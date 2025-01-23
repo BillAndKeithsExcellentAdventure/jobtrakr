@@ -1,21 +1,16 @@
-import { FlatList, Pressable, StyleSheet } from 'react-native';
-
-import EditScreenInfo from '@/components/EditScreenInfo';
+import { StyleSheet } from 'react-native';
 import { Text, View } from '@/components/Themed';
-import { useSession } from '@/session/ctx';
-import { router } from 'expo-router';
-import AntDesign from '@expo/vector-icons/AntDesign';
-import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import { FlashList } from '@shopify/flash-list';
+import { JobList } from '@/components/JobList';
+import { JobSummary } from '@/models/jobSummary';
 
-const DATA = [
-  { title: 'Lot 123' },
-  { title: 'Lot XYZ' },
-  { title: 'Bertram Farm' },
-  { title: "Grayson's Pool" },
-  { title: '456 Main Street' },
-  { title: '619 Elm Street' },
+const ALLJOBS: JobSummary[] = [
+  { name: 'Lot 123', jobComplete: false },
+  { name: 'Lot XYZ', jobComplete: false },
+  { name: 'Bertram Farm', jobComplete: false },
+  { name: "Grayson's Pool", jobComplete: false },
+  { name: '456 Main Street', jobComplete: false },
+  { name: '619 Elm Street', jobComplete: false },
 ];
 
 export default function HomeScreen() {
@@ -23,16 +18,8 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Project List</Text>
-      <View style={styles.separator} lightColor='#eee' darkColor='rgba(255,255,255,0.1)' />
-      <View style={{ flex: 1, width: 400, justifyContent: 'center', alignItems: 'center' }}>
-        <FlatList
-          style={{marginLeft:60, flex: 1, width: 400 }}
-          data={DATA}
-          renderItem={({ item }) => <Text style={{ fontSize: 30 }}>{item.title}</Text>}
-          keyExtractor={(item) => item.title}
-        />
-      </View>
+      <Text style={styles.title}>Projects</Text>
+      <JobList data={ALLJOBS} />
     </View>
   );
 }
@@ -42,14 +29,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
+    marginBottom: 20,
+    marginTop: 20,
   },
 });

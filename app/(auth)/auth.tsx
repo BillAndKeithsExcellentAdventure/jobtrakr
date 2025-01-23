@@ -16,7 +16,7 @@ export default function SignIn() {
       <Stack.Screen options={{ headerShown: true, title: 'Login to JobTrakR' }} />
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <Text
-          style={{ color: 'white', fontSize: 40 }}
+          style={{ color: colorScheme === 'light' ? 'black' : 'white', fontSize: 40 }}
           onPress={() => {
             signIn();
             router.replace('/(tabs)/home');
