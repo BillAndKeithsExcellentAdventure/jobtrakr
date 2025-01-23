@@ -42,6 +42,7 @@ export default function TabLayout() {
                   <AntDesign
                     name='logout'
                     size={24}
+                    color={colorScheme === 'light' ? 'black' : 'white'}
                     style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
                   />
                 )}
