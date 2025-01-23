@@ -24,12 +24,11 @@ export default function TabLayout() {
   const { signOut } = useSession();
 
   return (
-    <Tabs
-    >
+    <Tabs>
       <Tabs.Screen
         name='home'
         options={{
-          title: 'Home', 
+          title: 'Home',
           tabBarIcon: ({ color }) => <EntypoTabBarIcon name='home' color={color} />,
           headerRight: () => (
             <>
@@ -43,7 +42,6 @@ export default function TabLayout() {
                   <AntDesign
                     name='logout'
                     size={24}
-                    color={Colors[colorScheme ?? 'light'].text}
                     style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
                   />
                 )}
