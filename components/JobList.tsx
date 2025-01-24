@@ -60,7 +60,16 @@ export function JobList({ data }: { data: JobSummary[] }) {
   );
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth:600, paddingHorizontal: 10 }}>
+    <View
+      style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        maxWidth: 600,
+        paddingHorizontal: 10,
+      }}
+    >
       <FlatList
         style={[styles.flatList, { backgroundColor: colors.background }]}
         data={data}
@@ -106,7 +115,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   titleText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
@@ -117,16 +126,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   subtitleText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666',
   },
   subtitleTextLeft: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666',
     textAlign: 'left',
   },
   subtitleTextRight: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666',
     textAlign: 'right',
   },

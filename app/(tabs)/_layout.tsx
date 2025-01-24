@@ -28,7 +28,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name='home'
         options={{
-          title: 'Home',
+          title: 'Jobs',
           tabBarIcon: ({ color }) => <EntypoTabBarIcon name='home' color={color} />,
           headerRight: () => (
             <>
