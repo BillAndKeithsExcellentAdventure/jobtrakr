@@ -1,5 +1,5 @@
 export interface JobSummary {
-  jobID: number;
+  jobId: number;
   name: string;
   startDate?: Date;
   plannedFinish?: Date;

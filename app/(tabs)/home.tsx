@@ -12,7 +12,7 @@ const ALLJOBS: JobSummary[] = [
     bidPrice: 400000,
     spentToDate: 80000, // 20% of bidPrice
     jobComplete: false,
-    jobID: 1,
+    jobId: 1,
   },
   {
     name: 'Lot XYZ',
@@ -21,7 +21,7 @@ const ALLJOBS: JobSummary[] = [
     bidPrice: 900000,
     spentToDate: 450000, // 50% of bidPrice
     jobComplete: false,
-    jobID: 2,
+    jobId: 2,
   },
   {
     name: 'Bertram Farm',
@@ -30,7 +30,7 @@ const ALLJOBS: JobSummary[] = [
     bidPrice: 1500000,
     spentToDate: 1200000, // 80% of bidPrice
     jobComplete: false,
-    jobID: 3,
+    jobId: 3,
   },
   {
     name: "Grayson's Pool",
@@ -39,7 +39,7 @@ const ALLJOBS: JobSummary[] = [
     bidPrice: 600000,
     spentToDate: 300000, // 50% of bidPrice
     jobComplete: false,
-    jobID: 4,
+    jobId: 4,
   },
   {
     name: '456 Main Street',
@@ -48,7 +48,7 @@ const ALLJOBS: JobSummary[] = [
     bidPrice: 1200000,
     spentToDate: 600000, // 50% of bidPrice
     jobComplete: false,
-    jobID: 5,
+    jobId: 5,
   },
   {
     name: '619 Elm Street',
@@ -57,7 +57,7 @@ const ALLJOBS: JobSummary[] = [
     bidPrice: 1750000,
     spentToDate: 1400000, // 80% of bidPrice
     jobComplete: false,
-    jobID: 6,
+    jobId: 6,
   },
   {
     name: '345 Dixie Hwy',
@@ -66,7 +66,7 @@ const ALLJOBS: JobSummary[] = [
     bidPrice: 400000,
     spentToDate: 80000, // 20% of bidPrice
     jobComplete: false,
-    jobID: 7,
+    jobId: 7,
   },
   {
     name: '777 Heaven Lane',
@@ -75,7 +75,7 @@ const ALLJOBS: JobSummary[] = [
     bidPrice: 900000,
     spentToDate: 450000, // 50% of bidPrice
     jobComplete: false,
-    jobID: 8,
+    jobId: 8,
   },
   {
     name: '666 Devils Way',
@@ -84,7 +84,7 @@ const ALLJOBS: JobSummary[] = [
     bidPrice: 1500000,
     spentToDate: 1200000, // 80% of bidPrice
     jobComplete: false,
-    jobID: 9,
+    jobId: 9,
   },
   {
     name: '333 Halfway House',
@@ -93,7 +93,7 @@ const ALLJOBS: JobSummary[] = [
     bidPrice: 600000,
     spentToDate: 300000, // 50% of bidPrice
     jobComplete: false,
-    jobID: 10,
+    jobId: 10,
   },
   {
     name: '4444 4th Street',
@@ -102,7 +102,7 @@ const ALLJOBS: JobSummary[] = [
     bidPrice: 1200000,
     spentToDate: 600000, // 50% of bidPrice
     jobComplete: false,
-    jobID: 11,
+    jobId: 11,
   },
   {
     name: '258 7th Ave',
@@ -111,7 +111,7 @@ const ALLJOBS: JobSummary[] = [
     bidPrice: 1750000,
     spentToDate: 1400000, // 80% of bidPrice
     jobComplete: false,
-    jobID: 12,
+    jobId: 12,
   },
 ];
 

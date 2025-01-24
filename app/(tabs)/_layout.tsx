@@ -52,12 +52,14 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name='two'
+        name='camera'
         options={{
           title: 'Camera',
           tabBarIcon: ({ color }) => <AntTabBarIcon name='camera' color={color} />,
         }}
       />
+      <Tabs.Screen name='job/[id]' options={{ href: null }} />
+      <Tabs.Screen name='job/details/category/[category]' options={{ href: null }} />
     </Tabs>
   );
 }
