@@ -85,7 +85,7 @@ const ALLJOBS: JobSummary[] = [
 ];
 
 // Simulate an async function to load JSON data (like fetching from an API or reading from a file)
-export function loadJobData(): Promise<JobSummary[]> {
+export function fetchJobList(): Promise<JobSummary[]> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       // Simulating a successful data load with a slight delay
@@ -95,6 +95,6 @@ export function loadJobData(): Promise<JobSummary[]> {
       } else {
         reject(new Error('Failed to load data'));
       }
-    }, 300); 
+    }, 300);
   });
 }

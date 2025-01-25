@@ -59,7 +59,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen name='job/[jobId]' options={{ href: null }} />
-      <Tabs.Screen name='job/details/category/[category]' options={{ href: null }} />
+      <Tabs.Screen name='job/details/category/[categoryId]' options={{ href: null }} />
       <Tabs.Screen name='job/details/item/[item]' options={{ href: null }} />
     </Tabs>
   );

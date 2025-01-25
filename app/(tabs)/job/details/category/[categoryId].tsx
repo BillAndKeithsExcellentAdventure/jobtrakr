@@ -1,32 +1,32 @@
 import { View, Text, FlatList, StyleSheet, useColorScheme } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useLocalSearchParams, Stack } from 'expo-router';
-import { CategoryList } from '@/components/CategoryList';
 import { fetchItemsForCategories } from '@/api/items';
 import { JobCategoryItemEntry } from '@/models/jobCategoryItemEntry';
+import { CategoryItemList } from '@/components/CategoryItemList';
 
 const CategoryItemsPage = () => {
   const theme = useColorScheme(); // 'light' or 'dark'
-  const { jobId, jobName, category } = useLocalSearchParams<{ jobId: string; jobName: string; category: string }>();
+  const { jobId, jobName, categoryId } = useLocalSearchParams<{ jobId: string; jobName: string; categoryId: string }>();
   const [allJobCategoryItems, setAllJobCategoryItems] = useState<JobCategoryItemEntry[]>([]);
 
   useEffect(() => {
-    async function loadCategoryItemsForJob(jobId: string) {
+    async function loadCategoryItemsForJob(jobId: string, categoryName: string) {
       const jobNum = Number(jobId);
       if (!isNaN(jobNum)) {
-        const jobCategoryItems = await fetchItemsForCategories(category, jobNum);
+        const jobCategoryItems = await fetchItemsForCategories(categoryName, jobNum);
         if (jobCategoryItems) setAllJobCategoryItems(jobCategoryItems);
       }
     }
-    loadCategoryItemsForJob(jobId);
-  }, [jobId]);
+    loadCategoryItemsForJob(jobId, categoryId);
+  }, [jobId, categoryId]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme === 'dark' ? '#333' : '#fff' }]}>
-      <Stack.Screen options={{ title: 'Job Categories' }} />
-      <View>
+      <Stack.Screen options={{ title: `${categoryId} Items` }} />
+      <View style={[styles.listContainer]}>
         <Text style={[styles.title, { color: theme === 'dark' ? '#fff' : '#000' }]}>{jobName}</Text>
-        <CategoryList data={allJobCategoryItems} jobName={jobName} />
+        <CategoryItemList data={allJobCategoryItems} jobName={jobName} />
       </View>
     </View>
   );
@@ -35,12 +35,16 @@ const CategoryItemsPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+  },
+  listContainer: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center'
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginVertical: 8,
   },
   subtitle: {
     fontSize: 18,

@@ -44,7 +44,7 @@ export function JobList({ data }: { data: JobSummary[] }) {
         {/* Row for Title */}
         <View style={styles.titleRow}>
           <Text style={[styles.titleText, { color: colors.title }]}>
-            {item.name}({item.jobId})
+            {item.name}
           </Text>
           <Text style={[styles.subtitleText, { color: colors.subtitle }]}>{formatDate(item.plannedFinish)}</Text>
         </View>

@@ -23,10 +23,9 @@ const JobPage = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme === 'dark' ? '#333' : '#fff' }]}>
-      <Stack.Screen options={{ title: 'Job' }} />
+      <Stack.Screen options={{ title: 'Job Categories' }} />
       <View style={[styles.headerContainer]}>
         <Text style={[styles.title, { color: theme === 'dark' ? '#fff' : '#000' }]}>{jobName}</Text>
-        <Text style={[styles.subtitle, { color: theme === 'dark' ? '#bbb' : '#666' }]}>Categories</Text>
       </View>
       <CategoryList data={allJobCategories} jobName={jobName} />
     </View>

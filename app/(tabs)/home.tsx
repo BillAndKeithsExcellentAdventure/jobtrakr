@@ -4,7 +4,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { JobList } from '@/components/JobList';
 import { JobSummary } from '@/models/jobSummary';
 import React, { useEffect, useState } from 'react';
-import { loadJobData } from '@/api/job';
+import { fetchJobList } from '@/api/job';
 
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
@@ -12,7 +12,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     async function loadJobs() {
-      const jobs = await loadJobData();
+      const jobs = await fetchJobList();
       if (jobs) setAllJobs(jobs);
     }
     loadJobs();

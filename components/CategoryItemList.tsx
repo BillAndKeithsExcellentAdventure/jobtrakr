@@ -9,8 +9,9 @@ import { JobCategoryEntry } from '@/models/jobCategoryEntry';
 import { useColorScheme } from '@/components/useColorScheme';
 import { formatDate, formatCurrency } from '@/utils/formatters';
 import { router } from 'expo-router';
+import { JobCategoryItemEntry } from '@/models/jobCategoryItemEntry';
 
-export function CategoryList({ data, jobName }: { data: JobCategoryEntry[]; jobName: string }) {
+export function CategoryItemList({ data, jobName }: { data: JobCategoryItemEntry[]; jobName: string }) {
   const [height, setHeight] = useState(100);
   const colorScheme = useColorScheme();
   let showsVerticalScrollIndicator = false;
@@ -34,15 +35,15 @@ export function CategoryList({ data, jobName }: { data: JobCategoryEntry[]; jobN
           itemBackground: '#f9f9f9',
         };
 
-  const renderItem = ({ item }: { item: JobCategoryEntry }) => (
+  const renderItem = ({ item }: { item: JobCategoryItemEntry }) => (
     <Pressable
-      onPress={() => router.push(`/(tabs)/job/details/category/${item.categoryName}?jobId=${item.jobId}&jobName=${jobName}`)}
+      onPress={() => router.push(`/(tabs)/job/details/item/${item.categoryName}?jobName=${jobName}`)}
       style={{ height, width: '100%' }}
     >
       <View style={[styles.itemContainer, { backgroundColor: colors.itemBackground }]}>
         {/* Row for Title */}
         <View style={styles.titleRow}>
-          <Text style={[styles.titleText, { color: colors.title }]}>{item.categoryName}</Text>
+          <Text style={[styles.titleText, { color: colors.title }]}>{item.itemName}</Text>
         </View>
 
         {/* Row for Subtitles */}
