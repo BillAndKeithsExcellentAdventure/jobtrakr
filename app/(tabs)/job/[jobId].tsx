@@ -5,7 +5,7 @@ import { fetchCategoriesForJob } from '@/api/category';
 import { JobCategoryEntry } from '@/models/jobCategoryEntry';
 import { CategoryList } from '@/components/CategoryList';
 
-const CategoriesPage = () => {
+const JobPage = () => {
   const theme = useColorScheme(); // 'light' or 'dark'
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
   const [allJobCategories, setAllJobCategories] = useState<JobCategoryEntry[]>([]);
@@ -23,9 +23,12 @@ const CategoriesPage = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme === 'dark' ? '#333' : '#fff' }]}>
-      <Text style={[styles.title, { color: theme === 'dark' ? '#fff' : '#000' }]}>{jobName}</Text>
-      <Text style={[styles.subtitle, { color: theme === 'dark' ? '#bbb' : '#666' }]}>Categories</Text>
-      <CategoryList data={allJobCategories} jobName={jobName}  />
+      <Stack.Screen options={{ title: 'Job' }} />
+      <View style={[styles.headerContainer]}>
+        <Text style={[styles.title, { color: theme === 'dark' ? '#fff' : '#000' }]}>{jobName}</Text>
+        <Text style={[styles.subtitle, { color: theme === 'dark' ? '#bbb' : '#666' }]}>Categories</Text>
+      </View>
+      <CategoryList data={allJobCategories} jobName={jobName} />
     </View>
   );
 };
@@ -33,7 +36,11 @@ const CategoriesPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+  },
+  headerContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 24,
@@ -54,4 +61,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CategoriesPage;
+export default JobPage;

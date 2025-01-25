@@ -271,7 +271,7 @@ const ALLJOBCATEGORYDATA: JobCategoryEntry[] = [
 ];
 
 // Simulate an async function to load JSON data (like fetching from an API or reading from a file)
-export function loadJobCategoryData(jobId: number): Promise<JobCategoryEntry[]> {
+export function fetchCategoriesForJob(jobId: number): Promise<JobCategoryEntry[]> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       // Simulating a successful data load with a slight delay

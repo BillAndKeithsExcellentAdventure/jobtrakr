@@ -4,14 +4,13 @@ Sample list for web
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, FlatList, Platform } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
-import { JobSummary } from '@/models/jobSummary';
+import { JobCategoryEntry } from '@/models/jobCategoryEntry';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { formatDate, formatCurrency } from '@/utils/formatters';
 import { router } from 'expo-router';
-import { push } from 'expo-router/build/global-state/routing';
 
-export function JobList({ data }: { data: JobSummary[] }) {
+export function CategoryList({ data, jobName }: { data: JobCategoryEntry[]; jobName: string }) {
   const [height, setHeight] = useState(100);
   const colorScheme = useColorScheme();
   let showsVerticalScrollIndicator = false;
@@ -35,18 +34,15 @@ export function JobList({ data }: { data: JobSummary[] }) {
           itemBackground: '#f9f9f9',
         };
 
-  const renderItem = ({ item }: { item: JobSummary }) => (
+  const renderItem = ({ item }: { item: JobCategoryEntry }) => (
     <Pressable
-      onPress={() => router.push(`/(tabs)/job/${item.jobId}?jobName=${item.name}`)}
+      onPress={() => router.push(`/(tabs)/job/details/category/${item.categoryName}?jobName=${jobName}`)}
       style={{ height, width: '100%' }}
     >
       <View style={[styles.itemContainer, { backgroundColor: colors.itemBackground }]}>
         {/* Row for Title */}
         <View style={styles.titleRow}>
-          <Text style={[styles.titleText, { color: colors.title }]}>
-            {item.name}({item.jobId})
-          </Text>
-          <Text style={[styles.subtitleText, { color: colors.subtitle }]}>{formatDate(item.plannedFinish)}</Text>
+          <Text style={[styles.titleText, { color: colors.title }]}>{item.categoryName}</Text>
         </View>
 
         {/* Row for Subtitles */}
@@ -81,7 +77,7 @@ export function JobList({ data }: { data: JobSummary[] }) {
         style={[styles.flatList, { backgroundColor: colors.background }]}
         data={data}
         showsVerticalScrollIndicator={showsVerticalScrollIndicator}
-        keyExtractor={(item) => item.name.toString()}
+        keyExtractor={(item) => item.categoryName.toString()}
         renderItem={renderItem}
       />
     </View>
