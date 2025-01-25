@@ -1,6 +1,7 @@
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import React from 'react';
 import { useLocalSearchParams, Stack } from 'expo-router';
+
 
 const CategoryPage = () => {
   const { category, jobId } = useLocalSearchParams<{ category: string; jobId: string }>();
