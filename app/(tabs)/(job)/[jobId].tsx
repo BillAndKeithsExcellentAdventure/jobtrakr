@@ -23,7 +23,7 @@ const JobPage = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme === 'dark' ? '#333' : '#fff' }]}>
-      <Stack.Screen options={{ title: 'Job Categories' }} />
+      <Stack.Screen options={{ title: `Job Categories` }} />
       <View style={[styles.headerContainer]}>
         <Text style={[styles.title, { color: theme === 'dark' ? '#fff' : '#000' }]}>{jobName}</Text>
       </View>
