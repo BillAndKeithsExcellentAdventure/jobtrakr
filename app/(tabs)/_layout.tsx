@@ -26,29 +26,10 @@ export default function TabLayout() {
   return (
     <Tabs>
       <Tabs.Screen
-        name='home'
+        name='jobs'
         options={{
           title: 'Jobs',
           tabBarIcon: ({ color }) => <EntypoTabBarIcon name='home' color={color} />,
-          headerRight: () => (
-            <>
-              <Pressable
-                onPress={() => {
-                  signOut();
-                  router.replace('/(auth)/auth');
-                }}
-              >
-                {({ pressed }) => (
-                  <AntDesign
-                    name='logout'
-                    size={24}
-                    color={colorScheme === 'light' ? 'black' : 'white'}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </>
-          ),
         }}
       />
       <Tabs.Screen
@@ -58,7 +39,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <AntTabBarIcon name='camera' color={color} />,
         }}
       />
-      <Tabs.Screen name='(job)' options={{ href: null, headerShown: false }} />
     </Tabs>
   );
 }

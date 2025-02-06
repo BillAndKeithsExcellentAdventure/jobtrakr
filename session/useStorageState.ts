@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useReducer } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import { SessionUser } from './ctx';
 
 type UseStateHook<T> = [[boolean, T | null], (value: T | null) => void];
 
@@ -46,9 +47,10 @@ export function useStorageState(key: string): UseStateHook<string> {
         console.error('Local storage is unavailable:', e);
       }
     } else {
-      SecureStore.getItemAsync(key).then((value) => {
-        setState(value);
-      });
+      //SecureStore.getItemAsync(key).then((value) => {
+      const sessionUser: SessionUser = { userId: 1, name: 'Nick', email: 'nick@bertrambuilders.com' };
+        setState(JSON.stringify(sessionUser));
+      //});
     }
   }, [key]);
 
