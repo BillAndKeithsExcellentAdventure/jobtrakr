@@ -8,7 +8,7 @@ import ButtonBar, { ActionButtonProps } from '@/components/ButtonBar';
 
 // Define types for the props
 export interface TwoColumnListEntry {
-  entryId: number;
+  entryId: string;
   primaryTitle: string;
   imageUri?: string;
   secondaryTitle?: string;
@@ -74,8 +74,8 @@ export function TwoColumnList({
           <View style={[styles.textContentContainer, { backgroundColor: colors.itemBackground }]}>
             {/* Row for Title */}
             <View style={styles.titleRow}>
-              <Text txtSize='title'>{item.primaryTitle}</Text>
-              <Text txtSize='standard'>{item.secondaryTitle}</Text>
+              <Text txtSize="title">{item.primaryTitle}</Text>
+              <Text txtSize="standard">{item.secondaryTitle}</Text>
             </View>
 
             {/* Row for Subtitles */}
@@ -103,7 +103,7 @@ export function TwoColumnList({
         style={[styles.flatList, { backgroundColor: colors.listBackground }]}
         data={data}
         showsVerticalScrollIndicator={showsVerticalScrollIndicator}
-        keyExtractor={(item) => item.entryId.toString()}
+        keyExtractor={(item) => item.entryId}
         renderItem={renderItem}
       />
     </View>

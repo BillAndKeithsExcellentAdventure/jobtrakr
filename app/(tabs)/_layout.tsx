@@ -5,7 +5,6 @@ import { Link, Tabs } from 'expo-router';
 import { Pressable } from 'react-native';
 import { router } from 'expo-router';
 
-import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useSession } from '@/session/ctx';

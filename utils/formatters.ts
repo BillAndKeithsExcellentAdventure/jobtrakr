@@ -1,5 +1,10 @@
-export function formatDate(date?: Date, notSpecifiedString = 'Not Specified'): string {
+export function formatDate(date?: Date | string, notSpecifiedString = 'Not Specified'): string {
   if (!date) return notSpecifiedString;
+
+  if (typeof date == 'string') {
+    const actDate = new Date(date);
+    return formatDate(actDate);
+  }
 
   const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed, so add 1
   const day = String(date.getDate()).padStart(2, '0'); // Ensure day is two digits

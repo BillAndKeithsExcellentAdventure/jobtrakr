@@ -2,15 +2,15 @@ import { StyleSheet } from 'react-native';
 import { ActionButtonProps } from '@/components/ButtonBar';
 import { View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
-import { JobSummary } from '@/models/jobSummary';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { fetchJobList } from '@/api/job';
 import { Stack, useRouter } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
 import { Colors } from '@/constants/Colors';
 import { TwoColumnList, TwoColumnListEntry } from '@/components/TwoColumnList';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useJobDb } from '@/session/DatabaseContext';
+import { JobData } from 'jobdb';
 
 function isEntry(obj: any): obj is TwoColumnListEntry {
   return typeof obj.primaryTitle === 'string' && typeof obj.secondaryTitle === 'string';
@@ -18,10 +18,11 @@ function isEntry(obj: any): obj is TwoColumnListEntry {
 
 export default function JobHomeScreen() {
   const colorScheme = useColorScheme();
-  const [allJobs, setAllJobs] = useState<JobSummary[]>([]);
+  const [allJobs, setAllJobs] = useState<JobData[]>([]);
   const [jobListEntries, setJobListEntries] = useState<TwoColumnListEntry[]>([]);
 
   const navigation = useNavigation();
+  const { jobDbHost } = useJobDb();
 
   // Define colors based on the color scheme (dark or light)
   const colors = useMemo(() => {
@@ -47,12 +48,12 @@ export default function JobHomeScreen() {
           };
 
     return clrs;
-  }, []);
+  }, [colorScheme]);
 
   const buttons: ActionButtonProps[] = useMemo(
     () => [
       {
-        icon: <FontAwesome name='heart-o' size={16} color={colors.iconColor} />,
+        icon: <FontAwesome name="heart-o" size={16} color={colors.iconColor} />,
         label: 'Like',
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
@@ -63,7 +64,7 @@ export default function JobHomeScreen() {
         },
       },
       {
-        icon: <FontAwesome name='comment-o' size={16} color={colors.iconColor} />,
+        icon: <FontAwesome name="comment-o" size={16} color={colors.iconColor} />,
         label: 'Comment',
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
@@ -74,7 +75,7 @@ export default function JobHomeScreen() {
         },
       },
       {
-        icon: <FontAwesome name='share' size={16} color={colors.iconColor} />,
+        icon: <FontAwesome name="share" size={16} color={colors.iconColor} />,
         label: 'Share',
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
@@ -85,7 +86,7 @@ export default function JobHomeScreen() {
         },
       },
     ],
-    [colors]
+    [colors],
   );
 
   React.useEffect(() => {
@@ -95,19 +96,20 @@ export default function JobHomeScreen() {
 
   useEffect(() => {
     async function loadJobs() {
-      const jobs = await fetchJobList();
+      const result = await jobDbHost?.GetJobDB().FetchAllJobs();
+      const jobs = result ? result.jobs : [];
 
       if (jobs) {
         const listData: TwoColumnListEntry[] = jobs.map((job) => {
           return {
-            primaryTitle: job.name,
-            entryId: job.jobId,
+            primaryTitle: job.Name ? job.Name : 'unknown',
+            entryId: job._id ? job._id.toString() : '1',
             imageUri: '',
-            secondaryTitle: formatDate(job.plannedFinish),
+            secondaryTitle: formatDate(job.PlannedFinish),
             lines: [
               {
-                left: `bid: ${formatCurrency(job.bidPrice)}`,
-                right: `spent: ${formatCurrency(job.spentToDate)}`,
+                left: `bid: ${formatCurrency(job.BidPrice)}`,
+                right: `spent: ${formatCurrency(0)}`,
               },
             ],
           };
@@ -118,7 +120,7 @@ export default function JobHomeScreen() {
       }
     }
     loadJobs();
-  }, []);
+  }, [jobDbHost]);
 
   const router = useRouter();
   React.useEffect(() => {
@@ -127,11 +129,11 @@ export default function JobHomeScreen() {
 
   const handleSelection = useCallback(
     (entry: TwoColumnListEntry) => {
-      const job = allJobs.find((j) => j.jobId == entry.entryId);
-      if (job) router.push(`/(tabs)/jobs/${job.jobId}?jobName=${job.name}`);
+      const job = allJobs.find((j) => (j._id ? j._id.toString() : '') === entry.entryId);
+      if (job && job._id) router.push(`/(tabs)/jobs/${job._id}?jobName=${job.Name}`);
       console.log(`Hello from item ${entry.primaryTitle}`);
     },
-    [allJobs]
+    [allJobs],
   );
 
   return (
