@@ -220,7 +220,7 @@ export default function JobHomeScreen() {
             headerShown: true,
             header: () => (
               <ScreenHeader
-                title="Android Home Screen"
+                title="Jobs"
                 headerRight={() => (
                   <Pressable
                     onPress={() => {
@@ -245,7 +245,7 @@ export default function JobHomeScreen() {
         <Stack.Screen
           options={{
             headerShown: true,
-            title: 'Std Home Screen',
+            title: 'Jobs',
             headerRight: () => (
               <Pressable
                 onPress={() => {
