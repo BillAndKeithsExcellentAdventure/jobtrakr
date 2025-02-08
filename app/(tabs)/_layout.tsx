@@ -28,6 +28,7 @@ export default function TabLayout() {
         name='jobs'
         options={{
           title: 'Jobs',
+          headerShown: false,
           tabBarIcon: ({ color }) => <EntypoTabBarIcon name='home' color={color} />,
         }}
       />
