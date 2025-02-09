@@ -1,14 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Modal, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View, Text, TextInput } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { Button } from '@/components/Button';
-import { formatCurrency } from '@/utils/formatters';
 import { useJobDb } from '@/session/DatabaseContext';
 import { JobData } from 'jobdb';
+import { TextField } from '@/components/TextField';
+import { formatDate } from '@/utils/formatters';
 
 type Job = {
   name: string;
@@ -18,7 +19,13 @@ type Job = {
   bidAmount: number;
 };
 
-const JobModalScreen = ({ visible, hideModal }: { visible: boolean; hideModal: (success:boolean) => void }) => {
+const JobModalScreen = ({
+  visible,
+  hideModal,
+}: {
+  visible: boolean;
+  hideModal: (success: boolean) => void;
+}) => {
   const [job, setJob] = useState<Job>({
     name: '',
     location: '',
@@ -28,6 +35,7 @@ const JobModalScreen = ({ visible, hideModal }: { visible: boolean; hideModal: (
   });
 
   const [showDatePicker, setShowDatePicker] = useState(false);
+
   const insets = useSafeAreaInsets(); // just in case we use it on IOS
   const colorScheme = useColorScheme();
 
@@ -38,11 +46,13 @@ const JobModalScreen = ({ visible, hideModal }: { visible: boolean; hideModal: (
             background: Colors.dark.background,
             borderColor: Colors.dark.inputBorder,
             modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
+            transparent: Colors.dark.transparent,
           }
         : {
             background: Colors.light.background,
             borderColor: Colors.light.inputBorder,
             modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
+            transparent: Colors.light.transparent,
           };
 
     return themeColors;
@@ -54,19 +64,24 @@ const JobModalScreen = ({ visible, hideModal }: { visible: boolean; hideModal: (
     setCanAddJob(job.name?.length > 4);
   }, [job]);
 
-  const handleDateChange = (event: any, selectedDate: Date | undefined) => {
-    setShowDatePicker(false);
+  useEffect(() => {
+    if (Platform.OS === 'ios') setShowDatePicker(true); // Keeps the picker open for iOS
+  }, []);
+
+  const handleDateChange = useCallback((event: any, selectedDate: Date | undefined) => {
+    if (Platform.OS !== 'ios') setShowDatePicker(false);
+
     if (selectedDate) {
       setJob((prevJob) => ({
         ...prevJob,
         finishDate: selectedDate,
       }));
     }
-  };
+  }, []);
 
   const { jobDbHost } = useJobDb();
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     const id = { value: 0n };
     // Handle form submission here
 
@@ -91,7 +106,11 @@ const JobModalScreen = ({ visible, hideModal }: { visible: boolean; hideModal: (
       console.log('Job creation failed:', job);
       hideModal(false);
     }
-  };
+  }, []);
+
+  const handleAndroidShowDatePicker = useCallback((): void => {
+    setShowDatePicker(!showDatePicker);
+  }, []);
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
@@ -118,7 +137,34 @@ const JobModalScreen = ({ visible, hideModal }: { visible: boolean; hideModal: (
             onChangeText={(text) => setJob({ ...job, owner: text })}
           />
 
-          <DateTimePicker style={styles.input} value={job.finishDate} mode="date" display="default" onChange={handleDateChange} />
+          <View style={{ flexDirection: 'row'}}>
+            {Platform.OS === 'android' && (
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={handleAndroidShowDatePicker}
+                style={[styles.input, { alignSelf: 'stretch' }]}
+              >
+                <View pointerEvents="none" style={{ minWidth: 200 }}>
+                  <TextField
+                    value={job.finishDate ? formatDate(job.finishDate) : undefined}
+                    placeholder="Finish Date"
+                    editable={false}
+                    style={{ borderColor: colors.transparent }}
+                  />
+                </View>
+              </TouchableOpacity>
+            )}
+            {showDatePicker && (
+              <DateTimePicker
+                style={styles.input}
+                value={job.finishDate}
+                
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+              />
+            )}
+          </View>
 
           <TextInput
             style={styles.input}
@@ -130,7 +176,7 @@ const JobModalScreen = ({ visible, hideModal }: { visible: boolean; hideModal: (
 
           <View style={styles.buttons}>
             <Button disabled={!canAddJob} text="Submit" onPress={handleSubmit} />
-            <Button text="Cancel" onPress={()=>hideModal(false)} />
+            <Button text="Cancel" onPress={() => hideModal(false)} />
           </View>
         </View>
       </View>

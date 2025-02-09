@@ -172,7 +172,7 @@ export function TextInput(props: TextInputProps) {
 
   // Return the text component with merged styles
   return (
-    <DefaultTextInput style={[{ color, justifyContent: 'center1222' }, txtStyle, style]} {...otherProps} placeholderTextColor={placeHolderColor} />
+    <DefaultTextInput style={[{ color, justifyContent: 'center' }, txtStyle, style]} {...otherProps} placeholderTextColor={placeHolderColor} />
   );
 }
 
