@@ -1,4 +1,12 @@
-import { Modal, Platform, Pressable, SafeAreaView, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import {
+  Modal,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import { ActionButtonProps } from '@/components/ButtonBar';
 import { View, Text } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -14,6 +22,7 @@ import MaterialDesign from '@expo/vector-icons/MaterialCommunityIcons';
 import { useJobDb } from '@/session/DatabaseContext';
 import { JobData } from 'jobdb';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import JobModalScreen from '@/app/(modals)/JobModalScreen';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialDesign>['name'];
@@ -25,13 +34,16 @@ function MaterialDesignTabBarIcon(props: {
 function HomeScreenModalMenu({
   modalVisible,
   setModalVisible,
+  onMenuItemPress,
 }: {
   modalVisible: boolean;
   setModalVisible: (val: boolean) => void;
+  onMenuItemPress: (item: string) => void;
 }) {
   const handleMenuItemPress = (item: string): void => {
     console.log(`${item} pressed`);
     setModalVisible(false); // Close the modal after selecting an item
+    onMenuItemPress(item);
   };
 
   const colorScheme = useColorScheme();
@@ -67,6 +79,13 @@ function HomeScreenModalMenu({
               ]}
             >
               <TouchableOpacity
+                onPress={() => handleMenuItemPress('AddJob')}
+                style={[styles.menuItem, { borderBottomColor: colors.separatorColor }]}
+              >
+                <Text style={styles.menuText}>Add Job</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
                 onPress={() => handleMenuItemPress('Option 1')}
                 style={[styles.menuItem, { borderBottomColor: colors.separatorColor }]}
               >
@@ -94,6 +113,7 @@ export default function JobHomeScreen() {
   const colorScheme = useColorScheme();
   const [allJobs, setAllJobs] = useState<JobData[]>([]);
   const [jobListEntries, setJobListEntries] = useState<TwoColumnListEntry[]>([]);
+  const [jobModalVisible, setJobModalVisible] = useState(false);
 
   const navigation = useNavigation();
   const { jobDbHost } = useJobDb();
@@ -168,31 +188,32 @@ export default function JobHomeScreen() {
     console.log('Current stack state:', state);
   }, [navigation]);
 
-  useEffect(() => {
-    async function loadJobs() {
-      const result = await jobDbHost?.GetJobDB().FetchAllJobs();
-      const jobs = result ? result.jobs : [];
+  const loadJobs = useCallback(async () => {
+    const result = await jobDbHost?.GetJobDB().FetchAllJobs();
+    const jobs = result ? result.jobs : [];
 
-      if (jobs) {
-        const listData: TwoColumnListEntry[] = jobs.map((job) => {
-          return {
-            primaryTitle: job.Name ? job.Name : 'unknown',
-            entryId: job._id ? job._id.toString() : '1',
-            imageUri: '',
-            secondaryTitle: formatDate(job.PlannedFinish),
-            lines: [
-              {
-                left: `bid: ${formatCurrency(job.BidPrice)}`,
-                right: `spent: ${formatCurrency(0)}`,
-              },
-            ],
-          };
-        });
+    if (jobs) {
+      const listData: TwoColumnListEntry[] = jobs.map((job) => {
+        return {
+          primaryTitle: job.Name ? job.Name : 'unknown',
+          entryId: job._id ? job._id.toString() : '1',
+          imageUri: '',
+          secondaryTitle: formatDate(job.PlannedFinish),
+          lines: [
+            {
+              left: `bid: ${formatCurrency(job.BidPrice)}`,
+              right: `spent: ${formatCurrency(0)}`,
+            },
+          ],
+        };
+      });
 
-        setAllJobs(jobs);
-        setJobListEntries(listData);
-      }
+      setAllJobs(jobs);
+      setJobListEntries(listData);
     }
+  }, []);
+
+  useEffect(() => {
     loadJobs();
   }, [jobDbHost]);
 
@@ -210,7 +231,17 @@ export default function JobHomeScreen() {
     [allJobs],
   );
 
-  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const showJobModal = useCallback(() => setJobModalVisible(true), []);
+  const hideJobModal = useCallback((success: boolean) => {
+    setJobModalVisible(false);
+    if (success) loadJobs();
+  }, []);
+
+  const [menuModalVisible, setMenuModalVisible] = useState<boolean>(false);
+
+  const handleMenuItemPress = useCallback((item: string) => {
+    if (item === 'AddJob') showJobModal();
+  }, []);
 
   return (
     <>
@@ -224,7 +255,7 @@ export default function JobHomeScreen() {
                 headerRight={() => (
                   <Pressable
                     onPress={() => {
-                      setModalVisible(!modalVisible);
+                      setMenuModalVisible(!menuModalVisible);
                     }}
                   >
                     {({ pressed }) => (
@@ -249,7 +280,7 @@ export default function JobHomeScreen() {
             headerRight: () => (
               <Pressable
                 onPress={() => {
-                  setModalVisible(!modalVisible);
+                  setMenuModalVisible(!menuModalVisible);
                 }}
               >
                 {({ pressed }) => (
@@ -271,7 +302,13 @@ export default function JobHomeScreen() {
           <TwoColumnList data={jobListEntries} onPress={handleSelection} buttons={buttons} />
         </View>
       </View>
-      <HomeScreenModalMenu modalVisible={modalVisible} setModalVisible={setModalVisible} />
+      <HomeScreenModalMenu
+        modalVisible={menuModalVisible}
+        setModalVisible={setMenuModalVisible}
+        onMenuItemPress={handleMenuItemPress}
+      />
+      {/* Pass visibility state and hide function to JobModalScreen */}
+      <JobModalScreen visible={jobModalVisible} hideModal={hideJobModal} />
     </>
   );
 }
