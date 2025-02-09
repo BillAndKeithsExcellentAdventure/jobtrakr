@@ -117,7 +117,7 @@ export function TextInput(props: TextInputProps) {
   const placeHolderColor = useThemeColor({ light: lightColor, dark: darkColor }, 'placeHolder');
 
   // Default text style
-  let txtStyle: TextStyle = { fontSize: 14, fontWeight: 'normal', lineHeight: 21 };
+  let txtStyle: TextStyle = { fontSize: 16, fontWeight: 'normal', lineHeight: 20 };
 
   // Set the default fontSize and fontWeight based on txtSize
   if (txtSize) {
@@ -125,54 +125,54 @@ export function TextInput(props: TextInputProps) {
       case 'xxs':
         txtStyle.fontSize = 12;
         txtStyle.fontWeight = 'thin';
-        txtStyle.lineHeight = 18;
+        txtStyle.lineHeight = 16;
         break;
       case 'xs':
         txtStyle.fontSize = 14;
         txtStyle.fontWeight = 'normal';
-        txtStyle.lineHeight = 21;
+        txtStyle.lineHeight = 18;
         break;
       case 'standard':
         txtStyle.fontSize = 16;
         txtStyle.fontWeight = 'normal';
-        txtStyle.lineHeight = 24;
+        txtStyle.lineHeight = 20;
         break;
       case 'formLabel':
         txtStyle.fontSize = 16;
         txtStyle.fontWeight = 'medium';
-        txtStyle.lineHeight = 24;
+        txtStyle.lineHeight = 20;
         break;
       case 'sub-title':
         txtStyle.fontSize = 18;
         txtStyle.fontWeight = 'medium';
-        txtStyle.lineHeight = 26;
+        txtStyle.lineHeight = 22;
         break;
       case 'title':
         txtStyle.fontSize = 20;
         txtStyle.fontWeight = '600';
-        txtStyle.lineHeight = 32;
+        txtStyle.lineHeight = 24;
         break;
       case 'xl':
         txtStyle.fontSize = 24;
         txtStyle.fontWeight = 'bold';
-        txtStyle.lineHeight = 34;
+        txtStyle.lineHeight = 30;
         break;
       case 'xxl':
         txtStyle.fontSize = 36;
         txtStyle.fontWeight = '600';
-        txtStyle.lineHeight = 44;
+        txtStyle.lineHeight = 42;
         break;
       case 'screen-header':
-        txtStyle.fontSize = 14;
+        txtStyle.fontSize = 16;
         txtStyle.fontWeight = '500';
-        txtStyle.lineHeight = 21;
+        txtStyle.lineHeight = 20;
         break;
     }
   }
 
   // Return the text component with merged styles
   return (
-    <DefaultTextInput style={[{ color }, txtStyle, style]} {...otherProps} placeholderTextColor={placeHolderColor} />
+    <DefaultTextInput style={[{ color, justifyContent: 'center1222' }, txtStyle, style]} {...otherProps} placeholderTextColor={placeHolderColor} />
   );
 }
 

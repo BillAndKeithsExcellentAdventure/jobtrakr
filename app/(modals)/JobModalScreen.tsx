@@ -118,7 +118,7 @@ const JobModalScreen = ({ visible, hideModal }: { visible: boolean; hideModal: (
             onChangeText={(text) => setJob({ ...job, owner: text })}
           />
 
-          <DateTimePicker value={job.finishDate} mode="date" display="default" onChange={handleDateChange} />
+          <DateTimePicker style={styles.input} value={job.finishDate} mode="date" display="default" onChange={handleDateChange} />
 
           <TextInput
             style={styles.input}
