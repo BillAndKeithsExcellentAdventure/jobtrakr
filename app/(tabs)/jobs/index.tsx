@@ -211,7 +211,7 @@ export default function JobHomeScreen() {
       setAllJobs(jobs);
       setJobListEntries(listData);
     }
-  }, []);
+  }, [jobDbHost]);
 
   useEffect(() => {
     loadJobs();
