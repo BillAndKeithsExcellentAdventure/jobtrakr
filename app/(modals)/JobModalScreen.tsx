@@ -137,28 +137,24 @@ const JobModalScreen = ({
             onChangeText={(text) => setJob({ ...job, owner: text })}
           />
 
-          <View style={{ flexDirection: 'row'}}>
+          <View style={[styles.input, { flexDirection: 'row' }]}>
             {Platform.OS === 'android' && (
-              <TouchableOpacity
-                activeOpacity={1}
-                onPress={handleAndroidShowDatePicker}
-                style={[styles.input, { alignSelf: 'stretch' }]}
-              >
-                <View pointerEvents="none" style={{ minWidth: 200 }}>
+              <TouchableOpacity activeOpacity={1} onPress={handleAndroidShowDatePicker}>
+                <View pointerEvents="none" style={{ minWidth: 240, borderColor: colors.transparent }}>
                   <TextField
                     value={job.finishDate ? formatDate(job.finishDate) : undefined}
                     placeholder="Finish Date"
                     editable={false}
-                    style={{ borderColor: colors.transparent }}
+                    inputWrapperStyle={{ borderColor: colors.transparent, alignSelf: 'stretch' }}
+                    style={{ borderColor: colors.transparent, alignSelf: 'stretch' }}
                   />
                 </View>
               </TouchableOpacity>
             )}
             {showDatePicker && (
               <DateTimePicker
-                style={styles.input}
+                style={{ alignSelf: 'stretch' }}
                 value={job.finishDate}
-                
                 mode="date"
                 display="default"
                 onChange={handleDateChange}
