@@ -17,18 +17,19 @@ import { Colors } from '@/constants/Colors';
 import { TwoColumnList, TwoColumnListEntry } from '@/components/TwoColumnList';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import MaterialDesign from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { useJobDb } from '@/session/DatabaseContext';
 import { JobData } from 'jobdb';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import JobModalScreen from '@/app/(modals)/JobModalScreen';
+import EditJobModalScreen from '@/app/(modals)/EditJobModalScreen';
 
 function MaterialDesignTabBarIcon(props: {
-  name: React.ComponentProps<typeof MaterialDesign>['name'];
+  name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   color: string;
 }) {
-  return <MaterialDesign size={28} style={{ marginBottom: -3 }} {...props} />;
+  return <MaterialCommunityIcons size={28} style={{ marginBottom: -3 }} {...props} />;
 }
 
 function HomeScreenModalMenu({
@@ -114,6 +115,8 @@ export default function JobHomeScreen() {
   const [allJobs, setAllJobs] = useState<JobData[]>([]);
   const [jobListEntries, setJobListEntries] = useState<TwoColumnListEntry[]>([]);
   const [jobModalVisible, setJobModalVisible] = useState(false);
+  const [editJobId, setEditJobId] = useState<string | undefined>();
+  const [menuModalVisible, setMenuModalVisible] = useState<boolean>(false);
 
   const navigation = useNavigation();
   const { jobDbHost } = useJobDb();
@@ -147,7 +150,7 @@ export default function JobHomeScreen() {
   const buttons: ActionButtonProps[] = useMemo(
     () => [
       {
-        icon: <FontAwesome name="heart-o" size={16} color={colors.iconColor} />,
+        icon: <FontAwesome name="heart-o" size={24} color={colors.iconColor} />,
         label: 'Like',
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
@@ -158,7 +161,7 @@ export default function JobHomeScreen() {
         },
       },
       {
-        icon: <FontAwesome name="comment-o" size={16} color={colors.iconColor} />,
+        icon: <FontAwesome name="comment-o" size={24} color={colors.iconColor} />,
         label: 'Comment',
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
@@ -169,11 +172,12 @@ export default function JobHomeScreen() {
         },
       },
       {
-        icon: <FontAwesome name="share" size={16} color={colors.iconColor} />,
-        label: 'Share',
+        icon: <MaterialCommunityIcons name="menu" size={24} color={colors.iconColor} />,
+        label: 'Edit',
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
-            console.log('Share pressed - ', actionContext.primaryTitle);
+            console.log('Share pressed - ', actionContext.entryId);
+            setEditJobId(actionContext.entryId);
           } else {
             console.log('Share pressed - ', actionContext);
           }
@@ -232,12 +236,21 @@ export default function JobHomeScreen() {
   );
 
   const showJobModal = useCallback(() => setJobModalVisible(true), []);
-  const hideJobModal = useCallback((success: boolean) => {
-    setJobModalVisible(false);
-    if (success) loadJobs();
-  }, []);
+  const hideJobModal = useCallback(
+    (success: boolean) => {
+      setJobModalVisible(false);
+      if (success) loadJobs();
+    },
+    [loadJobs],
+  );
 
-  const [menuModalVisible, setMenuModalVisible] = useState<boolean>(false);
+  const hideEditJobModal = useCallback(
+    (success: boolean) => {
+      setEditJobId(undefined);
+      if (success) loadJobs();
+    },
+    [loadJobs],
+  );
 
   const handleMenuItemPress = useCallback((item: string) => {
     if (item === 'AddJob') showJobModal();
@@ -309,6 +322,7 @@ export default function JobHomeScreen() {
       />
       {/* Pass visibility state and hide function to JobModalScreen */}
       <JobModalScreen visible={jobModalVisible} hideModal={hideJobModal} />
+      <EditJobModalScreen jobId={editJobId} hideModal={hideEditJobModal} />
     </>
   );
 }

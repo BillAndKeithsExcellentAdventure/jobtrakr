@@ -1,32 +1,43 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, StyleSheet, Platform } from 'react-native';
+import { Modal, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View, Text, TextInput } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { Button } from '@/components/Button';
 import { useJobDb } from '@/session/DatabaseContext';
-import { JobData } from 'jobdb';
+import { DBStatus, JobData } from 'jobdb';
+import { TextField } from '@/components/TextField';
+import { formatDate } from '@/utils/formatters';
 
 type Job = {
+  jobId?: string;
   name: string;
   location: string;
   owner: string;
+  finishDate: Date;
+  bidAmount: number;
 };
 
-const JobModalScreen = ({
-  visible,
+const EditJobModalScreen = ({
+  jobId,
   hideModal,
 }: {
-  visible: boolean;
+  jobId: string | undefined;
   hideModal: (success: boolean) => void;
 }) => {
   const [job, setJob] = useState<Job>({
+    jobId,
     name: '',
     location: '',
     owner: '',
+    finishDate: new Date(),
+    bidAmount: 0,
   });
 
+  const [visible, setVisible] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const insets = useSafeAreaInsets(); // just in case we use it on IOS
   const colorScheme = useColorScheme();
 
@@ -55,7 +66,49 @@ const JobModalScreen = ({
     setCanAddJob(job.name?.length > 4);
   }, [job]);
 
+  useEffect(() => {
+    if (Platform.OS === 'ios') setShowDatePicker(true); // Keeps the picker open for iOS
+  }, []);
+
   const { jobDbHost } = useJobDb();
+
+  useEffect(() => {
+    if (jobId === undefined) setVisible(false);
+  }, [jobId]);
+
+  useEffect(() => {
+    async function loadJobData() {
+      //const result = await jobDbHost?.GetJobDB().FetchJobById(jobId);
+      //const jobData = result ? result.job : undefined;
+      if (!!jobId) {
+        const jobData: Job = {
+          name: 'Lot 100',
+          location: 'Kentucky Acres',
+          owner: 'John Smith',
+          finishDate: new Date(),
+          bidAmount: 10000,
+        };
+
+        if (jobData) {
+          setJob(jobData);
+          setVisible(true);
+        }
+      } 
+    }
+
+    loadJobData();
+  }, [jobId, jobDbHost, visible]);
+
+  const handleDateChange = useCallback((event: any, selectedDate: Date | undefined) => {
+    if (Platform.OS !== 'ios') setShowDatePicker(false);
+
+    if (selectedDate) {
+      setJob((prevJob) => ({
+        ...prevJob,
+        finishDate: selectedDate,
+      }));
+    }
+  }, []);
 
   const handleSubmit = useCallback(async () => {
     const id = { value: 0n };
@@ -64,8 +117,8 @@ const JobModalScreen = ({
       Name: job.name,
       UserId: 1,
       JobLocation: job.location,
-      PlannedFinish: undefined,
-      BidPrice: undefined,
+      PlannedFinish: job.finishDate,
+      BidPrice: job.bidAmount,
       _id: null,
       Code: null,
       JobTypeId: null,
@@ -73,7 +126,9 @@ const JobModalScreen = ({
       Thumbnail: undefined,
     };
 
-    const status = await jobDbHost?.GetJobDB().CreateJob(id, jobData);
+    //const status = await jobDbHost?.GetJobDB().CreateJob(id, jobData);
+    const status: DBStatus = 'Success';
+
     if (status === 'Success') {
       console.log('Job created:', job);
       hideModal(true);
@@ -83,11 +138,15 @@ const JobModalScreen = ({
     }
   }, [job]);
 
+  const handleAndroidShowDatePicker = useCallback((): void => {
+    setShowDatePicker(!showDatePicker);
+  }, []);
+
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
       <View style={[styles.modalBackground, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
         <View style={[styles.modalContainer, { marginTop: insets.top }]}>
-          <Text style={styles.modalTitle}>Create New Job</Text>
+          <Text style={styles.modalTitle}>Edit Existing Job</Text>
 
           <TextInput
             style={styles.input}
@@ -108,6 +167,39 @@ const JobModalScreen = ({
             onChangeText={(text) => setJob({ ...job, owner: text })}
           />
 
+          <View style={[styles.input, { flexDirection: 'row' }]}>
+            {Platform.OS === 'android' && (
+              <TouchableOpacity activeOpacity={1} onPress={handleAndroidShowDatePicker}>
+                <View pointerEvents="none" style={{ minWidth: 240, borderColor: colors.transparent }}>
+                  <TextField
+                    value={job.finishDate ? formatDate(job.finishDate) : undefined}
+                    placeholder="Finish Date"
+                    editable={false}
+                    inputWrapperStyle={{ borderColor: colors.transparent, alignSelf: 'stretch' }}
+                    style={{ borderColor: colors.transparent, alignSelf: 'stretch' }}
+                  />
+                </View>
+              </TouchableOpacity>
+            )}
+            {showDatePicker && (
+              <DateTimePicker
+                style={{ alignSelf: 'stretch' }}
+                value={job.finishDate}
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+              />
+            )}
+          </View>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Bid Price"
+            value={job.bidAmount ? job.bidAmount.toString() : undefined}
+            onChangeText={(text) => setJob({ ...job, bidAmount: parseFloat(text) })}
+            keyboardType="numeric"
+          />
+
           <View style={styles.buttons}>
             <Button disabled={!canAddJob} text="Submit" onPress={handleSubmit} />
             <Button text="Cancel" onPress={() => hideModal(false)} />
@@ -123,6 +215,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContainer: {
     width: 300,
@@ -137,10 +230,21 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
+    borderColor: '#ccc',
     borderWidth: 1,
     marginBottom: 10,
     paddingLeft: 8,
     borderRadius: 5,
+  },
+  dateButton: {
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  dateButtonText: {
+    color: 'white',
   },
   buttons: {
     marginTop: 10,
@@ -150,4 +254,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default JobModalScreen;
+export default EditJobModalScreen;
