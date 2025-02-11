@@ -228,7 +228,7 @@ export default function JobHomeScreen() {
   const handleSelection = useCallback(
     (entry: TwoColumnListEntry) => {
       const job = allJobs.find((j) => (j._id ? j._id.toString() : '') === entry.entryId);
-      if (job && job._id) router.push(`/(tabs)/jobs/${job._id}?jobName=${job.Name}`);
+      if (job && job._id) router.push(`/jobs/${job._id}?jobName=${job.Name}`);
       console.log(`Hello from item ${entry.primaryTitle}`);
     },
     [allJobs],

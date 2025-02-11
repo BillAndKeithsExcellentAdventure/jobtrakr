@@ -36,7 +36,7 @@ export function CategoryList({ data, jobName }: { data: JobCategoryEntry[]; jobN
 
   const renderItem = ({ item }: { item: JobCategoryEntry }) => (
     <Pressable
-      onPress={() => router.push(`/(tabs)/(job)/category/${item.categoryName}?jobId=${item.jobId}&jobName=${jobName}`)}
+      onPress={() => router.push(`/jobs/category/${item.categoryName}?jobId=${item.jobId}&jobName=${jobName}`)}
       style={{ height, width: '100%' }}
     >
       <View style={[styles.itemContainer, { backgroundColor: colors.itemBackground }]}>

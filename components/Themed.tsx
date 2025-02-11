@@ -13,6 +13,7 @@ import {
 
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from './useColorScheme';
+import { useMemo } from 'react';
 
 type ThemeProps = {
   lightColor?: string;
@@ -30,7 +31,7 @@ export type ViewProps = ThemeProps & DefaultView['props'];
 
 export function useThemeColor(
   props: { light?: string; dark?: string },
-  colorName: keyof typeof Colors.light & keyof typeof Colors.dark
+  colorName: keyof typeof Colors.light & keyof typeof Colors.dark,
 ) {
   const theme = useColorScheme() ?? 'light';
   const colorFromProps = props[theme];
@@ -113,11 +114,29 @@ export function Text(props: TextProps) {
 
 export function TextInput(props: TextInputProps) {
   const { style, lightColor, darkColor, txtSize, ...otherProps } = props;
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-  const placeHolderColor = useThemeColor({ light: lightColor, dark: darkColor }, 'placeHolder');
+  const colorScheme = useColorScheme();
+
+  // Define colors based on the color scheme (dark or light)
+  const colors = useMemo(() => {
+    const themeColors =
+      colorScheme === 'dark'
+        ? {
+            neutral200: Colors.dark.neutral200,
+            border: Colors.dark.neutral400,
+            text: Colors.dark.text,
+            placeHolder: Colors.dark.placeHolder,
+          }
+        : {
+            neutral200: Colors.light.neutral200,
+            border: Colors.light.neutral400,
+            text: Colors.light.text,
+            placeHolder: Colors.light.placeHolder,
+          };
+    return themeColors;
+  }, [colorScheme]);
 
   // Default text style
-  let txtStyle: TextStyle = { fontSize: 16, fontWeight: 'normal', lineHeight: 20, alignItems:'center' };
+  let txtStyle: TextStyle = { fontSize: 16, fontWeight: 'normal', lineHeight: 20, alignItems: 'center' };
 
   // Set the default fontSize and fontWeight based on txtSize
   if (txtSize) {
@@ -171,7 +190,11 @@ export function TextInput(props: TextInputProps) {
 
   // Return the text component with merged styles
   return (
-    <DefaultTextInput style={[{ color, justifyContent: 'center' }, txtStyle, style]} {...otherProps} placeholderTextColor={placeHolderColor} />
+    <DefaultTextInput
+      style={[{ color: colors.text, borderColor: colors.border, justifyContent: 'center' }, txtStyle, style]}
+      {...otherProps}
+      placeholderTextColor={colors.placeHolder}
+    />
   );
 }
 

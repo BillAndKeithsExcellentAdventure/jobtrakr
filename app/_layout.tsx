@@ -47,10 +47,11 @@ function RootLayoutNav() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <SessionProvider>
         <DatabaseHostProvider>
-          <Stack>
+          <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
-            <Stack.Screen name="(tabs)" options={{ headerTitle: 'Jobs', headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="job" />
+            <Stack.Screen name="camera" />
+            <Stack.Screen name="(auth)" />
           </Stack>
         </DatabaseHostProvider>
       </SessionProvider>

@@ -4,7 +4,7 @@ import { Stack } from 'expo-router';
 
 const JobsLayout = () => {
   return (
-    <Stack/>
+    <Stack screenOptions={{headerShown: false}}/>
   );
 };
 

@@ -7,7 +7,7 @@ export default function SignIn() {
   const colorScheme = useColorScheme();
   const { signIn, session } = useSession();
   if (session) {
-    <Redirect href="/(tabs)/home" />;
+    <Redirect href="/jobs" />;
   }
 
   return (
@@ -18,7 +18,7 @@ export default function SignIn() {
           style={{ color: colorScheme === 'light' ? 'black' : 'white', fontSize: 40 }}
           onPress={() => {
             signIn();
-            router.replace('/(tabs)/home');
+            router.replace('/jobs');
           }}
         >
           Sign In

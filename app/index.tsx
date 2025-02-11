@@ -16,7 +16,7 @@ const IndexPage = () => {
     console.log('User changed: ', session);
 
     if (session && !inTabsGroup) {
-      router.replace('/(tabs)/jobs');
+      router.replace('/jobs');
     } else {
       router.replace('/(auth)/auth');
     }
@@ -24,7 +24,7 @@ const IndexPage = () => {
 
   if (!session) return <Redirect href="/(auth)/auth" />;
 
-  return <Redirect href="/(tabs)/jobs" />;
+  return <Redirect href="/jobs" />;
 };
 
 export default IndexPage;
