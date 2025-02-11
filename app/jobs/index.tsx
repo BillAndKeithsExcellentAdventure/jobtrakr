@@ -200,9 +200,14 @@ export default function JobHomeScreen() {
         return {
           primaryTitle: job.Name ? job.Name : 'unknown',
           entryId: job._id ? job._id.toString() : '1',
-          imageUri: '',
-          secondaryTitle: formatDate(job.PlannedFinish),
+          imageUri: 'x',
+          secondaryTitle: job.Location,
+          tertiaryTitle: job.OwnerName??"Owner",
           lines: [
+            {
+              left: `start: ${formatDate(job.StartDate)}`,
+              right: `due: ${formatDate(job.PlannedFinish)}`,
+            },
             {
               left: `bid: ${formatCurrency(job.BidPrice)}`,
               right: `spent: ${formatCurrency(0)}`,

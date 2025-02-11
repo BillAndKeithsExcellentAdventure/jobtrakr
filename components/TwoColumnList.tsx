@@ -12,6 +12,8 @@ export interface TwoColumnListEntry {
   primaryTitle: string;
   imageUri?: string;
   secondaryTitle?: string;
+  tertiaryTitle?: string;
+  subtitleLines?: { left: string; right: string }[];
   lines?: { left: string; right: string }[];
 }
 
@@ -39,6 +41,7 @@ export function TwoColumnList({
           iconColor: Colors.dark.iconColor,
           shadowColor: Colors.dark.shadowColor,
           boxShadow: Colors.dark.boxShadow,
+          borderColor: Colors.dark.borderColor,
         }
       : {
           listBackground: Colors.light.listBackground,
@@ -46,6 +49,7 @@ export function TwoColumnList({
           iconColor: Colors.light.iconColor,
           shadowColor: Colors.light.shadowColor,
           boxShadow: Colors.light.boxShadow,
+          borderColor: Colors.light.borderColor,
         };
 
   if (Platform.OS === 'web') {
@@ -62,23 +66,60 @@ export function TwoColumnList({
     >
       <Pressable onPress={(e) => onPress(item)} style={{ width: '100%' }}>
         <View style={styles.itemContentContainer}>
-          {item.imageUri && (
-            <View style={styles.imageContentContainer}>
-              <Image
-                source={require('@/assets/images/hardHat.png')}
-                tintColor={colors.iconColor}
-                style={{ height: 60, width: 60 }}
-              />
+          <View style={styles.headerContentContainer}>
+            {item.imageUri && (
+              <View style={styles.imageContentContainer}>
+                <Image
+                  source={require('@/assets/images/hardHat.png')}
+                  tintColor={colors.iconColor}
+                  style={{ height: 60, width: 60 }}
+                />
+              </View>
+            )}
+            <View style={[styles.textContentContainer, { backgroundColor: colors.itemBackground }]}>
+              {/* Row for Title */}
+              <View style={styles.titleRow}>
+                <Text txtSize="title">{item.primaryTitle}</Text>
+              </View>
+              {item.secondaryTitle && (
+                <View style={styles.secondardyTitleRow}>
+                  <Text txtSize="standard">{item.secondaryTitle}</Text>
+                </View>
+              )}
+              {item.tertiaryTitle && (
+                <View style={styles.secondardyTitleRow}>
+                  <Text txtSize="standard">{item.tertiaryTitle}</Text>
+                </View>
+              )}
             </View>
-          )}
-          <View style={[styles.textContentContainer, { backgroundColor: colors.itemBackground }]}>
-            {/* Row for Title */}
-            <View style={styles.titleRow}>
-              <Text txtSize="title">{item.primaryTitle}</Text>
-              <Text txtSize="standard">{item.secondaryTitle}</Text>
-            </View>
+          </View>
 
+          <View
+            style={[
+              styles.textContentContainer,
+              {
+                backgroundColor: colors.itemBackground,
+                borderTopColor: colors.borderColor,
+                borderTopWidth: 1,
+                marginTop: 5,
+                paddingTop: 5,
+              },
+            ]}
+          >
             {/* Row for Subtitles */}
+            {item.subtitleLines &&
+              item.subtitleLines.map((line, index) => (
+                <View style={styles.subtitleRow} key={index}>
+                  <View style={styles.subtitleColumn}>
+                    <Text style={[styles.subtitleTextLeft]}>{line.left}</Text>
+                  </View>
+                  <View style={styles.subtitleColumn}>
+                    <Text style={[styles.subtitleTextRight]}>{line.right}</Text>
+                  </View>
+                </View>
+              ))}
+
+            {/* Row for Details */}
             {item.lines &&
               item.lines.map((line, index) => (
                 <View style={styles.subtitleRow} key={index}>
@@ -133,11 +174,15 @@ const styles = StyleSheet.create({
   },
 
   itemContentContainer: {
+    flexDirection: 'column',
+  },
+  headerContentContainer: {
     flexDirection: 'row',
   },
+
   imageContentContainer: {
-    marginRight: 10,
-    width: 100,
+    marginRight: 5,
+    width: 120,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -147,10 +192,15 @@ const styles = StyleSheet.create({
   },
   titleRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 10,
   },
+  secondardyTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+  },
+
   subtitleRow: {
     flexDirection: 'row',
     paddingHorizontal: 10,

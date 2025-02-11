@@ -3,13 +3,11 @@ Sample list for web
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, FlatList, Platform } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
 import { JobSummary } from '@/models/jobSummary';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { formatDate, formatCurrency } from '@/utils/formatters';
 import { router } from 'expo-router';
-import { push } from 'expo-router/build/global-state/routing';
 
 export function JobList({ data }: { data: JobSummary[] }) {
   const [height, setHeight] = useState(100);
@@ -92,7 +90,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'cyan',
     borderWidth: 2,
     borderRadius: 20,
-    borderColor: 'white',
     alignItems: 'center',
     justifyContent: 'space-around',
     width: '100%',
@@ -104,11 +101,9 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     marginBottom: 20,
-    backgroundColor: '#f9f9f9',
     borderRadius: 8,
     padding: 15,
     elevation: 3, // Adds shadow effect for Android
-    shadowColor: '#000', // iOS shadow
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -122,7 +117,6 @@ const styles = StyleSheet.create({
   titleText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
   },
   subtitleRow: {
     flexDirection: 'row',
@@ -132,16 +126,13 @@ const styles = StyleSheet.create({
   },
   subtitleText: {
     fontSize: 14,
-    color: '#666',
   },
   subtitleTextLeft: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'left',
   },
   subtitleTextRight: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'right',
   },
 });
