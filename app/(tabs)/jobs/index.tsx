@@ -176,7 +176,6 @@ export default function JobHomeScreen() {
         label: 'Edit',
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
-            console.log('Share pressed - ', actionContext.entryId);
             setEditJobId(actionContext.entryId);
           } else {
             console.log('Share pressed - ', actionContext);

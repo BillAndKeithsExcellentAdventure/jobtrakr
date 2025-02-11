@@ -62,19 +62,11 @@ const JobModalScreen = ({
 
     const jobData: JobData = {
       Name: job.name,
-      UserId: 1,
-      JobLocation: job.location,
-      PlannedFinish: undefined,
-      BidPrice: undefined,
-      _id: null,
-      Code: null,
-      JobTypeId: null,
-      JobStatus: null,
-      Thumbnail: undefined,
+      Location: job.location,
     };
 
-    const status = await jobDbHost?.GetJobDB().CreateJob(id, jobData);
-    if (status === 'Success') {
+    const result = await jobDbHost?.GetJobDB().CreateJob(jobData);
+    if (result?.status === 'Success') {
       console.log('Job created:', job);
       hideModal(true);
     } else {

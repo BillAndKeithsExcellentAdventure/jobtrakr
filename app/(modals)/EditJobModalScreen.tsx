@@ -14,10 +14,11 @@ import { formatDate } from '@/utils/formatters';
 type Job = {
   jobId?: string;
   name: string;
-  location: string;
-  owner: string;
+  location?: string;
+  owner?: string;
   finishDate: Date;
-  bidAmount: number;
+  startDate: Date;
+  bidPrice?: number;
 };
 
 const EditJobModalScreen = ({
@@ -27,15 +28,21 @@ const EditJobModalScreen = ({
   jobId: string | undefined;
   hideModal: (success: boolean) => void;
 }) => {
+  const defaultStartDate = new Date();
+  const defaultFinishDate = new Date();
+  defaultFinishDate.setMonth(defaultFinishDate.getMonth() + 9);
+
   const [job, setJob] = useState<Job>({
     jobId,
     name: '',
     location: '',
     owner: '',
-    finishDate: new Date(),
-    bidAmount: 0,
+    startDate: defaultStartDate,
+    finishDate: defaultFinishDate,
+    bidPrice: 0,
   });
 
+  const [currentJob, setExistingJob] = useState<JobData | undefined>();
   const [visible, setVisible] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const insets = useSafeAreaInsets(); // just in case we use it on IOS
@@ -78,21 +85,25 @@ const EditJobModalScreen = ({
 
   useEffect(() => {
     async function loadJobData() {
-      //const result = await jobDbHost?.GetJobDB().FetchJobById(jobId);
-      //const jobData = result ? result.job : undefined;
-      if (!!jobId) {
+      if (!jobId) return;
+
+      const result = await jobDbHost?.GetJobDB().FetchJobById(jobId);
+      const fetchedJob = result ? result.job : undefined;
+      if (!!fetchedJob) {
         const jobData: Job = {
-          name: 'Lot 100',
-          location: 'Kentucky Acres',
-          owner: 'John Smith',
-          finishDate: new Date(),
-          bidAmount: 10000,
+          ...job,
+          name: fetchedJob.Name,
+          location: fetchedJob.Location,
+          owner: fetchedJob.OwnerName,
+          bidPrice: fetchedJob.BidPrice,
         };
 
-        if (jobData) {
-          setJob(jobData);
-          setVisible(true);
-        }
+        if (fetchedJob.PlannedFinish) finishDate: fetchedJob.PlannedFinish;
+        if (fetchedJob.StartDate) startDate: fetchedJob.StartDate;
+
+        setExistingJob(fetchedJob);
+        setJob(jobData);
+        setVisible(true);
       }
     }
 
@@ -111,29 +122,24 @@ const EditJobModalScreen = ({
   }, []);
 
   const handleSubmit = useCallback(async () => {
-    const id = { value: 0n };
+    if (!jobId || !currentJob) return;
 
-    const jobData: JobData = {
+    const modifiedJob: JobData = {
+      ...currentJob,
       Name: job.name,
-      UserId: 1,
-      JobLocation: job.location,
+      Location: job.location,
+      OwnerName: job.owner,
       PlannedFinish: job.finishDate,
-      BidPrice: job.bidAmount,
-      _id: null,
-      Code: null,
-      JobTypeId: null,
-      JobStatus: null,
-      Thumbnail: undefined,
+      StartDate: job.startDate,
+      BidPrice: job.bidPrice,
     };
 
-    //const status = await jobDbHost?.GetJobDB().CreateJob(id, jobData);
-    const status: DBStatus = 'Success';
-
+    const status = await jobDbHost?.GetJobDB().UpdateJob(modifiedJob);
     if (status === 'Success') {
-      console.log('Job created:', job);
+      console.log('Job successfully updated:', job);
       hideModal(true);
     } else {
-      console.log('Job creation failed:', job);
+      console.log('Job update failed:', job);
       hideModal(false);
     }
   }, [job]);
@@ -195,8 +201,8 @@ const EditJobModalScreen = ({
           <TextInput
             style={styles.input}
             placeholder="Bid Price"
-            value={job.bidAmount ? job.bidAmount.toString() : undefined}
-            onChangeText={(text) => setJob({ ...job, bidAmount: parseFloat(text) })}
+            value={job.bidPrice ? job.bidPrice.toString() : undefined}
+            onChangeText={(text) => setJob({ ...job, bidPrice: parseFloat(text) })}
             keyboardType="numeric"
           />
 
