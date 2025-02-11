@@ -63,6 +63,7 @@ const JobModalScreen = ({
     const jobData: JobData = {
       Name: job.name,
       Location: job.location,
+      OwnerName: job.owner,
     };
 
     const result = await jobDbHost?.GetJobDB().CreateJob(jobData);
