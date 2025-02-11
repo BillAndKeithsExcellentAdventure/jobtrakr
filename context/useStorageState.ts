@@ -1,14 +1,14 @@
 import { useEffect, useCallback, useReducer } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import { SessionUser } from './ctx';
+import { SessionUser } from './AuthSessionContext';
 
 type UseStateHook<T> = [[boolean, T | null], (value: T | null) => void];
 
 function useAsyncState<T>(initialValue: [boolean, T | null] = [true, null]): UseStateHook<T> {
   return useReducer(
     (state: [boolean, T | null], action: T | null = null): [boolean, T | null] => [false, action],
-    initialValue
+    initialValue,
   ) as UseStateHook<T>;
 }
 
@@ -49,7 +49,7 @@ export function useStorageState(key: string): UseStateHook<string> {
     } else {
       //SecureStore.getItemAsync(key).then((value) => {
       const sessionUser: SessionUser = { userId: 1, name: 'Nick', email: 'nick@bertrambuilders.com' };
-        setState(JSON.stringify(sessionUser));
+      setState(JSON.stringify(sessionUser));
       //});
     }
   }, [key]);
@@ -60,7 +60,7 @@ export function useStorageState(key: string): UseStateHook<string> {
       setState(value);
       setStorageItemAsync(key, value);
     },
-    [key]
+    [key],
   );
 
   return [state, setValue];

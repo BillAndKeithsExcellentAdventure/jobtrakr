@@ -5,9 +5,9 @@ import { Redirect, Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-import { SessionProvider, useSession } from '@/session/ctx';
+import { SessionProvider, useSession } from '@/context/AuthSessionContext';
 import { useColorScheme } from '@/components/useColorScheme';
-import { DatabaseHostProvider } from '@/session/DatabaseContext';
+import { DatabaseHostProvider } from '@/context/DatabaseContext';
 
 export {
   // Catch any errors thrown by the Layout component.

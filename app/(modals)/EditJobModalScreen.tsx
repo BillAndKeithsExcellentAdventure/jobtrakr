@@ -6,7 +6,7 @@ import { View, Text, TextInput } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { Button } from '@/components/Button';
-import { useJobDb } from '@/session/DatabaseContext';
+import { useJobDb } from '@/context/DatabaseContext';
 import { DBStatus, JobData } from 'jobdb';
 import { TextField } from '@/components/TextField';
 import { formatDate } from '@/utils/formatters';
@@ -93,7 +93,7 @@ const EditJobModalScreen = ({
           setJob(jobData);
           setVisible(true);
         }
-      } 
+      }
     }
 
     loadJobData();

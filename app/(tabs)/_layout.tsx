@@ -7,7 +7,7 @@ import { router } from 'expo-router';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
-import { useSession } from '@/session/ctx';
+import { useSession } from '@/context/AuthSessionContext';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function AntTabBarIcon(props: { name: React.ComponentProps<typeof AntDesign>['name']; color: string }) {
@@ -25,18 +25,18 @@ export default function TabLayout() {
   return (
     <Tabs>
       <Tabs.Screen
-        name='jobs'
+        name="jobs"
         options={{
           title: 'Jobs',
           headerShown: false,
-          tabBarIcon: ({ color }) => <EntypoTabBarIcon name='home' color={color} />,
+          tabBarIcon: ({ color }) => <EntypoTabBarIcon name="home" color={color} />,
         }}
       />
       <Tabs.Screen
-        name='camera'
+        name="camera"
         options={{
           title: 'Camera',
-          tabBarIcon: ({ color }) => <AntTabBarIcon name='camera' color={color} />,
+          tabBarIcon: ({ color }) => <AntTabBarIcon name="camera" color={color} />,
         }}
       />
     </Tabs>

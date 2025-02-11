@@ -7,7 +7,7 @@ export interface SessionUser {
   email: string;
 }
 
-const AuthContext = createContext<{
+const AuthSessionContext = createContext<{
   signIn: () => void;
   signOut: () => void;
   session?: string | null;
@@ -23,7 +23,7 @@ const AuthContext = createContext<{
 
 // This hook can be used to access the user info.
 export function useSession() {
-  const value = useContext(AuthContext);
+  const value = useContext(AuthSessionContext);
   if (process.env.NODE_ENV !== 'production') {
     if (!value) {
       throw new Error('useSession must be wrapped in a <SessionProvider />');
@@ -45,7 +45,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
   }, [session]);
 
   return (
-    <AuthContext.Provider
+    <AuthSessionContext.Provider
       value={{
         signIn: () => {
           // Perform sign-in logic here
@@ -63,6 +63,6 @@ export function SessionProvider({ children }: PropsWithChildren) {
       }}
     >
       {children}
-    </AuthContext.Provider>
+    </AuthSessionContext.Provider>
   );
 }

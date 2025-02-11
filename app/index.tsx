@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react'
+import React, { useEffect } from 'react';
 import { Redirect, useRouter, useSegments } from 'expo-router';
-import { useSession } from '@/session/ctx';
+import { useSession } from '@/context/AuthSessionContext';
 
 const IndexPage = () => {
   const { session } = useSession();
@@ -22,9 +22,9 @@ const IndexPage = () => {
     }
   }, [session]);
 
-  if (!session) return <Redirect href='/(auth)/auth' />;
+  if (!session) return <Redirect href="/(auth)/auth" />;
 
-  return <Redirect href='/(tabs)/jobs' />;
-}
+  return <Redirect href="/(tabs)/jobs" />;
+};
 
-export default IndexPage
+export default IndexPage;

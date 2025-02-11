@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { JobTrakrDB } from 'jobdb';
-import { useSession } from './ctx';
+import { useSession } from './AuthSessionContext';
 
 // Define the context and its types
 interface DatabaseContextType {
@@ -40,9 +40,7 @@ export const DatabaseHostProvider: React.FC<DatabaseHostProviderProps> = ({ chil
     if (sessionUser && sessionUser.userId > 0) initDb(sessionUser.userId);
   }, [sessionUser]);
 
-  return (
-    <DatabaseContext.Provider value={{ jobDbHost: jobDbHost }}>{children}</DatabaseContext.Provider>
-  );
+  return <DatabaseContext.Provider value={{ jobDbHost: jobDbHost }}>{children}</DatabaseContext.Provider>;
 };
 
 // Define the custom hook to use the database

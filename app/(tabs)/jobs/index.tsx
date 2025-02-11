@@ -19,7 +19,7 @@ import { formatCurrency, formatDate } from '@/utils/formatters';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
-import { useJobDb } from '@/session/DatabaseContext';
+import { useJobDb } from '@/context/DatabaseContext';
 import { JobData } from 'jobdb';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import JobModalScreen from '@/app/(modals)/JobModalScreen';
