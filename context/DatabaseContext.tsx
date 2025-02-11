@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect, useRef } from 'react';
 import { JobTrakrDB } from 'jobdb';
 import { useSession } from './AuthSessionContext';
 
@@ -20,14 +20,18 @@ interface DatabaseHostProviderProps {
 export const DatabaseHostProvider: React.FC<DatabaseHostProviderProps> = ({ children }) => {
   const [jobDbHost, setJobDbHost] = useState<JobTrakrDB | null>(null);
   const { sessionUser } = useSession();
+  const replaceDatabase = useRef<boolean>(false); // set this to true to replace the database and then reset it to false
 
   useEffect(() => {
     async function initDb(userId: number) {
       console.info('Initializing DB...');
       const dbHost = new JobTrakrDB(userId);
       const createSampleDataIfEmpty = true;
-      const status = await dbHost.OpenDatabase(createSampleDataIfEmpty);
+      const status = await dbHost.OpenDatabase(createSampleDataIfEmpty, replaceDatabase.current);
       if (status === 'Success') {
+        // Only replace the database once
+        if (replaceDatabase.current) replaceDatabase.current = false;
+
         const db = dbHost.GetDb();
         console.info('DB Initialized. Opening...');
         setJobDbHost(dbHost);
