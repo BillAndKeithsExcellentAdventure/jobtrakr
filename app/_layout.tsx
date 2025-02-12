@@ -49,7 +49,7 @@ function RootLayoutNav() {
         <DatabaseHostProvider>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
-            <Stack.Screen name="job" />
+            <Stack.Screen name="jobs" />
             <Stack.Screen name="camera" />
             <Stack.Screen name="(auth)" />
           </Stack>

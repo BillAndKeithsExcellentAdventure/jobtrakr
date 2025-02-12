@@ -79,16 +79,22 @@ export function TwoColumnList({
             <View style={[styles.textContentContainer, { backgroundColor: colors.itemBackground }]}>
               {/* Row for Title */}
               <View style={styles.titleRow}>
-                <Text txtSize="title">{item.primaryTitle}</Text>
+                <Text numberOfLines={1} ellipsizeMode="tail" txtSize="title">
+                  {item.primaryTitle}
+                </Text>
               </View>
               {item.secondaryTitle && (
                 <View style={styles.secondardyTitleRow}>
-                  <Text txtSize="standard">{item.secondaryTitle}</Text>
+                  <Text numberOfLines={1} ellipsizeMode="tail" txtSize="standard">
+                    {item.secondaryTitle}
+                  </Text>
                 </View>
               )}
               {item.tertiaryTitle && (
                 <View style={styles.secondardyTitleRow}>
-                  <Text txtSize="standard">{item.tertiaryTitle}</Text>
+                  <Text numberOfLines={1} ellipsizeMode="tail" txtSize="standard">
+                    {item.tertiaryTitle}
+                  </Text>
                 </View>
               )}
             </View>
@@ -111,10 +117,14 @@ export function TwoColumnList({
               item.subtitleLines.map((line, index) => (
                 <View style={styles.subtitleRow} key={index}>
                   <View style={styles.subtitleColumn}>
-                    <Text style={[styles.subtitleTextLeft]}>{line.left}</Text>
+                    <Text style={[styles.subtitleTextLeft]} numberOfLines={1} ellipsizeMode="tail">
+                      {line.left}
+                    </Text>
                   </View>
                   <View style={styles.subtitleColumn}>
-                    <Text style={[styles.subtitleTextRight]}>{line.right}</Text>
+                    <Text style={[styles.subtitleTextRight]} numberOfLines={1} ellipsizeMode="tail">
+                      {line.right}
+                    </Text>
                   </View>
                 </View>
               ))}
@@ -124,10 +134,14 @@ export function TwoColumnList({
               item.lines.map((line, index) => (
                 <View style={styles.subtitleRow} key={index}>
                   <View style={styles.subtitleColumn}>
-                    <Text style={[styles.subtitleTextLeft]}>{line.left}</Text>
+                    <Text style={[styles.subtitleTextLeft]} numberOfLines={1} ellipsizeMode="tail">
+                      {line.left}
+                    </Text>
                   </View>
                   <View style={styles.subtitleColumn}>
-                    <Text style={[styles.subtitleTextRight]}>{line.right}</Text>
+                    <Text style={[styles.subtitleTextRight]} numberOfLines={1} ellipsizeMode="tail">
+                      {line.right}
+                    </Text>
                   </View>
                 </View>
               ))}
@@ -199,6 +213,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
+    overflow: 'hidden',
   },
 
   subtitleRow: {

@@ -70,9 +70,9 @@ export function Text(props: TextProps) {
         txtStyle.lineHeight = 20;
         break;
       case 'formLabel':
-        txtStyle.fontSize = 16;
+        txtStyle.fontSize = 12;
         txtStyle.fontWeight = 'medium';
-        txtStyle.lineHeight = 20;
+        txtStyle.lineHeight = 16;
         break;
       case 'sub-title':
         txtStyle.fontSize = 18;

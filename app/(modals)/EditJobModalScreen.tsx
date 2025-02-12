@@ -153,33 +153,42 @@ const EditJobModalScreen = ({
       <View style={[styles.modalBackground, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
         <View style={[styles.modalContainer, { marginTop: insets.top }]}>
           <Text style={styles.modalTitle}>Edit Existing Job</Text>
-
-          <TextInput
+          <TextField
             style={styles.input}
+            label="Job Name"
             placeholder="Job Name"
             value={job.name}
             onChangeText={(text) => setJob({ ...job, name: text })}
           />
-          <TextInput
+          <TextField
+            containerStyle={styles.inputContainer}
             style={styles.input}
             placeholder="Location"
+            label="Location"
             value={job.location}
             onChangeText={(text) => setJob({ ...job, location: text })}
           />
-          <TextInput
+          <TextField
+            containerStyle={styles.inputContainer}
             style={styles.input}
             placeholder="Owner"
+            label="Owner"
             value={job.owner}
             onChangeText={(text) => setJob({ ...job, owner: text })}
           />
 
+          {Platform.OS === 'ios' && (
+            <Text txtSize="formLabel" text="Finish Date" style={styles.inputContainer} />
+          )}
           <View style={[styles.input, { flexDirection: 'row' }]}>
             {Platform.OS === 'android' && (
               <TouchableOpacity activeOpacity={1} onPress={handleAndroidShowDatePicker}>
                 <View pointerEvents="none" style={{ minWidth: 240, borderColor: colors.transparent }}>
                   <TextField
+                    containerStyle={styles.inputContainer}
                     value={job.finishDate ? formatDate(job.finishDate) : undefined}
                     placeholder="Finish Date"
+                    label="Finish Date"
                     editable={false}
                     inputWrapperStyle={{ borderColor: colors.transparent, alignSelf: 'stretch' }}
                     style={{ borderColor: colors.transparent, alignSelf: 'stretch' }}
@@ -198,9 +207,10 @@ const EditJobModalScreen = ({
             )}
           </View>
 
-          <TextInput
+          <TextField
             style={styles.input}
             placeholder="Bid Price"
+            label="Bid Price"
             value={job.bidPrice ? job.bidPrice.toString() : undefined}
             onChangeText={(text) => setJob({ ...job, bidPrice: parseFloat(text) })}
             keyboardType="numeric"
@@ -234,24 +244,22 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: 'center',
   },
+  inputContainer: {
+    marginTop: 10,
+  },
   input: {
-    height: 40,
-    borderColor: '#ccc',
     borderWidth: 1,
-    marginBottom: 10,
-    paddingLeft: 8,
+    alignContent: 'stretch',
+    justifyContent: 'center',
     borderRadius: 5,
   },
   dateButton: {
-    backgroundColor: '#4CAF50',
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
     alignItems: 'center',
   },
-  dateButtonText: {
-    color: 'white',
-  },
+  dateButtonText: {},
   buttons: {
     marginTop: 10,
     flexDirection: 'row',
