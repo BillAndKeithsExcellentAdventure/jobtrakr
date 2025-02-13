@@ -173,7 +173,7 @@ const EditJobModalScreen = ({
         <View style={[styles.modalContainer, { marginTop: insets.top }]}>
           <Text style={styles.modalTitle}>Edit Existing Job</Text>
           <TextField
-            style={styles.input}
+            style={[styles.input, { borderColor: colors.transparent }]}
             label="Job Name"
             placeholder="Job Name"
             value={job.name}
@@ -181,7 +181,7 @@ const EditJobModalScreen = ({
           />
           <TextField
             containerStyle={styles.inputContainer}
-            style={styles.input}
+            style={[styles.input, { borderColor: colors.transparent }]}
             placeholder="Location"
             label="Location"
             value={job.location}
@@ -189,15 +189,15 @@ const EditJobModalScreen = ({
           />
           <TextField
             containerStyle={styles.inputContainer}
-            style={styles.input}
+            style={[styles.input, { borderColor: colors.transparent }]}
             placeholder="Owner"
             label="Owner"
             value={job.owner}
             onChangeText={(text) => setJob({ ...job, owner: text })}
           />
-          
+
           <TextField
-            style={styles.input}
+            style={[styles.input, { borderColor: colors.transparent }]}
             containerStyle={styles.inputContainer}
             placeholder="Bid Price"
             label="Bid Price"
@@ -206,43 +206,45 @@ const EditJobModalScreen = ({
             keyboardType="numeric"
           />
 
-          <TouchableOpacity activeOpacity={1} onPress={showStartDatePicker}>
-            <Text txtSize="formLabel" text="Start Date" style={styles.inputLabel} />
-            <TextInput
-              readOnly={true}
-              style={[styles.input, { backgroundColor: colors.neutral200, paddingHorizontal: 8, height: 36 }]}
-              placeholder="Start Date"
-              onPressIn={showStartDatePicker}
-              value={job.startDate ? formatDate(job.startDate) : 'No date selected'}
+          <View style={styles.dateContainer}>
+            <TouchableOpacity activeOpacity={1} onPress={showStartDatePicker}>
+              <Text txtSize="formLabel" text="Start Date" style={styles.inputLabel} />
+              <TextInput
+                readOnly={true}
+                style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                placeholder="Start Date"
+                onPressIn={showStartDatePicker}
+                value={job.startDate ? formatDate(job.startDate) : 'No date selected'}
+              />
+            </TouchableOpacity>
+            <DateTimePickerModal
+              style={{ alignSelf: 'stretch' }}
+              date={job.startDate}
+              isVisible={startDatePickerVisible}
+              mode="date"
+              onConfirm={handleStartDateConfirm}
+              onCancel={hideStartDatePicker}
             />
-          </TouchableOpacity>
-          <DateTimePickerModal
-            style={{ alignSelf: 'stretch' }}
-            date={job.startDate}
-            isVisible={startDatePickerVisible}
-            mode="date"
-            onConfirm={handleStartDateConfirm}
-            onCancel={hideStartDatePicker}
-          />
 
-          <TouchableOpacity activeOpacity={1} onPress={showFinishDatePicker}>
-            <Text txtSize="formLabel" text="Finish Date" style={styles.inputLabel} />
-            <TextInput
-              readOnly={true}
-              style={[styles.input, { backgroundColor: colors.neutral200, paddingHorizontal: 8, height: 36 }]}
-              placeholder="Finish Date"
-              onPressIn={showFinishDatePicker}
-              value={job.startDate ? formatDate(job.finishDate) : 'No date selected'}
+            <TouchableOpacity activeOpacity={1} onPress={showFinishDatePicker}>
+              <Text txtSize="formLabel" text="Finish Date" style={styles.inputLabel} />
+              <TextInput
+                readOnly={true}
+                style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                placeholder="Finish Date"
+                onPressIn={showFinishDatePicker}
+                value={job.startDate ? formatDate(job.finishDate) : 'No date selected'}
+              />
+            </TouchableOpacity>
+            <DateTimePickerModal
+              style={{ alignSelf: 'stretch', height: 200 }}
+              date={job.finishDate}
+              isVisible={finishDatePickerVisible}
+              mode="date"
+              onConfirm={handleFinishDateConfirm}
+              onCancel={hideFinishDatePicker}
             />
-          </TouchableOpacity>
-          <DateTimePickerModal
-            style={{ alignSelf: 'stretch', height: 200 }}
-            date={job.finishDate}
-            isVisible={finishDatePickerVisible}
-            mode="date"
-            onConfirm={handleFinishDateConfirm}
-            onCancel={hideFinishDatePicker}
-          />
+          </View>
 
           <View style={styles.buttons}>
             <Button disabled={!canAddJob} text="Submit" onPress={handleSubmit} />
@@ -261,9 +263,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
+  dateContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   modalContainer: {
-    width: 300,
-    padding: 20,
+    width: '90%',
+    padding: 10,
     borderRadius: 20,
   },
   modalTitle: {
@@ -273,25 +280,34 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   inputContainer: {
-    marginTop: 10,
+    marginTop: 6,
   },
   inputLabel: {
-    marginTop: 10,
+    marginTop: 6,
+    marginBottom: 4,
   },
-
   input: {
     borderWidth: 1,
     alignContent: 'stretch',
     justifyContent: 'center',
     borderRadius: 5,
   },
+  dateInput: {
+    borderWidth: 1,
+    alignContent: 'stretch',
+    justifyContent: 'center',
+    borderRadius: 5,
+    paddingHorizontal: 8,
+    height: 40,
+    paddingVertical: 0,
+  },
+
   dateButton: {
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
     alignItems: 'center',
   },
-  dateButtonText: {},
   buttons: {
     marginTop: 10,
     flexDirection: 'row',
