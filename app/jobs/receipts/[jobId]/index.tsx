@@ -4,7 +4,7 @@ import { useLocalSearchParams, Stack } from 'expo-router';
 import { JobCategoryEntry } from '@/models/jobCategoryEntry';
 import { Text, View } from '@/components/Themed';
 
-const JobCategoriesPage = () => {
+const JobReceiptsPage = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
   const [allJobCategories, setAllJobCategories] = useState<JobCategoryEntry[]>([]);
 
@@ -23,7 +23,7 @@ const JobCategoriesPage = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.container}>
-        <Stack.Screen options={{ title: `Job Categories`, headerShown: true }} />
+        <Stack.Screen options={{ title: `Job Receipts`, headerShown: true }} />
         <View style={styles.headerContainer}>
           <Text>JobName={jobName}</Text>
           <Text>JobId={jobId}</Text>
@@ -61,4 +61,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default JobCategoriesPage;
+export default JobReceiptsPage;

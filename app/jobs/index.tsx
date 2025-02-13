@@ -18,6 +18,7 @@ import { TwoColumnList, TwoColumnListEntry } from '@/components/TwoColumnList';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { useJobDb } from '@/context/DatabaseContext';
 import { JobData } from 'jobdb';
@@ -161,16 +162,36 @@ export default function JobHomeScreen() {
         },
       },
       {
-        icon: <FontAwesome name="comment-o" size={24} color={colors.iconColor} />,
-        label: 'Comment',
+        icon: <FontAwesome name="sticky-note-o" size={24} color={colors.iconColor} />,
+        label: 'Notes',
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
-            console.log('Comment pressed - ', actionContext.primaryTitle);
-          } else {
-            console.log('Comment pressed - ', actionContext);
+            if (actionContext && actionContext.entryId)
+              router.push(`/jobs/notes/${actionContext.entryId}?jobName=${actionContext.primaryTitle}`);
           }
         },
       },
+      {
+        icon: <FontAwesome name="photo" size={24} color={colors.iconColor} />,
+        label: 'Photos',
+        onPress: (e, actionContext) => {
+          if (isEntry(actionContext)) {
+            if (actionContext && actionContext.entryId)
+              router.push(`/jobs/photos/${actionContext.entryId}?jobName=${actionContext.primaryTitle}`);
+          }
+        },
+      },
+      {
+        icon: <Ionicons name="receipt-outline" size={24} color={colors.iconColor} />,
+        label: 'Receipts',
+        onPress: (e, actionContext) => {
+          if (isEntry(actionContext)) {
+            if (actionContext && actionContext.entryId)
+              router.push(`/jobs/receipts/${actionContext.entryId}?jobName=${actionContext.primaryTitle}`);
+          }
+        },
+      },
+
       {
         icon: <MaterialCommunityIcons name="menu" size={24} color={colors.iconColor} />,
         label: 'Edit',
@@ -202,7 +223,7 @@ export default function JobHomeScreen() {
           entryId: job._id ? job._id.toString() : '1',
           imageUri: 'x',
           secondaryTitle: job.Location,
-          tertiaryTitle: job.OwnerName??"Owner",
+          tertiaryTitle: job.OwnerName ?? 'Owner',
           lines: [
             {
               left: `start: ${formatDate(job.StartDate)}`,
