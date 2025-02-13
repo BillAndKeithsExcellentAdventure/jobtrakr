@@ -148,7 +148,11 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
     $inputStyleOverride,
   ];
 
-  const $helperStyles = [styles.helperStyle, status === 'error' && { color: colors.error }, HelperTextProps?.style];
+  const $helperStyles = [
+    styles.helperStyle,
+    status === 'error' && { color: colors.error },
+    HelperTextProps?.style,
+  ];
 
   function focusInput() {
     if (disabled) return;
@@ -159,13 +163,18 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
   useImperativeHandle(ref, () => input.current as TextInput);
 
   return (
-    <TouchableOpacity activeOpacity={1} style={$containerStyles} onPress={focusInput} accessibilityState={{ disabled }}>
-      {!!label && <Text txtSize='formLabel' text={label} style={$labelStyles} {...LabelTextProps} />}
+    <TouchableOpacity
+      activeOpacity={1}
+      style={$containerStyles}
+      onPress={focusInput}
+      accessibilityState={{ disabled }}
+    >
+      {!!label && <Text txtSize="formLabel" text={label} style={$labelStyles} {...LabelTextProps} />}
 
       <View style={$inputWrapperStyles}>
         {!!LeftAccessory && (
           <View
-            pointerEvents='none'
+            pointerEvents="none"
             style={[(styles.leftAccessoryContainerStyle, { backgroundColor: colors.neutral200 })]}
           >
             <LeftAccessory
@@ -180,7 +189,7 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
         <TextInput
           ref={input}
           underlineColorAndroid={colors.transparent}
-          textAlignVertical='top'
+          textAlignVertical="top"
           placeholder={placeholderContent}
           placeholderTextColor={colors.textDim}
           {...TextInputProps}
@@ -190,7 +199,7 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
 
         {!!RightAccessory && (
           <View
-            pointerEvents='none'
+            pointerEvents="none"
             style={[styles.rightAccessoryContainerStyle, { backgroundColor: colors.neutral200 }]}
           >
             <RightAccessory
@@ -203,7 +212,7 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
         )}
       </View>
 
-      {!!helper && <Text txtSize='standard' text={helper} {...HelperTextProps} style={$helperStyles} />}
+      {!!helper && <Text txtSize="standard" text={helper} {...HelperTextProps} style={$helperStyles} />}
     </TouchableOpacity>
   );
 });
