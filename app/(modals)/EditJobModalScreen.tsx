@@ -1,6 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import {
+  Modal,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from 'react-native';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View, Text, TextInput } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -44,9 +51,11 @@ const EditJobModalScreen = ({
 
   const [currentJob, setExistingJob] = useState<JobData | undefined>();
   const [visible, setVisible] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const insets = useSafeAreaInsets(); // just in case we use it on IOS
   const colorScheme = useColorScheme();
+
+  const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
+  const [finishDatePickerVisible, setFinishDatePickerVisible] = useState(false);
 
   const colors = useMemo<any>(() => {
     const themeColors =
@@ -56,26 +65,58 @@ const EditJobModalScreen = ({
             borderColor: Colors.dark.inputBorder,
             modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
             transparent: Colors.dark.transparent,
+            neutral200: Colors.dark.neutral200,
           }
         : {
             background: Colors.light.background,
             borderColor: Colors.light.inputBorder,
             modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
             transparent: Colors.light.transparent,
+            neutral200: Colors.light.neutral200,
           };
 
     return themeColors;
   }, [colorScheme]);
+
+  const showStartDatePicker = () => {
+    setStartDatePickerVisible(true);
+  };
+
+  const hideStartDatePicker = () => {
+    setStartDatePickerVisible(false);
+  };
+
+  const handleStartDateConfirm = (date: Date) => {
+    setJob((prevJob) => ({
+      ...prevJob,
+      startDate: date,
+    }));
+
+    hideStartDatePicker();
+  };
+
+  const showFinishDatePicker = () => {
+    setFinishDatePickerVisible(true);
+  };
+
+  const hideFinishDatePicker = () => {
+    setFinishDatePickerVisible(false);
+  };
+
+  const handleFinishDateConfirm = (date: Date) => {
+    setJob((prevJob) => ({
+      ...prevJob,
+      finishDate: date,
+    }));
+
+    hideFinishDatePicker();
+  };
 
   const [canAddJob, setCanAddJob] = useState(false);
 
   useEffect(() => {
     setCanAddJob(job.name?.length > 4);
   }, [job]);
-
-  useEffect(() => {
-    if (Platform.OS === 'ios') setShowDatePicker(true); // Keeps the picker open for iOS
-  }, []);
 
   const { jobDbHost } = useJobDb();
 
@@ -110,17 +151,6 @@ const EditJobModalScreen = ({
     loadJobData();
   }, [jobId, jobDbHost, visible]);
 
-  const handleDateChange = useCallback((event: any, selectedDate: Date | undefined) => {
-    if (Platform.OS !== 'ios') setShowDatePicker(false);
-
-    if (selectedDate) {
-      setJob((prevJob) => ({
-        ...prevJob,
-        finishDate: selectedDate,
-      }));
-    }
-  }, []);
-
   const handleSubmit = useCallback(async () => {
     if (!jobId || !currentJob) return;
 
@@ -144,83 +174,95 @@ const EditJobModalScreen = ({
     }
   }, [job]);
 
-  const handleAndroidShowDatePicker = useCallback((): void => {
-    setShowDatePicker(!showDatePicker);
-  }, []);
-
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
       <View style={[styles.modalBackground, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
-        <View style={[styles.modalContainer, { marginTop: insets.top }]}>
-          <Text style={styles.modalTitle}>Edit Existing Job</Text>
-          <TextField
-            style={styles.input}
-            label="Job Name"
-            placeholder="Job Name"
-            value={job.name}
-            onChangeText={(text) => setJob({ ...job, name: text })}
-          />
-          <TextField
-            containerStyle={styles.inputContainer}
-            style={styles.input}
-            placeholder="Location"
-            label="Location"
-            value={job.location}
-            onChangeText={(text) => setJob({ ...job, location: text })}
-          />
-          <TextField
-            containerStyle={styles.inputContainer}
-            style={styles.input}
-            placeholder="Owner"
-            label="Owner"
-            value={job.owner}
-            onChangeText={(text) => setJob({ ...job, owner: text })}
-          />
+        <TouchableWithoutFeedback onPress={dismissKeyboard}>
+          <View style={[styles.modalContainer, { marginTop: insets.top }]}>
+            <Text style={styles.modalTitle}>Edit Existing Job</Text>
+            <TextField
+              style={[styles.input, { borderColor: colors.transparent }]}
+              label="Job Name"
+              placeholder="Job Name"
+              value={job.name}
+              onChangeText={(text) => setJob({ ...job, name: text })}
+            />
+            <TextField
+              containerStyle={styles.inputContainer}
+              style={[styles.input, { borderColor: colors.transparent }]}
+              placeholder="Location"
+              label="Location"
+              value={job.location}
+              onChangeText={(text) => setJob({ ...job, location: text })}
+            />
+            <TextField
+              containerStyle={styles.inputContainer}
+              style={[styles.input, { borderColor: colors.transparent }]}
+              placeholder="Owner"
+              label="Owner"
+              value={job.owner}
+              onChangeText={(text) => setJob({ ...job, owner: text })}
+            />
 
-          {Platform.OS === 'ios' && (
-            <Text txtSize="formLabel" text="Finish Date" style={styles.inputContainer} />
-          )}
-          <View style={[styles.input, { flexDirection: 'row' }]}>
-            {Platform.OS === 'android' && (
-              <TouchableOpacity activeOpacity={1} onPress={handleAndroidShowDatePicker}>
-                <View pointerEvents="none" style={{ minWidth: 240, borderColor: colors.transparent }}>
-                  <TextField
-                    containerStyle={styles.inputContainer}
-                    value={job.finishDate ? formatDate(job.finishDate) : undefined}
-                    placeholder="Finish Date"
-                    label="Finish Date"
-                    editable={false}
-                    inputWrapperStyle={{ borderColor: colors.transparent, alignSelf: 'stretch' }}
-                    style={{ borderColor: colors.transparent, alignSelf: 'stretch' }}
-                  />
-                </View>
+            <TextField
+              style={[styles.input, { borderColor: colors.transparent }]}
+              containerStyle={styles.inputContainer}
+              placeholder="Bid Price"
+              label="Bid Price"
+              value={job.bidPrice ? job.bidPrice.toString() : undefined}
+              onChangeText={(text) => setJob({ ...job, bidPrice: parseFloat(text) })}
+              keyboardType="numeric"
+            />
+
+            <View style={styles.dateContainer}>
+              <TouchableOpacity activeOpacity={1} onPress={showStartDatePicker}>
+                <Text txtSize="formLabel" text="Start Date" style={styles.inputLabel} />
+                <TextInput
+                  readOnly={true}
+                  style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                  placeholder="Start Date"
+                  onPressIn={showStartDatePicker}
+                  value={job.startDate ? formatDate(job.startDate) : 'No date selected'}
+                />
               </TouchableOpacity>
-            )}
-            {showDatePicker && (
-              <DateTimePicker
+              <DateTimePickerModal
                 style={{ alignSelf: 'stretch' }}
-                value={job.finishDate}
+                date={job.startDate}
+                isVisible={startDatePickerVisible}
                 mode="date"
-                display="default"
-                onChange={handleDateChange}
+                onConfirm={handleStartDateConfirm}
+                onCancel={hideStartDatePicker}
               />
-            )}
-          </View>
 
-          <TextField
-            style={styles.input}
-            placeholder="Bid Price"
-            label="Bid Price"
-            value={job.bidPrice ? job.bidPrice.toString() : undefined}
-            onChangeText={(text) => setJob({ ...job, bidPrice: parseFloat(text) })}
-            keyboardType="numeric"
-          />
+              <TouchableOpacity activeOpacity={1} onPress={showFinishDatePicker}>
+                <Text txtSize="formLabel" text="Finish Date" style={styles.inputLabel} />
+                <TextInput
+                  readOnly={true}
+                  style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                  placeholder="Finish Date"
+                  onPressIn={showFinishDatePicker}
+                  value={job.startDate ? formatDate(job.finishDate) : 'No date selected'}
+                />
+              </TouchableOpacity>
+              <DateTimePickerModal
+                style={{ alignSelf: 'stretch', height: 200 }}
+                date={job.finishDate}
+                isVisible={finishDatePickerVisible}
+                mode="date"
+                onConfirm={handleFinishDateConfirm}
+                onCancel={hideFinishDatePicker}
+              />
+            </View>
 
-          <View style={styles.buttons}>
-            <Button disabled={!canAddJob} text="Submit" onPress={handleSubmit} />
-            <Button text="Cancel" onPress={() => hideModal(false)} />
+            <View style={styles.buttons}>
+              <Button disabled={!canAddJob} text="Submit" onPress={handleSubmit} />
+              <Button text="Cancel" onPress={() => hideModal(false)} />
+            </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </View>
     </Modal>
   );
@@ -233,9 +275,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
+  dateContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   modalContainer: {
-    width: 300,
-    padding: 20,
+    width: '90%',
+    padding: 10,
     borderRadius: 20,
   },
   modalTitle: {
@@ -245,7 +292,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   inputContainer: {
-    marginTop: 10,
+    marginTop: 6,
+  },
+  inputLabel: {
+    marginTop: 6,
+    marginBottom: 4,
   },
   input: {
     borderWidth: 1,
@@ -253,13 +304,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 5,
   },
+  dateInput: {
+    borderWidth: 1,
+    alignContent: 'stretch',
+    justifyContent: 'center',
+    borderRadius: 5,
+    paddingHorizontal: 8,
+    height: 40,
+    paddingVertical: 0,
+  },
+
   dateButton: {
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
     alignItems: 'center',
   },
-  dateButtonText: {},
   buttons: {
     marginTop: 10,
     flexDirection: 'row',
