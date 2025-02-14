@@ -60,6 +60,9 @@ export const Colors = {
     textDim: '#564E4A',
     transparent: 'rgba(0, 0, 0, 0)',
     bottomSheetBackground: '#D7CEC9',
+    actionBg: '#C76542',
+    actionFg: '#ff0000',
+    buttonBlue: '#007bff',
   },
   dark: {
     neutral900: '#FFFFFF',
@@ -119,5 +122,8 @@ export const Colors = {
     textDim: '#B6ACA6',
     transparent: 'rgba(0, 0, 0, 0)',
     bottomSheetBackground: '#191015',
+    actionBg: '#C03403',
+    actionFg: '#00ff00',
+    buttonBlue: '#007bff',
   },
 };

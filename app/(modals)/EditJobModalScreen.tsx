@@ -1,22 +1,23 @@
+import { Button } from '@/components/Button';
+import { TextField } from '@/components/TextField';
+import { Text, TextInput, View } from '@/components/Themed';
+import { useColorScheme } from '@/components/useColorScheme';
+import { Colors } from '@/constants/Colors';
+import { useJobDb } from '@/context/DatabaseContext';
+import { formatDate } from '@/utils/formatters';
+import { JobData } from 'jobdb';
+import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Modal,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-  TouchableWithoutFeedback,
   Keyboard,
+  Modal,
+  StyleSheet,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  Button as RNButton,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { View, Text, TextInput } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
-import { Button } from '@/components/Button';
-import { useJobDb } from '@/context/DatabaseContext';
-import { DBStatus, JobData } from 'jobdb';
-import { TextField } from '@/components/TextField';
-import { formatDate } from '@/utils/formatters';
 
 type Job = {
   jobId?: string;
@@ -26,6 +27,8 @@ type Job = {
   finishDate: Date;
   startDate: Date;
   bidPrice?: number;
+  longitude?: number;
+  latitude?: number;
 };
 
 const EditJobModalScreen = ({
@@ -47,6 +50,8 @@ const EditJobModalScreen = ({
     startDate: defaultStartDate,
     finishDate: defaultFinishDate,
     bidPrice: 0,
+    longitude: undefined,
+    latitude: undefined,
   });
 
   const [currentJob, setExistingJob] = useState<JobData | undefined>();
@@ -56,6 +61,23 @@ const EditJobModalScreen = ({
 
   const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
   const [finishDatePickerVisible, setFinishDatePickerVisible] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
+  const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
+
+  useEffect(() => {
+    const requestLocationPermission = async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        return;
+      }
+      // Fetch the current location after permission is granted
+      const location = await Location.getCurrentPositionAsync({});
+      setCurrentLocation(location);
+      setHasLocationPermission(true);
+    };
+
+    requestLocationPermission();
+  }, [hasLocationPermission]);
 
   const colors = useMemo<any>(() => {
     const themeColors =
@@ -66,6 +88,7 @@ const EditJobModalScreen = ({
             modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
             transparent: Colors.dark.transparent,
             neutral200: Colors.dark.neutral200,
+            buttonBlue: Colors.dark.buttonBlue,
           }
         : {
             background: Colors.light.background,
@@ -73,6 +96,7 @@ const EditJobModalScreen = ({
             modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
             transparent: Colors.light.transparent,
             neutral200: Colors.light.neutral200,
+            buttonBlue: Colors.light.buttonBlue,
           };
 
     return themeColors;
@@ -103,14 +127,30 @@ const EditJobModalScreen = ({
     setFinishDatePickerVisible(false);
   };
 
-  const handleFinishDateConfirm = (date: Date) => {
-    setJob((prevJob) => ({
-      ...prevJob,
-      finishDate: date,
-    }));
+  const handlePickGpsLocation = () => {};
 
-    hideFinishDatePicker();
-  };
+  const handleSetCurrentGpsLocation = useCallback(async () => {
+    if (currentLocation) {
+      console.log('Current location:', currentLocation);
+      setJob((prevJob) => ({
+        ...prevJob,
+        longitude: currentLocation.coords.longitude,
+        latitude: currentLocation.coords.latitude,
+      }));
+    }
+  }, [currentLocation]);
+
+  const handleFinishDateConfirm = useCallback(
+    (date: Date) => {
+      setJob((prevJob) => ({
+        ...prevJob,
+        finishDate: date,
+      }));
+
+      hideFinishDatePicker();
+    },
+    [setJob],
+  );
 
   const [canAddJob, setCanAddJob] = useState(false);
 
@@ -137,6 +177,8 @@ const EditJobModalScreen = ({
           location: fetchedJob.Location,
           owner: fetchedJob.OwnerName,
           bidPrice: fetchedJob.BidPrice,
+          longitude: fetchedJob.Longitude,
+          latitude: fetchedJob.Latitude,
         };
 
         if (fetchedJob.PlannedFinish) finishDate: fetchedJob.PlannedFinish;
@@ -162,6 +204,8 @@ const EditJobModalScreen = ({
       PlannedFinish: job.finishDate,
       StartDate: job.startDate,
       BidPrice: job.bidPrice,
+      Latitude: job.latitude,
+      Longitude: job.longitude,
     };
 
     const status = await jobDbHost?.GetJobDB().UpdateJob(modifiedJob);
@@ -174,9 +218,10 @@ const EditJobModalScreen = ({
     }
   }, [job]);
 
-  const dismissKeyboard = () => {
+  const dismissKeyboard = useCallback(() => {
     Keyboard.dismiss();
-  };
+  }, []);
+
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
       <View style={[styles.modalBackground, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
@@ -206,7 +251,6 @@ const EditJobModalScreen = ({
               value={job.owner}
               onChangeText={(text) => setJob({ ...job, owner: text })}
             />
-
             <TextField
               style={[styles.input, { borderColor: colors.transparent }]}
               containerStyle={styles.inputContainer}
@@ -216,7 +260,6 @@ const EditJobModalScreen = ({
               onChangeText={(text) => setJob({ ...job, bidPrice: parseFloat(text) })}
               keyboardType="numeric"
             />
-
             <View style={styles.dateContainer}>
               <TouchableOpacity activeOpacity={1} onPress={showStartDatePicker}>
                 <Text txtSize="formLabel" text="Start Date" style={styles.inputLabel} />
@@ -256,7 +299,29 @@ const EditJobModalScreen = ({
                 onCancel={hideFinishDatePicker}
               />
             </View>
-
+            {job.latitude && job.longitude ? (
+              <Text style={styles.inputLabel}>{`GPS Coordinates  (${job.latitude.toFixed(
+                4,
+              )}/${job.longitude.toFixed(4)})`}</Text>
+            ) : (
+              <Text style={styles.inputLabel}>GPS Coordinates</Text>
+            )}
+            <View style={styles.gpsButtonContainer}>
+              {hasLocationPermission && (
+                <TouchableOpacity
+                  style={[styles.gpsButton, styles.gpsButtonLeft, { borderColor: colors.buttonBlue }]}
+                  onPress={handleSetCurrentGpsLocation}
+                >
+                  <Text style={[styles.gpsButtonText, { color: colors.buttonBlue }]}>Use Current</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={[styles.gpsButton, styles.gpsButtonRight, { borderColor: colors.buttonBlue }]}
+                onPress={handlePickGpsLocation}
+              >
+                <Text style={[styles.gpsButtonText, { color: colors.buttonBlue }]}>Select on Map</Text>
+              </TouchableOpacity>
+            </View>
             <View style={styles.buttons}>
               <Button disabled={!canAddJob} text="Submit" onPress={handleSubmit} />
               <Button text="Cancel" onPress={() => hideModal(false)} />
@@ -325,6 +390,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'stretch',
     justifyContent: 'space-evenly',
+  },
+  gpsButtonContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+  },
+  gpsButton: {
+    flex: 1,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 10, // Rounded edges
+  },
+  gpsButtonLeft: {
+    marginRight: 10, // Add margin between the two buttons
+  },
+  gpsButtonRight: {
+    marginLeft: 10, // Add margin between the two buttons
+  },
+  gpsButtonText: {
+    fontSize: 16,
+    fontWeight: 'semibold',
   },
 });
 
