@@ -1,3 +1,15 @@
+import { ActionButtonProps } from '@/components/ButtonBar';
+import { Text, View } from '@/components/Themed';
+import { TwoColumnList, TwoColumnListEntry } from '@/components/TwoColumnList';
+import { useColorScheme } from '@/components/useColorScheme';
+import { Colors } from '@/constants/Colors';
+import { formatCurrency, formatDate } from '@/utils/formatters';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
+import { Stack, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Modal,
   Platform,
@@ -7,24 +19,12 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
 } from 'react-native';
-import { ActionButtonProps } from '@/components/ButtonBar';
-import { View, Text } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { router, Stack, useRouter } from 'expo-router';
-import { useNavigation } from '@react-navigation/native';
-import { Colors } from '@/constants/Colors';
-import { TwoColumnList, TwoColumnListEntry } from '@/components/TwoColumnList';
-import { formatCurrency, formatDate } from '@/utils/formatters';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import Ionicons from '@expo/vector-icons/Ionicons';
 
+import EditJobModalScreen from '@/app/(modals)/EditJobModalScreen';
+import JobModalScreen from '@/app/(modals)/JobModalScreen';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { useJobDb } from '@/context/DatabaseContext';
 import { JobData } from 'jobdb';
-import { ScreenHeader } from '@/components/ScreenHeader';
-import JobModalScreen from '@/app/(modals)/JobModalScreen';
-import EditJobModalScreen from '@/app/(modals)/EditJobModalScreen';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -122,6 +122,59 @@ export default function JobHomeScreen() {
   const navigation = useNavigation();
   const { jobDbHost } = useJobDb();
 
+  const loadJobs = useCallback(async () => {
+    const result = await jobDbHost?.GetJobDB().FetchAllJobs();
+    const jobs = result ? result.jobs : [];
+    jobs.sort((a, b) => (b.Favorite ?? 0) - (a.Favorite ?? 0));
+
+    if (jobs) {
+      const listData: TwoColumnListEntry[] = jobs.map((job) => {
+        return {
+          primaryTitle: job.Name ? job.Name : 'unknown',
+          entryId: job._id ? job._id.toString() : '1',
+          imageUri: 'x',
+          secondaryTitle: job.Location,
+          tertiaryTitle: job.OwnerName ?? 'Owner',
+          lines: [
+            {
+              left: `start: ${formatDate(job.StartDate)}`,
+              right: `due: ${formatDate(job.PlannedFinish)}`,
+            },
+            {
+              left: `bid: ${formatCurrency(job.BidPrice)}`,
+              right: `spent: ${formatCurrency(0)}`,
+            },
+          ],
+        };
+      });
+
+      setAllJobs(jobs);
+      setJobListEntries(listData);
+    }
+  }, [jobDbHost]);
+
+  const onLikePressed = useCallback(
+    async (jobId: string) => {
+      const matchingJob = allJobs.find((j) => j._id?.toString() === jobId);
+      if (matchingJob) {
+        const maxFavoriteValue = allJobs.reduce((max, current) => {
+          const currentValue = current.Favorite ?? 0;
+          return currentValue > max ? currentValue : max;
+        }, -Infinity);
+
+        const updatedJob = { ...matchingJob, Favorite: maxFavoriteValue + 1 };
+        const status = await jobDbHost?.GetJobDB().UpdateJob(updatedJob);
+        if (status === 'Success') {
+          console.log('Job successfully updated:', updatedJob.Name);
+          loadJobs();
+        } else {
+          console.log('Job update failed:', updatedJob.Name);
+        }
+      }
+    },
+    [allJobs, jobDbHost, loadJobs],
+  );
+
   // Define colors based on the color scheme (dark or light)
   const colors = useMemo(() => {
     const clrs =
@@ -155,9 +208,7 @@ export default function JobHomeScreen() {
         label: 'Like',
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
-            console.log('Like pressed - ', actionContext.primaryTitle);
-          } else {
-            console.log('Like pressed - ', actionContext);
+            if (actionContext && actionContext.entryId) onLikePressed(actionContext.entryId);
           }
         },
       },
@@ -204,43 +255,13 @@ export default function JobHomeScreen() {
         },
       },
     ],
-    [colors],
+    [colors, onLikePressed],
   );
 
   React.useEffect(() => {
     const state = navigation.getState();
     console.log('Current stack state:', state);
   }, [navigation]);
-
-  const loadJobs = useCallback(async () => {
-    const result = await jobDbHost?.GetJobDB().FetchAllJobs();
-    const jobs = result ? result.jobs : [];
-
-    if (jobs) {
-      const listData: TwoColumnListEntry[] = jobs.map((job) => {
-        return {
-          primaryTitle: job.Name ? job.Name : 'unknown',
-          entryId: job._id ? job._id.toString() : '1',
-          imageUri: 'x',
-          secondaryTitle: job.Location,
-          tertiaryTitle: job.OwnerName ?? 'Owner',
-          lines: [
-            {
-              left: `start: ${formatDate(job.StartDate)}`,
-              right: `due: ${formatDate(job.PlannedFinish)}`,
-            },
-            {
-              left: `bid: ${formatCurrency(job.BidPrice)}`,
-              right: `spent: ${formatCurrency(0)}`,
-            },
-          ],
-        };
-      });
-
-      setAllJobs(jobs);
-      setJobListEntries(listData);
-    }
-  }, [jobDbHost]);
 
   useEffect(() => {
     loadJobs();

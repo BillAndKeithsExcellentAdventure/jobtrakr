@@ -1,5 +1,5 @@
 export interface JobCategoryEntry {
-  jobId: number;
+  jobId: string;
   categoryName: string;
   bidPrice?: number;
   spentToDate?: number;
