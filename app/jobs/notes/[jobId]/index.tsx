@@ -83,6 +83,7 @@ const JobNotes = () => {
       const matchingNote = notes.find((note) => note._id === id);
       if (!matchingNote) return;
 
+      console.log('Toggling completed', id, completed);
       const noteToUpdate = { ...matchingNote };
       noteToUpdate.Completed = !completed;
 
@@ -97,7 +98,7 @@ const JobNotes = () => {
         alert('An error occurred while deleting the note.');
       }
     },
-    [jobDbHost, fetchNotes],
+    [jobDbHost, fetchNotes, notes],
   );
 
   const editNote = useCallback((note: TodoData) => {
@@ -209,16 +210,18 @@ const JobNotes = () => {
                   {item.Todo}
                 </Text>
                 <View style={{ flexDirection: 'row', marginLeft: 10, alignSelf: 'center' }}>
-                  <TouchableOpacity onPress={() => toggleCompleted(item._id ?? '', item.Completed!)}>
+                  <TouchableOpacity onPress={() => toggleCompleted(item._id!, item.Completed!)}>
                     <FontAwesomeIcon
                       name={item.Completed ? 'undo' : 'check-circle'}
                       size={28}
                       color={item.Completed ? 'gray' : 'green'}
                     />
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => deleteNote(item._id ?? '')}>
+
+                  <TouchableOpacity onPress={() => deleteNote(item._id!)}>
                     <FontAwesomeIcon name="trash" size={28} color="red" style={{ marginLeft: 10 }} />
                   </TouchableOpacity>
+
                   <TouchableOpacity onPress={() => editNote(item)}>
                     <FontAwesomeIcon name="edit" size={28} color="blue" style={{ marginLeft: 10 }} />
                   </TouchableOpacity>
