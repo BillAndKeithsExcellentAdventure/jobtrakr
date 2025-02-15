@@ -1,165 +1,289 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import { FlatList, TouchableOpacity, Alert, SafeAreaView, StyleSheet } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { Text, View, TextInput } from '@/components/Themed';
+import { DBStatus, TodoData } from 'jobdb';
 import { useJobDb } from '@/context/DatabaseContext';
-
-import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, ActivityIndicator, StyleSheet, SafeAreaView, Button } from 'react-native';
-import { JobNote } from '@/components/JobNote'; // Import the updated TodoItem component
-import { TodoData } from 'jobdb';
-
-type DBStatus = 'success' | 'error' | 'loading';
+import FontAwesomeIcon from '@expo/vector-icons/FontAwesome';
 
 const JobNotes = () => {
-  const [todos, setTodos] = useState<TodoData[]>([]);
-  const [status, setStatus] = useState<DBStatus>('loading');
-  const [error, setError] = useState<string | null>(null);
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
+  const [notes, setNotes] = useState<TodoData[]>([]);
+  const [newNoteTitle, setNewNoteTitle] = useState('');
+  const [editingNote, setEditingNote] = useState<TodoData | null>(null);
   const { jobDbHost } = useJobDb();
-  const [newTodoTitle, setNewTodoTitle] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchNotes = useCallback(async () => {
+    try {
+      const response = await jobDbHost?.GetTodoDB().FetchJobTodos(jobId);
+      if (!response) return;
+
+      if (response.status === 'Success') {
+        setNotes(response.todos);
+      }
+    } catch (err) {
+      setError('An error occurred while fetching the notes');
+    }
+  }, [jobId]);
 
   useEffect(() => {
-    const fetchTodos = async () => {
-      try {
-        const response = await jobDbHost?.GetTodoDB().FetchJobTodos(jobId);
-        if (!response) return;
+    // Fetch notes when the component mounts
+    fetchNotes();
+  }, [fetchNotes]);
 
-        if (response.status === 'Success') {
-          setTodos(response.todos);
-          setStatus('success');
-        } else {
-          setStatus('error');
-          setError('Failed to load notes');
-        }
-      } catch (err) {
-        setStatus('error');
-        setError('An error occurred while fetching the notes');
-      }
-    };
-
-    fetchTodos();
-  }, [jobId, jobDbHost]);
-
-  const handleMarkComplete = (id: string) => {
-    setTodos((prevTodos) =>
-      prevTodos.map((todo) => (todo._id === id ? { ...todo, completed: !todo.Completed } : todo)),
-    );
-  };
-
-  const handleRemove = (id: string) => {
-    setTodos((prevTodos) => prevTodos.filter((todo) => todo._id !== id));
-  };
-
-  const handleCreateTodo = useCallback(async () => {
-    if (!newTodoTitle.trim()) {
-      alert("Note can't be empty.");
+  const addNote = useCallback(async () => {
+    if (!newNoteTitle.trim()) {
+      Alert.alert('Error', 'Please enter a note.');
       return;
     }
 
-    const newTodo: TodoData = { Todo: newTodoTitle, JobId: jobId, Completed: false };
-
+    const newTodo: TodoData = { Todo: newNoteTitle, JobId: jobId, Completed: false };
     try {
       const response = await jobDbHost?.GetTodoDB().CreateTodo(newTodo);
       if (!response) return;
 
       if (response.status === 'Success') {
-        setTodos((prevTodos) => [...prevTodos, { ...newTodo, JobId: jobId, _id: response.id }]);
-        setNewTodoTitle(''); // Clear input after successful creation
+        await fetchNotes();
+        setNewNoteTitle(''); // Clear input after successful creation
       } else {
         alert('Failed to create note.');
       }
     } catch (err) {
       alert('An error occurred while creating the todo.');
     }
-  }, [newTodoTitle, jobDbHost, jobId]);
+  }, [newNoteTitle, jobDbHost, jobId]);
 
-  if (status === 'loading') {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Loading todos...</Text>
-      </View>
-    );
-  }
+  const deleteNote = useCallback(
+    (id: string) => {
+      Alert.alert('Delete Note', 'Are you sure you want to delete this note?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          onPress: async () => {
+            try {
+              const status = await jobDbHost?.GetTodoDB().DeleteTodo(id);
+              if (status === 'Success') {
+                await fetchNotes();
+              } else {
+                alert('Failed to delete note.');
+              }
+            } catch (err) {
+              alert('An error occurred while deleting the note.');
+            }
+          },
+        },
+      ]);
+    },
+    [jobDbHost, fetchNotes],
+  );
 
-  if (status === 'error') {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
-    );
-  }
+  const toggleCompleted = useCallback(
+    async (id: string, completed: boolean) => {
+      const matchingNote = notes.find((note) => note._id === id);
+      if (!matchingNote) return;
+
+      const noteToUpdate = { ...matchingNote };
+      noteToUpdate.Completed = !completed;
+
+      try {
+        const status = await jobDbHost?.GetTodoDB().UpdateJob(noteToUpdate);
+        if (status === 'Success') {
+          await fetchNotes();
+        } else {
+          alert('Failed to update note.');
+        }
+      } catch (err) {
+        alert('An error occurred while deleting the note.');
+      }
+    },
+    [jobDbHost, fetchNotes],
+  );
+
+  const editNote = useCallback((note: TodoData) => {
+    setEditingNote(note);
+  }, []);
+
+  const saveEdit = useCallback(async () => {
+    if (!editingNote || !editingNote.Todo || !editingNote.Todo.trim()) {
+      Alert.alert('Error', 'Please enter note text.');
+      return;
+    }
+
+    try {
+      const status = await jobDbHost?.GetTodoDB().UpdateJob(editingNote);
+      if (status === 'Success') {
+        fetchNotes(); // Refresh after editing
+        setEditingNote(null); // Clear editing state
+      } else {
+        alert('Failed to update note.');
+      }
+    } catch (err) {
+      alert('An error occurred while deleting the note.');
+    }
+  }, [jobDbHost, fetchNotes, editingNote]);
+
+  const cancelEdit = useCallback(() => {
+    setEditingNote(null); // Cancel editing
+  }, []);
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: `Job Notes`, headerShown: true }} />
+      <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
       <View style={styles.container}>
-        <View style={styles.headerContainer}>
-          <Text txtSize="title" text={jobName} style={styles.headerText} />
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter new note"
-              value={newTodoTitle}
-              onChangeText={setNewTodoTitle}
-            />
-            <Button title="Add" onPress={handleCreateTodo} />
-          </View>
-        </View>
-        <FlatList
-          data={todos}
-          renderItem={({ item }) => (
-            <JobNote todo={item} onMarkComplete={handleMarkComplete} onRemove={handleRemove} />
+        <View style={styles.centeredView}>
+          {/* Show Add Note Section only if no note is being edited */}
+          {!editingNote && (
+            <View>
+              <TextInput
+                value={newNoteTitle}
+                onChangeText={setNewNoteTitle}
+                placeholder="Enter job note"
+                style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
+              />
+              <TouchableOpacity
+                onPress={addNote}
+                style={{ backgroundColor: '#007bff', padding: 10, borderRadius: 5 }}
+              >
+                <Text style={{ color: '#fff', textAlign: 'center' }}>Add Note</Text>
+              </TouchableOpacity>
+            </View>
           )}
-          keyExtractor={(item) => item._id ?? '0'} // Add a fallback value for the key
-          ListEmptyComponent={<Text>No notes found.</Text>}
-        />
+
+          {/* Editing Note Section */}
+          {editingNote && (
+            <View>
+              <TextInput
+                value={editingNote.Todo ?? ''}
+                onChangeText={(title) => setEditingNote({ ...editingNote, Todo: title })}
+                placeholder="Edit note title"
+                style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
+              />
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <TouchableOpacity
+                  onPress={saveEdit}
+                  style={{
+                    backgroundColor: '#28a745',
+                    padding: 10,
+                    borderRadius: 5,
+                    flex: 1,
+                    marginRight: 5,
+                  }}
+                >
+                  <Text style={{ color: '#fff', textAlign: 'center' }}>Save</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={cancelEdit}
+                  style={{ backgroundColor: '#dc3545', padding: 10, borderRadius: 5, flex: 1 }}
+                >
+                  <Text style={{ color: '#fff', textAlign: 'center' }}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          <FlatList
+            style={{ marginTop: 20 }}
+            data={notes}
+            keyExtractor={(item) => item._id ?? ''}
+            renderItem={({ item }) => (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  marginVertical: 5,
+                  borderBottomWidth: 1,
+                  borderBottomColor: 'gray',
+                  paddingBottom: 5,
+                }}
+              >
+                <Text
+                  style={{
+                    flex: 1,
+                    textOverflow: 'ellipsis',
+                    alignSelf: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 5,
+                    textDecorationLine: item.Completed ? 'line-through' : 'none',
+                  }}
+                >
+                  {item.Todo}
+                </Text>
+                <View style={{ flexDirection: 'row', marginLeft: 10, alignSelf: 'center' }}>
+                  <TouchableOpacity onPress={() => toggleCompleted(item._id ?? '', item.Completed!)}>
+                    <FontAwesomeIcon
+                      name={item.Completed ? 'undo' : 'check-circle'}
+                      size={28}
+                      color={item.Completed ? 'gray' : 'green'}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => deleteNote(item._id ?? '')}>
+                    <FontAwesomeIcon name="trash" size={28} color="red" style={{ marginLeft: 10 }} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => editNote(item)}>
+                    <FontAwesomeIcon name="edit" size={28} color="blue" style={{ marginLeft: 10 }} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );
 };
 
+export default JobNotes;
+
 const styles = StyleSheet.create({
-  headerContainer: {
-    paddingVertical: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  },
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start', // Align items at the top vertically
+    alignItems: 'center', // Center horizontally
+    padding: 10,
+    width: '100%',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  headerText: {
-    marginBottom: 10,
-  },
-
-  errorText: {
-    color: 'red',
-    fontSize: 16,
-  },
-  inputContainer: {
-    marginBottom: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
+  centeredView: {
+    maxWidth: 400,
+    width: '100%',
+    paddingHorizontal: 10,
   },
   input: {
-    width: '60%',
-    padding: 10,
     borderWidth: 1,
-    borderRadius: 4,
+    padding: 8,
+    marginBottom: 10,
+  },
+  addButton: {
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 5,
+  },
+  addButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  saveButton: {
+    backgroundColor: '#28a745',
+    padding: 10,
+    borderRadius: 5,
+    flex: 1,
+    marginRight: 5,
+  },
+  saveButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#dc3545',
+    padding: 10,
+    borderRadius: 5,
+    flex: 1,
+  },
+  cancelButtonText: {
+    color: '#fff',
+    textAlign: 'center',
   },
 });
-
-export default JobNotes;
