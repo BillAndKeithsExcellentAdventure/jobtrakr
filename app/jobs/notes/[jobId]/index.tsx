@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, TouchableOpacity, Alert, SafeAreaView, StyleSheet } from 'react-native';
-import { useLocalSearchParams, Stack } from 'expo-router';
-import { Text, View, TextInput } from '@/components/Themed';
-import { DBStatus, TodoData } from 'jobdb';
+import { Text, TextInput, View } from '@/components/Themed';
 import { useJobDb } from '@/context/DatabaseContext';
 import FontAwesomeIcon from '@expo/vector-icons/FontAwesome';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import { TodoData } from 'jobdb';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, FlatList, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
 
 const JobNotes = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
