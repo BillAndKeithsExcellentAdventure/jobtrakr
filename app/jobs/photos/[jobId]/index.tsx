@@ -94,11 +94,16 @@ const JobPhotosPage = () => {
       console.log(`Found ${foundAssets ? foundAssets?.length : 0} pictures`);
 
       if (foundAssets) {
-        setNearAssets(foundAssets);
-        console.log(`Set ${foundAssets.length} assets into nearAssets`);
+        // Filter out assets that are already in jobAssets
+        const filteredAssets = foundAssets.filter(
+          (foundAsset) => !jobAssets?.some((jobAsset) => jobAsset.id === foundAsset.id),
+        );
+
+        setNearAssets(filteredAssets);
+        console.log(`Set ${filteredAssets.length} assets into nearAssets`);
       }
     }
-  }, [mediaAssets, setNearAssets]);
+  }, [mediaAssets, setNearAssets, jobAssets]);
 
   const OnAddAllToJobClicked = useCallback(async () => {
     if (nearAssets) {
@@ -110,38 +115,44 @@ const JobPhotosPage = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.container}>
-        <Stack.Screen options={{ title: `Job Photos`, headerShown: true }} />
-        <View style={styles.headerContainer}>
-          <Text>JobName={jobName}</Text>
-          <Text>JobId={jobId}</Text>
-          <Button title="Load Nearest" onPress={OnLoadNearestClicked}></Button>
+      <Stack.Screen options={{ title: `Job Photos`, headerShown: true }} />
+      <View style={styles.headerInfo}>
+        <Text>JobName={jobName}</Text>
+        <Text>JobId={jobId}</Text>
+        <Button title="Load Nearest" onPress={OnLoadNearestClicked} />
+      </View>
+      <View style={styles.listsContainer}>
+        {/* Left side - Job Assets */}
+        <View style={styles.listColumn}>
+          <Text style={styles.listTitle}>Job Photos</Text>
           {!jobAssets ? (
-            <Text>None</Text>
+            <Text>No photos in job</Text>
           ) : (
-            <View style={styles.container}>
-              <FlashList
-                data={jobAssets}
-                estimatedItemSize={200}
-                renderItem={(item) => (
-                  <Image source={{ uri: item.item.uri }} style={{ width: 200, height: 200 }} />
-                )}
-              />
-            </View>
+            <FlashList
+              data={jobAssets}
+              estimatedItemSize={200}
+              renderItem={(item) => <Image source={{ uri: item.item.uri }} style={styles.thumbnail} />}
+            />
           )}
+        </View>
+
+        {/* Separator */}
+        <View style={styles.separator} />
+
+        {/* Right side - Near Assets */}
+        <View style={styles.listColumn}>
+          <Text style={styles.listTitle}>Nearby Photos</Text>
           {!nearAssets ? (
             <Text>Loading...{fetchStatus}</Text>
           ) : (
-            <View style={styles.nearContainer}>
+            <>
               <FlashList
                 data={nearAssets}
                 estimatedItemSize={200}
-                renderItem={(item) => (
-                  <Image source={{ uri: item.item.uri }} style={{ width: 200, height: 200 }} />
-                )}
+                renderItem={(item) => <Image source={{ uri: item.item.uri }} style={styles.thumbnail} />}
               />
-              <Button title="Add All To Job" onPress={OnAddAllToJobClicked}></Button>
-            </View>
+              <Button title="Add All To Job" onPress={OnAddAllToJobClicked} />
+            </>
           )}
         </View>
       </View>
@@ -153,30 +164,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  nearContainer: {
-    flex: 2,
-  },
-  headerContainer: {
-    flex: 1,
-    marginTop: 20,
+  headerInfo: {
+    padding: 10,
     alignItems: 'center',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
+  listsContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    padding: 10,
   },
-  subtitle: {
+  listColumn: {
+    flex: 1,
+    padding: 10,
+  },
+  separator: {
+    width: 1,
+    backgroundColor: '#ccc',
+    marginHorizontal: 10,
+  },
+  listTitle: {
     fontSize: 18,
-    marginBottom: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
   },
-  itemContainer: {
-    marginBottom: 12,
-  },
-  categoryTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 4,
+  thumbnail: {
+    width: '100%',
+    height: 200,
+    marginBottom: 10,
+    borderRadius: 8,
   },
 });
 
