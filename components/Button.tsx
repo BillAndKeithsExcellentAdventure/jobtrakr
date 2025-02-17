@@ -1,5 +1,5 @@
 import { Colors } from '@/constants/Colors';
-import { ComponentType, useMemo } from 'react';
+import { act, ComponentType, useMemo } from 'react';
 import {
   Pressable,
   PressableProps,
@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import React from 'react';
 
-type Presets = 'default' | 'filled' | 'reversed';
+type Presets = 'default' | 'filled' | 'reversed' | 'action';
 
 export interface ButtonAccessoryProps {
   style: StyleProp<any>;
@@ -126,6 +126,8 @@ export function Button(props: ButtonProps) {
             neutral400: Colors.dark.neutral400,
             neutral700: Colors.dark.neutral700,
             neutral800: Colors.dark.neutral800,
+            actionBg: Colors.dark.actionBg,
+            actionFg: Colors.dark.actionFg,
           }
         : {
             text: Colors.light.text,
@@ -141,6 +143,8 @@ export function Button(props: ButtonProps) {
             neutral400: Colors.light.neutral400,
             neutral700: Colors.light.neutral700,
             neutral800: Colors.light.neutral800,
+            actionBg: Colors.light.actionBg,
+            actionFg: Colors.light.actionFg,
           };
     return themeColors;
   }, [colorScheme]);
@@ -163,6 +167,10 @@ export function Button(props: ButtonProps) {
       vwStyles = {
         backgroundColor: colors.neutral800,
       };
+    } else if (preset === 'action') {
+      vwStyles = {
+        backgroundColor: colors.actionBg,
+      };
     }
     return vwStyles;
   }, [colors]);
@@ -181,6 +189,10 @@ export function Button(props: ButtonProps) {
       txtStyles = {
         color: colors.neutral100,
       };
+    } else if (preset === 'action') {
+      txtStyles = {
+        color: colors.actionFg,
+      };
     }
     return txtStyles;
   }, [colors]);
@@ -190,7 +202,7 @@ export function Button(props: ButtonProps) {
   return (
     <Pressable
       style={[styles.baseViewStyle, viewStyles]}
-      accessibilityRole='button'
+      accessibilityRole="button"
       accessibilityState={{ disabled: !!disabled }}
       {...rest}
       disabled={disabled}
@@ -200,7 +212,9 @@ export function Button(props: ButtonProps) {
           {!!LeftAccessory && (
             <LeftAccessory style={[styles.leftAccessoryStyle]} pressableState={state} disabled={disabled} />
           )}
-          <Text style={[styles.baseTextStyle, textStyles, disabled&&{color: colors.textDim}]}>{content}</Text>
+          <Text style={[styles.baseTextStyle, textStyles, disabled && { color: colors.textDim }]}>
+            {content}
+          </Text>
           {!!RightAccessory && (
             <RightAccessory style={styles.rightAccessoryStyle} pressableState={state} disabled={disabled} />
           )}

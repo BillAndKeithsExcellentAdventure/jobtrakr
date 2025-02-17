@@ -1,5 +1,8 @@
-const tintColorLight = '#2f95dc';
-const tintColorDark = '#fff';
+export const tintColorLight = '#2f95dc';
+export const tintColorDark = '#fff';
+export const saveButtonBg = '#28a745';
+export const cancelButtonBg = '#dc3545';
+export const addButtnBg = '#007bff';
 
 export const Colors = {
   light: {
@@ -60,6 +63,9 @@ export const Colors = {
     textDim: '#564E4A',
     transparent: 'rgba(0, 0, 0, 0)',
     bottomSheetBackground: '#D7CEC9',
+    actionBg: '#C76542',
+    actionFg: '#ff0000',
+    buttonBlue: '#007bff',
   },
   dark: {
     neutral900: '#FFFFFF',
@@ -119,5 +125,8 @@ export const Colors = {
     textDim: '#B6ACA6',
     transparent: 'rgba(0, 0, 0, 0)',
     bottomSheetBackground: '#191015',
+    actionBg: '#C03403',
+    actionFg: '#00ff00',
+    buttonBlue: '#007bff',
   },
 };

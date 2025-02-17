@@ -14,7 +14,12 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jobtrakr.app",
+      "buildNumber": "1.0.0",
+            "config": {
+        "googleMapsApiKey": "AIzaSyBac7r0lXImLW3HkBExNDmEzVJpxXDMLUg"
+      }
     },
     "android": {
       "adaptiveIcon": {

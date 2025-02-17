@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, StyleSheet, Platform } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { View, Text, TextInput } from '@/components/Themed';
+import { Button } from '@/components/Button';
+import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { Button } from '@/components/Button';
 import { useJobDb } from '@/context/DatabaseContext';
 import { JobData } from 'jobdb';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Modal, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Job = {
   name: string;
