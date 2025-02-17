@@ -2,7 +2,7 @@ export const tintColorLight = '#2f95dc';
 export const tintColorDark = '#fff';
 export const saveButtonBg = '#28a745';
 export const cancelButtonBg = '#dc3545';
-export const addButtnBg = '#007bff';
+export const addButtonBg = '#007bff';
 
 export const Colors = {
   light: {
