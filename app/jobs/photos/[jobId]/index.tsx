@@ -16,6 +16,7 @@ const JobPhotosPage = () => {
   const [nearAssets, setNearAssets] = useState<MediaLibrary.Asset[] | undefined>(undefined);
   const [mediaAssets, setMediaAssets] = useState<MediaAssets | null>(null);
   const [fetchStatus, setFetchStatus] = useState<string>('');
+  const [showNearAssets, setShowNearAssets] = useState<boolean>(false);
   const { jobDbHost } = useJobDb();
 
   useEffect(() => {
@@ -82,7 +83,8 @@ const JobPhotosPage = () => {
   );
 
   const OnLoadNearestClicked = useCallback(async () => {
-    const location = await getCurrentLocation();
+    //const location = await getCurrentLocation();
+    const location = jobDbHost?.GetJobDB().(jobId);
     if (location) {
       console.log(`Current location: ${location.latitude}, ${location.longitude}`);
       const foundAssets: MediaLibrary.Asset[] | undefined = await mediaAssets?.getAllAssetsNearLocation(
@@ -100,6 +102,7 @@ const JobPhotosPage = () => {
         );
 
         setNearAssets(filteredAssets);
+        setShowNearAssets(true); // Show the panel when assets are loaded
         console.log(`Set ${filteredAssets.length} assets into nearAssets`);
       }
     }
@@ -110,8 +113,15 @@ const JobPhotosPage = () => {
       for (const asset of nearAssets) {
         await jobDbHost?.GetPictureBucketDB().InsertPicture(jobId, asset);
       }
+      setShowNearAssets(false); // Hide the panel after adding
+      setNearAssets(undefined); // Clear the assets
     }
-  }, [nearAssets, jobId]);
+  }, [nearAssets, jobId, jobDbHost]);
+
+  const handleClose = useCallback(() => {
+    setShowNearAssets(false);
+    setNearAssets(undefined);
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -136,25 +146,30 @@ const JobPhotosPage = () => {
           )}
         </View>
 
-        {/* Separator */}
-        <View style={styles.separator} />
-
-        {/* Right side - Near Assets */}
-        <View style={styles.listColumn}>
-          <Text style={styles.listTitle}>Nearby Photos</Text>
-          {!nearAssets ? (
-            <Text>Loading...{fetchStatus}</Text>
-          ) : (
-            <>
-              <FlashList
-                data={nearAssets}
-                estimatedItemSize={200}
-                renderItem={(item) => <Image source={{ uri: item.item.uri }} style={styles.thumbnail} />}
-              />
-              <Button title="Add All To Job" onPress={OnAddAllToJobClicked} />
-            </>
-          )}
-        </View>
+        {/* Right side - Only show when showNearAssets is true */}
+        {showNearAssets && (
+          <>
+            <View style={styles.separator} />
+            <View style={styles.listColumn}>
+              <Text style={styles.listTitle}>Nearby Photos</Text>
+              {!nearAssets ? (
+                <Text>Loading...{fetchStatus}</Text>
+              ) : (
+                <>
+                  <FlashList
+                    data={nearAssets}
+                    estimatedItemSize={200}
+                    renderItem={(item) => <Image source={{ uri: item.item.uri }} style={styles.thumbnail} />}
+                  />
+                  <View style={styles.buttonContainer}>
+                    <Button title="Add All To Job" onPress={OnAddAllToJobClicked} />
+                    <Button title="Close" onPress={handleClose} />
+                  </View>
+                </>
+              )}
+            </View>
+          </>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -193,6 +208,10 @@ const styles = StyleSheet.create({
     height: 200,
     marginBottom: 10,
     borderRadius: 8,
+  },
+  buttonContainer: {
+    gap: 10,
+    marginTop: 10,
   },
 });
 
