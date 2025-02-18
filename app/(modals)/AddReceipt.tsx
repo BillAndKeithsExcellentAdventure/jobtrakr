@@ -206,7 +206,7 @@ const AddReceiptModalScreen = ({
             <View style={styles.modalContainer}>
               <Text txtSize="title" style={styles.modalTitle} text="Add Receipt" />
 
-              <View style={{ paddingBottom: 10, borderBottomWidth: 1 }}>
+              <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.borderColor }}>
                 <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
                   <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
                   <TextInput
@@ -291,7 +291,7 @@ const AddReceiptModalScreen = ({
                 />
 
                 <ActionButton
-                  style={styles.saveButton}
+                  style={styles.cancelButton}
                   onPress={() => {
                     setJobReceipt(initJobReceipt);
                     hideModal(false);
@@ -362,6 +362,10 @@ const styles = StyleSheet.create({
   saveButton: {
     flex: 1,
     marginRight: 5,
+  },
+  cancelButton: {
+    flex: 1,
+    marginLeft: 5,
   },
 });
 

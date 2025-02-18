@@ -1,3 +1,4 @@
+import { ActionButton } from '@/components/ActionButton';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useJobDb } from '@/context/DatabaseContext';
 import FontAwesomeIcon from '@expo/vector-icons/FontAwesome';
@@ -142,12 +143,7 @@ const JobNotes = () => {
                 placeholder="Enter job note"
                 style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
               />
-              <TouchableOpacity
-                onPress={addNote}
-                style={{ backgroundColor: '#007bff', padding: 10, borderRadius: 5 }}
-              >
-                <Text style={{ color: '#fff', textAlign: 'center' }}>Add Note</Text>
-              </TouchableOpacity>
+              <ActionButton onPress={addNote} type={'action'} title="Add Note" />
             </View>
           )}
 
@@ -160,25 +156,15 @@ const JobNotes = () => {
                 placeholder="Edit note title"
                 style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
               />
+
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <TouchableOpacity
-                  onPress={saveEdit}
-                  style={{
-                    backgroundColor: '#28a745',
-                    padding: 10,
-                    borderRadius: 5,
-                    flex: 1,
-                    marginRight: 5,
-                  }}
-                >
-                  <Text style={{ color: '#fff', textAlign: 'center' }}>Save</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
+                <ActionButton style={styles.saveButton} onPress={saveEdit} type={'ok'} title="Save" />
+                <ActionButton
+                  style={styles.cancelButton}
                   onPress={cancelEdit}
-                  style={{ backgroundColor: '#dc3545', padding: 10, borderRadius: 5, flex: 1 }}
-                >
-                  <Text style={{ color: '#fff', textAlign: 'center' }}>Cancel</Text>
-                </TouchableOpacity>
+                  type={'cancel'}
+                  title="Cancel"
+                />
               </View>
             </View>
           )}
@@ -255,38 +241,16 @@ const styles = StyleSheet.create({
     padding: 8,
     marginBottom: 10,
   },
-  addButton: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 5,
-  },
-  addButtonText: {
-    color: '#fff',
-    textAlign: 'center',
-  },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   saveButton: {
-    backgroundColor: '#28a745',
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
     marginRight: 5,
-  },
-  saveButtonText: {
-    color: '#fff',
-    textAlign: 'center',
+    flex: 1,
   },
   cancelButton: {
-    backgroundColor: '#dc3545',
-    padding: 10,
-    borderRadius: 5,
     flex: 1,
-  },
-  cancelButtonText: {
-    color: '#fff',
-    textAlign: 'center',
+    marginLeft: 5,
   },
 });
