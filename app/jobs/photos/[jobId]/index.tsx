@@ -146,6 +146,7 @@ const JobPhotosPage = () => {
         <Text>JobName={jobName}</Text>
         <Text>JobId={jobId}</Text>
         <Button title="Load Nearest" onPress={OnLoadNearestClicked} />
+        <Text>{fetchStatus}</Text>
       </View>
       <View style={styles.listsContainer}>
         {/* Left side - Job Assets */}
@@ -190,8 +191,14 @@ const JobPhotosPage = () => {
                     )}
                   />
                   <View style={styles.buttonContainer}>
-                    <Button title="Add All To Job" onPress={OnAddAllToJobClicked} />
-                    <Button title="Close" onPress={handleClose} />
+                    <View style={styles.buttonRow}>
+                      <View style={styles.buttonWrapper}>
+                        <Button title="Add All" onPress={OnAddAllToJobClicked} />
+                      </View>
+                      <View style={styles.buttonWrapper}>
+                        <Button title="Close" onPress={handleClose} />
+                      </View>
+                    </View>
                   </View>
                 </>
               )}
@@ -237,8 +244,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   buttonContainer: {
-    gap: 10,
     marginTop: 10,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  buttonWrapper: {
+    flex: 1, // This makes both buttons take up equal space
   },
   assetContainer: {
     flexDirection: 'row',
