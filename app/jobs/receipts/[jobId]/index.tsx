@@ -12,12 +12,12 @@ export interface JobReceiptData {
   UserId?: string;
   JobId?: string;
   Amount?: number;
-  Vendor?: number;
+  Vendor?: string;
   Description?: string;
   Notes?: string;
   CategoryName: string;
   ItemName: string;
-  PictureBucketDataId?: string;
+  PictureUri?: string;
 }
 
 export interface PictureBucketData {
@@ -40,7 +40,7 @@ const JobReceiptsPage = () => {
     CategoryName: '',
     ItemName: '',
     Amount: 0,
-    Vendor: 0,
+    Vendor: '',
     Description: '',
     Notes: '',
   });
@@ -86,6 +86,14 @@ const JobReceiptsPage = () => {
     [fetchReceipts],
   );
 
+  const showPicture = useCallback((PictureUri: string) => {
+    // TODO
+  }, []);
+
+  const addPicture = useCallback((_id: string | undefined) => {
+    // TODO
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
@@ -112,7 +120,13 @@ const JobReceiptsPage = () => {
                   <Text>Vendor: {item.Vendor}</Text>
                   <Text>Description: {item.Description}</Text>
                   <Text>Notes: {item.Notes}</Text>
-                  {item.PictureBucketDataId && <Text>Picture: {item.PictureBucketDataId}</Text>}
+                  <ActionButton
+                    title={item.PictureUri ? 'Show Picture' : 'Add Picture'}
+                    onPress={(): void => {
+                      item.PictureUri ? showPicture(item.PictureUri) : addPicture(item._id);
+                    }}
+                    type={'action'}
+                  />
                 </View>
               )}
             />

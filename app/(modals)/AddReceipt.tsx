@@ -1,4 +1,5 @@
 import { ActionButton } from '@/components/ActionButton';
+import { CurrencyInputField } from '@/components/CurrencyInputField';
 import { TextField } from '@/components/TextField';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -97,10 +98,10 @@ const AddReceiptModalScreen = ({
     hideDatePicker();
   }, []);
 
-  const handleAmountChange = useCallback((amount: string) => {
+  const handleAmountChange = useCallback((amount: number) => {
     setJobReceipt((prevReceipt) => ({
       ...prevReceipt,
-      amount: parseFloat(amount),
+      amount,
     }));
   }, []);
 
@@ -199,11 +200,12 @@ const AddReceiptModalScreen = ({
             styles.container,
             styles.modalBackground,
             { backgroundColor: colors.modalOverlayBackgroundColor },
-            Platform.OS === 'ios' && { marginTop: 30 },
           ]}
         >
           <TouchableWithoutFeedback onPress={dismissKeyboard}>
-            <View style={styles.modalContainer}>
+            <View
+              style={[styles.modalContainer, Platform.OS === 'ios' ? { marginTop: 30 } : { marginTop: 40 }]}
+            >
               <Text txtSize="title" style={styles.modalTitle} text="Add Receipt" />
 
               <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.borderColor }}>
@@ -235,14 +237,12 @@ const AddReceiptModalScreen = ({
                   onChangeText={handleVendorChange}
                 />
 
-                <TextField
-                  containerStyle={styles.inputContainer}
-                  style={[styles.input, { borderColor: colors.transparent }]}
+                <CurrencyInputField
+                  style={styles.inputContainer}
                   placeholder="Amount"
                   label="Amount"
-                  keyboardType="numeric"
-                  value={jobReceipt.amount?.toString()}
-                  onChangeText={handleAmountChange}
+                  value={jobReceipt.amount}
+                  onChange={handleAmountChange}
                 />
                 <TextField
                   containerStyle={styles.inputContainer}
@@ -317,7 +317,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start', // Align items at the top vertically
     alignItems: 'center', // Center horizontally
     width: '100%',
-    paddingTop: 40,
   },
   modalContainer: {
     maxWidth: 400,
