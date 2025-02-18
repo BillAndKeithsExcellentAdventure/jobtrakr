@@ -118,11 +118,15 @@ const JobPhotosPage = () => {
     }
   }, [mediaAssets, setNearAssets, jobAssets]);
 
-  const OnAddAllToJobClicked = useCallback(async () => {
+  const OnAddToJobClicked = useCallback(async () => {
     if (nearAssets) {
+      const hasSelectedAssets = nearAssets.some((item) => item.selected);
       for (const asset of nearAssets) {
-        await jobDbHost?.GetPictureBucketDB().InsertPicture(jobId, asset);
+        if (!hasSelectedAssets || asset.selected) {
+          await jobDbHost?.GetPictureBucketDB().InsertPicture(jobId, asset.asset);
+        }
       }
+
       setShowNearAssets(false); // Hide the panel after adding
       setNearAssets(undefined); // Clear the assets
     }
@@ -138,6 +142,12 @@ const JobPhotosPage = () => {
       prevAssets?.map((item) => (item.asset.id === assetId ? { ...item, selected: !item.selected } : item)),
     );
   }, []);
+
+  const getAddButtonTitle = useCallback(() => {
+    if (!nearAssets) return 'Add All';
+    const hasSelectedAssets = nearAssets.some((item) => item.selected);
+    return hasSelectedAssets ? 'Add Selected' : 'Add All';
+  }, [nearAssets]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -193,7 +203,7 @@ const JobPhotosPage = () => {
                   <View style={styles.buttonContainer}>
                     <View style={styles.buttonRow}>
                       <View style={styles.buttonWrapper}>
-                        <Button title="Add All" onPress={OnAddAllToJobClicked} />
+                        <Button title={getAddButtonTitle()} onPress={OnAddToJobClicked} />
                       </View>
                       <View style={styles.buttonWrapper}>
                         <Button title="Close" onPress={handleClose} />
@@ -267,12 +277,11 @@ const styles = StyleSheet.create({
     height: 24,
     borderWidth: 2,
     borderColor: '#000',
-    borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkboxSelected: {
-    backgroundColor: '#fff', // Changed to white background
+    backgroundColor: '#fff',
     borderColor: '#007AFF',
   },
   checkmark: {
