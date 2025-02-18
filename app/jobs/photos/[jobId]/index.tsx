@@ -10,10 +10,15 @@ import { JobData } from 'jobdb';
 import * as Location from 'expo-location';
 import { FlashList } from '@shopify/flash-list';
 
+type NearAssetsItem = {
+  selected: boolean;
+  asset: MediaLibrary.Asset;
+};
+
 const JobPhotosPage = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
   const [jobAssets, setJobAssets] = useState<MediaLibrary.Asset[] | undefined>(undefined);
-  const [nearAssets, setNearAssets] = useState<MediaLibrary.Asset[] | undefined>(undefined);
+  const [nearAssets, setNearAssets] = useState<NearAssetsItem[] | undefined>(undefined);
   const [mediaAssets, setMediaAssets] = useState<MediaAssets | null>(null);
   const [fetchStatus, setFetchStatus] = useState<string>('');
   const [showNearAssets, setShowNearAssets] = useState<boolean>(false);
@@ -84,7 +89,7 @@ const JobPhotosPage = () => {
 
   const OnLoadNearestClicked = useCallback(async () => {
     //const location = await getCurrentLocation();
-    const location = jobDbHost?.GetJobDB().(jobId);
+    const location = await jobDbHost?.GetJobDB().FetchJobLocation(jobId);
     if (location) {
       console.log(`Current location: ${location.latitude}, ${location.longitude}`);
       const foundAssets: MediaLibrary.Asset[] | undefined = await mediaAssets?.getAllAssetsNearLocation(
@@ -101,7 +106,12 @@ const JobPhotosPage = () => {
           (foundAsset) => !jobAssets?.some((jobAsset) => jobAsset.id === foundAsset.id),
         );
 
-        setNearAssets(filteredAssets);
+        const selectionList: NearAssetsItem[] = filteredAssets.map((asset) => ({
+          selected: true,
+          asset: asset,
+        }));
+
+        setNearAssets(selectionList);
         setShowNearAssets(true); // Show the panel when assets are loaded
         console.log(`Set ${filteredAssets.length} assets into nearAssets`);
       }
@@ -159,7 +169,9 @@ const JobPhotosPage = () => {
                   <FlashList
                     data={nearAssets}
                     estimatedItemSize={200}
-                    renderItem={(item) => <Image source={{ uri: item.item.uri }} style={styles.thumbnail} />}
+                    renderItem={(item) => (
+                      <Image source={{ uri: item.item.asset.uri }} style={styles.thumbnail} />
+                    )}
                   />
                   <View style={styles.buttonContainer}>
                     <Button title="Add All To Job" onPress={OnAddAllToJobClicked} />
