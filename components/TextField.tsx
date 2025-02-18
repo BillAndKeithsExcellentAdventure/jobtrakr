@@ -1,4 +1,4 @@
-import { ComponentType, forwardRef, Ref, useImperativeHandle, useRef } from 'react';
+import { ComponentType, forwardRef, Ref, useImperativeHandle, useMemo, useRef } from 'react';
 import {
   ImageStyle,
   StyleProp,
@@ -106,24 +106,27 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
   const colorScheme = useColorScheme();
 
   // Define colors based on the color scheme (dark or light)
-  const colors =
-    colorScheme === 'dark'
-      ? {
-          error: Colors.dark.error,
-          textDim: Colors.dark.textDim,
-          transparent: Colors.dark.transparent,
-          neutral200: Colors.dark.neutral200,
-          neutral400: Colors.dark.neutral400,
-          text: Colors.dark.text,
-        }
-      : {
-          error: Colors.light.error,
-          textDim: Colors.light.textDim,
-          transparent: Colors.light.transparent,
-          neutral200: Colors.light.neutral200,
-          neutral400: Colors.light.neutral400,
-          text: Colors.light.text,
-        };
+  const colors = useMemo(() => {
+    const themedColors =
+      colorScheme === 'dark'
+        ? {
+            error: Colors.dark.error,
+            textDim: Colors.dark.textDim,
+            transparent: Colors.dark.transparent,
+            neutral200: Colors.dark.neutral200,
+            neutral400: Colors.dark.neutral400,
+            text: Colors.dark.text,
+          }
+        : {
+            error: Colors.light.error,
+            textDim: Colors.light.textDim,
+            transparent: Colors.light.transparent,
+            neutral200: Colors.light.neutral200,
+            neutral400: Colors.light.neutral400,
+            text: Colors.light.text,
+          };
+    return themedColors;
+  }, [Colors, colorScheme]);
 
   const $inputWrapperStyles = [
     {
