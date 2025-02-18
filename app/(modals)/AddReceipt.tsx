@@ -1,5 +1,5 @@
 import { ActionButton } from '@/components/ActionButton';
-import { CurrencyInputField } from '@/components/CurrencyInputField';
+import { NumberInputField } from '@/components/NumberInputField';
 import { TextField } from '@/components/TextField';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -237,7 +237,7 @@ const AddReceiptModalScreen = ({
                   onChangeText={handleVendorChange}
                 />
 
-                <CurrencyInputField
+                <NumberInputField
                   style={styles.inputContainer}
                   placeholder="Amount"
                   label="Amount"

@@ -4,8 +4,9 @@ import { useColorScheme } from './useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { TextProps, Text, View } from './Themed';
 
-interface CurrencyInputFieldProps {
+interface NumberInputFieldProps {
   value: number;
+  numDecimalPlaces?: number;
   onChange: (value: number) => void;
   label?: string;
   placeholder?: string;
@@ -13,10 +14,11 @@ interface CurrencyInputFieldProps {
   style?: ViewStyle;
 }
 
-export const CurrencyInputField: React.FC<CurrencyInputFieldProps> = ({
+export const NumberInputField: React.FC<NumberInputFieldProps> = ({
   value,
   onChange,
   label = '',
+  numDecimalPlaces = 2,
   placeholder = undefined,
   readOnly = false,
   style = {},
@@ -33,10 +35,11 @@ export const CurrencyInputField: React.FC<CurrencyInputFieldProps> = ({
   const handleBlur = useCallback(() => {
     const numericValue = parseFloat(inputValue.replace(/[^0-9.]/g, ''));
     if (!isNaN(numericValue)) {
-      setInputValue(numericValue.toFixed(2));
+      setInputValue(numericValue.toFixed(numDecimalPlaces));
       onChange(numericValue);
     } else {
-      setInputValue('0.00');
+      const zero = 0;
+      setInputValue(zero.toFixed(numDecimalPlaces));
       onChange(0);
     }
   }, [onChange, inputValue]);
