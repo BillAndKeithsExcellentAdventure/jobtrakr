@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { launchCamera } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 
 type JobReceipt = {
   date: Date;
@@ -42,7 +43,7 @@ const AddReceiptModalScreen = ({
 }) => {
   const defaultDate = new Date();
 
-  const [jobReceipt, setJobReceipt] = useState<JobReceipt>({
+  const initJobReceipt: JobReceipt = {
     jobId,
     date: defaultDate,
     amount: 0,
@@ -51,7 +52,9 @@ const AddReceiptModalScreen = ({
     notes: '',
     categoryName: '',
     subCategoryName: '',
-  });
+  };
+
+  const [jobReceipt, setJobReceipt] = useState<JobReceipt>(initJobReceipt);
 
   const colorScheme = useColorScheme();
   const [datePickerVisible, setDatePickerVisible] = useState(false);
@@ -70,6 +73,7 @@ const AddReceiptModalScreen = ({
             neutral200: Colors.dark.neutral200,
             buttonBlue: Colors.dark.buttonBlue,
             tint: Colors.dark.tint,
+            textDim: Colors.dark.textDim,
           }
         : {
             background: Colors.light.background,
@@ -80,6 +84,7 @@ const AddReceiptModalScreen = ({
             neutral200: Colors.light.neutral200,
             buttonBlue: Colors.light.buttonBlue,
             tint: Colors.light.tint,
+            textDim: Colors.light.textDim,
           };
 
     return themeColors;
@@ -177,28 +182,23 @@ const AddReceiptModalScreen = ({
     Keyboard.dismiss();
   }, []);
 
-  const handleCaptureImage = useCallback(() => {
-    launchCamera(
-      {
-        mediaType: 'photo',
-        saveToPhotos: true,
-        cameraType: 'back',
-        quality: 0.7,
-      },
-      (response) => {
-        if (response.didCancel) {
-          console.log('User cancelled image picker');
-        } else if (response.errorCode) {
-          console.log('ImagePicker Error: ', response.errorMessage);
-        } else {
-          if (!response.assets || response.assets.length === 0 || !response.assets[0].uri) return;
-          setJobReceipt((prevReceipt) => ({
-            ...prevReceipt,
-            pictureUri: response.assets ? response.assets[0].uri : '',
-          }));
-        }
-      },
-    );
+  const handleCaptureImage = useCallback(async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      alert("You've refused to allow this app to access your camera!");
+      return;
+    }
+
+    const response = await ImagePicker.launchCameraAsync();
+
+    if (!response.canceled) {
+      if (!response.assets || response.assets.length === 0 || !response.assets[0].uri) return;
+      setJobReceipt((prevReceipt) => ({
+        ...prevReceipt,
+        pictureUri: response.assets ? response.assets[0].uri : '',
+      }));
+    }
   }, []);
 
   return (
@@ -272,12 +272,10 @@ const AddReceiptModalScreen = ({
 
             {jobReceipt.pictureUri && (
               <>
-                <Text>Picture selected: {jobReceipt.pictureUri}</Text>
-                <View style={{ marginBottom: 20 }}>
-                  <Text>Picture selected:</Text>
+                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
                   <Image
                     source={{ uri: jobReceipt.pictureUri }}
-                    style={{ width: 150, height: 150, marginVertical: 10 }}
+                    style={{ width: 275, height: 180, marginVertical: 10 }}
                   />
                 </View>
               </>
@@ -288,7 +286,9 @@ const AddReceiptModalScreen = ({
                 onPress={handleCaptureImage}
                 style={[styles.saveButton, { backgroundColor: addButtonBg }]}
               >
-                <Text style={styles.saveButtonText}>Take Picture</Text>
+                <Text style={styles.saveButtonText}>
+                  {jobReceipt.pictureUri ? 'Retake Picture' : 'Take Picture'}
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -298,13 +298,17 @@ const AddReceiptModalScreen = ({
                 disabled={!canAddReceipt}
                 style={[
                   styles.saveButton,
-                  { backgroundColor: !!canAddReceipt ? saveButtonBg : colors.neutral500 },
+                  { backgroundColor: !!canAddReceipt ? saveButtonBg : colors.transparent },
+                  !canAddReceipt && { borderColor: colors.textDim },
                 ]}
               >
-                <Text style={styles.saveButtonText}>Save</Text>
+                <Text style={[styles.saveButtonText, !canAddReceipt && { color: colors.textDim }]}>Save</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => hideModal(false)}
+                onPress={() => {
+                  setJobReceipt(initJobReceipt);
+                  hideModal(false);
+                }}
                 style={[styles.cancelButton, { backgroundColor: cancelButtonBg }]}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
