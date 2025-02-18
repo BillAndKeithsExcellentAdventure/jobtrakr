@@ -1,12 +1,12 @@
 import React, { useState, FC, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Animated, Text, LayoutChangeEvent } from 'react-native';
 
-export interface CustomSwitchProps {
+export interface SwitchProps {
   value: boolean;
   onValueChange: (value: boolean) => void;
 }
 
-export const CustomSwitch: FC<CustomSwitchProps> = ({ value, onValueChange }) => {
+export const Switch: FC<SwitchProps> = ({ value, onValueChange }) => {
   const [animValue] = useState(new Animated.Value(value ? 1 : 0));
   const [containerWidth, setContainerWidth] = useState(0);
   const thumbWidth = 16; // Width of the switch thumb
