@@ -6,6 +6,7 @@ import { launchCamera } from 'react-native-image-picker';
 import { useJobDb } from '@/context/DatabaseContext';
 import AddReceiptModalScreen from '@/app/(modals)/AddReceipt';
 import { ActionButton } from '@/components/ActionButton';
+import { CustomSwitch } from '@/components/Switch';
 
 export interface JobReceiptData {
   _id?: string;
@@ -94,12 +95,21 @@ const JobReceiptsPage = () => {
     // TODO
   }, []);
 
+  const [isSwitchOn, setIsSwitchOn] = useState(false);
+
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
       <View style={{ padding: 20 }}>
         <View style={{ marginHorizontal: 10, marginBottom: 20 }}>
           <ActionButton onPress={handleAddReceipt} type={'action'} title="Add Receipt" />
+        </View>
+
+        <View style={{ marginHorizontal: 10, marginBottom: 20, alignSelf: 'center', flexDirection: 'row' }}>
+          <Text text="Filter Photos:" txtSize="standard" style={{ marginRight: 10 }} />
+          <Text text="Near Job" txtSize="standard" style={{ marginRight: 10 }} />
+          <CustomSwitch value={isSwitchOn} onValueChange={setIsSwitchOn} />
+          <Text text="All" txtSize="standard" style={{ marginLeft: 10 }} />
         </View>
 
         <Text text="Job Receipts" txtSize="title" />
