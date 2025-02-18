@@ -1,3 +1,4 @@
+import { ActionButton } from '@/components/ActionButton';
 import { Button } from '@/components/Button';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -101,9 +102,21 @@ const JobModalScreen = ({
             onChangeText={(text) => setJob({ ...job, owner: text })}
           />
 
-          <View style={styles.buttons}>
-            <Button disabled={!canAddJob} text="Submit" onPress={handleSubmit} />
-            <Button text="Cancel" onPress={() => hideModal(false)} />
+          <View style={styles.saveButtonRow}>
+            <ActionButton
+              style={styles.saveButton}
+              onPress={handleSubmit}
+              type={canAddJob ? 'ok' : 'disabled'}
+              title="Save"
+            />
+            <ActionButton
+              style={styles.cancelButton}
+              onPress={() => {
+                hideModal(false);
+              }}
+              type={'cancel'}
+              title="Cancel"
+            />
           </View>
         </View>
       </View>
@@ -118,7 +131,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContainer: {
-    width: 300,
+    width: '100%',
     padding: 20,
     borderRadius: 20,
   },
@@ -135,11 +148,18 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
     borderRadius: 5,
   },
-  buttons: {
+  saveButtonRow: {
     marginTop: 10,
     flexDirection: 'row',
-    alignItems: 'stretch',
-    justifyContent: 'space-evenly',
+    justifyContent: 'space-between',
+  },
+  saveButton: {
+    flex: 1,
+    marginRight: 5,
+  },
+  cancelButton: {
+    flex: 1,
+    marginLeft: 5,
   },
 });
 

@@ -5,6 +5,7 @@ import { Text, View, TextInput } from '@/components/Themed';
 import { launchCamera } from 'react-native-image-picker';
 import { useJobDb } from '@/context/DatabaseContext';
 import AddReceiptModalScreen from '@/app/(modals)/AddReceipt';
+import { ActionButton } from '@/components/ActionButton';
 
 export interface JobReceiptData {
   _id?: string;
@@ -89,10 +90,16 @@ const JobReceiptsPage = () => {
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
       <View style={{ padding: 20 }}>
+        <View style={{ marginHorizontal: 10, marginBottom: 20 }}>
+          <ActionButton onPress={handleAddReceipt} type={'action'} title="Add Receipt" />
+        </View>
+
         <Text text="Job Receipts" txtSize="title" />
-        <View style={{ marginVertical: 20, borderBottomWidth: 1 }}>
+        <View style={{ marginVertical: 20 }}>
           {receipts.length === 0 ? (
-            <Text>No receipts found.</Text>
+            <View style={{ alignItems: 'center' }}>
+              <Text>No receipts found.</Text>
+            </View>
           ) : (
             <FlatList
               data={receipts}
@@ -111,7 +118,6 @@ const JobReceiptsPage = () => {
             />
           )}
         </View>
-        <Button title="Add Receipt" onPress={handleAddReceipt} />
         <AddReceiptModalScreen jobId="{jobId}" visible={isAddModalVisible} hideModal={hideAddModal} />
       </View>
     </SafeAreaView>
@@ -121,28 +127,6 @@ const JobReceiptsPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  headerContainer: {
-    marginTop: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 18,
-    marginBottom: 16,
-  },
-  itemContainer: {
-    marginBottom: 12,
-  },
-  categoryTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 4,
   },
 });
 
