@@ -133,6 +133,12 @@ const JobPhotosPage = () => {
     setNearAssets(undefined);
   }, []);
 
+  const handleAssetSelection = useCallback((assetId: string) => {
+    setNearAssets((prevAssets) =>
+      prevAssets?.map((item) => (item.asset.id === assetId ? { ...item, selected: !item.selected } : item)),
+    );
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ title: `Job Photos`, headerShown: true }} />
@@ -169,8 +175,18 @@ const JobPhotosPage = () => {
                   <FlashList
                     data={nearAssets}
                     estimatedItemSize={200}
-                    renderItem={(item) => (
-                      <Image source={{ uri: item.item.asset.uri }} style={styles.thumbnail} />
+                    renderItem={({ item }) => (
+                      <View style={styles.assetContainer}>
+                        <TouchableOpacity
+                          style={styles.checkboxContainer}
+                          onPress={() => handleAssetSelection(item.asset.id)}
+                        >
+                          <View style={[styles.checkbox, item.selected && styles.checkboxSelected]}>
+                            {item.selected && <Text style={styles.checkmark}>✓</Text>}
+                          </View>
+                        </TouchableOpacity>
+                        <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
+                      </View>
                     )}
                   />
                   <View style={styles.buttonContainer}>
@@ -216,14 +232,39 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   thumbnail: {
-    width: '100%',
+    flex: 1,
     height: 200,
-    marginBottom: 10,
     borderRadius: 8,
   },
   buttonContainer: {
     gap: 10,
     marginTop: 10,
+  },
+  assetContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  checkboxContainer: {
+    marginRight: 10,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    borderColor: '#000',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxSelected: {
+    backgroundColor: '#fff', // Changed to white background
+    borderColor: '#007AFF',
+  },
+  checkmark: {
+    color: '#007AFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
