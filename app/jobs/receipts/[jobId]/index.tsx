@@ -111,6 +111,8 @@ const JobReceiptsPage = () => {
           <Switch value={isSwitchOn} onValueChange={setIsSwitchOn} />
           <Text text="All" txtSize="standard" style={{ marginLeft: 10 }} />
         </View>
+        <Switch value={isSwitchOn} onValueChange={setIsSwitchOn} isOffOnToggle={true} size="large" />
+        <Switch value={isSwitchOn} onValueChange={setIsSwitchOn} isOffOnToggle={true} size="medium" />
 
         <Text text="Job Receipts" txtSize="title" />
         <View style={{ marginVertical: 20 }}>
