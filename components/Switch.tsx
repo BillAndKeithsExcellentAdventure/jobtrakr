@@ -1,15 +1,22 @@
-import React, { useState, FC, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Animated, Text, LayoutChangeEvent } from 'react-native';
+import React, { FC, useEffect, useState } from 'react';
+import { Animated, LayoutChangeEvent, StyleSheet, TouchableOpacity } from 'react-native';
 
 export interface SwitchProps {
   value: boolean;
   onValueChange: (value: boolean) => void;
+  isOffOnToggle?: boolean;
+  size?: 'small' | 'medium' | 'large';
 }
 
-export const Switch: FC<SwitchProps> = ({ value, onValueChange }) => {
+export const Switch: FC<SwitchProps> = ({
+  value,
+  onValueChange,
+  isOffOnToggle: isOnOffToggle = false,
+  size = 'small',
+}) => {
   const [animValue] = useState(new Animated.Value(value ? 1 : 0));
   const [containerWidth, setContainerWidth] = useState(0);
-  const thumbWidth = 16; // Width of the switch thumb
+  const thumbWidth = size === 'large' ? 26 : size === 'medium' ? 21 : 16; // Width of the switch thumb
 
   useEffect(() => {
     Animated.timing(animValue, {
@@ -35,18 +42,26 @@ export const Switch: FC<SwitchProps> = ({ value, onValueChange }) => {
 
   const translateX = animValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [2, containerWidth - thumbWidth - 2], // Dynamic calculation
+    outputRange: [2, containerWidth - thumbWidth - 3], // Dynamic calculation
   });
 
   return (
     <TouchableOpacity
-      style={[styles.switchContainer, value && styles.switchContainerOn]}
+      style={[
+        styles.switchContainer,
+        size === 'medium' && styles.switchContainerMedium,
+        size === 'large' && styles.switchContainerLarge,
+        value && styles.switchContainerOn,
+        !value && isOnOffToggle && styles.switchContainerOff,
+      ]}
       onPress={toggleSwitch}
       onLayout={onLayout}
     >
       <Animated.View
         style={[
           styles.switchThumb,
+          size === 'large' && styles.switchThumbLarge,
+          size === 'medium' && styles.switchThumbMedium,
           {
             transform: [{ translateX }],
           },
@@ -63,25 +78,46 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
   },
-  text: {
-    marginBottom: 10,
-    fontSize: 20,
-  },
   switchContainer: {
     width: 40,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#008015',
+    backgroundColor: '#4CAF50',
     justifyContent: 'center',
     padding: 2,
   },
-  switchContainerOn: {
-    backgroundColor: '#6200ee',
+  switchContainerMedium: {
+    width: 50,
+    height: 25,
+    borderRadius: 12.5,
   },
+  switchContainerLarge: {
+    width: 60,
+    height: 30,
+    borderRadius: 15,
+  },
+  switchContainerOn: {
+    backgroundColor: '#1E88E5',
+  },
+  switchContainerOff: {
+    backgroundColor: '#D1D1D6',
+  },
+
   switchThumb: {
     width: 16,
     height: 16,
     borderRadius: 8,
     backgroundColor: '#fff',
+  },
+  switchThumbMedium: {
+    width: 21,
+    height: 21,
+    borderRadius: 10.5,
+    backgroundColor: '#fff',
+  },
+  switchThumbLarge: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
   },
 });
