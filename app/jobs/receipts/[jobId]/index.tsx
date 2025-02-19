@@ -1,12 +1,11 @@
-import { StyleSheet, SafeAreaView, FlatList, Button, TouchableOpacity } from 'react-native';
-import React, { useCallback, useEffect, useState } from 'react';
-import { useLocalSearchParams, Stack } from 'expo-router';
-import { Text, View, TextInput } from '@/components/Themed';
-import { launchCamera } from 'react-native-image-picker';
-import { useJobDb } from '@/context/DatabaseContext';
 import AddReceiptModalScreen from '@/app/(modals)/AddReceipt';
 import { ActionButton } from '@/components/ActionButton';
 import { Switch } from '@/components/Switch';
+import { Text, View } from '@/components/Themed';
+import { useJobDb } from '@/context/DatabaseContext';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { FlatList, SafeAreaView, StyleSheet } from 'react-native';
 
 export interface JobReceiptData {
   _id?: string;

@@ -89,7 +89,7 @@ const JobNotes = () => {
       noteToUpdate.Completed = !completed;
 
       try {
-        const status = await jobDbHost?.GetTodoDB().UpdateJob(noteToUpdate);
+        const status = await jobDbHost?.GetTodoDB().UpdateTodo(noteToUpdate);
         if (status === 'Success') {
           await fetchNotes();
         } else {
