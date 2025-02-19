@@ -131,7 +131,7 @@ export default function JobHomeScreen() {
       const listData: TwoColumnListEntry[] = jobs.map((job) => {
         return {
           primaryTitle: job.Name ? job.Name : 'unknown',
-          entryId: job._id ? job._id.toString() : '1',
+          entryId: job._id ?? '1',
           imageUri: 'x',
           secondaryTitle: job.Location,
           tertiaryTitle: job.OwnerName ?? 'Owner',
@@ -155,7 +155,7 @@ export default function JobHomeScreen() {
 
   const onLikePressed = useCallback(
     async (jobId: string) => {
-      const matchingJob = allJobs.find((j) => j._id?.toString() === jobId);
+      const matchingJob = allJobs.find((j) => j._id! === jobId);
       if (matchingJob) {
         const maxFavoriteValue = allJobs.reduce((max, current) => {
           const currentValue = current.Favorite ?? 0;
@@ -274,7 +274,7 @@ export default function JobHomeScreen() {
 
   const handleSelection = useCallback(
     (entry: TwoColumnListEntry) => {
-      const job = allJobs.find((j) => (j._id ? j._id.toString() : '') === entry.entryId);
+      const job = allJobs.find((j) => (j._id ?? '') === entry.entryId);
       if (job && job._id) router.push(`/jobs/${job._id}?jobName=${job.Name}`);
       console.log(`Hello from item ${entry.primaryTitle}`);
     },
@@ -318,8 +318,8 @@ export default function JobHomeScreen() {
                     }}
                   >
                     {({ pressed }) => (
-                      <MaterialDesignTabBarIcon
-                        name="cog"
+                      <Ionicons
+                        name="settings-sharp"
                         size={24}
                         color={colors.iconColor}
                         style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
@@ -343,8 +343,8 @@ export default function JobHomeScreen() {
                 }}
               >
                 {({ pressed }) => (
-                  <MaterialDesignTabBarIcon
-                    name="cog"
+                  <Ionicons
+                    name="settings-sharp"
                     size={24}
                     color={colors.iconColor}
                     style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}

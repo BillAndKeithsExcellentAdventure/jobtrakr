@@ -1,12 +1,11 @@
-import { StyleSheet, SafeAreaView, FlatList, Button, TouchableOpacity } from 'react-native';
-import React, { useCallback, useEffect, useState } from 'react';
-import { useLocalSearchParams, Stack } from 'expo-router';
-import { Text, View, TextInput } from '@/components/Themed';
-import { launchCamera } from 'react-native-image-picker';
-import { useJobDb } from '@/context/DatabaseContext';
 import AddReceiptModalScreen from '@/app/(modals)/AddReceipt';
 import { ActionButton } from '@/components/ActionButton';
 import { Switch } from '@/components/Switch';
+import { Text, View } from '@/components/Themed';
+import { useJobDb } from '@/context/DatabaseContext';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { FlatList, SafeAreaView, StyleSheet } from 'react-native';
 
 export interface JobReceiptData {
   _id?: string;
@@ -105,14 +104,45 @@ const JobReceiptsPage = () => {
           <ActionButton onPress={handleAddReceipt} type={'action'} title="Add Receipt" />
         </View>
 
-        <View style={{ marginHorizontal: 10, marginBottom: 20, alignSelf: 'center', flexDirection: 'row' }}>
-          <Text text="Filter Photos:" txtSize="standard" style={{ marginRight: 10 }} />
+        <View
+          style={{
+            marginHorizontal: 10,
+            marginBottom: 20,
+            alignSelf: 'center',
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}
+        >
           <Text text="Near Job" txtSize="standard" style={{ marginRight: 10 }} />
           <Switch value={isSwitchOn} onValueChange={setIsSwitchOn} />
           <Text text="All" txtSize="standard" style={{ marginLeft: 10 }} />
         </View>
-        <Switch value={isSwitchOn} onValueChange={setIsSwitchOn} isOffOnToggle={true} size="large" />
-        <Switch value={isSwitchOn} onValueChange={setIsSwitchOn} isOffOnToggle={true} size="medium" />
+        <View
+          style={{
+            marginHorizontal: 10,
+            marginBottom: 20,
+            alignSelf: 'center',
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}
+        >
+          <Text text="Near Job" txtSize="standard" style={{ marginRight: 10 }} />
+          <Switch value={isSwitchOn} onValueChange={setIsSwitchOn} size="large" />
+          <Text text="All" txtSize="standard" style={{ marginLeft: 10 }} />
+        </View>
+        <View
+          style={{
+            marginHorizontal: 10,
+            marginBottom: 20,
+            alignSelf: 'center',
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}
+        >
+          <Text text="Near Job" txtSize="standard" style={{ marginRight: 10 }} />
+          <Switch value={isSwitchOn} onValueChange={setIsSwitchOn} isOffOnToggle={true} size="medium" />
+          <Text text="All" txtSize="standard" style={{ marginLeft: 10 }} />
+        </View>
 
         <Text text="Job Receipts" txtSize="title" />
         <View style={{ marginVertical: 20 }}>
