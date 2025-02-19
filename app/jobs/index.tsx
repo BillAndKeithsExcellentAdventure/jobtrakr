@@ -319,7 +319,7 @@ export default function JobHomeScreen() {
                   >
                     {({ pressed }) => (
                       <Ionicons
-                        name="cog"
+                        name="settings-sharp"
                         size={24}
                         color={colors.iconColor}
                         style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
@@ -344,7 +344,7 @@ export default function JobHomeScreen() {
               >
                 {({ pressed }) => (
                   <Ionicons
-                    name="cog"
+                    name="settings-sharp"
                     size={24}
                     color={colors.iconColor}
                     style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
