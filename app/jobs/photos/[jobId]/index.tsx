@@ -255,7 +255,14 @@ const JobPhotosPage = () => {
             <FlashList
               data={jobAssets}
               estimatedItemSize={200}
-              renderItem={(item) => <Image source={{ uri: item.item.asset.uri }} style={styles.thumbnail} />}
+              renderItem={(item) => (
+                <View style={styles.imageContainer}>
+                  <Image source={{ uri: item.item.asset.uri }} style={styles.thumbnail} />
+                  <Text style={styles.dateOverlay}>
+                    {new Date(item.item.asset.creationTime * 1).toLocaleString()}
+                  </Text>
+                </View>
+              )}
             />
           )}
         </View>
@@ -287,7 +294,12 @@ const JobPhotosPage = () => {
                             {item.selected && <Text style={styles.checkmark}>✓</Text>}
                           </View>
                         </TouchableOpacity>
-                        <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
+                        <View style={styles.imageContainer}>
+                          <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
+                          <Text style={styles.dateOverlay}>
+                            {new Date(item.asset.creationTime * 1).toLocaleString()}
+                          </Text>
+                        </View>
                       </View>
                     )}
                   />
@@ -391,6 +403,21 @@ const styles = StyleSheet.create({
   footer: {
     padding: 10,
     alignItems: 'center',
+  },
+  imageContainer: {
+    position: 'relative',
+    flex: 1,
+    marginBottom: 10,
+  },
+  dateOverlay: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    color: 'white',
+    padding: 5,
+    borderRadius: 4,
+    fontSize: 12,
   },
 });
 
