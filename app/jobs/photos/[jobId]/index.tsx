@@ -1,5 +1,13 @@
-import { StyleSheet, Image, Button, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
-import React, { useCallback, useEffect, useState } from 'react';
+import {
+  StyleSheet,
+  Image,
+  Button,
+  ScrollView,
+  SafeAreaView,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { JobCategoryEntry } from '@/models/jobCategoryEntry';
 import { Text, View } from '@/components/Themed';
@@ -9,20 +17,41 @@ import { useJobDb } from '@/context/DatabaseContext';
 import { JobData } from 'jobdb';
 import * as Location from 'expo-location';
 import { FlashList } from '@shopify/flash-list';
+import { HorizontalLoadingIndicator } from '@/components/HorizontalActivityIndicator';
+import { Switch } from '@/components/Switch';
+import { ActionButton } from '@/components/ActionButton';
 
-type NearAssetsItem = {
+type AssetsItem = {
   selected: boolean;
   asset: MediaLibrary.Asset;
 };
 
+let gAssetItems: AssetsItem[] = [];
+
 const JobPhotosPage = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
   const [jobAssets, setJobAssets] = useState<MediaLibrary.Asset[] | undefined>(undefined);
-  const [nearAssets, setNearAssets] = useState<NearAssetsItem[] | undefined>(undefined);
-  const [mediaAssets, setMediaAssets] = useState<MediaAssets | null>(null);
+  const [assetItems, setAssetItems] = useState<AssetsItem[] | undefined>(undefined);
+  // const [mediaAssets, setMediaAssets] = useState<MediaAssets | null>(null);
+  const mediaTools = useRef<MediaAssets | null>(null);
   const [fetchStatus, setFetchStatus] = useState<string>('');
   const [showNearAssets, setShowNearAssets] = useState<boolean>(false);
   const { jobDbHost } = useJobDb();
+  const [useJobLocation, setUseJobLocation] = useState<boolean>(false);
+  const [showAssetItems, setShowAssetItems] = useState<boolean>(false);
+  const [useAllPhotos, setUseAllPhotos] = useState<boolean>(false);
+
+  useEffect(() => {
+    async function loadMediaAssetsObj() {
+      console.log(`Loading MediaAssets object ${mediaTools.current}`);
+      if (mediaTools.current === null) {
+        mediaTools.current = new MediaAssets();
+        console.log('   instaniated MediaAssets object');
+      }
+    }
+
+    loadMediaAssetsObj();
+  }, []);
 
   useEffect(() => {
     async function loadMedia(jobId: string) {
@@ -35,17 +64,6 @@ const JobPhotosPage = () => {
 
     loadMedia(jobId);
   }, [jobId, jobDbHost]);
-
-  useEffect(() => {
-    async function loadMediaAssetsObj() {
-      if (mediaAssets === null) {
-        const ma = new MediaAssets();
-        setMediaAssets(ma);
-      }
-    }
-
-    loadMediaAssetsObj();
-  }, []);
 
   useEffect(() => {
     async function getPermissions() {
@@ -66,20 +84,6 @@ const JobPhotosPage = () => {
     getPermissions();
   }, []);
 
-  // Lets move this to a Utils file at some point.
-  async function getCurrentLocation(): Promise<{ latitude: number; longitude: number } | null> {
-    try {
-      let location = await Location.getCurrentPositionAsync({});
-      return {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      };
-    } catch (error) {
-      console.error(`Error getting current location: ${error}`);
-      return null;
-    }
-  }
-
   const OnStatusUpdate = useCallback(
     (status: string) => {
       setFetchStatus(status);
@@ -87,17 +91,18 @@ const JobPhotosPage = () => {
     [setFetchStatus],
   );
 
-  const OnLoadNearestClicked = useCallback(async () => {
-    //const location = await getCurrentLocation();
+  const LoadPhotosNearestToJob = useCallback(async () => {
     const location = await jobDbHost?.GetJobDB().FetchJobLocation(jobId);
     if (location) {
+      setShowAssetItems(true); // Show the panel when assets are loaded
       console.log(`Current location: ${location.latitude}, ${location.longitude}`);
-      const foundAssets: MediaLibrary.Asset[] | undefined = await mediaAssets?.getAllAssetsNearLocation(
-        location.longitude,
-        location.latitude,
-        100, // Need to make this configurable
-        OnStatusUpdate,
-      );
+      const foundAssets: MediaLibrary.Asset[] | undefined =
+        await mediaTools.current?.getAllAssetsNearLocation(
+          location.longitude,
+          location.latitude,
+          100, // Need to make this configurable
+          OnStatusUpdate,
+        );
       console.log(`Found ${foundAssets ? foundAssets?.length : 0} pictures`);
 
       if (foundAssets) {
@@ -106,57 +111,134 @@ const JobPhotosPage = () => {
           (foundAsset) => !jobAssets?.some((jobAsset) => jobAsset.id === foundAsset.id),
         );
 
-        const selectionList: NearAssetsItem[] = filteredAssets.map((asset) => ({
+        const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
           selected: true,
           asset: asset,
         }));
 
-        setNearAssets(selectionList);
-        setShowNearAssets(true); // Show the panel when assets are loaded
-        console.log(`Set ${filteredAssets.length} assets into nearAssets`);
+        gAssetItems.length = 0;
+        gAssetItems = gAssetItems.concat(selectionList);
+        setAssetItems(gAssetItems);
+
+        const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
+        console.log(filteredStatus);
+        OnStatusUpdate(filteredStatus);
       }
     }
-  }, [mediaAssets, setNearAssets, jobAssets]);
+  }, [jobAssets]);
+
+  const LoadAllPhotos = useCallback(async () => {
+    setShowAssetItems(true); // Show the panel when assets are loaded
+
+    console.log(`Loading all photos ${mediaTools.current}`);
+    const foundAssets: MediaLibrary.Asset[] | undefined = await mediaTools.current?.getFirstAssetPage(10);
+    console.log(`Found ${foundAssets ? foundAssets?.length : 0} pictures`);
+
+    if (foundAssets) {
+      // Filter out assets that are already in jobAssets
+      const filteredAssets = foundAssets.filter(
+        (foundAsset) => !jobAssets?.some((jobAsset) => jobAsset.id === foundAsset.id),
+      );
+
+      const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
+        selected: false,
+        asset: asset,
+      }));
+
+      gAssetItems.length = 0;
+      gAssetItems = gAssetItems.concat(selectionList);
+      setAssetItems(gAssetItems);
+
+      const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
+      console.log(filteredStatus);
+      OnStatusUpdate(filteredStatus);
+    }
+  }, [jobAssets, assetItems]);
+
+  const OnLoadPhotosClicked = useCallback(async () => {
+    if (useAllPhotos === false) {
+      await LoadPhotosNearestToJob();
+    } else {
+      await LoadAllPhotos();
+    }
+  }, [useAllPhotos]);
+
+  const LoadMore = useCallback(async () => {
+    const foundAssets: MediaLibrary.Asset[] | undefined = await mediaTools.current?.getNextAssetPage();
+
+    if (foundAssets) {
+      // Filter out assets that are already in jobAssets
+      const filteredAssets = foundAssets.filter(
+        (foundAsset) => !jobAssets?.some((jobAsset) => jobAsset.id === foundAsset.id),
+      );
+
+      const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
+        selected: false,
+        asset: asset,
+      }));
+
+      gAssetItems = gAssetItems.concat(selectionList);
+      setAssetItems(gAssetItems);
+      const filteredStatus = `Added ${filteredAssets.length} assets into assetItems`;
+      console.log(filteredStatus);
+      OnStatusUpdate(filteredStatus);
+    }
+  }, [assetItems]);
 
   const OnAddToJobClicked = useCallback(async () => {
-    if (nearAssets) {
-      const hasSelectedAssets = nearAssets.some((item) => item.selected);
-      for (const asset of nearAssets) {
+    if (assetItems) {
+      const hasSelectedAssets = assetItems.some((item) => item.selected);
+      for (const asset of assetItems) {
         if (!hasSelectedAssets || asset.selected) {
           await jobDbHost?.GetPictureBucketDB().InsertPicture(jobId, asset.asset);
         }
       }
 
-      setShowNearAssets(false); // Hide the panel after adding
-      setNearAssets(undefined); // Clear the assets
+      setShowAssetItems(false); // Hide the panel after adding
+      assetItems.length = 0; // Clear the assets
     }
-  }, [nearAssets, jobId, jobDbHost]);
+  }, [assetItems, jobId, jobDbHost]);
 
   const handleClose = useCallback(() => {
-    setShowNearAssets(false);
-    setNearAssets(undefined);
+    setShowAssetItems(false);
+    gAssetItems.length = 0;
+    setAssetItems(gAssetItems);
   }, []);
 
   const handleAssetSelection = useCallback((assetId: string) => {
-    setNearAssets((prevAssets) =>
+    console.log(`Toggling asset ${assetId}`);
+    setAssetItems((prevAssets) =>
       prevAssets?.map((item) => (item.asset.id === assetId ? { ...item, selected: !item.selected } : item)),
     );
   }, []);
 
   const getAddButtonTitle = useCallback(() => {
-    if (!nearAssets) return 'Add All';
-    const hasSelectedAssets = nearAssets.some((item) => item.selected);
+    if (!assetItems) return 'Add All';
+    const hasSelectedAssets = assetItems.some((item) => item.selected);
     return hasSelectedAssets ? 'Add Selected' : 'Add All';
-  }, [nearAssets]);
+  }, [assetItems]);
+
+  const renderFooter = () => {
+    return (
+      <View style={styles.footer}>
+        <Button title="Load More" onPress={LoadMore}></Button>
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ title: `Job Photos`, headerShown: true }} />
       <View style={styles.headerInfo}>
-        <Text>JobName={jobName}</Text>
-        <Text>JobId={jobId}</Text>
-        <Button title="Load Nearest" onPress={OnLoadNearestClicked} />
-        <Text>{fetchStatus}</Text>
+        <Text>{jobName}</Text>
+        <View style={{ marginHorizontal: 10, marginBottom: 20, alignSelf: 'center', flexDirection: 'row' }}>
+          <Text text="Filter:" txtSize="standard" style={{ marginRight: 10 }} />
+          <Text text="Near Job" txtSize="standard" style={{ marginRight: 10 }} />
+          <Switch value={useAllPhotos} onValueChange={setUseAllPhotos} />
+          <Text text="All" txtSize="standard" style={{ marginLeft: 10 }} />
+        </View>
+
+        <Button title="Select Photos" onPress={OnLoadPhotosClicked} />
       </View>
       <View style={styles.listsContainer}>
         {/* Left side - Job Assets */}
@@ -173,19 +255,23 @@ const JobPhotosPage = () => {
           )}
         </View>
 
-        {/* Right side - Only show when showNearAssets is true */}
-        {showNearAssets && (
+        {/* Right side - Only show when showAssetItems is true.                      */}
+        {showAssetItems && (
           <>
             <View style={styles.separator} />
             <View style={styles.listColumn}>
-              <Text style={styles.listTitle}>Nearby Photos</Text>
-              {!nearAssets ? (
-                <Text>Loading...{fetchStatus}</Text>
+              <Text style={styles.listTitle}>Photos</Text>
+              {!assetItems ? (
+                <View style={styles.loadingContainer}>
+                  <Text>Loading...{fetchStatus}</Text>
+                  <ActivityIndicator size="large" color="#007AFF" style={styles.loadingIndicator} />
+                </View>
               ) : (
                 <>
                   <FlashList
-                    data={nearAssets}
+                    data={assetItems}
                     estimatedItemSize={200}
+                    ListFooterComponent={renderFooter}
                     renderItem={({ item }) => (
                       <View style={styles.assetContainer}>
                         <TouchableOpacity
@@ -288,6 +374,18 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingIndicator: {
+    marginTop: 10,
+  },
+  footer: {
+    padding: 10,
+    alignItems: 'center',
   },
 });
 
