@@ -27,15 +27,15 @@ type AssetsItem = {
 };
 
 let gAssetItems: AssetsItem[] = [];
+let gJobAssetItems: AssetsItem[] = [];
 
 const JobPhotosPage = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
-  const [jobAssets, setJobAssets] = useState<MediaLibrary.Asset[] | undefined>(undefined);
+  const [jobAssets, setJobAssets] = useState<AssetsItem[] | undefined>(undefined);
   const [assetItems, setAssetItems] = useState<AssetsItem[] | undefined>(undefined);
   // const [mediaAssets, setMediaAssets] = useState<MediaAssets | null>(null);
   const mediaTools = useRef<MediaAssets | null>(null);
   const [fetchStatus, setFetchStatus] = useState<string>('');
-  const [showNearAssets, setShowNearAssets] = useState<boolean>(false);
   const { jobDbHost } = useJobDb();
   const [useJobLocation, setUseJobLocation] = useState<boolean>(false);
   const [showAssetItems, setShowAssetItems] = useState<boolean>(false);
@@ -57,7 +57,11 @@ const JobPhotosPage = () => {
       const result = await jobDbHost?.GetPictureBucketDB().FetchJobAssets(jobId);
       console.log(`Fetched ${result?.assets?.length} assets for job ${jobName}`);
       if (result?.status === 'Success' && result && result.assets && result.assets.length > 0) {
-        setJobAssets(result.assets);
+        gJobAssetItems = result.assets.map((asset) => ({
+          selected: false,
+          asset: asset,
+        }));
+        setJobAssets(gJobAssetItems);
       }
     }
 
@@ -190,6 +194,8 @@ const JobPhotosPage = () => {
       for (const asset of assetItems) {
         if (!hasSelectedAssets || asset.selected) {
           await jobDbHost?.GetPictureBucketDB().InsertPicture(jobId, asset.asset);
+          gJobAssetItems = gJobAssetItems?.concat({ selected: false, asset: asset.asset });
+          setJobAssets(gJobAssetItems);
         }
       }
 
@@ -249,7 +255,7 @@ const JobPhotosPage = () => {
             <FlashList
               data={jobAssets}
               estimatedItemSize={200}
-              renderItem={(item) => <Image source={{ uri: item.item.uri }} style={styles.thumbnail} />}
+              renderItem={(item) => <Image source={{ uri: item.item.asset.uri }} style={styles.thumbnail} />}
             />
           )}
         </View>
