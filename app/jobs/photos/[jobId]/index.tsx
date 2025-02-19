@@ -39,7 +39,6 @@ const JobPhotosPage = () => {
   const { jobDbHost } = useJobDb();
   const [useJobLocation, setUseJobLocation] = useState<boolean>(false);
   const [showAssetItems, setShowAssetItems] = useState<boolean>(false);
-  const [useAllPhotos, setUseAllPhotos] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadMediaAssetsObj() {
@@ -156,12 +155,12 @@ const JobPhotosPage = () => {
   }, [jobAssets, assetItems]);
 
   const OnLoadPhotosClicked = useCallback(async () => {
-    if (useAllPhotos === false) {
+    if (useJobLocation === true) {
       await LoadPhotosNearestToJob();
     } else {
       await LoadAllPhotos();
     }
-  }, [useAllPhotos]);
+  }, [useJobLocation]);
 
   const LoadMore = useCallback(async () => {
     const foundAssets: MediaLibrary.Asset[] | undefined = await mediaTools.current?.getNextAssetPage();
@@ -221,7 +220,7 @@ const JobPhotosPage = () => {
   const renderFooter = () => {
     return (
       <View style={styles.footer}>
-        <Button title="Load More" onPress={LoadMore}></Button>
+        {!useJobLocation && <Button title="Load More" onPress={LoadMore}></Button>}
       </View>
     );
   };
@@ -233,12 +232,12 @@ const JobPhotosPage = () => {
         <Text>{jobName}</Text>
         <View style={{ marginHorizontal: 10, marginBottom: 20, alignSelf: 'center', flexDirection: 'row' }}>
           <Text text="Filter:" txtSize="standard" style={{ marginRight: 10 }} />
-          <Text text="Near Job" txtSize="standard" style={{ marginRight: 10 }} />
-          <Switch value={useAllPhotos} onValueChange={setUseAllPhotos} />
-          <Text text="All" txtSize="standard" style={{ marginLeft: 10 }} />
+          <Text text="All" txtSize="standard" style={{ marginRight: 10 }} />
+          <Switch value={useJobLocation} onValueChange={setUseJobLocation} />
+          <Text text="Near Job" txtSize="standard" style={{ marginLeft: 10 }} />
         </View>
 
-        <Button title="Select Photos" onPress={OnLoadPhotosClicked} />
+        <Button title="Add Photos" onPress={OnLoadPhotosClicked} />
       </View>
       <View style={styles.listsContainer}>
         {/* Left side - Job Assets */}
