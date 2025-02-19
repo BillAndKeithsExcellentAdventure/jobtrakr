@@ -22,6 +22,7 @@ import { Switch } from '@/components/Switch';
 import { ActionButton } from '@/components/ActionButton';
 
 type AssetsItem = {
+  _id: string;
   selected: boolean;
   asset: MediaLibrary.Asset;
 };
@@ -39,6 +40,7 @@ const JobPhotosPage = () => {
   const { jobDbHost } = useJobDb();
   const [useJobLocation, setUseJobLocation] = useState<boolean>(false);
   const [showAssetItems, setShowAssetItems] = useState<boolean>(false);
+  const [loadingNearest, setLoadingNearest] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadMediaAssetsObj() {
@@ -58,8 +60,9 @@ const JobPhotosPage = () => {
       console.log(`Fetched ${result?.assets?.length} assets for job ${jobName}`);
       if (result?.status === 'Success' && result && result.assets && result.assets.length > 0) {
         gJobAssetItems = result.assets.map((asset) => ({
+          _id: asset._id!,
           selected: false,
-          asset: asset,
+          asset: asset.asset!,
         }));
         setJobAssets(gJobAssetItems);
       }
@@ -95,6 +98,7 @@ const JobPhotosPage = () => {
   );
 
   const LoadPhotosNearestToJob = useCallback(async () => {
+    setLoadingNearest(true);
     const location = await jobDbHost?.GetJobDB().FetchJobLocation(jobId);
     if (location) {
       setShowAssetItems(true); // Show the panel when assets are loaded
@@ -106,15 +110,17 @@ const JobPhotosPage = () => {
           100, // Need to make this configurable
           OnStatusUpdate,
         );
+
       console.log(`Found ${foundAssets ? foundAssets?.length : 0} pictures`);
 
       if (foundAssets) {
         // Filter out assets that are already in jobAssets
         const filteredAssets = foundAssets.filter(
-          (foundAsset) => !jobAssets?.some((jobAsset) => jobAsset.id === foundAsset.id),
+          (foundAsset) => !jobAssets?.some((jobAsset) => jobAsset.asset.id === foundAsset.id),
         );
 
         const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
+          _id: asset.id ?? '',
           selected: true,
           asset: asset,
         }));
@@ -128,22 +134,24 @@ const JobPhotosPage = () => {
         OnStatusUpdate(filteredStatus);
       }
     }
+    setLoadingNearest(false);
   }, [jobAssets]);
 
   const LoadAllPhotos = useCallback(async () => {
     setShowAssetItems(true); // Show the panel when assets are loaded
 
     console.log(`Loading all photos ${mediaTools.current}`);
-    const foundAssets: MediaLibrary.Asset[] | undefined = await mediaTools.current?.getFirstAssetPage(10);
+    const foundAssets: MediaLibrary.Asset[] | undefined = await mediaTools.current?.getFirstAssetPage(100);
     console.log(`Found ${foundAssets ? foundAssets?.length : 0} pictures`);
 
     if (foundAssets) {
       // Filter out assets that are already in jobAssets
       const filteredAssets = foundAssets.filter(
-        (foundAsset) => !jobAssets?.some((jobAsset) => jobAsset.id === foundAsset.id),
+        (foundAsset) => !jobAssets?.some((jobAsset) => jobAsset.asset.id === foundAsset.id),
       );
 
       const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
+        _id: asset.id ?? '',
         selected: false,
         asset: asset,
       }));
@@ -176,6 +184,7 @@ const JobPhotosPage = () => {
       );
 
       const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
+        _id: asset.id ?? '',
         selected: false,
         asset: asset,
       }));
@@ -188,14 +197,32 @@ const JobPhotosPage = () => {
     }
   }, [assetItems]);
 
+  const HasSelectedAssets = (): boolean => {
+    if (!assetItems) return false;
+
+    const list = assetItems.some((item) => item.selected);
+
+    return list.valueOf();
+  };
+
+  const HasSelectedJobAssets = (): boolean => {
+    if (!jobAssets) return false;
+
+    const list = jobAssets.some((item) => item.selected);
+
+    return list.valueOf();
+  };
+
   const OnAddToJobClicked = useCallback(async () => {
     if (assetItems) {
-      const hasSelectedAssets = assetItems.some((item) => item.selected);
+      const hasSelectedAssets = HasSelectedAssets();
       for (const asset of assetItems) {
         if (!hasSelectedAssets || asset.selected) {
-          await jobDbHost?.GetPictureBucketDB().InsertPicture(jobId, asset.asset);
-          gJobAssetItems = gJobAssetItems?.concat({ selected: false, asset: asset.asset });
-          setJobAssets(gJobAssetItems);
+          const status = await jobDbHost?.GetPictureBucketDB().InsertPicture(jobId, asset.asset);
+          if (status?.status === 'Success') {
+            gJobAssetItems = gJobAssetItems?.concat({ _id: status.id, selected: false, asset: asset.asset });
+            setJobAssets(gJobAssetItems);
+          }
         }
       }
 
@@ -203,6 +230,21 @@ const JobPhotosPage = () => {
       assetItems.length = 0; // Clear the assets
     }
   }, [assetItems, jobId, jobDbHost]);
+
+  const OnRemoveFromJobClicked = useCallback(async () => {
+    if (jobAssets) {
+      for (const asset of jobAssets) {
+        if (asset.selected) {
+          console.log(`Removing asset ${asset._id}`);
+          await jobDbHost?.GetPictureBucketDB().RemovePicture(asset._id);
+          gJobAssetItems = gJobAssetItems?.filter((item) => item._id !== asset._id);
+          setJobAssets(gJobAssetItems);
+        }
+      }
+
+      setShowAssetItems(false); // Hide the panel after adding
+    }
+  }, [jobAssets, jobId, jobDbHost]);
 
   const handleClose = useCallback(() => {
     setShowAssetItems(false);
@@ -213,6 +255,13 @@ const JobPhotosPage = () => {
   const handleAssetSelection = useCallback((assetId: string) => {
     console.log(`Toggling asset ${assetId}`);
     setAssetItems((prevAssets) =>
+      prevAssets?.map((item) => (item.asset.id === assetId ? { ...item, selected: !item.selected } : item)),
+    );
+  }, []);
+
+  const handleJobAssetSelection = useCallback((assetId: string) => {
+    console.log(`Toggling job asset ${assetId}`);
+    setJobAssets((prevAssets) =>
       prevAssets?.map((item) => (item.asset.id === assetId ? { ...item, selected: !item.selected } : item)),
     );
   }, []);
@@ -236,14 +285,26 @@ const JobPhotosPage = () => {
       <Stack.Screen options={{ title: `Job Photos`, headerShown: true }} />
       <View style={styles.headerInfo}>
         <Text>{jobName}</Text>
-        <View style={{ marginHorizontal: 10, marginBottom: 20, alignSelf: 'center', flexDirection: 'row' }}>
+        <View
+          style={{
+            marginHorizontal: 10,
+            marginBottom: 20,
+            alignSelf: 'center',
+            alignItems: 'center',
+            flexDirection: 'row',
+          }}
+        >
           <Text text="Filter:" txtSize="standard" style={{ marginRight: 10 }} />
           <Text text="All" txtSize="standard" style={{ marginRight: 10 }} />
-          <Switch value={useJobLocation} onValueChange={setUseJobLocation} />
+          <Switch value={useJobLocation} onValueChange={setUseJobLocation} size="large" />
           <Text text="Near Job" txtSize="standard" style={{ marginLeft: 10 }} />
         </View>
 
         <Button title="Add Photos" onPress={OnLoadPhotosClicked} />
+        <Text txtSize="standard" style={{ marginLeft: 10 }}>
+          {' '}
+          {`Job contains ${jobAssets?.length} pictures.`}{' '}
+        </Text>
       </View>
       <View style={styles.listsContainer}>
         {/* Left side - Job Assets */}
@@ -252,18 +313,36 @@ const JobPhotosPage = () => {
           {!jobAssets ? (
             <Text>No photos in job</Text>
           ) : (
-            <FlashList
-              data={jobAssets}
-              estimatedItemSize={200}
-              renderItem={(item) => (
-                <View style={styles.imageContainer}>
-                  <Image source={{ uri: item.item.asset.uri }} style={styles.thumbnail} />
-                  <Text style={styles.dateOverlay}>
-                    {new Date(item.item.asset.creationTime * 1).toLocaleString()}
-                  </Text>
+            <>
+              <FlashList
+                data={jobAssets}
+                estimatedItemSize={200}
+                renderItem={({ item }) => (
+                  <View style={styles.imageContainer}>
+                    <TouchableOpacity
+                      style={[styles.imageContainer, item.selected && styles.imageSelectedRed]}
+                      onPress={() => handleJobAssetSelection(item.asset.id)}
+                    >
+                      <View>
+                        <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
+                        <Text style={styles.dateOverlay}>
+                          {new Date(item.asset.creationTime * 1).toLocaleString()}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              />
+              <View style={styles.buttonContainer}>
+                <View style={styles.buttonRow}>
+                  {HasSelectedJobAssets() && (
+                    <View style={styles.buttonWrapper}>
+                      <Button title="Remove" onPress={OnRemoveFromJobClicked} />
+                    </View>
+                  )}
                 </View>
-              )}
-            />
+              </View>
+            </>
           )}
         </View>
 
@@ -273,7 +352,7 @@ const JobPhotosPage = () => {
             <View style={styles.separator} />
             <View style={styles.listColumn}>
               <Text style={styles.listTitle}>Photos</Text>
-              {!assetItems ? (
+              {loadingNearest ? (
                 <View style={styles.loadingContainer}>
                   <Text>Loading...{fetchStatus}</Text>
                   <ActivityIndicator size="large" color="#007AFF" style={styles.loadingIndicator} />
@@ -287,27 +366,26 @@ const JobPhotosPage = () => {
                     renderItem={({ item }) => (
                       <View style={styles.assetContainer}>
                         <TouchableOpacity
-                          style={styles.checkboxContainer}
+                          style={[styles.imageContainer, item.selected && styles.imageSelected]}
                           onPress={() => handleAssetSelection(item.asset.id)}
                         >
-                          <View style={[styles.checkbox, item.selected && styles.checkboxSelected]}>
-                            {item.selected && <Text style={styles.checkmark}>✓</Text>}
+                          <View>
+                            <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
+                            <Text style={styles.dateOverlay}>
+                              {new Date(item.asset.creationTime * 1).toLocaleString()}
+                            </Text>
                           </View>
                         </TouchableOpacity>
-                        <View style={styles.imageContainer}>
-                          <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
-                          <Text style={styles.dateOverlay}>
-                            {new Date(item.asset.creationTime * 1).toLocaleString()}
-                          </Text>
-                        </View>
                       </View>
                     )}
                   />
                   <View style={styles.buttonContainer}>
                     <View style={styles.buttonRow}>
-                      <View style={styles.buttonWrapper}>
-                        <Button title={getAddButtonTitle()} onPress={OnAddToJobClicked} />
-                      </View>
+                      {(useJobLocation || (!useJobLocation && HasSelectedAssets())) && (
+                        <View style={styles.buttonWrapper}>
+                          <Button title={getAddButtonTitle()} onPress={OnAddToJobClicked} />
+                        </View>
+                      )}
                       <View style={styles.buttonWrapper}>
                         <Button title="Close" onPress={handleClose} />
                       </View>
@@ -374,6 +452,11 @@ const styles = StyleSheet.create({
   },
   checkboxContainer: {
     marginRight: 10,
+    borderWidth: 2,
+    backgroundColor: '#fff',
+    borderColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   checkbox: {
     width: 24,
@@ -386,6 +469,14 @@ const styles = StyleSheet.create({
   checkboxSelected: {
     backgroundColor: '#fff',
     borderColor: '#007AFF',
+  },
+  imageSelected: {
+    borderWidth: 3,
+    borderColor: '#007AFF',
+  },
+  imageSelectedRed: {
+    borderWidth: 3,
+    borderColor: '#FF0000',
   },
   checkmark: {
     color: '#007AFF',
