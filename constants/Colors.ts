@@ -58,6 +58,7 @@ export const Colors = {
     boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.8)', // ...(Platform.OS === 'web'
     placeHolder: 'rgba(0, 0, 0, 0.4)',
     modalOverlayBackgroundColor: 'rgba(0, 0, 0, 0.5)',
+    opaqueModalOverlayBackgroundColor: '#F8F8F8',
     error: '#C03403',
     errorBackground: '#F2D6CD',
     textDim: '#bbb8b7',
@@ -120,6 +121,7 @@ export const Colors = {
     boxShadow: '0px 2px 5px rgba(255, 255, 255, 0.8)', // ...(Platform.OS === 'web'
     placeHolder: 'rgba(255, 255, 255, 0.4)',
     modalOverlayBackgroundColor: 'rgba(255, 255, 255, 0.2)',
+    opaqueModalOverlayBackgroundColor: '#1F1F1F',
     error: '#C03403',
     errorBackground: '#F2D6CD',
     textDim: '#78716e',

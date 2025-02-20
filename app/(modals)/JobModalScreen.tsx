@@ -36,13 +36,13 @@ const JobModalScreen = ({
         ? {
             background: Colors.dark.background,
             borderColor: Colors.dark.inputBorder,
-            modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
+            modalOverlayBackgroundColor: Colors.dark.opaqueModalOverlayBackgroundColor,
             transparent: Colors.dark.transparent,
           }
         : {
             background: Colors.light.background,
             borderColor: Colors.light.inputBorder,
-            modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
+            modalOverlayBackgroundColor: Colors.light.opaqueModalOverlayBackgroundColor,
             transparent: Colors.light.transparent,
           },
     [colorScheme],

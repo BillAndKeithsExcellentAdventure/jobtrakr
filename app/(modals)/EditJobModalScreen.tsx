@@ -83,7 +83,7 @@ const EditJobModalScreen = ({
         ? {
             background: Colors.dark.background,
             borderColor: Colors.dark.inputBorder,
-            modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
+            modalOverlayBackgroundColor: Colors.dark.opaqueModalOverlayBackgroundColor,
             transparent: Colors.dark.transparent,
             neutral200: Colors.dark.neutral200,
             buttonBlue: Colors.dark.buttonBlue,
@@ -91,7 +91,7 @@ const EditJobModalScreen = ({
         : {
             background: Colors.light.background,
             borderColor: Colors.light.inputBorder,
-            modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
+            modalOverlayBackgroundColor: Colors.light.opaqueModalOverlayBackgroundColor,
             transparent: Colors.light.transparent,
             neutral200: Colors.light.neutral200,
             buttonBlue: Colors.light.buttonBlue,
@@ -360,7 +360,7 @@ const EditJobModalScreen = ({
 
 const styles = StyleSheet.create({
   modalBackground: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
   },
   container: {
     flex: 1,
@@ -375,8 +375,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   modalContainer: {
-    maxWidth: 400,
-    width: '90%',
+    maxWidth: 460,
+    width: '100%',
     padding: 10,
     borderRadius: 20,
   },
