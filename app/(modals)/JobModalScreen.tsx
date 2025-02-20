@@ -1,5 +1,4 @@
 import { ActionButton } from '@/components/ActionButton';
-import { Button } from '@/components/Button';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';

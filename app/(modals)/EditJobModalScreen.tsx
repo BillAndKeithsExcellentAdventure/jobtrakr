@@ -1,24 +1,22 @@
-import { Button } from '@/components/Button';
+import { ActionButton } from '@/components/ActionButton';
 import { TextField } from '@/components/TextField';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
-import { cancelButtonBg, Colors, saveButtonBg } from '@/constants/Colors';
+import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { formatDate } from '@/utils/formatters';
-import { JobData } from 'jobdb';
 import * as Location from 'expo-location';
+import { JobData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Keyboard,
   Modal,
+  SafeAreaView,
   StyleSheet,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  Button as RNButton,
-  SafeAreaView,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { ActionButton } from '@/components/ActionButton';
 
 type Job = {
   jobId?: string;
@@ -181,8 +179,13 @@ const EditJobModalScreen = ({
           latitude: fetchedJob.Latitude,
         };
 
-        if (fetchedJob.PlannedFinish) finishDate: fetchedJob.PlannedFinish;
-        if (fetchedJob.StartDate) startDate: fetchedJob.StartDate;
+        if (fetchedJob.PlannedFinish) {
+          jobData.finishDate = fetchedJob.PlannedFinish;
+        }
+
+        if (fetchedJob.StartDate) {
+          jobData.startDate = fetchedJob.StartDate;
+        }
 
         setExistingJob(fetchedJob);
         setJob(jobData);
