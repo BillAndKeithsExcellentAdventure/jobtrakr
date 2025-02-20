@@ -20,6 +20,9 @@ import { FlashList } from '@shopify/flash-list';
 import { HorizontalLoadingIndicator } from '@/components/HorizontalActivityIndicator';
 import { Switch } from '@/components/Switch';
 import { ActionButton } from '@/components/ActionButton';
+import * as FileSystem from 'expo-file-system';
+import { ShareFile } from '@/utils/sharing';
+import { CreateMediaZip } from '@/utils/zip';
 
 type AssetsItem = {
   _id: string;
@@ -166,6 +169,28 @@ const JobPhotosPage = () => {
     }
   }, [jobAssets, assetItems]);
 
+  const createPictureBucketDataArray = (assets: AssetsItem[]) => {
+    return assets.map((asset) => ({
+      _id: asset._id,
+      asset: asset.asset,
+    }));
+  };
+
+  const OnShareJobPhotosClicked = useCallback(async () => {
+    if (jobAssets) {
+      console.log(`Sharing ${jobAssets.length} photos`);
+      const zipFileName = `job_${jobName}_photos`;
+      const zipPath = `${FileSystem.documentDirectory}${zipFileName}.zip`;
+      const assets = createPictureBucketDataArray(jobAssets);
+      try {
+        await CreateMediaZip(assets, zipFileName);
+        await ShareFile(zipPath);
+      } catch (error) {
+        console.error('Error creating/sharing zip file:', error);
+      }
+    }
+  }, [jobAssets]);
+
   const OnLoadPhotosClicked = useCallback(async () => {
     if (useJobLocation === true) {
       await LoadPhotosNearestToJob();
@@ -301,6 +326,7 @@ const JobPhotosPage = () => {
         </View>
 
         <Button title="Add Photos" onPress={OnLoadPhotosClicked} />
+        <Button title="Share Job Photos" onPress={OnShareJobPhotosClicked} />
         <Text txtSize="standard" style={{ marginLeft: 10 }}>
           {' '}
           {`Job contains ${jobAssets?.length} pictures.`}{' '}
