@@ -113,7 +113,7 @@ const JobNotes = () => {
     }
 
     try {
-      const status = await jobDbHost?.GetTodoDB().UpdateJob(editingNote);
+      const status = await jobDbHost?.GetTodoDB().UpdateTodo(editingNote);
       if (status === 'Success') {
         fetchNotes(); // Refresh after editing
         setEditingNote(null); // Clear editing state

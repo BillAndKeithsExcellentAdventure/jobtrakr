@@ -49,7 +49,7 @@ export interface TextFieldProps extends Omit<TextInputProps, 'ref'> {
    * Optional placeholder options to pass to i18n. Useful for interpolation
    * as well as explicitly setting locale or translation fallbacks.
    */
-  style?: StyleProp<TextStyle>;
+  style?: any;
   /**
    * Style overrides for the container
    */

@@ -1,7 +1,7 @@
 /** *
 Sample list for web
  */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, FlatList, Platform } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { JobCategoryEntry } from '@/models/jobCategoryEntry';
