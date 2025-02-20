@@ -49,18 +49,21 @@ function HomeScreenModalMenu({
   };
 
   const colorScheme = useColorScheme();
-  const colors =
-    colorScheme === 'dark'
-      ? {
-          screenBackground: Colors.dark.background,
-          separatorColor: Colors.dark.separatorColor,
-          modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
-        }
-      : {
-          screenBackground: Colors.light.background,
-          separatorColor: Colors.light.separatorColor,
-          modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
-        };
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            screenBackground: Colors.dark.background,
+            separatorColor: Colors.dark.separatorColor,
+            modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
+          }
+        : {
+            screenBackground: Colors.light.background,
+            separatorColor: Colors.light.separatorColor,
+            modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
+          },
+    [colorScheme],
+  );
 
   const topMargin = Platform.OS === 'ios' ? 110 : 50;
 
@@ -123,14 +126,25 @@ export default function JobHomeScreen() {
   const { jobDbHost } = useJobDb();
 
   const loadJobs = useCallback(async () => {
+    const today = new Date();
+    const futureDay = new Date(today.getFullYear() + 5, today.getMonth(), today.getDate());
     const result = await jobDbHost?.GetJobDB().FetchAllJobs();
     const jobs = result ? result.jobs : [];
-    jobs.sort((a, b) => (b.Favorite ?? 0) - (a.Favorite ?? 0));
+    // sort based on favorite and then be planned finish date
+    jobs
+      .sort((a, b) => (b.Favorite ?? 0) - (a.Favorite ?? 0))
+      .sort((a, b) =>
+        a.Favorite === b.Favorite
+          ? (a.PlannedFinish ? a.PlannedFinish.getTime() : futureDay.getTime()) -
+            (b.PlannedFinish ? b.PlannedFinish.getTime() : futureDay.getTime())
+          : 0,
+      );
 
     if (jobs) {
       const listData: TwoColumnListEntry[] = jobs.map((job) => {
         return {
           primaryTitle: job.Name ? job.Name : 'unknown',
+          isFavorite: undefined !== job.Favorite ? job.Favorite > 0 : false,
           entryId: job._id ?? '1',
           imageUri: 'x',
           secondaryTitle: job.Location,
@@ -157,12 +171,10 @@ export default function JobHomeScreen() {
     async (jobId: string) => {
       const matchingJob = allJobs.find((j) => j._id! === jobId);
       if (matchingJob) {
-        const maxFavoriteValue = allJobs.reduce((max, current) => {
-          const currentValue = current.Favorite ?? 0;
-          return currentValue > max ? currentValue : max;
-        }, -Infinity);
-
-        const updatedJob = { ...matchingJob, Favorite: maxFavoriteValue + 1 };
+        const updatedJob = {
+          ...matchingJob,
+          Favorite: matchingJob.Favorite === undefined ? 1 : matchingJob.Favorite > 0 ? 0 : 1,
+        };
         const status = await jobDbHost?.GetJobDB().UpdateJob(updatedJob);
         if (status === 'Success') {
           console.log('Job successfully updated:', updatedJob.Name);
@@ -176,8 +188,8 @@ export default function JobHomeScreen() {
   );
 
   // Define colors based on the color scheme (dark or light)
-  const colors = useMemo(() => {
-    const clrs =
+  const colors = useMemo(
+    () =>
       colorScheme === 'dark'
         ? {
             screenBackground: Colors.dark.background,
@@ -196,15 +208,15 @@ export default function JobHomeScreen() {
             shadowColor: Colors.light.shadowColor,
             bottomSheetBackground: Colors.light.bottomSheetBackground,
             text: Colors.light.text,
-          };
-
-    return clrs;
-  }, [colorScheme]);
+          },
+    [colorScheme],
+  );
 
   const buttons: ActionButtonProps[] = useMemo(
     () => [
       {
         icon: <FontAwesome name="heart-o" size={24} color={colors.iconColor} />,
+        favoriteIcon: <FontAwesome name="heart" size={24} color={colors.iconColor} />,
         label: 'Like',
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {

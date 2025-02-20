@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TouchableOpacity, StyleSheet, GestureResponderEvent } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from './useColorScheme';
@@ -6,6 +6,7 @@ import { Colors } from '@/constants/Colors';
 
 export interface ActionButtonProps {
   icon?: React.ReactNode;
+  favoriteIcon?: React.ReactNode;
   label?: string;
   onPress: (event: GestureResponderEvent, actionContext: any) => void;
 }
@@ -13,35 +14,43 @@ export interface ActionButtonProps {
 interface ButtonBarProps {
   buttons: ActionButtonProps[];
   actionContext: any;
+  isFavorite?: boolean;
 }
 
-const ButtonBar: React.FC<ButtonBarProps> = ({ buttons, actionContext }) => {
+const ButtonBar: React.FC<ButtonBarProps> = ({ buttons, actionContext, isFavorite }) => {
   const colorScheme = useColorScheme();
 
   // Define colors based on the color scheme (dark or light)
-  const colors =
-    colorScheme === 'dark'
-      ? {
-          listBackground: Colors.dark.listBackground,
-          itemBackground: Colors.dark.itemBackground,
-          iconColor: Colors.dark.iconColor,
-          shadowColor: Colors.dark.shadowColor,
-          borderColor: Colors.dark.borderColor,
-        }
-      : {
-          listBackground: Colors.light.listBackground,
-          itemBackground: Colors.light.itemBackground,
-          iconColor: Colors.light.iconColor,
-          shadowColor: Colors.light.shadowColor,
-          borderColor: Colors.light.borderColor,
-        };
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            listBackground: Colors.dark.listBackground,
+            itemBackground: Colors.dark.itemBackground,
+            iconColor: Colors.dark.iconColor,
+            shadowColor: Colors.dark.shadowColor,
+            borderColor: Colors.dark.borderColor,
+          }
+        : {
+            listBackground: Colors.light.listBackground,
+            itemBackground: Colors.light.itemBackground,
+            iconColor: Colors.light.iconColor,
+            shadowColor: Colors.light.shadowColor,
+            borderColor: Colors.light.borderColor,
+          },
+    [colorScheme],
+  );
 
   return (
     <View style={[styles.buttonBarContainer, { borderTopColor: colors.borderColor }]}>
       {buttons.map((button, index) => (
-        <TouchableOpacity key={index} style={styles.button} onPress={(e)=>button.onPress(e, actionContext)}>
+        <TouchableOpacity key={index} style={styles.button} onPress={(e) => button.onPress(e, actionContext)}>
           <View style={styles.buttonContent}>
-            {button.icon && <>{button.icon}</>}
+            {isFavorite && button.favoriteIcon ? (
+              <>{button.favoriteIcon}</>
+            ) : (
+              button.icon && <>{button.icon}</>
+            )}
             {button.label && <Text style={styles.buttonText}>{button.label}</Text>}
           </View>
         </TouchableOpacity>

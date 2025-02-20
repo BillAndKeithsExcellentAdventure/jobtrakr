@@ -1,5 +1,4 @@
 import { ActionButton } from '@/components/ActionButton';
-import { Button } from '@/components/Button';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
@@ -31,24 +30,23 @@ const JobModalScreen = ({
   const insets = useSafeAreaInsets(); // just in case we use it on IOS
   const colorScheme = useColorScheme();
 
-  const colors = useMemo<any>(() => {
-    const themeColors =
+  const colors = useMemo(
+    () =>
       colorScheme === 'dark'
         ? {
             background: Colors.dark.background,
             borderColor: Colors.dark.inputBorder,
-            modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
+            modalOverlayBackgroundColor: Colors.dark.opaqueModalOverlayBackgroundColor,
             transparent: Colors.dark.transparent,
           }
         : {
             background: Colors.light.background,
             borderColor: Colors.light.inputBorder,
-            modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
+            modalOverlayBackgroundColor: Colors.light.opaqueModalOverlayBackgroundColor,
             transparent: Colors.light.transparent,
-          };
-
-    return themeColors;
-  }, [colorScheme]);
+          },
+    [colorScheme],
+  );
 
   const [canAddJob, setCanAddJob] = useState(false);
 

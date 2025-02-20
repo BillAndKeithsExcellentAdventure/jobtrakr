@@ -1,10 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, Image, StyleSheet, FlatList, Platform, GestureResponderEvent } from 'react-native';
-
-import { useColorScheme } from '@/components/useColorScheme';
-import { Text, View } from '@/components/Themed';
-import { Colors } from '@/constants/Colors';
+import React, { useMemo } from 'react';
+import { FlatList, Image, Platform, Pressable, StyleSheet } from 'react-native';
 import ButtonBar, { ActionButtonProps } from '@/components/ButtonBar';
+import { Text, View } from '@/components/Themed';
+import { useColorScheme } from '@/components/useColorScheme';
+import { Colors } from '@/constants/Colors';
 
 // Define types for the props
 export interface TwoColumnListEntry {
@@ -15,6 +14,7 @@ export interface TwoColumnListEntry {
   tertiaryTitle?: string;
   subtitleLines?: { left: string; right: string }[];
   lines?: { left: string; right: string }[];
+  isFavorite?: boolean;
 }
 
 export function TwoColumnList({
@@ -33,24 +33,27 @@ export function TwoColumnList({
   }
 
   // Define colors based on the color scheme (dark or light)
-  const colors =
-    colorScheme === 'dark'
-      ? {
-          listBackground: Colors.dark.listBackground,
-          itemBackground: Colors.dark.itemBackground,
-          iconColor: Colors.dark.iconColor,
-          shadowColor: Colors.dark.shadowColor,
-          boxShadow: Colors.dark.boxShadow,
-          borderColor: Colors.dark.borderColor,
-        }
-      : {
-          listBackground: Colors.light.listBackground,
-          itemBackground: Colors.light.itemBackground,
-          iconColor: Colors.light.iconColor,
-          shadowColor: Colors.light.shadowColor,
-          boxShadow: Colors.light.boxShadow,
-          borderColor: Colors.light.borderColor,
-        };
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            listBackground: Colors.dark.listBackground,
+            itemBackground: Colors.dark.itemBackground,
+            iconColor: Colors.dark.iconColor,
+            shadowColor: Colors.dark.shadowColor,
+            boxShadow: Colors.dark.boxShadow,
+            borderColor: Colors.dark.borderColor,
+          }
+        : {
+            listBackground: Colors.light.listBackground,
+            itemBackground: Colors.light.itemBackground,
+            iconColor: Colors.light.iconColor,
+            shadowColor: Colors.light.shadowColor,
+            boxShadow: Colors.light.boxShadow,
+            borderColor: Colors.light.borderColor,
+          },
+    [colorScheme],
+  );
 
   if (Platform.OS === 'web') {
     colors.listBackground = '#efefef';
@@ -148,7 +151,7 @@ export function TwoColumnList({
           </View>
         </View>
       </Pressable>
-      {buttons && <ButtonBar buttons={buttons} actionContext={item} />}
+      {buttons && <ButtonBar buttons={buttons} actionContext={item} isFavorite={item.isFavorite} />}
     </View>
   );
 

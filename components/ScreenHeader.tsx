@@ -1,6 +1,6 @@
 // components/ScreenHeader.tsx - For use on Android devices when headerLeft or headRight components are specified.
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, ViewStyle, Platform, FlexAlignType } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -25,16 +25,19 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({ headerLeft, headerRi
   }
 
   // Define colors based on the color scheme (dark or light)
-  const colors =
-    colorScheme === 'dark'
-      ? {
-          screenBackground: Colors.dark.background,
-          separatorColor: Colors.dark.separatorColor,
-        }
-      : {
-          screenBackground: Colors.light.background,
-          separatorColor: Colors.light.separatorColor,
-        };
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            screenBackground: Colors.dark.background,
+            separatorColor: Colors.dark.separatorColor,
+          }
+        : {
+            screenBackground: Colors.light.background,
+            separatorColor: Colors.light.separatorColor,
+          },
+    [colorScheme],
+  );
 
   return (
     <View
@@ -52,7 +55,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({ headerLeft, headerRi
       {headerLeft && <View style={styles.headerLeft}>{headerLeft()}</View>}
       {/* Title */}
       <View style={[styles.headerTitleContainer, { alignItems }]}>
-        <Text txtSize='screen-header'>{title}</Text>
+        <Text txtSize="screen-header">{title}</Text>
       </View>
 
       {/* Right Header Component */}

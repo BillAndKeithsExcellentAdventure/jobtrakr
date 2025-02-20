@@ -1,8 +1,8 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { TextInput, StyleSheet, TextStyle, ViewStyle } from 'react-native';
-import { useColorScheme } from './useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { TextProps, Text, View } from './Themed';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { StyleSheet, TextInput, ViewStyle } from 'react-native';
+import { Text, View } from './Themed';
+import { useColorScheme } from './useColorScheme';
 
 interface NumberInputFieldProps {
   value: number;
@@ -45,8 +45,8 @@ export const NumberInputField: React.FC<NumberInputFieldProps> = ({
   }, [onChange, inputValue]);
 
   // Define colors based on the color scheme (dark or light)
-  const colors = useMemo(() => {
-    const themedColors =
+  const colors = useMemo(
+    () =>
       colorScheme === 'dark'
         ? {
             error: Colors.dark.error,
@@ -63,9 +63,9 @@ export const NumberInputField: React.FC<NumberInputFieldProps> = ({
             neutral200: Colors.light.neutral200,
             neutral400: Colors.light.neutral400,
             text: Colors.light.text,
-          };
-    return themedColors;
-  }, [Colors, colorScheme]);
+          },
+    [colorScheme],
+  );
 
   const handleFocus = useCallback(
     (event: any) => {

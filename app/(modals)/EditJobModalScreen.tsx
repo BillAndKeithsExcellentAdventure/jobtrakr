@@ -1,24 +1,22 @@
-import { Button } from '@/components/Button';
+import { ActionButton } from '@/components/ActionButton';
 import { TextField } from '@/components/TextField';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
-import { cancelButtonBg, Colors, saveButtonBg } from '@/constants/Colors';
+import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { formatDate } from '@/utils/formatters';
-import { JobData } from 'jobdb';
 import * as Location from 'expo-location';
+import { JobData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Keyboard,
   Modal,
+  SafeAreaView,
   StyleSheet,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  Button as RNButton,
-  SafeAreaView,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { ActionButton } from '@/components/ActionButton';
 
 type Job = {
   jobId?: string;
@@ -79,13 +77,13 @@ const EditJobModalScreen = ({
     requestLocationPermission();
   }, [hasLocationPermission]);
 
-  const colors = useMemo<any>(() => {
-    const themeColors =
+  const colors = useMemo(
+    () =>
       colorScheme === 'dark'
         ? {
             background: Colors.dark.background,
             borderColor: Colors.dark.inputBorder,
-            modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
+            modalOverlayBackgroundColor: Colors.dark.opaqueModalOverlayBackgroundColor,
             transparent: Colors.dark.transparent,
             neutral200: Colors.dark.neutral200,
             buttonBlue: Colors.dark.buttonBlue,
@@ -93,14 +91,13 @@ const EditJobModalScreen = ({
         : {
             background: Colors.light.background,
             borderColor: Colors.light.inputBorder,
-            modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
+            modalOverlayBackgroundColor: Colors.light.opaqueModalOverlayBackgroundColor,
             transparent: Colors.light.transparent,
             neutral200: Colors.light.neutral200,
             buttonBlue: Colors.light.buttonBlue,
-          };
-
-    return themeColors;
-  }, [colorScheme]);
+          },
+    [colorScheme],
+  );
 
   const showStartDatePicker = () => {
     setStartDatePickerVisible(true);
@@ -181,8 +178,13 @@ const EditJobModalScreen = ({
           latitude: fetchedJob.Latitude,
         };
 
-        if (fetchedJob.PlannedFinish) finishDate: fetchedJob.PlannedFinish;
-        if (fetchedJob.StartDate) startDate: fetchedJob.StartDate;
+        if (fetchedJob.PlannedFinish) {
+          jobData.finishDate = fetchedJob.PlannedFinish;
+        }
+
+        if (fetchedJob.StartDate) {
+          jobData.startDate = fetchedJob.StartDate;
+        }
 
         setExistingJob(fetchedJob);
         setJob(jobData);
@@ -358,7 +360,7 @@ const EditJobModalScreen = ({
 
 const styles = StyleSheet.create({
   modalBackground: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
   },
   container: {
     flex: 1,
@@ -373,8 +375,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   modalContainer: {
-    maxWidth: 400,
-    width: '90%',
+    maxWidth: 460,
+    width: '100%',
     padding: 10,
     borderRadius: 20,
   },

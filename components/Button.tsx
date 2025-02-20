@@ -109,8 +109,8 @@ export function Button(props: ButtonProps) {
   const colorScheme = useColorScheme();
 
   // Define colors based on the color scheme (dark or light)
-  const colors = useMemo<any>(() => {
-    const themeColors =
+  const colors = useMemo(
+    () =>
       colorScheme === 'dark'
         ? {
             text: Colors.dark.text,
@@ -145,9 +145,9 @@ export function Button(props: ButtonProps) {
             neutral800: Colors.light.neutral800,
             actionBg: Colors.light.actionBg,
             actionFg: Colors.light.actionFg,
-          };
-    return themeColors;
-  }, [colorScheme]);
+          },
+    [colorScheme],
+  );
 
   const preset: Presets = props.preset ?? 'default';
 
