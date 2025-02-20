@@ -95,7 +95,7 @@ export function Text(props: TextProps) {
         txtStyle.lineHeight = 42;
         break;
       case 'screen-header':
-        txtStyle.fontSize = 14;
+        txtStyle.fontSize = 18;
         txtStyle.fontWeight = '500';
         txtStyle.lineHeight = 20;
         break;

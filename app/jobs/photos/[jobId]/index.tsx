@@ -6,9 +6,14 @@ import {
   SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
+  Pressable,
+  Modal,
+  TouchableWithoutFeedback,
+  Alert,
 } from 'react-native';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocalSearchParams, Stack } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { JobCategoryEntry } from '@/models/jobCategoryEntry';
 import { Text, View } from '@/components/Themed';
 import * as MediaLibrary from 'expo-media-library';
@@ -23,6 +28,10 @@ import { ActionButton } from '@/components/ActionButton';
 import * as FileSystem from 'expo-file-system';
 import { ShareFile } from '@/utils/sharing';
 import { CreateMediaZip } from '@/utils/zip';
+import { ScreenHeader } from '@/components/ScreenHeader';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
 
 type AssetsItem = {
   _id: string;
@@ -32,6 +41,70 @@ type AssetsItem = {
 
 let gAssetItems: AssetsItem[] = [];
 let gJobAssetItems: AssetsItem[] = [];
+
+function HomeScreenModalMenu({
+  modalVisible,
+  setModalVisible,
+  onMenuItemPress,
+}: {
+  modalVisible: boolean;
+  setModalVisible: (val: boolean) => void;
+  onMenuItemPress: (item: string) => void;
+}) {
+  const handleMenuItemPress = (item: string): void => {
+    console.log(`${item} pressed`);
+    setModalVisible(false); // Close the modal after selecting an item
+    onMenuItemPress(item);
+  };
+
+  const colorScheme = useColorScheme();
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            screenBackground: Colors.dark.background,
+            separatorColor: Colors.dark.separatorColor,
+            modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
+          }
+        : {
+            screenBackground: Colors.light.background,
+            separatorColor: Colors.light.separatorColor,
+            modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
+          },
+    [colorScheme],
+  );
+
+  const topMargin = Platform.OS === 'ios' ? 110 : 50;
+
+  return (
+    <SafeAreaView>
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)} // Close on back press
+      >
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
+            <View
+              style={[
+                styles.modalContent,
+                { backgroundColor: colors.screenBackground, marginTop: topMargin },
+              ]}
+            >
+              <TouchableOpacity
+                onPress={() => handleMenuItemPress('AddPhotos')}
+                style={[styles.menuItem, { borderBottomColor: colors.separatorColor }]}
+              >
+                <Text style={styles.menuText}>Add Photos</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+    </SafeAreaView>
+  );
+}
 
 const JobPhotosPage = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
@@ -44,6 +117,8 @@ const JobPhotosPage = () => {
   const [useJobLocation, setUseJobLocation] = useState<boolean>(false);
   const [showAssetItems, setShowAssetItems] = useState<boolean>(false);
   const [loadingNearest, setLoadingNearest] = useState<boolean>(false);
+  const colorScheme = useColorScheme();
+  const [menuModalVisible, setMenuModalVisible] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadMediaAssetsObj() {
@@ -170,10 +245,12 @@ const JobPhotosPage = () => {
   }, [jobAssets, assetItems]);
 
   const createPictureBucketDataArray = (assets: AssetsItem[]) => {
-    return assets.map((asset) => ({
-      _id: asset._id,
-      asset: asset.asset,
-    }));
+    return assets
+      .filter((asset) => asset.selected)
+      .map((asset) => ({
+        _id: asset._id,
+        asset: asset.asset,
+      }));
   };
 
   const OnShareJobPhotosClicked = useCallback(async () => {
@@ -257,18 +334,26 @@ const JobPhotosPage = () => {
   }, [assetItems, jobId, jobDbHost]);
 
   const OnRemoveFromJobClicked = useCallback(async () => {
-    if (jobAssets) {
-      for (const asset of jobAssets) {
-        if (asset.selected) {
-          console.log(`Removing asset ${asset._id}`);
-          await jobDbHost?.GetPictureBucketDB().RemovePicture(asset._id);
-          gJobAssetItems = gJobAssetItems?.filter((item) => item._id !== asset._id);
-          setJobAssets(gJobAssetItems);
-        }
-      }
+    Alert.alert('Remove Photos', 'Are you sure you want to remove these photos from this job?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        onPress: async () => {
+          if (jobAssets) {
+            for (const asset of jobAssets) {
+              if (asset.selected) {
+                console.log(`Removing asset ${asset._id}`);
+                await jobDbHost?.GetPictureBucketDB().RemovePicture(asset._id);
+                gJobAssetItems = gJobAssetItems?.filter((item) => item._id !== asset._id);
+                setJobAssets(gJobAssetItems);
+              }
+            }
 
-      setShowAssetItems(false); // Hide the panel after adding
-    }
+            setShowAssetItems(false); // Hide the panel after adding
+          }
+        },
+      },
+    ]);
   }, [jobAssets, jobId, jobDbHost]);
 
   const handleClose = useCallback(() => {
@@ -305,9 +390,104 @@ const JobPhotosPage = () => {
     );
   };
 
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            screenBackground: Colors.dark.background,
+            listBackground: Colors.dark.listBackground,
+            itemBackground: Colors.dark.itemBackground,
+            iconColor: Colors.dark.iconColor,
+            shadowColor: Colors.dark.shadowColor,
+            bottomSheetBackground: Colors.dark.bottomSheetBackground,
+            text: Colors.dark.text,
+          }
+        : {
+            screenBackground: Colors.light.background,
+            listBackground: Colors.light.listBackground,
+            itemBackground: Colors.light.itemBackground,
+            iconColor: Colors.light.iconColor,
+            shadowColor: Colors.light.shadowColor,
+            bottomSheetBackground: Colors.light.bottomSheetBackground,
+            text: Colors.light.text,
+          },
+    [colorScheme],
+  );
+
+  const handleMenuItemPress = useCallback((item: string) => {
+    if (item === 'AddPhotos') OnLoadPhotosClicked();
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
-      <Stack.Screen options={{ title: `Job Photos`, headerShown: true }} />
+      {Platform.OS === 'android' ? (
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            header: () => (
+              <ScreenHeader
+                title="Job Photos"
+                headerLeft={() => (
+                  <Pressable
+                    onPress={() => {
+                      router.back();
+                    }}
+                  >
+                    {({ pressed }) => (
+                      <Ionicons
+                        name="chevron-back"
+                        size={24}
+                        color={colors.iconColor}
+                        style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                      />
+                    )}
+                  </Pressable>
+                )}
+                headerRight={() => (
+                  <Pressable
+                    onPress={() => {
+                      setMenuModalVisible(!menuModalVisible);
+                    }}
+                  >
+                    {({ pressed }) => (
+                      <Ionicons
+                        name="menu-outline"
+                        size={24}
+                        color={colors.iconColor}
+                        style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                      />
+                    )}
+                  </Pressable>
+                )}
+              />
+            ),
+          }}
+        />
+      ) : (
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            title: 'Jobs',
+            headerRight: () => (
+              <Pressable
+                onPress={() => {
+                  setMenuModalVisible(!menuModalVisible);
+                }}
+              >
+                {({ pressed }) => (
+                  <Ionicons
+                    name="menu-outline"
+                    size={24}
+                    color={colors.iconColor}
+                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                  />
+                )}
+              </Pressable>
+            ),
+          }}
+        />
+      )}
+
       <View style={styles.headerInfo}>
         <Text>{jobName}</Text>
         <View
@@ -319,14 +499,16 @@ const JobPhotosPage = () => {
             flexDirection: 'row',
           }}
         >
-          <Text text="Filter:" txtSize="standard" style={{ marginRight: 10 }} />
-          <Text text="All" txtSize="standard" style={{ marginRight: 10 }} />
-          <Switch value={useJobLocation} onValueChange={setUseJobLocation} size="large" />
-          <Text text="Near Job" txtSize="standard" style={{ marginLeft: 10 }} />
+          {showAssetItems && (
+            <>
+              <Text text="Filter:" txtSize="standard" style={{ marginRight: 10 }} />
+              <Text text="All" txtSize="standard" style={{ marginRight: 10 }} />
+              <Switch value={useJobLocation} onValueChange={setUseJobLocation} size="large" />
+              <Text text="Near Job" txtSize="standard" style={{ marginLeft: 10 }} />
+            </>
+          )}
         </View>
 
-        <Button title="Add Photos" onPress={OnLoadPhotosClicked} />
-        <Button title="Share Job Photos" onPress={OnShareJobPhotosClicked} />
         <Text txtSize="standard" style={{ marginLeft: 10 }}>
           {' '}
           {`Job contains ${jobAssets?.length} pictures.`}{' '}
@@ -336,17 +518,23 @@ const JobPhotosPage = () => {
         {/* Left side - Job Assets */}
         <View style={styles.listColumn}>
           <Text style={styles.listTitle}>Job Photos</Text>
+          {HasSelectedJobAssets() && (
+            <Text style={{ alignSelf: 'center' }}>
+              {jobAssets?.filter((asset) => asset.selected).length} selected
+            </Text>
+          )}
           {!jobAssets ? (
             <Text>No photos in job</Text>
           ) : (
             <>
               <FlashList
+                numColumns={showAssetItems ? 1 : 2}
                 data={jobAssets}
                 estimatedItemSize={200}
                 renderItem={({ item }) => (
                   <View style={styles.imageContainer}>
                     <TouchableOpacity
-                      style={[styles.imageContainer, item.selected && styles.imageSelectedRed]}
+                      style={[styles.imageContainer, item.selected && styles.imageSelected]}
                       onPress={() => handleJobAssetSelection(item.asset.id)}
                     >
                       <View>
@@ -360,13 +548,16 @@ const JobPhotosPage = () => {
                 )}
               />
               <View style={styles.buttonContainer}>
-                <View style={styles.buttonRow}>
-                  {HasSelectedJobAssets() && (
+                {HasSelectedJobAssets() && (
+                  <View style={styles.buttonRow}>
                     <View style={styles.buttonWrapper}>
                       <Button title="Remove" onPress={OnRemoveFromJobClicked} />
                     </View>
-                  )}
-                </View>
+                    <View style={styles.buttonWrapper}>
+                      <Button title="Share Photos" onPress={OnShareJobPhotosClicked} />
+                    </View>
+                  </View>
+                )}
               </View>
             </>
           )}
@@ -378,6 +569,11 @@ const JobPhotosPage = () => {
             <View style={styles.separator} />
             <View style={styles.listColumn}>
               <Text style={styles.listTitle}>Photos</Text>
+              {HasSelectedAssets() && (
+                <Text style={{ alignSelf: 'center' }}>
+                  {assetItems?.filter((asset) => asset.selected).length} selected
+                </Text>
+              )}
               {loadingNearest ? (
                 <View style={styles.loadingContainer}>
                   <Text>Loading...{fetchStatus}</Text>
@@ -422,6 +618,11 @@ const JobPhotosPage = () => {
             </View>
           </>
         )}
+        <HomeScreenModalMenu
+          modalVisible={menuModalVisible}
+          setModalVisible={setMenuModalVisible}
+          onMenuItemPress={handleMenuItemPress}
+        />
       </View>
     </SafeAreaView>
   );
@@ -500,10 +701,6 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: '#007AFF',
   },
-  imageSelectedRed: {
-    borderWidth: 3,
-    borderColor: '#FF0000',
-  },
   checkmark: {
     color: '#007AFF',
     fontSize: 16,
@@ -535,6 +732,25 @@ const styles = StyleSheet.create({
     padding: 5,
     borderRadius: 4,
     fontSize: 12,
+  },
+  modalOverlay: {
+    flex: 1,
+    alignItems: 'flex-end',
+    justifyContent: 'flex-start',
+  },
+  modalContent: {
+    marginRight: 10,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    width: 150,
+    elevation: 5, // To give the modal a slight shadow
+  },
+  menuItem: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+  },
+  menuText: {
+    fontSize: 16,
   },
 });
 
