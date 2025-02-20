@@ -32,6 +32,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
+import { ImageViewerModal } from '@/components/ImageViewerModal';
 
 type AssetsItem = {
   _id: string;
@@ -119,6 +120,8 @@ const JobPhotosPage = () => {
   const [loadingNearest, setLoadingNearest] = useState<boolean>(false);
   const colorScheme = useColorScheme();
   const [menuModalVisible, setMenuModalVisible] = useState<boolean>(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
 
   useEffect(() => {
     async function loadMediaAssetsObj() {
@@ -418,6 +421,11 @@ const JobPhotosPage = () => {
     if (item === 'AddPhotos') OnLoadPhotosClicked();
   }, []);
 
+  const handleImagePress = useCallback((uri: string) => {
+    setSelectedImage(uri);
+    setIsImageViewerVisible(true);
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' ? (
@@ -536,6 +544,7 @@ const JobPhotosPage = () => {
                     <TouchableOpacity
                       style={[styles.imageContainer, item.selected && styles.imageSelected]}
                       onPress={() => handleJobAssetSelection(item.asset.id)}
+                      onLongPress={() => handleImagePress(item.asset.uri)}
                     >
                       <View>
                         <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
@@ -590,6 +599,7 @@ const JobPhotosPage = () => {
                         <TouchableOpacity
                           style={[styles.imageContainer, item.selected && styles.imageSelected]}
                           onPress={() => handleAssetSelection(item.asset.id)}
+                          onLongPress={() => handleImagePress(item.asset.uri)}
                         >
                           <View>
                             <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
@@ -624,6 +634,13 @@ const JobPhotosPage = () => {
           onMenuItemPress={handleMenuItemPress}
         />
       </View>
+      {selectedImage && (
+        <ImageViewerModal
+          isVisible={isImageViewerVisible}
+          imageUri={selectedImage}
+          onClose={() => setIsImageViewerVisible(false)}
+        />
+      )}
     </SafeAreaView>
   );
 };
