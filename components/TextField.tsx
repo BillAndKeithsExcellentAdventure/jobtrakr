@@ -106,8 +106,8 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
   const colorScheme = useColorScheme();
 
   // Define colors based on the color scheme (dark or light)
-  const colors = useMemo(() => {
-    const themedColors =
+  const colors = useMemo(
+    () =>
       colorScheme === 'dark'
         ? {
             error: Colors.dark.error,
@@ -124,9 +124,9 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
             neutral200: Colors.light.neutral200,
             neutral400: Colors.light.neutral400,
             text: Colors.light.text,
-          };
-    return themedColors;
-  }, [Colors, colorScheme]);
+          },
+    [colorScheme],
+  );
 
   const $inputWrapperStyles = [
     {

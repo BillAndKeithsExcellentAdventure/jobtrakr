@@ -24,8 +24,8 @@ export const DateSelector = ({
 
   const colorScheme = useColorScheme();
 
-  const colors = useMemo<any>(() => {
-    const themeColors =
+  const colors = useMemo(
+    () =>
       colorScheme === 'dark'
         ? {
             background: Colors.dark.background,
@@ -38,10 +38,9 @@ export const DateSelector = ({
             borderColor: Colors.light.inputBorder,
             modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
             transparent: Colors.light.transparent,
-          };
-
-    return themeColors;
-  }, [colorScheme]);
+          },
+    [colorScheme],
+  );
 
   const handleDateChange = useCallback((event: any, selectedDate: Date | undefined) => {
     if (Platform.OS !== 'ios') setShowDatePicker(false);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TouchableOpacity, StyleSheet, GestureResponderEvent } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from './useColorScheme';
@@ -21,22 +21,25 @@ const ButtonBar: React.FC<ButtonBarProps> = ({ buttons, actionContext, isFavorit
   const colorScheme = useColorScheme();
 
   // Define colors based on the color scheme (dark or light)
-  const colors =
-    colorScheme === 'dark'
-      ? {
-          listBackground: Colors.dark.listBackground,
-          itemBackground: Colors.dark.itemBackground,
-          iconColor: Colors.dark.iconColor,
-          shadowColor: Colors.dark.shadowColor,
-          borderColor: Colors.dark.borderColor,
-        }
-      : {
-          listBackground: Colors.light.listBackground,
-          itemBackground: Colors.light.itemBackground,
-          iconColor: Colors.light.iconColor,
-          shadowColor: Colors.light.shadowColor,
-          borderColor: Colors.light.borderColor,
-        };
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            listBackground: Colors.dark.listBackground,
+            itemBackground: Colors.dark.itemBackground,
+            iconColor: Colors.dark.iconColor,
+            shadowColor: Colors.dark.shadowColor,
+            borderColor: Colors.dark.borderColor,
+          }
+        : {
+            listBackground: Colors.light.listBackground,
+            itemBackground: Colors.light.itemBackground,
+            iconColor: Colors.light.iconColor,
+            shadowColor: Colors.light.shadowColor,
+            borderColor: Colors.light.borderColor,
+          },
+    [colorScheme],
+  );
 
   return (
     <View style={[styles.buttonBarContainer, { borderTopColor: colors.borderColor }]}>

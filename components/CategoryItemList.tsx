@@ -20,20 +20,23 @@ export function CategoryItemList({ data, jobName }: { data: JobCategoryItemEntry
   }
 
   // Define colors based on the color scheme (dark or light)
-  const colors =
-    colorScheme === 'dark'
-      ? {
-          background: '#333',
-          title: '#fff',
-          subtitle: '#bbb',
-          itemBackground: '#444',
-        }
-      : {
-          background: '#fff',
-          title: '#000',
-          subtitle: '#555',
-          itemBackground: '#f9f9f9',
-        };
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            background: '#333',
+            title: '#fff',
+            subtitle: '#bbb',
+            itemBackground: '#444',
+          }
+        : {
+            background: '#fff',
+            title: '#000',
+            subtitle: '#555',
+            itemBackground: '#f9f9f9',
+          },
+    [colorScheme],
+  );
 
   const renderItem = ({ item }: { item: JobCategoryItemEntry }) => (
     <Pressable
@@ -50,12 +53,12 @@ export function CategoryItemList({ data, jobName }: { data: JobCategoryItemEntry
         <View style={styles.subtitleRow}>
           <View style={styles.subtitleColumn}>
             <Text style={[styles.subtitleTextLeft, { color: colors.subtitle }]}>{`bid: ${formatCurrency(
-              item.bidPrice
+              item.bidPrice,
             )}`}</Text>
           </View>
           <View style={styles.subtitleColumn}>
             <Text style={[styles.subtitleTextRight, { color: colors.subtitle }]}>{`spent: ${formatCurrency(
-              item.spentToDate
+              item.spentToDate,
             )}`}</Text>
           </View>
         </View>

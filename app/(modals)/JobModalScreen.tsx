@@ -30,8 +30,8 @@ const JobModalScreen = ({
   const insets = useSafeAreaInsets(); // just in case we use it on IOS
   const colorScheme = useColorScheme();
 
-  const colors = useMemo<any>(() => {
-    const themeColors =
+  const colors = useMemo(
+    () =>
       colorScheme === 'dark'
         ? {
             background: Colors.dark.background,
@@ -44,10 +44,9 @@ const JobModalScreen = ({
             borderColor: Colors.light.inputBorder,
             modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
             transparent: Colors.light.transparent,
-          };
-
-    return themeColors;
-  }, [colorScheme]);
+          },
+    [colorScheme],
+  );
 
   const [canAddJob, setCanAddJob] = useState(false);
 

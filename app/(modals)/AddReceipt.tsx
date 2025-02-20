@@ -60,8 +60,8 @@ const AddReceiptModalScreen = ({
   const [canAddReceipt, setCanAddReceipt] = useState(false);
   const { jobDbHost } = useJobDb();
 
-  const colors = useMemo<any>(() => {
-    const themeColors =
+  const colors = useMemo(
+    () =>
       colorScheme === 'dark'
         ? {
             background: Colors.dark.background,
@@ -76,10 +76,9 @@ const AddReceiptModalScreen = ({
             modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
             neutral200: Colors.light.neutral200,
             transparent: Colors.light.transparent,
-          };
-
-    return themeColors;
-  }, [colorScheme]);
+          },
+    [colorScheme],
+  );
 
   const showDatePicker = () => {
     setDatePickerVisible(true);

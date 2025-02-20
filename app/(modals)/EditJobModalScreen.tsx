@@ -77,8 +77,8 @@ const EditJobModalScreen = ({
     requestLocationPermission();
   }, [hasLocationPermission]);
 
-  const colors = useMemo<any>(() => {
-    const themeColors =
+  const colors = useMemo(
+    () =>
       colorScheme === 'dark'
         ? {
             background: Colors.dark.background,
@@ -95,10 +95,9 @@ const EditJobModalScreen = ({
             transparent: Colors.light.transparent,
             neutral200: Colors.light.neutral200,
             buttonBlue: Colors.light.buttonBlue,
-          };
-
-    return themeColors;
-  }, [colorScheme]);
+          },
+    [colorScheme],
+  );
 
   const showStartDatePicker = () => {
     setStartDatePickerVisible(true);

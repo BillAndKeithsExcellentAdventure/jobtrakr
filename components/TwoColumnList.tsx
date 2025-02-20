@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { FlatList, Image, Platform, Pressable, StyleSheet } from 'react-native';
 import ButtonBar, { ActionButtonProps } from '@/components/ButtonBar';
 import { Text, View } from '@/components/Themed';
@@ -33,24 +33,27 @@ export function TwoColumnList({
   }
 
   // Define colors based on the color scheme (dark or light)
-  const colors =
-    colorScheme === 'dark'
-      ? {
-          listBackground: Colors.dark.listBackground,
-          itemBackground: Colors.dark.itemBackground,
-          iconColor: Colors.dark.iconColor,
-          shadowColor: Colors.dark.shadowColor,
-          boxShadow: Colors.dark.boxShadow,
-          borderColor: Colors.dark.borderColor,
-        }
-      : {
-          listBackground: Colors.light.listBackground,
-          itemBackground: Colors.light.itemBackground,
-          iconColor: Colors.light.iconColor,
-          shadowColor: Colors.light.shadowColor,
-          boxShadow: Colors.light.boxShadow,
-          borderColor: Colors.light.borderColor,
-        };
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            listBackground: Colors.dark.listBackground,
+            itemBackground: Colors.dark.itemBackground,
+            iconColor: Colors.dark.iconColor,
+            shadowColor: Colors.dark.shadowColor,
+            boxShadow: Colors.dark.boxShadow,
+            borderColor: Colors.dark.borderColor,
+          }
+        : {
+            listBackground: Colors.light.listBackground,
+            itemBackground: Colors.light.itemBackground,
+            iconColor: Colors.light.iconColor,
+            shadowColor: Colors.light.shadowColor,
+            boxShadow: Colors.light.boxShadow,
+            borderColor: Colors.light.borderColor,
+          },
+    [colorScheme],
+  );
 
   if (Platform.OS === 'web') {
     colors.listBackground = '#efefef';

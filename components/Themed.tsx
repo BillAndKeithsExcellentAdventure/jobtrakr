@@ -117,8 +117,8 @@ export function TextInput(props: TextInputProps) {
   const colorScheme = useColorScheme();
 
   // Define colors based on the color scheme (dark or light)
-  const colors = useMemo(() => {
-    const themeColors =
+  const colors = useMemo(
+    () =>
       colorScheme === 'dark'
         ? {
             neutral200: Colors.dark.neutral200,
@@ -131,9 +131,9 @@ export function TextInput(props: TextInputProps) {
             border: Colors.light.neutral400,
             text: Colors.light.text,
             placeHolder: Colors.light.placeHolder,
-          };
-    return themeColors;
-  }, [colorScheme]);
+          },
+    [colorScheme],
+  );
 
   // Default text style
   let txtStyle: TextStyle = { fontSize: 16, fontWeight: 'normal', lineHeight: 20, alignItems: 'center' };

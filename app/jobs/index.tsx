@@ -49,18 +49,21 @@ function HomeScreenModalMenu({
   };
 
   const colorScheme = useColorScheme();
-  const colors =
-    colorScheme === 'dark'
-      ? {
-          screenBackground: Colors.dark.background,
-          separatorColor: Colors.dark.separatorColor,
-          modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
-        }
-      : {
-          screenBackground: Colors.light.background,
-          separatorColor: Colors.light.separatorColor,
-          modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
-        };
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            screenBackground: Colors.dark.background,
+            separatorColor: Colors.dark.separatorColor,
+            modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
+          }
+        : {
+            screenBackground: Colors.light.background,
+            separatorColor: Colors.light.separatorColor,
+            modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
+          },
+    [colorScheme],
+  );
 
   const topMargin = Platform.OS === 'ios' ? 110 : 50;
 
@@ -185,8 +188,8 @@ export default function JobHomeScreen() {
   );
 
   // Define colors based on the color scheme (dark or light)
-  const colors = useMemo(() => {
-    const clrs =
+  const colors = useMemo(
+    () =>
       colorScheme === 'dark'
         ? {
             screenBackground: Colors.dark.background,
@@ -205,10 +208,9 @@ export default function JobHomeScreen() {
             shadowColor: Colors.light.shadowColor,
             bottomSheetBackground: Colors.light.bottomSheetBackground,
             text: Colors.light.text,
-          };
-
-    return clrs;
-  }, [colorScheme]);
+          },
+    [colorScheme],
+  );
 
   const buttons: ActionButtonProps[] = useMemo(
     () => [
