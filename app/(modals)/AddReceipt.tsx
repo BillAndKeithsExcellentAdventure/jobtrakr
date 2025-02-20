@@ -7,6 +7,7 @@ import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { formatDate } from '@/utils/formatters';
 import * as ImagePicker from 'expo-image-picker';
+import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Image,
@@ -30,6 +31,8 @@ type JobReceipt = {
   categoryName: string;
   subCategoryName: string;
   pictureUri?: string;
+  albumId?: string;
+  assetId?: string;
 };
 
 const AddReceiptModalScreen = ({
@@ -146,27 +149,25 @@ const AddReceiptModalScreen = ({
   const handleAddReceipt = useCallback(async () => {
     if (!canAddReceipt) return;
 
-    /*
-    const modifiedJobReceipt: JobReceiptData = {
+    const newReceipt: ReceiptBucketData = {
       Amount: jobReceipt.amount,
       Vendor: jobReceipt.vendor,
       Description: jobReceipt.description,
       Notes: jobReceipt.notes,
-      CategoryName: jobReceipt.categoryName,
-      ItemName: jobReceipt.subCategoryName,
+      AssetId: jobReceipt.assetId,
+      PictureUri: jobReceipt.pictureUri,
     };
 
-    const status = await jobDbHost?.GetJobDB().UpdateJobReceipt(modifiedJobReceipt);
-    if (status === 'Success') {
-      console.log('Job receipt successfully updated:', jobReceipt);
+    const response = await jobDbHost?.GetReceiptBucketDB().InsertReceipt(jobId, newReceipt);
+    if (response?.status === 'Success') {
+      console.log('Job receipt successfully added:', jobReceipt);
       hideModal(true);
     } else {
       console.log('Job receipt update failed:', jobReceipt);
       hideModal(false);
     }
-      */
     hideModal(false);
-  }, [jobReceipt]);
+  }, [jobReceipt, jobDbHost]);
 
   const dismissKeyboard = useCallback(() => {
     Keyboard.dismiss();
@@ -183,10 +184,12 @@ const AddReceiptModalScreen = ({
     const response = await ImagePicker.launchCameraAsync();
 
     if (!response.canceled) {
-      if (!response.assets || response.assets.length === 0 || !response.assets[0].uri) return;
+      const asset = response.assets[0];
+      if (!response.assets || response.assets.length === 0 || !asset) return;
       setJobReceipt((prevReceipt) => ({
         ...prevReceipt,
-        pictureUri: response.assets ? response.assets[0].uri : '',
+        pictureUri: asset.uri ?? undefined,
+        assetId: asset.assetId ?? undefined,
       }));
     }
   }, []);
