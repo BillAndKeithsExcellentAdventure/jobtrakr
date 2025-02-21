@@ -426,6 +426,11 @@ const JobPhotosPage = () => {
     setIsImageViewerVisible(true);
   }, []);
 
+  const onSwitchValueChanged = useCallback(() => {
+    setUseJobLocation(!useJobLocation);
+    OnLoadPhotosClicked();
+  }, [setUseJobLocation, useJobLocation]);
+
   return (
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' ? (
@@ -511,7 +516,7 @@ const JobPhotosPage = () => {
             <>
               <Text text="Filter:" txtSize="standard" style={{ marginRight: 10 }} />
               <Text text="All" txtSize="standard" style={{ marginRight: 10 }} />
-              <Switch value={useJobLocation} onValueChange={setUseJobLocation} size="large" />
+              <Switch value={useJobLocation} onValueChange={onSwitchValueChanged} size="large" />
               <Text text="Near Job" txtSize="standard" style={{ marginLeft: 10 }} />
             </>
           )}
