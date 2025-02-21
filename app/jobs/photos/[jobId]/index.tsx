@@ -179,43 +179,65 @@ const JobPhotosPage = () => {
   );
 
   const LoadPhotosNearestToJob = useCallback(async () => {
-    setLoadingNearest(true);
-    const location = await jobDbHost?.GetJobDB().FetchJobLocation(jobId);
-    if (location) {
-      setShowAssetItems(true); // Show the panel when assets are loaded
-      console.log(`Current location: ${location.latitude}, ${location.longitude}`);
-      const foundAssets: MediaLibrary.Asset[] | undefined =
-        await mediaTools.current?.getAllAssetsNearLocation(
-          location.longitude,
-          location.latitude,
-          100, // Need to make this configurable
-          OnStatusUpdate,
-        );
+    Alert.alert(
+      'Find Pictures Near Job',
+      "Press Ok to find pictures near the designated job's location. This may take a few minutes to process.",
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+          onPress: async () => {
+            setUseJobLocation(false);
+          },
+        },
+        {
+          text: 'Ok',
+          onPress: async () => {
+            try {
+              setLoadingNearest(true);
+              const location = await jobDbHost?.GetJobDB().FetchJobLocation(jobId);
+              if (location) {
+                setShowAssetItems(true); // Show the panel when assets are loaded
+                console.log(`Current location: ${location.latitude}, ${location.longitude}`);
+                const foundAssets: MediaLibrary.Asset[] | undefined =
+                  await mediaTools.current?.getAllAssetsNearLocation(
+                    location.longitude,
+                    location.latitude,
+                    100, // Need to make this configurable
+                    OnStatusUpdate,
+                  );
 
-      console.log(`Found ${foundAssets ? foundAssets?.length : 0} pictures`);
+                console.log(`Found ${foundAssets ? foundAssets?.length : 0} pictures`);
 
-      if (foundAssets) {
-        // Filter out assets that are already in jobAssets
-        const filteredAssets = foundAssets.filter(
-          (foundAsset) => !jobAssets?.some((jobAsset) => jobAsset.asset.id === foundAsset.id),
-        );
+                if (foundAssets) {
+                  // Filter out assets that are already in jobAssets
+                  const filteredAssets = foundAssets.filter(
+                    (foundAsset) => !jobAssets?.some((jobAsset) => jobAsset.asset.id === foundAsset.id),
+                  );
 
-        const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
-          _id: asset.id ?? '',
-          selected: true,
-          asset: asset,
-        }));
+                  const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
+                    _id: asset.id ?? '',
+                    selected: true,
+                    asset: asset,
+                  }));
 
-        gAssetItems.length = 0;
-        gAssetItems = gAssetItems.concat(selectionList);
-        setAssetItems(gAssetItems);
+                  gAssetItems.length = 0;
+                  gAssetItems = gAssetItems.concat(selectionList);
+                  setAssetItems(gAssetItems);
 
-        const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
-        console.log(filteredStatus);
-        OnStatusUpdate(filteredStatus);
-      }
-    }
-    setLoadingNearest(false);
+                  const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
+                  console.log(filteredStatus);
+                  OnStatusUpdate(filteredStatus);
+                }
+              }
+              setLoadingNearest(false);
+            } catch (err) {
+              alert('An error while finding pictures.');
+            }
+          },
+        },
+      ],
+    );
   }, [jobAssets]);
 
   const LoadAllPhotos = useCallback(async () => {
@@ -271,13 +293,16 @@ const JobPhotosPage = () => {
     }
   }, [jobAssets]);
 
-  const OnLoadPhotosClicked = useCallback(async () => {
-    if (useJobLocation === true) {
-      await LoadPhotosNearestToJob();
-    } else {
-      await LoadAllPhotos();
-    }
-  }, [useJobLocation]);
+  const OnLoadPhotosClicked = useCallback(
+    async (useNewJobLocation: boolean) => {
+      if (useNewJobLocation) {
+        await LoadPhotosNearestToJob();
+      } else {
+        await LoadAllPhotos();
+      }
+    },
+    [LoadPhotosNearestToJob, LoadAllPhotos],
+  );
 
   const LoadMore = useCallback(async () => {
     const foundAssets: MediaLibrary.Asset[] | undefined = await mediaTools.current?.getNextAssetPage();
@@ -417,9 +442,15 @@ const JobPhotosPage = () => {
     [colorScheme],
   );
 
-  const handleMenuItemPress = useCallback((item: string) => {
-    if (item === 'AddPhotos') OnLoadPhotosClicked();
-  }, []);
+  const handleMenuItemPress = useCallback(
+    (item: string) => {
+      if (item === 'AddPhotos') {
+        setUseJobLocation(false);
+        OnLoadPhotosClicked(false);
+      }
+    },
+    [useJobLocation, OnLoadPhotosClicked],
+  );
 
   const handleImagePress = useCallback((uri: string) => {
     setSelectedImage(uri);
@@ -427,9 +458,10 @@ const JobPhotosPage = () => {
   }, []);
 
   const onSwitchValueChanged = useCallback(() => {
-    setUseJobLocation(!useJobLocation);
-    OnLoadPhotosClicked();
-  }, [setUseJobLocation, useJobLocation]);
+    const newValue = !useJobLocation;
+    setUseJobLocation(newValue);
+    OnLoadPhotosClicked(newValue);
+  }, [useJobLocation, OnLoadPhotosClicked]);
 
   const onJobAllOrClearChanged = useCallback(() => {
     if (HasSelectedJobAssets()) {
@@ -459,7 +491,7 @@ const JobPhotosPage = () => {
             headerShown: true,
             header: () => (
               <ScreenHeader
-                title="Job Photos"
+                title={jobName}
                 headerLeft={() => (
                   <Pressable
                     onPress={() => {
@@ -500,7 +532,7 @@ const JobPhotosPage = () => {
         <Stack.Screen
           options={{
             headerShown: true,
-            title: 'Jobs',
+            title: jobName,
             headerRight: () => (
               <Pressable
                 onPress={() => {
@@ -522,59 +554,68 @@ const JobPhotosPage = () => {
       )}
 
       <View style={styles.headerInfo}>
-        <Text>{jobName}</Text>
-        <View
-          style={{
-            marginHorizontal: 10,
-            marginBottom: 20,
-            alignSelf: 'center',
-            alignItems: 'center',
-            flexDirection: 'row',
-          }}
-        >
-          {showAssetItems && (
-            <>
-              <Text text="Filter:" txtSize="standard" style={{ marginRight: 10 }} />
-              <Text text="All" txtSize="standard" style={{ marginRight: 10 }} />
-              <Switch value={useJobLocation} onValueChange={onSwitchValueChanged} size="large" />
-              <Text text="Near Job" txtSize="standard" style={{ marginLeft: 10 }} />
-            </>
-          )}
-        </View>
-
-        <Text txtSize="standard" style={{ marginLeft: 10 }}>
-          {' '}
-          {`Job contains ${jobAssets?.length} pictures.`}{' '}
-        </Text>
+        {showAssetItems && (
+          <View
+            style={{
+              marginTop: 5,
+              marginBottom: 5,
+              alignSelf: 'center',
+              alignItems: 'center',
+              flexDirection: 'row',
+            }}
+          >
+            <Text text="Filter:" txtSize="standard" style={{ marginRight: 10 }} />
+            <Text text="All" txtSize="standard" style={{ marginRight: 10 }} />
+            <Switch value={useJobLocation} onValueChange={onSwitchValueChanged} size="large" />
+            <Text text="Near Job" txtSize="standard" style={{ marginLeft: 10 }} />
+          </View>
+        )}
       </View>
       <View style={styles.listsContainer}>
         {/* Left side - Job Assets */}
         <View style={styles.listColumn}>
-          <Text style={styles.listTitle}>Job Photos</Text>
-          {HasSelectedJobAssets() && (
-            <Text style={{ alignSelf: 'center' }}>
-              {jobAssets?.filter((asset) => asset.selected).length} selected
+          <View style={{ alignItems: 'center' }}>
+            <Text txtSize="title" style={styles.listTitle}>
+              Job Photos
             </Text>
-          )}
+            <Text txtSize="sub-title" style={{ marginLeft: 10 }}>
+              {`Job contains ${jobAssets ? jobAssets?.length : 0} pictures.`}
+            </Text>
+          </View>
           {!jobAssets ? (
-            <Text>No photos in job</Text>
+            <View style={{ alignItems: 'center' }}>
+              <Text>Use menu button to add photos.</Text>
+            </View>
           ) : (
             <>
-              {' '}
-              <Pressable
-                onPress={() => {
-                  onJobAllOrClearChanged();
-                }}
-              >
-                {({ pressed }) => (
-                  <Ionicons
-                    name={HasSelectedJobAssets() ? 'checkbox' : 'checkbox-outline'}
-                    size={24}
-                    color={colors.iconColor}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
+              <View style={styles.selectRow}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Pressable
+                    onPress={() => {
+                      onJobAllOrClearChanged();
+                    }}
+                  >
+                    {({ pressed }) => (
+                      <Ionicons
+                        name={HasSelectedJobAssets() ? 'ellipse-sharp' : 'ellipse-outline'}
+                        size={24}
+                        color={colors.iconColor}
+                        style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                      />
+                    )}
+                  </Pressable>
+                  <Text>
+                    {!showAssetItems ? (HasSelectedJobAssets() ? 'Clear Selection' : 'Select All') : ''}
+                  </Text>
+                </View>
+                <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                  {HasSelectedJobAssets() && (
+                    <Text style={{ alignSelf: 'center' }}>
+                      {jobAssets?.filter((asset) => asset.selected).length} selected
+                    </Text>
+                  )}
+                </View>
+              </View>
               <FlashList
                 numColumns={showAssetItems ? 1 : 2}
                 data={jobAssets}
@@ -618,11 +659,6 @@ const JobPhotosPage = () => {
             <View style={styles.separator} />
             <View style={styles.listColumn}>
               <Text style={styles.listTitle}>Photos</Text>
-              {HasSelectedAssets() && (
-                <Text style={{ alignSelf: 'center' }}>
-                  {assetItems?.filter((asset) => asset.selected).length} selected
-                </Text>
-              )}
               {loadingNearest ? (
                 <View style={styles.loadingContainer}>
                   <Text>Loading...{fetchStatus}</Text>
@@ -630,20 +666,28 @@ const JobPhotosPage = () => {
                 </View>
               ) : (
                 <>
-                  <Pressable
-                    onPress={() => {
-                      onAssetAllOrClearChanged();
-                    }}
-                  >
-                    {({ pressed }) => (
-                      <Ionicons
-                        name={HasSelectedAssets() ? 'checkbox' : 'checkbox-outline'}
-                        size={24}
-                        color={colors.iconColor}
-                        style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                      />
+                  <View style={styles.selectRow}>
+                    <Pressable
+                      onPress={() => {
+                        onAssetAllOrClearChanged();
+                      }}
+                    >
+                      {({ pressed }) => (
+                        <Ionicons
+                          name={HasSelectedAssets() ? 'ellipse-sharp' : 'ellipse-outline'}
+                          size={24}
+                          color={colors.iconColor}
+                          style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                        />
+                      )}
+                    </Pressable>
+
+                    {HasSelectedAssets() && (
+                      <Text style={{ alignSelf: 'center' }}>
+                        {assetItems?.filter((asset) => asset.selected).length} selected
+                      </Text>
                     )}
-                  </Pressable>
+                  </View>
                   <FlashList
                     data={assetItems}
                     estimatedItemSize={200}
@@ -708,13 +752,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerInfo: {
-    padding: 10,
+    paddingHorizontal: 10,
     alignItems: 'center',
   },
   listsContainer: {
     flex: 1,
     flexDirection: 'row',
-    padding: 10,
+    paddingHorizontal: 10,
   },
   listColumn: {
     flex: 1,
@@ -726,9 +770,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   listTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
     textAlign: 'center',
   },
   thumbnail: {
@@ -738,6 +779,11 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginTop: 10,
+  },
+  selectRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   buttonRow: {
     flexDirection: 'row',
