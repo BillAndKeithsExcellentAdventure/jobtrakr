@@ -431,6 +431,26 @@ const JobPhotosPage = () => {
     OnLoadPhotosClicked();
   }, [setUseJobLocation, useJobLocation]);
 
+  const onJobAllOrClearChanged = useCallback(() => {
+    if (HasSelectedJobAssets()) {
+      console.log('Clearing all job assets');
+      setJobAssets((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: false } as AssetsItem)));
+    } else {
+      console.log('Selecting all job pictures');
+      setJobAssets((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: true })));
+    }
+  }, [jobAssets, setJobAssets]);
+
+  const onAssetAllOrClearChanged = useCallback(() => {
+    if (HasSelectedAssets()) {
+      console.log('Clearing all assets');
+      setAssetItems((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: false } as AssetsItem)));
+    } else {
+      console.log('Selecting all pictures');
+      setAssetItems((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: true })));
+    }
+  }, [assetItems, setAssetItems]);
+
   return (
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' ? (
@@ -540,6 +560,21 @@ const JobPhotosPage = () => {
             <Text>No photos in job</Text>
           ) : (
             <>
+              {' '}
+              <Pressable
+                onPress={() => {
+                  onJobAllOrClearChanged();
+                }}
+              >
+                {({ pressed }) => (
+                  <Ionicons
+                    name={HasSelectedJobAssets() ? 'checkbox' : 'checkbox-outline'}
+                    size={24}
+                    color={colors.iconColor}
+                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                  />
+                )}
+              </Pressable>
               <FlashList
                 numColumns={showAssetItems ? 1 : 2}
                 data={jobAssets}
@@ -595,6 +630,20 @@ const JobPhotosPage = () => {
                 </View>
               ) : (
                 <>
+                  <Pressable
+                    onPress={() => {
+                      onAssetAllOrClearChanged();
+                    }}
+                  >
+                    {({ pressed }) => (
+                      <Ionicons
+                        name={HasSelectedAssets() ? 'checkbox' : 'checkbox-outline'}
+                        size={24}
+                        color={colors.iconColor}
+                        style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                      />
+                    )}
+                  </Pressable>
                   <FlashList
                     data={assetItems}
                     estimatedItemSize={200}
