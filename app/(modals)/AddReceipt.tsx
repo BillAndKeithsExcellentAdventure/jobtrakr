@@ -160,7 +160,7 @@ const AddReceiptModalScreen = ({
 
     const response = await jobDbHost?.GetReceiptBucketDB().InsertReceipt(jobId, newReceipt);
     if (response?.status === 'Success') {
-      console.log('Job receipt successfully added:', jobReceipt);
+      console.log('Job receipt successfully added:', newReceipt);
       hideModal(true);
     } else {
       console.log('Job receipt update failed:', jobReceipt);

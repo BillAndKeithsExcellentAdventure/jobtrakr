@@ -1,5 +1,6 @@
 import AddReceiptModalScreen from '@/app/(modals)/AddReceipt';
 import { ActionButton } from '@/components/ActionButton';
+import { ModalImageViewer } from '@/components/ModalImageViewer';
 import { Text, View } from '@/components/Themed';
 import { useJobDb } from '@/context/DatabaseContext';
 import { formatCurrency } from '@/utils/formatters';
@@ -12,6 +13,8 @@ const JobReceiptsPage = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
   const [receipts, setReceipts] = useState<ReceiptBucketData[]>([]);
   const [isAddModalVisible, setIsAddModalVisible] = useState<boolean>(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
 
   const { jobDbHost } = useJobDb();
 
@@ -47,8 +50,9 @@ const JobReceiptsPage = () => {
     [fetchReceipts],
   );
 
-  const showPicture = useCallback((PictureUri: string) => {
-    // TODO
+  const showPicture = useCallback((uri: string) => {
+    setSelectedImage(uri);
+    setIsImageViewerVisible(true);
   }, []);
 
   const addPicture = useCallback((_id: string | undefined) => {
@@ -56,6 +60,13 @@ const JobReceiptsPage = () => {
   }, []);
 
   const [isSwitchOn, setIsSwitchOn] = useState(false);
+
+  const handleRemoveReceipt = useCallback(async (id: string | undefined) => {
+    if (id !== undefined) {
+      const response = await jobDbHost?.GetReceiptBucketDB().DeleteReceipt(id);
+      fetchReceipts();
+    }
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -81,19 +92,37 @@ const JobReceiptsPage = () => {
                   <Text>Vendor: {item.Vendor}</Text>
                   <Text>Description: {item.Description}</Text>
                   <Text>Notes: {item.Notes}</Text>
-                  <ActionButton
-                    title={item.PictureUri ? 'Show Picture' : 'Add Picture'}
-                    onPress={(): void => {
-                      item.PictureUri ? showPicture(item.PictureUri) : addPicture(item._id);
-                    }}
-                    type={'action'}
-                  />
+                  <View style={{ flexDirection: 'row' }}>
+                    <ActionButton
+                      title={item.PictureUri ? 'Show Picture' : 'Add Picture'}
+                      onPress={(): void => {
+                        item.PictureUri ? showPicture(item.PictureUri) : addPicture(item._id);
+                      }}
+                      type={'action'}
+                    />
+                    <ActionButton
+                      title="Remove"
+                      onPress={(): void => {
+                        handleRemoveReceipt(item._id);
+                      }}
+                      type={'action'}
+                    />
+                  </View>
                 </View>
               )}
             />
           )}
         </View>
-        <AddReceiptModalScreen jobId={jobId} visible={isAddModalVisible} hideModal={hideAddModal} />
+        <>
+          <AddReceiptModalScreen jobId={jobId} visible={isAddModalVisible} hideModal={hideAddModal} />
+          {selectedImage && (
+            <ModalImageViewer
+              isVisible={isImageViewerVisible}
+              imageUri={selectedImage}
+              onClose={() => setIsImageViewerVisible(false)}
+            />
+          )}
+        </>
       </View>
     </SafeAreaView>
   );
