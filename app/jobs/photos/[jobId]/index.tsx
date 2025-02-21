@@ -560,10 +560,10 @@ const JobPhotosPage = () => {
                 {HasSelectedJobAssets() && (
                   <View style={styles.buttonRow}>
                     <View style={styles.buttonWrapper}>
-                      <Button title="Remove" onPress={OnRemoveFromJobClicked} />
+                      <ActionButton title="Remove" onPress={OnRemoveFromJobClicked} type={'action'} />
                     </View>
                     <View style={styles.buttonWrapper}>
-                      <Button title="Share Photos" onPress={OnShareJobPhotosClicked} />
+                      <ActionButton title="Share Photos" onPress={OnShareJobPhotosClicked} type={'action'} />
                     </View>
                   </View>
                 )}
@@ -615,11 +615,15 @@ const JobPhotosPage = () => {
                     <View style={styles.buttonRow}>
                       {(useJobLocation || (!useJobLocation && HasSelectedAssets())) && (
                         <View style={styles.buttonWrapper}>
-                          <Button title={getAddButtonTitle()} onPress={OnAddToJobClicked} />
+                          <ActionButton
+                            type={'action'}
+                            title={getAddButtonTitle()}
+                            onPress={OnAddToJobClicked}
+                          />
                         </View>
                       )}
                       <View style={styles.buttonWrapper}>
-                        <Button title="Close" onPress={handleClose} />
+                        <ActionButton title="Close" onPress={handleClose} type={'action'} />
                       </View>
                     </View>
                   </View>
