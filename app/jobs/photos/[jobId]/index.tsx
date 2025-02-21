@@ -33,6 +33,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { ImageViewerModal } from '@/components/ImageViewerModal';
+import { VideoPlayerModal } from '@/components/VideoPlayerModal';
 
 type AssetsItem = {
   _id: string;
@@ -122,6 +123,8 @@ const JobPhotosPage = () => {
   const [menuModalVisible, setMenuModalVisible] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
 
   useEffect(() => {
     async function loadMediaAssetsObj() {
@@ -452,9 +455,22 @@ const JobPhotosPage = () => {
     [useJobLocation, OnLoadPhotosClicked],
   );
 
-  const handleImagePress = useCallback((uri: string) => {
+  const showImage = useCallback((uri: string) => {
     setSelectedImage(uri);
     setIsImageViewerVisible(true);
+  }, []);
+
+  const playVideo = (videoUri: string) => {
+    setSelectedVideo(videoUri);
+    setIsVideoPlayerVisible(true);
+  };
+
+  const handleImagePress = useCallback((uri: string, type: MediaLibrary.MediaTypeValue) => {
+    if (type === 'video') {
+      playVideo(uri);
+    } else if (type === 'photo') {
+      showImage(uri);
+    }
   }, []);
 
   const onSwitchValueChanged = useCallback(() => {
@@ -625,7 +641,7 @@ const JobPhotosPage = () => {
                     <TouchableOpacity
                       style={[styles.imageContainer, item.selected && styles.imageSelected]}
                       onPress={() => handleJobAssetSelection(item.asset.id)}
-                      onLongPress={() => handleImagePress(item.asset.uri)}
+                      onLongPress={() => handleImagePress(item.asset.uri, item.asset.mediaType)}
                     >
                       <View>
                         <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
@@ -697,7 +713,7 @@ const JobPhotosPage = () => {
                         <TouchableOpacity
                           style={[styles.imageContainer, item.selected && styles.imageSelected]}
                           onPress={() => handleAssetSelection(item.asset.id)}
-                          onLongPress={() => handleImagePress(item.asset.uri)}
+                          onLongPress={() => handleImagePress(item.asset.uri, item.asset.mediaType)}
                         >
                           <View>
                             <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
@@ -741,6 +757,13 @@ const JobPhotosPage = () => {
           isVisible={isImageViewerVisible}
           imageUri={selectedImage}
           onClose={() => setIsImageViewerVisible(false)}
+        />
+      )}
+      {selectedVideo && (
+        <VideoPlayerModal
+          isVisible={isVideoPlayerVisible}
+          videoUri={selectedVideo}
+          onClose={() => setIsVideoPlayerVisible(false)}
         />
       )}
     </SafeAreaView>
