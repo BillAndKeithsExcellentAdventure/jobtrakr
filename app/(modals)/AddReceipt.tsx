@@ -188,7 +188,7 @@ const AddReceiptModalScreen = ({
       if (!response.assets || response.assets.length === 0 || !asset) return;
       setJobReceipt((prevReceipt) => ({
         ...prevReceipt,
-        pictureUri: asset.uri ?? undefined,
+        pictureUri: asset.uri,
         assetId: asset.assetId ?? undefined,
       }));
     }

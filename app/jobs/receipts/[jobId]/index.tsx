@@ -2,6 +2,7 @@ import AddReceiptModalScreen from '@/app/(modals)/AddReceipt';
 import { ActionButton } from '@/components/ActionButton';
 import { Text, View } from '@/components/Themed';
 import { useJobDb } from '@/context/DatabaseContext';
+import { formatCurrency } from '@/utils/formatters';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -73,10 +74,10 @@ const JobReceiptsPage = () => {
           ) : (
             <FlatList
               data={receipts}
-              keyExtractor={(item) => item._id!}
+              keyExtractor={(item, index) => item._id ?? index.toString()}
               renderItem={({ item }) => (
                 <View style={{ marginVertical: 10, padding: 10, borderWidth: 1 }}>
-                  <Text>Amount: ${item.Amount}</Text>
+                  <Text>Amount: {formatCurrency(item.Amount)}</Text>
                   <Text>Vendor: {item.Vendor}</Text>
                   <Text>Description: {item.Description}</Text>
                   <Text>Notes: {item.Notes}</Text>
@@ -92,7 +93,7 @@ const JobReceiptsPage = () => {
             />
           )}
         </View>
-        <AddReceiptModalScreen jobId="{jobId}" visible={isAddModalVisible} hideModal={hideAddModal} />
+        <AddReceiptModalScreen jobId={jobId} visible={isAddModalVisible} hideModal={hideAddModal} />
       </View>
     </SafeAreaView>
   );
