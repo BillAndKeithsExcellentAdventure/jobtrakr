@@ -1,13 +1,26 @@
 import AddReceiptModalScreen from '@/app/(modals)/AddReceipt';
 import { ActionButton } from '@/components/ActionButton';
+import ButtonBar, { ActionButtonProps } from '@/components/ButtonBar';
 import { ModalImageViewer } from '@/components/ModalImageViewer';
 import { Text, View } from '@/components/Themed';
+import { useColorScheme } from '@/components/useColorScheme';
+import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { formatCurrency } from '@/utils/formatters';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { FlashList } from '@shopify/flash-list';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, SafeAreaView, StyleSheet } from 'react-native';
+
+function isEntry(actionContext: any): actionContext is { entryId: string; primaryTitle: string } {
+  return (
+    actionContext &&
+    typeof actionContext.entryId === 'string' &&
+    typeof actionContext.primaryTitle === 'string'
+  );
+}
 
 const JobReceiptsPage = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
@@ -68,45 +81,108 @@ const JobReceiptsPage = () => {
     }
   }, []);
 
+  const colorScheme = useColorScheme();
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            deleteColor: Colors.dark.angry500,
+            iconColor: Colors.dark.iconColor,
+            separatorColor: Colors.dark.separatorColor,
+          }
+        : {
+            deleteColor: Colors.dark.angry500,
+            iconColor: Colors.light.iconColor,
+            separatorColor: Colors.light.separatorColor,
+          },
+    [colorScheme],
+  );
+
+  const onEditPressed = useCallback((entryId: string) => {}, []);
+
+  const buttons: ActionButtonProps[] = useMemo(
+    () => [
+      {
+        icon: <FontAwesome name="edit" size={24} color={colors.iconColor} />,
+        label: 'Edit',
+        onPress: (e, actionContext) => {
+          if (isEntry(actionContext)) {
+            if (actionContext && actionContext.entryId) onEditPressed(actionContext.entryId);
+          }
+        },
+      },
+      {
+        icon: <FontAwesome name="photo" size={24} color={colors.iconColor} />,
+        label: 'Show',
+        onPress: (e, actionContext) => {
+          if (isEntry(actionContext)) {
+            if (actionContext && actionContext.entryId) showPicture(actionContext.entryId);
+          }
+        },
+      },
+
+      {
+        icon: <FontAwesome name="trash" size={24} color={colors.deleteColor} />,
+        label: 'Delete',
+        onPress: (e, actionContext) => {
+          if (isEntry(actionContext)) {
+            if (actionContext && actionContext.entryId) handleRemoveReceipt(actionContext.entryId);
+          }
+        },
+      },
+    ],
+    [colors, onEditPressed, handleRemoveReceipt],
+  );
+
+  const ListHeader: React.FC = () => (
+    <View style={styles.listHeaderContainer}>
+      <Text txtSize="sub-title">Amount</Text>
+      <Text txtSize="sub-title">Description</Text>
+      <Text txtSize="sub-title">Vendor</Text>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
-      <View style={{ padding: 20 }}>
+      <View style={{ padding: 20, flex: 1 }}>
         <View style={{ marginHorizontal: 10, marginBottom: 20 }}>
           <ActionButton onPress={handleAddReceipt} type={'action'} title="Add Receipt" />
         </View>
 
         <Text text="Job Receipts" txtSize="title" />
-        <View style={{ marginVertical: 20 }}>
+        <View style={{ flex: 1 }}>
           {receipts.length === 0 ? (
             <View style={{ alignItems: 'center' }}>
               <Text>No receipts found.</Text>
             </View>
           ) : (
-            <FlatList
+            <FlashList
+              style={{ width: '100%' }}
+              estimatedItemSize={200}
               data={receipts}
               keyExtractor={(item, index) => item._id ?? index.toString()}
               renderItem={({ item }) => (
-                <View style={{ marginVertical: 10, padding: 10, borderWidth: 1 }}>
+                <View
+                  style={{
+                    marginTop: 10,
+                    paddingHorizontal: 10,
+                    paddingTop: 5,
+                    borderWidth: 1,
+                    borderRadius: 10,
+                    width: '100%',
+                  }}
+                >
                   <Text>Amount: {formatCurrency(item.Amount)}</Text>
                   <Text>Vendor: {item.Vendor}</Text>
                   <Text>Description: {item.Description}</Text>
                   <Text>Notes: {item.Notes}</Text>
-                  <View style={{ flexDirection: 'row' }}>
-                    <ActionButton
-                      title={item.PictureUri ? 'Show Picture' : 'Add Picture'}
-                      onPress={(): void => {
-                        item.PictureUri ? showPicture(item.PictureUri) : addPicture(item._id);
-                      }}
-                      type={'action'}
-                    />
-                    <ActionButton
-                      title="Remove"
-                      onPress={(): void => {
-                        handleRemoveReceipt(item._id);
-                      }}
-                      type={'action'}
-                    />
+                  <View
+                    style={{
+                      alignItems: 'stretch',
+                    }}
+                  >
+                    {buttons && <ButtonBar buttons={buttons} actionContext={item} />}
                   </View>
                 </View>
               )}
@@ -131,6 +207,12 @@ const JobReceiptsPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  listHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#f8f8f8',
+    padding: 10,
   },
 });
 
