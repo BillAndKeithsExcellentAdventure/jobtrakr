@@ -287,6 +287,7 @@ const JobPhotosPage = () => {
       const zipFileName = `job_${jobName}_photos`;
       const zipPath = `${FileSystem.documentDirectory}${zipFileName}.zip`;
       const assets = createPictureBucketDataArray(jobAssets);
+      console.log(` Creating zip file with ${assets.length} assets`);
       try {
         await CreateMediaZip(assets, zipFileName);
         await ShareFile(zipPath);
@@ -335,22 +336,6 @@ const JobPhotosPage = () => {
       OnStatusUpdate(filteredStatus);
     }
   }, [assetItems]);
-
-  const HasSelectedJobAssets = (): boolean => {
-    if (!jobAssets) return false;
-
-    const list = jobAssets.some((item) => item.selected);
-
-    return list.valueOf();
-  };
-
-  const NumSelectedJobAssets = (): number => {
-    if (!jobAssets) return 0;
-
-    const list = jobAssets.filter((item) => item.selected);
-
-    return list.length;
-  };
 
   const OnAddToJobClicked = useCallback(async () => {
     if (assetItems) {
@@ -421,6 +406,17 @@ const JobPhotosPage = () => {
       setHasSelectedAssets(false);
     }
   }, [assetItems]);
+
+  const [numSelectedJobAssets, setNumSelectedJobAssets] = useState<number>(0);
+
+  useEffect(() => {
+    if (jobAssets) {
+      const num = jobAssets?.filter((item) => item.selected === true).length;
+      setNumSelectedJobAssets(num ? num : 0);
+    } else {
+      setNumSelectedJobAssets(0);
+    }
+  }, [jobAssets]);
 
   const getAddButtonTitle = useCallback(() => {
     if (!assetItems) return 'Add All';
@@ -495,7 +491,7 @@ const JobPhotosPage = () => {
   }, [useJobLocation, OnLoadPhotosClicked]);
 
   const onJobAllOrClearChanged = useCallback(() => {
-    if (HasSelectedJobAssets()) {
+    if (numSelectedJobAssets > 0) {
       console.log('Clearing all job assets');
       setJobAssets((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: false } as AssetsItem)));
     } else {
@@ -628,7 +624,7 @@ const JobPhotosPage = () => {
                   >
                     {({ pressed }) => (
                       <Ionicons
-                        name={HasSelectedJobAssets() ? 'ellipse-sharp' : 'ellipse-outline'}
+                        name={numSelectedJobAssets > 0 ? 'ellipse-sharp' : 'ellipse-outline'}
                         size={24}
                         color={colors.iconColor}
                         style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
@@ -636,11 +632,11 @@ const JobPhotosPage = () => {
                     )}
                   </Pressable>
                   <Text>
-                    {!showAssetItems ? (HasSelectedJobAssets() ? 'Clear Selection' : 'Select All') : ''}
+                    {!showAssetItems ? (numSelectedJobAssets > 0 ? 'Clear Selection' : 'Select All') : ''}
                   </Text>
                 </View>
                 <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                  {HasSelectedJobAssets() && (
+                  {numSelectedJobAssets > 0 && (
                     <Text style={{ alignSelf: 'center' }}>
                       {jobAssets?.filter((asset) => asset.selected).length} selected
                     </Text>
@@ -674,7 +670,7 @@ const JobPhotosPage = () => {
                 )}
               />
               <View style={styles.buttonContainer}>
-                {HasSelectedJobAssets() && (
+                {numSelectedJobAssets > 0 && (
                   <View style={styles.buttonRow}>
                     <View style={styles.buttonWrapper}>
                       <ActionButton title="Remove" onPress={OnRemoveFromJobClicked} type={'action'} />
@@ -682,7 +678,7 @@ const JobPhotosPage = () => {
                     <View style={styles.buttonWrapper}>
                       <ActionButton title="Share" onPress={OnShareJobPhotosClicked} type={'action'} />
                     </View>
-                    {NumSelectedJobAssets() === 1 && (
+                    {numSelectedJobAssets === 1 && (
                       <View style={styles.buttonWrapper}>
                         <ActionButton
                           title="Thumbnail"
