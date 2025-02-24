@@ -648,6 +648,11 @@ const JobPhotosPage = () => {
                         <Text style={styles.dateOverlay}>
                           {new Date(item.asset.creationTime * 1).toLocaleString()}
                         </Text>
+                        {item.asset.mediaType === 'video' && (
+                          <View style={styles.playButtonOverlay}>
+                            <Ionicons name="play" size={30} color="white" />
+                          </View>
+                        )}
                       </View>
                     </TouchableOpacity>
                   </View>
@@ -720,6 +725,11 @@ const JobPhotosPage = () => {
                             <Text style={styles.dateOverlay}>
                               {new Date(item.asset.creationTime * 1).toLocaleString()}
                             </Text>
+                            {item.asset.mediaType === 'video' && (
+                              <View style={styles.playButtonOverlay}>
+                                <Ionicons name="play" size={30} color="white" />
+                              </View>
+                            )}
                           </View>
                         </TouchableOpacity>
                       </View>
@@ -895,6 +905,15 @@ const styles = StyleSheet.create({
   },
   menuText: {
     fontSize: 16,
+  },
+  playButtonOverlay: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -20 }, { translateY: -20 }],
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 25,
+    padding: 10,
   },
 });
 
