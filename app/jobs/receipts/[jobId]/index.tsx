@@ -14,12 +14,8 @@ import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, SafeAreaView, StyleSheet } from 'react-native';
 
-function isEntry(actionContext: any): actionContext is { entryId: string; primaryTitle: string } {
-  return (
-    actionContext &&
-    typeof actionContext.entryId === 'string' &&
-    typeof actionContext.primaryTitle === 'string'
-  );
+function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
+  return actionContext && typeof actionContext.PictureUri === 'string';
 }
 
 const JobReceiptsPage = () => {
@@ -106,7 +102,7 @@ const JobReceiptsPage = () => {
         icon: <FontAwesome name="edit" size={24} color={colors.iconColor} />,
         label: 'Edit',
         onPress: (e, actionContext) => {
-          if (isEntry(actionContext)) {
+          if (isReceiptEntry(actionContext)) {
             if (actionContext && actionContext.entryId) onEditPressed(actionContext.entryId);
           }
         },
@@ -115,8 +111,8 @@ const JobReceiptsPage = () => {
         icon: <FontAwesome name="photo" size={24} color={colors.iconColor} />,
         label: 'Show',
         onPress: (e, actionContext) => {
-          if (isEntry(actionContext)) {
-            if (actionContext && actionContext.entryId) showPicture(actionContext.entryId);
+          if (isReceiptEntry(actionContext)) {
+            if (actionContext.PictureUri) showPicture(actionContext.PictureUri);
           }
         },
       },
@@ -125,7 +121,7 @@ const JobReceiptsPage = () => {
         icon: <FontAwesome name="trash" size={24} color={colors.deleteColor} />,
         label: 'Delete',
         onPress: (e, actionContext) => {
-          if (isEntry(actionContext)) {
+          if (isReceiptEntry(actionContext)) {
             if (actionContext && actionContext.entryId) handleRemoveReceipt(actionContext.entryId);
           }
         },
