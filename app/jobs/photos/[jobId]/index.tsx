@@ -299,7 +299,15 @@ const JobPhotosPage = () => {
 
   const OnSetThumbnailClicked = useCallback(async () => {
     if (jobAssets) {
-      console.log(`Setting Thumbnail photos`);
+      const asset = jobAssets.find((asset) => asset.selected);
+      if (asset) {
+        const tn = await mediaTools.current?.createThumbnail(asset.asset.uri, jobName, 100, 100);
+
+        const status = await jobDbHost?.GetJobDB().UpdateThumbnail(tn, jobId);
+        if (status === 'Success') {
+          console.log('Thumbnail set successfully');
+        }
+      }
     }
   }, [jobAssets]);
 
