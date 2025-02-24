@@ -296,6 +296,12 @@ const JobPhotosPage = () => {
     }
   }, [jobAssets]);
 
+  const OnSetThumbnailClicked = useCallback(async () => {
+    if (jobAssets) {
+      console.log(`Setting Thumbnail photos`);
+    }
+  }, [jobAssets]);
+
   const OnLoadPhotosClicked = useCallback(
     async (useNewJobLocation: boolean) => {
       if (useNewJobLocation) {
@@ -330,14 +336,6 @@ const JobPhotosPage = () => {
     }
   }, [assetItems]);
 
-  const HasSelectedAssets = (): boolean => {
-    if (!assetItems) return false;
-
-    const list = assetItems.some((item) => item.selected);
-
-    return list.valueOf();
-  };
-
   const HasSelectedJobAssets = (): boolean => {
     if (!jobAssets) return false;
 
@@ -346,9 +344,16 @@ const JobPhotosPage = () => {
     return list.valueOf();
   };
 
+  const NumSelectedJobAssets = (): number => {
+    if (!jobAssets) return 0;
+
+    const list = jobAssets.filter((item) => item.selected);
+
+    return list.length;
+  };
+
   const OnAddToJobClicked = useCallback(async () => {
     if (assetItems) {
-      const hasSelectedAssets = HasSelectedAssets();
       for (const asset of assetItems) {
         if (!hasSelectedAssets || asset.selected) {
           const status = await jobDbHost?.GetPictureBucketDB().InsertPicture(jobId, asset.asset);
@@ -362,7 +367,7 @@ const JobPhotosPage = () => {
       setShowAssetItems(false); // Hide the panel after adding
       assetItems.length = 0; // Clear the assets
     }
-  }, [assetItems, jobId, jobDbHost]);
+  }, [assetItems, jobId, jobDbHost, hasSelectedAssets]);
 
   const OnRemoveFromJobClicked = useCallback(async () => {
     Alert.alert('Remove Photos', 'Are you sure you want to remove these photos from this job?', [
@@ -406,6 +411,16 @@ const JobPhotosPage = () => {
       prevAssets?.map((item) => (item.asset.id === assetId ? { ...item, selected: !item.selected } : item)),
     );
   }, []);
+
+  const [hasSelectedAssets, setHasSelectedAssets] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (assetItems) {
+      setHasSelectedAssets(assetItems.some((item) => item.selected));
+    } else {
+      setHasSelectedAssets(false);
+    }
+  }, [assetItems]);
 
   const getAddButtonTitle = useCallback(() => {
     if (!assetItems) return 'Add All';
@@ -490,14 +505,14 @@ const JobPhotosPage = () => {
   }, [jobAssets, setJobAssets]);
 
   const onAssetAllOrClearChanged = useCallback(() => {
-    if (HasSelectedAssets()) {
+    if (hasSelectedAssets) {
       console.log('Clearing all assets');
       setAssetItems((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: false } as AssetsItem)));
     } else {
       console.log('Selecting all pictures');
       setAssetItems((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: true })));
     }
-  }, [assetItems, setAssetItems]);
+  }, [assetItems, hasSelectedAssets]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -665,8 +680,18 @@ const JobPhotosPage = () => {
                       <ActionButton title="Remove" onPress={OnRemoveFromJobClicked} type={'action'} />
                     </View>
                     <View style={styles.buttonWrapper}>
-                      <ActionButton title="Share Photos" onPress={OnShareJobPhotosClicked} type={'action'} />
+                      <ActionButton title="Share" onPress={OnShareJobPhotosClicked} type={'action'} />
                     </View>
+                    {NumSelectedJobAssets() === 1 && (
+                      <View style={styles.buttonWrapper}>
+                        <ActionButton
+                          title="Thumbnail"
+                          style={{ paddingHorizontal: 1 }}
+                          onPress={OnSetThumbnailClicked}
+                          type={'action'}
+                        />
+                      </View>
+                    )}
                   </View>
                 )}
               </View>
@@ -695,7 +720,7 @@ const JobPhotosPage = () => {
                     >
                       {({ pressed }) => (
                         <Ionicons
-                          name={HasSelectedAssets() ? 'ellipse-sharp' : 'ellipse-outline'}
+                          name={hasSelectedAssets ? 'ellipse-sharp' : 'ellipse-outline'}
                           size={24}
                           color={colors.iconColor}
                           style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
@@ -703,7 +728,7 @@ const JobPhotosPage = () => {
                       )}
                     </Pressable>
 
-                    {HasSelectedAssets() && (
+                    {hasSelectedAssets && (
                       <Text style={{ alignSelf: 'center' }}>
                         {assetItems?.filter((asset) => asset.selected).length} selected
                       </Text>
@@ -737,7 +762,7 @@ const JobPhotosPage = () => {
                   />
                   <View style={styles.buttonContainer}>
                     <View style={styles.buttonRow}>
-                      {(useJobLocation || (!useJobLocation && HasSelectedAssets())) && (
+                      {(useJobLocation || (!useJobLocation && hasSelectedAssets)) && (
                         <View style={styles.buttonWrapper}>
                           <ActionButton
                             type={'action'}
