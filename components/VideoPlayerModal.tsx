@@ -4,6 +4,7 @@ import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { Text, View } from '@/components/Themed';
+import { useEvent } from 'expo';
 
 interface VideoPlayerModalProps {
   isVisible: boolean;
@@ -19,6 +20,7 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
     player.loop = true;
     player.play();
   });
+  const { status, error } = useEvent(player, 'statusChange', { status: player.status });
 
   useEffect(() => {
     if (!isVisible) {
@@ -42,15 +44,15 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
   //     }
   //   };
 
-  //   const handlePlayPause = async () => {
-  //     if (videoRef.current) {
-  //       if (isPlaying) {
-  //         await videoRef.current.pauseAsync();
-  //       } else {
-  //         await videoRef.current.playAsync();
-  //       }
-  //     }
-  //   };
+  const handlePlayPause = async () => {
+    if (player) {
+      if (isPlaying) {
+        await player.pause();
+      } else {
+        await player.play();
+      }
+    }
+  };
 
   //   const handleSliderChange = async (value: number) => {
   //     if (videoRef.current) {
@@ -72,7 +74,7 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
         </View>
 
         <View style={styles.controls}>
-          <Pressable style={styles.playButton}>
+          <Pressable onPress={handlePlayPause} style={styles.playButton}>
             <Ionicons name={isPlaying ? 'pause' : 'play'} size={32} color="white" />
           </Pressable>
 
