@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, StyleSheet, Pressable, Dimensions, SafeAreaView } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { Text, View } from '@/components/Themed';
 import { useEvent } from 'expo';
+import { useEventListener } from 'expo';
 
 interface VideoPlayerModalProps {
   isVisible: boolean;
@@ -13,9 +14,11 @@ interface VideoPlayerModalProps {
 }
 
 export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, videoUri, onClose }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
+  const [playerStatus, setPlayerStatus] = useState('');
+  const [playerError, setPlayerError] = useState('');
   const player = useVideoPlayer(videoUri, (player) => {
     player.loop = true;
     player.play();
@@ -44,15 +47,24 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
   //     }
   //   };
 
-  const handlePlayPause = async () => {
+  const handlePlayPause = useCallback(async () => {
     if (player) {
+      console.log(`handlePlayPause ${isPlaying}`);
       if (isPlaying) {
         await player.pause();
+        setIsPlaying(true);
       } else {
         await player.play();
+        setIsPlaying(false);
       }
     }
-  };
+  }, [isPlaying, player]);
+
+  useEventListener(player, 'statusChange', ({ status, error }) => {
+    setPlayerStatus(status);
+    setPlayerError(error?.message || '');
+    console.log('Player status changed: ', status);
+  });
 
   //   const handleSliderChange = async (value: number) => {
   //     if (videoRef.current) {
@@ -71,29 +83,6 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
 
         <View style={styles.videoContainer}>
           <VideoView style={styles.video} player={player} allowsFullscreen />
-        </View>
-
-        <View style={styles.controls}>
-          <Pressable onPress={handlePlayPause} style={styles.playButton}>
-            <Ionicons name={isPlaying ? 'pause' : 'play'} size={32} color="white" />
-          </Pressable>
-
-          <View style={styles.sliderContainer}>
-            <Slider
-              style={styles.slider}
-              minimumValue={0}
-              maximumValue={duration}
-              value={position}
-              onSlidingComplete={(value) => console.log(value)}
-              minimumTrackTintColor="#FFFFFF"
-              maximumTrackTintColor="#666666"
-              thumbTintColor="#FFFFFF"
-            />
-            <View style={styles.timeContainer}>
-              <Text style={styles.timeText}>{formatTime(position)}</Text>
-              <Text style={styles.timeText}>{formatTime(duration)}</Text>
-            </View>
-          </View>
         </View>
       </SafeAreaView>
     </Modal>
