@@ -524,6 +524,8 @@ const JobPhotosPage = () => {
       const asset = response.assets[0];
       if (!response.assets || response.assets.length === 0 || !asset) return;
 
+      console.log(`Asset = ${asset}`);
+
       const mediaLibraryAsset: MediaLibrary.Asset = {
         id: asset.assetId || '',
         filename: asset.uri.split('/').pop() || '',
