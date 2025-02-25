@@ -4,6 +4,7 @@ import { ActionButtonProps, ButtonBar } from '@/components/ButtonBar';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import Base64Image from './Base64Image';
 
 // Define types for the props
 export interface TwoColumnListEntry {
@@ -72,11 +73,15 @@ export function TwoColumnList({
           <View style={styles.headerContentContainer}>
             {item.imageUri && (
               <View style={styles.imageContentContainer}>
-                <Image
-                  source={require('@/assets/images/hardHat.png')}
-                  tintColor={colors.iconColor}
-                  style={{ height: 60, width: 60 }}
-                />
+                {item.imageUri.length === 1 ? (
+                  <Image
+                    source={require('@/assets/images/hardHat.png')}
+                    tintColor={colors.iconColor}
+                    style={{ height: 60, width: 60 }}
+                  />
+                ) : (
+                  <Base64Image base64String={item.imageUri} height={80} width={120} />
+                )}
               </View>
             )}
             <View style={[styles.textContentContainer, { backgroundColor: colors.itemBackground }]}>

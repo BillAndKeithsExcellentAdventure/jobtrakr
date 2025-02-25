@@ -85,7 +85,7 @@ export default function JobHomeScreen() {
           primaryTitle: job.Name ? job.Name : 'unknown',
           isFavorite: undefined !== job.Favorite ? job.Favorite > 0 : false,
           entryId: job._id ?? '1',
-          imageUri: 'x',
+          imageUri: job.Thumbnail ?? 'x',
           secondaryTitle: job.Location,
           tertiaryTitle: job.OwnerName ?? 'Owner',
           lines: [
