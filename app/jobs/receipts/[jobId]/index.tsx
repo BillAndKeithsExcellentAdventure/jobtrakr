@@ -13,7 +13,7 @@ import { FlashList } from '@shopify/flash-list';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, SafeAreaView, StyleSheet } from 'react-native';
+import { Image, Pressable, SafeAreaView, StyleSheet } from 'react-native';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
   return actionContext && typeof actionContext.PictureUri === 'string';
@@ -109,16 +109,6 @@ const JobReceiptsPage = () => {
         },
       },
       {
-        icon: <FontAwesome name="photo" size={24} color={colors.iconColor} />,
-        label: 'Show',
-        onPress: (e, actionContext) => {
-          if (isReceiptEntry(actionContext)) {
-            if (actionContext.PictureUri) showPicture(actionContext.PictureUri);
-          }
-        },
-      },
-
-      {
         icon: <FontAwesome name="trash" size={24} color={colors.deleteColor} />,
         label: 'Delete',
         onPress: (e, actionContext) => {
@@ -169,10 +159,23 @@ const JobReceiptsPage = () => {
                     width: '100%',
                   }}
                 >
-                  <Text>Amount: {formatCurrency(item.Amount)}</Text>
-                  <Text>Vendor: {item.Vendor}</Text>
-                  <Text>Description: {item.Description}</Text>
-                  <Text>Notes: {item.Notes}</Text>
+                  <View style={{ flexDirection: 'row' }}>
+                    <View style={styles.imageContentContainer}>
+                      {item.PictureUri ? (
+                        <Pressable onPress={() => showPicture(item.PictureUri!)}>
+                          <Image source={{ uri: item.PictureUri }} style={{ height: 80, width: 120 }} />
+                        </Pressable>
+                      ) : (
+                        <Text>Add Image</Text>
+                      )}
+                    </View>
+                    <View>
+                      <Text>Amount: {formatCurrency(item.Amount)}</Text>
+                      <Text>Vendor: {item.Vendor}</Text>
+                      <Text>Description: {item.Description}</Text>
+                      <Text>Notes: {item.Notes}</Text>
+                    </View>
+                  </View>
                   <View
                     style={{
                       alignItems: 'stretch',
@@ -209,6 +212,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     backgroundColor: '#f8f8f8',
     padding: 10,
+  },
+  imageContentContainer: {
+    marginRight: 5,
+    width: 120,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 
