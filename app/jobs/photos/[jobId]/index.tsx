@@ -36,6 +36,9 @@ import { ImageViewerModal } from '@/components/ImageViewerModal';
 import { VideoPlayerModal } from '@/components/VideoPlayerModal';
 import * as ImagePicker from 'expo-image-picker';
 import { PictureBucketDB } from 'jobdb/dist/pictureBucket';
+import { JobCameraView } from '@/app/(modals)/CameraView';
+
+export type PhotoCapturedCallback = (asset: MediaLibrary.Asset) => void;
 
 type AssetsItem = {
   _id: string;
@@ -127,6 +130,7 @@ const JobPhotosPage = () => {
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
+  const [isCameraVisible, setIsCameraVisible] = useState(false);
 
   useEffect(() => {
     async function loadMediaAssetsObj() {
@@ -510,46 +514,24 @@ const JobPhotosPage = () => {
     }
   }, [jobAssets, setJobAssets]);
 
-  const OnTakePictureClicked = useCallback(async () => {
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-
-    if (permissionResult.granted === false) {
-      alert("You've refused to allow this app to access your camera!");
-      return;
-    }
-
-    const response = await ImagePicker.launchCameraAsync();
-
-    if (!response.canceled) {
-      const asset = response.assets[0];
-      if (!response.assets || response.assets.length === 0 || !asset) return;
-
-      console.log(`Asset = ${asset}`);
-
-      const mediaLibraryAsset: MediaLibrary.Asset = {
-        id: asset.assetId || '',
-        filename: asset.uri.split('/').pop() || '',
-        uri: asset.uri,
-        mediaType: 'photo',
-        mediaSubtypes: [],
-        width: asset.width,
-        height: asset.height,
-        creationTime: Date.now(),
-        modificationTime: Date.now(),
-        duration: 0,
-      };
-
-      const status = await jobDbHost?.GetPictureBucketDB().InsertPicture(jobId, mediaLibraryAsset);
+  const handlePhotoCaptured: PhotoCapturedCallback = async (asset) => {
+    if (asset) {
+      const status = await jobDbHost?.GetPictureBucketDB().InsertPicture(jobId, asset);
       if (status?.status === 'Success') {
-        gJobAssetItems = gJobAssetItems?.concat({
-          _id: status.id,
-          selected: false,
-          asset: mediaLibraryAsset,
-        });
+        console.log(`Added asset ${status.id}`);
+        gJobAssetItems = gJobAssetItems?.concat({ _id: status.id, selected: false, asset: asset });
         setJobAssets(gJobAssetItems);
       }
     }
-  }, []);
+  };
+
+  const onCameraClosed = useCallback(async () => {
+    setIsCameraVisible(false);
+  }, [isCameraVisible]);
+
+  const OnTakePictureClicked = useCallback(async () => {
+    setIsCameraVisible(true);
+  }, [isCameraVisible]);
 
   const onAssetAllOrClearChanged = useCallback(() => {
     if (hasSelectedAssets) {
@@ -855,6 +837,14 @@ const JobPhotosPage = () => {
           videoUri={selectedVideo}
           onClose={() => setIsVideoPlayerVisible(false)}
         />
+      )}
+      {isCameraVisible && (
+        <JobCameraView
+          visible={isCameraVisible}
+          jobName={jobName}
+          onMediaCaptured={handlePhotoCaptured}
+          onClose={onCameraClosed}
+        ></JobCameraView>
       )}
     </SafeAreaView>
   );
