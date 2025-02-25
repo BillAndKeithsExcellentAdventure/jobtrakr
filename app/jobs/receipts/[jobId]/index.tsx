@@ -1,6 +1,6 @@
 import AddReceiptModalScreen from '@/app/(modals)/AddReceipt';
 import { ActionButton } from '@/components/ActionButton';
-import ButtonBar, { ActionButtonProps } from '@/components/ButtonBar';
+import { ActionButtonProps, ButtonBar } from '@/components/ButtonBar';
 import { ModalImageViewer } from '@/components/ModalImageViewer';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -8,6 +8,7 @@ import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { formatCurrency } from '@/utils/formatters';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+
 import { FlashList } from '@shopify/flash-list';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
@@ -147,14 +148,13 @@ const JobReceiptsPage = () => {
         </View>
 
         <Text text="Job Receipts" txtSize="title" />
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, width: '100%' }}>
           {receipts.length === 0 ? (
             <View style={{ alignItems: 'center' }}>
               <Text>No receipts found.</Text>
             </View>
           ) : (
             <FlashList
-              style={{ width: '100%' }}
               estimatedItemSize={200}
               data={receipts}
               keyExtractor={(item, index) => item._id ?? index.toString()}

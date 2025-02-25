@@ -15,9 +15,15 @@ interface ButtonBarProps {
   buttons: ActionButtonProps[];
   actionContext: any;
   isFavorite?: boolean;
+  vertical?: boolean;
 }
 
-const ButtonBar: React.FC<ButtonBarProps> = ({ buttons, actionContext, isFavorite }) => {
+export const ButtonBar: React.FC<ButtonBarProps> = ({
+  buttons,
+  actionContext,
+  isFavorite,
+  vertical = false,
+}) => {
   const colorScheme = useColorScheme();
 
   // Define colors based on the color scheme (dark or light)
@@ -42,10 +48,17 @@ const ButtonBar: React.FC<ButtonBarProps> = ({ buttons, actionContext, isFavorit
   );
 
   return (
-    <View style={[styles.buttonBarContainer, { borderTopColor: colors.borderColor }]}>
+    <View
+      style={[
+        styles.buttonBarContainer,
+        !vertical && styles.buttonBarContainerHorizontal,
+        !vertical && { borderTopColor: colors.borderColor },
+        vertical && styles.buttonBarContainerVertical,
+      ]}
+    >
       {buttons.map((button, index) => (
         <TouchableOpacity key={index} style={styles.button} onPress={(e) => button.onPress(e, actionContext)}>
-          <View style={styles.buttonContent}>
+          <View style={[styles.buttonContent, vertical && styles.buttonContentVertical]}>
             {isFavorite && button.favoriteIcon ? (
               <>{button.favoriteIcon}</>
             ) : (
@@ -61,14 +74,24 @@ const ButtonBar: React.FC<ButtonBarProps> = ({ buttons, actionContext, isFavorit
 
 const styles = StyleSheet.create({
   buttonBarContainer: {
-    flexDirection: 'row',
     justifyContent: 'space-evenly',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderTopWidth: 1,
-    marginTop: 4,
   },
+  buttonBarContainerHorizontal: {
+    flexDirection: 'row',
+    paddingHorizontal: 10,
+    paddingTop: 5,
+    borderTopWidth: 1,
+    marginTop: 5,
+  },
+  buttonBarContainerVertical: {
+    flexDirection: 'column',
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+    paddingHorizontal: 5,
+    paddingVertical: 5,
+  },
+
   button: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -77,11 +100,14 @@ const styles = StyleSheet.create({
   buttonContent: {
     flexDirection: 'column',
     alignItems: 'center',
+    marginTop: 5,
   },
+  buttonContentVertical: {
+    marginTop: 10,
+  },
+
   buttonText: {
     fontSize: 10,
     marginLeft: 5,
   },
 });
-
-export default ButtonBar;

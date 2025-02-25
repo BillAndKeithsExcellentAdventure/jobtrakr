@@ -1,5 +1,5 @@
 import { ActionButtonProps } from '@/components/ButtonBar';
-import { Text, View } from '@/components/Themed';
+import { View } from '@/components/Themed';
 import { TwoColumnList, TwoColumnListEntry } from '@/components/TwoColumnList';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
@@ -7,24 +7,17 @@ import { formatCurrency, formatDate } from '@/utils/formatters';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import Entypo from '@expo/vector-icons/Entypo';
 import { useNavigation } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Modal,
-  Platform,
-  Pressable,
-  SafeAreaView,
-  StyleSheet,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-} from 'react-native';
+import { Platform, Pressable, StyleSheet } from 'react-native';
 
-import EditJobModalScreen from '@/app/(modals)/EditJobModalScreen';
 import JobModalScreen from '@/app/(modals)/JobModalScreen';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useJobDb } from '@/context/DatabaseContext';
 import { JobData } from 'jobdb';
+import HomeScreenHeaderMenu from './HomeScreenHeaderMenu';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -33,97 +26,43 @@ function MaterialDesignTabBarIcon(props: {
   return <MaterialCommunityIcons size={28} style={{ marginBottom: -3 }} {...props} />;
 }
 
-function HomeScreenModalMenu({
-  modalVisible,
-  setModalVisible,
-  onMenuItemPress,
-}: {
-  modalVisible: boolean;
-  setModalVisible: (val: boolean) => void;
-  onMenuItemPress: (item: string) => void;
-}) {
-  const handleMenuItemPress = (item: string): void => {
-    console.log(`${item} pressed`);
-    setModalVisible(false); // Close the modal after selecting an item
-    onMenuItemPress(item);
-  };
-
-  const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            screenBackground: Colors.dark.background,
-            separatorColor: Colors.dark.separatorColor,
-            modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
-          }
-        : {
-            screenBackground: Colors.light.background,
-            separatorColor: Colors.light.separatorColor,
-            modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
-          },
-    [colorScheme],
-  );
-
-  const topMargin = Platform.OS === 'ios' ? 110 : 50;
-
-  return (
-    <SafeAreaView>
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)} // Close on back press
-      >
-        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-          <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
-            <View
-              style={[
-                styles.modalContent,
-                { backgroundColor: colors.screenBackground, marginTop: topMargin },
-              ]}
-            >
-              <TouchableOpacity
-                onPress={() => handleMenuItemPress('AddJob')}
-                style={[styles.menuItem, { borderBottomColor: colors.separatorColor }]}
-              >
-                <Text style={styles.menuText}>Add Job</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => handleMenuItemPress('Option 1')}
-                style={[styles.menuItem, { borderBottomColor: colors.separatorColor }]}
-              >
-                <Text style={styles.menuText}>Option 1</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => handleMenuItemPress('Option 2')}
-                style={[styles.menuItem, { borderBottomColor: colors.separatorColor }]}
-              >
-                <Text style={styles.menuText}>Option 2</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-    </SafeAreaView>
-  );
-}
-
 function isEntry(obj: any): obj is TwoColumnListEntry {
   return typeof obj.primaryTitle === 'string' && typeof obj.secondaryTitle === 'string';
 }
 
 export default function JobHomeScreen() {
-  const colorScheme = useColorScheme();
   const [allJobs, setAllJobs] = useState<JobData[]>([]);
   const [jobListEntries, setJobListEntries] = useState<TwoColumnListEntry[]>([]);
   const [jobModalVisible, setJobModalVisible] = useState(false);
-  const [editJobId, setEditJobId] = useState<string | undefined>();
-  const [menuModalVisible, setMenuModalVisible] = useState<boolean>(false);
-
+  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const navigation = useNavigation();
   const { jobDbHost } = useJobDb();
+  const colorScheme = useColorScheme();
+
+  // Define colors based on the color scheme (dark or light)
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            screenBackground: Colors.dark.background,
+            listBackground: Colors.dark.listBackground,
+            itemBackground: Colors.dark.itemBackground,
+            iconColor: Colors.dark.iconColor,
+            shadowColor: Colors.dark.shadowColor,
+            bottomSheetBackground: Colors.dark.bottomSheetBackground,
+            text: Colors.dark.text,
+          }
+        : {
+            screenBackground: Colors.light.background,
+            listBackground: Colors.light.listBackground,
+            itemBackground: Colors.light.itemBackground,
+            iconColor: Colors.light.iconColor,
+            shadowColor: Colors.light.shadowColor,
+            bottomSheetBackground: Colors.light.bottomSheetBackground,
+            text: Colors.light.text,
+          },
+    [colorScheme],
+  );
 
   const loadJobs = useCallback(async () => {
     const today = new Date();
@@ -187,31 +126,6 @@ export default function JobHomeScreen() {
     [allJobs, jobDbHost, loadJobs],
   );
 
-  // Define colors based on the color scheme (dark or light)
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            screenBackground: Colors.dark.background,
-            listBackground: Colors.dark.listBackground,
-            itemBackground: Colors.dark.itemBackground,
-            iconColor: Colors.dark.iconColor,
-            shadowColor: Colors.dark.shadowColor,
-            bottomSheetBackground: Colors.dark.bottomSheetBackground,
-            text: Colors.dark.text,
-          }
-        : {
-            screenBackground: Colors.light.background,
-            listBackground: Colors.light.listBackground,
-            itemBackground: Colors.light.itemBackground,
-            iconColor: Colors.light.iconColor,
-            shadowColor: Colors.light.shadowColor,
-            bottomSheetBackground: Colors.light.bottomSheetBackground,
-            text: Colors.light.text,
-          },
-    [colorScheme],
-  );
-
   const buttons: ActionButtonProps[] = useMemo(
     () => [
       {
@@ -256,14 +170,11 @@ export default function JobHomeScreen() {
       },
 
       {
-        icon: <MaterialCommunityIcons name="menu" size={24} color={colors.iconColor} />,
-        label: 'Edit',
+        icon: <Entypo name="text-document" size={24} color={colors.iconColor} />,
+        label: 'Invoices',
         onPress: (e, actionContext) => {
-          if (isEntry(actionContext)) {
-            setEditJobId(actionContext.entryId);
-          } else {
-            console.log('Share pressed - ', actionContext);
-          }
+          if (actionContext && actionContext.entryId)
+            router.push(`/jobs/invoices/${actionContext.entryId}?jobName=${actionContext.primaryTitle}`);
         },
       },
     ],
@@ -287,7 +198,7 @@ export default function JobHomeScreen() {
   const handleSelection = useCallback(
     (entry: TwoColumnListEntry) => {
       const job = allJobs.find((j) => (j._id ?? '') === entry.entryId);
-      if (job && job._id) router.push(`/jobs/${job._id}?jobName=${job.Name}`);
+      if (job && job._id) router.push(`/jobs/${job._id}`);
       console.log(`Hello from item ${entry.primaryTitle}`);
     },
     [allJobs],
@@ -326,7 +237,7 @@ export default function JobHomeScreen() {
                 headerRight={() => (
                   <Pressable
                     onPress={() => {
-                      setMenuModalVisible(!menuModalVisible);
+                      setHeaderMenuModalVisible(!headerMenuModalVisible);
                     }}
                   >
                     {({ pressed }) => (
@@ -351,7 +262,7 @@ export default function JobHomeScreen() {
             headerRight: () => (
               <Pressable
                 onPress={() => {
-                  setMenuModalVisible(!menuModalVisible);
+                  setHeaderMenuModalVisible(!headerMenuModalVisible);
                 }}
               >
                 {({ pressed }) => (
@@ -373,19 +284,18 @@ export default function JobHomeScreen() {
           <TwoColumnList data={jobListEntries} onPress={handleSelection} buttons={buttons} />
         </View>
       </View>
-      <HomeScreenModalMenu
-        modalVisible={menuModalVisible}
-        setModalVisible={setMenuModalVisible}
+      <HomeScreenHeaderMenu
+        modalVisible={headerMenuModalVisible}
+        setModalVisible={setHeaderMenuModalVisible}
         onMenuItemPress={handleMenuItemPress}
       />
       {/* Pass visibility state and hide function to JobModalScreen */}
       <JobModalScreen visible={jobModalVisible} hideModal={hideJobModal} />
-      <EditJobModalScreen jobId={editJobId} hideModal={hideEditJobModal} />
     </>
   );
 }
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
