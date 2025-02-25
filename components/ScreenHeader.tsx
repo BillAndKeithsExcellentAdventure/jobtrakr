@@ -46,7 +46,6 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({ headerLeft, headerRi
         {
           backgroundColor: colors.screenBackground,
           marginTop: insets.top,
-          marginStart: 15,
           borderColor: colors.separatorColor,
         },
       ]}
@@ -71,10 +70,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
+    marginLeft: 15,
   } as ViewStyle, // Type for the header container style
   headerLeft: {
     justifyContent: 'center',
-    marginRight: 20,
   } as ViewStyle,
   headerTitleContainer: {
     flex: 1,

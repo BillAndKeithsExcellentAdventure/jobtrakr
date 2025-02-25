@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { FlatList, Image, Platform, Pressable, StyleSheet } from 'react-native';
-import ButtonBar, { ActionButtonProps } from '@/components/ButtonBar';
+import { ActionButtonProps, ButtonBar } from '@/components/ButtonBar';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
