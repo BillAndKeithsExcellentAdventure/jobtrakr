@@ -34,6 +34,8 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { ImageViewerModal } from '@/components/ImageViewerModal';
 import { VideoPlayerModal } from '@/components/VideoPlayerModal';
+import * as ImagePicker from 'expo-image-picker';
+import { PictureBucketDB } from 'jobdb/dist/pictureBucket';
 
 type AssetsItem = {
   _id: string;
@@ -508,6 +510,45 @@ const JobPhotosPage = () => {
     }
   }, [jobAssets, setJobAssets]);
 
+  const OnTakePictureClicked = useCallback(async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      alert("You've refused to allow this app to access your camera!");
+      return;
+    }
+
+    const response = await ImagePicker.launchCameraAsync();
+
+    if (!response.canceled) {
+      const asset = response.assets[0];
+      if (!response.assets || response.assets.length === 0 || !asset) return;
+
+      const mediaLibraryAsset: MediaLibrary.Asset = {
+        id: asset.assetId || '',
+        filename: asset.uri.split('/').pop() || '',
+        uri: asset.uri,
+        mediaType: 'photo',
+        mediaSubtypes: [],
+        width: asset.width,
+        height: asset.height,
+        creationTime: Date.now(),
+        modificationTime: Date.now(),
+        duration: 0,
+      };
+
+      const status = await jobDbHost?.GetPictureBucketDB().InsertPicture(jobId, mediaLibraryAsset);
+      if (status?.status === 'Success') {
+        gJobAssetItems = gJobAssetItems?.concat({
+          _id: status.id,
+          selected: false,
+          asset: mediaLibraryAsset,
+        });
+        setJobAssets(gJobAssetItems);
+      }
+    }
+  }, []);
+
   const onAssetAllOrClearChanged = useCallback(() => {
     if (hasSelectedAssets) {
       console.log('Clearing all assets');
@@ -589,6 +630,14 @@ const JobPhotosPage = () => {
       )}
 
       <View style={styles.headerInfo}>
+        {!showAssetItems && (
+          <ActionButton
+            style={{ alignSelf: 'stretch', marginTop: 5 }}
+            type={'action'}
+            title={'Take Picture'}
+            onPress={OnTakePictureClicked}
+          />
+        )}
         {showAssetItems && (
           <View
             style={{
