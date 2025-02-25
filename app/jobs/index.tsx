@@ -17,7 +17,7 @@ import JobModalScreen from '@/app/(modals)/JobModalScreen';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useJobDb } from '@/context/DatabaseContext';
 import { JobData } from 'jobdb';
-import HomeScreenHeaderMenu from './HomeScreenHeaderMenu';
+import RightHeaderMenu from '@/components/RightHeaderMenu';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -126,7 +126,7 @@ export default function JobHomeScreen() {
     [allJobs, jobDbHost, loadJobs],
   );
 
-  const buttons: ActionButtonProps[] = useMemo(
+  const jobActionButtons: ActionButtonProps[] = useMemo(
     () => [
       {
         icon: <FontAwesome name="heart-o" size={24} color={colors.iconColor} />,
@@ -213,20 +213,26 @@ export default function JobHomeScreen() {
     [loadJobs],
   );
 
-  const hideEditJobModal = useCallback(
-    (success: boolean) => {
-      setEditJobId(undefined);
-      if (success) loadJobs();
-    },
-    [loadJobs],
-  );
-
-  const handleMenuItemPress = useCallback((item: string) => {
+  const handleMenuItemPress = useCallback((item: string, actionContext: any) => {
+    setHeaderMenuModalVisible(false);
     if (item === 'AddJob') showJobModal();
   }, []);
 
+  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
+    () => [
+      {
+        icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
+        label: 'Add Job',
+        onPress: (e, actionContext) => {
+          handleMenuItemPress('AddJob', actionContext);
+        },
+      },
+    ],
+    [colors],
+  );
+
   return (
-    <>
+    <View style={styles.container}>
       {Platform.OS === 'android' ? (
         <Stack.Screen
           options={{
@@ -241,9 +247,9 @@ export default function JobHomeScreen() {
                     }}
                   >
                     {({ pressed }) => (
-                      <Ionicons
-                        name="settings-sharp"
-                        size={24}
+                      <MaterialCommunityIcons
+                        name="menu"
+                        size={28}
                         color={colors.iconColor}
                         style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
                       />
@@ -266,9 +272,9 @@ export default function JobHomeScreen() {
                 }}
               >
                 {({ pressed }) => (
-                  <Ionicons
-                    name="settings-sharp"
-                    size={24}
+                  <MaterialCommunityIcons
+                    name="menu"
+                    size={28}
                     color={colors.iconColor}
                     style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
                   />
@@ -279,19 +285,26 @@ export default function JobHomeScreen() {
         />
       )}
 
-      <View style={styles.container}>
+      <View style={{ flex: 1, width: '100%' }}>
         <View style={[styles.twoColListContainer, { backgroundColor: colors.screenBackground }]}>
-          <TwoColumnList data={jobListEntries} onPress={handleSelection} buttons={buttons} />
+          <TwoColumnList
+            style={{ flex: 1 }}
+            data={jobListEntries}
+            onPress={handleSelection}
+            buttons={jobActionButtons}
+          />
         </View>
       </View>
-      <HomeScreenHeaderMenu
-        modalVisible={headerMenuModalVisible}
-        setModalVisible={setHeaderMenuModalVisible}
-        onMenuItemPress={handleMenuItemPress}
-      />
+      {headerMenuModalVisible && (
+        <RightHeaderMenu
+          modalVisible={headerMenuModalVisible}
+          setModalVisible={setHeaderMenuModalVisible}
+          buttons={rightHeaderMenuButtons}
+        />
+      )}
       {/* Pass visibility state and hide function to JobModalScreen */}
       <JobModalScreen visible={jobModalVisible} hideModal={hideJobModal} />
-    </>
+    </View>
   );
 }
 
@@ -307,25 +320,5 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
-    padding: 10,
-  },
-  modalOverlay: {
-    flex: 1,
-    alignItems: 'flex-end',
-    justifyContent: 'flex-start',
-  },
-  modalContent: {
-    marginRight: 10,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    width: 150,
-    elevation: 5, // To give the modal a slight shadow
-  },
-  menuItem: {
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-  },
-  menuText: {
-    fontSize: 16,
   },
 });

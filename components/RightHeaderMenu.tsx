@@ -1,18 +1,17 @@
 import { ActionButtonProps, ButtonBar } from '@/components/ButtonBar';
-import { View, Text } from '@/components/Themed';
+import { View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
-  useColorScheme,
+  Modal,
   Platform,
   SafeAreaView,
-  Modal,
   StyleSheet,
   TouchableWithoutFeedback,
-  TouchableOpacity,
+  useColorScheme,
 } from 'react-native';
 
-const JobIdHeaderMenu = ({
+const RightHeaderMenu = ({
   modalVisible,
   setModalVisible,
   buttons,
@@ -42,32 +41,29 @@ const JobIdHeaderMenu = ({
 
   const topMargin = Platform.OS === 'ios' ? 102 : 50;
 
+  if (!modalVisible) return null;
+
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)} // Close on back press
-      >
-        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-          <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
-            <View
-              style={[
-                styles.modalContent,
-                { backgroundColor: colors.screenBackground, marginTop: topMargin },
-              ]}
-            >
-              <ButtonBar buttons={buttons} actionContext={actionContext} vertical />
-            </View>
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={modalVisible}
+      onRequestClose={() => setModalVisible(false)} // Close on back press
+    >
+      <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
+          <View
+            style={[styles.modalContent, { backgroundColor: colors.screenBackground, marginTop: topMargin }]}
+          >
+            <ButtonBar buttons={buttons} actionContext={actionContext} vertical />
           </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-    </SafeAreaView>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
   );
 };
 
-export default JobIdHeaderMenu;
+export default RightHeaderMenu;
 
 export const styles = StyleSheet.create({
   container: {

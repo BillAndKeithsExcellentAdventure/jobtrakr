@@ -67,17 +67,16 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
+    marginLeft: 15,
   } as ViewStyle, // Type for the header container style
   headerLeft: {
     justifyContent: 'center',
-    marginRight: 20,
-    marginLeft: 15,
   } as ViewStyle,
   headerTitleContainer: {
     flex: 1,
-    marginLeft: 15,
     alignItems: 'flex-start',
   } as ViewStyle,
   headerRight: {

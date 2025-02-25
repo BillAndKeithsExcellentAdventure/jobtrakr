@@ -1,19 +1,16 @@
-import { StyleSheet, SafeAreaView, Pressable, Platform } from 'react-native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useLocalSearchParams, Stack } from 'expo-router';
-import { JobCategoryEntry } from '@/models/jobCategoryEntry';
+import EditJobModalScreen from '@/app/(modals)/EditJobModalScreen';
+import { ActionButtonProps } from '@/components/ButtonBar';
+import RightHeaderMenu from '@/components/RightHeaderMenu';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { Text, View } from '@/components/Themed';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { ScreenHeader } from '@/components/ScreenHeader';
-import JobIdHeaderMenu from './JobIdHeaderMenu';
-import { ActionButtonProps } from '@/components/ButtonBar';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import EditJobModalScreen from '@/app/(modals)/EditJobModalScreen';
 import { useJobDb } from '@/context/DatabaseContext';
-import { JobData } from 'jobdb';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Platform, Pressable, SafeAreaView, StyleSheet } from 'react-native';
 
 type Job = {
   jobId?: string;
@@ -94,14 +91,13 @@ const JobCategoriesPage = () => {
 
   const handleMenuItemPress = useCallback(
     (menuItem: string, actionContext: any) => {
-      console.log('menu item pressed-', menuItem);
       setHeaderMenuModalVisible(false);
       if (menuItem === 'Edit' && jobId) setEditJobId(jobId);
     },
     [jobId],
   );
 
-  const buttons: ActionButtonProps[] = useMemo(
+  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
       {
         icon: <FontAwesome name="edit" size={28} color={colors.iconColor} />,
@@ -114,7 +110,7 @@ const JobCategoriesPage = () => {
         icon: <FontAwesome name="trash" size={28} color={colors.iconColor} />,
         label: 'Delete Job',
         onPress: (e, actionContext) => {
-          handleMenuItemPress('Edit', actionContext);
+          handleMenuItemPress('Delete', actionContext);
         },
       },
     ],
@@ -138,7 +134,23 @@ const JobCategoriesPage = () => {
               headerShown: true,
               header: () => (
                 <ScreenHeader
-                  title="Job Details"
+                  title="Job Overview"
+                  headerLeft={() => (
+                    <Pressable
+                      onPress={() => {
+                        router.back();
+                      }}
+                    >
+                      {({ pressed }) => (
+                        <MaterialCommunityIcons
+                          name="arrow-left"
+                          size={24}
+                          color={colors.iconColor}
+                          style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                        />
+                      )}
+                    </Pressable>
+                  )}
                   headerRight={() => (
                     <Pressable
                       onPress={() => {
@@ -163,7 +175,7 @@ const JobCategoriesPage = () => {
           <Stack.Screen
             options={{
               headerShown: true,
-              title: 'Job Details',
+              title: 'Job Overview',
               headerRight: () => (
                 <Pressable
                   style={{ marginRight: 12 }}
@@ -190,10 +202,10 @@ const JobCategoriesPage = () => {
           <Text>JobId={jobId}</Text>
         </View>
       </View>
-      <JobIdHeaderMenu
+      <RightHeaderMenu
         modalVisible={headerMenuModalVisible}
         setModalVisible={setHeaderMenuModalVisible}
-        buttons={buttons}
+        buttons={rightHeaderMenuButtons}
       />
       <EditJobModalScreen jobId={editJobId} hideModal={hideEditJobModal} />
     </SafeAreaView>
