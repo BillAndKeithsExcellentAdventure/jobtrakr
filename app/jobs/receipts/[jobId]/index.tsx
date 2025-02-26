@@ -76,31 +76,33 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
   return (
     <PanGestureHandler onGestureEvent={onGestureEvent} onHandlerStateChange={onHandlerStateChange}>
       <Animated.View
-        style={[styles.receiptContainer, animatedStyle]} // Apply animated style here
+        style={[animatedStyle]} // Apply animated style here
       >
-        <View style={styles.imageContentContainer}>
-          {item.PictureUri ? (
-            <Pressable onPress={() => onShowPicture(item.PictureUri!)}>
-              <Image source={{ uri: item.PictureUri }} style={{ height: 80, width: 120 }} />
-            </Pressable>
-          ) : (
-            <Text>Add Image</Text>
+        <View style={styles.itemContainer}>
+          <View style={styles.imageContentContainer}>
+            {item.PictureUri ? (
+              <Pressable onPress={() => onShowPicture(item.PictureUri!)}>
+                <Image source={{ uri: item.PictureUri }} style={{ height: 80, width: 120 }} />
+              </Pressable>
+            ) : (
+              <Text>Add Image</Text>
+            )}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text>Amount: {formatCurrency(item.Amount)}</Text>
+            <Text>Vendor: {item.Vendor}</Text>
+            <Text>Description: {item.Description}</Text>
+            <Text>Notes: {item.Notes}</Text>
+          </View>
+
+          {isSwiped && (
+            <View style={styles.deleteButton}>
+              <Text style={styles.deleteText} onPress={handleDelete}>
+                Delete
+              </Text>
+            </View>
           )}
         </View>
-        <View>
-          <Text>Amount: {formatCurrency(item.Amount)}</Text>
-          <Text>Vendor: {item.Vendor}</Text>
-          <Text>Description: {item.Description}</Text>
-          <Text>Notes: {item.Notes}</Text>
-        </View>
-
-        {isSwiped && (
-          <View style={styles.deleteButton}>
-            <Text style={styles.deleteText} onPress={handleDelete}>
-              Delete
-            </Text>
-          </View>
-        )}
       </Animated.View>
     </PanGestureHandler>
   );
@@ -235,6 +237,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   itemContainer: {
+    flexDirection: 'row',
     marginTop: 10,
     marginHorizontal: 10,
     borderRadius: 15,
@@ -243,13 +246,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 15,
     padding: 10,
-  },
-  receiptContainer: {
-    padding: 20,
-    borderBottomWidth: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
   deleteButton: {
     backgroundColor: 'red',
