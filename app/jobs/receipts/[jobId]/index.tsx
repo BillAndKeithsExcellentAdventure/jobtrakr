@@ -1,24 +1,22 @@
 import AddReceiptModalScreen from '@/app/(modals)/AddReceipt';
 import { ActionButton } from '@/components/ActionButton';
-import { ActionButtonProps, ButtonBar } from '@/components/ButtonBar';
 import { ModalImageViewer } from '@/components/ModalImageViewer';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { formatCurrency } from '@/utils/formatters';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { FlashList } from '@shopify/flash-list';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Pressable, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, Image, Pressable, SafeAreaView, StyleSheet } from 'react-native';
 import {
-  PanGestureHandler,
   GestureHandlerRootView,
+  PanGestureHandler,
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
   return actionContext && typeof actionContext.PictureUri === 'string';
@@ -109,11 +107,9 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
             </Pressable>
           </View>
           {isSwiped && (
-            <View style={styles.deleteButton}>
-              <Text style={styles.deleteText} onPress={handleDelete}>
-                Delete
-              </Text>
-            </View>
+            <Pressable onPress={handleDelete} style={styles.deleteButton}>
+              <Text style={styles.deleteText}>Delete</Text>
+            </Pressable>
           )}
         </View>
       </Animated.View>
