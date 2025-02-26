@@ -8,16 +8,118 @@ import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { formatCurrency } from '@/utils/formatters';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-
 import { FlashList } from '@shopify/flash-list';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Image, Pressable, SafeAreaView, StyleSheet } from 'react-native';
+import { Alert, Image, Pressable, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  PanGestureHandler,
+  GestureHandlerRootView,
+  PanGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
+import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
   return actionContext && typeof actionContext.PictureUri === 'string';
 }
+
+interface SwipeableItemProps {
+  item: ReceiptBucketData;
+  onDelete: (id: string) => void;
+  onShowPicture: (uri: string) => void;
+}
+
+const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPicture }) => {
+  const translateX = useSharedValue(0); // Shared value for horizontal translation
+
+  const [isSwiped, setIsSwiped] = useState(false); // Track if item is swiped for delete
+
+  const onShowDetails = useCallback((item: ReceiptBucketData) => {
+    router.push(`/jobs/receipts/[jobId]/details/${item._id}`);
+  }, []);
+
+  // Gesture handler for the swipe action
+  const onGestureEvent = (event: PanGestureHandlerGestureEvent) => {
+    translateX.value = event.nativeEvent.translationX; // Update translation during gesture
+  };
+
+  // Handler for gesture state change (when the swipe ends)
+  const onHandlerStateChange = (event: PanGestureHandlerGestureEvent) => {
+    if (event.nativeEvent.state === 5) {
+      // Gesture end
+      if (event.nativeEvent.translationX < -150) {
+        // Trigger delete when swiped beyond threshold
+        setIsSwiped(true);
+        translateX.value = withSpring(-200); // Animate to the delete position
+      } else {
+        // Reset position if swipe isn't enough
+        translateX.value = withSpring(0);
+        setIsSwiped(false);
+      }
+    }
+  };
+
+  // Use animated style to apply the translateX value to the component's transform
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: translateX.value }],
+    };
+  });
+
+  // Handle delete confirmation
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Receipt',
+      'Are you sure you want to delete this receipt?',
+      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => onDelete(item._id!) }],
+      { cancelable: true },
+    );
+  };
+
+  return (
+    <PanGestureHandler onGestureEvent={onGestureEvent} onHandlerStateChange={onHandlerStateChange}>
+      <Animated.View
+        style={[animatedStyle]} // Apply animated style here
+      >
+        <View style={styles.itemContainer}>
+          <View style={styles.imageContentContainer}>
+            {item.PictureUri ? (
+              <Pressable onPress={() => onShowPicture(item.PictureUri!)}>
+                <Image source={{ uri: item.PictureUri }} style={{ height: 80, width: 120 }} />
+              </Pressable>
+            ) : (
+              <Text txtSize="sub-title">No Image</Text>
+            )}
+          </View>
+          <View style={[styles.detailsContentContainer, !!!item.Amount && { alignItems: 'center' }]}>
+            <Pressable onPress={() => onShowDetails(item)}>
+              {item.Amount ? (
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                  <Text>Amount: {formatCurrency(item.Amount)}</Text>
+                  <Text>Vendor: {item.Vendor}</Text>
+                  <Text>Description: {item.Description}</Text>
+                  {item.Notes && <Text>Notes: {item.Notes}</Text>}
+                </View>
+              ) : (
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                  <Text txtSize="sub-title">No details</Text>
+                </View>
+              )}
+            </Pressable>
+          </View>
+          {isSwiped && (
+            <View style={styles.deleteButton}>
+              <Text style={styles.deleteText} onPress={handleDelete}>
+                Delete
+              </Text>
+            </View>
+          )}
+        </View>
+      </Animated.View>
+    </PanGestureHandler>
+  );
+};
 
 const JobReceiptsPage = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
@@ -69,8 +171,6 @@ const JobReceiptsPage = () => {
     // TODO
   }, []);
 
-  const [isSwitchOn, setIsSwitchOn] = useState(false);
-
   const handleRemoveReceipt = useCallback(async (id: string | undefined) => {
     if (id !== undefined) {
       const response = await jobDbHost?.GetReceiptBucketDB().DeleteReceipt(id);
@@ -95,99 +195,34 @@ const JobReceiptsPage = () => {
     [colorScheme],
   );
 
-  const onEditPressed = useCallback((entryId: string) => {}, []);
-
-  const buttons: ActionButtonProps[] = useMemo(
-    () => [
-      {
-        icon: <FontAwesome name="edit" size={24} color={colors.iconColor} />,
-        label: 'Edit',
-        onPress: (e, actionContext) => {
-          if (isReceiptEntry(actionContext)) {
-            if (actionContext && actionContext.entryId) onEditPressed(actionContext.entryId);
-          }
-        },
-      },
-      {
-        icon: <FontAwesome name="trash" size={24} color={colors.deleteColor} />,
-        label: 'Delete',
-        onPress: (e, actionContext) => {
-          if (isReceiptEntry(actionContext)) {
-            if (actionContext && actionContext.entryId) handleRemoveReceipt(actionContext.entryId);
-          }
-        },
-      },
-    ],
-    [colors, onEditPressed, handleRemoveReceipt],
-  );
-
-  const ListHeader: React.FC = () => (
-    <View style={styles.listHeaderContainer}>
-      <Text txtSize="sub-title">Amount</Text>
-      <Text txtSize="sub-title">Description</Text>
-      <Text txtSize="sub-title">Vendor</Text>
-    </View>
-  );
-
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
-      <View style={{ padding: 20, flex: 1 }}>
+      <View style={{ padding: 0, flex: 1 }}>
         <View style={{ marginHorizontal: 10, marginBottom: 20 }}>
           <ActionButton onPress={handleAddReceipt} type={'action'} title="Add Receipt" />
         </View>
-
-        <Text text="Job Receipts" txtSize="title" />
-        <View style={{ flex: 1, width: '100%' }}>
-          {receipts.length === 0 ? (
-            <View style={{ alignItems: 'center' }}>
-              <Text>No receipts found.</Text>
-            </View>
-          ) : (
-            <FlashList
-              estimatedItemSize={200}
-              data={receipts}
-              keyExtractor={(item, index) => item._id ?? index.toString()}
-              renderItem={({ item }) => (
-                <View
-                  style={{
-                    marginTop: 10,
-                    paddingHorizontal: 10,
-                    paddingTop: 5,
-                    borderWidth: 1,
-                    borderRadius: 10,
-                    width: '100%',
-                  }}
-                >
-                  <View style={{ flexDirection: 'row' }}>
-                    <View style={styles.imageContentContainer}>
-                      {item.PictureUri ? (
-                        <Pressable onPress={() => showPicture(item.PictureUri!)}>
-                          <Image source={{ uri: item.PictureUri }} style={{ height: 80, width: 120 }} />
-                        </Pressable>
-                      ) : (
-                        <Text>Add Image</Text>
-                      )}
-                    </View>
-                    <View>
-                      <Text>Amount: {formatCurrency(item.Amount)}</Text>
-                      <Text>Vendor: {item.Vendor}</Text>
-                      <Text>Description: {item.Description}</Text>
-                      <Text>Notes: {item.Notes}</Text>
-                    </View>
-                  </View>
-                  <View
-                    style={{
-                      alignItems: 'stretch',
-                    }}
-                  >
-                    {buttons && <ButtonBar buttons={buttons} actionContext={item} />}
-                  </View>
-                </View>
-              )}
-            />
-          )}
+        <View style={{ alignItems: 'center' }}>
+          <Text text="Job Receipts" txtSize="title" />
         </View>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <View style={{ flex: 1, width: '100%' }}>
+            {receipts.length === 0 ? (
+              <View style={{ alignItems: 'center' }}>
+                <Text>No receipts found.</Text>
+              </View>
+            ) : (
+              <FlashList
+                estimatedItemSize={150}
+                data={receipts}
+                keyExtractor={(item, index) => item._id ?? index.toString()}
+                renderItem={({ item }) => (
+                  <SwipeableItem item={item} onDelete={handleRemoveReceipt} onShowPicture={showPicture} />
+                )}
+              />
+            )}
+          </View>
+        </GestureHandlerRootView>
         <>
           <AddReceiptModalScreen jobId={jobId} visible={isAddModalVisible} hideModal={hideAddModal} />
           {selectedImage && (
@@ -207,17 +242,46 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  listHeaderContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#f8f8f8',
-    padding: 10,
-  },
   imageContentContainer: {
-    marginRight: 5,
+    marginRight: 10,
     width: 120,
+    maxHeight: 110,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  detailsContentContainer: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  itemContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
+    marginHorizontal: 10,
+    borderRadius: 15,
+    elevation: 4, // Adds shadow effect for Android
+    shadowOffset: { width: 2, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    padding: 10,
+    height: 100,
+  },
+  deleteButton: {
+    backgroundColor: 'red',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 100,
+    height: '100%',
+    position: 'absolute',
+    right: 0,
+    top: 10,
+    bottom: 0,
+  },
+  deleteText: {
+    color: 'white',
+    fontWeight: 'bold',
+    paddingHorizontal: 10,
+    paddingVertical: 20,
   },
 });
 
