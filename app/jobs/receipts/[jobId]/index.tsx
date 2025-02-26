@@ -187,12 +187,13 @@ const JobReceiptsPage = () => {
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
-      <View style={{ padding: 20, flex: 1 }}>
+      <View style={{ padding: 0, flex: 1 }}>
         <View style={{ marginHorizontal: 10, marginBottom: 20 }}>
           <ActionButton onPress={handleAddReceipt} type={'action'} title="Add Receipt" />
         </View>
-
-        <Text text="Job Receipts" txtSize="title" />
+        <View style={{ alignItems: 'center' }}>
+          <Text text="Job Receipts" txtSize="title" />
+        </View>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <View style={{ flex: 1, width: '100%' }}>
             {receipts.length === 0 ? (
