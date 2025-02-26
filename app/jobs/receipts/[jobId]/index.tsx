@@ -9,7 +9,7 @@ import { useJobDb } from '@/context/DatabaseContext';
 import { formatCurrency } from '@/utils/formatters';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { FlashList } from '@shopify/flash-list';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Image, Pressable, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
@@ -34,6 +34,10 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
   const translateX = useSharedValue(0); // Shared value for horizontal translation
 
   const [isSwiped, setIsSwiped] = useState(false); // Track if item is swiped for delete
+
+  const onShowDetails = useCallback((item: ReceiptBucketData) => {
+    router.push(`/jobs/receipts/[jobId]/details/${item._id}`);
+  }, []);
 
   // Gesture handler for the swipe action
   const onGestureEvent = (event: PanGestureHandlerGestureEvent) => {
@@ -85,16 +89,25 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
                 <Image source={{ uri: item.PictureUri }} style={{ height: 80, width: 120 }} />
               </Pressable>
             ) : (
-              <Text>Add Image</Text>
+              <Text txtSize="sub-title">No Image</Text>
             )}
           </View>
-          <View style={{ flex: 1 }}>
-            <Text>Amount: {formatCurrency(item.Amount)}</Text>
-            <Text>Vendor: {item.Vendor}</Text>
-            <Text>Description: {item.Description}</Text>
-            <Text>Notes: {item.Notes}</Text>
+          <View style={[styles.detailsContentContainer, !!!item.Amount && { alignItems: 'center' }]}>
+            <Pressable onPress={() => onShowDetails(item)}>
+              {item.Amount ? (
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                  <Text>Amount: {formatCurrency(item.Amount)}</Text>
+                  <Text>Vendor: {item.Vendor}</Text>
+                  <Text>Description: {item.Description}</Text>
+                  {item.Notes && <Text>Notes: {item.Notes}</Text>}
+                </View>
+              ) : (
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                  <Text txtSize="sub-title">No details</Text>
+                </View>
+              )}
+            </Pressable>
           </View>
-
           {isSwiped && (
             <View style={styles.deleteButton}>
               <Text style={styles.deleteText} onPress={handleDelete}>
@@ -158,8 +171,6 @@ const JobReceiptsPage = () => {
     // TODO
   }, []);
 
-  const [isSwitchOn, setIsSwitchOn] = useState(false);
-
   const handleRemoveReceipt = useCallback(async (id: string | undefined) => {
     if (id !== undefined) {
       const response = await jobDbHost?.GetReceiptBucketDB().DeleteReceipt(id);
@@ -202,7 +213,7 @@ const JobReceiptsPage = () => {
               </View>
             ) : (
               <FlashList
-                estimatedItemSize={200}
+                estimatedItemSize={150}
                 data={receipts}
                 keyExtractor={(item, index) => item._id ?? index.toString()}
                 renderItem={({ item }) => (
@@ -232,10 +243,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   imageContentContainer: {
-    marginRight: 5,
+    marginRight: 10,
     width: 120,
+    maxHeight: 110,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  detailsContentContainer: {
+    flex: 1,
+    alignItems: 'flex-start',
   },
   itemContainer: {
     flexDirection: 'row',
@@ -247,6 +264,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 15,
     padding: 10,
+    height: 100,
   },
   deleteButton: {
     backgroundColor: 'red',
