@@ -8,30 +8,32 @@ import {
   Dimensions,
   Button,
   Modal,
+  Image,
 } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
 
-// Change the interface name
 interface JobCameraViewProps {
   visible: boolean;
   jobName: string;
   onMediaCaptured: (asset: MediaLibrary.Asset) => void;
   onClose: () => void;
+  showPreview?: boolean; // Add new prop with default true
 }
 
-// Change the component name
 export const JobCameraView: React.FC<JobCameraViewProps> = ({
   visible,
   jobName,
   onMediaCaptured,
   onClose,
+  showPreview = true, // Set default value
 }) => {
   const [type, setType] = useState('back' as CameraType);
   const [permission, requestPermission] = useCameraPermissions();
   const [isRecording, setIsRecording] = useState(false);
   const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
+  const [previewUri, setPreviewUri] = useState<string | null>(null);
 
   if (!permission) {
     // Camera permissions are still loading.
@@ -58,9 +60,14 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
     try {
       const photo = await cameraRef.takePictureAsync();
       if (photo) {
-        const asset = await MediaLibrary.createAssetAsync(photo.uri);
-        asset.creationTime = Date.now();
-        onMediaCaptured(asset);
+        if (showPreview) {
+          setPreviewUri(photo.uri);
+        } else {
+          // Direct save without preview
+          const asset = await MediaLibrary.createAssetAsync(photo.uri);
+          asset.creationTime = Date.now();
+          onMediaCaptured(asset);
+        }
       }
     } catch (error) {
       console.error('Error taking picture:', error);
@@ -89,6 +96,23 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
     cameraRef.stopRecording();
   };
 
+  const handleSavePreview = async () => {
+    if (!previewUri) return;
+
+    try {
+      const asset = await MediaLibrary.createAssetAsync(previewUri);
+      asset.creationTime = Date.now();
+      onMediaCaptured(asset);
+      setPreviewUri(null);
+    } catch (error) {
+      console.error('Error saving picture:', error);
+    }
+  };
+
+  const handleCancelPreview = () => {
+    setPreviewUri(null);
+  };
+
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
       <SafeAreaView style={styles.container}>
@@ -99,24 +123,38 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
           </TouchableOpacity>
         </View>
 
-        <CameraView ref={(ref) => setCameraRef(ref)} style={styles.camera} facing={type}>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button} onPress={toggleCameraType}>
-              <Ionicons name="camera-reverse" size={30} color="white" />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[styles.button, styles.captureButton]} onPress={takePicture}>
-              <Ionicons name="camera" size={36} color="white" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, isRecording && styles.recording]}
-              onPress={isRecording ? stopRecording : startRecording}
-            >
-              <Ionicons name={isRecording ? 'stop-circle' : 'videocam'} size={30} color="white" />
-            </TouchableOpacity>
+        {previewUri ? (
+          <View style={styles.previewContainer}>
+            <Image source={{ uri: previewUri }} style={styles.preview} />
+            <View style={styles.previewButtons}>
+              <TouchableOpacity style={styles.previewButton} onPress={handleCancelPreview}>
+                <Ionicons name="close-circle" size={40} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.previewButton} onPress={handleSavePreview}>
+                <Ionicons name="checkmark-circle" size={40} color="#4CAF50" />
+              </TouchableOpacity>
+            </View>
           </View>
-        </CameraView>
+        ) : (
+          <CameraView ref={(ref) => setCameraRef(ref)} style={styles.camera} facing={type}>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.button} onPress={toggleCameraType}>
+                <Ionicons name="camera-reverse" size={30} color="white" />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.button, styles.captureButton]} onPress={takePicture}>
+                <Ionicons name="camera" size={36} color="white" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.button, isRecording && styles.recording]}
+                onPress={isRecording ? stopRecording : startRecording}
+              >
+                <Ionicons name={isRecording ? 'stop-circle' : 'videocam'} size={30} color="white" />
+              </TouchableOpacity>
+            </View>
+          </CameraView>
+        )}
       </SafeAreaView>
     </Modal>
   );
@@ -173,5 +211,26 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.5)',
     textAlign: 'center',
     paddingBottom: 10,
+  },
+  previewContainer: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  preview: {
+    flex: 1,
+    width: '100%',
+  },
+  previewButtons: {
+    position: 'absolute',
+    bottom: 40,
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-around',
+    paddingHorizontal: 50,
+  },
+  previewButton: {
+    padding: 10,
+    borderRadius: 30,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
 });

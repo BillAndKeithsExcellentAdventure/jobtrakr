@@ -844,6 +844,7 @@ const JobPhotosPage = () => {
           jobName={jobName}
           onMediaCaptured={handlePhotoCaptured}
           onClose={onCameraClosed}
+          showPreview={false}
         ></JobCameraView>
       )}
     </SafeAreaView>
