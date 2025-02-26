@@ -143,7 +143,9 @@ const AddReceiptModalScreen = ({
   }, []);
 
   useEffect(() => {
-    setCanAddReceipt(jobReceipt.amount > 0 && !!jobReceipt.vendor && !!jobReceipt.description);
+    setCanAddReceipt(
+      (jobReceipt.amount > 0 && !!jobReceipt.vendor && !!jobReceipt.description) || !!jobReceipt.pictureUri,
+    );
   }, [jobReceipt]);
 
   const handleAddReceipt = useCallback(async () => {
@@ -167,7 +169,7 @@ const AddReceiptModalScreen = ({
       hideModal(false);
     }
     hideModal(false);
-  }, [jobReceipt, jobDbHost]);
+  }, [jobReceipt, jobDbHost, canAddReceipt]);
 
   const dismissKeyboard = useCallback(() => {
     Keyboard.dismiss();
