@@ -20,6 +20,7 @@ interface JobCameraViewProps {
   onMediaCaptured: (asset: MediaLibrary.Asset) => void;
   onClose: () => void;
   showPreview?: boolean; // Add new prop with default true
+  showVideo?: boolean; // Add new prop
 }
 
 export const JobCameraView: React.FC<JobCameraViewProps> = ({
@@ -28,6 +29,7 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
   onMediaCaptured,
   onClose,
   showPreview = true, // Set default value
+  showVideo = true, // Add default value
 }) => {
   const [type, setType] = useState('back' as CameraType);
   const [permission, requestPermission] = useCameraPermissions();
@@ -146,12 +148,14 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
                 <Ionicons name="camera" size={36} color="white" />
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.button, isRecording && styles.recording]}
-                onPress={isRecording ? stopRecording : startRecording}
-              >
-                <Ionicons name={isRecording ? 'stop-circle' : 'videocam'} size={30} color="white" />
-              </TouchableOpacity>
+              {showVideo && (
+                <TouchableOpacity
+                  style={[styles.button, isRecording && styles.recording]}
+                  onPress={isRecording ? stopRecording : startRecording}
+                >
+                  <Ionicons name={isRecording ? 'stop-circle' : 'videocam'} size={30} color="white" />
+                </TouchableOpacity>
+              )}
             </View>
           </CameraView>
         )}
