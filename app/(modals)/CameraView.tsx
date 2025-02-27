@@ -13,6 +13,8 @@ import {
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
+import Slider from '@react-native-community/slider';
+import { Picker } from '@react-native-picker/picker';
 
 interface JobCameraViewProps {
   visible: boolean;
@@ -36,6 +38,7 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
   const [previewUri, setPreviewUri] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(0); // Add zoom state
 
   if (!permission) {
     // Camera permissions are still loading.
@@ -115,6 +118,10 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
     setPreviewUri(null);
   };
 
+  const handleZoom = (zoomLevel: number) => {
+    setZoom(zoomLevel);
+  };
+
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
       <SafeAreaView style={styles.container}>
@@ -138,7 +145,21 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
             </View>
           </View>
         ) : (
-          <CameraView ref={(ref) => setCameraRef(ref)} style={styles.camera} facing={type}>
+          <CameraView ref={(ref) => setCameraRef(ref)} style={styles.camera} facing={type} zoom={zoom}>
+            <View style={styles.zoomContainer}>
+              <Picker
+                selectedValue={zoom}
+                onValueChange={handleZoom}
+                style={styles.zoomPicker}
+                dropdownIconColor="white"
+                mode="dropdown"
+                itemStyle={{ color: 'white' }} // Ensure picker items are visible
+              >
+                {[0.0, 0.25, 0.5, 0.75, 1.0].map((zoomLevel) => (
+                  <Picker.Item key={zoomLevel} label={`${zoomLevel + 1}x`} value={zoomLevel} color="black" />
+                ))}
+              </Picker>
+            </View>
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={styles.button} onPress={toggleCameraType}>
                 <Ionicons name="camera-reverse" size={30} color="white" />
@@ -236,5 +257,19 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 30,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
+  zoomContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 15,
+    width: 125,
+    overflow: 'hidden',
+  },
+  zoomPicker: {
+    width: '100%',
+    color: 'white',
+    backgroundColor: 'transparent',
   },
 });
