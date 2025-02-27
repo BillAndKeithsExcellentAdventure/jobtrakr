@@ -14,12 +14,12 @@ import {
   Keyboard,
   Modal,
   Platform,
-  SafeAreaView,
   StyleSheet,
   TouchableOpacity,
   TouchableWithoutFeedback,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type JobReceipt = {
   date: Date;

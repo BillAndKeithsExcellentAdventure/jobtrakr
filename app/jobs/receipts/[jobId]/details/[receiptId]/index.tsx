@@ -1,10 +1,10 @@
-import { SafeAreaView } from 'react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Text, View } from '@/components/Themed';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useJobDb } from '@/context/DatabaseContext';
 import { ReceiptBucketData } from 'jobdb';
 import { formatCurrency } from '@/utils/formatters';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ReceiptDetailsPage = () => {
   const { receiptId } = useLocalSearchParams<{ receiptId: string }>();
@@ -32,7 +32,7 @@ const ReceiptDetailsPage = () => {
   }, []);
 
   return (
-    <View style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <Stack.Screen options={{ title: 'Receipt Details', headerShown: true }} />
 
       <View>
@@ -47,7 +47,7 @@ const ReceiptDetailsPage = () => {
           <Text>No Receipt</Text>
         )}
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

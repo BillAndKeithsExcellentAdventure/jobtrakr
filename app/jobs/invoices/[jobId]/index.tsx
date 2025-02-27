@@ -1,8 +1,9 @@
-import { StyleSheet, SafeAreaView } from 'react-native';
+import { StyleSheet } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { JobCategoryEntry } from '@/models/jobCategoryEntry';
 import { Text, View } from '@/components/Themed';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const JobInvoicesPage = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();

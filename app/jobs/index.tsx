@@ -18,6 +18,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { useJobDb } from '@/context/DatabaseContext';
 import { JobData } from 'jobdb';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -232,7 +233,7 @@ export default function JobHomeScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
       {Platform.OS === 'android' ? (
         <Stack.Screen
           options={{
@@ -304,7 +305,7 @@ export default function JobHomeScreen() {
       )}
       {/* Pass visibility state and hide function to JobModalScreen */}
       <JobModalScreen visible={jobModalVisible} hideModal={hideJobModal} />
-    </View>
+    </SafeAreaView>
   );
 }
 

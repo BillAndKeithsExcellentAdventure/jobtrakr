@@ -17,6 +17,7 @@ import {
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
   return actionContext && typeof actionContext.PictureUri === 'string';
@@ -229,53 +230,63 @@ const JobReceiptsPage = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
       <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
-      <View style={{ padding: 0, flex: 1 }}>
-        <View style={{ marginHorizontal: 10, marginBottom: 20 }}>
-          <ActionButton onPress={handleAddReceipt} type={'action'} title="Add Receipt" />
-        </View>
-        <View style={{ alignItems: 'center' }}>
-          <Text text="Job Receipts" txtSize="title" />
-        </View>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <View style={{ flex: 1, width: '100%' }}>
-            {receipts.length === 0 ? (
-              <View style={{ alignItems: 'center' }}>
-                <Text>No receipts found.</Text>
-              </View>
-            ) : (
-              <FlashList
-                estimatedItemSize={150}
-                data={receipts}
-                keyExtractor={(item, index) => item._id ?? index.toString()}
-                renderItem={({ item }) => (
-                  <SwipeableItem item={item} onDelete={handleRemoveReceipt} onShowPicture={showPicture} />
-                )}
+      <View style={styles.viewCenteringContainer}>
+        <View style={styles.viewContentContainer}>
+          <View style={{ marginHorizontal: 10, marginBottom: 20 }}>
+            <ActionButton onPress={handleAddReceipt} type={'action'} title="Add Receipt" />
+          </View>
+          <View style={{ alignItems: 'center' }}>
+            <Text text="Job Receipts" txtSize="title" />
+          </View>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <View style={{ flex: 1, width: '100%' }}>
+              {receipts.length === 0 ? (
+                <View style={{ alignItems: 'center' }}>
+                  <Text>No receipts found.</Text>
+                </View>
+              ) : (
+                <FlashList
+                  estimatedItemSize={150}
+                  data={receipts}
+                  keyExtractor={(item, index) => item._id ?? index.toString()}
+                  renderItem={({ item }) => (
+                    <SwipeableItem item={item} onDelete={handleRemoveReceipt} onShowPicture={showPicture} />
+                  )}
+                />
+              )}
+            </View>
+          </GestureHandlerRootView>
+          <>
+            {isAddModalVisible && (
+              <AddReceiptModalScreen jobId={jobId} visible={isAddModalVisible} hideModal={hideAddModal} />
+            )}
+            {selectedImage && !isAddModalVisible && (
+              <ModalImageViewer
+                isVisible={isImageViewerVisible}
+                imageUri={selectedImage}
+                onClose={() => setIsImageViewerVisible(false)}
               />
             )}
-          </View>
-        </GestureHandlerRootView>
-        <>
-          {isAddModalVisible && (
-            <AddReceiptModalScreen jobId={jobId} visible={isAddModalVisible} hideModal={hideAddModal} />
-          )}
-          {selectedImage && !isAddModalVisible && (
-            <ModalImageViewer
-              isVisible={isImageViewerVisible}
-              imageUri={selectedImage}
-              onClose={() => setIsImageViewerVisible(false)}
-            />
-          )}
-        </>
+          </>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  viewCenteringContainer: {
+    flex: 1,
+  },
+  viewContentContainer: {
+    padding: 0,
+    flex: 1,
+    maxWidth: 550,
   },
   imageContentContainer: {
     marginRight: 10,

@@ -5,7 +5,8 @@ import FontAwesomeIcon from '@expo/vector-icons/FontAwesome';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { TodoData } from 'jobdb';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const JobNotes = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
@@ -130,7 +131,7 @@ const JobNotes = () => {
   }, []);
 
   return (
-    <View style={{ flex: 1 }}>
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
       <View style={styles.container}>
         <View style={styles.centeredView}>
@@ -217,7 +218,7 @@ const JobNotes = () => {
           />
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -232,7 +233,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   centeredView: {
-    maxWidth: 400,
     width: '100%',
     paddingHorizontal: 10,
   },
