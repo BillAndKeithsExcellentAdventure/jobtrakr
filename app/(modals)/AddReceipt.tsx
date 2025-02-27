@@ -5,6 +5,7 @@ import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
+import { useReceiptDataStore } from '@/stores/receiptDataStore';
 import { formatDate } from '@/utils/formatters';
 import * as ImagePicker from 'expo-image-picker';
 import { ReceiptBucketData } from 'jobdb';
@@ -57,6 +58,7 @@ const AddReceiptModalScreen = ({
     subCategoryName: '',
   };
 
+  const { addReceiptData } = useReceiptDataStore();
   const [jobReceipt, setJobReceipt] = useState<JobReceipt>(initJobReceipt);
   const colorScheme = useColorScheme();
   const [datePickerVisible, setDatePickerVisible] = useState(false);
@@ -162,14 +164,16 @@ const AddReceiptModalScreen = ({
 
     const response = await jobDbHost?.GetReceiptBucketDB().InsertReceipt(jobId, newReceipt);
     if (response?.status === 'Success') {
+      newReceipt._id = response.id;
+      addReceiptData(newReceipt);
       console.log('Job receipt successfully added:', newReceipt);
-      hideModal(true);
+      hideModal(false);
     } else {
       console.log('Job receipt update failed:', jobReceipt);
       hideModal(false);
     }
     hideModal(false);
-  }, [jobReceipt, jobDbHost, canAddReceipt]);
+  }, [jobReceipt, jobDbHost, addReceiptData, canAddReceipt]);
 
   const dismissKeyboard = useCallback(() => {
     Keyboard.dismiss();

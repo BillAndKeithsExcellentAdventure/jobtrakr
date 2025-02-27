@@ -5,6 +5,7 @@ import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
+import { useReceiptDataStore } from '@/stores/receiptDataStore';
 import { formatCurrency } from '@/utils/formatters';
 import { FlashList } from '@shopify/flash-list';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
@@ -114,7 +115,11 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
   }
 
   return (
-    <PanGestureHandler onGestureEvent={onGestureEvent} onHandlerStateChange={onHandlerStateChange}>
+    <PanGestureHandler
+      onGestureEvent={onGestureEvent}
+      onHandlerStateChange={onHandlerStateChange}
+      activeOffsetX={[-10, 10]} // Used to allow vertical scrolling to not be blocked when checking for horizontal swiping
+    >
       <Animated.View
         style={[animatedStyle]} // Apply animated style here
       >
@@ -157,12 +162,11 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
 
 const JobReceiptsPage = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
-  const [receipts, setReceipts] = useState<ReceiptBucketData[]>([]);
   const [isAddModalVisible, setIsAddModalVisible] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
-
   const { jobDbHost } = useJobDb();
+  const { receiptData, removeReceiptData, setReceiptData } = useReceiptDataStore();
 
   const fetchReceipts = useCallback(async () => {
     try {
@@ -171,13 +175,13 @@ const JobReceiptsPage = () => {
       if (!response) return;
 
       if (response.status === 'Success' && response.data) {
-        setReceipts(response.data);
+        setReceiptData(response.data);
       }
     } catch (err) {
       alert('An error occurred while fetching the receipts');
       console.log('An error occurred while fetching the receipts', err);
     }
-  }, [jobId, jobDbHost]);
+  }, [jobId, jobDbHost, setReceiptData]);
 
   // Fetch receipts for the given job and user
   useEffect(() => {
@@ -205,12 +209,16 @@ const JobReceiptsPage = () => {
     // TODO
   }, []);
 
-  const handleRemoveReceipt = useCallback(async (id: string | undefined) => {
-    if (id !== undefined) {
-      const response = await jobDbHost?.GetReceiptBucketDB().DeleteReceipt(id);
-      fetchReceipts();
-    }
-  }, []);
+  const handleRemoveReceipt = useCallback(
+    async (id: string | undefined) => {
+      if (id !== undefined) {
+        const strId = id.toString(); // Keith is returning number not string
+        const response = await jobDbHost?.GetReceiptBucketDB().DeleteReceipt(strId);
+        if (response === 'Success') removeReceiptData(strId);
+      }
+    },
+    [removeReceiptData],
+  );
 
   const colorScheme = useColorScheme();
   const colors = useMemo(
@@ -242,14 +250,14 @@ const JobReceiptsPage = () => {
           </View>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <View style={{ flex: 1, width: '100%' }}>
-              {receipts.length === 0 ? (
+              {receiptData.length === 0 ? (
                 <View style={{ alignItems: 'center' }}>
                   <Text>No receipts found.</Text>
                 </View>
               ) : (
                 <FlashList
                   estimatedItemSize={150}
-                  data={receipts}
+                  data={receiptData}
                   keyExtractor={(item, index) => item._id ?? index.toString()}
                   renderItem={({ item }) => (
                     <SwipeableItem item={item} onDelete={handleRemoveReceipt} onShowPicture={showPicture} />
