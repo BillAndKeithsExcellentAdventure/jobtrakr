@@ -32,7 +32,7 @@ const ReceiptDetailsPage = () => {
   }, []);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       <Stack.Screen options={{ title: 'Receipt Details', headerShown: true }} />
 
       <View>
@@ -47,7 +47,7 @@ const ReceiptDetailsPage = () => {
           <Text>No Receipt</Text>
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

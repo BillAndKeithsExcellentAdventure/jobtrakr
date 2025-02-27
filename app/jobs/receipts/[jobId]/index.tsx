@@ -10,7 +10,7 @@ import { FlashList } from '@shopify/flash-list';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Pressable, SafeAreaView, StyleSheet } from 'react-native';
+import { Alert, Image, Platform, Pressable, StyleSheet } from 'react-native';
 import {
   GestureHandlerRootView,
   PanGestureHandler,
@@ -74,6 +74,43 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
       { cancelable: true },
     );
   };
+
+  if (Platform.OS === 'android') {
+    return (
+      <View style={styles.itemContainer}>
+        <View style={styles.imageContentContainer}>
+          {item.PictureUri ? (
+            <Pressable onPress={() => onShowPicture(item.PictureUri!)}>
+              <Image source={{ uri: item.PictureUri }} style={{ height: 80, width: 120 }} />
+            </Pressable>
+          ) : (
+            <Text txtSize="sub-title">No Image</Text>
+          )}
+        </View>
+        <View style={[styles.detailsContentContainer, !!!item.Amount && { alignItems: 'center' }]}>
+          <Pressable onPress={() => onShowDetails(item)}>
+            {item.Amount ? (
+              <View style={{ flex: 1, justifyContent: 'center' }}>
+                <Text>Amount: {formatCurrency(item.Amount)}</Text>
+                <Text>Vendor: {item.Vendor}</Text>
+                <Text>Description: {item.Description}</Text>
+                {item.Notes && <Text>Notes: {item.Notes}</Text>}
+              </View>
+            ) : (
+              <View style={{ flex: 1, justifyContent: 'center' }}>
+                <Text txtSize="sub-title">No details</Text>
+              </View>
+            )}
+          </Pressable>
+        </View>
+        {isSwiped && (
+          <Pressable onPress={handleDelete} style={styles.deleteButton}>
+            <Text style={styles.deleteText}>Delete</Text>
+          </Pressable>
+        )}
+      </View>
+    );
+  }
 
   return (
     <PanGestureHandler onGestureEvent={onGestureEvent} onHandlerStateChange={onHandlerStateChange}>
@@ -192,7 +229,7 @@ const JobReceiptsPage = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
       <View style={{ padding: 0, flex: 1 }}>
         <View style={{ marginHorizontal: 10, marginBottom: 20 }}>
@@ -220,8 +257,10 @@ const JobReceiptsPage = () => {
           </View>
         </GestureHandlerRootView>
         <>
-          <AddReceiptModalScreen jobId={jobId} visible={isAddModalVisible} hideModal={hideAddModal} />
-          {selectedImage && (
+          {isAddModalVisible && (
+            <AddReceiptModalScreen jobId={jobId} visible={isAddModalVisible} hideModal={hideAddModal} />
+          )}
+          {selectedImage && !isAddModalVisible && (
             <ModalImageViewer
               isVisible={isImageViewerVisible}
               imageUri={selectedImage}
@@ -230,7 +269,7 @@ const JobReceiptsPage = () => {
           )}
         </>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

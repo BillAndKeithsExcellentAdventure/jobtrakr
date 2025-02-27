@@ -130,7 +130,7 @@ const JobNotes = () => {
   }, []);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
       <View style={styles.container}>
         <View style={styles.centeredView}>
@@ -217,7 +217,7 @@ const JobNotes = () => {
           />
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
