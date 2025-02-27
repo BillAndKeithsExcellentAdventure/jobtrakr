@@ -158,8 +158,6 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
 
 const JobReceiptsPage = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
   const { jobDbHost } = useJobDb();
   const { receiptData, removeReceiptData, setReceiptData } = useReceiptDataStore();
 
@@ -184,8 +182,7 @@ const JobReceiptsPage = () => {
   }, []);
 
   const showPicture = useCallback((uri: string) => {
-    setSelectedImage(uri);
-    setIsImageViewerVisible(true);
+    router.push(`/jobs/receipts/[jobId]/showImage/${jobId}?uri=${uri}`);
   }, []);
 
   const handleRemoveReceipt = useCallback(
@@ -246,7 +243,6 @@ const JobReceiptsPage = () => {
                 </View>
               ) : (
                 <FlashList
-                  style={[{ backgroundColor: colors.listBackground }]}
                   estimatedItemSize={150}
                   data={receiptData}
                   keyExtractor={(item, index) => item._id ?? index.toString()}
@@ -257,15 +253,6 @@ const JobReceiptsPage = () => {
               )}
             </View>
           </GestureHandlerRootView>
-          <>
-            {selectedImage && (
-              <ModalImageViewer
-                isVisible={isImageViewerVisible}
-                imageUri={selectedImage}
-                onClose={() => setIsImageViewerVisible(false)}
-              />
-            )}
-          </>
         </View>
       </View>
     </SafeAreaView>
