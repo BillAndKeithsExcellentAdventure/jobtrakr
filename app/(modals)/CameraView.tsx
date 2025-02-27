@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -45,6 +45,7 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
   const [video, setVideo] = useState<string | undefined>();
   const [videoPromise, setVideoPromise] = useState<Promise<any> | null>(null);
   const [cameraModeSwitch, setCameraModeSwitch] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
 
   // Move the callback definition here, before any conditional returns
   const onCameraModeChanged = useCallback(
@@ -53,6 +54,30 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
     },
     [cameraModeSwitch],
   );
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setRecordingTime(0);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isRecording]);
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
 
   // Now handle the permission checks
   if (!permission || !micPermission) {
@@ -233,21 +258,25 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
                 <Ionicons name="camera-reverse" size={30} color="white" />
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  styles.captureButton,
-                  isRecording && styles.recording,
-                  { marginTop: 10 },
-                ]}
-                onPress={processCameraAction}
-              >
-                {cameraModeSwitch === true ? (
-                  <Ionicons name={isRecording ? 'stop-circle' : 'videocam'} size={30} color="white" />
-                ) : (
-                  <Ionicons name="camera" size={36} color="white" />
-                )}
-              </TouchableOpacity>
+              <View style={styles.captureContainer}>
+                {isRecording && <Text style={styles.timerText}>{formatTime(recordingTime)}</Text>}
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    styles.captureButton,
+                    isRecording && styles.recording,
+                    { marginTop: 10 },
+                  ]}
+                  onPress={processCameraAction}
+                >
+                  {cameraModeSwitch === true ? (
+                    <Ionicons name={isRecording ? 'stop-circle' : 'videocam'} size={30} color="white" />
+                  ) : (
+                    <Ionicons name="camera" size={36} color="white" />
+                  )}
+                </TouchableOpacity>
+              </View>
+
               {showVideo && (
                 <View style={{ flexDirection: 'column', alignItems: 'center' }}>
                   <TouchableOpacity
@@ -377,5 +406,17 @@ const styles = StyleSheet.create({
     padding: 5,
     borderRadius: 15,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
+  captureContainer: {
+    alignItems: 'center',
+  },
+  timerText: {
+    color: '#FF3B30',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    padding: 5,
+    borderRadius: 5,
   },
 });

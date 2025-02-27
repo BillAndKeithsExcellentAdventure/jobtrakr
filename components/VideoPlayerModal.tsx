@@ -21,9 +21,19 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
   const [playerError, setPlayerError] = useState('');
   const player = useVideoPlayer(videoUri, (player) => {
     player.loop = true;
-    player.play();
   });
   const { status, error } = useEvent(player, 'statusChange', { status: player.status });
+
+  useEffect(() => {
+    console.log(`VideoPlayerModal useEffect isVisible: ${isVisible}`);
+    player.seekBy(0);
+    player.play();
+    setIsPlaying(true);
+
+    return () => {
+      console.log(`VideoPlayerModal cleanup isVisible: ${isVisible}`);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isVisible) {
@@ -66,6 +76,12 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
     console.log('Player status changed: ', status);
   });
 
+  useEventListener(player, 'sourceChange', () => {
+    console.log('Video metadata loaded, starting playback...');
+    player.play();
+    setIsPlaying(true);
+  });
+
   //   const handleSliderChange = async (value: number) => {
   //     if (videoRef.current) {
   //       await videoRef.current.setPositionAsync(value);
@@ -76,7 +92,14 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
     <Modal visible={isVisible} transparent={true} animationType="fade">
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={onClose} style={styles.closeButton}>
+          <Pressable
+            onPress={() => {
+              onClose();
+              player.pause();
+              setIsPlaying(false);
+            }}
+            style={styles.closeButton}
+          >
             <Ionicons name="close" size={28} color="white" />
           </Pressable>
         </View>
