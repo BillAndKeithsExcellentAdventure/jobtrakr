@@ -1,4 +1,3 @@
-import AddReceiptModalScreen from '@/app/(modals)/AddReceipt';
 import { ActionButton } from '@/components/ActionButton';
 import { ModalImageViewer } from '@/components/ModalImageViewer';
 import { Text, View } from '@/components/Themed';
@@ -51,7 +50,7 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
       if (event.nativeEvent.translationX < -150) {
         // Trigger delete when swiped beyond threshold
         setIsSwiped(true);
-        translateX.value = withSpring(-200); // Animate to the delete position
+        translateX.value = withSpring(-100); // Animate to the delete position
       } else {
         // Reset position if swipe isn't enough
         translateX.value = withSpring(0);
@@ -77,42 +76,33 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
     );
   };
 
-  if (Platform.OS === 'android') {
-    return (
-      <View style={styles.itemContainer}>
-        <View style={styles.imageContentContainer}>
-          {item.PictureUri ? (
-            <Pressable onPress={() => onShowPicture(item.PictureUri!)}>
-              <Image source={{ uri: item.PictureUri }} style={{ height: 80, width: 120 }} />
-            </Pressable>
-          ) : (
-            <Text txtSize="sub-title">No Image</Text>
-          )}
-        </View>
-        <View style={[styles.detailsContentContainer, !!!item.Amount && { alignItems: 'center' }]}>
-          <Pressable onPress={() => onShowDetails(item)}>
-            {item.Amount ? (
-              <View style={{ flex: 1, justifyContent: 'center' }}>
-                <Text>Amount: {formatCurrency(item.Amount)}</Text>
-                <Text>Vendor: {item.Vendor}</Text>
-                <Text>Description: {item.Description}</Text>
-                {item.Notes && <Text>Notes: {item.Notes}</Text>}
-              </View>
-            ) : (
-              <View style={{ flex: 1, justifyContent: 'center' }}>
-                <Text txtSize="sub-title">No details</Text>
-              </View>
-            )}
-          </Pressable>
-        </View>
-        {isSwiped && (
-          <Pressable onPress={handleDelete} style={styles.deleteButton}>
-            <Text style={styles.deleteText}>Delete</Text>
-          </Pressable>
-        )}
-      </View>
-    );
-  }
+  const colorScheme = useColorScheme();
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            deleteColor: Colors.dark.angry500,
+            separatorColor: Colors.dark.separatorColor,
+            listBackground: Colors.dark.listBackground,
+            itemBackground: Colors.dark.itemBackground,
+            shadowColor: Colors.dark.shadowColor,
+            boxShadow: Colors.dark.boxShadow,
+            borderColor: Colors.dark.borderColor,
+          }
+        : {
+            deleteColor: Colors.dark.angry500,
+            iconColor: Colors.light.iconColor,
+            separatorColor: Colors.light.separatorColor,
+            listBackground: Colors.light.listBackground,
+            itemBackground: Colors.light.itemBackground,
+            shadowColor: Colors.light.shadowColor,
+            boxShadow: Colors.light.boxShadow,
+            borderColor: Colors.light.borderColor,
+          },
+    [colorScheme],
+  );
+
+  const boxShadow = Platform.OS === 'web' ? colors.boxShadow : undefined;
 
   return (
     <PanGestureHandler
@@ -123,7 +113,13 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
       <Animated.View
         style={[animatedStyle]} // Apply animated style here
       >
-        <View style={styles.itemContainer}>
+        <View
+          style={[
+            styles.itemContainer,
+            { backgroundColor: colors.itemBackground },
+            { backgroundColor: colors.itemBackground, shadowColor: colors.shadowColor, boxShadow },
+          ]}
+        >
           <View style={styles.imageContentContainer}>
             {item.PictureUri ? (
               <Pressable onPress={() => onShowPicture(item.PictureUri!)}>
@@ -162,7 +158,6 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
 
 const JobReceiptsPage = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
-  const [isAddModalVisible, setIsAddModalVisible] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
   const { jobDbHost } = useJobDb();
@@ -188,25 +183,9 @@ const JobReceiptsPage = () => {
     fetchReceipts();
   }, []);
 
-  const handleAddReceipt = useCallback(() => {
-    setIsAddModalVisible(true);
-  }, []);
-
-  const hideAddModal = useCallback(
-    (success: boolean): void => {
-      setIsAddModalVisible(false);
-      if (success) fetchReceipts();
-    },
-    [fetchReceipts],
-  );
-
   const showPicture = useCallback((uri: string) => {
     setSelectedImage(uri);
     setIsImageViewerVisible(true);
-  }, []);
-
-  const addPicture = useCallback((_id: string | undefined) => {
-    // TODO
   }, []);
 
   const handleRemoveReceipt = useCallback(
@@ -228,14 +207,28 @@ const JobReceiptsPage = () => {
             deleteColor: Colors.dark.angry500,
             iconColor: Colors.dark.iconColor,
             separatorColor: Colors.dark.separatorColor,
+            listBackground: Colors.dark.listBackground,
+            shadowColor: Colors.dark.shadowColor,
+            boxShadow: Colors.dark.boxShadow,
+            borderColor: Colors.dark.borderColor,
+            screenBackground: Colors.dark.background,
           }
         : {
             deleteColor: Colors.dark.angry500,
             iconColor: Colors.light.iconColor,
             separatorColor: Colors.light.separatorColor,
+            listBackground: Colors.light.listBackground,
+            shadowColor: Colors.light.shadowColor,
+            boxShadow: Colors.light.boxShadow,
+            borderColor: Colors.light.borderColor,
+            screenBackground: Colors.light.background,
           },
     [colorScheme],
   );
+
+  const handleAddReceipt = useCallback(() => {
+    router.push(`/jobs/receipts/[jobId]/add/${jobId}?jobName=${jobName}`);
+  }, []);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
@@ -245,17 +238,15 @@ const JobReceiptsPage = () => {
           <View style={{ marginHorizontal: 10, marginBottom: 20 }}>
             <ActionButton onPress={handleAddReceipt} type={'action'} title="Add Receipt" />
           </View>
-          <View style={{ alignItems: 'center' }}>
-            <Text text="Job Receipts" txtSize="title" />
-          </View>
           <GestureHandlerRootView style={{ flex: 1 }}>
-            <View style={{ flex: 1, width: '100%' }}>
+            <View style={{ flex: 1, width: '100%', backgroundColor: colors.listBackground }}>
               {receiptData.length === 0 ? (
                 <View style={{ alignItems: 'center' }}>
                   <Text>No receipts found.</Text>
                 </View>
               ) : (
                 <FlashList
+                  style={[{ backgroundColor: colors.listBackground }]}
                   estimatedItemSize={150}
                   data={receiptData}
                   keyExtractor={(item, index) => item._id ?? index.toString()}
@@ -267,10 +258,7 @@ const JobReceiptsPage = () => {
             </View>
           </GestureHandlerRootView>
           <>
-            {isAddModalVisible && (
-              <AddReceiptModalScreen jobId={jobId} visible={isAddModalVisible} hideModal={hideAddModal} />
-            )}
-            {selectedImage && !isAddModalVisible && (
+            {selectedImage && (
               <ModalImageViewer
                 isVisible={isImageViewerVisible}
                 imageUri={selectedImage}
@@ -313,7 +301,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginHorizontal: 10,
     borderRadius: 15,
-    elevation: 4, // Adds shadow effect for Android
+    elevation: 20, // Adds shadow effect for Android
     shadowOffset: { width: 2, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 15,
@@ -327,7 +315,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: '100%',
     position: 'absolute',
-    right: 0,
+    right: -100,
     top: 10,
     bottom: 0,
   },
