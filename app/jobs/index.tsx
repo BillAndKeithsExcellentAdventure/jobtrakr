@@ -239,7 +239,7 @@ export default function JobHomeScreen() {
             headerShown: true,
             header: () => (
               <ScreenHeader
-                title="Jobs Android"
+                title="Jobs"
                 headerRight={() => (
                   <Pressable
                     onPress={() => {
@@ -264,7 +264,7 @@ export default function JobHomeScreen() {
         <Stack.Screen
           options={{
             headerShown: true,
-            title: 'Jobs Ios',
+            title: 'Jobs',
             headerRight: () => (
               <Pressable
                 onPress={() => {
