@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   itemContainer: {
     marginBottom: 10,
     borderRadius: 15,
-    elevation: 4, // Adds shadow effect for Android
+    elevation: 20, // Adds shadow effect for Android
     shadowOffset: { width: 2, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 15,
