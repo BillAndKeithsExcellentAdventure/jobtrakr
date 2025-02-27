@@ -1,3 +1,4 @@
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -47,12 +48,14 @@ function RootLayoutNav() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <SessionProvider>
         <DatabaseHostProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="jobs" />
-            <Stack.Screen name="camera" />
-            <Stack.Screen name="(auth)" />
-          </Stack>
+          <SafeAreaProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="jobs" />
+              <Stack.Screen name="camera" />
+              <Stack.Screen name="(auth)" />
+            </Stack>
+          </SafeAreaProvider>
         </DatabaseHostProvider>
       </SessionProvider>
     </ThemeProvider>

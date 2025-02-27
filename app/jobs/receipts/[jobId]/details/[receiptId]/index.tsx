@@ -1,9 +1,10 @@
-import { SafeAreaView } from 'react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Text, View } from '@/components/Themed';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useJobDb } from '@/context/DatabaseContext';
 import { ReceiptBucketData } from 'jobdb';
+import { formatCurrency } from '@/utils/formatters';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ReceiptDetailsPage = () => {
   const { receiptId } = useLocalSearchParams<{ receiptId: string }>();
@@ -11,7 +12,6 @@ const ReceiptDetailsPage = () => {
   const [receipt, setReceipt] = useState<ReceiptBucketData | null>(null);
 
   const fetchReceipt = useCallback(async () => {
-    /*
     try {
       const response = await jobDbHost?.GetReceiptBucketDB().FetchJobReceipt(receiptId);
 
@@ -21,10 +21,9 @@ const ReceiptDetailsPage = () => {
         setReceipt(response.data);
       }
     } catch (err) {
-      alert('An error occurred while fetching the receipts');
-      console.log('An error occurred while fetching the receipts', err);
+      alert(`An error occurred while fetching the receipt with _id=${receiptId}`);
+      console.log('An error occurred while fetching the receipt', err);
     }
-      */
   }, [receiptId, jobDbHost]);
 
   // Fetch receipts for the given job and user
@@ -37,7 +36,16 @@ const ReceiptDetailsPage = () => {
       <Stack.Screen options={{ title: 'Receipt Details', headerShown: true }} />
 
       <View>
-        <Text>index</Text>
+        {receipt ? (
+          <>
+            <Text>Amount: {formatCurrency(receipt.Amount)}</Text>
+            <Text>Vendor: {receipt.Vendor}</Text>
+            <Text>Description: {receipt.Description}</Text>
+            <Text>Notes: {receipt.Notes}</Text>
+          </>
+        ) : (
+          <Text>No Receipt</Text>
+        )}
       </View>
     </SafeAreaView>
   );

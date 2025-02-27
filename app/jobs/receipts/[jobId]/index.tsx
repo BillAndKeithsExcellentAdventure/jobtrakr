@@ -1,24 +1,24 @@
 import AddReceiptModalScreen from '@/app/(modals)/AddReceipt';
 import { ActionButton } from '@/components/ActionButton';
-import { ActionButtonProps, ButtonBar } from '@/components/ButtonBar';
 import { ModalImageViewer } from '@/components/ModalImageViewer';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
+import { useReceiptDataStore } from '@/stores/receiptDataStore';
 import { formatCurrency } from '@/utils/formatters';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { FlashList } from '@shopify/flash-list';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Pressable, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, Image, Platform, Pressable, StyleSheet } from 'react-native';
 import {
-  PanGestureHandler,
   GestureHandlerRootView,
+  PanGestureHandler,
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
   return actionContext && typeof actionContext.PictureUri === 'string';
@@ -77,8 +77,49 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
     );
   };
 
+  if (Platform.OS === 'android') {
+    return (
+      <View style={styles.itemContainer}>
+        <View style={styles.imageContentContainer}>
+          {item.PictureUri ? (
+            <Pressable onPress={() => onShowPicture(item.PictureUri!)}>
+              <Image source={{ uri: item.PictureUri }} style={{ height: 80, width: 120 }} />
+            </Pressable>
+          ) : (
+            <Text txtSize="sub-title">No Image</Text>
+          )}
+        </View>
+        <View style={[styles.detailsContentContainer, !!!item.Amount && { alignItems: 'center' }]}>
+          <Pressable onPress={() => onShowDetails(item)}>
+            {item.Amount ? (
+              <View style={{ flex: 1, justifyContent: 'center' }}>
+                <Text>Amount: {formatCurrency(item.Amount)}</Text>
+                <Text>Vendor: {item.Vendor}</Text>
+                <Text>Description: {item.Description}</Text>
+                {item.Notes && <Text>Notes: {item.Notes}</Text>}
+              </View>
+            ) : (
+              <View style={{ flex: 1, justifyContent: 'center' }}>
+                <Text txtSize="sub-title">No details</Text>
+              </View>
+            )}
+          </Pressable>
+        </View>
+        {isSwiped && (
+          <Pressable onPress={handleDelete} style={styles.deleteButton}>
+            <Text style={styles.deleteText}>Delete</Text>
+          </Pressable>
+        )}
+      </View>
+    );
+  }
+
   return (
-    <PanGestureHandler onGestureEvent={onGestureEvent} onHandlerStateChange={onHandlerStateChange}>
+    <PanGestureHandler
+      onGestureEvent={onGestureEvent}
+      onHandlerStateChange={onHandlerStateChange}
+      activeOffsetX={[-10, 10]} // Used to allow vertical scrolling to not be blocked when checking for horizontal swiping
+    >
       <Animated.View
         style={[animatedStyle]} // Apply animated style here
       >
@@ -109,11 +150,9 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
             </Pressable>
           </View>
           {isSwiped && (
-            <View style={styles.deleteButton}>
-              <Text style={styles.deleteText} onPress={handleDelete}>
-                Delete
-              </Text>
-            </View>
+            <Pressable onPress={handleDelete} style={styles.deleteButton}>
+              <Text style={styles.deleteText}>Delete</Text>
+            </Pressable>
           )}
         </View>
       </Animated.View>
@@ -123,12 +162,11 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
 
 const JobReceiptsPage = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
-  const [receipts, setReceipts] = useState<ReceiptBucketData[]>([]);
   const [isAddModalVisible, setIsAddModalVisible] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
-
   const { jobDbHost } = useJobDb();
+  const { receiptData, removeReceiptData, setReceiptData } = useReceiptDataStore();
 
   const fetchReceipts = useCallback(async () => {
     try {
@@ -137,13 +175,13 @@ const JobReceiptsPage = () => {
       if (!response) return;
 
       if (response.status === 'Success' && response.data) {
-        setReceipts(response.data);
+        setReceiptData(response.data);
       }
     } catch (err) {
       alert('An error occurred while fetching the receipts');
       console.log('An error occurred while fetching the receipts', err);
     }
-  }, [jobId, jobDbHost]);
+  }, [jobId, jobDbHost, setReceiptData]);
 
   // Fetch receipts for the given job and user
   useEffect(() => {
@@ -171,12 +209,16 @@ const JobReceiptsPage = () => {
     // TODO
   }, []);
 
-  const handleRemoveReceipt = useCallback(async (id: string | undefined) => {
-    if (id !== undefined) {
-      const response = await jobDbHost?.GetReceiptBucketDB().DeleteReceipt(id);
-      fetchReceipts();
-    }
-  }, []);
+  const handleRemoveReceipt = useCallback(
+    async (id: string | undefined) => {
+      if (id !== undefined) {
+        const strId = id.toString(); // Keith is returning number not string
+        const response = await jobDbHost?.GetReceiptBucketDB().DeleteReceipt(strId);
+        if (response === 'Success') removeReceiptData(strId);
+      }
+    },
+    [removeReceiptData],
+  );
 
   const colorScheme = useColorScheme();
   const colors = useMemo(
@@ -196,43 +238,47 @@ const JobReceiptsPage = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
       <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
-      <View style={{ padding: 0, flex: 1 }}>
-        <View style={{ marginHorizontal: 10, marginBottom: 20 }}>
-          <ActionButton onPress={handleAddReceipt} type={'action'} title="Add Receipt" />
-        </View>
-        <View style={{ alignItems: 'center' }}>
-          <Text text="Job Receipts" txtSize="title" />
-        </View>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <View style={{ flex: 1, width: '100%' }}>
-            {receipts.length === 0 ? (
-              <View style={{ alignItems: 'center' }}>
-                <Text>No receipts found.</Text>
-              </View>
-            ) : (
-              <FlashList
-                estimatedItemSize={150}
-                data={receipts}
-                keyExtractor={(item, index) => item._id ?? index.toString()}
-                renderItem={({ item }) => (
-                  <SwipeableItem item={item} onDelete={handleRemoveReceipt} onShowPicture={showPicture} />
-                )}
+      <View style={styles.viewCenteringContainer}>
+        <View style={styles.viewContentContainer}>
+          <View style={{ marginHorizontal: 10, marginBottom: 20 }}>
+            <ActionButton onPress={handleAddReceipt} type={'action'} title="Add Receipt" />
+          </View>
+          <View style={{ alignItems: 'center' }}>
+            <Text text="Job Receipts" txtSize="title" />
+          </View>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <View style={{ flex: 1, width: '100%' }}>
+              {receiptData.length === 0 ? (
+                <View style={{ alignItems: 'center' }}>
+                  <Text>No receipts found.</Text>
+                </View>
+              ) : (
+                <FlashList
+                  estimatedItemSize={150}
+                  data={receiptData}
+                  keyExtractor={(item, index) => item._id ?? index.toString()}
+                  renderItem={({ item }) => (
+                    <SwipeableItem item={item} onDelete={handleRemoveReceipt} onShowPicture={showPicture} />
+                  )}
+                />
+              )}
+            </View>
+          </GestureHandlerRootView>
+          <>
+            {isAddModalVisible && (
+              <AddReceiptModalScreen jobId={jobId} visible={isAddModalVisible} hideModal={hideAddModal} />
+            )}
+            {selectedImage && !isAddModalVisible && (
+              <ModalImageViewer
+                isVisible={isImageViewerVisible}
+                imageUri={selectedImage}
+                onClose={() => setIsImageViewerVisible(false)}
               />
             )}
-          </View>
-        </GestureHandlerRootView>
-        <>
-          <AddReceiptModalScreen jobId={jobId} visible={isAddModalVisible} hideModal={hideAddModal} />
-          {selectedImage && (
-            <ModalImageViewer
-              isVisible={isImageViewerVisible}
-              imageUri={selectedImage}
-              onClose={() => setIsImageViewerVisible(false)}
-            />
-          )}
-        </>
+          </>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -241,6 +287,14 @@ const JobReceiptsPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  viewCenteringContainer: {
+    flex: 1,
+  },
+  viewContentContainer: {
+    padding: 0,
+    flex: 1,
+    maxWidth: 550,
   },
   imageContentContainer: {
     marginRight: 10,

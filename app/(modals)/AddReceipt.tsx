@@ -5,6 +5,7 @@ import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
+import { useReceiptDataStore } from '@/stores/receiptDataStore';
 import { formatDate } from '@/utils/formatters';
 import * as ImagePicker from 'expo-image-picker';
 import { ReceiptBucketData } from 'jobdb';
@@ -14,12 +15,12 @@ import {
   Keyboard,
   Modal,
   Platform,
-  SafeAreaView,
   StyleSheet,
   TouchableOpacity,
   TouchableWithoutFeedback,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type JobReceipt = {
   date: Date;
@@ -57,6 +58,7 @@ const AddReceiptModalScreen = ({
     subCategoryName: '',
   };
 
+  const { addReceiptData } = useReceiptDataStore();
   const [jobReceipt, setJobReceipt] = useState<JobReceipt>(initJobReceipt);
   const colorScheme = useColorScheme();
   const [datePickerVisible, setDatePickerVisible] = useState(false);
@@ -162,14 +164,16 @@ const AddReceiptModalScreen = ({
 
     const response = await jobDbHost?.GetReceiptBucketDB().InsertReceipt(jobId, newReceipt);
     if (response?.status === 'Success') {
+      newReceipt._id = response.id;
+      addReceiptData(newReceipt);
       console.log('Job receipt successfully added:', newReceipt);
-      hideModal(true);
+      hideModal(false);
     } else {
       console.log('Job receipt update failed:', jobReceipt);
       hideModal(false);
     }
     hideModal(false);
-  }, [jobReceipt, jobDbHost, canAddReceipt]);
+  }, [jobReceipt, jobDbHost, addReceiptData, canAddReceipt]);
 
   const dismissKeyboard = useCallback(() => {
     Keyboard.dismiss();
@@ -198,116 +202,118 @@ const AddReceiptModalScreen = ({
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <View
-          style={[
-            styles.container,
-            styles.modalBackground,
-            { backgroundColor: colors.modalOverlayBackgroundColor },
-          ]}
-        >
-          <TouchableWithoutFeedback onPress={dismissKeyboard}>
-            <View
-              style={[styles.modalContainer, Platform.OS === 'ios' ? { marginTop: 30 } : { marginTop: 40 }]}
-            >
-              <Text txtSize="title" style={styles.modalTitle} text="Add Receipt" />
+      <View style={{ flex: 1, width: '100%' }}>
+        <SafeAreaView style={{ flex: 1 }}>
+          <View
+            style={[
+              styles.container,
+              styles.modalBackground,
+              { backgroundColor: colors.modalOverlayBackgroundColor },
+            ]}
+          >
+            <TouchableWithoutFeedback onPress={dismissKeyboard}>
+              <View
+                style={[styles.modalContainer, Platform.OS === 'ios' ? { marginTop: 30 } : { marginTop: 40 }]}
+              >
+                <Text txtSize="title" style={styles.modalTitle} text="Add Receipt" />
 
-              <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.borderColor }}>
-                <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
-                  <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
-                  <TextInput
-                    readOnly={true}
-                    style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
-                    placeholder="Date"
-                    onPressIn={showDatePicker}
-                    value={jobReceipt.date ? formatDate(jobReceipt.date) : 'No date selected'}
+                <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.borderColor }}>
+                  <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
+                    <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
+                    <TextInput
+                      readOnly={true}
+                      style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                      placeholder="Date"
+                      onPressIn={showDatePicker}
+                      value={jobReceipt.date ? formatDate(jobReceipt.date) : 'No date selected'}
+                    />
+                  </TouchableOpacity>
+                  <DateTimePickerModal
+                    style={{ alignSelf: 'stretch' }}
+                    date={jobReceipt.date}
+                    isVisible={datePickerVisible}
+                    mode="date"
+                    onConfirm={handleDateConfirm}
+                    onCancel={hideDatePicker}
                   />
-                </TouchableOpacity>
-                <DateTimePickerModal
-                  style={{ alignSelf: 'stretch' }}
-                  date={jobReceipt.date}
-                  isVisible={datePickerVisible}
-                  mode="date"
-                  onConfirm={handleDateConfirm}
-                  onCancel={hideDatePicker}
-                />
 
-                <TextField
-                  containerStyle={styles.inputContainer}
-                  style={[styles.input, { borderColor: colors.transparent }]}
-                  placeholder="Vendor"
-                  label="Vendor"
-                  value={jobReceipt.vendor}
-                  onChangeText={handleVendorChange}
-                />
+                  <TextField
+                    containerStyle={styles.inputContainer}
+                    style={[styles.input, { borderColor: colors.transparent }]}
+                    placeholder="Vendor"
+                    label="Vendor"
+                    value={jobReceipt.vendor}
+                    onChangeText={handleVendorChange}
+                  />
 
-                <NumberInputField
-                  style={styles.inputContainer}
-                  placeholder="Amount"
-                  label="Amount"
-                  value={jobReceipt.amount}
-                  onChange={handleAmountChange}
-                />
-                <TextField
-                  containerStyle={styles.inputContainer}
-                  style={[styles.input, { borderColor: colors.transparent }]}
-                  placeholder="Description"
-                  label="Description"
-                  value={jobReceipt.description}
-                  onChangeText={handleDescriptionChange}
-                />
-                <TextField
-                  containerStyle={styles.inputContainer}
-                  style={[styles.input, { borderColor: colors.transparent }]}
-                  placeholder="Notes"
-                  label="Notes"
-                  value={jobReceipt.notes}
-                  onChangeText={handleNotesChange}
-                />
+                  <NumberInputField
+                    style={styles.inputContainer}
+                    placeholder="Amount"
+                    label="Amount"
+                    value={jobReceipt.amount}
+                    onChange={handleAmountChange}
+                  />
+                  <TextField
+                    containerStyle={styles.inputContainer}
+                    style={[styles.input, { borderColor: colors.transparent }]}
+                    placeholder="Description"
+                    label="Description"
+                    value={jobReceipt.description}
+                    onChangeText={handleDescriptionChange}
+                  />
+                  <TextField
+                    containerStyle={styles.inputContainer}
+                    style={[styles.input, { borderColor: colors.transparent }]}
+                    placeholder="Notes"
+                    label="Notes"
+                    value={jobReceipt.notes}
+                    onChangeText={handleNotesChange}
+                  />
 
-                {jobReceipt.pictureUri && (
-                  <>
-                    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                      <Image
-                        source={{ uri: jobReceipt.pictureUri }}
-                        style={{ width: 275, height: 180, marginVertical: 10 }}
-                      />
-                    </View>
-                  </>
-                )}
+                  {jobReceipt.pictureUri && (
+                    <>
+                      <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                        <Image
+                          source={{ uri: jobReceipt.pictureUri }}
+                          style={{ width: 275, height: 180, marginVertical: 10 }}
+                        />
+                      </View>
+                    </>
+                  )}
 
-                <View style={styles.takePictureButtonRow}>
+                  <View style={styles.takePictureButtonRow}>
+                    <ActionButton
+                      style={styles.saveButton}
+                      onPress={handleCaptureImage}
+                      type={'action'}
+                      title={jobReceipt.pictureUri ? 'Retake Picture' : 'Take Picture'}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.saveButtonRow}>
                   <ActionButton
                     style={styles.saveButton}
-                    onPress={handleCaptureImage}
-                    type={'action'}
-                    title={jobReceipt.pictureUri ? 'Retake Picture' : 'Take Picture'}
+                    onPress={handleAddReceipt}
+                    type={canAddReceipt ? 'ok' : 'disabled'}
+                    title="Save"
+                  />
+
+                  <ActionButton
+                    style={styles.cancelButton}
+                    onPress={() => {
+                      setJobReceipt(initJobReceipt);
+                      hideModal(false);
+                    }}
+                    type={'cancel'}
+                    title="Cancel"
                   />
                 </View>
               </View>
-
-              <View style={styles.saveButtonRow}>
-                <ActionButton
-                  style={styles.saveButton}
-                  onPress={handleAddReceipt}
-                  type={canAddReceipt ? 'ok' : 'disabled'}
-                  title="Save"
-                />
-
-                <ActionButton
-                  style={styles.cancelButton}
-                  onPress={() => {
-                    setJobReceipt(initJobReceipt);
-                    hideModal(false);
-                  }}
-                  type={'cancel'}
-                  title="Cancel"
-                />
-              </View>
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
-      </SafeAreaView>
+            </TouchableWithoutFeedback>
+          </View>
+        </SafeAreaView>
+      </View>
     </Modal>
   );
 };

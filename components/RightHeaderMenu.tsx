@@ -2,14 +2,7 @@ import { ActionButtonProps, ButtonBar } from '@/components/ButtonBar';
 import { View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
 import React, { useMemo } from 'react';
-import {
-  Modal,
-  Platform,
-  SafeAreaView,
-  StyleSheet,
-  TouchableWithoutFeedback,
-  useColorScheme,
-} from 'react-native';
+import { Modal, Platform, StyleSheet, TouchableWithoutFeedback, useColorScheme } from 'react-native';
 
 const RightHeaderMenu = ({
   modalVisible,

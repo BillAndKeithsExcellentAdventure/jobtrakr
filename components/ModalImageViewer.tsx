@@ -1,10 +1,11 @@
 import React, { useCallback, useMemo } from 'react';
-import { Modal, StyleSheet, View, SafeAreaView, Pressable, Dimensions } from 'react-native';
+import { Modal, StyleSheet, View, Pressable, Dimensions } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from './useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface ModalImageViewerProps {
   isVisible: boolean;
