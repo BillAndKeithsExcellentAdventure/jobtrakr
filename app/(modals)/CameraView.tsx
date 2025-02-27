@@ -9,12 +9,13 @@ import {
   Button,
   Modal,
   Image,
+  Pressable,
 } from 'react-native';
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { CameraView, CameraType, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
-import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
+import { Switch } from '@/components/Switch';
 
 interface JobCameraViewProps {
   visible: boolean;
@@ -33,14 +34,28 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
   showPreview = true, // Set default value
   showVideo = true, // Add default value
 }) => {
+  // Move ALL hooks to the top, before any conditional logic
   const [type, setType] = useState('back' as CameraType);
   const [permission, requestPermission] = useCameraPermissions();
+  const [micPermission, requestMicPermission] = useMicrophonePermissions();
   const [isRecording, setIsRecording] = useState(false);
   const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
   const [previewUri, setPreviewUri] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(0); // Add zoom state
+  const [zoom, setZoom] = useState(0);
+  const [video, setVideo] = useState<string | undefined>();
+  const [videoPromise, setVideoPromise] = useState<Promise<any> | null>(null);
+  const [cameraModeSwitch, setCameraModeSwitch] = useState(false);
 
-  if (!permission) {
+  // Move the callback definition here, before any conditional returns
+  const onCameraModeChanged = useCallback(
+    (value: boolean) => {
+      setCameraModeSwitch(value);
+    },
+    [cameraModeSwitch],
+  );
+
+  // Now handle the permission checks
+  if (!permission || !micPermission) {
     // Camera permissions are still loading.
     return <View />;
   }
@@ -55,6 +70,16 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
     );
   }
 
+  if (!micPermission.granted) {
+    // Camera permissions are not granted yet.
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>We need your permission to show the camera</Text>
+        <Button onPress={requestMicPermission} title="grant permission" />
+      </View>
+    );
+  }
+
   const toggleCameraType = () => {
     setType((current) => (current === 'back' ? 'front' : 'back'));
   };
@@ -63,7 +88,7 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
     if (!cameraRef) return;
 
     try {
-      const photo = await cameraRef.takePictureAsync();
+      const photo = await cameraRef?.takePictureAsync();
       if (photo) {
         if (showPreview) {
           setPreviewUri(photo.uri);
@@ -82,23 +107,40 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
   const startRecording = async () => {
     if (!cameraRef) return;
 
+    console.log('Starting recording...');
     setIsRecording(true);
     try {
-      const video = await cameraRef.recordAsync();
-      if (video) {
-        const asset = await MediaLibrary.createAssetAsync(video.uri);
+      console.log('Before recordAsync...');
+
+      const promise = cameraRef.recordAsync();
+      setVideoPromise(promise);
+
+      const v = await promise;
+
+      console.log('After recordAsync...');
+      if (v) {
+        const asset = await MediaLibrary.createAssetAsync(v.uri);
         asset.creationTime = Date.now();
         onMediaCaptured(asset);
       }
     } catch (error) {
       console.error('Error recording video:', error);
+    } finally {
+      setIsRecording(false);
+      setVideoPromise(null);
     }
-    setIsRecording(false);
   };
 
-  const stopRecording = () => {
+  const stopRecording = async () => {
     if (!cameraRef) return;
-    cameraRef.stopRecording();
+    console.log('Stopping recording...');
+
+    await cameraRef?.stopRecording();
+    console.log('After Stopping recording...');
+
+    if (videoPromise) {
+      await videoPromise;
+    }
   };
 
   const handleSavePreview = async () => {
@@ -120,6 +162,26 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
 
   const handleZoom = (zoomLevel: number) => {
     setZoom(zoomLevel);
+  };
+
+  const processCameraAction = async () => {
+    if (cameraModeSwitch === false) {
+      await takePicture();
+    } else {
+      if (isRecording) {
+        await stopRecording();
+      } else {
+        await startRecording();
+      }
+    }
+  };
+
+  const onSetPictureMode = () => {
+    setCameraModeSwitch(false);
+  };
+
+  const onSetVideoMode = () => {
+    setCameraModeSwitch(true);
   };
 
   return (
@@ -145,7 +207,13 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
             </View>
           </View>
         ) : (
-          <CameraView ref={(ref) => setCameraRef(ref)} style={styles.camera} facing={type} zoom={zoom}>
+          <CameraView
+            ref={(ref) => setCameraRef(ref)}
+            style={styles.camera}
+            facing={type}
+            zoom={zoom}
+            mode={cameraModeSwitch ? 'video' : 'picture'} // Switch mode based on the switch state
+          >
             <View style={styles.zoomContainer}>
               <Picker
                 selectedValue={zoom}
@@ -161,21 +229,48 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
               </Picker>
             </View>
             <View style={styles.buttonContainer}>
-              <TouchableOpacity style={styles.button} onPress={toggleCameraType}>
+              <TouchableOpacity style={[styles.button, { marginTop: 10 }]} onPress={toggleCameraType}>
                 <Ionicons name="camera-reverse" size={30} color="white" />
               </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.button, styles.captureButton]} onPress={takePicture}>
-                <Ionicons name="camera" size={36} color="white" />
-              </TouchableOpacity>
-
-              {showVideo && (
-                <TouchableOpacity
-                  style={[styles.button, isRecording && styles.recording]}
-                  onPress={isRecording ? stopRecording : startRecording}
-                >
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.captureButton,
+                  isRecording && styles.recording,
+                  { marginTop: 10 },
+                ]}
+                onPress={processCameraAction}
+              >
+                {cameraModeSwitch === true ? (
                   <Ionicons name={isRecording ? 'stop-circle' : 'videocam'} size={30} color="white" />
-                </TouchableOpacity>
+                ) : (
+                  <Ionicons name="camera" size={36} color="white" />
+                )}
+              </TouchableOpacity>
+              {showVideo && (
+                <View style={{ flexDirection: 'column', alignItems: 'center' }}>
+                  <TouchableOpacity
+                    style={[
+                      styles.cameraModeButton,
+                      { marginTop: 10, width: 70 },
+                      !cameraModeSwitch && { backgroundColor: '#007AFF' },
+                    ]}
+                    onPress={onSetPictureMode}
+                  >
+                    <Text style={styles.buttonText}>Picture</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.cameraModeButton,
+                      { marginTop: 10, width: 70 },
+                      cameraModeSwitch && { backgroundColor: '#007AFF' },
+                    ]}
+                    onPress={onSetVideoMode}
+                  >
+                    <Text style={styles.buttonText}>Video</Text>
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
           </CameraView>
@@ -271,5 +366,16 @@ const styles = StyleSheet.create({
     width: '100%',
     color: 'white',
     backgroundColor: 'transparent',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+    alignSelf: 'center',
+  },
+  cameraModeButton: {
+    padding: 5,
+    borderRadius: 15,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
 });

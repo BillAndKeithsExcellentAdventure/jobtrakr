@@ -618,7 +618,7 @@ const JobPhotosPage = () => {
           <ActionButton
             style={{ alignSelf: 'stretch', marginTop: 5 }}
             type={'action'}
-            title={'Take Picture'}
+            title={'Take Picture / Video'}
             onPress={OnTakePictureClicked}
           />
         )}
