@@ -316,9 +316,7 @@ const styles = StyleSheet.create({
   deleteText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 18,
-    paddingHorizontal: 10,
-    paddingVertical: 20,
+    fontSize: 16,
   },
 });
 
