@@ -76,7 +76,7 @@ const JobModalScreen = ({
   }, [job]);
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true}>
+    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={() => hideModal(false)}>
       <View style={[styles.modalBackground, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
         <View style={[styles.modalContainer, { marginTop: insets.top }]}>
           <Text style={styles.modalTitle}>Create New Job</Text>

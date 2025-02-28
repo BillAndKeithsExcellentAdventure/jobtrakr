@@ -1,5 +1,5 @@
 import { ActionButton } from '@/components/ActionButton';
-import { ModalImageViewer } from '@/components/ModalImageViewer';
+import { ImageViewerScreen } from '@/components/ImageViewerScreen';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';

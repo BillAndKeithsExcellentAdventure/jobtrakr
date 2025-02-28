@@ -6,12 +6,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from './useColorScheme';
 import { Colors } from '@/constants/Colors';
 
-interface ModalImageViewerProps {
+interface ImageViewerScreenProps {
   imageUri: string;
   onClose: () => void;
 }
 
-export const ModalImageViewer: React.FC<ModalImageViewerProps> = ({ imageUri, onClose }) => {
+export const ImageViewerScreen: React.FC<ImageViewerScreenProps> = ({ imageUri, onClose }) => {
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
   const offset = useSharedValue({ x: 0, y: 0 });

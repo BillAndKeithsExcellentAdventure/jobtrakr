@@ -1,4 +1,4 @@
-import { ModalImageViewer } from '@/components/ModalImageViewer';
+import { ImageViewerScreen } from '@/components/ImageViewerScreen';
 import { View } from '@/components/Themed';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
@@ -12,7 +12,7 @@ const ShowReceiptPage = () => {
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <View style={styles.container}>
         <Stack.Screen options={{ title: `Receipt Image`, headerShown: true }} />
-        <ModalImageViewer imageUri={uri} onClose={() => router.back()} />
+        <ImageViewerScreen imageUri={uri} onClose={() => router.back()} />
       </View>
     </SafeAreaView>
   );

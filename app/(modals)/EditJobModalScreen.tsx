@@ -219,7 +219,7 @@ const EditJobModalScreen = ({
   }, []);
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true}>
+    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={() => hideModal(false)}>
       <SafeAreaView style={{ flex: 1 }}>
         <View
           style={[
