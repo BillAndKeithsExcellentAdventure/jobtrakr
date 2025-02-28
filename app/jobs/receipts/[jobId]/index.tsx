@@ -192,7 +192,7 @@ const JobReceiptsPage = () => {
   const handleRemoveReceipt = useCallback(
     async (id: string | undefined) => {
       if (id !== undefined) {
-        const strId = id.toString(); // Keith is returning number not string
+        const strId = id;
         const response = await jobDbHost?.GetReceiptBucketDB().DeleteReceipt(strId);
         if (response === 'Success') removeReceiptData(strId);
       }
