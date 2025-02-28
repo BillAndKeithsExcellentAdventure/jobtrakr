@@ -1,19 +1,17 @@
 import React, { useCallback, useMemo } from 'react';
-import { Modal, StyleSheet, View, Pressable, Dimensions } from 'react-native';
+import { StyleSheet, View, Pressable, Dimensions } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from './useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-interface ModalImageViewerProps {
-  isVisible: boolean;
+interface ImageViewerScreenProps {
   imageUri: string;
   onClose: () => void;
 }
 
-export const ModalImageViewer: React.FC<ModalImageViewerProps> = ({ isVisible, imageUri, onClose }) => {
+export const ImageViewerScreen: React.FC<ImageViewerScreenProps> = ({ imageUri, onClose }) => {
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
   const offset = useSharedValue({ x: 0, y: 0 });
@@ -82,34 +80,31 @@ export const ModalImageViewer: React.FC<ModalImageViewerProps> = ({ isVisible, i
   }, [onClose, scale, savedScale, start, offset]);
 
   return (
-    <Modal visible={isVisible} transparent={true} animationType="fade">
-      <SafeAreaView style={{ flex: 1 }}>
-        <View style={[styles.container, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
-          <View style={{ alignItems: 'flex-end' }}>
-            <Pressable onPress={handleClose} style={styles.closeButton}>
-              <Ionicons name="close" size={28} color={colors.iconColor} />
-            </Pressable>
-          </View>
-          <View style={{ flex: 1, overflow: 'hidden' }}>
-            <GestureHandlerRootView>
-              <GestureDetector gesture={Gesture.Exclusive(doubleTapGesture, composed)}>
-                <Animated.Image
-                  source={{ uri: imageUri }}
-                  style={[styles.image, animatedStyle]}
-                  resizeMode="contain"
-                />
-              </GestureDetector>
-            </GestureHandlerRootView>
-          </View>
-        </View>
-      </SafeAreaView>
-    </Modal>
+    <View style={[styles.container, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
+      <View style={{ alignItems: 'flex-end' }}>
+        <Pressable onPress={handleClose} style={styles.closeButton}>
+          <Ionicons name="close" size={28} color={colors.iconColor} />
+        </Pressable>
+      </View>
+      <View style={{ flex: 1, width: '100%', overflow: 'hidden' }}>
+        <GestureHandlerRootView>
+          <GestureDetector gesture={Gesture.Exclusive(doubleTapGesture, composed)}>
+            <Animated.Image
+              source={{ uri: imageUri }}
+              style={[styles.image, animatedStyle]}
+              resizeMode="contain"
+            />
+          </GestureDetector>
+        </GestureHandlerRootView>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
   },
   closeButton: {
     padding: 8,
@@ -117,5 +112,7 @@ const styles = StyleSheet.create({
   image: {
     width: Dimensions.get('window').width,
     height: Dimensions.get('window').height - 60,
+    minWidth: 400,
+    minHeight: 800,
   },
 });

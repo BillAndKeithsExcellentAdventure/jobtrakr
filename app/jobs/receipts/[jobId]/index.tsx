@@ -1,5 +1,5 @@
 import { ActionButton } from '@/components/ActionButton';
-import { ModalImageViewer } from '@/components/ModalImageViewer';
+import { ImageViewerScreen } from '@/components/ImageViewerScreen';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
@@ -10,7 +10,7 @@ import { FlashList } from '@shopify/flash-list';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Platform, Pressable, StyleSheet } from 'react-native';
+import { Alert, Image, Platform, Pressable, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import {
   GestureHandlerRootView,
   PanGestureHandler,
@@ -105,61 +105,63 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
   const boxShadow = Platform.OS === 'web' ? colors.boxShadow : undefined;
 
   return (
-    <PanGestureHandler
-      onGestureEvent={onGestureEvent}
-      onHandlerStateChange={onHandlerStateChange}
-      activeOffsetX={[-10, 10]} // Used to allow vertical scrolling to not be blocked when checking for horizontal swiping
+    <View
+      style={[
+        styles.itemContainer,
+        { backgroundColor: colors.itemBackground },
+        { backgroundColor: colors.itemBackground, shadowColor: colors.shadowColor, boxShadow },
+      ]}
     >
-      <Animated.View
-        style={[animatedStyle]} // Apply animated style here
+      <PanGestureHandler
+        onGestureEvent={onGestureEvent}
+        onHandlerStateChange={onHandlerStateChange}
+        activeOffsetX={[-10, 10]} // Used to allow vertical scrolling to not be blocked when checking for horizontal swiping
       >
-        <View
-          style={[
-            styles.itemContainer,
-            { backgroundColor: colors.itemBackground },
-            { backgroundColor: colors.itemBackground, shadowColor: colors.shadowColor, boxShadow },
-          ]}
+        <Animated.View
+          style={[animatedStyle, { width: '100%' }]} // Apply animated style here
         >
-          <View style={styles.imageContentContainer}>
-            {item.PictureUri ? (
-              <Pressable onPress={() => onShowPicture(item.PictureUri!)}>
-                <Image source={{ uri: item.PictureUri }} style={{ height: 80, width: 120 }} />
-              </Pressable>
-            ) : (
-              <Text txtSize="sub-title">No Image</Text>
-            )}
-          </View>
-          <View style={[styles.detailsContentContainer, !!!item.Amount && { alignItems: 'center' }]}>
-            <Pressable onPress={() => onShowDetails(item)}>
-              {item.Amount ? (
-                <View style={{ flex: 1, justifyContent: 'center' }}>
-                  <Text>Amount: {formatCurrency(item.Amount)}</Text>
-                  <Text>Vendor: {item.Vendor}</Text>
-                  <Text>Description: {item.Description}</Text>
-                  {item.Notes && <Text>Notes: {item.Notes}</Text>}
-                </View>
+          <View style={[styles.container, { flexDirection: 'row' }]}>
+            <View style={styles.imageContentContainer}>
+              {item.PictureUri ? (
+                <TouchableWithoutFeedback onPress={() => onShowPicture(item.PictureUri!)}>
+                  <Image source={{ uri: item.PictureUri }} style={{ height: 80, width: 120 }} />
+                </TouchableWithoutFeedback>
               ) : (
-                <View style={{ flex: 1, justifyContent: 'center' }}>
-                  <Text txtSize="sub-title">No details</Text>
-                </View>
+                <Text txtSize="sub-title">No Image</Text>
               )}
-            </Pressable>
+            </View>
+            <View style={[styles.detailsContentContainer, !!!item.Amount && { alignItems: 'center' }]}>
+              <TouchableWithoutFeedback onPress={() => onShowDetails(item)}>
+                {item.Amount ? (
+                  <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <Text>Amount: {formatCurrency(item.Amount)}</Text>
+                    <Text>Vendor: {item.Vendor}</Text>
+                    <Text>Description: {item.Description}</Text>
+                    {item.Notes && <Text>Notes: {item.Notes}</Text>}
+                  </View>
+                ) : (
+                  <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <Text txtSize="sub-title">No details</Text>
+                  </View>
+                )}
+              </TouchableWithoutFeedback>
+            </View>
           </View>
-          {isSwiped && (
-            <Pressable onPress={handleDelete} style={styles.deleteButton}>
-              <Text style={styles.deleteText}>Delete</Text>
-            </Pressable>
-          )}
-        </View>
-      </Animated.View>
-    </PanGestureHandler>
+        </Animated.View>
+      </PanGestureHandler>
+      {isSwiped && (
+        <TouchableWithoutFeedback onPress={handleDelete}>
+          <View style={styles.deleteButton}>
+            <Text style={styles.deleteText}>Delete</Text>
+          </View>
+        </TouchableWithoutFeedback>
+      )}
+    </View>
   );
 };
 
 const JobReceiptsPage = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
   const { jobDbHost } = useJobDb();
   const { receiptData, removeReceiptData, setReceiptData } = useReceiptDataStore();
 
@@ -184,14 +186,13 @@ const JobReceiptsPage = () => {
   }, []);
 
   const showPicture = useCallback((uri: string) => {
-    setSelectedImage(uri);
-    setIsImageViewerVisible(true);
+    router.push(`/jobs/receipts/[jobId]/showImage/${jobId}?uri=${uri}`);
   }, []);
 
   const handleRemoveReceipt = useCallback(
     async (id: string | undefined) => {
       if (id !== undefined) {
-        const strId = id.toString(); // Keith is returning number not string
+        const strId = id;
         const response = await jobDbHost?.GetReceiptBucketDB().DeleteReceipt(strId);
         if (response === 'Success') removeReceiptData(strId);
       }
@@ -246,7 +247,6 @@ const JobReceiptsPage = () => {
                 </View>
               ) : (
                 <FlashList
-                  style={[{ backgroundColor: colors.listBackground }]}
                   estimatedItemSize={150}
                   data={receiptData}
                   keyExtractor={(item, index) => item._id ?? index.toString()}
@@ -257,15 +257,6 @@ const JobReceiptsPage = () => {
               )}
             </View>
           </GestureHandlerRootView>
-          <>
-            {selectedImage && (
-              <ModalImageViewer
-                isVisible={isImageViewerVisible}
-                imageUri={selectedImage}
-                onClose={() => setIsImageViewerVisible(false)}
-              />
-            )}
-          </>
         </View>
       </View>
     </SafeAreaView>
@@ -278,10 +269,12 @@ const styles = StyleSheet.create({
   },
   viewCenteringContainer: {
     flex: 1,
+    alignItems: 'center',
   },
   viewContentContainer: {
     padding: 0,
     flex: 1,
+    width: '100%',
     maxWidth: 550,
   },
   imageContentContainer: {
@@ -312,18 +305,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'red',
     justifyContent: 'center',
     alignItems: 'center',
-    width: 100,
-    height: '100%',
+    width: 80,
+    height: 80,
     position: 'absolute',
-    right: -100,
+    right: 10,
+    elevation: 100,
+    zIndex: 20,
     top: 10,
     bottom: 0,
+    borderRadius: 10,
   },
   deleteText: {
     color: 'white',
     fontWeight: 'bold',
-    paddingHorizontal: 10,
-    paddingVertical: 20,
+    fontSize: 16,
   },
 });
 

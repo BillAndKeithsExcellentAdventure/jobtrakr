@@ -92,14 +92,14 @@ export function TwoColumnList({
                 </Text>
               </View>
               {item.secondaryTitle && (
-                <View style={styles.secondardyTitleRow}>
+                <View style={styles.secondaryTitleRow}>
                   <Text numberOfLines={1} ellipsizeMode="tail" txtSize="standard">
                     {item.secondaryTitle}
                   </Text>
                 </View>
               )}
               {item.tertiaryTitle && (
-                <View style={styles.secondardyTitleRow}>
+                <View style={styles.secondaryTitleRow}>
                   <Text numberOfLines={1} ellipsizeMode="tail" txtSize="standard">
                     {item.tertiaryTitle}
                   </Text>
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
   },
-  secondardyTitleRow: {
+  secondaryTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
