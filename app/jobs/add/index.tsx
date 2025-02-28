@@ -6,8 +6,9 @@ import { useJobDb } from '@/context/DatabaseContext';
 import { JobData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useJobDataStore } from '@/stores/jobDataStore';
+import { router } from 'expo-router';
 
 type Job = {
   name: string;
@@ -15,13 +16,7 @@ type Job = {
   owner: string;
 };
 
-const JobModalScreen = ({
-  visible,
-  hideModal,
-}: {
-  visible: boolean;
-  hideModal: (success: boolean) => void;
-}) => {
+const AddJobScreen = () => {
   const { addJob } = useJobDataStore();
 
   const [job, setJob] = useState<Job>({
@@ -30,7 +25,6 @@ const JobModalScreen = ({
     owner: '',
   });
 
-  const insets = useSafeAreaInsets(); // just in case we use it on IOS
   const colorScheme = useColorScheme();
 
   const colors = useMemo(
@@ -73,57 +67,54 @@ const JobModalScreen = ({
       jobData._id = result.id.toString();
       addJob(jobData);
       console.log('Job created:', job);
-      hideModal(true);
     } else {
       console.log('Job creation failed:', job);
-      hideModal(false);
     }
+    router.back();
   }, [job]);
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={() => hideModal(false)}>
-      <View style={[styles.modalBackground, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
-        <View style={[styles.modalContainer, { marginTop: insets.top }]}>
-          <Text style={styles.modalTitle}>Create New Job</Text>
+    <SafeAreaView style={[styles.modalBackground, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
+      <View style={styles.modalContainer}>
+        <Text style={styles.modalTitle}>Create New Job</Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Job Name"
-            value={job.name}
-            onChangeText={(text) => setJob({ ...job, name: text })}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Location"
-            value={job.location}
-            onChangeText={(text) => setJob({ ...job, location: text })}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Owner"
-            value={job.owner}
-            onChangeText={(text) => setJob({ ...job, owner: text })}
-          />
+        <TextInput
+          style={styles.input}
+          placeholder="Job Name"
+          value={job.name}
+          onChangeText={(text) => setJob({ ...job, name: text })}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Location"
+          value={job.location}
+          onChangeText={(text) => setJob({ ...job, location: text })}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Owner"
+          value={job.owner}
+          onChangeText={(text) => setJob({ ...job, owner: text })}
+        />
 
-          <View style={styles.saveButtonRow}>
-            <ActionButton
-              style={styles.saveButton}
-              onPress={handleSubmit}
-              type={canAddJob ? 'ok' : 'disabled'}
-              title="Save"
-            />
-            <ActionButton
-              style={styles.cancelButton}
-              onPress={() => {
-                hideModal(false);
-              }}
-              type={'cancel'}
-              title="Cancel"
-            />
-          </View>
+        <View style={styles.saveButtonRow}>
+          <ActionButton
+            style={styles.saveButton}
+            onPress={handleSubmit}
+            type={canAddJob ? 'ok' : 'disabled'}
+            title="Save"
+          />
+          <ActionButton
+            style={styles.cancelButton}
+            onPress={() => {
+              hideModal(false);
+            }}
+            type={'cancel'}
+            title="Cancel"
+          />
         </View>
       </View>
-    </Modal>
+    </SafeAreaView>
   );
 };
 
@@ -166,4 +157,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default JobModalScreen;
+export default AddJobScreen;

@@ -1,4 +1,3 @@
-import EditJobModalScreen from '@/app/(modals)/EditJobModalScreen';
 import { ActionButtonProps } from '@/components/ButtonBar';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { ScreenHeader } from '@/components/ScreenHeader';

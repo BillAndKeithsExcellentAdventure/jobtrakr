@@ -13,7 +13,6 @@ import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, StyleSheet } from 'react-native';
 
-import JobModalScreen from '@/app/(modals)/JobModalScreen';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useJobDb } from '@/context/DatabaseContext';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
@@ -289,8 +288,6 @@ export default function JobHomeScreen() {
           buttons={rightHeaderMenuButtons}
         />
       )}
-      {/* Pass visibility state and hide function to JobModalScreen */}
-      <JobModalScreen visible={jobModalVisible} hideModal={hideJobModal} />
     </SafeAreaView>
   );
 }
