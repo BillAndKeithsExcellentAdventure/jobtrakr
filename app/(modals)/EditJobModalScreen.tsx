@@ -4,6 +4,7 @@ import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
+import { useJobDataStore } from '@/stores/jobDataStore';
 import { formatDate } from '@/utils/formatters';
 import * as Location from 'expo-location';
 import { JobData } from 'jobdb';
@@ -55,6 +56,7 @@ const EditJobModalScreen = ({
   const [finishDatePickerVisible, setFinishDatePickerVisible] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
   const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
+  const { updateJob } = useJobDataStore();
 
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -206,6 +208,7 @@ const EditJobModalScreen = ({
 
     const status = await jobDbHost?.GetJobDB().UpdateJob(modifiedJob);
     if (status === 'Success') {
+      if (modifiedJob._id) updateJob(modifiedJob._id, modifiedJob);
       console.log('Job successfully updated:', job);
       hideModal(true);
     } else {

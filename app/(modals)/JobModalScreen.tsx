@@ -7,6 +7,7 @@ import { JobData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useJobDataStore } from '@/stores/jobDataStore';
 
 type Job = {
   name: string;
@@ -21,6 +22,8 @@ const JobModalScreen = ({
   visible: boolean;
   hideModal: (success: boolean) => void;
 }) => {
+  const { addJob } = useJobDataStore();
+
   const [job, setJob] = useState<Job>({
     name: '',
     location: '',
@@ -67,6 +70,8 @@ const JobModalScreen = ({
 
     const result = await jobDbHost?.GetJobDB().CreateJob(jobData);
     if (result?.status === 'Success') {
+      jobData._id = result.id.toString();
+      addJob(jobData);
       console.log('Job created:', job);
       hideModal(true);
     } else {
