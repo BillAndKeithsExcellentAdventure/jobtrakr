@@ -3,7 +3,6 @@ import {
   Image,
   Button,
   ScrollView,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   Platform,
@@ -37,6 +36,7 @@ import { VideoPlayerModal } from '@/components/VideoPlayerModal';
 import * as ImagePicker from 'expo-image-picker';
 import { PictureBucketDB } from 'jobdb/dist/pictureBucket';
 import { JobCameraView } from '@/app/(modals)/CameraView';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export type PhotoCapturedCallback = (asset: MediaLibrary.Asset) => void;
 
