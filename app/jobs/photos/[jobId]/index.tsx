@@ -132,7 +132,7 @@ const JobPhotosPage = () => {
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
   const [isCameraVisible, setIsCameraVisible] = useState(false);
-  const { updateThumbnail } = useJobDataStore();
+  const { updateJob } = useJobDataStore();
 
   useEffect(() => {
     async function loadMediaAssetsObj() {
@@ -314,7 +314,8 @@ const JobPhotosPage = () => {
         const status = await jobDbHost?.GetJobDB().UpdateThumbnail(tn, jobId);
         if (status === 'Success' && tn) {
           // Update the JobStore.
-          updateThumbnail(jobId, tn);
+          updateJob(jobId, { Thumbnail: tn });
+
           console.log('Thumbnail set successfully');
         }
       }

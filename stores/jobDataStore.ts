@@ -7,7 +7,6 @@ type JobDataStore = {
   addJob: (job: JobData) => void;
   removeJob: (id: string) => void;
   updateJob: (id: string, updatedJob: Partial<JobData>) => void;
-  updateThumbnail: (id: string, thumbnail: string) => void;
 };
 
 const futureDay = new Date('2099-12-31'); // A default far future date
@@ -39,15 +38,6 @@ export const useJobDataStore = create<JobDataStore>((set) => ({
     set((state) => {
       // Update the job if it exists
       const updatedJobData = state.allJobs.map((job) => (job._id === id ? { ...job, ...updatedJob } : job));
-      // Sort the updated jobData array
-      return { allJobs: sortJobData(updatedJobData) };
-    }),
-  updateThumbnail: (id, thumbnail) =>
-    set((state) => {
-      // Update the job if it exists
-      const updatedJobData = state.allJobs.map((job) =>
-        job._id === id ? { ...job, Thumbnail: thumbnail } : job,
-      );
       // Sort the updated jobData array
       return { allJobs: sortJobData(updatedJobData) };
     }),
