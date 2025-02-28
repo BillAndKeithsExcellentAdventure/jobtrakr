@@ -6,6 +6,7 @@ type ReceiptDataStore = {
   setReceiptData: (data: ReceiptBucketData[]) => void;
   addReceiptData: (receipt: ReceiptBucketData) => void;
   removeReceiptData: (id: string) => void;
+  updateReceiptData: (id: string, updatedReceipt: Partial<ReceiptBucketData>) => void;
 };
 
 export const useReceiptDataStore = create<ReceiptDataStore>((set) => ({
@@ -15,5 +16,11 @@ export const useReceiptDataStore = create<ReceiptDataStore>((set) => ({
   removeReceiptData: (id) =>
     set((state) => ({
       receiptData: state.receiptData.filter((receipt) => receipt._id! !== id), // Removes the receipt with the specified id
+    })),
+  updateReceiptData: (id, updatedReceipt) =>
+    set((state) => ({
+      receiptData: state.receiptData.map((receipt) =>
+        receipt._id === id ? { ...receipt, ...updatedReceipt } : receipt,
+      ),
     })),
 }));

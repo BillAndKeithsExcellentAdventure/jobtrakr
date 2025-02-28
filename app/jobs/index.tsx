@@ -16,9 +16,9 @@ import { Platform, Pressable, StyleSheet } from 'react-native';
 import JobModalScreen from '@/app/(modals)/JobModalScreen';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useJobDb } from '@/context/DatabaseContext';
-import { JobData } from 'jobdb';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useJobDataStore } from '@/stores/jobDataStore';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -32,7 +32,7 @@ function isEntry(obj: any): obj is TwoColumnListEntry {
 }
 
 export default function JobHomeScreen() {
-  const [allJobs, setAllJobs] = useState<JobData[]>([]);
+  const { allJobs, updateJob, setAllJobs } = useJobDataStore();
   const [jobListEntries, setJobListEntries] = useState<TwoColumnListEntry[]>([]);
   const [jobModalVisible, setJobModalVisible] = useState(false);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
@@ -67,21 +67,14 @@ export default function JobHomeScreen() {
 
   const loadJobs = useCallback(async () => {
     const today = new Date();
-    const futureDay = new Date(today.getFullYear() + 5, today.getMonth(), today.getDate());
     const result = await jobDbHost?.GetJobDB().FetchAllJobs();
     const jobs = result ? result.jobs : [];
-    // sort based on favorite and then be planned finish date
-    jobs
-      .sort((a, b) => (b.Favorite ?? 0) - (a.Favorite ?? 0))
-      .sort((a, b) =>
-        a.Favorite === b.Favorite
-          ? (a.PlannedFinish ? a.PlannedFinish.getTime() : futureDay.getTime()) -
-            (b.PlannedFinish ? b.PlannedFinish.getTime() : futureDay.getTime())
-          : 0,
-      );
+    setAllJobs(jobs); // update the jobDataStore
+  }, [jobDbHost]);
 
-    if (jobs) {
-      const listData: TwoColumnListEntry[] = jobs.map((job) => {
+  React.useEffect(() => {
+    if (allJobs) {
+      const listData: TwoColumnListEntry[] = allJobs.map((job) => {
         return {
           primaryTitle: job.Name ? job.Name : 'unknown',
           isFavorite: undefined !== job.Favorite ? job.Favorite > 0 : false,
@@ -102,10 +95,9 @@ export default function JobHomeScreen() {
         };
       });
 
-      setAllJobs(jobs);
       setJobListEntries(listData);
     }
-  }, [jobDbHost]);
+  }, [allJobs]);
 
   const onLikePressed = useCallback(
     async (jobId: string) => {
@@ -117,8 +109,8 @@ export default function JobHomeScreen() {
         };
         const status = await jobDbHost?.GetJobDB().UpdateJob(updatedJob);
         if (status === 'Success') {
+          updateJob(updatedJob._id!, updatedJob); // update the jobDataStore
           console.log('Job successfully updated:', updatedJob.Name);
-          loadJobs();
         } else {
           console.log('Job update failed:', updatedJob.Name);
         }
@@ -209,7 +201,6 @@ export default function JobHomeScreen() {
   const hideJobModal = useCallback(
     (success: boolean) => {
       setJobModalVisible(false);
-      if (success) loadJobs();
     },
     [loadJobs],
   );
