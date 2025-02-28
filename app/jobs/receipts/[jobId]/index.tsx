@@ -10,7 +10,7 @@ import { FlashList } from '@shopify/flash-list';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Platform, Pressable, StyleSheet } from 'react-native';
+import { Alert, Image, Platform, Pressable, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import {
   GestureHandlerRootView,
   PanGestureHandler,
@@ -105,54 +105,58 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
   const boxShadow = Platform.OS === 'web' ? colors.boxShadow : undefined;
 
   return (
-    <PanGestureHandler
-      onGestureEvent={onGestureEvent}
-      onHandlerStateChange={onHandlerStateChange}
-      activeOffsetX={[-10, 10]} // Used to allow vertical scrolling to not be blocked when checking for horizontal swiping
+    <View
+      style={[
+        styles.itemContainer,
+        { backgroundColor: colors.itemBackground },
+        { backgroundColor: colors.itemBackground, shadowColor: colors.shadowColor, boxShadow },
+      ]}
     >
-      <Animated.View
-        style={[animatedStyle]} // Apply animated style here
+      <PanGestureHandler
+        onGestureEvent={onGestureEvent}
+        onHandlerStateChange={onHandlerStateChange}
+        activeOffsetX={[-10, 10]} // Used to allow vertical scrolling to not be blocked when checking for horizontal swiping
       >
-        <View
-          style={[
-            styles.itemContainer,
-            { backgroundColor: colors.itemBackground },
-            { backgroundColor: colors.itemBackground, shadowColor: colors.shadowColor, boxShadow },
-          ]}
+        <Animated.View
+          style={[animatedStyle, { width: '100%' }]} // Apply animated style here
         >
-          <View style={styles.imageContentContainer}>
-            {item.PictureUri ? (
-              <Pressable onPress={() => onShowPicture(item.PictureUri!)}>
-                <Image source={{ uri: item.PictureUri }} style={{ height: 80, width: 120 }} />
-              </Pressable>
-            ) : (
-              <Text txtSize="sub-title">No Image</Text>
-            )}
-          </View>
-          <View style={[styles.detailsContentContainer, !!!item.Amount && { alignItems: 'center' }]}>
-            <Pressable onPress={() => onShowDetails(item)}>
-              {item.Amount ? (
-                <View style={{ flex: 1, justifyContent: 'center' }}>
-                  <Text>Amount: {formatCurrency(item.Amount)}</Text>
-                  <Text>Vendor: {item.Vendor}</Text>
-                  <Text>Description: {item.Description}</Text>
-                  {item.Notes && <Text>Notes: {item.Notes}</Text>}
-                </View>
+          <View style={[styles.container, { flexDirection: 'row' }]}>
+            <View style={styles.imageContentContainer}>
+              {item.PictureUri ? (
+                <TouchableWithoutFeedback onPress={() => onShowPicture(item.PictureUri!)}>
+                  <Image source={{ uri: item.PictureUri }} style={{ height: 80, width: 120 }} />
+                </TouchableWithoutFeedback>
               ) : (
-                <View style={{ flex: 1, justifyContent: 'center' }}>
-                  <Text txtSize="sub-title">No details</Text>
-                </View>
+                <Text txtSize="sub-title">No Image</Text>
               )}
-            </Pressable>
+            </View>
+            <View style={[styles.detailsContentContainer, !!!item.Amount && { alignItems: 'center' }]}>
+              <TouchableWithoutFeedback onPress={() => onShowDetails(item)}>
+                {item.Amount ? (
+                  <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <Text>Amount: {formatCurrency(item.Amount)}</Text>
+                    <Text>Vendor: {item.Vendor}</Text>
+                    <Text>Description: {item.Description}</Text>
+                    {item.Notes && <Text>Notes: {item.Notes}</Text>}
+                  </View>
+                ) : (
+                  <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <Text txtSize="sub-title">No details</Text>
+                  </View>
+                )}
+              </TouchableWithoutFeedback>
+            </View>
           </View>
-          {isSwiped && (
-            <Pressable onPress={handleDelete} style={styles.deleteButton}>
-              <Text style={styles.deleteText}>Delete</Text>
-            </Pressable>
-          )}
-        </View>
-      </Animated.View>
-    </PanGestureHandler>
+        </Animated.View>
+      </PanGestureHandler>
+      {isSwiped && (
+        <TouchableWithoutFeedback onPress={handleDelete}>
+          <View style={styles.deleteButton}>
+            <Text style={styles.deleteText}>Delete</Text>
+          </View>
+        </TouchableWithoutFeedback>
+      )}
+    </View>
   );
 };
 
@@ -299,16 +303,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'red',
     justifyContent: 'center',
     alignItems: 'center',
-    width: 100,
-    height: '100%',
+    width: 80,
+    height: 80,
     position: 'absolute',
-    right: -100,
+    right: 10,
+    elevation: 100,
+    zIndex: 20,
     top: 10,
     bottom: 0,
+    borderRadius: 10,
   },
   deleteText: {
     color: 'white',
     fontWeight: 'bold',
+    fontSize: 18,
     paddingHorizontal: 10,
     paddingVertical: 20,
   },
