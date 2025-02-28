@@ -279,12 +279,7 @@ export default function JobHomeScreen() {
 
       <View style={{ flex: 1, width: '100%' }}>
         <View style={[styles.twoColListContainer, { backgroundColor: colors.screenBackground }]}>
-          <TwoColumnList
-            style={{ flex: 1 }}
-            data={jobListEntries}
-            onPress={handleSelection}
-            buttons={jobActionButtons}
-          />
+          <TwoColumnList data={jobListEntries} onPress={handleSelection} buttons={jobActionButtons} />
         </View>
       </View>
       {headerMenuModalVisible && (
