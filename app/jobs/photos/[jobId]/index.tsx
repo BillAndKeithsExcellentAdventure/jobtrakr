@@ -37,6 +37,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { PictureBucketDB } from 'jobdb/dist/pictureBucket';
 import { JobCameraView } from '@/app/(modals)/CameraView';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useJobDataStore } from '@/stores/jobDataStore';
 
 export type PhotoCapturedCallback = (asset: MediaLibrary.Asset) => void;
 
@@ -131,6 +132,7 @@ const JobPhotosPage = () => {
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
   const [isCameraVisible, setIsCameraVisible] = useState(false);
+  const { updateThumbnail } = useJobDataStore();
 
   useEffect(() => {
     async function loadMediaAssetsObj() {
@@ -310,7 +312,9 @@ const JobPhotosPage = () => {
         const tn = await mediaTools.current?.createThumbnail(asset.asset.uri, jobName, 100, 100);
 
         const status = await jobDbHost?.GetJobDB().UpdateThumbnail(tn, jobId);
-        if (status === 'Success') {
+        if (status === 'Success' && tn) {
+          // Update the JobStore.
+          updateThumbnail(jobId, tn);
           console.log('Thumbnail set successfully');
         }
       }
