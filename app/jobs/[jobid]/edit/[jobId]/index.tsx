@@ -7,6 +7,7 @@ import { useJobDb } from '@/context/DatabaseContext';
 import { useJobDataStore } from '@/stores/jobDataStore';
 import { formatDate } from '@/utils/formatters';
 import * as Location from 'expo-location';
+import { router, useLocalSearchParams } from 'expo-router';
 import { JobData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Keyboard, Modal, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
@@ -25,13 +26,10 @@ type Job = {
   latitude?: number;
 };
 
-const EditJobModalScreen = ({
-  jobId,
-  hideModal,
-}: {
-  jobId: string | undefined;
-  hideModal: (success: boolean) => void;
-}) => {
+const EditJobScreen = () => {
+  const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
+  const { updateJob } = useJobDataStore();
+
   const defaultStartDate = new Date();
   const defaultFinishDate = new Date();
   defaultFinishDate.setMonth(defaultFinishDate.getMonth() + 9);
@@ -56,7 +54,6 @@ const EditJobModalScreen = ({
   const [finishDatePickerVisible, setFinishDatePickerVisible] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
   const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
-  const { updateJob } = useJobDataStore();
 
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -210,11 +207,10 @@ const EditJobModalScreen = ({
     if (status === 'Success') {
       if (modifiedJob._id) updateJob(modifiedJob._id, modifiedJob);
       console.log('Job successfully updated:', job);
-      hideModal(true);
     } else {
       console.log('Job update failed:', job);
-      hideModal(false);
     }
+    router.back();
   }, [job]);
 
   const dismissKeyboard = useCallback(() => {
@@ -222,136 +218,134 @@ const EditJobModalScreen = ({
   }, []);
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={() => hideModal(false)}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <View
-          style={[
-            styles.container,
-            styles.modalBackground,
-            { backgroundColor: colors.modalOverlayBackgroundColor },
-          ]}
-        >
-          <TouchableWithoutFeedback onPress={dismissKeyboard}>
-            <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>Edit Existing Job</Text>
-              <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.borderColor }}>
-                <TextField
-                  style={[styles.input, { borderColor: colors.transparent }]}
-                  label="Job Name"
-                  placeholder="Job Name"
-                  value={job.name}
-                  onChangeText={(text) => setJob({ ...job, name: text })}
-                />
-                <TextField
-                  containerStyle={styles.inputContainer}
-                  style={[styles.input, { borderColor: colors.transparent }]}
-                  placeholder="Location"
-                  label="Location"
-                  value={job.location}
-                  onChangeText={(text) => setJob({ ...job, location: text })}
-                />
-                <TextField
-                  containerStyle={styles.inputContainer}
-                  style={[styles.input, { borderColor: colors.transparent }]}
-                  placeholder="Owner"
-                  label="Owner"
-                  value={job.owner}
-                  onChangeText={(text) => setJob({ ...job, owner: text })}
-                />
-                <TextField
-                  style={[styles.input, { borderColor: colors.transparent }]}
-                  containerStyle={styles.inputContainer}
-                  placeholder="Bid Price"
-                  label="Bid Price"
-                  value={job.bidPrice ? job.bidPrice.toString() : undefined}
-                  onChangeText={(text) => setJob({ ...job, bidPrice: parseFloat(text) })}
-                  keyboardType="numeric"
-                />
-                <View style={styles.dateContainer}>
-                  <TouchableOpacity activeOpacity={1} onPress={showStartDatePicker}>
-                    <Text txtSize="formLabel" text="Start Date" style={styles.inputLabel} />
-                    <TextInput
-                      readOnly={true}
-                      style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
-                      placeholder="Start Date"
-                      onPressIn={showStartDatePicker}
-                      value={job.startDate ? formatDate(job.startDate) : 'No date selected'}
-                    />
-                  </TouchableOpacity>
-                  <DateTimePickerModal
-                    style={{ alignSelf: 'stretch' }}
-                    date={job.startDate}
-                    isVisible={startDatePickerVisible}
-                    mode="date"
-                    onConfirm={handleStartDateConfirm}
-                    onCancel={hideStartDatePicker}
+    <SafeAreaView style={{ flex: 1 }}>
+      <View
+        style={[
+          styles.container,
+          styles.modalBackground,
+          { backgroundColor: colors.modalOverlayBackgroundColor },
+        ]}
+      >
+        <TouchableWithoutFeedback onPress={dismissKeyboard}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Edit Existing Job</Text>
+            <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.borderColor }}>
+              <TextField
+                style={[styles.input, { borderColor: colors.transparent }]}
+                label="Job Name"
+                placeholder="Job Name"
+                value={job.name}
+                onChangeText={(text) => setJob({ ...job, name: text })}
+              />
+              <TextField
+                containerStyle={styles.inputContainer}
+                style={[styles.input, { borderColor: colors.transparent }]}
+                placeholder="Location"
+                label="Location"
+                value={job.location}
+                onChangeText={(text) => setJob({ ...job, location: text })}
+              />
+              <TextField
+                containerStyle={styles.inputContainer}
+                style={[styles.input, { borderColor: colors.transparent }]}
+                placeholder="Owner"
+                label="Owner"
+                value={job.owner}
+                onChangeText={(text) => setJob({ ...job, owner: text })}
+              />
+              <TextField
+                style={[styles.input, { borderColor: colors.transparent }]}
+                containerStyle={styles.inputContainer}
+                placeholder="Bid Price"
+                label="Bid Price"
+                value={job.bidPrice ? job.bidPrice.toString() : undefined}
+                onChangeText={(text) => setJob({ ...job, bidPrice: parseFloat(text) })}
+                keyboardType="numeric"
+              />
+              <View style={styles.dateContainer}>
+                <TouchableOpacity activeOpacity={1} onPress={showStartDatePicker}>
+                  <Text txtSize="formLabel" text="Start Date" style={styles.inputLabel} />
+                  <TextInput
+                    readOnly={true}
+                    style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                    placeholder="Start Date"
+                    onPressIn={showStartDatePicker}
+                    value={job.startDate ? formatDate(job.startDate) : 'No date selected'}
                   />
+                </TouchableOpacity>
+                <DateTimePickerModal
+                  style={{ alignSelf: 'stretch' }}
+                  date={job.startDate}
+                  isVisible={startDatePickerVisible}
+                  mode="date"
+                  onConfirm={handleStartDateConfirm}
+                  onCancel={hideStartDatePicker}
+                />
 
-                  <TouchableOpacity activeOpacity={1} onPress={showFinishDatePicker}>
-                    <Text txtSize="formLabel" text="Finish Date" style={styles.inputLabel} />
-                    <TextInput
-                      readOnly={true}
-                      style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
-                      placeholder="Finish Date"
-                      onPressIn={showFinishDatePicker}
-                      value={job.startDate ? formatDate(job.finishDate) : 'No date selected'}
-                    />
-                  </TouchableOpacity>
-                  <DateTimePickerModal
-                    style={{ alignSelf: 'stretch', height: 200 }}
-                    date={job.finishDate}
-                    isVisible={finishDatePickerVisible}
-                    mode="date"
-                    onConfirm={handleFinishDateConfirm}
-                    onCancel={hideFinishDatePicker}
+                <TouchableOpacity activeOpacity={1} onPress={showFinishDatePicker}>
+                  <Text txtSize="formLabel" text="Finish Date" style={styles.inputLabel} />
+                  <TextInput
+                    readOnly={true}
+                    style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                    placeholder="Finish Date"
+                    onPressIn={showFinishDatePicker}
+                    value={job.startDate ? formatDate(job.finishDate) : 'No date selected'}
                   />
-                </View>
-                {job.latitude && job.longitude ? (
-                  <Text style={styles.inputLabel}>{`GPS Coordinates  (${job.latitude.toFixed(
-                    4,
-                  )}/${job.longitude.toFixed(4)})`}</Text>
-                ) : (
-                  <Text style={styles.inputLabel}>GPS Coordinates</Text>
-                )}
-                <View style={styles.gpsButtonContainer}>
-                  {hasLocationPermission && (
-                    <TouchableOpacity
-                      style={[styles.gpsButton, styles.gpsButtonLeft, { borderColor: colors.buttonBlue }]}
-                      onPress={handleSetCurrentGpsLocation}
-                    >
-                      <Text style={[styles.gpsButtonText, { color: colors.buttonBlue }]}>Use Current</Text>
-                    </TouchableOpacity>
-                  )}
-                  <TouchableOpacity
-                    style={[styles.gpsButton, styles.gpsButtonRight, { borderColor: colors.buttonBlue }]}
-                    onPress={handlePickGpsLocation}
-                  >
-                    <Text style={[styles.gpsButtonText, { color: colors.buttonBlue }]}>Select on Map</Text>
-                  </TouchableOpacity>
-                </View>
+                </TouchableOpacity>
+                <DateTimePickerModal
+                  style={{ alignSelf: 'stretch', height: 200 }}
+                  date={job.finishDate}
+                  isVisible={finishDatePickerVisible}
+                  mode="date"
+                  onConfirm={handleFinishDateConfirm}
+                  onCancel={hideFinishDatePicker}
+                />
               </View>
-              <View style={styles.saveButtonRow}>
-                <ActionButton
-                  style={styles.saveButton}
-                  onPress={handleSubmit}
-                  type={canAddJob ? 'ok' : 'disabled'}
-                  title="Save"
-                />
-
-                <ActionButton
-                  style={styles.cancelButton}
-                  onPress={() => {
-                    hideModal(false);
-                  }}
-                  type={'cancel'}
-                  title="Cancel"
-                />
+              {job.latitude && job.longitude ? (
+                <Text style={styles.inputLabel}>{`GPS Coordinates  (${job.latitude.toFixed(
+                  4,
+                )}/${job.longitude.toFixed(4)})`}</Text>
+              ) : (
+                <Text style={styles.inputLabel}>GPS Coordinates</Text>
+              )}
+              <View style={styles.gpsButtonContainer}>
+                {hasLocationPermission && (
+                  <TouchableOpacity
+                    style={[styles.gpsButton, styles.gpsButtonLeft, { borderColor: colors.buttonBlue }]}
+                    onPress={handleSetCurrentGpsLocation}
+                  >
+                    <Text style={[styles.gpsButtonText, { color: colors.buttonBlue }]}>Use Current</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={[styles.gpsButton, styles.gpsButtonRight, { borderColor: colors.buttonBlue }]}
+                  onPress={handlePickGpsLocation}
+                >
+                  <Text style={[styles.gpsButtonText, { color: colors.buttonBlue }]}>Select on Map</Text>
+                </TouchableOpacity>
               </View>
             </View>
-          </TouchableWithoutFeedback>
-        </View>
-      </SafeAreaView>
-    </Modal>
+            <View style={styles.saveButtonRow}>
+              <ActionButton
+                style={styles.saveButton}
+                onPress={handleSubmit}
+                type={canAddJob ? 'ok' : 'disabled'}
+                title="Save"
+              />
+
+              <ActionButton
+                style={styles.cancelButton}
+                onPress={() => {
+                  router.back();
+                }}
+                type={'cancel'}
+                title="Cancel"
+              />
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -443,4 +437,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EditJobModalScreen;
+export default EditJobScreen;

@@ -29,7 +29,6 @@ const JobCategoriesPage = () => {
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
   const colorScheme = useColorScheme();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
-  const [editJobId, setEditJobId] = useState<string | undefined>();
   const { jobDbHost } = useJobDb();
   const [job, setJob] = useState<Job>({
     jobId,
@@ -93,9 +92,9 @@ const JobCategoriesPage = () => {
   const handleMenuItemPress = useCallback(
     (menuItem: string, actionContext: any) => {
       setHeaderMenuModalVisible(false);
-      if (menuItem === 'Edit' && jobId) setEditJobId(jobId);
+      if (menuItem === 'Edit' && jobId) router.push(`/jobs/[jobId]/edit/${jobId}?jobName=${job.name}`);
     },
-    [jobId],
+    [jobId, job],
   );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
@@ -118,16 +117,8 @@ const JobCategoriesPage = () => {
     [colors],
   );
 
-  const hideEditJobModal = useCallback(
-    (success: boolean) => {
-      setEditJobId(undefined);
-      if (success) loadJobData();
-    },
-    [loadJobData],
-  );
-
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
       <View style={styles.container}>
         {Platform.OS === 'android' ? (
           <Stack.Screen
@@ -208,7 +199,6 @@ const JobCategoriesPage = () => {
         setModalVisible={setHeaderMenuModalVisible}
         buttons={rightHeaderMenuButtons}
       />
-      <EditJobModalScreen jobId={editJobId} hideModal={hideEditJobModal} />
     </SafeAreaView>
   );
 };
