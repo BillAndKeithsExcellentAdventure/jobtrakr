@@ -269,10 +269,12 @@ const styles = StyleSheet.create({
   },
   viewCenteringContainer: {
     flex: 1,
+    alignItems: 'center',
   },
   viewContentContainer: {
     padding: 0,
     flex: 1,
+    width: '100%',
     maxWidth: 550,
   },
   imageContentContainer: {

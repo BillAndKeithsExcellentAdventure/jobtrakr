@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   modalContainer: {
-    maxWidth: 400,
+    maxWidth: 550,
     width: '90%',
     padding: 10,
     borderRadius: 20,
