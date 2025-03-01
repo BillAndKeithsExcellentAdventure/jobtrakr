@@ -1,14 +1,14 @@
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useColorScheme } from '@/components/useColorScheme';
+import { SessionProvider } from '@/context/AuthSessionContext';
+import { DatabaseHostProvider } from '@/context/DatabaseContext';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Redirect, Stack, useRouter, useSegments } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-import { SessionProvider, useSession } from '@/context/AuthSessionContext';
-import { useColorScheme } from '@/components/useColorScheme';
-import { DatabaseHostProvider } from '@/context/DatabaseContext';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -52,7 +52,6 @@ function RootLayoutNav() {
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="index" />
               <Stack.Screen name="jobs" />
-              <Stack.Screen name="camera" />
               <Stack.Screen name="(auth)" />
             </Stack>
           </SafeAreaProvider>
