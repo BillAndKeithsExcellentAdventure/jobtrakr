@@ -18,6 +18,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const AddReceiptPage = () => {
   const defaultDate = new Date();
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
+
+  type JobReceipt = {
+    date: Date;
+    jobId: string;
+    amount: number;
+    vendor: string;
+    description: string;
+    notes: string;
+    categoryName: string;
+    subCategoryName: string;
+    pictureUri?: string;
+    albumId?: string;
+    assetId?: string;
+  };
+
   const initJobReceipt: JobReceipt = {
     jobId,
     date: defaultDate,
@@ -35,20 +50,6 @@ const AddReceiptPage = () => {
   const colorScheme = useColorScheme();
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [canAddReceipt, setCanAddReceipt] = useState(false);
-
-  type JobReceipt = {
-    date: Date;
-    jobId: string;
-    amount: number;
-    vendor: string;
-    description: string;
-    notes: string;
-    categoryName: string;
-    subCategoryName: string;
-    pictureUri?: string;
-    albumId?: string;
-    assetId?: string;
-  };
 
   const colors = useMemo(
     () =>
