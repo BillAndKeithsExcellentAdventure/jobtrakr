@@ -35,7 +35,7 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
   const [isSwiped, setIsSwiped] = useState(false); // Track if item is swiped for delete
 
   const onShowDetails = useCallback((item: ReceiptBucketData) => {
-    router.push(`/jobs/receipts/[jobId]/details/${item._id}`);
+    router.push(`/jobs/${item.JobId}/receipt/${item._id}`);
   }, []);
 
   // Gesture handler for the swipe action
@@ -161,7 +161,11 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
 };
 
 const JobReceiptsPage = () => {
-  const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
+  const { jobId, receiptId, jobName } = useLocalSearchParams<{
+    jobId: string;
+    receiptId: string;
+    jobName: string;
+  }>();
   const { jobDbHost } = useJobDb();
   const { receiptData, removeReceiptData, setReceiptData } = useReceiptDataStore();
 
@@ -186,7 +190,7 @@ const JobReceiptsPage = () => {
   }, []);
 
   const showPicture = useCallback((uri: string) => {
-    router.push(`/jobs/receipts/[jobId]/showImage/${jobId}?uri=${uri}`);
+    router.push(`/jobs/${jobId}/receipt/${receiptId}/showImage/?uri=${uri}`);
   }, []);
 
   const handleRemoveReceipt = useCallback(
@@ -228,7 +232,7 @@ const JobReceiptsPage = () => {
   );
 
   const handleAddReceipt = useCallback(() => {
-    router.push(`/jobs/receipts/[jobId]/add/${jobId}?jobName=${jobName}`);
+    router.push(`/jobs/${jobId}/receipt/add/?jobName=${jobName}`);
   }, []);
 
   return (

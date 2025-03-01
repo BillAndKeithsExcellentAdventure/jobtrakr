@@ -6,7 +6,7 @@ import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ShowReceiptPage = () => {
-  const { jobName, uri } = useLocalSearchParams<{ jobName: string; uri: string }>();
+  const { uri } = useLocalSearchParams<{ jobId: string; receiptId: string; uri: string }>();
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
