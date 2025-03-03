@@ -91,7 +91,8 @@ const JobCategoriesPage = () => {
   const handleMenuItemPress = useCallback(
     (menuItem: string, actionContext: any) => {
       setHeaderMenuModalVisible(false);
-      if (menuItem === 'Edit' && jobId) router.push(`/jobs/[jobId]/edit/${jobId}?jobName=${job.name}`);
+      if (menuItem === 'Edit' && jobId) router.push(`/jobs/${jobId}/edit/?jobName=${job.name}`);
+      //if (menuItem === 'Edit' && jobId) router.push(`/jobs/[jobId]/edit/${jobId}?jobName=${job.name}`);
     },
     [jobId, job],
   );

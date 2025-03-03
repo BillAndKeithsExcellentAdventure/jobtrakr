@@ -107,7 +107,7 @@ const AddJobScreen = () => {
           <ActionButton
             style={styles.cancelButton}
             onPress={() => {
-              hideModal(false);
+              router.back();
             }}
             type={'cancel'}
             title="Cancel"

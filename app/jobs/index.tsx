@@ -136,7 +136,7 @@ export default function JobHomeScreen() {
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
             if (actionContext && actionContext.entryId)
-              router.push(`/jobs/notes/${actionContext.entryId}?jobName=${actionContext.primaryTitle}`);
+              router.push(`/jobs/${actionContext.entryId}/notes/?jobName=${actionContext.primaryTitle}`);
           }
         },
       },
@@ -146,7 +146,7 @@ export default function JobHomeScreen() {
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
             if (actionContext && actionContext.entryId)
-              router.push(`/jobs/photos/${actionContext.entryId}?jobName=${actionContext.primaryTitle}`);
+              router.push(`/jobs/${actionContext.entryId}/photos/?jobName=${actionContext.primaryTitle}`);
           }
         },
       },
@@ -156,7 +156,7 @@ export default function JobHomeScreen() {
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
             if (actionContext && actionContext.entryId)
-              router.push(`/jobs/receipts/${actionContext.entryId}?jobName=${actionContext.primaryTitle}`);
+              router.push(`/jobs/${actionContext.entryId}/receipts/?jobName=${actionContext.primaryTitle}`);
           }
         },
       },
@@ -166,7 +166,7 @@ export default function JobHomeScreen() {
         label: 'Invoices',
         onPress: (e, actionContext) => {
           if (actionContext && actionContext.entryId)
-            router.push(`/jobs/invoices/${actionContext.entryId}?jobName=${actionContext.primaryTitle}`);
+            router.push(`/jobs/${actionContext.entryId}/invoices/?jobName=${actionContext.primaryTitle}`);
         },
       },
     ],
@@ -196,17 +196,11 @@ export default function JobHomeScreen() {
     [allJobs],
   );
 
-  const showJobModal = useCallback(() => setJobModalVisible(true), []);
-  const hideJobModal = useCallback(
-    (success: boolean) => {
-      setJobModalVisible(false);
-    },
-    [loadJobs],
-  );
-
   const handleMenuItemPress = useCallback((item: string, actionContext: any) => {
     setHeaderMenuModalVisible(false);
-    if (item === 'AddJob') showJobModal();
+    if (item === 'AddJob') {
+      router.push(`/jobs/add-job`);
+    }
   }, []);
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
