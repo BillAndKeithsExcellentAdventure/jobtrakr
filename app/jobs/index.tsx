@@ -111,9 +111,9 @@ export default function JobHomeScreen() {
         const status = await jobDbHost?.GetJobDB().UpdateJob(updatedJob);
         if (status === 'Success') {
           updateJob(updatedJob._id!, updatedJob); // update the jobDataStore
-          console.log('Job successfully updated:', updatedJob.Name);
+          logger.info('Job successfully updated:', updatedJob.Name);
         } else {
-          console.log('Job update failed:', updatedJob.Name);
+          logger.info('Job update failed:', updatedJob.Name);
         }
       }
     },
@@ -177,7 +177,7 @@ export default function JobHomeScreen() {
 
   React.useEffect(() => {
     const state = navigation.getState();
-    console.log('Current stack state:', state);
+    logger.info('Current stack state:', state);
   }, [navigation]);
 
   useEffect(() => {
@@ -186,14 +186,14 @@ export default function JobHomeScreen() {
 
   const router = useRouter();
   React.useEffect(() => {
-    console.log('Router output', router);
+    logger.info('Router output', router);
   }, [router]);
 
   const handleSelection = useCallback(
     (entry: TwoColumnListEntry) => {
       const job = allJobs.find((j) => (j._id ?? '') === entry.entryId);
       if (job && job._id) router.push(`/jobs/${job._id}`);
-      console.log(`Hello from item ${entry.primaryTitle}`);
+      logger.info(`Hello from item ${entry.primaryTitle}`);
     },
     [allJobs],
   );

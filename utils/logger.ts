@@ -40,7 +40,6 @@ export class Logger {
       await this.rotateLog();
       await FileSystem.writeAsStringAsync(this.logFile, message, {
         encoding: FileSystem.EncodingType.UTF8,
-        append: true,
       });
     } catch (error) {
       console.error('Failed to write to log file:', error);
