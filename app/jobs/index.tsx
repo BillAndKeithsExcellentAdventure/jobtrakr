@@ -33,7 +33,6 @@ function isEntry(obj: any): obj is TwoColumnListEntry {
 export default function JobHomeScreen() {
   const { allJobs, updateJob, setAllJobs } = useJobDataStore();
   const [jobListEntries, setJobListEntries] = useState<TwoColumnListEntry[]>([]);
-  const [jobModalVisible, setJobModalVisible] = useState(false);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const navigation = useNavigation();
   const { jobDbHost } = useJobDb();
