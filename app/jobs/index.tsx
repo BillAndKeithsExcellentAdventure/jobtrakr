@@ -146,7 +146,7 @@ export default function JobHomeScreen() {
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
             if (actionContext && actionContext.entryId)
-              router.push(`/jobs/photos/${actionContext.entryId}?jobName=${actionContext.primaryTitle}`);
+              router.push(`/jobs/${actionContext.entryId}/photos/?jobName=${actionContext.primaryTitle}`);
           }
         },
       },
