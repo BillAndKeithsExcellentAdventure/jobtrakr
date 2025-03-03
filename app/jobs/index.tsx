@@ -18,6 +18,8 @@ import { useJobDb } from '@/context/DatabaseContext';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useJobDataStore } from '@/stores/jobDataStore';
+import { ShareFile } from '@/utils/sharing';
+import logger from '@/logger.config';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -200,6 +202,9 @@ export default function JobHomeScreen() {
     setHeaderMenuModalVisible(false);
     if (item === 'AddJob') {
       router.push(`/jobs/add-job`);
+    } else if (item === 'ShareLog') {
+      logger.info('Sharing log file');
+      ShareFile(logger.getLogFilePath());
     }
   }, []);
 
@@ -210,6 +215,13 @@ export default function JobHomeScreen() {
         label: 'Add Job',
         onPress: (e, actionContext) => {
           handleMenuItemPress('AddJob', actionContext);
+        },
+      },
+      {
+        icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
+        label: 'Share Log',
+        onPress: (e, actionContext) => {
+          handleMenuItemPress('ShareLog', actionContext);
         },
       },
     ],

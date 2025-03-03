@@ -127,6 +127,30 @@ const JobPhotosPage = () => {
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
   const [isCameraVisible, setIsCameraVisible] = useState(false);
   const { updateJob } = useJobDataStore();
+  const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
+
+  useEffect(() => {
+    async function getPermissions() {
+      if (permissionResponse?.status !== 'granted') {
+        await requestPermission();
+      }
+
+      console.info('Initializing Media...');
+      const response = await MediaLibrary.requestPermissionsAsync(true);
+      if (response.status !== 'granted') {
+        console.error('Permission to access media library was denied');
+        return null;
+      }
+
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.error('Permission to access location was denied');
+        return null;
+      }
+    }
+
+    getPermissions();
+  }, []);
 
   useEffect(() => {
     async function loadMediaAssetsObj() {
@@ -156,25 +180,6 @@ const JobPhotosPage = () => {
 
     loadMedia(jobId);
   }, [jobId, jobDbHost]);
-
-  useEffect(() => {
-    async function getPermissions() {
-      console.info('Initializing Media...');
-      const response = await MediaLibrary.requestPermissionsAsync(true);
-      if (response.status !== 'granted') {
-        console.error('Permission to access media library was denied');
-        return null;
-      }
-
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        console.error('Permission to access location was denied');
-        return null;
-      }
-    }
-
-    getPermissions();
-  }, []);
 
   const OnStatusUpdate = useCallback(
     (status: string) => {
