@@ -65,13 +65,14 @@ const JobPhotosPage = () => {
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
   const [isCameraVisible, setIsCameraVisible] = useState(false);
   const { updateJob } = useJobDataStore();
+  const [hasSelectedAssets, setHasSelectedAssets] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadMediaAssetsObj() {
       console.log(`Loading MediaAssets object ${mediaTools.current}`);
       if (mediaTools.current === null) {
         mediaTools.current = new MediaAssets();
-        console.log('   instaniated MediaAssets object');
+        console.log('   instantiated MediaAssets object');
       }
     }
 
@@ -271,7 +272,7 @@ const JobPhotosPage = () => {
     if (foundAssets) {
       // Filter out assets that are already in jobAssets
       const filteredAssets = foundAssets.filter(
-        (foundAsset) => !jobAssets?.some((jobAsset) => jobAsset.id === foundAsset.id),
+        (foundAsset) => !jobAssets?.some((jobAsset) => jobAsset._id === foundAsset.id),
       );
 
       const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
@@ -347,8 +348,6 @@ const JobPhotosPage = () => {
       prevAssets?.map((item) => (item.asset.id === assetId ? { ...item, selected: !item.selected } : item)),
     );
   }, []);
-
-  const [hasSelectedAssets, setHasSelectedAssets] = useState<boolean>(false);
 
   useEffect(() => {
     if (assetItems) {
