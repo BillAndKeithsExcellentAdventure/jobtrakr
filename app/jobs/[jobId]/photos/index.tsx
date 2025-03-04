@@ -1,6 +1,8 @@
 import { JobCameraView } from '@/app/(modals)/CameraView';
 import { ActionButton } from '@/components/ActionButton';
+import { ActionButtonProps } from '@/components/ButtonBar';
 import { ImageViewerModal } from '@/components/ImageViewerModal';
+import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Switch } from '@/components/Switch';
 import { Text, View } from '@/components/Themed';
@@ -11,7 +13,7 @@ import { useJobDb } from '@/context/DatabaseContext';
 import { useJobDataStore } from '@/stores/jobDataStore';
 import { ShareFile } from '@/utils/sharing';
 import { CreateMediaZip } from '@/utils/zip';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Entypo } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import * as FileSystem from 'expo-file-system';
 import * as Location from 'expo-location';
@@ -44,70 +46,6 @@ type AssetsItem = {
 let gAssetItems: AssetsItem[] = [];
 let gJobAssetItems: AssetsItem[] = [];
 
-function HomeScreenModalMenu({
-  modalVisible,
-  setModalVisible,
-  onMenuItemPress,
-}: {
-  modalVisible: boolean;
-  setModalVisible: (val: boolean) => void;
-  onMenuItemPress: (item: string) => void;
-}) {
-  const handleMenuItemPress = (item: string): void => {
-    console.log(`${item} pressed`);
-    setModalVisible(false); // Close the modal after selecting an item
-    onMenuItemPress(item);
-  };
-
-  const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            screenBackground: Colors.dark.background,
-            separatorColor: Colors.dark.separatorColor,
-            modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
-          }
-        : {
-            screenBackground: Colors.light.background,
-            separatorColor: Colors.light.separatorColor,
-            modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
-          },
-    [colorScheme],
-  );
-
-  const topMargin = Platform.OS === 'ios' ? 110 : 50;
-
-  return (
-    <SafeAreaView>
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)} // Close on back press
-      >
-        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-          <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
-            <View
-              style={[
-                styles.modalContent,
-                { backgroundColor: colors.screenBackground, marginTop: topMargin },
-              ]}
-            >
-              <TouchableOpacity
-                onPress={() => handleMenuItemPress('AddPhotos')}
-                style={[styles.menuItem, { borderBottomColor: colors.separatorColor }]}
-              >
-                <Text style={styles.menuText}>Add Photos</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-    </SafeAreaView>
-  );
-}
-
 const JobPhotosPage = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
   const [jobAssets, setJobAssets] = useState<AssetsItem[] | undefined>(undefined);
@@ -120,7 +58,7 @@ const JobPhotosPage = () => {
   const [showAssetItems, setShowAssetItems] = useState<boolean>(false);
   const [loadingNearest, setLoadingNearest] = useState<boolean>(false);
   const colorScheme = useColorScheme();
-  const [menuModalVisible, setMenuModalVisible] = useState<boolean>(false);
+  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
@@ -469,12 +407,26 @@ const JobPhotosPage = () => {
     [colorScheme],
   );
 
+  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
+    () => [
+      {
+        icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
+        label: 'Add Photos',
+        onPress: () => {
+          handleMenuItemPress('AddPhotos');
+        },
+      },
+    ],
+    [colors],
+  );
+
   const handleMenuItemPress = useCallback(
     (item: string) => {
       if (item === 'AddPhotos') {
         setUseJobLocation(false);
         OnLoadPhotosClicked(false);
       }
+      setHeaderMenuModalVisible(false);
     },
     [useJobLocation, OnLoadPhotosClicked],
   );
@@ -570,7 +522,7 @@ const JobPhotosPage = () => {
                 headerRight={() => (
                   <Pressable
                     onPress={() => {
-                      setMenuModalVisible(!menuModalVisible);
+                      setHeaderMenuModalVisible(!headerMenuModalVisible);
                     }}
                   >
                     {({ pressed }) => (
@@ -595,7 +547,7 @@ const JobPhotosPage = () => {
             headerRight: () => (
               <Pressable
                 onPress={() => {
-                  setMenuModalVisible(!menuModalVisible);
+                  setHeaderMenuModalVisible(!headerMenuModalVisible);
                 }}
               >
                 {({ pressed }) => (
@@ -817,11 +769,13 @@ const JobPhotosPage = () => {
             </View>
           </>
         )}
-        <HomeScreenModalMenu
-          modalVisible={menuModalVisible}
-          setModalVisible={setMenuModalVisible}
-          onMenuItemPress={handleMenuItemPress}
-        />
+        {headerMenuModalVisible && (
+          <RightHeaderMenu
+            modalVisible={headerMenuModalVisible}
+            setModalVisible={setHeaderMenuModalVisible}
+            buttons={rightHeaderMenuButtons}
+          />
+        )}
       </View>
       {selectedImage && (
         <ImageViewerModal
