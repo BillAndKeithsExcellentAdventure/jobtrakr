@@ -19,6 +19,9 @@
       "buildNumber": "1.0.0",
       "config": {
         "googleMapsApiKey": "AIzaSyBac7r0lXImLW3HkBExNDmEzVJpxXDMLUg"
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
