@@ -1,6 +1,7 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import { SessionProvider } from '@/context/AuthSessionContext';
 import { DatabaseHostProvider } from '@/context/DatabaseContext';
+import { LoggerHostProvider } from '@/context/LoggerContext';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -48,13 +49,15 @@ function RootLayoutNav() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <SessionProvider>
         <DatabaseHostProvider>
-          <SafeAreaProvider>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="jobs" />
-              <Stack.Screen name="(auth)" />
-            </Stack>
-          </SafeAreaProvider>
+          <LoggerHostProvider>
+            <SafeAreaProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="jobs" />
+                <Stack.Screen name="(auth)" />
+              </Stack>
+            </SafeAreaProvider>
+          </LoggerHostProvider>
         </DatabaseHostProvider>
       </SessionProvider>
     </ThemeProvider>

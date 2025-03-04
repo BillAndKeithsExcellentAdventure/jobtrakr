@@ -1,0 +1,117 @@
+import React, {
+  createContext,
+  useContext,
+  ReactNode,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from 'react';
+import { DBLogger } from 'jobdb';
+import { useSession } from './AuthSessionContext';
+import { ShareFile } from '@/utils/sharing';
+
+// Define the context and its types
+interface LoggerContextType {
+  shareLogFile: () => void;
+  logError: (msg: string) => void;
+  logInfo: (msg: string) => void;
+  logWarn: (msg: string) => void;
+}
+
+// Create the context
+const LoggerContext = createContext<LoggerContextType>({
+  shareLogFile: () => null,
+  logError: (msg: string) => null,
+  logInfo: (msg: string) => null,
+  logWarn: (msg: string) => null,
+});
+
+// Define the provider component
+interface LoggerHostProviderProps {
+  children: ReactNode;
+}
+
+export const LoggerHostProvider: React.FC<LoggerHostProviderProps> = ({ children }) => {
+  const [dbLoggerHost, setDbLoggerHost] = useState<DBLogger | null>(null);
+  const dbLoggerRef = useRef<DBLogger | null>(null); // Add this line
+  const { sessionUser } = useSession();
+  const replaceDatabase = useRef<boolean>(false);
+
+  // Update the initialization effect
+  useEffect(() => {
+    async function initDb() {
+      console.info('Initializing Logging DB...');
+      const dbHost = new DBLogger();
+      const status = await dbHost.OpenDatabase(replaceDatabase.current);
+      if (status === 'Success') {
+        if (replaceDatabase.current) replaceDatabase.current = false;
+        console.info(`DBLogger Initialized. File: ${dbHost.GetLogFileName()}`);
+        dbLoggerRef.current = dbHost; // Store in ref
+        setDbLoggerHost(dbHost);
+      } else {
+        console.error(`Failed to initialize DBLogger: ${status}`);
+        dbLoggerRef.current = null;
+        setDbLoggerHost(null);
+      }
+    }
+
+    if (sessionUser && sessionUser.userId > 0) {
+      console.info('Initializing DB for user:', sessionUser.userId);
+      initDb();
+    }
+
+    // Cleanup function
+    return () => {
+      console.info('Cleaning up DBLogger...');
+      if (dbLoggerRef.current) {
+        console.info('Closing logger connection...');
+        dbLoggerRef.current = null;
+        setDbLoggerHost(null);
+      }
+    };
+  }, [sessionUser]);
+
+  // Modified share function
+  const handleShareLogFile = useCallback(async () => {
+    console.info('Starting handleShareLogFile...');
+    console.info('Current dbLoggerHost:', dbLoggerRef.current?.GetLogFileName());
+
+    const logger = dbLoggerRef.current;
+    if (!logger) {
+      console.error('DBLogger is null or undefined');
+      return;
+    }
+
+    try {
+      console.info(`Attempting to share log file: ${logger.GetLogFileName()}`);
+      await logger.Share();
+      console.info('Log file shared successfully');
+    } catch (error) {
+      console.error('Error sharing log file:', error);
+    }
+  }, []); // Remove dbLoggerHost dependency since we're using ref
+
+  // Modified provider value
+  const contextValue = useMemo(
+    () => ({
+      shareLogFile: handleShareLogFile,
+      logError: (msg: string) => dbLoggerRef.current?.InsertLog('Error', msg),
+      logInfo: (msg: string) => dbLoggerRef.current?.InsertLog('Info', msg),
+      logWarn: (msg: string) => dbLoggerRef.current?.InsertLog('Warn', msg),
+    }),
+    [handleShareLogFile],
+  );
+
+  return <LoggerContext.Provider value={contextValue}>{children}</LoggerContext.Provider>;
+};
+
+// Define the custom hook to use the database
+export const useDbLogger = (): LoggerContextType => {
+  const context = useContext(LoggerContext);
+  if (!context) {
+    throw new Error('useDbLogger must be used within a LoggerProvider');
+  }
+  return context;
+};

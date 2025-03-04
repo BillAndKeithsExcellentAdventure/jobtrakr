@@ -19,7 +19,7 @@ import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useJobDataStore } from '@/stores/jobDataStore';
 import { ShareFile } from '@/utils/sharing';
-import logger from '@/logger.config';
+import { useDbLogger } from '@/context/LoggerContext';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -39,6 +39,7 @@ export default function JobHomeScreen() {
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const navigation = useNavigation();
   const { jobDbHost } = useJobDb();
+  const { logInfo, shareLogFile } = useDbLogger();
   const colorScheme = useColorScheme();
 
   // Define colors based on the color scheme (dark or light)
@@ -111,13 +112,13 @@ export default function JobHomeScreen() {
         const status = await jobDbHost?.GetJobDB().UpdateJob(updatedJob);
         if (status === 'Success') {
           updateJob(updatedJob._id!, updatedJob); // update the jobDataStore
-          logger.info('Job successfully updated:', updatedJob.Name);
+          logInfo('Job successfully updated:', updatedJob.Name);
         } else {
-          logger.info('Job update failed:', updatedJob.Name);
+          logInfo('Job update failed:', updatedJob.Name);
         }
       }
     },
-    [allJobs, jobDbHost, loadJobs],
+    [allJobs, jobDbHost, loadJobs, logInfo],
   );
 
   const jobActionButtons: ActionButtonProps[] = useMemo(
@@ -177,8 +178,8 @@ export default function JobHomeScreen() {
 
   React.useEffect(() => {
     const state = navigation.getState();
-    logger.info('Current stack state:', state);
-  }, [navigation]);
+    logInfo(`Current stack state: ${state}`);
+  }, [navigation, logInfo]);
 
   useEffect(() => {
     loadJobs();
@@ -186,27 +187,31 @@ export default function JobHomeScreen() {
 
   const router = useRouter();
   React.useEffect(() => {
-    logger.info('Router output', router);
+    logInfo(`Router output ${router}`);
   }, [router]);
 
   const handleSelection = useCallback(
     (entry: TwoColumnListEntry) => {
       const job = allJobs.find((j) => (j._id ?? '') === entry.entryId);
       if (job && job._id) router.push(`/jobs/${job._id}`);
-      logger.info(`Hello from item ${entry.primaryTitle}`);
+      logInfo(`Hello from item ${entry.primaryTitle}`);
     },
     [allJobs],
   );
 
-  const handleMenuItemPress = useCallback((item: string, actionContext: any) => {
-    setHeaderMenuModalVisible(false);
-    if (item === 'AddJob') {
-      router.push(`/jobs/add-job`);
-    } else if (item === 'ShareLog') {
-      logger.info('Sharing log file');
-      ShareFile(logger.getLogFilePath());
-    }
-  }, []);
+  const handleMenuItemPress = useCallback(
+    (item: string, actionContext: any) => {
+      setHeaderMenuModalVisible(false);
+      if (item === 'AddJob') {
+        router.push(`/jobs/add-job`);
+      } else if (item === 'ShareLog') {
+        console.log('Sharing log file...');
+        shareLogFile();
+        console.log('Log file shared');
+      }
+    },
+    [shareLogFile, logInfo],
+  );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
