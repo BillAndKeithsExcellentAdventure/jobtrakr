@@ -1,5 +1,4 @@
 import { ActionButton } from '@/components/ActionButton';
-import { ImageViewerScreen } from '@/components/ImageViewerScreen';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
@@ -10,7 +9,7 @@ import { FlashList } from '@shopify/flash-list';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Platform, Pressable, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import { Alert, Image, Platform, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import {
   GestureHandlerRootView,
   PanGestureHandler,
@@ -190,6 +189,7 @@ const JobReceiptsPage = () => {
   }, []);
 
   const showPicture = useCallback((uri: string) => {
+    console.log(`show uri ${uri}`);
     router.push(`/jobs/${jobId}/receipt/${receiptId}/showImage/?uri=${uri}`);
   }, []);
 
