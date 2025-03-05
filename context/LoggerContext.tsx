@@ -35,8 +35,11 @@ interface LoggerHostProviderProps {
 }
 
 export const LoggerHostProvider: React.FC<LoggerHostProviderProps> = ({ children }) => {
-  const [dbLoggerHost, setDbLoggerHost] = useState<DBLogger | null>(null);
   const dbLoggerRef = useRef<DBLogger | null>(null); // Add this line
+
+  // DO NOT REMOVE. Using the setDBLoggerHost function after the dbHost below is initialized will prevent
+  //                it from being garbage collected.
+  const [dbLoggerHost, setDbLoggerHost] = useState<DBLogger | null>(null);
   const { sessionUser } = useSession();
   const replaceDatabase = useRef<boolean>(false);
 
@@ -56,7 +59,6 @@ export const LoggerHostProvider: React.FC<LoggerHostProviderProps> = ({ children
       } else {
         console.error(`Failed to initialize DBLogger: ${status}`);
         dbLoggerRef.current = null;
-        setDbLoggerHost(null);
       }
     }
 
@@ -71,7 +73,6 @@ export const LoggerHostProvider: React.FC<LoggerHostProviderProps> = ({ children
       if (dbLoggerRef.current) {
         console.info('Closing logger connection...');
         dbLoggerRef.current = null;
-        setDbLoggerHost(null);
       }
     };
   }, [sessionUser]);

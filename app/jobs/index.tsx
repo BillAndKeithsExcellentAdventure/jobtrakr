@@ -69,6 +69,7 @@ export default function JobHomeScreen() {
   const loadJobs = useCallback(async () => {
     const today = new Date();
     const result = await jobDbHost?.GetJobDB().FetchAllJobs();
+    console.log('Fetched jobs:', result?.status);
     const jobs = result ? result.jobs : [];
     setAllJobs(jobs); // update the jobDataStore
   }, [jobDbHost]);
@@ -198,8 +199,14 @@ export default function JobHomeScreen() {
     [allJobs],
   );
 
+  const handleJobDbShare = useCallback(async () => {
+    console.log(`Sharing job db file... ${jobDbHost}`);
+    await jobDbHost?.Share();
+    console.log('Job db file shared');
+  }, [jobDbHost]);
+
   const handleMenuItemPress = useCallback(
-    (item: string, actionContext: any) => {
+    async (item: string, actionContext: any) => {
       setHeaderMenuModalVisible(false);
       if (item === 'AddJob') {
         router.push(`/jobs/add-job`);
@@ -207,6 +214,8 @@ export default function JobHomeScreen() {
         console.log('Sharing log file...');
         shareLogFile();
         console.log('Log file shared');
+      } else if (item === 'ShareJobDb') {
+        handleJobDbShare();
       }
     },
     [shareLogFile, logInfo],
@@ -219,6 +228,13 @@ export default function JobHomeScreen() {
         label: 'Add Job',
         onPress: (e, actionContext) => {
           handleMenuItemPress('AddJob', actionContext);
+        },
+      },
+      {
+        icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
+        label: 'Share Job DB',
+        onPress: (e, actionContext) => {
+          handleMenuItemPress('ShareJobDb', actionContext);
         },
       },
       {
