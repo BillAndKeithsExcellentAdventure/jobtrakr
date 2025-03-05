@@ -140,7 +140,7 @@ const JobReceiptsPage = () => {
     jobName: string;
   }>();
   const { jobDbHost } = useJobDb();
-  const { receiptData, removeReceiptData, setReceiptData } = useReceiptDataStore();
+  const { allJobReceipts: receiptData, removeReceiptData, setReceiptData } = useReceiptDataStore();
 
   const fetchReceipts = useCallback(async () => {
     try {
@@ -253,14 +253,6 @@ export const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     maxWidth: 550,
-  },
-  imageContentContainer: {
-    marginRight: 10,
-    width: 120,
-    maxHeight: 110,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   itemContainer: {
     flexDirection: 'row',

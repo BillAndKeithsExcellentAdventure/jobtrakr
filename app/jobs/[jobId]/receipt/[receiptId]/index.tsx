@@ -1,15 +1,18 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Text, TextInput, View } from '@/components/Themed';
-import { Stack, useLocalSearchParams } from 'expo-router';
-import { useJobDb } from '@/context/DatabaseContext';
-import { ReceiptBucketData } from 'jobdb';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { NumberInputField } from '@/components/NumberInputField';
+import { ReceiptSummary } from '@/components/ReceiptSummary';
 import { TextField } from '@/components/TextField';
-import { StyleSheet } from 'react-native';
+import { View } from '@/components/Themed';
+import { Colors } from '@/constants/Colors';
+import { useJobDb } from '@/context/DatabaseContext';
+import { useReceiptDataStore } from '@/stores/receiptDataStore';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { ReceiptBucketData } from 'jobdb';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Platform, StyleSheet, useColorScheme } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ReceiptDetailsPage = () => {
   const { receiptId } = useLocalSearchParams<{ receiptId: string }>();
+  const { allJobReceipts } = useReceiptDataStore();
   const { jobDbHost } = useJobDb();
   const [receipt, setReceipt] = useState<ReceiptBucketData>({
     _id: '',
@@ -29,78 +32,79 @@ const ReceiptDetailsPage = () => {
 
   const fetchReceipt = useCallback(async () => {
     try {
-      const response = await jobDbHost?.GetReceiptBucketDB().FetchJobReceipt(receiptId);
+      const match = allJobReceipts.find((r) => r._id === receiptId);
+      if (!match) return;
 
-      if (!response) return;
-
-      if (response.status === 'Success' && response.data) {
+      if (match) {
         setReceipt((prevReceipt) => ({
           ...prevReceipt,
-          ...response.data,
+          ...match,
         }));
       }
     } catch (err) {
       alert(`An error occurred while fetching the receipt with _id=${receiptId}`);
       console.log('An error occurred while fetching the receipt', err);
     }
-  }, [receiptId, jobDbHost]);
+  }, [receiptId, jobDbHost, allJobReceipts]);
 
   // Fetch receipts for the given job and user
   useEffect(() => {
     fetchReceipt();
-  }, []);
+  }, [allJobReceipts]);
+
+  const showPicture = useCallback(
+    (uri: string) => {
+      router.push(`/jobs/${receipt.JobId}/receipt/${receiptId}/showImage/?uri=${uri}`);
+    },
+    [receipt, receiptId],
+  );
+
+  const editDetails = useCallback(
+    (item: ReceiptBucketData) => {
+      router.push(`/jobs/${receipt.JobId}/receipt/${receiptId}/edit`);
+    },
+    [receipt, receiptId],
+  );
+
+  const colorScheme = useColorScheme();
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            separatorColor: Colors.dark.separatorColor,
+            listBackground: Colors.dark.listBackground,
+            itemBackground: Colors.dark.itemBackground,
+            shadowColor: Colors.dark.shadowColor,
+            boxShadow: Colors.dark.boxShadow,
+            borderColor: Colors.dark.borderColor,
+          }
+        : {
+            separatorColor: Colors.light.separatorColor,
+            listBackground: Colors.light.listBackground,
+            itemBackground: Colors.light.itemBackground,
+            shadowColor: Colors.light.shadowColor,
+            boxShadow: Colors.light.boxShadow,
+            borderColor: Colors.light.borderColor,
+          },
+    [colorScheme],
+  );
+
+  const boxShadow = Platform.OS === 'web' ? colors.boxShadow : undefined;
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen options={{ title: 'Receipt Details', headerShown: true }} />
+      <View
+        style={[
+          styles.itemContainer,
+          { backgroundColor: colors.itemBackground },
+          { backgroundColor: colors.itemBackground, shadowColor: colors.shadowColor, boxShadow },
+        ]}
+      >
+        <ReceiptSummary item={receipt} onShowDetails={editDetails} onShowPicture={showPicture} />
+      </View>
+
       <View style={styles.container}>
-        <NumberInputField
-          style={styles.inputContainer}
-          label="Amount"
-          value={receipt.Amount!}
-          onChange={function (value: number): void {
-            setReceipt((prevReceipt) => ({
-              ...prevReceipt,
-              Amount: value,
-            }));
-          }}
-        />
-        <TextField
-          containerStyle={styles.inputContainer}
-          placeholder="Vendor"
-          label="Vendor"
-          value={receipt.Vendor}
-          onChangeText={(text): void => {
-            setReceipt((prevReceipt) => ({
-              ...prevReceipt,
-              Vendor: text,
-            }));
-          }}
-        />
-        <TextField
-          containerStyle={styles.inputContainer}
-          placeholder="Description"
-          label="Description"
-          value={receipt.Description}
-          onChangeText={(text): void => {
-            setReceipt((prevReceipt) => ({
-              ...prevReceipt,
-              Description: text,
-            }));
-          }}
-        />
-        <TextField
-          containerStyle={styles.inputContainer}
-          placeholder="Notes"
-          label="Notes"
-          value={receipt.Notes}
-          onChangeText={(text): void => {
-            setReceipt((prevReceipt) => ({
-              ...prevReceipt,
-              Notes: text,
-            }));
-          }}
-        />
         <TextField
           containerStyle={styles.inputContainer}
           placeholder="Category"
@@ -128,5 +132,17 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginTop: 6,
+  },
+  itemContainer: {
+    flexDirection: 'row',
+    margin: 20,
+    marginHorizontal: 10,
+    borderRadius: 15,
+    elevation: 20, // Adds shadow effect for Android
+    shadowOffset: { width: 2, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    padding: 10,
+    height: 100,
   },
 });
