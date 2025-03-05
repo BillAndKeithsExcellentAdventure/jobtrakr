@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Text, TextInput, View } from '@/components/Themed';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { View } from '@/components/Themed';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useJobDb } from '@/context/DatabaseContext';
 import { ReceiptBucketData } from 'jobdb';
@@ -7,7 +7,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NumberInputField } from '@/components/NumberInputField';
 import { TextField } from '@/components/TextField';
 import { StyleSheet } from 'react-native';
-import { ReceiptSummary } from '@/components/ReceiptSummary';
 import { useReceiptDataStore } from '@/stores/receiptDataStore';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
@@ -16,7 +15,6 @@ import { ActionButton } from '@/components/ActionButton';
 const EditReceiptDetailsPage = () => {
   const { receiptId } = useLocalSearchParams<{ receiptId: string }>();
   const { allJobReceipts, updateReceiptData } = useReceiptDataStore();
-  const numberInputRef = useRef(null); // Create a ref to access the child component
 
   const { jobDbHost } = useJobDb();
   const [receipt, setReceipt] = useState<ReceiptBucketData>({
@@ -82,10 +80,6 @@ const EditReceiptDetailsPage = () => {
   );
 
   const handleSubmit = useCallback(async () => {
-    if (numberInputRef.current) {
-      numberInputRef.current.apply(); // Call the apply method on the child component
-    }
-
     if (receipt._id) {
       const status = await jobDbHost?.GetReceiptBucketDB().UpdateReceipt(receipt);
       if (status === 'Success') {
@@ -104,7 +98,6 @@ const EditReceiptDetailsPage = () => {
       <View style={[styles.container, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
         <View style={styles.editContainer}>
           <NumberInputField
-            ref={numberInputRef}
             style={styles.inputContainer}
             label="Amount"
             value={receipt.Amount!}
