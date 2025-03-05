@@ -15,6 +15,7 @@ import { ShareFile } from '@/utils/sharing';
 // Define the context and its types
 interface LoggerContextType {
   shareLogFile: () => void;
+  removeOld: (numDays: number) => void;
   logError: (msg: string) => void;
   logInfo: (msg: string) => void;
   logWarn: (msg: string) => void;
@@ -23,6 +24,7 @@ interface LoggerContextType {
 // Create the context
 const LoggerContext = createContext<LoggerContextType>({
   shareLogFile: () => null,
+  removeOld: (numDays: number) => null,
   logError: (msg: string) => null,
   logInfo: (msg: string) => null,
   logWarn: (msg: string) => null,
@@ -50,6 +52,8 @@ export const LoggerHostProvider: React.FC<LoggerHostProviderProps> = ({ children
         console.info(`DBLogger Initialized. File: ${dbHost.GetLogFileName()}`);
         dbLoggerRef.current = dbHost; // Store in ref
         setDbLoggerHost(dbHost);
+
+        await dbHost.RemoveOld(3);
       } else {
         console.error(`Failed to initialize DBLogger: ${status}`);
         dbLoggerRef.current = null;
@@ -93,10 +97,27 @@ export const LoggerHostProvider: React.FC<LoggerHostProviderProps> = ({ children
     }
   }, []); // Remove dbLoggerHost dependency since we're using ref
 
+  const handleRemoveOld = useCallback(async (numDays: number) => {
+    console.info('Starting removeOld...');
+
+    const logger = dbLoggerRef.current;
+    if (!logger) {
+      console.error('DBLogger is null or undefined');
+      return;
+    }
+
+    try {
+      await logger.RemoveOld(numDays);
+    } catch (error) {
+      console.error('Error removing old log entries:', error);
+    }
+  }, []); // Remove dbLoggerHost dependency since we're using ref
+
   // Modified provider value
   const contextValue = useMemo(
     () => ({
       shareLogFile: handleShareLogFile,
+      removeOld: (numDays: number) => handleRemoveOld(numDays),
       logError: (msg: string) => dbLoggerRef.current?.InsertLog('Error', msg),
       logInfo: (msg: string) => dbLoggerRef.current?.InsertLog('Info', msg),
       logWarn: (msg: string) => dbLoggerRef.current?.InsertLog('Warn', msg),
