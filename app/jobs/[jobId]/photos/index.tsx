@@ -231,8 +231,10 @@ const JobPhotosPage = () => {
       const assets = createPictureBucketDataArray(jobAssets);
       await await logInfo(` Creating zip file with ${assets.length} assets`);
       try {
-        await CreateMediaZip(assets, zipFileName);
-        await ShareFile(zipPath);
+        const zipfiles = await CreateMediaZip(assets, zipFileName);
+        for (const file of zipfiles) {
+          await ShareFile(file);
+        }
       } catch (error) {
         await logError(`Error creating/sharing zip file: ${error}`);
       }
