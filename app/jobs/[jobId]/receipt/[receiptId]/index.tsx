@@ -53,7 +53,6 @@ const ReceiptDetailsPage = () => {
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen options={{ title: 'Receipt Details', headerShown: true }} />
-
       <View style={styles.container}>
         <NumberInputField
           style={styles.inputContainer}

@@ -23,7 +23,8 @@ export const NumberInputField: React.FC<NumberInputFieldProps> = ({
   readOnly = false,
   style = {},
 }) => {
-  const [inputValue, setInputValue] = useState(value.toFixed(2));
+  const zero = 0;
+  const [inputValue, setInputValue] = useState(value ? value.toFixed(2) : zero.toFixed(2));
   const inputRef = useRef<TextInput>(null);
   const colorScheme = useColorScheme();
 

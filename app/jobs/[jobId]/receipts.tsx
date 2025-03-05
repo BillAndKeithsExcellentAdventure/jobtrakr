@@ -4,12 +4,11 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { useReceiptDataStore } from '@/stores/receiptDataStore';
-import { formatCurrency } from '@/utils/formatters';
 import { FlashList } from '@shopify/flash-list';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Platform, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import { Alert, Platform, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import {
   GestureHandlerRootView,
   PanGestureHandler,
@@ -17,6 +16,7 @@ import {
 } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ReceiptSummary } from '@/components/MyReceiptSummary';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
   return actionContext && typeof actionContext.PictureUri === 'string';
@@ -119,33 +119,7 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
         <Animated.View
           style={[animatedStyle, { width: '100%' }]} // Apply animated style here
         >
-          <View style={[styles.container, { flexDirection: 'row' }]}>
-            <View style={styles.imageContentContainer}>
-              {item.PictureUri ? (
-                <TouchableWithoutFeedback onPress={() => onShowPicture(item.PictureUri!)}>
-                  <Image source={{ uri: item.PictureUri }} style={{ height: 80, width: 120 }} />
-                </TouchableWithoutFeedback>
-              ) : (
-                <Text txtSize="sub-title">No Image</Text>
-              )}
-            </View>
-            <View style={[styles.detailsContentContainer, !!!item.Amount && { alignItems: 'center' }]}>
-              <TouchableWithoutFeedback onPress={() => onShowDetails(item)}>
-                {item.Amount ? (
-                  <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text>Amount: {formatCurrency(item.Amount)}</Text>
-                    <Text>Vendor: {item.Vendor}</Text>
-                    <Text>Description: {item.Description}</Text>
-                    {item.Notes && <Text>Notes: {item.Notes}</Text>}
-                  </View>
-                ) : (
-                  <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text txtSize="sub-title">No details</Text>
-                  </View>
-                )}
-              </TouchableWithoutFeedback>
-            </View>
-          </View>
+          <ReceiptSummary item={item} onShowPicture={onShowPicture} onShowDetails={onShowDetails} />
         </Animated.View>
       </PanGestureHandler>
       {isSwiped && (
@@ -266,7 +240,7 @@ const JobReceiptsPage = () => {
   );
 };
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -287,10 +261,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  detailsContentContainer: {
-    flex: 1,
-    alignItems: 'flex-start',
   },
   itemContainer: {
     flexDirection: 'row',
