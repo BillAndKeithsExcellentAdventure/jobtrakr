@@ -1,4 +1,4 @@
-import { ImageViewerScreen } from '@/components/ImageViewerScreen';
+import { ZoomImageViewer } from '@/components/ZoomImageViewer';
 import { View } from '@/components/Themed';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
@@ -7,12 +7,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ShowReceiptPage = () => {
   const { uri } = useLocalSearchParams<{ jobId: string; receiptId: string; uri: string }>();
-
+  console.log(`useLocalSearchParams uri=${uri}`);
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <View style={styles.container}>
         <Stack.Screen options={{ title: `Receipt Image`, headerShown: true }} />
-        <ImageViewerScreen imageUri={uri} onClose={() => router.back()} />
+        <ZoomImageViewer imageUri={uri} />
       </View>
     </SafeAreaView>
   );
