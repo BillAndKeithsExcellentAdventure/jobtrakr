@@ -1,16 +1,15 @@
+import { DBLogger } from 'jobdb';
 import React, {
   createContext,
-  useContext,
   ReactNode,
-  useState,
-  useEffect,
-  useRef,
   useCallback,
+  useContext,
+  useEffect,
   useMemo,
+  useRef,
+  useState,
 } from 'react';
-import { DBLogger } from 'jobdb';
 import { useSession } from './AuthSessionContext';
-import { ShareFile } from '@/utils/sharing';
 
 // Define the context and its types
 interface LoggerContextType {

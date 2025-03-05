@@ -1,7 +1,6 @@
 import { JobCameraView } from '@/app/(modals)/CameraView';
 import { ActionButton } from '@/components/ActionButton';
 import { ActionButtonProps } from '@/components/ButtonBar';
-import { ImageViewerModal } from '@/components/ImageViewerModal';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Switch } from '@/components/Switch';
@@ -14,10 +13,9 @@ import { useDbLogger } from '@/context/LoggerContext';
 import { useJobDataStore } from '@/stores/jobDataStore';
 import { ShareFile } from '@/utils/sharing';
 import { CreateMediaZip } from '@/utils/zip';
-import { Ionicons, Entypo } from '@expo/vector-icons';
+import { Entypo, Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import * as FileSystem from 'expo-file-system';
-import * as Location from 'expo-location';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { MediaAssets } from 'jobmedia';
@@ -27,12 +25,10 @@ import {
   Alert,
   Button,
   Image,
-  Modal,
   Platform,
   Pressable,
   StyleSheet,
   TouchableOpacity,
-  TouchableWithoutFeedback,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -51,7 +47,6 @@ const JobPhotosPage = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
   const [jobAssets, setJobAssets] = useState<AssetsItem[] | undefined>(undefined);
   const [assetItems, setAssetItems] = useState<AssetsItem[] | undefined>(undefined);
-  // const [mediaAssets, setMediaAssets] = useState<MediaAssets | null>(null);
   const mediaTools = useRef<MediaAssets | null>(null);
   const [fetchStatus, setFetchStatus] = useState<string>('');
   const { jobDbHost } = useJobDb();
@@ -60,7 +55,6 @@ const JobPhotosPage = () => {
   const [loadingNearest, setLoadingNearest] = useState<boolean>(false);
   const colorScheme = useColorScheme();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
@@ -431,23 +425,23 @@ const JobPhotosPage = () => {
     [useJobLocation, OnLoadPhotosClicked],
   );
 
-  const showImage = useCallback((uri: string) => {
-    setSelectedImage(uri);
-    setIsImageViewerVisible(true);
-  }, []);
-
   const playVideo = (videoUri: string) => {
     setSelectedVideo(videoUri);
     setIsVideoPlayerVisible(true);
   };
 
-  const handleImagePress = useCallback((uri: string, type: MediaLibrary.MediaTypeValue) => {
-    if (type === 'video') {
-      playVideo(uri);
-    } else if (type === 'photo') {
-      showImage(uri);
-    }
-  }, []);
+  const handleImagePress = useCallback(
+    (uri: string, type: MediaLibrary.MediaTypeValue, photoDate?: string) => {
+      if (type === 'video') {
+        playVideo(uri);
+      } else if (type === 'photo') {
+        console.log(`photoDate=${photoDate}`);
+        const dateString = photoDate ?? 'No Date Info Available';
+        router.push(`/jobs/${jobId}/photos/showImage/?uri=${uri}&jobName=${jobName}&photoDate=${dateString}`);
+      }
+    },
+    [],
+  );
 
   const onSwitchValueChanged = useCallback(() => {
     const newValue = !useJobLocation;
@@ -469,6 +463,7 @@ const JobPhotosPage = () => {
     if (asset) {
       const status = await jobDbHost?.GetPictureBucketDB().InsertPicture(jobId, asset);
       if (status?.status === 'Success') {
+        console.log();
         await logInfo(`Added asset ${status.id}`);
         gJobAssetItems = gJobAssetItems?.concat({ _id: status.id, selected: false, asset: asset });
         setJobAssets(gJobAssetItems);
@@ -639,27 +634,28 @@ const JobPhotosPage = () => {
                 numColumns={showAssetItems ? 1 : 2}
                 data={jobAssets}
                 estimatedItemSize={200}
-                renderItem={({ item }) => (
-                  <View style={styles.imageContainer}>
-                    <TouchableOpacity
-                      style={[styles.imageContainer, item.selected && styles.imageSelected]}
-                      onPress={() => handleJobAssetSelection(item.asset.id)}
-                      onLongPress={() => handleImagePress(item.asset.uri, item.asset.mediaType)}
-                    >
-                      <View>
-                        <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
-                        <Text style={styles.dateOverlay}>
-                          {new Date(item.asset.creationTime * 1).toLocaleString()}
-                        </Text>
-                        {item.asset.mediaType === 'video' && (
-                          <View style={styles.playButtonOverlay}>
-                            <Ionicons name="play" size={30} color="white" />
-                          </View>
-                        )}
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-                )}
+                renderItem={({ item }) => {
+                  const photoDate = new Date(item.asset.creationTime * 1).toLocaleString();
+                  return (
+                    <View style={styles.imageContainer}>
+                      <TouchableOpacity
+                        style={[styles.imageContainer, item.selected && styles.imageSelected]}
+                        onPress={() => handleJobAssetSelection(item.asset.id)}
+                        onLongPress={() => handleImagePress(item.asset.uri, item.asset.mediaType, photoDate)}
+                      >
+                        <View>
+                          <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
+                          <Text style={styles.dateOverlay}>{photoDate}</Text>
+                          {item.asset.mediaType === 'video' && (
+                            <View style={styles.playButtonOverlay}>
+                              <Ionicons name="play" size={30} color="white" />
+                            </View>
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                }}
               />
               <View style={styles.buttonContainer}>
                 {numSelectedJobAssets > 0 && (
@@ -726,27 +722,30 @@ const JobPhotosPage = () => {
                     data={assetItems}
                     estimatedItemSize={200}
                     ListFooterComponent={renderFooter}
-                    renderItem={({ item }) => (
-                      <View style={styles.assetContainer}>
-                        <TouchableOpacity
-                          style={[styles.imageContainer, item.selected && styles.imageSelected]}
-                          onPress={() => handleAssetSelection(item.asset.id)}
-                          onLongPress={() => handleImagePress(item.asset.uri, item.asset.mediaType)}
-                        >
-                          <View>
-                            <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
-                            <Text style={styles.dateOverlay}>
-                              {new Date(item.asset.creationTime * 1).toLocaleString()}
-                            </Text>
-                            {item.asset.mediaType === 'video' && (
-                              <View style={styles.playButtonOverlay}>
-                                <Ionicons name="play" size={30} color="white" />
-                              </View>
-                            )}
-                          </View>
-                        </TouchableOpacity>
-                      </View>
-                    )}
+                    renderItem={({ item }) => {
+                      const photoDate = new Date(item.asset.creationTime * 1).toLocaleString();
+                      return (
+                        <View style={styles.assetContainer}>
+                          <TouchableOpacity
+                            style={[styles.imageContainer, item.selected && styles.imageSelected]}
+                            onPress={() => handleAssetSelection(item.asset.id)}
+                            onLongPress={() =>
+                              handleImagePress(item.asset.uri, item.asset.mediaType, photoDate)
+                            }
+                          >
+                            <View>
+                              <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
+                              <Text style={styles.dateOverlay}>{photoDate}</Text>
+                              {item.asset.mediaType === 'video' && (
+                                <View style={styles.playButtonOverlay}>
+                                  <Ionicons name="play" size={30} color="white" />
+                                </View>
+                              )}
+                            </View>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }}
                   />
                   <View style={styles.buttonContainer}>
                     <View style={styles.buttonRow}>
@@ -777,13 +776,6 @@ const JobPhotosPage = () => {
           />
         )}
       </View>
-      {selectedImage && (
-        <ImageViewerModal
-          isVisible={isImageViewerVisible}
-          imageUri={selectedImage}
-          onClose={() => setIsImageViewerVisible(false)}
-        />
-      )}
       {selectedVideo && (
         <VideoPlayerModal
           isVisible={isVideoPlayerVisible}

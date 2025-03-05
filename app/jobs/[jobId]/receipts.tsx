@@ -189,7 +189,6 @@ const JobReceiptsPage = () => {
   }, []);
 
   const showPicture = useCallback((uri: string) => {
-    console.log(`show uri ${uri}`);
     router.push(`/jobs/${jobId}/receipt/${receiptId}/showImage/?uri=${uri}`);
   }, []);
 
