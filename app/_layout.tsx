@@ -10,6 +10,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -56,6 +57,7 @@ function RootLayoutNav() {
                 <Stack.Screen name="jobs" />
                 <Stack.Screen name="(auth)" />
               </Stack>
+              <StatusBar style={colorScheme === 'dark' ? 'dark' : 'light'} />
             </SafeAreaProvider>
           </LoggerHostProvider>
         </DatabaseHostProvider>
