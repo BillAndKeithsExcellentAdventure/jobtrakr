@@ -2,7 +2,7 @@ import { ReceiptBucketData } from 'jobdb';
 import { create } from 'zustand';
 
 type ReceiptDataStore = {
-  receiptData: ReceiptBucketData[];
+  allJobReceipts: ReceiptBucketData[];
   setReceiptData: (data: ReceiptBucketData[]) => void;
   addReceiptData: (receipt: ReceiptBucketData) => void;
   removeReceiptData: (id: string) => void;
@@ -10,16 +10,16 @@ type ReceiptDataStore = {
 };
 
 export const useReceiptDataStore = create<ReceiptDataStore>((set) => ({
-  receiptData: [],
-  setReceiptData: (data) => set({ receiptData: data }),
-  addReceiptData: (receipt) => set((state) => ({ receiptData: [...state.receiptData, receipt] })),
+  allJobReceipts: [],
+  setReceiptData: (data) => set({ allJobReceipts: data }),
+  addReceiptData: (receipt) => set((state) => ({ allJobReceipts: [...state.allJobReceipts, receipt] })),
   removeReceiptData: (id) =>
     set((state) => ({
-      receiptData: state.receiptData.filter((receipt) => receipt._id! !== id), // Removes the receipt with the specified id
+      allJobReceipts: state.allJobReceipts.filter((receipt) => receipt._id! !== id), // Removes the receipt with the specified id
     })),
   updateReceiptData: (id, updatedReceipt) =>
     set((state) => ({
-      receiptData: state.receiptData.map((receipt) =>
+      allJobReceipts: state.allJobReceipts.map((receipt) =>
         receipt._id === id ? { ...receipt, ...updatedReceipt } : receipt,
       ),
     })),
