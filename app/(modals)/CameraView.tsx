@@ -1,21 +1,9 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import {
-  StyleSheet,
-  View,
-  TouchableOpacity,
-  SafeAreaView,
-  Text,
-  Dimensions,
-  Button,
-  Modal,
-  Image,
-  Pressable,
-} from 'react-native';
-import { CameraView, CameraType, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
-import * as MediaLibrary from 'expo-media-library';
 import { Picker } from '@react-native-picker/picker';
-import { Switch } from '@/components/Switch';
+import { CameraType, CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
+import * as MediaLibrary from 'expo-media-library';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Button, Image, Modal, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface JobCameraViewProps {
   visible: boolean;
