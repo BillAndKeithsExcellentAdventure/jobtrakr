@@ -11,7 +11,7 @@ import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { useDbLogger } from '@/context/LoggerContext';
 import { useJobDataStore } from '@/stores/jobDataStore';
-import { ShareFile } from '@/utils/sharing';
+import { ShareFile, ShareFiles } from '@/utils/sharing';
 import { CreateMediaZip } from '@/utils/zip';
 import { Entypo, Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
@@ -95,7 +95,12 @@ const JobPhotosPage = () => {
   useEffect(() => {
     async function loadMedia(jobId: string) {
       const result = await jobDbHost?.GetPictureBucketDB().FetchJobAssets(jobId);
-      await await logInfo(`Fetched ${result?.assets?.length} assets for job ${jobName}`);
+      console.log(
+        `Fetched ${result?.assets?.length}:${
+          result?.assets?.at(0)?.asset?.creationTime
+        } assets for job ${jobName}`,
+      );
+      await logInfo(`Fetched ${result?.assets?.length} assets for job ${jobName}`);
       if (result?.status === 'Success' && result && result.assets && result.assets.length > 0) {
         gJobAssetItems = result.assets.map((asset) => ({
           _id: asset._id!,
@@ -219,16 +224,12 @@ const JobPhotosPage = () => {
 
   const OnShareJobPhotosClicked = useCallback(async () => {
     if (jobAssets) {
-      await await logInfo(`Sharing ${jobAssets.length} photos`);
-      const zipFileName = `job_${jobName}_photos`;
-      const zipPath = `${FileSystem.documentDirectory}${zipFileName}.zip`;
       const assets = createPictureBucketDataArray(jobAssets);
-      await await logInfo(` Creating zip file with ${assets.length} assets`);
       try {
-        await CreateMediaZip(assets, zipFileName);
-        await ShareFile(zipPath);
+        const paths = assets.map((asset) => asset.asset.uri);
+        await ShareFiles(paths);
       } catch (error) {
-        await logError(`Error creating/sharing zip file: ${error}`);
+        await logError(`Error creating/sharing file: ${error}`);
       }
     }
   }, [jobAssets]);

@@ -101,14 +101,13 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
     if (!cameraRef) return;
 
     try {
-      const photo = await cameraRef?.takePictureAsync();
+      const photo = await cameraRef?.takePictureAsync({ exif: true });
       if (photo) {
         if (showPreview) {
           setPreviewUri(photo.uri);
         } else {
           // Direct save without preview
           const asset = await MediaLibrary.createAssetAsync(photo.uri);
-          asset.creationTime = Date.now();
           onMediaCaptured(asset);
         }
       }

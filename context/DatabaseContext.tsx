@@ -18,6 +18,10 @@ interface DatabaseHostProviderProps {
 }
 
 export const DatabaseHostProvider: React.FC<DatabaseHostProviderProps> = ({ children }) => {
+  const dbRef = useRef<JobTrakrDB | null>(null); // Add this line
+
+  // DO NOT REMOVE. Using the setJobDbHost function after the dbHost below is initialized will prevent
+  //                it from being garbage collected.
   const [jobDbHost, setJobDbHost] = useState<JobTrakrDB | null>(null);
   const { sessionUser } = useSession();
   const replaceDatabase = useRef<boolean>(false); // set this to true to replace the database and then reset it to false
@@ -32,9 +36,10 @@ export const DatabaseHostProvider: React.FC<DatabaseHostProviderProps> = ({ chil
         // Only replace the database once
         if (replaceDatabase.current) replaceDatabase.current = false;
 
-        const db = dbHost.GetDb();
-        console.info('DB Initialized. Opening...');
+        dbRef.current = dbHost;
         setJobDbHost(dbHost);
+
+        console.info(`DB Initialized  Opening...`);
         console.info('DB Initialized');
       } else {
         console.error(`Failed to initialize DB with status: ${status}`);
@@ -42,9 +47,18 @@ export const DatabaseHostProvider: React.FC<DatabaseHostProviderProps> = ({ chil
     }
 
     if (sessionUser && sessionUser.userId > 0) initDb(sessionUser.userId);
+
+    // Cleanup function
+    return () => {
+      console.info('Cleaning up DBLogger...');
+      if (dbRef.current) {
+        console.info('Closing logger connection...');
+        dbRef.current = null;
+      }
+    };
   }, [sessionUser]);
 
-  return <DatabaseContext.Provider value={{ jobDbHost: jobDbHost }}>{children}</DatabaseContext.Provider>;
+  return <DatabaseContext.Provider value={{ jobDbHost: dbRef.current }}>{children}</DatabaseContext.Provider>;
 };
 
 // Define the custom hook to use the database
