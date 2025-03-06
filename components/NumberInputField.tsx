@@ -23,18 +23,13 @@ export const NumberInputField: React.FC<NumberInputFieldProps> = ({
   readOnly = false,
   style = {},
 }) => {
-  const zero = 0;
-
-  const [inputValue, setInputValue] = useState(
-    value ? value.toFixed(numDecimalPlaces) : zero.toFixed(numDecimalPlaces),
-  );
+  const [inputValue, setInputValue] = useState(value.toFixed(numDecimalPlaces));
   const colorScheme = useColorScheme();
   const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
-    setInputValue(value ? value.toFixed(numDecimalPlaces) : zero.toFixed(numDecimalPlaces)); // Reset input value if the prop changes
-  }, [value, numDecimalPlaces]);
-
+    setInputValue(value.toString());
+  }, [value]);
   const handleInputChange = (text: string) => {
     if (readOnly) return; // Prevent changes if readOnly is true
 

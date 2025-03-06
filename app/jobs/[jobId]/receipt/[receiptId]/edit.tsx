@@ -91,6 +91,8 @@ const EditReceiptDetailsPage = () => {
     router.back();
   }, [receipt]);
 
+  const receiptAmount = receipt.Amount ?? 0;
+  console.log(`receipt amount is ${receiptAmount}`);
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Stack.Screen options={{ title: 'Edit Receipt Details', headerShown: false }} />
@@ -100,8 +102,8 @@ const EditReceiptDetailsPage = () => {
           <NumberInputField
             style={styles.inputContainer}
             label="Amount"
-            value={receipt.Amount!}
-            onChange={function (value: number): void {
+            value={receiptAmount}
+            onChange={(value: number): void => {
               setReceipt((prevReceipt) => ({
                 ...prevReceipt,
                 Amount: value,
