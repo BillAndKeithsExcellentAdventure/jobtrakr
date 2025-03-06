@@ -94,12 +94,16 @@ const JobPhotosPage = () => {
 
   useEffect(() => {
     async function loadMedia(jobId: string) {
+      setJobAssets(undefined);
+      gJobAssetItems.length = 0;
+
       const result = await jobDbHost?.GetPictureBucketDB().FetchJobAssets(jobId);
       console.log(
         `Fetched ${result?.assets?.length}:${
           result?.assets?.at(0)?.asset?.creationTime
         } assets for job ${jobName}`,
       );
+      console.log('   result:', result);
       await logInfo(`Fetched ${result?.assets?.length} assets for job ${jobName}`);
       if (result?.status === 'Success' && result && result.assets && result.assets.length > 0) {
         gJobAssetItems = result.assets.map((asset) => ({
