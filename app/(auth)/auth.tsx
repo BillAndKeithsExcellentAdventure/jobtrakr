@@ -1,13 +1,14 @@
 import { Redirect, router, Stack } from 'expo-router';
 import { Text, useColorScheme, View } from 'react-native';
 
-import { useSession } from '@/context/AuthSessionContext';
+import { useAuthSession } from '@/context/AuthSessionContext';
 
 export default function SignIn() {
   const colorScheme = useColorScheme();
-  const { signIn, session } = useSession();
-  if (session) {
-    <Redirect href="/jobs" />;
+  const { signIn, sessionUser } = useAuthSession();
+
+  if (sessionUser) {
+    return <Redirect href="/jobs" />;
   }
 
   return (

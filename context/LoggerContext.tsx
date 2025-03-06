@@ -9,7 +9,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { useSession } from './AuthSessionContext';
+import { useAuthSession } from './AuthSessionContext';
 
 // Define the context and its types
 interface LoggerContextType {
@@ -40,7 +40,7 @@ export const LoggerHostProvider: React.FC<LoggerHostProviderProps> = ({ children
   // DO NOT REMOVE. Using the setDBLoggerHost function after the dbHost below is initialized will prevent
   //                it from being garbage collected.
   const [dbLoggerHost, setDbLoggerHost] = useState<DBLogger | null>(null);
-  const { sessionUser } = useSession();
+  const { sessionUser } = useAuthSession();
   const replaceDatabase = useRef<boolean>(false);
 
   // Update the initialization effect
@@ -118,9 +118,18 @@ export const LoggerHostProvider: React.FC<LoggerHostProviderProps> = ({ children
     () => ({
       shareLogFile: handleShareLogFile,
       removeOld: (numDays: number) => handleRemoveOld(numDays),
-      logError: (msg: string) => dbLoggerRef.current?.InsertLog('Error', msg),
-      logInfo: (msg: string) => dbLoggerRef.current?.InsertLog('Info', msg),
-      logWarn: (msg: string) => dbLoggerRef.current?.InsertLog('Warn', msg),
+      logError: (msg: string) => {
+        console.error('logError', msg);
+        dbLoggerRef.current?.InsertLog('Error', msg);
+      },
+      logInfo: (msg: string) => {
+        console.info('logInfo', msg);
+        dbLoggerRef.current?.InsertLog('Info', msg);
+      },
+      logWarn: (msg: string) => {
+        console.warn('logWarn', msg);
+        dbLoggerRef.current?.InsertLog('Warn', msg);
+      },
     }),
     [handleShareLogFile],
   );

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect, useRef } from 'react';
 import { JobTrakrDB } from 'jobdb';
-import { useSession } from './AuthSessionContext';
+import { useAuthSession } from './AuthSessionContext';
 
 // Define the context and its types
 interface DatabaseContextType {
@@ -23,7 +23,7 @@ export const DatabaseHostProvider: React.FC<DatabaseHostProviderProps> = ({ chil
   // DO NOT REMOVE. Using the setJobDbHost function after the dbHost below is initialized will prevent
   //                it from being garbage collected.
   const [jobDbHost, setJobDbHost] = useState<JobTrakrDB | null>(null);
-  const { sessionUser } = useSession();
+  const { sessionUser } = useAuthSession();
   const replaceDatabase = useRef<boolean>(false); // set this to true to replace the database and then reset it to false
 
   useEffect(() => {
