@@ -1,11 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Modal, StyleSheet, Pressable, Dimensions, SafeAreaView } from 'react-native';
-import { VideoView, useVideoPlayer } from 'expo-video';
+import { View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
-import Slider from '@react-native-community/slider';
-import { Text, View } from '@/components/Themed';
-import { useEvent } from 'expo';
-import { useEventListener } from 'expo';
+import { useEvent, useEventListener } from 'expo';
+import { VideoView, useVideoPlayer } from 'expo-video';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Dimensions, Modal, Pressable, SafeAreaView, StyleSheet } from 'react-native';
 
 interface VideoPlayerModalProps {
   isVisible: boolean;
@@ -82,12 +80,6 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
     setIsPlaying(true);
   });
 
-  //   const handleSliderChange = async (value: number) => {
-  //     if (videoRef.current) {
-  //       await videoRef.current.setPositionAsync(value);
-  //     }
-  //   };
-
   return (
     <Modal visible={isVisible} transparent={true} animationType="fade">
       <SafeAreaView style={styles.container}>
@@ -152,13 +144,6 @@ const styles = StyleSheet.create({
   playButton: {
     alignSelf: 'center',
     padding: 10,
-  },
-  sliderContainer: {
-    marginTop: 10,
-  },
-  slider: {
-    width: '100%',
-    height: 40,
   },
   timeContainer: {
     flexDirection: 'row',
