@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View } from '@/components/Themed';
+import { View, Text } from '@/components/Themed';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useJobDb } from '@/context/DatabaseContext';
 import { ReceiptBucketData } from 'jobdb';
@@ -53,7 +53,7 @@ const EditReceiptDetailsPage = () => {
   // Fetch receipts for the given job and user
   useEffect(() => {
     fetchReceipt();
-  }, [allJobReceipts]);
+  }, [fetchReceipt]);
 
   const colorScheme = useColorScheme();
 
@@ -95,10 +95,13 @@ const EditReceiptDetailsPage = () => {
   console.log(`receipt amount is ${receiptAmount}`);
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: 'Edit Receipt Details', headerShown: false }} />
+      <Stack.Screen options={{ title: 'Edit Receipt Summary', headerShown: false }} />
 
       <View style={[styles.container, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
         <View style={styles.editContainer}>
+          <View style={{ alignItems: 'center' }}>
+            <Text txtSize="title" text="Edit Receipt Summary" />
+          </View>
           <NumberInputField
             style={styles.inputContainer}
             label="Amount"
@@ -170,7 +173,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: '100%',
-    paddingTop: 20,
   },
   editContainer: {
     padding: 20,

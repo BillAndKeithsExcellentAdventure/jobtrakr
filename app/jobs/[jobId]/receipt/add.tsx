@@ -151,6 +151,7 @@ const AddReceiptPage = () => {
     const response = await jobDbHost?.GetReceiptBucketDB().InsertReceipt(jobId, newReceipt);
     if (response?.status === 'Success') {
       newReceipt._id = response.id;
+      newReceipt.JobId = jobId;
       addReceiptData(newReceipt);
       console.log('Job receipt successfully added:', newReceipt);
     } else {
