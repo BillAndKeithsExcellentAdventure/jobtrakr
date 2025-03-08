@@ -144,7 +144,7 @@ const JobNotes = () => {
                 placeholder="Enter job note"
                 style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
               />
-              <ActionButton onPress={addNote} type={'action'} title="Add Note" />
+              <ActionButton onPress={addNote} type={newNoteTitle ? 'action' : 'disabled'} title="Add Note" />
             </View>
           )}
 

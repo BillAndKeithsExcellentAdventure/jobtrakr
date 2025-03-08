@@ -1,7 +1,9 @@
 import { ActionButtonProps } from '@/components/ButtonBar';
+import OptionList, { OptionEntry } from '@/components/OptionList';
+import BottomSheetContainer from '@/components/BottomSheetContainer';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Text, View } from '@/components/Themed';
+import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
@@ -9,8 +11,9 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, Pressable, StyleSheet } from 'react-native';
+import { Button, Platform, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 type Job = {
   jobId?: string;
@@ -24,7 +27,7 @@ type Job = {
   latitude?: number;
 };
 
-const JobCategoriesPage = () => {
+const JobDetailsPage = () => {
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
   const colorScheme = useColorScheme();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
@@ -41,6 +44,25 @@ const JobCategoriesPage = () => {
     latitude: undefined,
   });
 
+  const [isListPickerVisible, setIsListPickerVisible] = useState<boolean>(false);
+  const [isOkToSaveSelectedValue, setIsOkToSaveSelectedValue] = useState<boolean>(false);
+  const [pickedOption, setPickedOption] = useState<string | undefined>(undefined);
+
+  const [pickerOptions] = useState<OptionEntry[]>([
+    { label: '' },
+    { label: 'One' },
+    { label: 'Two' },
+    { label: 'Three' },
+    { label: 'Four' },
+    { label: 'Five' },
+    { label: 'Six' },
+    { label: 'Seven' },
+    { label: 'Eight' },
+    { label: 'Nine' },
+    { label: 'Ten' },
+    { label: 'Eleven' },
+  ]);
+
   // Define colors based on the color scheme (dark or light)
   const colors = useMemo(
     () =>
@@ -51,6 +73,7 @@ const JobCategoriesPage = () => {
             itemBackground: Colors.dark.itemBackground,
             iconColor: Colors.dark.iconColor,
             shadowColor: Colors.dark.shadowColor,
+            borderColor: Colors.dark.borderColor,
             bottomSheetBackground: Colors.dark.bottomSheetBackground,
             text: Colors.dark.text,
           }
@@ -60,6 +83,7 @@ const JobCategoriesPage = () => {
             itemBackground: Colors.light.itemBackground,
             iconColor: Colors.light.iconColor,
             shadowColor: Colors.light.shadowColor,
+            borderColor: Colors.light.borderColor,
             bottomSheetBackground: Colors.light.bottomSheetBackground,
             text: Colors.light.text,
           },
@@ -116,6 +140,19 @@ const JobCategoriesPage = () => {
     ],
     [colors],
   );
+
+  const onListPickerModalClose = (okPressed?: boolean) => {
+    if (okPressed) {
+      // Todo if need to save only on OK
+    }
+    setIsListPickerVisible(false);
+  };
+
+  const onOptionSelected = (label: string) => {
+    setPickedOption(label);
+    setIsOkToSaveSelectedValue(!!label);
+    //setIsListPickerVisible(false);
+  };
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
@@ -192,6 +229,14 @@ const JobCategoriesPage = () => {
         <View style={styles.headerContainer}>
           <Text>JobName={job.name}</Text>
           <Text>JobId={jobId}</Text>
+          <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center' }}>
+            <Text text={pickedOption} style={{ marginRight: 10 }} />
+            <View style={[styles.circleButtonContainer, { borderColor: colors.borderColor }]}>
+              <Pressable style={styles.circleButton} onPress={() => setIsListPickerVisible(true)}>
+                <MaterialIcons name="arrow-drop-down" size={36} color="#25292e" />{' '}
+              </Pressable>
+            </View>
+          </View>
         </View>
       </View>
       <RightHeaderMenu
@@ -199,6 +244,15 @@ const JobCategoriesPage = () => {
         setModalVisible={setHeaderMenuModalVisible}
         buttons={rightHeaderMenuButtons}
       />
+      <BottomSheetContainer
+        isVisible={isListPickerVisible}
+        onClose={onListPickerModalClose}
+        title="Select an option"
+        showOkCancel
+        isOkEnabled={isOkToSaveSelectedValue}
+      >
+        <OptionList options={pickerOptions} onSelect={(option) => onOptionSelected(option.label)} />
+      </BottomSheetContainer>
     </SafeAreaView>
   );
 };
@@ -232,6 +286,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 4,
   },
+  circleButtonContainer: {
+    width: 42,
+    height: 42,
+    marginHorizontal: 10,
+    borderWidth: 4,
+    borderRadius: 21,
+    padding: 0,
+  },
+
+  circleButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 21,
+  },
 });
 
-export default JobCategoriesPage;
+export default JobDetailsPage;
