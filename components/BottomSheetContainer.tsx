@@ -1,5 +1,5 @@
 import { DimensionValue, Modal, Pressable, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import { PropsWithChildren, useMemo } from 'react';
+import { PropsWithChildren, useCallback, useMemo } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
@@ -9,11 +9,9 @@ import { ActionButton } from './ActionButton';
 
 type Props = PropsWithChildren<{
   isVisible: boolean;
-  onClose: (okPressed?: boolean) => void;
+  onClose: () => void;
   title?: string;
-  showOkCancel?: boolean;
   modalHeight?: DimensionValue;
-  isOkEnabled?: boolean;
 }>;
 
 export default function BottomSheetContainer({
@@ -22,8 +20,6 @@ export default function BottomSheetContainer({
   onClose,
   title,
   modalHeight = '40%',
-  showOkCancel,
-  isOkEnabled,
 }: Props) {
   const { bottom, top } = useSafeAreaInsets();
   const colorScheme = useColorScheme();
@@ -50,10 +46,12 @@ export default function BottomSheetContainer({
     [colorScheme],
   );
 
+  if (!isVisible) return null;
+
   return (
-    <Modal animationType="slide" transparent={true} visible={isVisible}>
-      <TouchableWithoutFeedback onPress={() => onClose(false)}>
-        <>
+    <Modal animationType="slide" transparent={true} visible={isVisible} onRequestClose={() => onClose()}>
+      <TouchableWithoutFeedback onPress={() => onClose()}>
+        <View style={{ flex: 1, backgroundColor: 'transparent' }}>
           <View
             style={{
               flex: 1,
@@ -72,41 +70,20 @@ export default function BottomSheetContainer({
                       borderBottomWidth: 2,
                       borderColor: colors.borderColor,
                     },
-                    showOkCancel && { justifyContent: 'center' },
                   ]}
                 >
                   <Text txtSize="standard" style={[{ fontWeight: '600' }]} text={title} />
-                  {!showOkCancel && (
-                    <Pressable onPress={() => onClose(false)}>
-                      <MaterialIcons name="close" color={colors.iconColor} size={22} />
-                    </Pressable>
-                  )}
+                  <Pressable onPress={() => onClose()}>
+                    <MaterialIcons name="close" color={colors.iconColor} size={22} />
+                  </Pressable>
                 </View>
               ) : (
                 <View style={{ height: 10 }} />
               )}
               {children}
-              {showOkCancel && (
-                <View style={{ borderTopColor: colors.borderColor }}>
-                  <View style={[styles.saveButtonRow, { borderTopColor: colors.borderColor }]}>
-                    <ActionButton
-                      style={styles.saveButton}
-                      onPress={() => onClose(true)}
-                      type={isOkEnabled ? 'ok' : 'disabled'}
-                      title="Save"
-                    />
-                    <ActionButton
-                      style={styles.cancelButton}
-                      onPress={() => onClose(false)}
-                      type={'cancel'}
-                      title="Cancel"
-                    />
-                  </View>
-                </View>
-              )}
             </View>
           </View>
-        </>
+        </View>
       </TouchableWithoutFeedback>
     </Modal>
   );
@@ -127,21 +104,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  saveButtonRow: {
-    paddingHorizontal: 10,
-    borderTopWidth: 2,
-    marginTop: 10,
-    paddingTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  saveButton: {
-    flex: 1,
-    marginRight: 5,
-  },
-  cancelButton: {
-    flex: 1,
-    marginLeft: 5,
   },
 });

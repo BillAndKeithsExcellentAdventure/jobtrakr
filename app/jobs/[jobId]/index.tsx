@@ -9,11 +9,13 @@ import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Platform, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { TextField } from '@/components/TextField';
 
 type Job = {
   jobId?: string;
@@ -45,8 +47,7 @@ const JobDetailsPage = () => {
   });
 
   const [isListPickerVisible, setIsListPickerVisible] = useState<boolean>(false);
-  const [isOkToSaveSelectedValue, setIsOkToSaveSelectedValue] = useState<boolean>(false);
-  const [pickedOption, setPickedOption] = useState<string | undefined>(undefined);
+  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
 
   const [pickerOptions] = useState<OptionEntry[]>([
     { label: '' },
@@ -141,17 +142,9 @@ const JobDetailsPage = () => {
     [colors],
   );
 
-  const onListPickerModalClose = (okPressed?: boolean) => {
-    if (okPressed) {
-      // Todo if need to save only on OK
-    }
+  const onOptionSelected = (option: OptionEntry) => {
+    setPickedOption(option);
     setIsListPickerVisible(false);
-  };
-
-  const onOptionSelected = (label: string) => {
-    setPickedOption(label);
-    setIsOkToSaveSelectedValue(!!label);
-    //setIsListPickerVisible(false);
   };
 
   return (
@@ -229,30 +222,34 @@ const JobDetailsPage = () => {
         <View style={styles.headerContainer}>
           <Text>JobName={job.name}</Text>
           <Text>JobId={jobId}</Text>
-          <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center' }}>
-            <Text text={pickedOption} style={{ marginRight: 10 }} />
-            <View style={[styles.circleButtonContainer, { borderColor: colors.borderColor }]}>
-              <Pressable style={styles.circleButton} onPress={() => setIsListPickerVisible(true)}>
-                <MaterialIcons name="arrow-drop-down" size={36} color="#25292e" />{' '}
-              </Pressable>
+          <View style={styles.textWithPickerButton}>
+            <View style={{ flex: 1 }}>
+              <TextField label="Option" placeholder="Define Option" value={pickedOption?.label} />
             </View>
+            <Pressable style={{ justifyContent: 'flex-end' }} onPress={() => setIsListPickerVisible(true)}>
+              <View style={[styles.pickerButtonContainer]}>
+                <Ionicons name="ellipsis-horizontal-circle" size={36} color={colors.iconColor} />
+              </View>
+            </Pressable>
           </View>
         </View>
       </View>
-      <RightHeaderMenu
-        modalVisible={headerMenuModalVisible}
-        setModalVisible={setHeaderMenuModalVisible}
-        buttons={rightHeaderMenuButtons}
-      />
-      <BottomSheetContainer
-        isVisible={isListPickerVisible}
-        onClose={onListPickerModalClose}
-        title="Select an option"
-        showOkCancel
-        isOkEnabled={isOkToSaveSelectedValue}
-      >
-        <OptionList options={pickerOptions} onSelect={(option) => onOptionSelected(option.label)} />
-      </BottomSheetContainer>
+      {headerMenuModalVisible && (
+        <RightHeaderMenu
+          modalVisible={headerMenuModalVisible}
+          setModalVisible={setHeaderMenuModalVisible}
+          buttons={rightHeaderMenuButtons}
+        />
+      )}
+      {isListPickerVisible && (
+        <BottomSheetContainer isVisible={isListPickerVisible} onClose={() => setIsListPickerVisible(false)}>
+          <OptionList
+            options={pickerOptions}
+            onSelect={(option) => onOptionSelected(option)}
+            selectedOption={pickedOption}
+          />
+        </BottomSheetContainer>
+      )}
     </SafeAreaView>
   );
 };
@@ -260,8 +257,6 @@ const JobDetailsPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     width: '100%',
   },
   headerContainer: {
@@ -286,20 +281,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 4,
   },
-  circleButtonContainer: {
-    width: 42,
-    height: 42,
-    marginHorizontal: 10,
-    borderWidth: 4,
-    borderRadius: 21,
-    padding: 0,
+  textWithPickerButton: {
+    width: '100%',
+    paddingHorizontal: 20,
+    flexDirection: 'row',
   },
-
-  circleButton: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 21,
+  pickerButtonContainer: {
+    paddingLeft: 10,
   },
 });
 
