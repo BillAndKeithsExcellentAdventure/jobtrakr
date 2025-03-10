@@ -11,12 +11,39 @@ import { useReceiptDataStore } from '@/stores/receiptDataStore';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { ActionButton } from '@/components/ActionButton';
+import OptionList, { OptionEntry } from '@/components/OptionList';
+import { OptionPickerItem } from '@/components/OptionPickerItem';
+import BottomSheetContainer from '@/components/BottomSheetContainer';
 
 const EditReceiptDetailsPage = () => {
   const { receiptId } = useLocalSearchParams<{ receiptId: string }>();
   const { allJobReceipts, updateReceiptData } = useReceiptDataStore();
+  const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
+  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
+  const [vendors, setVendors] = useState<OptionEntry[]>([]);
+
+  const handleVendorOptionChange = (option: OptionEntry) => {
+    if (option) {
+      handleVendorChange(option.label);
+    }
+    setIsVendorListPickerVisible(false);
+  };
 
   const { jobDbHost } = useJobDb();
+
+  useEffect(() => {
+    // TODO need to fetch from database
+    const vendorOptions = [
+      { label: 'Home Depot' },
+      { label: "Lowe's" },
+      { label: 'Tractor Supply' },
+      { label: 'Master Plumbing' },
+      { label: 'Ace Hardware' },
+      { label: 'Johnson Fence' },
+    ];
+    setVendors(vendorOptions);
+  }, []);
+
   const [receipt, setReceipt] = useState<ReceiptBucketData>({
     _id: '',
     UserId: '',
@@ -43,6 +70,7 @@ const EditReceiptDetailsPage = () => {
           ...prevReceipt,
           ...match,
         }));
+        pickedOption;
       }
     } catch (err) {
       alert(`An error occurred while fetching the receipt with _id=${receiptId}`);
@@ -54,6 +82,11 @@ const EditReceiptDetailsPage = () => {
   useEffect(() => {
     fetchReceipt();
   }, [fetchReceipt]);
+
+  useEffect(() => {
+    const match = vendors.find((o) => o.label === receipt.Vendor);
+    setPickedOption(match);
+  }, [receipt, vendors]);
 
   const colorScheme = useColorScheme();
 
@@ -79,6 +112,13 @@ const EditReceiptDetailsPage = () => {
     [colorScheme],
   );
 
+  const handleVendorChange = useCallback((vendor: string) => {
+    setReceipt((prevReceipt) => ({
+      ...prevReceipt,
+      Vendor: vendor,
+    }));
+  }, []);
+
   const handleSubmit = useCallback(async () => {
     if (receipt._id) {
       const status = await jobDbHost?.GetReceiptBucketDB().UpdateReceipt(receipt);
@@ -92,7 +132,7 @@ const EditReceiptDetailsPage = () => {
   }, [receipt]);
 
   const receiptAmount = receipt.Amount ?? 0;
-  console.log(`receipt amount is ${receiptAmount}`);
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Stack.Screen options={{ title: 'Edit Receipt Summary', headerShown: false }} />
@@ -113,18 +153,25 @@ const EditReceiptDetailsPage = () => {
               }));
             }}
           />
-          <TextField
-            containerStyle={styles.inputContainer}
-            placeholder="Vendor"
-            label="Vendor"
-            value={receipt.Vendor}
-            onChangeText={(text): void => {
-              setReceipt((prevReceipt) => ({
-                ...prevReceipt,
-                Vendor: text,
-              }));
-            }}
-          />
+          {vendors && vendors.length ? (
+            <OptionPickerItem
+              containerStyle={styles.inputContainer}
+              optionLabel={receipt.Vendor}
+              label="Vendor"
+              placeholder="Vendor"
+              onOptionLabelChange={handleVendorChange}
+              onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
+            />
+          ) : (
+            <TextField
+              containerStyle={styles.inputContainer}
+              placeholder="Vendor"
+              label="Vendor"
+              value={receipt.Vendor}
+              onChangeText={handleVendorChange}
+            />
+          )}
+
           <TextField
             containerStyle={styles.inputContainer}
             placeholder="Description"
@@ -162,6 +209,18 @@ const EditReceiptDetailsPage = () => {
             />
           </View>
         </View>
+        {vendors && isVendorListPickerVisible && (
+          <BottomSheetContainer
+            isVisible={isVendorListPickerVisible}
+            onClose={() => setIsVendorListPickerVisible(false)}
+          >
+            <OptionList
+              options={vendors}
+              onSelect={(option) => handleVendorOptionChange(option)}
+              selectedOption={pickedOption}
+            />
+          </BottomSheetContainer>
+        )}
       </View>
     </SafeAreaView>
   );

@@ -1,6 +1,6 @@
 import { TextField } from '@/components/TextField';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 import { useThemeColor, View } from './Themed';
 
 /* -------------------------------------------
@@ -53,6 +53,7 @@ interface OptionPickerItemProps {
   label?: string;
   placeholder?: string;
   editable?: boolean;
+  containerStyle?: StyleProp<ViewStyle>;
 }
 
 export const OptionPickerItem: React.FC<OptionPickerItemProps> = ({
@@ -62,11 +63,12 @@ export const OptionPickerItem: React.FC<OptionPickerItemProps> = ({
   label,
   placeholder,
   editable = true,
+  containerStyle,
 }) => {
   const iconColor = useThemeColor({ light: undefined, dark: undefined }, 'iconColor');
 
   return (
-    <View style={styles.optionPickerRow}>
+    <View style={[styles.optionPickerRow, containerStyle]}>
       <View style={{ flex: 1 }}>
         <TextField
           label={label}
@@ -88,7 +90,6 @@ export const OptionPickerItem: React.FC<OptionPickerItemProps> = ({
 const styles = StyleSheet.create({
   optionPickerRow: {
     width: '100%',
-    paddingHorizontal: 20,
     flexDirection: 'row',
   },
   pickerButtonContainer: {
