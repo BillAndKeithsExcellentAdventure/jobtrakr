@@ -3,7 +3,7 @@ import OptionList, { OptionEntry } from '@/components/OptionList';
 import BottomSheetContainer from '@/components/BottomSheetContainer';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Text, TextInput, View } from '@/components/Themed';
+import { Text, TextInput, useThemeColor, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
@@ -15,7 +15,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Platform, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { TextField } from '@/components/TextField';
+import { OptionPickerItem } from '@/components/OptionPickerItem';
 
 type Job = {
   jobId?: string;
@@ -48,6 +48,7 @@ const JobDetailsPage = () => {
 
   const [isListPickerVisible, setIsListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
+  const [pickedOptionLabel, setPickedOptionLabel] = useState<string | undefined>(undefined);
 
   const [pickerOptions] = useState<OptionEntry[]>([
     { label: '' },
@@ -144,8 +145,17 @@ const JobDetailsPage = () => {
 
   const onOptionSelected = (option: OptionEntry) => {
     setPickedOption(option);
+    setPickedOptionLabel(option.label);
     setIsListPickerVisible(false);
   };
+
+  const optionLabelChanged = useCallback((optionLabel: string) => {
+    const match = pickerOptions.find((o) => o.label === optionLabel);
+    setPickedOptionLabel(optionLabel);
+    if (match) {
+      setPickedOption(match);
+    }
+  }, []);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
@@ -222,16 +232,13 @@ const JobDetailsPage = () => {
         <View style={styles.headerContainer}>
           <Text>JobName={job.name}</Text>
           <Text>JobId={jobId}</Text>
-          <View style={styles.textWithPickerButton}>
-            <View style={{ flex: 1 }}>
-              <TextField label="Option" placeholder="Define Option" value={pickedOption?.label} />
-            </View>
-            <Pressable style={{ justifyContent: 'flex-end' }} onPress={() => setIsListPickerVisible(true)}>
-              <View style={[styles.pickerButtonContainer]}>
-                <Ionicons name="ellipsis-horizontal-circle" size={36} color={colors.iconColor} />
-              </View>
-            </Pressable>
-          </View>
+          <OptionPickerItem
+            optionLabel={pickedOptionLabel}
+            label="My Option"
+            placeholder="Define Option"
+            onOptionLabelChange={optionLabelChanged}
+            onPickerButtonPress={() => setIsListPickerVisible(true)}
+          />
         </View>
       </View>
       {headerMenuModalVisible && (
@@ -281,7 +288,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 4,
   },
-  textWithPickerButton: {
+  optionPickerRow: {
     width: '100%',
     paddingHorizontal: 20,
     flexDirection: 'row',
