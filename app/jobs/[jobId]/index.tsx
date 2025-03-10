@@ -49,6 +49,19 @@ const JobDetailsPage = () => {
   const [isListPickerVisible, setIsListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const [pickedOptionLabel, setPickedOptionLabel] = useState<string | undefined>(undefined);
+  const onOptionSelected = (option: OptionEntry) => {
+    setPickedOption(option);
+    if (option) {
+      setPickedOptionLabel(option.label);
+    }
+    setIsListPickerVisible(false);
+  };
+
+  const optionLabelChanged = useCallback((optionLabel: string) => {
+    const match = pickerOptions.find((o) => o.label === optionLabel);
+    setPickedOptionLabel(optionLabel);
+    setPickedOption(match);
+  }, []);
 
   const [pickerOptions] = useState<OptionEntry[]>([
     { label: '' },
@@ -142,20 +155,6 @@ const JobDetailsPage = () => {
     ],
     [colors],
   );
-
-  const onOptionSelected = (option: OptionEntry) => {
-    setPickedOption(option);
-    setPickedOptionLabel(option.label);
-    setIsListPickerVisible(false);
-  };
-
-  const optionLabelChanged = useCallback((optionLabel: string) => {
-    const match = pickerOptions.find((o) => o.label === optionLabel);
-    setPickedOptionLabel(optionLabel);
-    if (match) {
-      setPickedOption(match);
-    }
-  }, []);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
