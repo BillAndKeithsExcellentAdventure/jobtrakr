@@ -1,8 +1,8 @@
-import { View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { useEvent, useEventListener } from 'expo';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import React, { useCallback, useEffect, useState } from 'react';
+import { Text, View } from '@/components/Themed';
+import { useCallback, useEffect, useState } from 'react';
 import { Dimensions, Modal, Pressable, SafeAreaView, StyleSheet } from 'react-native';
 
 interface VideoPlayerModalProps {
