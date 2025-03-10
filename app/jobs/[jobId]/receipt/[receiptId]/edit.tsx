@@ -14,6 +14,7 @@ import { ActionButton } from '@/components/ActionButton';
 import OptionList, { OptionEntry } from '@/components/OptionList';
 import { OptionPickerItem } from '@/components/OptionPickerItem';
 import BottomSheetContainer from '@/components/BottomSheetContainer';
+import { useVendorDataStore } from '@/stores/vendorDataStore';
 
 const EditReceiptDetailsPage = () => {
   const { receiptId } = useLocalSearchParams<{ receiptId: string }>();
@@ -30,19 +31,18 @@ const EditReceiptDetailsPage = () => {
   };
 
   const { jobDbHost } = useJobDb();
+  const { allVendors } = useVendorDataStore();
 
   useEffect(() => {
-    // TODO need to fetch from database
-    const vendorOptions = [
-      { label: 'Home Depot' },
-      { label: "Lowe's" },
-      { label: 'Tractor Supply' },
-      { label: 'Master Plumbing' },
-      { label: 'Ace Hardware' },
-      { label: 'Johnson Fence' },
-    ];
-    setVendors(vendorOptions);
-  }, []);
+    if (allVendors && allVendors.length) {
+      const vendorMap = allVendors.map((v) => {
+        return { label: v.label, value: v._id };
+      });
+      setVendors(vendorMap);
+    } else {
+      setVendors([]);
+    }
+  }, [allVendors]);
 
   const [receipt, setReceipt] = useState<ReceiptBucketData>({
     _id: '',

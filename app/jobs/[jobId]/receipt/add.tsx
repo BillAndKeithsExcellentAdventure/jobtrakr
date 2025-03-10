@@ -17,6 +17,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Image, Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useVendorDataStore } from '@/stores/vendorDataStore';
 
 const AddReceiptPage = () => {
   const defaultDate = new Date();
@@ -64,19 +65,18 @@ const AddReceiptPage = () => {
   const colorScheme = useColorScheme();
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [canAddReceipt, setCanAddReceipt] = useState(false);
+  const { allVendors } = useVendorDataStore();
 
   useEffect(() => {
-    // TODO need to fetch from database
-    const vendorOptions = [
-      { label: 'Home Depot' },
-      { label: "Lowe's" },
-      { label: 'Tractor Supply' },
-      { label: 'Master Plumbing' },
-      { label: 'Ace Hardware' },
-      { label: 'Johnson Fence' },
-    ];
-    setVendors(vendorOptions);
-  }, []);
+    if (allVendors && allVendors.length) {
+      const vendorMap = allVendors.map((v) => {
+        return { label: v.label, value: v._id };
+      });
+      setVendors(vendorMap);
+    } else {
+      setVendors([]);
+    }
+  }, [allVendors]);
 
   const colors = useMemo(
     () =>

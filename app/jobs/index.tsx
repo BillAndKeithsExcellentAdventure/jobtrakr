@@ -18,6 +18,7 @@ import { useJobDb } from '@/context/DatabaseContext';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useJobDataStore } from '@/stores/jobDataStore';
+import { useVendorDataStore, VendorEntry } from '@/stores/vendorDataStore';
 import { ShareFile } from '@/utils/sharing';
 import { useDbLogger } from '@/context/LoggerContext';
 
@@ -34,6 +35,7 @@ function isEntry(obj: any): obj is TwoColumnListEntry {
 
 export default function JobHomeScreen() {
   const { allJobs, updateJob, setAllJobs } = useJobDataStore();
+  const { setVendorData } = useVendorDataStore();
   const [jobListEntries, setJobListEntries] = useState<TwoColumnListEntry[]>([]);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const navigation = useNavigation();
@@ -74,7 +76,21 @@ export default function JobHomeScreen() {
     setAllJobs(jobs); // update the jobDataStore
   }, [jobDbHost]);
 
-  React.useEffect(() => {
+  // set the vendor data on initial screen render
+  useEffect(() => {
+    const vendorOptions: VendorEntry[] = [
+      { label: 'Home Depot', _id: '1' },
+      { label: "Lowe's", _id: '2' },
+      { label: 'Tractor Supply', _id: '3' },
+      { label: 'Master Plumbing', _id: '4' },
+      { label: 'Ace Hardware', _id: '5' },
+      { label: 'Johnson Fence', _id: '6' },
+    ];
+
+    setVendorData(vendorOptions);
+  }, [allJobs]);
+
+  useEffect(() => {
     if (allJobs) {
       const listData: TwoColumnListEntry[] = allJobs.map((job) => {
         return {
