@@ -50,7 +50,7 @@ const ReceiptDetailsPage = () => {
   // Fetch receipts for the given job and user
   useEffect(() => {
     fetchReceipt();
-  }, [allJobReceipts]);
+  }, [fetchReceipt]);
 
   const showPicture = useCallback(
     (uri: string) => {

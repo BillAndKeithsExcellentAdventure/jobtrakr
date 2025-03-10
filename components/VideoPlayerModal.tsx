@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Modal, StyleSheet, Pressable, Dimensions, SafeAreaView } from 'react-native';
+import { View } from '@/components/Themed';
+import { Ionicons } from '@expo/vector-icons';
+import { useEvent, useEventListener } from 'expo';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from '@/components/Themed';

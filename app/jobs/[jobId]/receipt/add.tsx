@@ -1,5 +1,8 @@
 import { ActionButton } from '@/components/ActionButton';
+import BottomSheetContainer from '@/components/BottomSheetContainer';
 import { NumberInputField } from '@/components/NumberInputField';
+import OptionList, { OptionEntry } from '@/components/OptionList';
+import { OptionPickerItem } from '@/components/OptionPickerItem';
 import { TextField } from '@/components/TextField';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -18,6 +21,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const AddReceiptPage = () => {
   const defaultDate = new Date();
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
+  const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
+  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
+  const [vendors, setVendors] = useState<OptionEntry[]>([]);
+
+  const handleVendorOptionChange = (option: OptionEntry) => {
+    setPickedOption(option);
+    if (option) {
+      handleVendorChange(option.label);
+    }
+    setIsVendorListPickerVisible(false);
+  };
 
   type JobReceipt = {
     date: Date;
@@ -50,6 +64,19 @@ const AddReceiptPage = () => {
   const colorScheme = useColorScheme();
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [canAddReceipt, setCanAddReceipt] = useState(false);
+
+  useEffect(() => {
+    // TODO need to fetch from database
+    const vendorOptions = [
+      { label: 'Home Depot' },
+      { label: "Lowe's" },
+      { label: 'Tractor Supply' },
+      { label: 'Master Plumbing' },
+      { label: 'Ace Hardware' },
+      { label: 'Johnson Fence' },
+    ];
+    setVendors(vendorOptions);
+  }, []);
 
   const colors = useMemo(
     () =>
@@ -151,6 +178,7 @@ const AddReceiptPage = () => {
     const response = await jobDbHost?.GetReceiptBucketDB().InsertReceipt(jobId, newReceipt);
     if (response?.status === 'Success') {
       newReceipt._id = response.id;
+      newReceipt.JobId = jobId;
       addReceiptData(newReceipt);
       console.log('Job receipt successfully added:', newReceipt);
     } else {
@@ -219,14 +247,25 @@ const AddReceiptPage = () => {
                 onCancel={hideDatePicker}
               />
 
-              <TextField
-                containerStyle={styles.inputContainer}
-                style={[styles.input, { borderColor: colors.transparent }]}
-                placeholder="Vendor"
-                label="Vendor"
-                value={jobReceipt.vendor}
-                onChangeText={handleVendorChange}
-              />
+              {vendors && vendors.length ? (
+                <OptionPickerItem
+                  containerStyle={styles.inputContainer}
+                  optionLabel={jobReceipt.vendor}
+                  label="Vendor"
+                  placeholder="Vendor"
+                  onOptionLabelChange={handleVendorChange}
+                  onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
+                />
+              ) : (
+                <TextField
+                  containerStyle={styles.inputContainer}
+                  style={[styles.input, { borderColor: colors.transparent }]}
+                  placeholder="Vendor"
+                  label="Vendor"
+                  value={jobReceipt.vendor}
+                  onChangeText={handleVendorChange}
+                />
+              )}
 
               <NumberInputField
                 style={styles.inputContainer}
@@ -293,6 +332,18 @@ const AddReceiptPage = () => {
             </View>
           </View>
         </TouchableWithoutFeedback>
+        {vendors && isVendorListPickerVisible && (
+          <BottomSheetContainer
+            isVisible={isVendorListPickerVisible}
+            onClose={() => setIsVendorListPickerVisible(false)}
+          >
+            <OptionList
+              options={vendors}
+              onSelect={(option) => handleVendorOptionChange(option)}
+              selectedOption={pickedOption}
+            />
+          </BottomSheetContainer>
+        )}
       </View>
     </SafeAreaView>
   );

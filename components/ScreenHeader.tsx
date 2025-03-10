@@ -70,12 +70,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    marginLeft: 15,
   } as ViewStyle, // Type for the header container style
   headerLeft: {
+    marginLeft: 10,
     justifyContent: 'center',
   } as ViewStyle,
   headerTitleContainer: {
+    marginLeft: 10,
     flex: 1,
     alignItems: 'flex-start',
   } as ViewStyle,

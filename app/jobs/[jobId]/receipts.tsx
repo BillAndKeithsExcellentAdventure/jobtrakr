@@ -140,7 +140,7 @@ const JobReceiptsPage = () => {
     jobName: string;
   }>();
   const { jobDbHost } = useJobDb();
-  const { allJobReceipts: receiptData, removeReceiptData, setReceiptData } = useReceiptDataStore();
+  const { allJobReceipts, removeReceiptData, setReceiptData } = useReceiptDataStore();
 
   const fetchReceipts = useCallback(async () => {
     try {
@@ -216,24 +216,24 @@ const JobReceiptsPage = () => {
           <View style={{ marginHorizontal: 10, marginBottom: 20 }}>
             <ActionButton onPress={handleAddReceipt} type={'action'} title="Add Receipt" />
           </View>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <View style={{ flex: 1, width: '100%', backgroundColor: colors.listBackground }}>
-              {receiptData.length === 0 ? (
-                <View style={{ alignItems: 'center' }}>
-                  <Text>No receipts found.</Text>
-                </View>
-              ) : (
+          {allJobReceipts.length === 0 ? (
+            <View style={{ alignItems: 'center', margin: 40 }}>
+              <Text txtSize="xl" text="No receipts found." />
+            </View>
+          ) : (
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <View style={{ flex: 1, width: '100%', backgroundColor: colors.listBackground }}>
                 <FlashList
                   estimatedItemSize={150}
-                  data={receiptData}
+                  data={allJobReceipts}
                   keyExtractor={(item, index) => item._id ?? index.toString()}
                   renderItem={({ item }) => (
                     <SwipeableItem item={item} onDelete={handleRemoveReceipt} onShowPicture={showPicture} />
                   )}
                 />
-              )}
-            </View>
-          </GestureHandlerRootView>
+              </View>
+            </GestureHandlerRootView>
+          )}
         </View>
       </View>
     </SafeAreaView>

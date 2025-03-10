@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Text, TextInput, View } from '@/components/Themed';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { View, Text } from '@/components/Themed';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useJobDb } from '@/context/DatabaseContext';
 import { ReceiptBucketData } from 'jobdb';
@@ -7,18 +7,43 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NumberInputField } from '@/components/NumberInputField';
 import { TextField } from '@/components/TextField';
 import { StyleSheet } from 'react-native';
-import { ReceiptSummary } from '@/components/ReceiptSummary';
 import { useReceiptDataStore } from '@/stores/receiptDataStore';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { ActionButton } from '@/components/ActionButton';
+import OptionList, { OptionEntry } from '@/components/OptionList';
+import { OptionPickerItem } from '@/components/OptionPickerItem';
+import BottomSheetContainer from '@/components/BottomSheetContainer';
 
 const EditReceiptDetailsPage = () => {
   const { receiptId } = useLocalSearchParams<{ receiptId: string }>();
   const { allJobReceipts, updateReceiptData } = useReceiptDataStore();
-  const numberInputRef = useRef(null); // Create a ref to access the child component
+  const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
+  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
+  const [vendors, setVendors] = useState<OptionEntry[]>([]);
+
+  const handleVendorOptionChange = (option: OptionEntry) => {
+    if (option) {
+      handleVendorChange(option.label);
+    }
+    setIsVendorListPickerVisible(false);
+  };
 
   const { jobDbHost } = useJobDb();
+
+  useEffect(() => {
+    // TODO need to fetch from database
+    const vendorOptions = [
+      { label: 'Home Depot' },
+      { label: "Lowe's" },
+      { label: 'Tractor Supply' },
+      { label: 'Master Plumbing' },
+      { label: 'Ace Hardware' },
+      { label: 'Johnson Fence' },
+    ];
+    setVendors(vendorOptions);
+  }, []);
+
   const [receipt, setReceipt] = useState<ReceiptBucketData>({
     _id: '',
     UserId: '',
@@ -45,6 +70,7 @@ const EditReceiptDetailsPage = () => {
           ...prevReceipt,
           ...match,
         }));
+        pickedOption;
       }
     } catch (err) {
       alert(`An error occurred while fetching the receipt with _id=${receiptId}`);
@@ -55,7 +81,12 @@ const EditReceiptDetailsPage = () => {
   // Fetch receipts for the given job and user
   useEffect(() => {
     fetchReceipt();
-  }, [allJobReceipts]);
+  }, [fetchReceipt]);
+
+  useEffect(() => {
+    const match = vendors.find((o) => o.label === receipt.Vendor);
+    setPickedOption(match);
+  }, [receipt, vendors]);
 
   const colorScheme = useColorScheme();
 
@@ -81,11 +112,14 @@ const EditReceiptDetailsPage = () => {
     [colorScheme],
   );
 
-  const handleSubmit = useCallback(async () => {
-    if (numberInputRef.current) {
-      numberInputRef.current.apply(); // Call the apply method on the child component
-    }
+  const handleVendorChange = useCallback((vendor: string) => {
+    setReceipt((prevReceipt) => ({
+      ...prevReceipt,
+      Vendor: vendor,
+    }));
+  }, []);
 
+  const handleSubmit = useCallback(async () => {
     if (receipt._id) {
       const status = await jobDbHost?.GetReceiptBucketDB().UpdateReceipt(receipt);
       if (status === 'Success') {
@@ -97,36 +131,47 @@ const EditReceiptDetailsPage = () => {
     router.back();
   }, [receipt]);
 
+  const receiptAmount = receipt.Amount ?? 0;
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: 'Edit Receipt Details', headerShown: false }} />
+      <Stack.Screen options={{ title: 'Edit Receipt Summary', headerShown: false }} />
 
       <View style={[styles.container, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
         <View style={styles.editContainer}>
+          <View style={{ alignItems: 'center' }}>
+            <Text txtSize="title" text="Edit Receipt Summary" />
+          </View>
           <NumberInputField
-            ref={numberInputRef}
             style={styles.inputContainer}
             label="Amount"
-            value={receipt.Amount!}
-            onChange={function (value: number): void {
+            value={receiptAmount}
+            onChange={(value: number): void => {
               setReceipt((prevReceipt) => ({
                 ...prevReceipt,
                 Amount: value,
               }));
             }}
           />
-          <TextField
-            containerStyle={styles.inputContainer}
-            placeholder="Vendor"
-            label="Vendor"
-            value={receipt.Vendor}
-            onChangeText={(text): void => {
-              setReceipt((prevReceipt) => ({
-                ...prevReceipt,
-                Vendor: text,
-              }));
-            }}
-          />
+          {vendors && vendors.length ? (
+            <OptionPickerItem
+              containerStyle={styles.inputContainer}
+              optionLabel={receipt.Vendor}
+              label="Vendor"
+              placeholder="Vendor"
+              onOptionLabelChange={handleVendorChange}
+              onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
+            />
+          ) : (
+            <TextField
+              containerStyle={styles.inputContainer}
+              placeholder="Vendor"
+              label="Vendor"
+              value={receipt.Vendor}
+              onChangeText={handleVendorChange}
+            />
+          )}
+
           <TextField
             containerStyle={styles.inputContainer}
             placeholder="Description"
@@ -164,6 +209,18 @@ const EditReceiptDetailsPage = () => {
             />
           </View>
         </View>
+        {vendors && isVendorListPickerVisible && (
+          <BottomSheetContainer
+            isVisible={isVendorListPickerVisible}
+            onClose={() => setIsVendorListPickerVisible(false)}
+          >
+            <OptionList
+              options={vendors}
+              onSelect={(option) => handleVendorOptionChange(option)}
+              selectedOption={pickedOption}
+            />
+          </BottomSheetContainer>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -175,7 +232,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: '100%',
-    paddingTop: 20,
   },
   editContainer: {
     padding: 20,

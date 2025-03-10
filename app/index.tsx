@@ -1,28 +1,28 @@
 import React, { useEffect } from 'react';
 import { Redirect, useRouter, useSegments } from 'expo-router';
-import { useSession } from '@/context/AuthSessionContext';
+import { useAuthSession } from '@/context/AuthSessionContext';
 
 const IndexPage = () => {
-  const { session } = useSession();
+  const { sessionUser } = useAuthSession();
 
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
-    if (!session) return;
+    if (!sessionUser) return;
 
     const inTabsGroup = segments[0] === '(auth)';
 
-    console.log('User changed: ', session);
+    console.log('User changed: ', sessionUser);
 
-    if (session && !inTabsGroup) {
+    if (sessionUser && !inTabsGroup) {
       router.replace('/jobs');
     } else {
       router.replace('/(auth)/auth');
     }
-  }, [session]);
+  }, [sessionUser]);
 
-  if (!session) return <Redirect href="/(auth)/auth" />;
+  if (!sessionUser) return <Redirect href="/(auth)/auth" />;
 
   return <Redirect href="/jobs" />;
 };

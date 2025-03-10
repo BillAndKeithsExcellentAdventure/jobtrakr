@@ -57,7 +57,7 @@ function RootLayoutNav() {
                 <Stack.Screen name="jobs" />
                 <Stack.Screen name="(auth)" />
               </Stack>
-              <StatusBar style={colorScheme === 'dark' ? 'dark' : 'light'} />
+              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
             </SafeAreaProvider>
           </LoggerHostProvider>
         </DatabaseHostProvider>

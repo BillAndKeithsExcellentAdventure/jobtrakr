@@ -13,9 +13,12 @@ export function formatDate(date?: Date | string, notSpecifiedString = 'Not Speci
   return `${month}/${day}/${year}`;
 }
 
-export function formatCurrency(amount?: number): string {
+export function formatCurrency(amount?: number, includeCents = false): string {
   if (amount === undefined || amount === null) return '';
 
-  const roundedAmount = Math.round(amount); // Round the amount to the nearest whole number
-  return `$${roundedAmount.toLocaleString()}`; // Format with commas and add dollar sign
+  if (!includeCents) {
+    const roundedAmount = Math.round(amount); // Round the amount to the nearest whole number
+    return `$${roundedAmount.toLocaleString()}`; // Format with commas and add dollar sign
+  }
+  return `$${amount.toFixed(2)}`;
 }
