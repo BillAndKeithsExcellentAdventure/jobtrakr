@@ -1,11 +1,9 @@
-import { View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { useEvent, useEventListener } from 'expo';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from '@/components/Themed';
-import { useEvent } from 'expo';
-import { useEventListener } from 'expo';
+import { useCallback, useEffect, useState } from 'react';
+import { Dimensions, Modal, Pressable, SafeAreaView, StyleSheet } from 'react-native';
 
 interface VideoPlayerModalProps {
   isVisible: boolean;
