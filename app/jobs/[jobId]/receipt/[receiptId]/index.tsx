@@ -149,7 +149,11 @@ const ReceiptDetailsPage = () => {
     [colorScheme],
   );
 
-  const addLineItem = useCallback(() => {}, []);
+  const addLineItem = useCallback(() => {
+    console.log(`addLineItem - route = /jobs/${receipt.JobId}/receipt/${receiptId}/addLineItem`);
+    router.push(`/jobs/${receipt.JobId}/receipt/${receiptId}/addLineItem`);
+  }, [receipt, receiptId]);
+
   const requestAIProcessing = useCallback(() => {}, []);
   const [containerHeight, setContainerHeight] = useState(0);
 
