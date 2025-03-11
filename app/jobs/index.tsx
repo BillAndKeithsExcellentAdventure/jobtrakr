@@ -128,9 +128,9 @@ export default function JobHomeScreen() {
         const status = await jobDbHost?.GetJobDB().UpdateJob(updatedJob);
         if (status === 'Success') {
           updateJob(updatedJob._id!, updatedJob); // update the jobDataStore
-          logInfo('Job successfully updated:', updatedJob.Name);
+          await logInfo('Job successfully updated:', updatedJob.Name);
         } else {
-          logInfo('Job update failed:', updatedJob.Name);
+          await logInfo('Job update failed:', updatedJob.Name);
         }
       }
     },
@@ -200,7 +200,7 @@ export default function JobHomeScreen() {
     (entry: TwoColumnListEntry) => {
       const job = allJobs.find((j) => (j._id ?? '') === entry.entryId);
       if (job && job._id) router.push(`/jobs/${job._id}`);
-      logInfo(`Hello from item ${entry.primaryTitle}`);
+      console.log(`Hello from item ${entry.primaryTitle}`);
     },
     [allJobs],
   );

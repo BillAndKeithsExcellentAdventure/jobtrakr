@@ -249,7 +249,7 @@ const JobPhotosPage = () => {
           // Update the JobStore.
           updateJob(jobId, { Thumbnail: tn });
 
-          await await logInfo('Thumbnail set successfully');
+          await logInfo('Thumbnail set successfully');
         }
       }
     }
