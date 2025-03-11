@@ -9,7 +9,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Entypo from '@expo/vector-icons/Entypo';
 import { useNavigation } from '@react-navigation/native';
-import { Stack, useRouter } from 'expo-router';
+import { router, Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, StyleSheet } from 'react-native';
 
@@ -192,19 +192,9 @@ export default function JobHomeScreen() {
     [colors, onLikePressed],
   );
 
-  React.useEffect(() => {
-    const state = navigation.getState();
-    logInfo(`Current stack state: ${state}`);
-  }, [navigation, logInfo]);
-
   useEffect(() => {
     loadJobs();
   }, [jobDbHost]);
-
-  const router = useRouter();
-  React.useEffect(() => {
-    logInfo(`Router output ${router}`);
-  }, [router]);
 
   const handleSelection = useCallback(
     (entry: TwoColumnListEntry) => {

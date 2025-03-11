@@ -5,8 +5,8 @@ export type ReceiptItemEntry = {
   amount: number;
   _id?: string;
   receiptId: string;
-  category: string;
-  subCategory: string;
+  category?: string;
+  subCategory?: string;
 };
 
 export type ItemizedReceiptDataStore = {
@@ -17,7 +17,7 @@ export type ItemizedReceiptDataStore = {
   updateReceiptItem: (id: string, updatedItem: Partial<ReceiptItemEntry>) => void;
 };
 
-export const useVendorDataStore = create<ItemizedReceiptDataStore>((set) => ({
+export const useItemizedReceiptDataStore = create<ItemizedReceiptDataStore>((set) => ({
   allReceiptItems: [],
   setReceiptItems: (data) => set({ allReceiptItems: data }),
   addReceiptItem: (vendor) => set((state) => ({ allReceiptItems: [...state.allReceiptItems, vendor] })),

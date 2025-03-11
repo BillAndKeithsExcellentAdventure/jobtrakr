@@ -22,3 +22,9 @@ export function formatCurrency(amount?: number, includeCents = false): string {
   }
   return `$${amount.toFixed(2)}`;
 }
+
+export function formatNumber(amount?: number, numDecimalPlaces = 2): string {
+  if (amount === undefined || amount === null) return (0.0).toFixed(numDecimalPlaces);
+
+  return `${amount.toFixed(numDecimalPlaces)}`;
+}

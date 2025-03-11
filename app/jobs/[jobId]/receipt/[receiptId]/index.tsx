@@ -7,14 +7,17 @@ import { useReceiptDataStore } from '@/stores/receiptDataStore';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { LayoutChangeEvent, Platform, StyleSheet, useColorScheme } from 'react-native';
+import { FlatList, LayoutChangeEvent, Platform, StyleSheet, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { ActionButton } from '@/components/ActionButton';
+import { useItemizedReceiptDataStore } from '@/stores/itemizedReceiptDataStore';
+import { formatCurrency, formatNumber } from '@/utils/formatters';
 
 const ReceiptDetailsPage = () => {
   const { receiptId } = useLocalSearchParams<{ receiptId: string }>();
   const { allJobReceipts } = useReceiptDataStore();
+  const { allReceiptItems, setReceiptItems } = useItemizedReceiptDataStore();
   const { jobDbHost } = useJobDb();
   const [receipt, setReceipt] = useState<ReceiptBucketData>({
     _id: '',
@@ -31,6 +34,7 @@ const ReceiptDetailsPage = () => {
     AlbumId: '',
     PictureUri: '',
   });
+  const [itemsTotalCost, setItemsTotalCost] = useState(0);
 
   const fetchReceipt = useCallback(async () => {
     try {
@@ -54,6 +58,66 @@ const ReceiptDetailsPage = () => {
     fetchReceipt();
   }, [fetchReceipt]);
 
+  const fetchItemizedReceipts = useCallback(async () => {
+    try {
+      const receiptItems = [
+        {
+          label: 'Nails',
+          amount: 103.85,
+          _id: '1',
+          receiptId: '1',
+          category: 'Hardware',
+          subCategory: 'Nails',
+        },
+        {
+          label: "3 - 500' rolls of silt fencing",
+          amount: 223.0,
+          _id: '3',
+          receiptId: '1',
+        },
+        {
+          label: "5 - 20' 20in PVC pipe",
+          amount: 223.0,
+          _id: '4',
+          receiptId: '1',
+        },
+        {
+          label: "5 - 100' Roofing Felt",
+          amount: 185.0,
+          _id: '5',
+          receiptId: '1',
+        },
+        {
+          label: "5 - 100' Roofing Felt",
+          amount: 185.0,
+          _id: '6',
+          receiptId: '1',
+        },
+        {
+          label: '10# 2.5in Deck Screws',
+          amount: 48.75,
+          _id: '7',
+          receiptId: '1',
+          category: 'Hardware',
+          subCategory: 'Screws',
+        },
+      ];
+
+      setReceiptItems(receiptItems);
+    } catch (err) {
+      alert(`An error occurred while fetching the receipt with _id=${receiptId}`);
+      console.log('An error occurred while fetching the receipt', err);
+    }
+  }, [receiptId, jobDbHost, allJobReceipts]);
+
+  useEffect(() => {
+    fetchItemizedReceipts();
+  }, [fetchItemizedReceipts]);
+
+  useEffect(() => {
+    setItemsTotalCost(allReceiptItems.reduce((acc, item) => acc + item.amount, 0));
+  }, [allReceiptItems]);
+
   const showPicture = useCallback(
     (uri: string) => {
       router.push(`/jobs/${receipt.JobId}/receipt/${receiptId}/showImage/?uri=${uri}`);
@@ -74,26 +138,16 @@ const ReceiptDetailsPage = () => {
       colorScheme === 'dark'
         ? {
             separatorColor: Colors.dark.separatorColor,
-            listBackground: Colors.dark.listBackground,
-            itemBackground: Colors.dark.itemBackground,
-            shadowColor: Colors.dark.shadowColor,
-            boxShadow: Colors.dark.boxShadow,
             borderColor: Colors.dark.borderColor,
             iconColor: Colors.dark.iconColor,
           }
         : {
             separatorColor: Colors.light.separatorColor,
-            listBackground: Colors.light.listBackground,
-            itemBackground: Colors.light.itemBackground,
-            shadowColor: Colors.light.shadowColor,
-            boxShadow: Colors.light.boxShadow,
             borderColor: Colors.light.borderColor,
             iconColor: Colors.light.iconColor,
           },
     [colorScheme],
   );
-
-  const boxShadow = Platform.OS === 'web' ? colors.boxShadow : undefined;
 
   const addLineItem = useCallback(() => {}, []);
   const requestAIProcessing = useCallback(() => {}, []);
@@ -107,18 +161,12 @@ const ReceiptDetailsPage = () => {
     <SafeAreaView
       onLayout={onLayout}
       edges={['right', 'bottom', 'left']}
-      style={{ flex: 1, backgroundColor: 'yellow', overflowY: 'hidden' }}
+      style={{ flex: 1, overflowY: 'hidden' }}
     >
       <Stack.Screen options={{ title: 'Receipt Details', headerShown: true }} />
       {containerHeight > 0 && (
         <>
-          <View
-            style={[
-              styles.itemContainer,
-              { backgroundColor: colors.itemBackground },
-              { backgroundColor: colors.itemBackground, shadowColor: colors.shadowColor, boxShadow },
-            ]}
-          >
+          <View style={[styles.itemContainer, { borderColor: colors.borderColor }]}>
             <ReceiptSummary item={receipt} onShowDetails={editDetails} onShowPicture={showPicture} />
           </View>
 
@@ -149,72 +197,72 @@ const ReceiptDetailsPage = () => {
               }}
             >
               <Text
-                style={{ width: 105, textAlign: 'center', fontWeight: '600' }}
+                style={{ width: 90, textAlign: 'center', fontWeight: '600' }}
                 txtSize="standard"
                 text="Amount"
               />
               <Text
-                style={{ flex: 1, marginHorizontal: 10, textAlign: 'center', fontWeight: '600' }}
+                style={{ flex: 1, marginHorizontal: 20, textAlign: 'center', fontWeight: '600' }}
                 txtSize="standard"
                 text="Description"
               />
               <Text style={{ width: 40, fontWeight: '600' }} txtSize="standard" text="" />
             </View>
-            <View
-              style={{
-                flexDirection: 'row',
-                width: '100%',
-                borderTopColor: colors.separatorColor,
-                borderTopWidth: 1,
 
-                minHeight: 40,
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ width: 105, textAlign: 'right' }} txtSize="standard" text="10,223.00" />
-              <Text
-                style={{ flex: 1, marginHorizontal: 10, textAlign: 'left' }}
-                txtSize="standard"
-                text="Nails"
+            <View style={{ maxHeight: containerHeight - 290 }}>
+              <FlatList
+                showsVerticalScrollIndicator={Platform.OS === 'web'}
+                data={allReceiptItems}
+                renderItem={({ item, index }) => (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      width: '100%',
+                      borderTopColor: colors.separatorColor,
+                      borderTopWidth: 1,
+
+                      minHeight: 40,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text
+                      style={{ width: 90, textAlign: 'right' }}
+                      txtSize="standard"
+                      text={formatNumber(item.amount)}
+                    />
+                    <Text
+                      style={{ flex: 1, marginHorizontal: 20, textAlign: 'left' }}
+                      txtSize="xs"
+                      text={item.label}
+                    />
+                    {item.category && item.subCategory ? (
+                      <View
+                        style={{
+                          width: 40,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          backgroundColor: 'transparent',
+                        }}
+                      >
+                        <AntDesign name="checkcircleo" size={24} color={colors.iconColor} />
+                      </View>
+                    ) : (
+                      <View
+                        style={{
+                          width: 40,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          backgroundColor: 'transparent',
+                        }}
+                      >
+                        <AntDesign name="questioncircleo" size={24} color={colors.iconColor} />
+                      </View>
+                    )}
+                  </View>
+                )}
               />
-              <View
-                style={{
-                  width: 40,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: 'transparent',
-                }}
-              >
-                <AntDesign name="questioncircleo" size={24} color={colors.iconColor} />
-              </View>
             </View>
-            <View
-              style={{
-                flexDirection: 'row',
-                borderTopColor: colors.separatorColor,
-                borderTopWidth: 1,
-                width: '100%',
-                minHeight: 40,
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ width: 105, textAlign: 'right' }} txtSize="standard" text="10,223.00" />
-              <Text
-                style={{ flex: 1, marginHorizontal: 10, textAlign: 'left' }}
-                txtSize="standard"
-                text="This is a very long description of the items purchased"
-              />
-              <View
-                style={{
-                  width: 40,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: 'transparent',
-                }}
-              >
-                <AntDesign name="checkcircleo" size={24} color={colors.iconColor} />
-              </View>
-            </View>
+
             <View
               style={{
                 flexDirection: 'row',
@@ -226,14 +274,16 @@ const ReceiptDetailsPage = () => {
               }}
             >
               <Text
-                style={{ width: 105, textAlign: 'center', fontWeight: '600' }}
+                style={{ width: 90, textAlign: 'right', fontWeight: '600' }}
                 txtSize="standard"
-                text="20,446.00"
+                text={itemsTotalCost ? formatCurrency(itemsTotalCost, true) : '$0.00'}
               />
               <Text
                 style={{ flex: 1, marginHorizontal: 10, textAlign: 'center', fontWeight: '600' }}
                 txtSize="standard"
-                text="Total for 2 line items"
+                text={`Total for ${allReceiptItems.length} line ${
+                  allReceiptItems.length?.toString() === '1' ? 'item' : 'items'
+                }`}
               />
             </View>
           </View>
@@ -256,15 +306,14 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     flexDirection: 'row',
-    margin: 20,
-    marginHorizontal: 10,
+    margin: 10,
     borderRadius: 15,
-    elevation: 20, // Adds shadow effect for Android
-    shadowOffset: { width: 2, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 15,
     padding: 10,
     height: 100,
+  },
+
+  amountColumn: {
+    width: 90,
   },
 
   leftButton: {
