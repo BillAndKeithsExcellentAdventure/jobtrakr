@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/splash-icon-dark.png",
+      "dark": {
+        "image": "./assets/images/splash-icon-light.png",
+        "backgroundColor": "#000000"
+      },
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -20,6 +24,11 @@
       "config": {
         "googleMapsApiKey": "AIzaSyBac7r0lXImLW3HkBExNDmEzVJpxXDMLUg"
       },
+      "icon": {
+        "dark": "./assets/images/icon.png",
+        "light": "./assets/images/icon.png",
+        "tinted": "./assets/images/icon.png"
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -27,6 +36,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
+        "monochromeImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
