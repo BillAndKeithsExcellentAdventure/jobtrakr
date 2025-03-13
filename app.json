@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "jobtrakr",
+    "name": "Job+",
     "slug": "jobplus",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "jobtrakr",
@@ -20,7 +20,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.jobtrakr.app",
-      "buildNumber": "1.0.0",
+      "buildNumber": "1.0.1",
       "config": {
         "googleMapsApiKey": "AIzaSyBac7r0lXImLW3HkBExNDmEzVJpxXDMLUg"
       },
