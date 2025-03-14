@@ -14,6 +14,8 @@ import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
+import * as ImagePicker from 'expo-image-picker';
+
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ReceiptSummary } from '@/components/ReceiptSummary';
@@ -140,7 +142,7 @@ const JobReceiptsPage = () => {
     jobName: string;
   }>();
   const { jobDbHost } = useJobDb();
-  const { allJobReceipts, removeReceiptData, setReceiptData } = useReceiptDataStore();
+  const { allJobReceipts, addReceiptData, removeReceiptData, setReceiptData } = useReceiptDataStore();
 
   const fetchReceipts = useCallback(async () => {
     try {
@@ -204,6 +206,37 @@ const JobReceiptsPage = () => {
     [colorScheme],
   );
 
+  const handleAddPhotoReceipt = useCallback(async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      alert("You've refused to allow this app to access your camera!");
+      return;
+    }
+
+    const cameraResponse = await ImagePicker.launchCameraAsync();
+
+    if (!cameraResponse.canceled) {
+      const asset = cameraResponse.assets[0];
+      if (!cameraResponse.assets || cameraResponse.assets.length === 0 || !asset) return;
+
+      const newReceipt: ReceiptBucketData = {
+        PictureUri: asset.uri,
+        AssetId: asset.assetId ?? undefined,
+      };
+
+      const response = await jobDbHost?.GetReceiptBucketDB().InsertReceipt(jobId, newReceipt);
+      if (response?.status === 'Success') {
+        newReceipt._id = response.id;
+        newReceipt.JobId = jobId;
+        addReceiptData(newReceipt);
+        console.log('Job receipt successfully added:', newReceipt);
+      } else {
+        alert(`Unable to inset Job receipt: ${JSON.stringify(newReceipt)}`);
+      }
+    }
+  }, []);
+
   const handleAddReceipt = useCallback(() => {
     router.push(`/jobs/${jobId}/receipt/add/?jobName=${jobName}`);
   }, []);
@@ -213,8 +246,33 @@ const JobReceiptsPage = () => {
       <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
       <View style={styles.viewCenteringContainer}>
         <View style={styles.viewContentContainer}>
-          <View style={{ marginHorizontal: 10, marginBottom: 20 }}>
-            <ActionButton onPress={handleAddReceipt} type={'action'} title="Add Receipt" />
+          <View
+            style={{
+              marginHorizontal: 10,
+              marginTop: 10,
+              marginBottom: 10,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: 'row',
+                width: '100%',
+                gap: 10,
+              }}
+            >
+              <ActionButton
+                style={{ flex: 1 }}
+                onPress={handleAddPhotoReceipt}
+                type={'action'}
+                title="Add Photo"
+              />
+              <ActionButton
+                style={{ flex: 1 }}
+                onPress={handleAddReceipt}
+                type={'action'}
+                title="Add Manual"
+              />
+            </View>
           </View>
           {allJobReceipts.length === 0 ? (
             <View style={{ alignItems: 'center', margin: 40 }}>
