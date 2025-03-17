@@ -1,5 +1,5 @@
 import { ActionButtonProps } from '@/components/ButtonBar';
-import { View } from '@/components/Themed';
+import { View, Text } from '@/components/Themed';
 import { TwoColumnList, TwoColumnListEntry } from '@/components/TwoColumnList';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
@@ -128,9 +128,9 @@ export default function JobHomeScreen() {
         const status = await jobDbHost?.GetJobDB().UpdateJob(updatedJob);
         if (status === 'Success') {
           updateJob(updatedJob._id!, updatedJob); // update the jobDataStore
-          await logInfo('Job successfully updated:', updatedJob.Name);
+          await logInfo(`Job successfully updated: ${updatedJob.Name}`);
         } else {
-          await logInfo('Job update failed:', updatedJob.Name);
+          await logInfo(`Job update failed: %{updatedJob.Name}`);
         }
       }
     },
@@ -222,6 +222,8 @@ export default function JobHomeScreen() {
         console.log('Log file shared');
       } else if (item === 'ShareJobDb') {
         handleJobDbShare();
+      } else if (item === 'Configuration') {
+        router.push('/jobs/configuration');
       }
     },
     [shareLogFile, logInfo],
@@ -237,10 +239,10 @@ export default function JobHomeScreen() {
         },
       },
       {
-        icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
-        label: 'Share Job DB',
+        icon: <FontAwesome name="gear" size={28} color={colors.iconColor} />,
+        label: 'Configuration',
         onPress: (e, actionContext) => {
-          handleMenuItemPress('ShareJobDb', actionContext);
+          handleMenuItemPress('Configuration', actionContext);
         },
       },
       {
@@ -309,9 +311,16 @@ export default function JobHomeScreen() {
       )}
 
       <View style={{ flex: 1, width: '100%' }}>
-        <View style={[styles.twoColListContainer, { backgroundColor: colors.screenBackground }]}>
-          <TwoColumnList data={jobListEntries} onPress={handleSelection} buttons={jobActionButtons} />
-        </View>
+        {jobListEntries.length > 0 ? (
+          <View style={[styles.twoColListContainer, { backgroundColor: colors.screenBackground }]}>
+            <TwoColumnList data={jobListEntries} onPress={handleSelection} buttons={jobActionButtons} />
+          </View>
+        ) : (
+          <View style={[styles.container, { padding: 20, backgroundColor: colors.screenBackground }]}>
+            <Text text="No Jobs Found!" txtSize="xl" />
+            <Text text="Use menu in upper right to add one." />
+          </View>
+        )}
       </View>
       {headerMenuModalVisible && (
         <RightHeaderMenu

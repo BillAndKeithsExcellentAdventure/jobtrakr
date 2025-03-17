@@ -30,7 +30,7 @@ export const DatabaseHostProvider: React.FC<DatabaseHostProviderProps> = ({ chil
     async function initDb(userId: number) {
       console.info('Initializing DB...');
       const dbHost = new JobTrakrDB(userId);
-      const createSampleDataIfEmpty = true;
+      const createSampleDataIfEmpty = false; // set this to true to create sample data if the database is empty
       const status = await dbHost.OpenDatabase(createSampleDataIfEmpty, replaceDatabase.current);
       if (status === 'Success') {
         // Only replace the database once

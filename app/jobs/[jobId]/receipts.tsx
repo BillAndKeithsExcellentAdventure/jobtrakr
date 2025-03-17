@@ -19,6 +19,7 @@ import * as ImagePicker from 'expo-image-picker';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ReceiptSummary } from '@/components/ReceiptSummary';
+import { useJobCategoryDataStore } from '@/stores/categoryDataStore';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
   return actionContext && typeof actionContext.PictureUri === 'string';
@@ -143,6 +144,7 @@ const JobReceiptsPage = () => {
   }>();
   const { jobDbHost } = useJobDb();
   const { allJobReceipts, addReceiptData, removeReceiptData, setReceiptData } = useReceiptDataStore();
+  const { allJobCategories, setJobCategories } = useJobCategoryDataStore();
 
   const fetchReceipts = useCallback(async () => {
     try {
@@ -163,6 +165,28 @@ const JobReceiptsPage = () => {
   useEffect(() => {
     fetchReceipts();
   }, []);
+
+  // Fetch receipts for the given job and user
+  /*
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await jobDbHost?.GetCategoryDB().FetchAllCategories();
+
+        if (!response) return;
+
+        if (response.status === 'Success' && response.data) {
+          setReceiptData(response.data);
+        }
+      } catch (err) {
+        alert('An error occurred while fetching the receipts');
+        console.log('An error occurred while fetching the receipts', err);
+      }
+    };
+
+    fetchReceipts();
+  }, [jobId, jobDbHost, setJobCategories]);
+  */
 
   const showPicture = useCallback((uri: string) => {
     router.push(`/jobs/${jobId}/receipt/${receiptId}/showImage/?uri=${uri}`);
