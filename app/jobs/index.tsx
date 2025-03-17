@@ -223,7 +223,7 @@ export default function JobHomeScreen() {
       } else if (item === 'ShareJobDb') {
         handleJobDbShare();
       } else if (item === 'Configuration') {
-        router.push('/jobs/configuration');
+        router.push('/jobs/configuration/home');
       }
     },
     [shareLogFile, logInfo],

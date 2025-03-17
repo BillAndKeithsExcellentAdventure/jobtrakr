@@ -3,9 +3,7 @@ import React from 'react';
 import { Stack } from 'expo-router';
 
 const JobsLayout = () => {
-  return (
-    <Stack screenOptions={{headerShown: false}}/>
-  );
+  return <Stack screenOptions={{ headerShown: true }} />;
 };
 
 export default JobsLayout;
