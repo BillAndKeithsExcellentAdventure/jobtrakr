@@ -1,12 +1,12 @@
-import { JobCategoryData } from 'jobdb';
+import { WorkCategoryData } from 'jobdb';
 import { create } from 'zustand';
 
 export type JobCategoryDataStore = {
-  allJobCategories: JobCategoryData[];
-  setJobCategories: (data: JobCategoryData[]) => void;
-  addJobCategories: (receipt: JobCategoryData) => void;
+  allJobCategories: WorkCategoryData[];
+  setJobCategories: (data: WorkCategoryData[]) => void;
+  addJobCategories: (receipt: WorkCategoryData) => void;
   removeJobCategories: (id: string) => void;
-  updateJobCategories: (id: string, updatedItem: Partial<JobCategoryData>) => void;
+  updateJobCategories: (id: string, updatedItem: Partial<WorkCategoryData>) => void;
 };
 
 export const useJobCategoryDataStore = create<JobCategoryDataStore>((set) => ({

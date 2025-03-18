@@ -54,11 +54,11 @@ const VendorsScreen = () => {
   }, []);
 
   const handleAddVendor = () => {
-    router.push('/jobs/configuration/vendor-add');
+    router.push('/jobs/configuration/vendor/add');
   };
 
   const handleEditVendor = (id: string) => {
-    router.push(`/jobs/configuration/vendor-edit/${id}`);
+    router.push(`/jobs/configuration/vendor/${id}`);
   };
 
   const renderVendor = ({ item }: { item: VendorData }) => (

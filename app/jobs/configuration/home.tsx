@@ -22,12 +22,12 @@ const home = () => {
         <ConfigurationEntry
           label="Categories"
           description="Manage work categories"
-          onPress={() => router.push('/jobs/configuration/categories')}
+          onPress={() => router.push('/jobs/configuration/workcategory/workCategories')}
         />
         <ConfigurationEntry
           label="Vendors"
           description="Add and Edit Vendors"
-          onPress={() => router.push('/jobs/configuration/vendors')}
+          onPress={() => router.push('/jobs/configuration/vendor/vendors')}
         />
       </View>
     </SafeAreaView>
