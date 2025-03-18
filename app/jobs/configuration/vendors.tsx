@@ -33,8 +33,19 @@ const VendorsScreen = () => {
     // Fetch vendors from API or local storage (simulated here)
     const fetchVendors = async () => {
       const vendorsData: VendorData[] = [
-        { _id: '1', VendorName: 'Vendor 1', City: 'City 1', BusinessPhone: '123-456-7890' },
-        { _id: '2', VendorName: 'Vendor 2', City: 'City 2', BusinessPhone: '123-456-0780' },
+        {
+          _id: '1',
+          VendorName: 'Vendor 1',
+          City: 'City 1',
+          Address: '101 West Hwy 22',
+          BusinessPhone: '123-456-7890',
+        },
+        {
+          _id: '2',
+          VendorName: 'Vendor 2',
+          Address: '2044 Bardstown Rd',
+          BusinessPhone: '123-456-0780',
+        },
       ];
       setVendors(vendorsData);
     };
@@ -58,7 +69,11 @@ const VendorsScreen = () => {
       <View style={[styles.vendorContent, { borderColor: colors.borderColor, borderWidth: 1 }]}>
         <View style={styles.vendorInfo}>
           <Text style={styles.vendorName}>{item.VendorName}</Text>
-          <Text>{item.City}</Text>
+          <View style={{ flexDirection: 'row' }}>
+            <Text>{item.Address}</Text>
+            {item.City && item.Address && <Text>{', '}</Text>}
+            <Text>{item.City}</Text>
+          </View>
           <Text>{item.BusinessPhone}</Text>
         </View>
         <View>
@@ -76,9 +91,10 @@ const VendorsScreen = () => {
           title: 'Vendors',
         }}
       />
-      <ActionButton onPress={handleAddVendor} style={styles.addButton} type="action" title="Add Vendor" />
-
-      <FlatList data={vendors} keyExtractor={(item) => item._id!} renderItem={renderVendor} />
+      <View style={styles.container}>
+        <ActionButton onPress={handleAddVendor} type="action" title="Add Vendor" />
+        <FlatList data={vendors} keyExtractor={(item) => item._id!} renderItem={renderVendor} />
+      </View>
     </SafeAreaView>
   );
 };
@@ -86,7 +102,7 @@ const VendorsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 10,
   },
   header: {
     fontSize: 24,
@@ -111,16 +127,6 @@ const styles = StyleSheet.create({
   vendorName: {
     fontSize: 18,
     fontWeight: '600',
-  },
-  addButton: {
-    marginBottom: 16,
-    padding: 12,
-    borderRadius: 8,
-  },
-  addButtonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontSize: 18,
   },
 });
 

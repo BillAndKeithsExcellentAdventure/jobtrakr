@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { StyleSheet, Alert } from 'react-native';
+import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { VendorData } from 'jobdb';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActionButton } from '@/components/ActionButton';
+import { Text, TextInput, View } from '@/components/Themed';
 
 const EditVendor = () => {
   const { id } = useLocalSearchParams();
@@ -57,62 +60,88 @@ const EditVendor = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Edit Vendor</Text>
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Edit Vendor',
+        }}
+      />
+      <View style={styles.container}>
+        <TextInput
+          style={styles.input}
+          placeholder="Vendor Name"
+          value={vendor.VendorName}
+          onChangeText={(text) => handleInputChange('VendorName', text)}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Address"
+          value={vendor.Address}
+          onChangeText={(text) => handleInputChange('Address', text)}
+        />
+        <View style={{ flexDirection: 'row' }}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginRight: 8 }]}
+            placeholder="City"
+            value={vendor.City}
+            onChangeText={(text) => handleInputChange('City', text)}
+          />
+          <TextInput
+            style={[styles.input, { width: 75, marginRight: 8 }]}
+            placeholder="State"
+            value={vendor.State}
+            onChangeText={(text) => handleInputChange('State', text)}
+          />
+          <TextInput
+            style={[styles.input, { width: 80 }]}
+            placeholder="Zip"
+            value={vendor.Zip}
+            keyboardType="number-pad"
+            onChangeText={(text) => handleInputChange('Zip', text)}
+          />
+        </View>
+        <View style={{ flexDirection: 'row' }}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginRight: 8 }]}
+            placeholder="Mobile Phone"
+            keyboardType="phone-pad"
+            value={vendor.MobilePhone}
+            onChangeText={(text) => handleInputChange('MobilePhone', text)}
+          />
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="Business Phone"
+            value={vendor.BusinessPhone}
+            keyboardType="phone-pad"
+            onChangeText={(text) => handleInputChange('BusinessPhone', text)}
+          />
+        </View>
+        <TextInput
+          style={styles.input}
+          placeholder="Notes"
+          value={vendor.Notes}
+          onChangeText={(text) => handleInputChange('Notes', text)}
+        />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Vendor Name"
-        value={vendor.VendorName}
-        onChangeText={(text) => handleInputChange('VendorName', text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Address"
-        value={vendor.Address}
-        onChangeText={(text) => handleInputChange('Address', text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="City"
-        value={vendor.City}
-        onChangeText={(text) => handleInputChange('City', text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="State"
-        value={vendor.State}
-        onChangeText={(text) => handleInputChange('State', text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Zip Code"
-        value={vendor.Zip}
-        onChangeText={(text) => handleInputChange('Zip', text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Mobile Phone"
-        value={vendor.MobilePhone}
-        onChangeText={(text) => handleInputChange('MobilePhone', text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Business Phone"
-        value={vendor.BusinessPhone}
-        onChangeText={(text) => handleInputChange('BusinessPhone', text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Notes"
-        value={vendor.Notes}
-        onChangeText={(text) => handleInputChange('Notes', text)}
-      />
-
-      <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-        <Text style={styles.saveButtonText}>Save Vendor</Text>
-      </TouchableOpacity>
-    </View>
+        <View style={styles.saveButtonRow}>
+          <ActionButton
+            style={styles.saveButton}
+            onPress={handleSave}
+            type={vendor.VendorName ? 'ok' : 'disabled'}
+            title="Save"
+          />
+          <ActionButton
+            style={styles.cancelButton}
+            onPress={() => {
+              router.back();
+            }}
+            type={'cancel'}
+            title="Cancel"
+          />
+        </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -134,16 +163,18 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
     borderRadius: 4,
   },
-  saveButton: {
-    backgroundColor: '#28a745',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 20,
+  saveButtonRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  saveButtonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontSize: 18,
+  saveButton: {
+    flex: 1,
+    marginRight: 5,
+  },
+  cancelButton: {
+    flex: 1,
+    marginLeft: 5,
   },
 });
 
