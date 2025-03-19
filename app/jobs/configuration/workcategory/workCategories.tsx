@@ -1,15 +1,33 @@
 // screens/ListWorkCategories.tsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
-import { FontAwesome } from '@expo/vector-icons'; // Right caret icon
+import { Stack, useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons'; // Right caret icon
 import { Text, View } from '@/components/Themed';
 import { WorkCategoryData } from '@/app/models/types';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActionButton } from '@/components/ActionButton';
+import { useColorScheme } from '@/components/useColorScheme';
+import { Colors } from '@/constants/Colors';
 
 const ListWorkCategories = () => {
   const [categories, setCategories] = useState<WorkCategoryData[]>([]);
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            borderColor: Colors.dark.borderColor,
+            iconColor: Colors.dark.iconColor,
+          }
+        : {
+            borderColor: Colors.light.borderColor,
+            iconColor: Colors.light.iconColor,
+          },
+    [colorScheme],
+  );
 
   useEffect(() => {
     // Fetch categories from API or local storage (simulated here)
@@ -37,24 +55,30 @@ const ListWorkCategories = () => {
       onPress={() => handleEditCategory(item._id!)} // Edit on item press
       style={styles.categoryItem}
     >
-      <View style={styles.categoryContent}>
+      <View style={[styles.categoryContent, { borderColor: colors.borderColor, borderWidth: 1 }]}>
         <View style={styles.categoryInfo}>
           <Text style={styles.categoryName}>{item.CategoryName}</Text>
           <Text>{item.CategoryStatus}</Text>
         </View>
-        <FontAwesome name="chevron-right" size={24} color="gray" />
+        <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Work Categories</Text>
-      <TouchableOpacity onPress={handleAddCategory} style={styles.addButton}>
-        <Text style={styles.addButtonText}>Add Category</Text>
-      </TouchableOpacity>
-      <FlatList data={categories} keyExtractor={(item) => item._id!} renderItem={renderCategory} />
-    </View>
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Work Categories',
+        }}
+      />
+
+      <View style={styles.container}>
+        <ActionButton onPress={handleAddCategory} type="action" title="Add Category" />
+        <FlatList data={categories} keyExtractor={(item) => item._id!} renderItem={renderCategory} />
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -69,37 +93,24 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   categoryItem: {
-    backgroundColor: '#f9f9f9',
-    padding: 16,
-    marginBottom: 8,
-    borderRadius: 8,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: 10,
   },
   categoryContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '90%',
+    width: '100%',
+    padding: 8,
+    borderRadius: 8,
   },
+
   categoryInfo: {
     flex: 1,
   },
   categoryName: {
     fontSize: 18,
     fontWeight: '600',
-  },
-  addButton: {
-    marginBottom: 16,
-    backgroundColor: '#28a745',
-    padding: 12,
-    borderRadius: 8,
-  },
-  addButtonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontSize: 18,
   },
 });
 

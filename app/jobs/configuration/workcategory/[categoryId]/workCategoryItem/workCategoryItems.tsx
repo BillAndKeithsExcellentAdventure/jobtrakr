@@ -1,15 +1,31 @@
 // screens/ListWorkCategoryItems.tsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { FontAwesome } from '@expo/vector-icons'; // Right caret icon
+import { MaterialIcons } from '@expo/vector-icons'; // Right caret icon
 import { WorkCategoryItemData } from '@/app/models/types';
+import { useColorScheme } from '@/components/useColorScheme';
+import { Colors } from '@/constants/Colors';
 
 const ListWorkCategoryItems = () => {
   const { categoryId } = useLocalSearchParams(); // Get categoryId from URL params
   const [items, setItems] = useState<WorkCategoryItemData[]>([]);
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            borderColor: Colors.dark.borderColor,
+            iconColor: Colors.dark.iconColor,
+          }
+        : {
+            borderColor: Colors.light.borderColor,
+            iconColor: Colors.light.iconColor,
+          },
+    [colorScheme],
+  );
 
   useEffect(() => {
     if (categoryId) {
@@ -35,12 +51,12 @@ const ListWorkCategoryItems = () => {
       onPress={() => handleEditItem(item._id!)} // Edit on item press
       style={styles.item}
     >
-      <View style={styles.itemContent}>
+      <View style={[styles.itemContent, { borderColor: colors.borderColor, borderWidth: 1 }]}>
         <View style={styles.itemInfo}>
           <Text style={styles.itemName}>{item.ItemName}</Text>
           <Text>{item.ItemStatus}</Text>
         </View>
-        <FontAwesome name="chevron-right" size={24} color="gray" />
+        <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
       </View>
     </TouchableOpacity>
   );
@@ -66,6 +82,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
   },
+
   item: {
     backgroundColor: '#f9f9f9',
     padding: 16,

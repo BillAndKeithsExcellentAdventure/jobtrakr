@@ -2,9 +2,11 @@
 
 import React, { useState } from 'react';
 import { TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { WorkCategoryData } from 'jobdb';
+import { Stack, useRouter } from 'expo-router';
 import { Text, TextInput, View } from '@/components/Themed';
+import { WorkCategoryData } from '@/app/models/types';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActionButton } from '@/components/ActionButton';
 
 const AddWorkCategory = () => {
   const [category, setCategory] = useState<WorkCategoryData>({
@@ -33,26 +35,44 @@ const AddWorkCategory = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Add Work Category</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Category Name"
-        value={category.CategoryName}
-        onChangeText={(text) => handleInputChange('CategoryName', text)}
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Add Work Category',
+        }}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Category Status"
-        value={category.CategoryStatus}
-        onChangeText={(text) => handleInputChange('CategoryStatus', text)}
-      />
-
-      <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-        <Text style={styles.saveButtonText}>Save Category</Text>
-      </TouchableOpacity>
-    </View>
+      <View style={styles.container}>
+        <TextInput
+          style={styles.input}
+          placeholder="Category Name"
+          value={category.CategoryName}
+          onChangeText={(text) => handleInputChange('CategoryName', text)}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Category Status"
+          value={category.CategoryStatus}
+          onChangeText={(text) => handleInputChange('CategoryStatus', text)}
+        />
+        <View style={styles.saveButtonRow}>
+          <ActionButton
+            style={styles.saveButton}
+            onPress={handleSave}
+            type={category.CategoryName ? 'ok' : 'disabled'}
+            title="Save"
+          />
+          <ActionButton
+            style={styles.cancelButton}
+            onPress={() => {
+              router.back();
+            }}
+            type={'cancel'}
+            title="Cancel"
+          />
+        </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -74,16 +94,18 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
     borderRadius: 4,
   },
-  saveButton: {
-    backgroundColor: '#28a745',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 20,
+  saveButtonRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  saveButtonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontSize: 18,
+  saveButton: {
+    flex: 1,
+    marginRight: 5,
+  },
+  cancelButton: {
+    flex: 1,
+    marginLeft: 5,
   },
 });
 

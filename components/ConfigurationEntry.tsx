@@ -1,6 +1,6 @@
 import { View, Text, useThemeColor } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { MaterialIcons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
 import { TouchableWithoutFeedback, Image, StyleSheet } from 'react-native';
 import { useColorScheme } from './useColorScheme';
@@ -36,7 +36,7 @@ export const ConfigurationEntry: React.FC<ConfigurationEntryProps> = ({ label, d
             <Text txtSize="xs" text={description} style={{ marginTop: 5 }} />
           </View>
           <View>
-            <FontAwesome name="chevron-right" size={24} color={colors.iconColor} />
+            <MaterialIcons name="chevron-right" size={32} color={colors.iconColor} />
           </View>
         </View>
       </View>

@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { FontAwesome } from '@expo/vector-icons'; // Use FontAwesome for the ">" icon
+import { MaterialIcons } from '@expo/vector-icons';
 import { VendorData } from 'jobdb';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -77,7 +77,7 @@ const VendorsScreen = () => {
           <Text>{item.BusinessPhone}</Text>
         </View>
         <View>
-          <FontAwesome name="chevron-right" size={24} color={colors.iconColor} />
+          <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
         </View>
       </View>
     </TouchableOpacity>
