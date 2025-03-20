@@ -2,26 +2,26 @@
 
 import React, { useState, useEffect } from 'react';
 import { TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { WorkCategoryData } from 'jobdb';
+import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { Text, TextInput, View } from '@/components/Themed';
+import { WorkCategoryData } from '@/app/models/types';
+import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import OkayCancelButtons from '@/components/OkayCancelButtons';
 
 const EditWorkCategory = () => {
-  const { id } = useLocalSearchParams();
+  const { categoryId } = useLocalSearchParams();
+  const { allWorkCategories, updateWorkCategory } = useWorkCategoryDataStore();
   const [category, setCategory] = useState<WorkCategoryData | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    if (id) {
+    if (categoryId) {
       // Simulate fetching the existing category data by ID
-      const fetchedCategory: WorkCategoryData = {
-        _id: id,
-        CategoryName: 'Electrical',
-        CategoryStatus: 'Active',
-      };
-      setCategory(fetchedCategory);
+      const fetchedCategory = allWorkCategories.find((c) => c._id === categoryId);
+      setCategory(fetchedCategory || null);
     }
-  }, [id]);
+  }, [categoryId]);
 
   const handleInputChange = (name: keyof WorkCategoryData, value: string) => {
     if (category) {
@@ -36,12 +36,10 @@ const EditWorkCategory = () => {
     if (category) {
       // Simulate saving the edited category (e.g., API call or database update)
       console.log('Updated category:', category);
-
-      // Show success message
-      Alert.alert('Category Updated', 'The work category has been successfully updated!');
+      updateWorkCategory(categoryId as string, category);
 
       // Go back to the categories list screen
-      router.push('/');
+      router.back();
     }
   };
 
@@ -54,26 +52,34 @@ const EditWorkCategory = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Edit Work Category</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Category Name"
-        value={category.CategoryName}
-        onChangeText={(text) => handleInputChange('CategoryName', text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Category Status"
-        value={category.CategoryStatus}
-        onChangeText={(text) => handleInputChange('CategoryStatus', text)}
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Edit Work Category',
+        }}
       />
 
-      <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-        <Text style={styles.saveButtonText}>Save Changes</Text>
-      </TouchableOpacity>
-    </View>
+      <View style={styles.container}>
+        <TextInput
+          style={styles.input}
+          placeholder="Name"
+          value={category.Name}
+          onChangeText={(text) => handleInputChange('Name', text)}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Code"
+          value={category.Code}
+          onChangeText={(text) => handleInputChange('Code', text)}
+        />
+        <OkayCancelButtons
+          okTitle="Save"
+          isOkEnabled={!!category.Name && !!category.Code}
+          onOkPress={handleSave}
+        />
+      </View>
+    </SafeAreaView>
   );
 };
 

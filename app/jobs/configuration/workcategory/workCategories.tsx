@@ -10,9 +10,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
 
 const ListWorkCategories = () => {
-  const [categories, setCategories] = useState<WorkCategoryData[]>([]);
+  const { allWorkCategories, setWorkCategories } = useWorkCategoryDataStore();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = useMemo(
@@ -33,10 +34,10 @@ const ListWorkCategories = () => {
     // Fetch categories from API or local storage (simulated here)
     const fetchCategories = async () => {
       const categoriesData: WorkCategoryData[] = [
-        { _id: '1', CategoryName: 'Electrical', CategoryStatus: 'Active' },
-        { _id: '2', CategoryName: 'Plumbing', CategoryStatus: 'Inactive' },
+        { _id: '1', Name: 'Electrical', Code: '100' },
+        { _id: '2', Name: 'Plumbing', Code: '200' },
       ];
-      setCategories(categoriesData);
+      setWorkCategories(categoriesData);
     };
 
     fetchCategories();
@@ -57,8 +58,8 @@ const ListWorkCategories = () => {
     >
       <View style={[styles.categoryContent, { borderColor: colors.borderColor, borderWidth: 1 }]}>
         <View style={styles.categoryInfo}>
-          <Text style={styles.categoryName}>{item.CategoryName}</Text>
-          <Text>{item.CategoryStatus}</Text>
+          <Text style={styles.categoryName}>{item.Name}</Text>
+          <Text>{item.Code}</Text>
         </View>
         <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
       </View>
@@ -76,7 +77,7 @@ const ListWorkCategories = () => {
 
       <View style={styles.container}>
         <ActionButton onPress={handleAddCategory} type="action" title="Add Category" />
-        <FlatList data={categories} keyExtractor={(item) => item._id!} renderItem={renderCategory} />
+        <FlatList data={allWorkCategories} keyExtractor={(item) => item._id!} renderItem={renderCategory} />
       </View>
     </SafeAreaView>
   );

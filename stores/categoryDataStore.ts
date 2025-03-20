@@ -1,25 +1,25 @@
-import { WorkCategoryData } from 'jobdb';
+import { WorkCategoryData } from '@/app/models/types';
 import { create } from 'zustand';
 
-export type JobCategoryDataStore = {
-  allJobCategories: WorkCategoryData[];
-  setJobCategories: (data: WorkCategoryData[]) => void;
-  addJobCategories: (receipt: WorkCategoryData) => void;
-  removeJobCategories: (id: string) => void;
-  updateJobCategories: (id: string, updatedItem: Partial<WorkCategoryData>) => void;
+export type WorkCategoryDataStore = {
+  allWorkCategories: WorkCategoryData[];
+  setWorkCategories: (data: WorkCategoryData[]) => void;
+  addWorkCategory: (receipt: WorkCategoryData) => void;
+  removeWorkCategory: (id: string) => void;
+  updateWorkCategory: (id: string, updatedItem: Partial<WorkCategoryData>) => void;
 };
 
-export const useJobCategoryDataStore = create<JobCategoryDataStore>((set) => ({
-  allJobCategories: [],
-  setJobCategories: (data) => set({ allJobCategories: data }),
-  addJobCategories: (vendor) => set((state) => ({ allJobCategories: [...state.allJobCategories, vendor] })),
-  removeJobCategories: (id) =>
+export const useWorkCategoryDataStore = create<WorkCategoryDataStore>((set) => ({
+  allWorkCategories: [],
+  setWorkCategories: (data) => set({ allWorkCategories: data }),
+  addWorkCategory: (vendor) => set((state) => ({ allWorkCategories: [...state.allWorkCategories, vendor] })),
+  removeWorkCategory: (id) =>
     set((state) => ({
-      allJobCategories: state.allJobCategories.filter((i) => i._id! !== id),
+      allWorkCategories: state.allWorkCategories.filter((i) => i._id! !== id),
     })),
-  updateJobCategories: (id, updatedItem) =>
+  updateWorkCategory: (id, updatedItem) =>
     set((state) => ({
-      allJobCategories: state.allJobCategories.map((item) =>
+      allWorkCategories: state.allWorkCategories.map((item) =>
         item._id === id ? { ...item, ...updatedItem } : item,
       ),
     })),

@@ -7,11 +7,13 @@ import { Text, TextInput, View } from '@/components/Themed';
 import { WorkCategoryData } from '@/app/models/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
+import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
 
 const AddWorkCategory = () => {
+  const { allWorkCategories, addWorkCategory } = useWorkCategoryDataStore();
   const [category, setCategory] = useState<WorkCategoryData>({
-    CategoryName: '',
-    CategoryStatus: 'Active', // Default to Active
+    Name: '',
+    Code: '',
   });
 
   const router = useRouter();
@@ -25,13 +27,12 @@ const AddWorkCategory = () => {
 
   const handleSave = () => {
     // Simulate saving the new category (e.g., API call or database insertion)
-    console.log('Saving category:', category);
-
-    // Show success message
-    Alert.alert('Category Added', 'The work category has been successfully added!');
+    const newCategory = { ...category, _id: String(allWorkCategories.length + 1) };
+    console.log('Saving category:', newCategory);
+    addWorkCategory(newCategory);
 
     // Go back to the categories list screen
-    router.push('/');
+    router.back();
   };
 
   return (
@@ -45,21 +46,21 @@ const AddWorkCategory = () => {
       <View style={styles.container}>
         <TextInput
           style={styles.input}
-          placeholder="Category Name"
-          value={category.CategoryName}
-          onChangeText={(text) => handleInputChange('CategoryName', text)}
+          placeholder="Name"
+          value={category.Name}
+          onChangeText={(text) => handleInputChange('Name', text)}
         />
         <TextInput
           style={styles.input}
-          placeholder="Category Status"
-          value={category.CategoryStatus}
-          onChangeText={(text) => handleInputChange('CategoryStatus', text)}
+          placeholder="Code"
+          value={category.Code}
+          onChangeText={(text) => handleInputChange('Code', text)}
         />
         <View style={styles.saveButtonRow}>
           <ActionButton
             style={styles.saveButton}
             onPress={handleSave}
-            type={category.CategoryName ? 'ok' : 'disabled'}
+            type={category.Name && category.Code ? 'ok' : 'disabled'}
             title="Save"
           />
           <ActionButton

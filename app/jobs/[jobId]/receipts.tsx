@@ -19,7 +19,7 @@ import * as ImagePicker from 'expo-image-picker';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ReceiptSummary } from '@/components/ReceiptSummary';
-import { useJobCategoryDataStore } from '@/stores/categoryDataStore';
+import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
   return actionContext && typeof actionContext.PictureUri === 'string';
@@ -144,7 +144,8 @@ const JobReceiptsPage = () => {
   }>();
   const { jobDbHost } = useJobDb();
   const { allJobReceipts, addReceiptData, removeReceiptData, setReceiptData } = useReceiptDataStore();
-  const { allJobCategories, setJobCategories } = useJobCategoryDataStore();
+  const { allWorkCategories: allJobCategories, setWorkCategories: setJobCategories } =
+    useWorkCategoryDataStore();
 
   const fetchReceipts = useCallback(async () => {
     try {

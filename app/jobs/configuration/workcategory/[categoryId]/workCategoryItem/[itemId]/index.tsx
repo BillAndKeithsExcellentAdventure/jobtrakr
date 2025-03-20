@@ -15,7 +15,7 @@ const EditWorkCategoryItem = () => {
       // Simulate fetching the existing item data by ID
       const fetchedItem: WorkCategoryItemData = {
         _id: id,
-        ItemName: 'Circuit Breaker',
+        Name: 'Circuit Breaker',
         ItemStatus: 'Active',
       };
       setItem(fetchedItem);
@@ -59,7 +59,7 @@ const EditWorkCategoryItem = () => {
       <TextInput
         style={styles.input}
         placeholder="Item Name"
-        value={item.ItemName}
+        value={item.Name}
         onChangeText={(text) => handleInputChange('ItemName', text)}
       />
       <TextInput

@@ -8,8 +8,8 @@ import { WorkCategoryItemData } from '@/app/models/types';
 const AddWorkCategoryItem = () => {
   const { categoryId } = useLocalSearchParams(); // Get categoryId from URL params
   const [item, setItem] = useState<WorkCategoryItemData>({
-    ItemName: '',
-    ItemStatus: 'Active', // Default to Active
+    Name: '',
+    Code: '',
   });
 
   const router = useRouter();
@@ -40,15 +40,15 @@ const AddWorkCategoryItem = () => {
 
       <TextInput
         style={styles.input}
-        placeholder="Item Name"
-        value={item.ItemName}
+        placeholder="Name"
+        value={item.Name}
         onChangeText={(text) => handleInputChange('ItemName', text)}
       />
       <TextInput
         style={styles.input}
-        placeholder="Item Status"
-        value={item.ItemStatus}
-        onChangeText={(text) => handleInputChange('ItemStatus', text)}
+        placeholder="Code"
+        value={item.Code}
+        onChangeText={(text) => handleInputChange('ItemCode', text)}
       />
 
       <TouchableOpacity onPress={handleSave} style={styles.saveButton}>

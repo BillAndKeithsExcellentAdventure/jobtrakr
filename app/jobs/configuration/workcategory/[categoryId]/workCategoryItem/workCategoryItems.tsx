@@ -31,8 +31,8 @@ const ListWorkCategoryItems = () => {
     if (categoryId) {
       // Simulate fetching items based on the categoryId
       const categoryItems: WorkCategoryItemData[] = [
-        { _id: '1', CategoryId: categoryId, ItemName: 'Circuit Breaker', ItemStatus: 'Active' },
-        { _id: '2', CategoryId: categoryId, ItemName: 'Wire', ItemStatus: 'Inactive' },
+        { _id: '1', CategoryId: categoryId, Name: 'Circuit Breaker', ItemStatus: 'Active' },
+        { _id: '2', CategoryId: categoryId, Name: 'Wire', ItemStatus: 'Inactive' },
       ];
       setItems(categoryItems);
     }
@@ -53,7 +53,7 @@ const ListWorkCategoryItems = () => {
     >
       <View style={[styles.itemContent, { borderColor: colors.borderColor, borderWidth: 1 }]}>
         <View style={styles.itemInfo}>
-          <Text style={styles.itemName}>{item.ItemName}</Text>
+          <Text style={styles.itemName}>{item.Name}</Text>
           <Text>{item.ItemStatus}</Text>
         </View>
         <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
