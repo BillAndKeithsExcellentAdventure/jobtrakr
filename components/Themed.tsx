@@ -20,7 +20,7 @@ type ThemeProps = {
   darkColor?: string;
 };
 
-type ThemedTextProps = {
+export type ThemedTextProps = {
   txtSize?: 'xxs' | 'xs' | 'standard' | 'formLabel' | 'sub-title' | 'title' | 'screen-header' | 'xl' | 'xxl';
   text?: string;
 };

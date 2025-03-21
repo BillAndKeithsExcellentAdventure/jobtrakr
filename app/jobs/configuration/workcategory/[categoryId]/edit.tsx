@@ -1,49 +1,65 @@
-// screens/AddWorkCategory.tsx
+// screens/EditWorkCategory.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { Text, TextInput, View } from '@/components/Themed';
 import { WorkCategoryData } from '@/app/models/types';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ActionButton } from '@/components/ActionButton';
 import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import OkayCancelButtons from '@/components/OkayCancelButtons';
 
-const AddWorkCategory = () => {
-  const { allWorkCategories, addWorkCategory } = useWorkCategoryDataStore();
-  const [category, setCategory] = useState<WorkCategoryData>({
-    Name: '',
-    Code: '',
-  });
-
+const EditWorkCategory = () => {
+  const { categoryId } = useLocalSearchParams();
+  const { allWorkCategories, updateWorkCategory } = useWorkCategoryDataStore();
+  const [category, setCategory] = useState<WorkCategoryData | null>(null);
   const router = useRouter();
 
+  useEffect(() => {
+    if (categoryId) {
+      // Simulate fetching the existing category data by ID
+      const fetchedCategory = allWorkCategories.find((c) => c._id === categoryId);
+      setCategory(fetchedCategory || null);
+    }
+  }, [categoryId]);
+
   const handleInputChange = (name: keyof WorkCategoryData, value: string) => {
-    setCategory((prevCategory) => ({
-      ...prevCategory,
-      [name]: value,
-    }));
+    if (category) {
+      setCategory({
+        ...category,
+        [name]: value,
+      });
+    }
   };
 
   const handleSave = () => {
-    // Simulate saving the new category (e.g., API call or database insertion)
-    const newCategory = { ...category, _id: String(allWorkCategories.length + 1) };
-    console.log('Saving category:', newCategory);
-    addWorkCategory(newCategory);
+    if (category) {
+      // Simulate saving the edited category (e.g., API call or database update)
+      console.log('Updated category:', category);
+      updateWorkCategory(categoryId as string, category);
 
-    // Go back to the categories list screen
-    router.back();
+      // Go back to the categories list screen
+      router.back();
+    }
   };
+
+  if (!category) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Add Work Category',
+          title: 'Edit Work Category',
         }}
       />
+
       <View style={styles.container}>
         <TextInput
           style={styles.input}
@@ -85,6 +101,17 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
     borderRadius: 4,
   },
+  saveButton: {
+    backgroundColor: '#28a745',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+  saveButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontSize: 18,
+  },
 });
 
-export default AddWorkCategory;
+export default EditWorkCategory;

@@ -2,25 +2,25 @@ import { WorkCategoryItemData } from '@/app/models/types';
 import { create } from 'zustand';
 
 export type WorkCategoryItemDataStore = {
-  allJobCategoryItems: WorkCategoryItemData[];
-  setJobCategoryItems: (data: WorkCategoryItemData[]) => void;
-  addJobCategoryItems: (receipt: WorkCategoryItemData) => void;
-  removeJobCategoryItems: (id: string) => void;
-  updateJobCategoryItems: (id: string, updatedItem: Partial<WorkCategoryItemData>) => void;
+  allWorkCategoryItems: WorkCategoryItemData[];
+  setWorkCategoryItems: (data: WorkCategoryItemData[]) => void;
+  addWorkCategoryItem: (receipt: WorkCategoryItemData) => void;
+  removeWorkCategoryItem: (id: string) => void;
+  updateWorkCategoryItem: (id: string, updatedItem: Partial<WorkCategoryItemData>) => void;
 };
 
 export const useWorkCategoryItemDataStore = create<WorkCategoryItemDataStore>((set) => ({
-  allJobCategoryItems: [],
-  setJobCategoryItems: (data) => set({ allJobCategoryItems: data }),
-  addJobCategoryItems: (vendor) =>
-    set((state) => ({ allJobCategoryItems: [...state.allJobCategoryItems, vendor] })),
-  removeJobCategoryItems: (id) =>
+  allWorkCategoryItems: [],
+  setWorkCategoryItems: (data) => set({ allWorkCategoryItems: data }),
+  addWorkCategoryItem: (vendor) =>
+    set((state) => ({ allWorkCategoryItems: [...state.allWorkCategoryItems, vendor] })),
+  removeWorkCategoryItem: (id) =>
     set((state) => ({
-      allJobCategoryItems: state.allJobCategoryItems.filter((i) => i._id! !== id),
+      allWorkCategoryItems: state.allWorkCategoryItems.filter((i) => i._id! !== id),
     })),
-  updateJobCategoryItems: (id, updatedItem) =>
+  updateWorkCategoryItem: (id, updatedItem) =>
     set((state) => ({
-      allJobCategoryItems: state.allJobCategoryItems.map((item) =>
+      allWorkCategoryItems: state.allWorkCategoryItems.map((item) =>
         item._id === id ? { ...item, ...updatedItem } : item,
       ),
     })),
