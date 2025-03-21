@@ -1,4 +1,4 @@
-import { WorkCategoryData } from '@/app/models/types';
+import { WorkCategoryData } from '@/models/types';
 import { create } from 'zustand';
 
 export type WorkCategoryDataStore = {

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { TouchableOpacity, StyleSheet, Alert, useColorScheme, FlatList, Pressable } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { Text, TextInput, View } from '@/components/Themed';
-import { WorkCategoryData, WorkCategoryItemData } from '@/app/models/types';
+import { WorkCategoryData, WorkCategoryItemData } from '@/models/types';
 import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
 import { useWorkCategoryItemDataStore } from '@/stores/categoryItemDataStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -77,12 +77,13 @@ const ShowWorkCategory = () => {
         _id: (allWorkCategoryItems.length + 1).toString(),
         CategoryId: categoryId,
       } as WorkCategoryItemData;
+      console.log('Saving item:', newItem);
+
       setWorkCategoryItems(
         [...allWorkCategoryItems, newItem].sort(
           (a, b) => Number.parseInt(a.Code ?? '0') - Number.parseInt(b.Code ?? '0'),
         ),
       );
-      console.log('Saving item:', newItem);
 
       // Clear the input fields
       setItem({ Name: '', Code: '' });
@@ -135,7 +136,13 @@ const ShowWorkCategory = () => {
             },
           ]}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 5 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingVertical: 5,
+            }}
+          >
             <View style={{ alignItems: 'center', marginHorizontal: 5, flex: 1 }}>
               <Text text="Work Items" txtSize="title" />
             </View>
@@ -170,7 +177,7 @@ const ShowWorkCategory = () => {
               />
             </View>
           )}
-          <View style={{ flex: 1, marginTop: 20, backgroundColor: colors.background }}>
+          <View style={{ flex: 1, marginTop: showAdd ? 10 : 0, backgroundColor: colors.background }}>
             {categorySpecificItems.length > 0 ? (
               <FlatList
                 style={{ borderTopWidth: 1, borderColor: colors.borderColor }}

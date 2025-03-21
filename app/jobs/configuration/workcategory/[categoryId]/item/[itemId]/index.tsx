@@ -1,47 +1,47 @@
 import OkayCancelButtons from '@/components/OkayCancelButtons';
 import { Text, TextInput, View } from '@/components/Themed';
-import { WorkCategoryData } from '@/models/types';
-import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
+import { WorkCategoryItemData } from '@/models/types';
+import { useWorkCategoryItemDataStore } from '@/stores/categoryItemDataStore';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const EditWorkCategory = () => {
-  const { categoryId } = useLocalSearchParams();
-  const { allWorkCategories, updateWorkCategory } = useWorkCategoryDataStore();
-  const [category, setCategory] = useState<WorkCategoryData | null>(null);
+const EditWorkItem = () => {
+  const { categoryId, itemId } = useLocalSearchParams();
+  const { allWorkCategoryItems, updateWorkCategoryItem } = useWorkCategoryItemDataStore();
+  const [item, setItem] = useState<WorkCategoryItemData | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     if (categoryId) {
       // Simulate fetching the existing category data by ID
-      const fetchedCategory = allWorkCategories.find((c) => c._id === categoryId);
-      setCategory(fetchedCategory || null);
+      const fetchedItem = allWorkCategoryItems.find((i) => i._id === itemId);
+      setItem(fetchedItem || null);
     }
   }, [categoryId]);
 
-  const handleInputChange = (name: keyof WorkCategoryData, value: string) => {
-    if (category) {
-      setCategory({
-        ...category,
+  const handleInputChange = (name: keyof WorkCategoryItemData, value: string) => {
+    if (item) {
+      setItem({
+        ...item,
         [name]: value,
       });
     }
   };
 
   const handleSave = () => {
-    if (category) {
+    if (item) {
       // Simulate saving the edited category (e.g., API call or database update)
-      console.log('Updated category:', category);
-      updateWorkCategory(categoryId as string, category);
+      console.log('Updated work item:', item);
+      updateWorkCategoryItem(itemId as string, item);
 
       // Go back to the categories list screen
       router.back();
     }
   };
 
-  if (!category) {
+  if (!item) {
     return (
       <View style={styles.container}>
         <Text>Loading...</Text>
@@ -54,7 +54,7 @@ const EditWorkCategory = () => {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Edit Work Category',
+          title: 'Edit Work Item',
         }}
       />
 
@@ -62,20 +62,16 @@ const EditWorkCategory = () => {
         <TextInput
           style={styles.input}
           placeholder="Name"
-          value={category.Name}
+          value={item.Name}
           onChangeText={(text) => handleInputChange('Name', text)}
         />
         <TextInput
           style={styles.input}
           placeholder="Code"
-          value={category.Code}
+          value={item.Code}
           onChangeText={(text) => handleInputChange('Code', text)}
         />
-        <OkayCancelButtons
-          okTitle="Save"
-          isOkEnabled={!!category.Name && !!category.Code}
-          onOkPress={handleSave}
-        />
+        <OkayCancelButtons okTitle="Save" isOkEnabled={!!item.Name && !!item.Code} onOkPress={handleSave} />
       </View>
     </SafeAreaView>
   );
@@ -112,4 +108,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EditWorkCategory;
+export default EditWorkItem;

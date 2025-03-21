@@ -5,7 +5,7 @@ import { FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons'; // Right caret icon
 import { Text, TextInput, View } from '@/components/Themed';
-import { WorkCategoryData } from '@/app/models/types';
+import { WorkCategoryData } from '@/models/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -98,8 +98,9 @@ const ListWorkCategories = () => {
         ...category,
         _id: (allWorkCategories.length + 1).toString(),
       } as WorkCategoryData;
-      addWorkCategory(newCategory);
+
       console.log('Saving item:', newCategory);
+      addWorkCategory(newCategory);
 
       // Clear the input fields
       setCategory({ Name: '', Code: '', _id: '' });
