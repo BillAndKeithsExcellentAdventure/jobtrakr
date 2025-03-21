@@ -79,9 +79,7 @@ export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = ({ imageUri }) =>
   };
 
   return (
-    <GestureHandlerRootView
-      style={[styles.container, { backgroundColor: colors.modalOverlayBackgroundColor }]}
-    >
+    <View style={[styles.container, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
       <View style={styles.overlay} onLayout={onLayout}>
         {containerWidth > 0 && containerHeight > 0 && (
           <GestureDetector gesture={combinedGesture}>
@@ -100,7 +98,7 @@ export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = ({ imageUri }) =>
           </GestureDetector>
         )}
       </View>
-    </GestureHandlerRootView>
+    </View>
   );
 };
 

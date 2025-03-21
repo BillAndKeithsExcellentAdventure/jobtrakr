@@ -304,7 +304,7 @@ const JobReceiptsPage = () => {
               <Text txtSize="xl" text="No receipts found." />
             </View>
           ) : (
-            <GestureHandlerRootView style={{ flex: 1 }}>
+            <View style={{ flex: 1 }}>
               <View style={{ flex: 1, width: '100%', backgroundColor: colors.listBackground }}>
                 <FlashList
                   estimatedItemSize={150}
@@ -315,7 +315,7 @@ const JobReceiptsPage = () => {
                   )}
                 />
               </View>
-            </GestureHandlerRootView>
+            </View>
           )}
         </View>
       </View>

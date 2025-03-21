@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { TouchableOpacity, StyleSheet, Alert, useColorScheme, FlatList } from 'react-native';
+import { TouchableOpacity, StyleSheet, Alert, useColorScheme, FlatList, Pressable } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { Text, TextInput, View } from '@/components/Themed';
 import { WorkCategoryData, WorkCategoryItemData } from '@/app/models/types';
@@ -7,8 +7,9 @@ import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
 import { useWorkCategoryItemDataStore } from '@/stores/categoryItemDataStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { ActionButton } from '@/components/ActionButton';
+import SwipeableCategoryItem from './SwipeableCategoryItem';
 
 const ShowWorkCategory = () => {
   const { categoryId } = useLocalSearchParams();
@@ -20,6 +21,7 @@ const ShowWorkCategory = () => {
     Code: '',
   });
   const [category, setCategory] = useState<WorkCategoryData | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = useMemo(
@@ -129,58 +131,61 @@ const ShowWorkCategory = () => {
             },
           ]}
         >
-          <View style={{ alignItems: 'center', margin: 5 }}>
-            <Text text="Work Category Items" txtSize="title" />
-          </View>
-          <View>
-            <View style={{ flexDirection: 'row' }}>
-              <View style={{ width: 120 }}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Code"
-                  value={item.Code}
-                  onChangeText={(text) => handleInputChange('Code', text)}
-                />
-              </View>
-              <View style={{ flex: 1, marginLeft: 10 }}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Name"
-                  value={item.Name}
-                  onChangeText={(text) => handleInputChange('Name', text)}
-                />
-              </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 5 }}>
+            <View style={{ alignItems: 'center', marginHorizontal: 5, flex: 1 }}>
+              <Text text="Work Items" txtSize="title" />
             </View>
-            <ActionButton
-              onPress={handleAddItem}
-              type={item.Code && item.Name ? 'action' : 'disabled'}
-              title="Add Work Item"
-            />
+            <TouchableOpacity style={{ padding: 4 }} onPress={() => setShowAdd(!showAdd)}>
+              <Ionicons name={showAdd ? 'chevron-up-sharp' : 'add'} size={24} color={colors.iconColor} />
+            </TouchableOpacity>
           </View>
+          {showAdd && (
+            <View>
+              <View style={{ flexDirection: 'row' }}>
+                <View style={{ width: 120 }}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Code"
+                    value={item.Code}
+                    onChangeText={(text) => handleInputChange('Code', text)}
+                  />
+                </View>
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Name"
+                    value={item.Name}
+                    onChangeText={(text) => handleInputChange('Name', text)}
+                  />
+                </View>
+              </View>
+              <ActionButton
+                onPress={handleAddItem}
+                type={item.Code && item.Name ? 'action' : 'disabled'}
+                title="Add Work Item"
+              />
+            </View>
+          )}
           <View style={{ flex: 1, marginTop: 20, backgroundColor: colors.background }}>
             {categorySpecificItems.length > 0 ? (
               <FlatList
                 style={{ borderTopWidth: 1, borderColor: colors.borderColor }}
                 data={categorySpecificItems}
                 keyExtractor={(item) => item._id!}
-                renderItem={({ item }) => (
-                  <View style={[styles.itemEntry, { borderColor: colors.borderColor, borderBottomWidth: 1 }]}>
-                    <View style={styles.itemInfo}>
-                      <Text style={styles.itemCode}>{item.Code}</Text>
-                      <Text style={styles.itemName}>{item.Name}</Text>
-                      <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
-                    </View>
-                  </View>
-                )}
+                renderItem={({ item }) => <SwipeableCategoryItem item={item} />}
               />
             ) : (
               <View style={{ alignItems: 'center', margin: 20 }}>
-                <Text
-                  txtSize="title"
-                  text="No items found for this category."
-                  style={{ textAlign: 'center', marginBottom: 10 }}
-                />
-                <Text text="To add an item, define its Code and Name and press Add Work Item." />
+                {!showAdd && (
+                  <>
+                    <Text
+                      txtSize="title"
+                      text="No items found for this category."
+                      style={{ textAlign: 'center', marginBottom: 10 }}
+                    />
+                    <Text text="To add an item, press '+' icon and then Add Work Item." />
+                  </>
+                )}
               </View>
             )}
           </View>
@@ -216,25 +221,9 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 10,
   },
-  itemInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    height: 40,
-  },
-  itemName: {
-    width: 200,
-    marginRight: 10,
-  },
-  itemEntry: {
-    width: '100%',
-  },
   categoryName: {
     fontSize: 18,
     fontWeight: '600',
-  },
-  itemCode: {
-    flex: 1,
   },
   categoryItem: {
     borderRadius: 10,

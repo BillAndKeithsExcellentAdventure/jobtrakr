@@ -11,6 +11,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -52,12 +53,14 @@ function RootLayoutNav() {
         <DatabaseHostProvider>
           <LoggerHostProvider>
             <SafeAreaProvider>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="index" />
-                <Stack.Screen name="jobs" />
-                <Stack.Screen name="(auth)" />
-              </Stack>
-              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+              <GestureHandlerRootView>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="jobs" />
+                  <Stack.Screen name="(auth)" />
+                </Stack>
+                <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+              </GestureHandlerRootView>
             </SafeAreaProvider>
           </LoggerHostProvider>
         </DatabaseHostProvider>
