@@ -11,7 +11,7 @@ import Entypo from '@expo/vector-icons/Entypo';
 import { useNavigation } from '@react-navigation/native';
 import { router, Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, Pressable, StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useJobDb } from '@/context/DatabaseContext';
@@ -21,6 +21,7 @@ import { useJobDataStore } from '@/stores/jobDataStore';
 import { useVendorDataStore, VendorEntry } from '@/stores/vendorDataStore';
 import { ShareFile } from '@/utils/sharing';
 import { useDbLogger } from '@/context/LoggerContext';
+import { Pressable } from 'react-native-gesture-handler';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -258,57 +259,28 @@ export default function JobHomeScreen() {
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
-      {Platform.OS === 'android' ? (
-        <Stack.Screen
-          options={{
-            headerShown: true,
-            header: () => (
-              <ScreenHeader
-                title="Jobs"
-                headerRight={() => (
-                  <Pressable
-                    onPress={() => {
-                      setHeaderMenuModalVisible(!headerMenuModalVisible);
-                    }}
-                  >
-                    {({ pressed }) => (
-                      <MaterialCommunityIcons
-                        name="menu"
-                        size={28}
-                        color={colors.iconColor}
-                        style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                      />
-                    )}
-                  </Pressable>
-                )}
-              />
-            ),
-          }}
-        />
-      ) : (
-        <Stack.Screen
-          options={{
-            headerShown: true,
-            title: 'Jobs',
-            headerRight: () => (
-              <Pressable
-                onPress={() => {
-                  setHeaderMenuModalVisible(!headerMenuModalVisible);
-                }}
-              >
-                {({ pressed }) => (
-                  <MaterialCommunityIcons
-                    name="menu"
-                    size={28}
-                    color={colors.iconColor}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            ),
-          }}
-        />
-      )}
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Jobs',
+          headerRight: () => (
+            <Pressable
+              onPress={() => {
+                setHeaderMenuModalVisible(!headerMenuModalVisible);
+              }}
+            >
+              {({ pressed }) => (
+                <MaterialCommunityIcons
+                  name="menu"
+                  size={28}
+                  color={colors.iconColor}
+                  style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                />
+              )}
+            </Pressable>
+          ),
+        }}
+      />
 
       <View style={{ flex: 1, width: '100%' }}>
         {jobListEntries.length > 0 ? (

@@ -111,7 +111,7 @@ export const Colors = {
     tabIconSelected: tintColorDark,
     borderColor: '#666',
     headerBackgroundColor: '#1F1F1F',
-    listBackground: '#222',
+    listBackground: '#191015',
     itemBackground: '#000',
     iconColor: '#fff',
     pressedIconColor: '#eee',

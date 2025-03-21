@@ -1,6 +1,6 @@
 export interface WorkCategoryData {
   _id?: string;
-  Code?: string;
+  Code: string;
   Name: string;
   Status?: string;
 }
@@ -8,7 +8,7 @@ export interface WorkCategoryData {
 export interface WorkCategoryItemData {
   _id?: string;
   CategoryId?: string;
-  Code?: string;
+  Code: string;
   Name: string;
   Status?: string;
 }

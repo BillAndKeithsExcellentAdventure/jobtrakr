@@ -77,7 +77,11 @@ const ShowWorkCategory = () => {
         _id: (allWorkCategoryItems.length + 1).toString(),
         CategoryId: categoryId,
       } as WorkCategoryItemData;
-      setWorkCategoryItems([...allWorkCategoryItems, newItem]);
+      setWorkCategoryItems(
+        [...allWorkCategoryItems, newItem].sort(
+          (a, b) => Number.parseInt(a.Code ?? '0') - Number.parseInt(b.Code ?? '0'),
+        ),
+      );
       console.log('Saving item:', newItem);
 
       // Clear the input fields
@@ -172,7 +176,7 @@ const ShowWorkCategory = () => {
                 style={{ borderTopWidth: 1, borderColor: colors.borderColor }}
                 data={categorySpecificItems}
                 keyExtractor={(item) => item._id!}
-                renderItem={({ item }) => <SwipeableCategoryItem item={item} />}
+                renderItem={({ item }) => <SwipeableCategoryItem item={item} category={category} />}
               />
             ) : (
               <View style={{ alignItems: 'center', margin: 20 }}>

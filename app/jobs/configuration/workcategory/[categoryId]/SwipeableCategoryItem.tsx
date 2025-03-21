@@ -1,12 +1,18 @@
 import { StyleSheet } from 'react-native';
 import React, { useMemo } from 'react';
-import { WorkCategoryItemData } from '@/app/models/types';
+import { WorkCategoryData, WorkCategoryItemData } from '@/app/models/types';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 
-const SwipeableCategoryItem = ({ item }: { item: WorkCategoryItemData }) => {
+const SwipeableCategoryItem = ({
+  item,
+  category,
+}: {
+  item: WorkCategoryItemData;
+  category: WorkCategoryData;
+}) => {
   const colorScheme = useColorScheme();
   const colors = useMemo(
     () =>
@@ -29,7 +35,7 @@ const SwipeableCategoryItem = ({ item }: { item: WorkCategoryItemData }) => {
   return (
     <View style={[styles.itemEntry, { borderColor: colors.borderColor, borderBottomWidth: 1 }]}>
       <View style={styles.itemInfo}>
-        <Text style={styles.itemCode}>{item.Code}</Text>
+        <Text style={styles.itemCode} text={`${category.Code}.${item.Code}`} />
         <Text style={styles.itemName}>{item.Name}</Text>
         <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
       </View>
