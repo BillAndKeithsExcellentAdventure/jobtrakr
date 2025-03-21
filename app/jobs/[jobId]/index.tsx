@@ -1,21 +1,19 @@
+import BottomSheetContainer from '@/components/BottomSheetContainer';
 import { ActionButtonProps } from '@/components/ButtonBar';
 import OptionList, { OptionEntry } from '@/components/OptionList';
-import BottomSheetContainer from '@/components/BottomSheetContainer';
+import { OptionPickerItem } from '@/components/OptionPickerItem';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
-import { ScreenHeader } from '@/components/ScreenHeader';
-import { Text, TextInput, useThemeColor, View } from '@/components/Themed';
+import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Stack, router, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Platform, Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { OptionPickerItem } from '@/components/OptionPickerItem';
 
 type Job = {
   jobId?: string;
@@ -159,74 +157,29 @@ const JobDetailsPage = () => {
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
       <View style={styles.container}>
-        {Platform.OS === 'android' ? (
-          <Stack.Screen
-            options={{
-              headerShown: true,
-              header: () => (
-                <ScreenHeader
-                  title="Job Overview"
-                  headerLeft={() => (
-                    <Pressable
-                      onPress={() => {
-                        router.back();
-                      }}
-                    >
-                      {({ pressed }) => (
-                        <MaterialCommunityIcons
-                          name="arrow-left"
-                          size={24}
-                          color={colors.iconColor}
-                          style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                        />
-                      )}
-                    </Pressable>
-                  )}
-                  headerRight={() => (
-                    <Pressable
-                      onPress={() => {
-                        setHeaderMenuModalVisible(!headerMenuModalVisible);
-                      }}
-                    >
-                      {({ pressed }) => (
-                        <MaterialCommunityIcons
-                          name="menu"
-                          size={28}
-                          color={colors.iconColor}
-                          style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                        />
-                      )}
-                    </Pressable>
-                  )}
-                />
-              ),
-            }}
-          />
-        ) : (
-          <Stack.Screen
-            options={{
-              headerShown: true,
-              title: 'Job Overview',
-              headerRight: () => (
-                <Pressable
-                  style={{ marginRight: 12 }}
-                  onPress={() => {
-                    setHeaderMenuModalVisible(!headerMenuModalVisible);
-                  }}
-                >
-                  {({ pressed }) => (
-                    <MaterialCommunityIcons
-                      name="menu"
-                      size={28}
-                      color={colors.iconColor}
-                      style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                    />
-                  )}
-                </Pressable>
-              ),
-            }}
-          />
-        )}
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            title: 'Job Overview',
+            headerRight: () => (
+              <Pressable
+                style={{ marginRight: 12 }}
+                onPress={() => {
+                  setHeaderMenuModalVisible(!headerMenuModalVisible);
+                }}
+              >
+                {({ pressed }) => (
+                  <MaterialCommunityIcons
+                    name="menu"
+                    size={28}
+                    color={colors.iconColor}
+                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                  />
+                )}
+              </Pressable>
+            ),
+          }}
+        />
 
         <View style={styles.headerContainer}>
           <Text>JobName={job.name}</Text>

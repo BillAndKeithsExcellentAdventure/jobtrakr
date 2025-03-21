@@ -32,11 +32,8 @@ const EditWorkItem = () => {
 
   const handleSave = () => {
     if (item) {
-      // Simulate saving the edited category (e.g., API call or database update)
       console.log('Updated work item:', item);
       updateWorkCategoryItem(itemId as string, item);
-
-      // Go back to the categories list screen
       router.back();
     }
   };

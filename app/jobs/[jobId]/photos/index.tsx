@@ -2,7 +2,6 @@ import { JobCameraView } from '@/app/(modals)/CameraView';
 import { ActionButton } from '@/components/ActionButton';
 import { ActionButtonProps } from '@/components/ButtonBar';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
-import { ScreenHeader } from '@/components/ScreenHeader';
 import { Switch } from '@/components/Switch';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -11,25 +10,15 @@ import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { useDbLogger } from '@/context/LoggerContext';
 import { useJobDataStore } from '@/stores/jobDataStore';
-import { ShareFile, ShareFiles } from '@/utils/sharing';
-import { CreateMediaZip } from '@/utils/zip';
+import { ShareFiles } from '@/utils/sharing';
 import { Entypo, Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
-import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { MediaAssets } from 'jobmedia';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Button,
-  Image,
-  Platform,
-  Pressable,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
+import { ActivityIndicator, Alert, Button, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export type PhotoCapturedCallback = (asset: MediaLibrary.Asset) => void;
@@ -496,73 +485,28 @@ const JobPhotosPage = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {Platform.OS === 'android' ? (
-        <Stack.Screen
-          options={{
-            headerShown: true,
-            header: () => (
-              <ScreenHeader
-                title={jobName}
-                headerLeft={() => (
-                  <Pressable
-                    onPress={() => {
-                      router.back();
-                    }}
-                  >
-                    {({ pressed }) => (
-                      <Ionicons
-                        name="chevron-back"
-                        size={24}
-                        color={colors.iconColor}
-                        style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                      />
-                    )}
-                  </Pressable>
-                )}
-                headerRight={() => (
-                  <Pressable
-                    onPress={() => {
-                      setHeaderMenuModalVisible(!headerMenuModalVisible);
-                    }}
-                  >
-                    {({ pressed }) => (
-                      <Ionicons
-                        name="menu-outline"
-                        size={24}
-                        color={colors.iconColor}
-                        style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                      />
-                    )}
-                  </Pressable>
-                )}
-              />
-            ),
-          }}
-        />
-      ) : (
-        <Stack.Screen
-          options={{
-            headerShown: true,
-            title: jobName,
-            headerRight: () => (
-              <Pressable
-                onPress={() => {
-                  setHeaderMenuModalVisible(!headerMenuModalVisible);
-                }}
-              >
-                {({ pressed }) => (
-                  <Ionicons
-                    name="menu-outline"
-                    size={24}
-                    color={colors.iconColor}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            ),
-          }}
-        />
-      )}
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: jobName,
+          headerRight: () => (
+            <Pressable
+              onPress={() => {
+                setHeaderMenuModalVisible(!headerMenuModalVisible);
+              }}
+            >
+              {({ pressed }) => (
+                <Ionicons
+                  name="menu-outline"
+                  size={24}
+                  color={colors.iconColor}
+                  style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                />
+              )}
+            </Pressable>
+          ),
+        }}
+      />
 
       <View style={styles.headerInfo}>
         {!showAssetItems && (
