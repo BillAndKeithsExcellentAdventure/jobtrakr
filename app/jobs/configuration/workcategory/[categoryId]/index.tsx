@@ -158,7 +158,7 @@ const ShowWorkCategory = () => {
             />
           </View>
           <View style={{ flex: 1, marginTop: 20, backgroundColor: colors.background }}>
-            {categorySpecificItems.length > 0 && (
+            {categorySpecificItems.length > 0 ? (
               <FlatList
                 style={{ borderTopWidth: 1, borderColor: colors.borderColor }}
                 data={categorySpecificItems}
@@ -173,6 +173,15 @@ const ShowWorkCategory = () => {
                   </View>
                 )}
               />
+            ) : (
+              <View style={{ alignItems: 'center', margin: 20 }}>
+                <Text
+                  txtSize="title"
+                  text="No items found for this category."
+                  style={{ textAlign: 'center', marginBottom: 10 }}
+                />
+                <Text text="To add an item, define its Code and Name and press Add Work Item." />
+              </View>
             )}
           </View>
         </View>
