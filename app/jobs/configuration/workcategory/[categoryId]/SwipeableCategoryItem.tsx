@@ -98,31 +98,6 @@ const SwipeableCategoryItem = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  categoryItems: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 16,
-    marginBottom: 16,
-  },
-  input: {
-    height: 40,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    marginBottom: 12,
-    paddingLeft: 8,
-    borderRadius: 4,
-  },
-  categoryContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    padding: 8,
-    borderRadius: 10,
-  },
   itemInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -136,21 +111,7 @@ const styles = StyleSheet.create({
   itemEntry: {
     width: '100%',
   },
-  categoryName: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
   itemCode: {
-    flex: 1,
-  },
-  categoryItem: {
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 10,
-  },
-
-  categoryInfo: {
     flex: 1,
   },
   rightAction: {
