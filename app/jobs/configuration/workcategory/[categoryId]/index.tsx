@@ -112,7 +112,7 @@ const ShowWorkCategory = () => {
       />
 
       <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
-        <View style={{ borderRadius: 10 }}>
+        <View style={{ backgroundColor: colors.listBackground, padding: 10 }}>
           <TouchableOpacity
             onPress={() => handleEditCategory(category._id!)} // Edit on item press
           >
@@ -125,33 +125,17 @@ const ShowWorkCategory = () => {
             </View>
           </TouchableOpacity>
         </View>
-        <View
-          style={[
-            styles.categoryItems,
-            {
-              flex: 1,
-              backgroundColor: colors.background,
-              borderRadius: 10,
-              paddingHorizontal: 10,
-            },
-          ]}
-        >
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingVertical: 5,
-            }}
-          >
+        <View style={[styles.categoryItems, { backgroundColor: colors.listBackground }]}>
+          <View style={styles.categoryListHeader}>
             <View style={{ alignItems: 'center', marginHorizontal: 5, flex: 1 }}>
               <Text text="Work Items" txtSize="title" />
             </View>
-            <TouchableOpacity style={{ padding: 4 }} onPress={() => setShowAdd(!showAdd)}>
+            <TouchableOpacity style={{ padding: 4, paddingRight: 20 }} onPress={() => setShowAdd(!showAdd)}>
               <Ionicons name={showAdd ? 'chevron-up-sharp' : 'add'} size={24} color={colors.iconColor} />
             </TouchableOpacity>
           </View>
           {showAdd && (
-            <View>
+            <View style={{ borderRadius: 10, margin: 10, marginHorizontal: 15, padding: 10 }}>
               <View style={{ flexDirection: 'row' }}>
                 <View style={{ width: 120 }}>
                   <TextInput
@@ -171,13 +155,14 @@ const ShowWorkCategory = () => {
                 </View>
               </View>
               <ActionButton
+                style={{ paddingHorizontal: 10 }}
                 onPress={handleAddItem}
                 type={item.Code && item.Name ? 'action' : 'disabled'}
                 title="Add Work Item"
               />
             </View>
           )}
-          <View style={{ flex: 1, marginTop: showAdd ? 10 : 0, backgroundColor: colors.background }}>
+          <View style={{ flex: 1, paddingHorizontal: 10 }}>
             {categorySpecificItems.length > 0 ? (
               <FlatList
                 style={{ borderTopWidth: 1, borderColor: colors.borderColor }}
@@ -208,15 +193,18 @@ const ShowWorkCategory = () => {
 
 const styles = StyleSheet.create({
   container: {
+    padding: 0,
     flex: 1,
-    padding: 16,
   },
   categoryItems: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 16,
-    marginBottom: 16,
+    flex: 1,
   },
+  categoryListHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 5,
+  },
+
   input: {
     height: 40,
     borderColor: '#ccc',

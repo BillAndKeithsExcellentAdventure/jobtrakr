@@ -15,7 +15,7 @@ const EditVendor = () => {
     if (id) {
       // Simulate fetching vendor details based on the `id`
       const fetchedVendor: VendorData = {
-        _id: id,
+        _id: id as string,
         VendorName: 'Vendor 1',
         Address: '123 Main St',
         City: 'City 1',

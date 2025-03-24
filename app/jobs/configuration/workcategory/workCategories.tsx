@@ -12,6 +12,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
 import { Pressable } from 'react-native-gesture-handler';
+import SwipeableCategory from './SwipeableCategory';
 
 const ListWorkCategories = () => {
   const { allWorkCategories, setWorkCategories, addWorkCategory } = useWorkCategoryDataStore();
@@ -65,21 +66,6 @@ const ListWorkCategories = () => {
     router.push(`/jobs/configuration/workcategory/${id}`);
   };
 
-  const renderCategory = ({ item }: { item: WorkCategoryData }) => (
-    <TouchableOpacity
-      onPress={() => handleEditCategory(item._id!)} // Edit on item press
-      style={styles.categoryItem}
-    >
-      <View style={[styles.categoryContent, { borderColor: colors.borderColor, borderWidth: 1 }]}>
-        <View style={styles.categoryInfo}>
-          <Text style={styles.categoryName}>{item.Name}</Text>
-          <Text>{item.Code}</Text>
-        </View>
-        <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
-      </View>
-    </TouchableOpacity>
-  );
-
   const renderHeaderRight = () => (
     <Pressable
       // work around for https://github.com/software-mansion/react-native-screens/issues/2219
@@ -117,11 +103,9 @@ const ListWorkCategories = () => {
         }}
       />
 
-      <View
-        style={[styles.container, { backgroundColor: colors.listBackground, paddingTop: showAdd ? 10 : 0 }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
         {showAdd && (
-          <View style={{ padding: 10, borderRadius: 10 }}>
+          <View style={{ padding: 10, borderRadius: 10, marginVertical: 10, marginHorizontal: 15 }}>
             <View style={{ flexDirection: 'row' }}>
               <View style={{ width: 120 }}>
                 <TextInput
@@ -131,7 +115,7 @@ const ListWorkCategories = () => {
                   onChangeText={(text) => handleInputChange('Code', text)}
                 />
               </View>
-              <View style={{ flex: 1, marginLeft: 10 }}>
+              <View style={{ flex: 1 }}>
                 <TextInput
                   style={styles.input}
                   placeholder="Name"
@@ -143,11 +127,17 @@ const ListWorkCategories = () => {
             <ActionButton
               onPress={handleAddCategory}
               type={category.Code && category.Name ? 'action' : 'disabled'}
-              title="Add Work Item"
+              title="Add Work  Category"
             />
           </View>
         )}
-        <FlatList data={allWorkCategories} keyExtractor={(item) => item._id!} renderItem={renderCategory} />
+        <View>
+          <FlatList
+            data={allWorkCategories}
+            keyExtractor={(item) => item._id!}
+            renderItem={({ item }) => <SwipeableCategory category={item} />}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -156,7 +146,6 @@ const ListWorkCategories = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 10,
   },
   header: {
     fontSize: 24,
