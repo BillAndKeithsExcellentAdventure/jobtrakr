@@ -1,5 +1,6 @@
 import React from 'react';
 import { Text, TouchableOpacity, StyleSheet, Platform, ViewStyle, TextStyle } from 'react-native';
+import { useColorScheme } from './useColorScheme';
 
 type ActionButtonProps = {
   title: string;
@@ -17,6 +18,7 @@ interface ButtonSettings {
 
 export const ActionButton: React.FC<ActionButtonProps> = ({ title, onPress, type, style, textStyle }) => {
   const platform = Platform.OS; // Get the current platform (iOS or Android)
+  const colorScheme = useColorScheme();
 
   const getButtonStyles = (buttonType: ActionButtonProps['type'], platform: string): ButtonSettings => {
     switch (buttonType) {
@@ -39,6 +41,13 @@ export const ActionButton: React.FC<ActionButtonProps> = ({ title, onPress, type
           color: '#fff',
         };
       case 'disabled':
+        if (colorScheme === 'dark') {
+          return {
+            backgroundColor: '#616161',
+            borderColor: '#4a4a4a',
+            color: '#b0b0b0',
+          };
+        }
         if (platform === 'ios') {
           return {
             backgroundColor: '#D1D1D6', // iOS Disabled Grey (light grey)
