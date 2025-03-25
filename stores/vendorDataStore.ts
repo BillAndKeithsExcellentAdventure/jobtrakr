@@ -1,16 +1,12 @@
+import { VendorData } from 'jobdb';
 import { create } from 'zustand';
 
-export type VendorEntry = {
-  label: string;
-  _id?: string;
-};
-
 export type VendorsDataStore = {
-  allVendors: VendorEntry[];
-  setVendorData: (data: VendorEntry[]) => void;
-  addVendor: (receipt: VendorEntry) => void;
+  allVendors: VendorData[];
+  setVendorData: (data: VendorData[]) => void;
+  addVendor: (receipt: VendorData) => void;
   removeVendor: (id: string) => void;
-  updateVendor: (id: string, updatedReceipt: Partial<VendorEntry>) => void;
+  updateVendor: (id: string, updatedReceipt: Partial<VendorData>) => void;
 };
 
 export const useVendorDataStore = create<VendorsDataStore>((set) => ({

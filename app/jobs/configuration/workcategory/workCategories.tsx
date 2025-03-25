@@ -154,10 +154,9 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderColor: '#ccc',
     borderWidth: 1,
-    marginBottom: 12,
-    paddingLeft: 8,
+    marginBottom: 10,
+    paddingLeft: 10,
     borderRadius: 4,
   },
 

@@ -5,29 +5,27 @@ import { VendorData } from 'jobdb';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
 import { Text, TextInput, View } from '@/components/Themed';
+import { useVendorDataStore } from '@/stores/vendorDataStore';
 
 const EditVendor = () => {
   const { id } = useLocalSearchParams();
   const [vendor, setVendor] = useState<VendorData | null>(null);
   const router = useRouter();
+  const { allVendors, updateVendor } = useVendorDataStore();
 
   useEffect(() => {
-    if (id) {
+    if (id && allVendors) {
       // Simulate fetching vendor details based on the `id`
-      const fetchedVendor: VendorData = {
-        _id: id as string,
-        VendorName: 'Vendor 1',
-        Address: '123 Main St',
-        City: 'City 1',
-        State: 'State 1',
-        Zip: '12345',
-        MobilePhone: '123-456-7890',
-        BusinessPhone: '098-765-4321',
-        Notes: 'Some notes here',
-      };
+      const fetchedVendor: VendorData | undefined = allVendors.find((v) => v._id === id);
+      if (!fetchedVendor) {
+        Alert.alert('Vendor Not Found', 'The vendor you are trying to edit does not exist.');
+        router.back();
+        return; // Exit early if the vendor is not found
+      }
+
       setVendor(fetchedVendor);
     }
-  }, [id]);
+  }, [id, allVendors]);
 
   const handleInputChange = (name: keyof VendorData, value: string) => {
     if (vendor) {
@@ -39,14 +37,12 @@ const EditVendor = () => {
   };
 
   const handleSave = () => {
-    if (vendor) {
-      // Simulate saving the updated vendor (e.g., API call or database update)
-      console.log('Updated vendor:', vendor);
-
-      // For now, we'll just alert the user and navigate back
-      Alert.alert('Vendor Updated', 'The vendor details have been successfully updated!');
-
-      // Go back to the vendor list screen after saving
+    if (vendor && vendor._id) {
+      if (!vendor.VendorName) {
+        Alert.alert('Vendor Name Required', 'Please enter a name for the vendor.');
+        return;
+      }
+      updateVendor(vendor._id, vendor);
       router.back();
     }
   };
