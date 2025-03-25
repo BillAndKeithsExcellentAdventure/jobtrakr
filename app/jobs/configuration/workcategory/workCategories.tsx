@@ -1,7 +1,7 @@
 // screens/ListWorkCategories.tsx
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, TouchableOpacity, StyleSheet, Keyboard } from 'react-native';
+import { FlatList, TouchableOpacity, StyleSheet, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons'; // Right caret icon
 import { Text, TextInput, View } from '@/components/Themed';
@@ -11,7 +11,7 @@ import { ActionButton } from '@/components/ActionButton';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
-import { Pressable, TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import { Pressable } from 'react-native-gesture-handler';
 import SwipeableCategory from './SwipeableCategory';
 
 const ListWorkCategories = () => {
@@ -96,6 +96,7 @@ const ListWorkCategories = () => {
   }, [allWorkCategories, category, setWorkCategories]);
 
   const dismissKeyboard = useCallback(() => {
+    console.log('Dismiss Keyboard');
     Keyboard.dismiss();
   }, []);
 
@@ -112,30 +113,33 @@ const ListWorkCategories = () => {
       <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
         {showAdd && (
           <TouchableWithoutFeedback onPress={dismissKeyboard}>
-            <View style={{ padding: 10, borderRadius: 10, marginVertical: 10, marginHorizontal: 15 }}>
-              <View style={{ flexDirection: 'row' }}>
-                <View style={{ width: 120 }}>
-                  <TextInput
-                    style={[styles.input, { backgroundColor: colors.neutral200 }]}
-                    placeholder="Code"
-                    value={category.Code}
-                    onChangeText={(text) => handleInputChange('Code', text)}
-                  />
+            <View style={{ backgroundColor: colors.listBackground }}>
+              <View style={{ padding: 10, borderRadius: 10, marginVertical: 15, marginHorizontal: 15 }}>
+                <View style={{ flexDirection: 'row' }}>
+                  <View style={{ width: 120 }}>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: colors.neutral200 }]}
+                      placeholder="Code"
+                      value={category.Code}
+                      onChangeText={(text) => handleInputChange('Code', text)}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: colors.neutral200, marginLeft: 5 }]}
+                      placeholder="Name"
+                      value={category.Name}
+                      onChangeText={(text) => handleInputChange('Name', text)}
+                    />
+                  </View>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <TextInput
-                    style={[styles.input, { backgroundColor: colors.neutral200, marginLeft: 5 }]}
-                    placeholder="Name"
-                    value={category.Name}
-                    onChangeText={(text) => handleInputChange('Name', text)}
-                  />
-                </View>
+                <ActionButton
+                  style={{ zIndex: 1 }}
+                  onPress={handleAddCategory}
+                  type={category.Code && category.Name ? 'action' : 'disabled'}
+                  title="Add Work Category"
+                />
               </View>
-              <ActionButton
-                onPress={handleAddCategory}
-                type={category.Code && category.Name ? 'action' : 'disabled'}
-                title="Add Work  Category"
-              />
             </View>
           </TouchableWithoutFeedback>
         )}

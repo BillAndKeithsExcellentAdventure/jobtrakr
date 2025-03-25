@@ -1,9 +1,11 @@
 import OkayCancelButtons from '@/components/OkayCancelButtons';
 import { Text, TextInput, View } from '@/components/Themed';
+import { useColorScheme } from '@/components/useColorScheme';
+import { Colors } from '@/constants/Colors';
 import { WorkCategoryData } from '@/models/types';
 import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -12,6 +14,19 @@ const EditWorkCategory = () => {
   const { allWorkCategories, updateWorkCategory } = useWorkCategoryDataStore();
   const [category, setCategory] = useState<WorkCategoryData | null>(null);
   const router = useRouter();
+
+  const colorScheme = useColorScheme();
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            neutral200: Colors.dark.neutral200,
+          }
+        : {
+            neutral200: Colors.light.neutral200,
+          },
+    [colorScheme],
+  );
 
   useEffect(() => {
     if (categoryId) {
@@ -60,13 +75,13 @@ const EditWorkCategory = () => {
 
       <View style={styles.container}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Name"
           value={category.Name}
           onChangeText={(text) => handleInputChange('Name', text)}
         />
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Code"
           value={category.Code}
           onChangeText={(text) => handleInputChange('Code', text)}

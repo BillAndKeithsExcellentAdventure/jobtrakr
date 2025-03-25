@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { StyleSheet, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { VendorData } from 'jobdb';
@@ -6,12 +6,28 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useVendorDataStore } from '@/stores/vendorDataStore';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
 
 const EditVendor = () => {
   const { id } = useLocalSearchParams();
   const [vendor, setVendor] = useState<VendorData | null>(null);
   const router = useRouter();
   const { allVendors, updateVendor } = useVendorDataStore();
+  const colorScheme = useColorScheme();
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            listBackground: Colors.dark.listBackground,
+            neutral200: Colors.dark.neutral200,
+          }
+        : {
+            listBackground: Colors.light.listBackground,
+            neutral200: Colors.light.neutral200,
+          },
+    [colorScheme],
+  );
 
   useEffect(() => {
     if (id && allVendors) {
@@ -65,32 +81,32 @@ const EditVendor = () => {
       />
       <View style={styles.container}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Vendor Name"
           value={vendor.VendorName}
           onChangeText={(text) => handleInputChange('VendorName', text)}
         />
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Address"
           value={vendor.Address}
           onChangeText={(text) => handleInputChange('Address', text)}
         />
         <View style={{ flexDirection: 'row' }}>
           <TextInput
-            style={[styles.input, { flex: 1, marginRight: 8 }]}
+            style={[styles.input, { flex: 1, marginRight: 8, backgroundColor: colors.neutral200 }]}
             placeholder="City"
             value={vendor.City}
             onChangeText={(text) => handleInputChange('City', text)}
           />
           <TextInput
-            style={[styles.input, { width: 75, marginRight: 8 }]}
+            style={[styles.input, { width: 75, marginRight: 8, backgroundColor: colors.neutral200 }]}
             placeholder="State"
             value={vendor.State}
             onChangeText={(text) => handleInputChange('State', text)}
           />
           <TextInput
-            style={[styles.input, { width: 80 }]}
+            style={[styles.input, { width: 80, backgroundColor: colors.neutral200 }]}
             placeholder="Zip"
             value={vendor.Zip}
             keyboardType="number-pad"
@@ -99,14 +115,14 @@ const EditVendor = () => {
         </View>
         <View style={{ flexDirection: 'row' }}>
           <TextInput
-            style={[styles.input, { flex: 1, marginRight: 8 }]}
+            style={[styles.input, { flex: 1, marginRight: 8, backgroundColor: colors.neutral200 }]}
             placeholder="Mobile Phone"
             keyboardType="phone-pad"
             value={vendor.MobilePhone}
             onChangeText={(text) => handleInputChange('MobilePhone', text)}
           />
           <TextInput
-            style={[styles.input, { flex: 1 }]}
+            style={[styles.input, { flex: 1, backgroundColor: colors.neutral200 }]}
             placeholder="Business Phone"
             value={vendor.BusinessPhone}
             keyboardType="phone-pad"
@@ -114,7 +130,7 @@ const EditVendor = () => {
           />
         </View>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Notes"
           value={vendor.Notes}
           onChangeText={(text) => handleInputChange('Notes', text)}

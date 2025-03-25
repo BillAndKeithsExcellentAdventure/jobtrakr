@@ -1,24 +1,22 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import {
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  useColorScheme,
-  FlatList,
-  Pressable,
-  Keyboard,
-} from 'react-native';
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
+import { ActionButton } from '@/components/ActionButton';
 import { Text, TextInput, View } from '@/components/Themed';
+import { Colors } from '@/constants/Colors';
 import { WorkCategoryData, WorkCategoryItemData } from '@/models/types';
 import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
 import { useWorkCategoryItemDataStore } from '@/stores/categoryItemDataStore';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/Colors';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { ActionButton } from '@/components/ActionButton';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  FlatList,
+  Keyboard,
+  StyleSheet,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  useColorScheme,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableCategoryItem from './SwipeableCategoryItem';
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 
 const ShowWorkCategory = () => {
   const { categoryId } = useLocalSearchParams();
@@ -105,6 +103,10 @@ const ShowWorkCategory = () => {
     router.push(`/jobs/configuration/workcategory/${id}/edit`);
   };
 
+  const dismissKeyboard = useCallback(() => {
+    Keyboard.dismiss();
+  }, []);
+
   if (!category) {
     return (
       <View style={styles.container}>
@@ -112,10 +114,6 @@ const ShowWorkCategory = () => {
       </View>
     );
   }
-
-  const dismissKeyboard = useCallback(() => {
-    Keyboard.dismiss();
-  }, []);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -151,31 +149,33 @@ const ShowWorkCategory = () => {
           </View>
           {showAdd && (
             <TouchableWithoutFeedback onPress={dismissKeyboard}>
-              <View style={{ borderRadius: 10, margin: 10, marginHorizontal: 15, padding: 10 }}>
-                <View style={{ flexDirection: 'row' }}>
-                  <View style={{ width: 120 }}>
-                    <TextInput
-                      style={[styles.input, { backgroundColor: colors.neutral200 }]}
-                      placeholder="Code"
-                      value={item.Code}
-                      onChangeText={(text) => handleInputChange('Code', text)}
-                    />
+              <View style={{ backgroundColor: colors.listBackground }}>
+                <View style={{ borderRadius: 10, margin: 10, marginHorizontal: 15, padding: 10 }}>
+                  <View style={{ flexDirection: 'row' }}>
+                    <View style={{ width: 120 }}>
+                      <TextInput
+                        style={[styles.input, { backgroundColor: colors.neutral200 }]}
+                        placeholder="Code"
+                        value={item.Code}
+                        onChangeText={(text) => handleInputChange('Code', text)}
+                      />
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 5 }}>
+                      <TextInput
+                        style={[styles.input, { backgroundColor: colors.neutral200 }]}
+                        placeholder="Name"
+                        value={item.Name}
+                        onChangeText={(text) => handleInputChange('Name', text)}
+                      />
+                    </View>
                   </View>
-                  <View style={{ flex: 1, marginLeft: 5 }}>
-                    <TextInput
-                      style={[styles.input, { backgroundColor: colors.neutral200 }]}
-                      placeholder="Name"
-                      value={item.Name}
-                      onChangeText={(text) => handleInputChange('Name', text)}
-                    />
-                  </View>
+                  <ActionButton
+                    style={{ paddingHorizontal: 10, zIndex: 1 }}
+                    onPress={handleAddItem}
+                    type={item.Code && item.Name ? 'action' : 'disabled'}
+                    title="Add Work Item"
+                  />
                 </View>
-                <ActionButton
-                  style={{ paddingHorizontal: 10 }}
-                  onPress={handleAddItem}
-                  type={item.Code && item.Name ? 'action' : 'disabled'}
-                  title="Add Work Item"
-                />
               </View>
             </TouchableWithoutFeedback>
           )}
