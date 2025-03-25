@@ -52,6 +52,11 @@ const home = () => {
           description="Add and Edit Vendors"
           onPress={() => router.push('/jobs/configuration/vendor/vendors')}
         />
+        <ConfigurationEntry
+          label="Job Templates"
+          description="Define Job-specific Work Items"
+          onPress={() => router.push('/jobs/configuration/template/templates')}
+        />
       </View>
     </SafeAreaView>
   );
