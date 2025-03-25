@@ -36,7 +36,7 @@ const EditReceiptDetailsPage = () => {
   useEffect(() => {
     if (allVendors && allVendors.length) {
       const vendorMap = allVendors.map((v) => {
-        return { label: v.label, value: v._id };
+        return { label: v.VendorName ?? 'unknown', value: v._id };
       });
       setVendors(vendorMap);
     } else {

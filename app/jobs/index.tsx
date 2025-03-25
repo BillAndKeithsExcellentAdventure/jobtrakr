@@ -1,27 +1,26 @@
 import { ActionButtonProps } from '@/components/ButtonBar';
-import { View, Text } from '@/components/Themed';
+import { Text, View } from '@/components/Themed';
 import { TwoColumnList, TwoColumnListEntry } from '@/components/TwoColumnList';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { formatCurrency, formatDate } from '@/utils/formatters';
+import Entypo from '@expo/vector-icons/Entypo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import Entypo from '@expo/vector-icons/Entypo';
 import { useNavigation } from '@react-navigation/native';
-import { router, Stack, useRouter } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
-import { ScreenHeader } from '@/components/ScreenHeader';
-import { useJobDb } from '@/context/DatabaseContext';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useJobDataStore } from '@/stores/jobDataStore';
-import { useVendorDataStore, VendorEntry } from '@/stores/vendorDataStore';
-import { ShareFile } from '@/utils/sharing';
+import { useJobDb } from '@/context/DatabaseContext';
 import { useDbLogger } from '@/context/LoggerContext';
+import { useJobDataStore } from '@/stores/jobDataStore';
+import { useVendorDataStore } from '@/stores/vendorDataStore';
 import { Pressable } from 'react-native-gesture-handler';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { VendorData } from 'jobdb';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -79,13 +78,13 @@ export default function JobHomeScreen() {
 
   // set the vendor data on initial screen render
   useEffect(() => {
-    const vendorOptions: VendorEntry[] = [
-      { label: 'Home Depot', _id: '1' },
-      { label: "Lowe's", _id: '2' },
-      { label: 'Tractor Supply', _id: '3' },
-      { label: 'Master Plumbing', _id: '4' },
-      { label: 'Ace Hardware', _id: '5' },
-      { label: 'Johnson Fence', _id: '6' },
+    const vendorOptions: VendorData[] = [
+      { VendorName: 'Home Depot', _id: '1' },
+      { VendorName: "Lowe's", _id: '2' },
+      { VendorName: 'Tractor Supply', _id: '3' },
+      { VendorName: 'Master Plumbing', _id: '4' },
+      { VendorName: 'Ace Hardware', _id: '5' },
+      { VendorName: 'Johnson Fence', _id: '6' },
     ];
 
     setVendorData(vendorOptions);
@@ -104,10 +103,10 @@ export default function JobHomeScreen() {
           lines: [
             {
               left: `start: ${formatDate(job.StartDate)}`,
-              right: `due: ${formatDate(job.PlannedFinish)}`,
+              right: `bid: ${formatCurrency(job.BidPrice)}`,
             },
             {
-              left: `bid: ${formatCurrency(job.BidPrice)}`,
+              left: `due: ${formatDate(job.PlannedFinish)}`,
               right: `spent: ${formatCurrency(0)}`,
             },
           ],

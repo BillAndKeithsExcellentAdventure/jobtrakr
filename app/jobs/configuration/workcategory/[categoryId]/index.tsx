@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { TouchableOpacity, StyleSheet, Alert, useColorScheme, FlatList, Pressable } from 'react-native';
+import {
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  useColorScheme,
+  FlatList,
+  Pressable,
+  Keyboard,
+} from 'react-native';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { Text, TextInput, View } from '@/components/Themed';
 import { WorkCategoryData, WorkCategoryItemData } from '@/models/types';
@@ -10,6 +18,7 @@ import { Colors } from '@/constants/Colors';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { ActionButton } from '@/components/ActionButton';
 import SwipeableCategoryItem from './SwipeableCategoryItem';
+import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 
 const ShowWorkCategory = () => {
   const { categoryId } = useLocalSearchParams();
@@ -32,12 +41,14 @@ const ShowWorkCategory = () => {
             listBackground: Colors.dark.listBackground,
             borderColor: Colors.dark.borderColor,
             iconColor: Colors.dark.iconColor,
+            neutral200: Colors.dark.neutral200,
           }
         : {
             background: Colors.light.background,
             listBackground: Colors.light.listBackground,
             borderColor: Colors.light.borderColor,
             iconColor: Colors.light.iconColor,
+            neutral200: Colors.light.neutral200,
           },
     [colorScheme],
   );
@@ -102,6 +113,10 @@ const ShowWorkCategory = () => {
     );
   }
 
+  const dismissKeyboard = useCallback(() => {
+    Keyboard.dismiss();
+  }, []);
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
@@ -135,32 +150,34 @@ const ShowWorkCategory = () => {
             </TouchableOpacity>
           </View>
           {showAdd && (
-            <View style={{ borderRadius: 10, margin: 10, marginHorizontal: 15, padding: 10 }}>
-              <View style={{ flexDirection: 'row' }}>
-                <View style={{ width: 120 }}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Code"
-                    value={item.Code}
-                    onChangeText={(text) => handleInputChange('Code', text)}
-                  />
+            <TouchableWithoutFeedback onPress={dismissKeyboard}>
+              <View style={{ borderRadius: 10, margin: 10, marginHorizontal: 15, padding: 10 }}>
+                <View style={{ flexDirection: 'row' }}>
+                  <View style={{ width: 120 }}>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: colors.neutral200 }]}
+                      placeholder="Code"
+                      value={item.Code}
+                      onChangeText={(text) => handleInputChange('Code', text)}
+                    />
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 5 }}>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: colors.neutral200 }]}
+                      placeholder="Name"
+                      value={item.Name}
+                      onChangeText={(text) => handleInputChange('Name', text)}
+                    />
+                  </View>
                 </View>
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Name"
-                    value={item.Name}
-                    onChangeText={(text) => handleInputChange('Name', text)}
-                  />
-                </View>
+                <ActionButton
+                  style={{ paddingHorizontal: 10 }}
+                  onPress={handleAddItem}
+                  type={item.Code && item.Name ? 'action' : 'disabled'}
+                  title="Add Work Item"
+                />
               </View>
-              <ActionButton
-                style={{ paddingHorizontal: 10 }}
-                onPress={handleAddItem}
-                type={item.Code && item.Name ? 'action' : 'disabled'}
-                title="Add Work Item"
-              />
-            </View>
+            </TouchableWithoutFeedback>
           )}
           <View style={{ flex: 1, paddingHorizontal: 10 }}>
             {categorySpecificItems.length > 0 ? (
