@@ -50,14 +50,20 @@ const ListJobTemplates = () => {
       const jobTemplatesData: JobTemplateData[] = [
         {
           _id: '1',
-          Name: 'Electrical Work Template',
-          Description: 'Template for electrical tasks',
+          Name: 'Standard House',
+          Description: 'Standard Residential Construction',
           WorkItems: ['1', '3'],
         },
         {
           _id: '2',
-          Name: 'Plumbing Work Template',
-          Description: 'Template for plumbing tasks',
+          Name: 'Private Steel Building',
+          Description: 'Privately owned steel building',
+          WorkItems: ['2'],
+        },
+        {
+          _id: '3',
+          Name: 'Public Steel Building',
+          Description: 'State or Federally owned steel building',
           WorkItems: ['2'],
         },
       ];

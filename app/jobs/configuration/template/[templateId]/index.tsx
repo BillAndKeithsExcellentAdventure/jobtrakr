@@ -1,38 +1,90 @@
+import { Text, View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { SectionList, TouchableOpacity, StyleSheet, ListRenderItemInfo } from 'react-native';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useJobTemplateDataStore } from '@/stores/jobTemplateDataStore';
 import { JobTemplateData } from '@/models/types';
-import { View, Text } from '@/components/Themed';
+import { useColorScheme } from '@/components/useColorScheme';
+import { Colors } from '@/constants/Colors';
+
+interface ItemData {
+  title: string;
+  isActive: boolean; // Indicates if the item is active or collapsed
+}
 
 interface SectionData {
   title: string;
-  data: string[];
+  data: ItemData[]; // Data now contains ItemData with isActive flag
 }
 
 const CollapsibleSectionList: React.FC = () => {
   const { templateId } = useLocalSearchParams(); // Assuming the route includes jobTemplateId
-  const { allJobTemplates, updateJobTemplate } = useJobTemplateDataStore();
+  const { allJobTemplates } = useJobTemplateDataStore();
   const [template, setTemplate] = useState<JobTemplateData | null>();
+  const listRef = useRef<SectionList<any>>(null);
+
+  const colorScheme = useColorScheme();
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            background: Colors.dark.background,
+            listBackground: Colors.dark.listBackground,
+            borderColor: Colors.dark.borderColor,
+            iconColor: Colors.dark.iconColor,
+            neutral200: Colors.dark.neutral200,
+          }
+        : {
+            background: Colors.light.background,
+            listBackground: Colors.light.listBackground,
+            borderColor: Colors.light.borderColor,
+            iconColor: Colors.light.iconColor,
+            neutral200: Colors.light.neutral200,
+          },
+    [colorScheme],
+  );
 
   // Sample data for SectionList
-  const originalData: SectionData[] = [
+  const [sectionData, setSectionData] = useState<SectionData[]>([
     {
-      title: 'Fruits',
-      data: ['Apple', 'Banana', 'Orange', 'Grapes'],
+      title: 'Site Work',
+      data: [
+        { title: 'Silt Fence', isActive: true },
+        { title: 'Grading', isActive: true },
+        { title: 'Culvert', isActive: false },
+        { title: 'Permits', isActive: true },
+      ],
     },
     {
-      title: 'Vegetables',
-      data: ['Carrot', 'Lettuce', 'Tomato', 'Cucumber'],
+      title: 'Concrete',
+      data: [
+        { title: 'Footer', isActive: true },
+        { title: 'Basement Walls', isActive: true },
+        { title: 'Porch', isActive: false },
+        { title: 'Patio', isActive: false },
+        { title: 'Driveway', isActive: true },
+        { title: 'Misc Slab', isActive: false },
+        { title: 'Garage Pad', isActive: true },
+        { title: 'Carport', isActive: true },
+        { title: 'Silt Fence', isActive: true },
+        { title: 'Grading', isActive: true },
+        { title: 'Culvert', isActive: true },
+        { title: 'Permits', isActive: true },
+      ],
     },
     {
-      title: 'Animals',
-      data: ['Dog', 'Cat', 'Horse', 'Elephant'],
+      title: 'Framing',
+      data: [
+        { title: 'Walls', isActive: true },
+        { title: 'Roof', isActive: true },
+        { title: 'Doors & Window', isActive: true },
+        { title: 'Finish', isActive: true },
+      ],
     },
-  ];
+  ]);
 
   // State to manage which sections are collapsed
   const [collapsedSections, setCollapsedSections] = useState<{ [key: string]: boolean }>({});
@@ -53,32 +105,120 @@ const CollapsibleSectionList: React.FC = () => {
     }));
   };
 
+  // Toggle the active state of an item
+  const toggleItemActiveState = (sectionTitle: string, itemTitle: string) => {
+    //setTemplate((prevTemplate) => {
+    //  if (!prevTemplate) return prevTemplate;
+
+    const updatedSections = sectionData.map((section) => {
+      if (section.title === sectionTitle) {
+        const updatedData = section.data.map((item) =>
+          item.title === itemTitle ? { ...item, isActive: !item.isActive } : item,
+        );
+        return { ...section, data: updatedData };
+      }
+      return section;
+    });
+
+    setSectionData(updatedSections);
+  };
+
   // Render the section header with the toggle functionality
   const renderSectionHeader = ({ section }: { section: SectionData }) => {
     const isCollapsed = collapsedSections[section.title];
     return (
-      <View style={styles.header}>
-        <Text style={styles.headerText}>{section.title}</Text>
-        <Pressable onPress={() => toggleSection(section.title)} hitSlop={10} style={styles.headerButton}>
-          <Ionicons name={isCollapsed ? 'chevron-down-sharp' : 'chevron-up-sharp'} size={24} color={'#000'} />
-        </Pressable>
+      <View
+        style={[
+          styles.header,
+          {
+            borderColor: colors.borderColor,
+            backgroundColor: colors.listBackground,
+            borderBottomWidth: 1,
+            alignItems: 'center',
+            height: 50,
+          },
+        ]}
+      >
+        <View style={{ width: 50, backgroundColor: colors.listBackground }}>
+          <View
+            style={[
+              styles.roundButton,
+              { borderColor: colors.iconColor, borderWidth: 1, backgroundColor: colors.listBackground },
+            ]}
+          >
+            <TouchableOpacity
+              style={[styles.roundButton, { borderColor: colors.iconColor }]}
+              onPress={() => alert('Button Pressed')}
+            ></TouchableOpacity>
+          </View>
+        </View>
+        <View style={{ flex: 1, backgroundColor: colors.listBackground }}>
+          <Pressable onPress={() => toggleSection(section.title)} hitSlop={10}>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                backgroundColor: colors.listBackground,
+              }}
+            >
+              <Text style={styles.headerText}>{section.title}</Text>
+              <Ionicons
+                name={isCollapsed ? 'chevron-down-sharp' : 'chevron-up-sharp'}
+                size={24}
+                color={colors.iconColor}
+              />
+            </View>
+          </Pressable>
+        </View>
       </View>
     );
   };
 
   // Render the section content (items) only if the section is not collapsed
-  const renderItem = ({ item }: ListRenderItemInfo<string>) => (
-    <View style={styles.item}>
-      <Text style={styles.itemText}>{item}</Text>
-    </View>
-  );
+  const renderItem = ({ item, section }: ListRenderItemInfo<ItemData>) => {
+    const isActive = item.isActive;
+    return (
+      <View style={[styles.item, { borderColor: colors.borderColor }]}>
+        <View
+          style={[
+            styles.roundButton,
+            {
+              borderColor: colors.iconColor,
+              borderWidth: 1,
+              backgroundColor: isActive ? colors.iconColor : 'transparent', // Conditionally set backgroundColor
+            },
+          ]}
+        >
+          <TouchableOpacity
+            style={[styles.roundButton, { borderColor: colors.iconColor }]}
+            onPress={() => toggleItemActiveState(section.title, item.title)}
+          ></TouchableOpacity>
+        </View>
+        <View style={{ marginLeft: 60 }}>
+          <Text style={styles.itemText}>{item.title}</Text>
+        </View>
+      </View>
+    );
+  };
 
-  // Modify the original data based on collapse state (show/hide data)
-  const getDataWithVisibility = () => {
-    return originalData.map((section) => ({
+  // Memoize the data with visibility based on collapsed sections
+  const memoizedSections = useMemo(() => {
+    return sectionData.map((section) => ({
       ...section,
       data: collapsedSections[section.title] ? [] : section.data,
     }));
+  }, [collapsedSections, sectionData]);
+
+  // To avoid the scroll "jumping", remove scrollToEnd
+  const handleContentSizeChange = (_contentWidth: number, contentHeight: number) => {
+    if (listRef.current) {
+      // Avoid forcing scroll to end or triggering a scroll if not necessary
+      const offsetY = listRef.current.contentOffset?.y || 0;
+      if (contentHeight > offsetY) {
+        // Optionally add scroll logic if needed
+      }
+    }
   };
 
   // The main render method for SectionList
@@ -96,11 +236,15 @@ const CollapsibleSectionList: React.FC = () => {
           <Text txtSize="title" text={template?.Name} />
         </View>
         <SectionList
-          sections={getDataWithVisibility()} // Dynamically get the data based on collapse state
+          ref={listRef} // Add the ref to SectionList
+          sections={memoizedSections} // Use the memoized sections data
           renderItem={renderItem}
           renderSectionHeader={renderSectionHeader}
           keyExtractor={(item, index) => index.toString()}
           ListEmptyComponent={<Text>No data available</Text>}
+          onContentSizeChange={handleContentSizeChange} // Ensure scroll position when content size changes
+          initialNumToRender={10} // Limit the initial number of items to render
+          maxToRenderPerBatch={15} // Adjust max renderable items per batch to avoid overloading
         />
       </View>
     </SafeAreaView>
@@ -113,23 +257,27 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    backgroundColor: '#ddd',
-    justifyContent: 'space-between',
     padding: 10,
     borderTopWidth: 1,
-    borderColor: '#ccc',
   },
   headerText: {
     fontSize: 18,
     fontWeight: 'bold',
   },
   item: {
+    flexDirection: 'row',
     padding: 10,
     borderBottomWidth: 1,
-    borderColor: '#ccc',
   },
   itemText: {
     fontSize: 16,
+  },
+  roundButton: {
+    width: 25, // Width of the button
+    height: 25, // Height of the button (same as width to make it circular)
+    borderRadius: 12.5, // Half of width/height for the round shape
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
