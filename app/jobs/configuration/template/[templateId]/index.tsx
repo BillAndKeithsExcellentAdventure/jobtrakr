@@ -10,6 +10,7 @@ import { useJobTemplateDataStore } from '@/stores/jobTemplateDataStore';
 import { JobTemplateData } from '@/models/types';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { LegendList } from '@legendapp/list';
 
 interface ItemData {
   id: string; // Added the id property
@@ -72,6 +73,9 @@ const CollapsibleFlashList: React.FC = () => {
         { id: 'item40', title: '200.16 - Alt Misc Slab', isActive: false },
         { id: 'item41', title: '200.17 - Alt Garage Pad', isActive: true },
         { id: 'item42', title: '200.18 - Alt Carport', isActive: true },
+        { id: 'item50', title: '200.26 - Alt1 Misc Slab', isActive: false },
+        { id: 'item51', title: '200.27 - Alt1 Garage Pad', isActive: true },
+        { id: 'item52', title: '200.28 - Alt1 Carport', isActive: true },
       ],
       isExpanded: false, // Initially collapsed
     },
@@ -143,8 +147,9 @@ const CollapsibleFlashList: React.FC = () => {
         <View style={{ alignItems: 'center', paddingVertical: 5 }}>
           <Text txtSize="title" text={template?.Name} />
         </View>
-        <FlashList
+        <LegendList
           data={sectionData}
+          maintainVisibleContentPosition
           renderItem={({ item }) => (
             <>
               {/* Render the section header */}
