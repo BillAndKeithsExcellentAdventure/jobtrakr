@@ -227,7 +227,7 @@ const renderItem = (
   const isActive = item.isActive;
   return (
     <TouchableOpacity
-      style={[styles.item]}
+      style={[styles.item, { borderColor: colors.borderColor }]}
       onPress={() => toggleItemActiveState(sectionTitle, item.title)} // Toggle active state on press anywhere in the item
     >
       <View
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
     padding: 10,
-    borderBottomWidth: 1,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   itemText: {
     fontSize: 16,
