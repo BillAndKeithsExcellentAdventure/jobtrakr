@@ -126,43 +126,50 @@ const CollapsibleFlashList: React.FC = () => {
   );
 };
 
-// Extracted renderSectionHeader function with toggleSection passed as argument
+// Extracted renderSectionHeader function with active count
 const renderSectionHeader = (
   section: SectionData,
   toggleSection: (title: string) => void,
   colors: typeof Colors.light | typeof Colors.dark,
-) => (
-  <View
-    style={[
-      styles.header,
-      {
-        borderColor: colors.borderColor,
-        backgroundColor: colors.listBackground,
-        borderBottomWidth: 1,
-        alignItems: 'center',
-        height: 50,
-      },
-    ]}
-  >
-    <Pressable onPress={() => toggleSection(section.title)} hitSlop={10}>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+) => {
+  // Count the number of active items in the section
+  const activeCount = section.data.filter((item) => item.isActive).length;
+
+  return (
+    <View
+      style={[
+        styles.header,
+        {
+          borderColor: colors.borderColor,
           backgroundColor: colors.listBackground,
-        }}
-      >
-        <Text style={styles.headerText}>{section.title}</Text>
-        <Ionicons
-          name={section.isExpanded ? 'chevron-up-sharp' : 'chevron-down-sharp'}
-          size={24}
-          color={colors.iconColor}
-        />
-      </View>
-    </Pressable>
-  </View>
-);
+          borderBottomWidth: 1,
+          alignItems: 'center',
+          height: 50,
+        },
+      ]}
+    >
+      <Pressable onPress={() => toggleSection(section.title)} hitSlop={10}>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            backgroundColor: colors.listBackground,
+          }}
+        >
+          <Text style={styles.headerText}>
+            {section.title} ({activeCount}) {/* Display active item count */}
+          </Text>
+          <Ionicons
+            name={section.isExpanded ? 'chevron-up-sharp' : 'chevron-down-sharp'}
+            size={24}
+            color={colors.iconColor}
+          />
+        </View>
+      </Pressable>
+    </View>
+  );
+};
 
 // Extracted renderItem function with toggleItemActiveState passed as argument
 const renderItem = (
