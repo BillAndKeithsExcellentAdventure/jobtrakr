@@ -21,7 +21,17 @@ type ThemeProps = {
 };
 
 export type ThemedTextProps = {
-  txtSize?: 'xxs' | 'xs' | 'standard' | 'formLabel' | 'sub-title' | 'title' | 'screen-header' | 'xl' | 'xxl';
+  txtSize?:
+    | 'xxs'
+    | 'xs'
+    | 'standard'
+    | 'formLabel'
+    | 'sub-title'
+    | 'section-header'
+    | 'title'
+    | 'screen-header'
+    | 'xl'
+    | 'xxl';
   text?: string;
 };
 
@@ -73,6 +83,11 @@ export function Text(props: TextProps) {
         txtStyle.fontSize = 12;
         txtStyle.fontWeight = 'medium';
         txtStyle.lineHeight = 16;
+        break;
+      case 'section-header':
+        txtStyle.fontSize = 18;
+        txtStyle.fontWeight = '500';
+        txtStyle.lineHeight = 22;
         break;
       case 'sub-title':
         txtStyle.fontSize = 18;

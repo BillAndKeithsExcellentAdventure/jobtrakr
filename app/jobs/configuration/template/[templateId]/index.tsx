@@ -12,11 +12,13 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 
 interface ItemData {
+  id: string; // Added the id property
   title: string;
   isActive: boolean;
 }
 
 interface SectionData {
+  id: string; // Added the id property
   title: string;
   data: ItemData[];
   isExpanded: boolean; // This determines if the section is expanded
@@ -40,46 +42,57 @@ const CollapsibleFlashList: React.FC = () => {
 
   const [sectionData, setSectionData] = useState<SectionData[]>([
     {
+      id: 'section1', // Dummy ID, replace with real ID from your DB
       title: '100 - Site Work',
       data: [
-        { title: '100.1 - Silt Fence', isActive: true },
-        { title: '100.2 - Grading', isActive: true },
-        { title: '100.3 - Culvert', isActive: false },
-        { title: '100.4 - Permits', isActive: true },
+        { id: 'item1', title: '100.1 - Silt Fence', isActive: true },
+        { id: 'item2', title: '100.2 - Grading', isActive: true },
+        { id: 'item3', title: '100.3 - Culvert', isActive: false },
+        { id: 'item4', title: '100.4 - Permits', isActive: true },
       ],
       isExpanded: false, // Initially collapsed
     },
     {
+      id: 'section2', // Dummy ID, replace with real ID from your DB
       title: '200 - Concrete',
       data: [
-        { title: '200.1 - Footer', isActive: true },
-        { title: '200.2 - Basement Walls', isActive: true },
-        { title: '200.3 - Porch', isActive: false },
-        { title: '200.4 - Patio', isActive: false },
-        { title: '200.5 - Driveway', isActive: true },
-        { title: '200.6 - Misc Slab', isActive: false },
-        { title: '200.7 - Garage Pad', isActive: true },
-        { title: '200.8 - Carport', isActive: true },
+        { id: 'item5', title: '200.1 - Footer', isActive: true },
+        { id: 'item6', title: '200.2 - Basement Walls', isActive: true },
+        { id: 'item7', title: '200.3 - Porch', isActive: false },
+        { id: 'item8', title: '200.4 - Patio', isActive: false },
+        { id: 'item9', title: '200.5 - Driveway', isActive: true },
+        { id: 'item10', title: '200.6 - Misc Slab', isActive: false },
+        { id: 'item11', title: '200.7 - Garage Pad', isActive: true },
+        { id: 'item12', title: '200.8 - Carport', isActive: true },
+        { id: 'item35', title: '200.11 - Alt Footer', isActive: true },
+        { id: 'item36', title: '200.12 - Alt Basement Walls', isActive: true },
+        { id: 'item37', title: '200.13 - Alt Porch', isActive: false },
+        { id: 'item38', title: '200.14 - Alt Patio', isActive: false },
+        { id: 'item39', title: '200.15 - Alt Driveway', isActive: true },
+        { id: 'item40', title: '200.16 - Alt Misc Slab', isActive: false },
+        { id: 'item41', title: '200.17 - Alt Garage Pad', isActive: true },
+        { id: 'item42', title: '200.18 - Alt Carport', isActive: true },
       ],
       isExpanded: false, // Initially collapsed
     },
     {
+      id: 'section3', // Dummy ID, replace with real ID from your DB
       title: '300 - Framing',
       data: [
-        { title: '300.1 - Walls', isActive: true },
-        { title: '300.2 - Roof', isActive: true },
-        { title: '300.3 - Doors & Window', isActive: true },
-        { title: '300.4 - Finish', isActive: true },
+        { id: 'item13', title: '300.1 - Walls', isActive: true },
+        { id: 'item14', title: '300.2 - Roof', isActive: true },
+        { id: 'item15', title: '300.3 - Doors & Window', isActive: true },
+        { id: 'item16', title: '300.4 - Finish', isActive: true },
       ],
       isExpanded: false, // Initially collapsed
     },
   ]);
 
   // Toggle the expanded state of a section
-  const toggleSection = (title: string) => {
+  const toggleSection = (id: string) => {
     setSectionData((prevData) =>
       prevData.map((section) =>
-        section.title === title
+        section.id === id
           ? { ...section, isExpanded: !section.isExpanded }
           : { ...section, isExpanded: false },
       ),
@@ -87,10 +100,10 @@ const CollapsibleFlashList: React.FC = () => {
   };
 
   // Toggle all items' active state in a section
-  const toggleAllItemsActiveState = (sectionTitle: string) => {
+  const toggleAllItemsActiveState = (sectionId: string) => {
     setSectionData((prevData) =>
       prevData.map((section) => {
-        if (section.title === sectionTitle) {
+        if (section.id === sectionId) {
           const allActive = section.data.every((item) => item.isActive);
           const updatedData = section.data.map((item) => ({
             ...item,
@@ -104,12 +117,12 @@ const CollapsibleFlashList: React.FC = () => {
   };
 
   // Toggle the active state of an item
-  const toggleItemActiveState = (sectionTitle: string, itemTitle: string) => {
+  const toggleItemActiveState = (sectionId: string, itemId: string) => {
     setSectionData((prevData) =>
       prevData.map((section) => {
-        if (section.title === sectionTitle) {
+        if (section.id === sectionId) {
           const updatedData = section.data.map((item) =>
-            item.title === itemTitle ? { ...item, isActive: !item.isActive } : item,
+            item.id === itemId ? { ...item, isActive: !item.isActive } : item,
           );
           return { ...section, data: updatedData };
         }
@@ -139,12 +152,14 @@ const CollapsibleFlashList: React.FC = () => {
 
               {/* Render items only if the section is expanded */}
               {item.isExpanded &&
-                item.data.map((dataItem, index) => (
-                  <View key={index}>{renderItem(dataItem, item.title, toggleItemActiveState, colors)}</View>
+                item.data.map((dataItem) => (
+                  <View key={dataItem.id}>
+                    {renderItem(dataItem, item.id, toggleItemActiveState, colors)}
+                  </View>
                 ))}
             </>
           )}
-          keyExtractor={(item, index) => index.toString()}
+          keyExtractor={(item) => item.id} // Use id as the key extractor
           ListEmptyComponent={<Text>No data available</Text>}
           estimatedItemSize={50}
         />
@@ -156,9 +171,9 @@ const CollapsibleFlashList: React.FC = () => {
 // Extracted renderSectionHeader function with active count
 const renderSectionHeader = (
   section: SectionData,
-  toggleSection: (title: string) => void,
+  toggleSection: (id: string) => void,
   colors: typeof Colors.light | typeof Colors.dark,
-  toggleAllItemsActiveState: (sectionTitle: string) => void,
+  toggleAllItemsActiveState: (sectionId: string) => void,
 ) => {
   // Count the number of active items in the section
   const activeCount = section.data.filter((item) => item.isActive).length;
@@ -180,7 +195,7 @@ const renderSectionHeader = (
       {section.isExpanded && (
         <TouchableOpacity
           style={{ marginRight: 20 }}
-          onPress={() => toggleAllItemsActiveState(section.title)} // Toggle active state on press anywhere in the item
+          onPress={() => toggleAllItemsActiveState(section.id)} // Toggle active state on press anywhere in the item
         >
           <View
             style={[
@@ -194,7 +209,7 @@ const renderSectionHeader = (
           />
         </TouchableOpacity>
       )}
-      <Pressable style={{ flex: 1 }} onPress={() => toggleSection(section.title)} hitSlop={10}>
+      <Pressable style={{ flex: 1 }} onPress={() => toggleSection(section.id)} hitSlop={10}>
         <View
           style={{
             flexDirection: 'row',
@@ -203,9 +218,7 @@ const renderSectionHeader = (
             backgroundColor: colors.listBackground,
           }}
         >
-          <Text style={styles.headerText}>
-            {section.title} ({activeCount}/{totalCount})
-          </Text>
+          <Text txtSize="section-header" text={`${section.title} (${activeCount}/${totalCount})`} />
           <Ionicons
             name={section.isExpanded ? 'chevron-up-sharp' : 'chevron-down-sharp'}
             size={24}
@@ -220,15 +233,15 @@ const renderSectionHeader = (
 // Extracted renderItem function with toggleItemActiveState passed as argument
 const renderItem = (
   item: ItemData,
-  sectionTitle: string,
-  toggleItemActiveState: (sectionTitle: string, itemTitle: string) => void,
+  sectionId: string,
+  toggleItemActiveState: (sectionId: string, itemId: string) => void,
   colors: typeof Colors.light | typeof Colors.dark,
 ) => {
   const isActive = item.isActive;
   return (
     <TouchableOpacity
       style={[styles.item, { borderColor: colors.borderColor }]}
-      onPress={() => toggleItemActiveState(sectionTitle, item.title)} // Toggle active state on press anywhere in the item
+      onPress={() => toggleItemActiveState(sectionId, item.id)} // Toggle active state on press anywhere in the item
     >
       <View
         style={[
