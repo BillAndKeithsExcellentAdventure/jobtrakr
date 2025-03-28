@@ -1,6 +1,6 @@
 import { Text, View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, SectionList, Pressable } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,7 +22,7 @@ interface SectionData {
   isExpanded: boolean;
 }
 
-const CollapsibleSectionList: React.FC = () => {
+const JobTemplatesConfigurationScreen: React.FC = () => {
   const { templateId } = useLocalSearchParams();
   const { allJobTemplates } = useJobTemplateDataStore();
   const [template, setTemplate] = useState<JobTemplateData | null>();
@@ -69,6 +69,13 @@ const CollapsibleSectionList: React.FC = () => {
         { id: 'item40', title: '200.16 - Alt Misc Slab', isActive: false },
         { id: 'item41', title: '200.17 - Alt Garage Pad', isActive: true },
         { id: 'item42', title: '200.18 - Alt Carport', isActive: true },
+        { id: 'item46', title: '200.22 - Alt1 Basement Walls', isActive: true },
+        { id: 'item47', title: '200.23 - Alt1 Porch', isActive: false },
+        { id: 'item48', title: '200.24 - Alt1 Patio', isActive: false },
+        { id: 'item49', title: '200.25 - Alt1 Driveway', isActive: true },
+        { id: 'item50', title: '200.26 - Alt1 Misc Slab', isActive: false },
+        { id: 'item51', title: '200.27 - Alt1 Garage Pad', isActive: true },
+        { id: 'item52', title: '200.28 - Alt1 Carport', isActive: true },
       ],
       isExpanded: false,
     },
@@ -142,7 +149,6 @@ const CollapsibleSectionList: React.FC = () => {
           stickySectionHeadersEnabled={false}
           sections={sectionData}
           renderItem={({ item, section }) =>
-            // Only render items if the section is expanded
             section.isExpanded ? renderItem(item, section.id, toggleItemActiveState, colors) : null
           }
           renderSectionHeader={({ section }) =>
@@ -248,10 +254,12 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    padding: 10,
+    padding: 5,
     borderTopWidth: 1,
+    height: 45,
   },
   item: {
+    height: 45,
     flexDirection: 'row',
     padding: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -268,4 +276,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CollapsibleSectionList;
+export default JobTemplatesConfigurationScreen;
