@@ -132,7 +132,8 @@ const JobTemplatesConfigurationScreen: React.FC = () => {
     );
   };
 
-  const marginBottom = Platform.OS === 'android' ? 20 : 0;
+  // not sure why but I seem to need to set margin to row height to get it to show properly on the google pixel
+  const marginBottom = Platform.OS === 'android' ? 45 : 0;
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
