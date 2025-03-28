@@ -138,10 +138,13 @@ const CollapsibleSectionList: React.FC = () => {
           <Text txtSize="title" text={template?.Name} />
         </View>
         <SectionList
+          showsVerticalScrollIndicator={false}
+          stickySectionHeadersEnabled={false}
           sections={sectionData}
-          renderItem={({ item, section }) => (
-            <>{renderItem(item, section.id, toggleItemActiveState, colors)}</>
-          )}
+          renderItem={({ item, section }) =>
+            // Only render items if the section is expanded
+            section.isExpanded ? renderItem(item, section.id, toggleItemActiveState, colors) : null
+          }
           renderSectionHeader={({ section }) =>
             renderSectionHeader(section, toggleSection, colors, toggleAllItemsActiveState)
           }
@@ -247,10 +250,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 10,
     borderTopWidth: 1,
-  },
-  headerText: {
-    fontSize: 18,
-    fontWeight: 'bold',
   },
   item: {
     flexDirection: 'row',
