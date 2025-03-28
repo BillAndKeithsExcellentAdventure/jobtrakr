@@ -1,16 +1,14 @@
 import { Text, View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { StyleSheet, FlatList, Platform } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FlashList } from '@shopify/flash-list'; // Import FlashList
 import { useJobTemplateDataStore } from '@/stores/jobTemplateDataStore';
 import { JobTemplateData } from '@/models/types';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { LegendList } from '@legendapp/list';
 
 interface ItemData {
   id: string; // Added the id property
@@ -135,6 +133,8 @@ const CollapsibleFlashList: React.FC = () => {
     );
   };
 
+  const marginBottom = Platform.OS === 'android' ? 50 : 10;
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
@@ -143,31 +143,31 @@ const CollapsibleFlashList: React.FC = () => {
           title: 'Define Template Work Items',
         }}
       />
-      <View style={styles.container}>
+      <View style={[styles.container, { marginBottom }]}>
         <View style={{ alignItems: 'center', paddingVertical: 5 }}>
           <Text txtSize="title" text={template?.Name} />
         </View>
-        <LegendList
-          data={sectionData}
-          maintainVisibleContentPosition
-          renderItem={({ item }) => (
-            <>
-              {/* Render the section header */}
-              {renderSectionHeader(item, toggleSection, colors, toggleAllItemsActiveState)}
+        <View style={{ flex: 1, overflow: 'scroll' }}>
+          <FlatList
+            data={sectionData}
+            renderItem={({ item }) => (
+              <>
+                {/* Render the section header */}
+                {renderSectionHeader(item, toggleSection, colors, toggleAllItemsActiveState)}
 
-              {/* Render items only if the section is expanded */}
-              {item.isExpanded &&
-                item.data.map((dataItem) => (
-                  <View key={dataItem.id}>
-                    {renderItem(dataItem, item.id, toggleItemActiveState, colors)}
-                  </View>
-                ))}
-            </>
-          )}
-          keyExtractor={(item) => item.id} // Use id as the key extractor
-          ListEmptyComponent={<Text>No data available</Text>}
-          estimatedItemSize={50}
-        />
+                {/* Render items only if the section is expanded */}
+                {item.isExpanded &&
+                  item.data.map((dataItem) => (
+                    <View key={dataItem.id}>
+                      {renderItem(dataItem, item.id, toggleItemActiveState, colors)}
+                    </View>
+                  ))}
+              </>
+            )}
+            keyExtractor={(item) => item.id} // Use id as the key extractor
+            ListEmptyComponent={<Text>No data available</Text>}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -198,7 +198,7 @@ const renderSectionHeader = (
       ]}
     >
       {section.isExpanded && (
-        <TouchableOpacity
+        <Pressable
           style={{ marginRight: 20 }}
           onPress={() => toggleAllItemsActiveState(section.id)} // Toggle active state on press anywhere in the item
         >
@@ -212,7 +212,7 @@ const renderSectionHeader = (
               },
             ]}
           />
-        </TouchableOpacity>
+        </Pressable>
       )}
       <Pressable style={{ flex: 1 }} onPress={() => toggleSection(section.id)} hitSlop={10}>
         <View
@@ -244,7 +244,7 @@ const renderItem = (
 ) => {
   const isActive = item.isActive;
   return (
-    <TouchableOpacity
+    <Pressable
       style={[styles.item, { borderColor: colors.borderColor }]}
       onPress={() => toggleItemActiveState(sectionId, item.id)} // Toggle active state on press anywhere in the item
     >
@@ -261,7 +261,7 @@ const renderItem = (
       <View style={{ marginLeft: 50 }}>
         <Text style={styles.itemText}>{item.title}</Text>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
