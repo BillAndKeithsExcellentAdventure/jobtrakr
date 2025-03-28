@@ -1,9 +1,8 @@
 import { Text, View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, Platform } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { StyleSheet, SectionList, Pressable } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useJobTemplateDataStore } from '@/stores/jobTemplateDataStore';
 import { JobTemplateData } from '@/models/types';
@@ -11,19 +10,19 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 
 interface ItemData {
-  id: string; // Added the id property
+  id: string;
   title: string;
   isActive: boolean;
 }
 
 interface SectionData {
-  id: string; // Added the id property
+  id: string;
   title: string;
   data: ItemData[];
-  isExpanded: boolean; // This determines if the section is expanded
+  isExpanded: boolean;
 }
 
-const CollapsibleFlashList: React.FC = () => {
+const JobTemplatesConfigurationScreen: React.FC = () => {
   const { templateId } = useLocalSearchParams();
   const { allJobTemplates } = useJobTemplateDataStore();
   const [template, setTemplate] = useState<JobTemplateData | null>();
@@ -33,7 +32,6 @@ const CollapsibleFlashList: React.FC = () => {
 
   useEffect(() => {
     if (templateId) {
-      // Simulate fetching the existing category data by ID
       const fetchedTemplate = allJobTemplates.find((c) => c._id === templateId);
       setTemplate(fetchedTemplate || null);
     }
@@ -41,7 +39,7 @@ const CollapsibleFlashList: React.FC = () => {
 
   const [sectionData, setSectionData] = useState<SectionData[]>([
     {
-      id: 'section1', // Dummy ID, replace with real ID from your DB
+      id: 'section1',
       title: '100 - Site Work',
       data: [
         { id: 'item1', title: '100.1 - Silt Fence', isActive: true },
@@ -49,10 +47,10 @@ const CollapsibleFlashList: React.FC = () => {
         { id: 'item3', title: '100.3 - Culvert', isActive: false },
         { id: 'item4', title: '100.4 - Permits', isActive: true },
       ],
-      isExpanded: false, // Initially collapsed
+      isExpanded: false,
     },
     {
-      id: 'section2', // Dummy ID, replace with real ID from your DB
+      id: 'section2',
       title: '200 - Concrete',
       data: [
         { id: 'item5', title: '200.1 - Footer', isActive: true },
@@ -71,14 +69,18 @@ const CollapsibleFlashList: React.FC = () => {
         { id: 'item40', title: '200.16 - Alt Misc Slab', isActive: false },
         { id: 'item41', title: '200.17 - Alt Garage Pad', isActive: true },
         { id: 'item42', title: '200.18 - Alt Carport', isActive: true },
+        { id: 'item46', title: '200.22 - Alt1 Basement Walls', isActive: true },
+        { id: 'item47', title: '200.23 - Alt1 Porch', isActive: false },
+        { id: 'item48', title: '200.24 - Alt1 Patio', isActive: false },
+        { id: 'item49', title: '200.25 - Alt1 Driveway', isActive: true },
         { id: 'item50', title: '200.26 - Alt1 Misc Slab', isActive: false },
         { id: 'item51', title: '200.27 - Alt1 Garage Pad', isActive: true },
         { id: 'item52', title: '200.28 - Alt1 Carport', isActive: true },
       ],
-      isExpanded: false, // Initially collapsed
+      isExpanded: false,
     },
     {
-      id: 'section3', // Dummy ID, replace with real ID from your DB
+      id: 'section3',
       title: '300 - Framing',
       data: [
         { id: 'item13', title: '300.1 - Walls', isActive: true },
@@ -86,11 +88,10 @@ const CollapsibleFlashList: React.FC = () => {
         { id: 'item15', title: '300.3 - Doors & Window', isActive: true },
         { id: 'item16', title: '300.4 - Finish', isActive: true },
       ],
-      isExpanded: false, // Initially collapsed
+      isExpanded: false,
     },
   ]);
 
-  // Toggle the expanded state of a section
   const toggleSection = (id: string) => {
     setSectionData((prevData) =>
       prevData.map((section) =>
@@ -101,7 +102,6 @@ const CollapsibleFlashList: React.FC = () => {
     );
   };
 
-  // Toggle all items' active state in a section
   const toggleAllItemsActiveState = (sectionId: string) => {
     setSectionData((prevData) =>
       prevData.map((section) => {
@@ -109,7 +109,7 @@ const CollapsibleFlashList: React.FC = () => {
           const allActive = section.data.every((item) => item.isActive);
           const updatedData = section.data.map((item) => ({
             ...item,
-            isActive: !allActive, // Set all items to active if all were inactive, or vice versa
+            isActive: !allActive,
           }));
           return { ...section, data: updatedData };
         }
@@ -118,7 +118,6 @@ const CollapsibleFlashList: React.FC = () => {
     );
   };
 
-  // Toggle the active state of an item
   const toggleItemActiveState = (sectionId: string, itemId: string) => {
     setSectionData((prevData) =>
       prevData.map((section) => {
@@ -133,8 +132,6 @@ const CollapsibleFlashList: React.FC = () => {
     );
   };
 
-  const marginBottom = Platform.OS === 'android' ? 50 : 10;
-
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
@@ -143,44 +140,34 @@ const CollapsibleFlashList: React.FC = () => {
           title: 'Define Template Work Items',
         }}
       />
-      <View style={[styles.container, { marginBottom }]}>
+      <View style={styles.container}>
         <View style={{ alignItems: 'center', paddingVertical: 5 }}>
           <Text txtSize="title" text={template?.Name} />
         </View>
-        <View style={{ flex: 1, overflow: 'scroll' }}>
-          <FlatList
-            data={sectionData}
-            renderItem={({ item }) => (
-              <>
-                {/* Render the section header */}
-                {renderSectionHeader(item, toggleSection, colors, toggleAllItemsActiveState)}
-
-                {/* Render items only if the section is expanded */}
-                {item.isExpanded &&
-                  item.data.map((dataItem) => (
-                    <View key={dataItem.id}>
-                      {renderItem(dataItem, item.id, toggleItemActiveState, colors)}
-                    </View>
-                  ))}
-              </>
-            )}
-            keyExtractor={(item) => item.id} // Use id as the key extractor
-            ListEmptyComponent={<Text>No data available</Text>}
-          />
-        </View>
+        <SectionList
+          showsVerticalScrollIndicator={false}
+          stickySectionHeadersEnabled={false}
+          sections={sectionData}
+          renderItem={({ item, section }) =>
+            section.isExpanded ? renderItem(item, section.id, toggleItemActiveState, colors) : null
+          }
+          renderSectionHeader={({ section }) =>
+            renderSectionHeader(section, toggleSection, colors, toggleAllItemsActiveState)
+          }
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={<Text>No data available</Text>}
+        />
       </View>
     </SafeAreaView>
   );
 };
 
-// Extracted renderSectionHeader function with active count
 const renderSectionHeader = (
   section: SectionData,
   toggleSection: (id: string) => void,
   colors: typeof Colors.light | typeof Colors.dark,
   toggleAllItemsActiveState: (sectionId: string) => void,
 ) => {
-  // Count the number of active items in the section
   const activeCount = section.data.filter((item) => item.isActive).length;
   const totalCount = section.data.length;
 
@@ -198,10 +185,7 @@ const renderSectionHeader = (
       ]}
     >
       {section.isExpanded && (
-        <Pressable
-          style={{ marginRight: 20 }}
-          onPress={() => toggleAllItemsActiveState(section.id)} // Toggle active state on press anywhere in the item
-        >
+        <Pressable style={{ marginRight: 20 }} onPress={() => toggleAllItemsActiveState(section.id)}>
           <View
             style={[
               styles.roundButton,
@@ -235,7 +219,6 @@ const renderSectionHeader = (
   );
 };
 
-// Extracted renderItem function with toggleItemActiveState passed as argument
 const renderItem = (
   item: ItemData,
   sectionId: string,
@@ -246,7 +229,7 @@ const renderItem = (
   return (
     <Pressable
       style={[styles.item, { borderColor: colors.borderColor }]}
-      onPress={() => toggleItemActiveState(sectionId, item.id)} // Toggle active state on press anywhere in the item
+      onPress={() => toggleItemActiveState(sectionId, item.id)}
     >
       <View
         style={[
@@ -254,7 +237,7 @@ const renderItem = (
           {
             borderColor: colors.iconColor,
             borderWidth: 1,
-            backgroundColor: isActive ? colors.iconColor : 'transparent', // Conditionally set backgroundColor
+            backgroundColor: isActive ? colors.iconColor : 'transparent',
           },
         ]}
       />
@@ -271,14 +254,12 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    padding: 10,
+    padding: 5,
     borderTopWidth: 1,
-  },
-  headerText: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    height: 45,
   },
   item: {
+    height: 45,
     flexDirection: 'row',
     padding: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -295,4 +276,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CollapsibleFlashList;
+export default JobTemplatesConfigurationScreen;
