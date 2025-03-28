@@ -1,7 +1,7 @@
 import { Text, View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, SectionList, Pressable } from 'react-native';
+import { StyleSheet, SectionList, Pressable, Platform } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useJobTemplateDataStore } from '@/stores/jobTemplateDataStore';
@@ -132,6 +132,8 @@ const JobTemplatesConfigurationScreen: React.FC = () => {
     );
   };
 
+  const marginBottom = Platform.OS === 'android' ? 20 : 0;
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
@@ -140,7 +142,7 @@ const JobTemplatesConfigurationScreen: React.FC = () => {
           title: 'Define Template Work Items',
         }}
       />
-      <View style={styles.container}>
+      <View style={[styles.container, { marginBottom }]}>
         <View style={{ alignItems: 'center', paddingVertical: 5 }}>
           <Text txtSize="title" text={template?.Name} />
         </View>
