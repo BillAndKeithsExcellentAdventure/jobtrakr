@@ -1,8 +1,8 @@
 export interface WorkCategoryData {
   _id?: string;
-  code: string;
-  name: string;
-  status?: string;
+  Code: string;
+  Name: string;
+  Status?: string;
 }
 
 export interface WorkCategoryItemData {

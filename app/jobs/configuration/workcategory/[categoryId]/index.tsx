@@ -131,8 +131,8 @@ const ShowWorkCategory = () => {
           >
             <View style={[styles.categoryContent, { borderColor: colors.borderColor, borderWidth: 1 }]}>
               <View style={styles.categoryInfo}>
-                <Text style={styles.categoryName}>{category.name}</Text>
-                <Text>{category.code}</Text>
+                <Text style={styles.categoryName}>{category.Name}</Text>
+                <Text>{category.Code}</Text>
               </View>
               <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
             </View>
