@@ -11,12 +11,14 @@ import { Colors } from '@/constants/Colors';
 
 interface ItemData {
   id: string;
+  code: number;
   title: string;
   isActive: boolean;
 }
 
 interface SectionData {
   id: string;
+  code: number;
   title: string;
   data: ItemData[];
   isExpanded: boolean;
@@ -40,53 +42,208 @@ const JobTemplatesConfigurationScreen: React.FC = () => {
   const [sectionData, setSectionData] = useState<SectionData[]>([
     {
       id: 'section1',
-      title: '100 - Site Work',
+      code: 10,
+      title: 'PRE-CONSTRUCTION',
       data: [
-        { id: 'item1', title: '100.1 - Silt Fence', isActive: true },
-        { id: 'item2', title: '100.2 - Grading', isActive: true },
-        { id: 'item3', title: '100.3 - Culvert', isActive: false },
-        { id: 'item4', title: '100.4 - Permits', isActive: true },
+        { id: 'item105', code: 5, title: 'Blueprints', isActive: false },
+        { id: 'item110', code: 10, title: 'Plot Plan, Stake Out, Pinning', isActive: true },
+        { id: 'item115', code: 15, title: 'Zoning Permit', isActive: true },
+        { id: 'item120', code: 20, title: 'Building Permit', isActive: true },
+        { id: 'item121', code: 21, title: 'Water Tap Fee', isActive: true },
+        { id: 'item125', code: 25, title: 'Port-O-Let', isActive: true },
+        { id: 'item130', code: 30, title: 'Temporary Electric', isActive: true },
+        { id: 'item135', code: 35, title: 'Clearing', isActive: false },
+        { id: 'item140', code: 40, title: 'Design Fee', isActive: false },
       ],
       isExpanded: false,
     },
     {
       id: 'section2',
-      title: '200 - Concrete',
+      code: 20,
+      title: 'SITE WORK',
       data: [
-        { id: 'item5', title: '200.1 - Footer', isActive: true },
-        { id: 'item6', title: '200.2 - Basement Walls', isActive: true },
-        { id: 'item7', title: '200.3 - Porch', isActive: false },
-        { id: 'item8', title: '200.4 - Patio', isActive: false },
-        { id: 'item9', title: '200.5 - Driveway', isActive: true },
-        { id: 'item10', title: '200.6 - Misc Slab', isActive: false },
-        { id: 'item11', title: '200.7 - Garage Pad', isActive: true },
-        { id: 'item12', title: '200.8 - Carport', isActive: true },
-        { id: 'item35', title: '200.11 - Alt Footer', isActive: true },
-        { id: 'item36', title: '200.12 - Alt Basement Walls', isActive: true },
-        { id: 'item37', title: '200.13 - Alt Porch', isActive: false },
-        { id: 'item38', title: '200.14 - Alt Patio', isActive: false },
-        { id: 'item39', title: '200.15 - Alt Driveway', isActive: true },
-        { id: 'item40', title: '200.16 - Alt Misc Slab', isActive: false },
-        { id: 'item41', title: '200.17 - Alt Garage Pad', isActive: true },
-        { id: 'item42', title: '200.18 - Alt Carport', isActive: true },
-        { id: 'item46', title: '200.22 - Alt1 Basement Walls', isActive: true },
-        { id: 'item47', title: '200.23 - Alt1 Porch', isActive: false },
-        { id: 'item48', title: '200.24 - Alt1 Patio', isActive: false },
-        { id: 'item49', title: '200.25 - Alt1 Driveway', isActive: true },
-        { id: 'item50', title: '200.26 - Alt1 Misc Slab', isActive: false },
-        { id: 'item51', title: '200.27 - Alt1 Garage Pad', isActive: true },
-        { id: 'item52', title: '200.28 - Alt1 Carport', isActive: true },
+        { id: 'item205', code: 5, title: 'Foundation Excavation', isActive: true },
+        { id: 'item206', code: 6, title: 'Trench Footers', isActive: true },
+        { id: 'item210', code: 10, title: 'Footer Labor', isActive: true },
+        { id: 'item215', code: 15, title: 'Footer Concrete', isActive: true },
+        { id: 'item220', code: 20, title: 'Pump Truck - Footer', isActive: true },
+        { id: 'item225', code: 25, title: 'Drain Tile Material', isActive: true },
+        { id: 'item230', code: 30, title: 'Footer Gravel Material', isActive: true },
+        { id: 'item235', code: 35, title: 'Footer Gravel - Slinger', isActive: true },
+        { id: 'item240', code: 40, title: 'Foundation Wall Labor', isActive: true },
+        { id: 'item241', code: 41, title: 'Block Material', isActive: true },
+        { id: 'item242', code: 42, title: 'Block Labor', isActive: true },
+        { id: 'item243', code: 43, title: 'Under Slab Insulation Material', isActive: true },
+        { id: 'item245', code: 45, title: 'Foundation Wall Concrete', isActive: true },
+        { id: 'item246', code: 46, title: 'Pump Truck - Wall', isActive: true },
+        { id: 'item250', code: 50, title: 'Waterproof Foundation', isActive: true },
+        { id: 'item255', code: 55, title: 'Gravel To Top Off Footer', isActive: true },
+        { id: 'item260', code: 60, title: 'Plumbing Underground', isActive: true },
+        { id: 'item265', code: 65, title: 'Backfill Foundation', isActive: true },
+        { id: 'item270', code: 70, title: 'Haul Excess Dirt', isActive: true },
+        { id: 'item275', code: 75, title: 'Garage/Porch/Temp Drive Gravel', isActive: true },
+        { id: 'item280', code: 80, title: 'Basement & Garage Slab Labor', isActive: true },
+        { id: 'item285', code: 85, title: 'Basement & Garage Slab Concrete', isActive: true },
+        { id: 'item290', code: 90, title: 'Basement & Garage Slab Rebar/Plastic', isActive: true },
+        { id: 'item295', code: 95, title: 'Pump Truck - Slabs', isActive: true },
       ],
       isExpanded: false,
     },
     {
       id: 'section3',
-      title: '300 - Framing',
+      title: 'FRAMING & ROUGH-IN',
+      code: 30,
       data: [
-        { id: 'item13', title: '300.1 - Walls', isActive: true },
-        { id: 'item14', title: '300.2 - Roof', isActive: true },
-        { id: 'item15', title: '300.3 - Doors & Window', isActive: true },
-        { id: 'item16', title: '300.4 - Finish', isActive: true },
+        { id: 'item3005', code: 5, title: 'Framing Labor', isActive: true },
+        { id: 'item3010', code: 10, title: 'Framing Material', isActive: true },
+        { id: 'item3015', code: 15, title: 'Truss Material', isActive: true },
+        { id: 'item3020', code: 20, title: 'Framing Material Pickups', isActive: true },
+        { id: 'item3025', code: 25, title: 'Dumpsters', isActive: true },
+        { id: 'item3030', code: 30, title: 'Shingle Labor', isActive: true },
+        { id: 'item3035', code: 35, title: 'Shingle Material', isActive: true },
+        { id: 'item3040', code: 40, title: 'Metal Roof Material', isActive: true },
+        { id: 'item3045', code: 45, title: 'Metal Roof Labor', isActive: true },
+        { id: 'item3050', code: 50, title: 'Window Install Material & Labor', isActive: true },
+        { id: 'item3055', code: 55, title: 'Front Door Material', isActive: true },
+        { id: 'item3060', code: 60, title: 'Exterior Door Material', isActive: true },
+        { id: 'item3065', code: 65, title: 'Exterior Door Labor', isActive: true },
+        { id: 'item3070', code: 70, title: 'HVAC Rough', isActive: true },
+        { id: 'item3075', code: 75, title: 'Fireplace Install', isActive: true },
+        { id: 'item3080', code: 80, title: 'Plumbing Rough', isActive: true },
+        { id: 'item3085', code: 85, title: 'Sewer & Water Tap Fee', isActive: true },
+        { id: 'item3090', code: 90, title: 'Sewer & Water Install', isActive: true },
+        { id: 'item3095', code: 95, title: 'Sewer/Water Gravel Material', isActive: true },
+        { id: 'item3100', code: 100, title: 'Electric Trench & Sump Line', isActive: true },
+        { id: 'item3105', code: 105, title: 'Frame Punch Material', isActive: true },
+        { id: 'item3110', code: 110, title: 'Electric Rough', isActive: true },
+        { id: 'item3115', code: 115, title: 'Low Voltage Rough', isActive: true },
+        { id: 'item3120', code: 120, title: 'AIP', isActive: true },
+        { id: 'item3125', code: 125, title: 'Insulation', isActive: true },
+      ],
+      isExpanded: false,
+    },
+    {
+      id: 'section4',
+      title: 'EXTERIOR',
+      code: 40,
+      data: [
+        { id: 'item4005', code: 5, title: 'Exterior Trim Labor', isActive: true },
+        { id: 'item4010', code: 10, title: 'Exterior Trim Material', isActive: true },
+        { id: 'item4015', code: 15, title: 'Paint Exterior Labor', isActive: true },
+        { id: 'item4020', code: 20, title: 'Paint Exterior Material', isActive: true },
+        { id: 'item4025', code: 25, title: 'Install Garage Doors', isActive: true },
+        { id: 'item4030', code: 30, title: 'Garage Door Opener Material', isActive: true },
+        { id: 'item4035', code: 35, title: 'Garage Door Opener Labor', isActive: true },
+        { id: 'item4040', code: 40, title: 'Install Brick Flashing', isActive: true },
+        { id: 'item4045', code: 45, title: 'Brick Labor', isActive: true },
+        { id: 'item4050', code: 50, title: 'Brick Material', isActive: true },
+        { id: 'item4055', code: 55, title: 'Stone Labor', isActive: true },
+        { id: 'item4060', code: 60, title: 'Stone Labor', isActive: true },
+        { id: 'item4065', code: 65, title: 'Clean Brick', isActive: true },
+        { id: 'item4070', code: 70, title: 'Deck Labor', isActive: true },
+        { id: 'item4075', code: 75, title: 'Deck Material', isActive: true },
+        { id: 'item4080', code: 80, title: 'Deck Rails', isActive: true },
+        { id: 'item4085', code: 85, title: 'Gutters', isActive: true },
+        { id: 'item4090', code: 90, title: 'Exterior Concrete Labor', isActive: true },
+        { id: 'item4095', code: 95, title: 'Exterior Concrete Gravel', isActive: true },
+        { id: 'item4100', code: 100, title: 'Exterior Concrete', isActive: true },
+        { id: 'item4105', code: 105, title: 'Exterior Concrete Rebar', isActive: true },
+        { id: 'item4110', code: 110, title: 'Boulder Labor', isActive: true },
+        { id: 'item4115', code: 115, title: 'Boulders Material', isActive: true },
+        { id: 'item4120', code: 120, title: 'Final Grade', isActive: true },
+        { id: 'item4125', code: 125, title: 'Install Landscaping', isActive: true },
+        { id: 'item4130', code: 130, title: 'Install Irrigation System', isActive: true },
+        { id: 'item4135', code: 135, title: 'Install Landscape Lighting', isActive: true },
+        { id: 'item4140', code: 140, title: 'Install Sod', isActive: true },
+        { id: 'item4145', code: 145, title: 'Install Fence', isActive: true },
+        { id: 'item4150', code: 150, title: 'Mailbox', isActive: true },
+        { id: 'item4155', code: 155, title: 'Install Phantom Screens', isActive: true },
+        { id: 'item4160', code: 160, title: 'Pressure Wash Exterior Concrete', isActive: true },
+      ],
+      isExpanded: false,
+    },
+    {
+      id: 'section5',
+      title: 'INTERIOR INSTALL',
+      code: 50,
+      data: [
+        { id: 'item5005', code: 5, title: 'Drywall Material', isActive: true },
+        { id: 'item5010', code: 10, title: 'Hang Drywall Labor', isActive: true },
+        { id: 'item5015', code: 15, title: 'Finish Drywall Labor', isActive: true },
+        { id: 'item5020', code: 20, title: 'Prime Walls Labor', isActive: true },
+        { id: 'item5025', code: 25, title: 'Prime Walls Material', isActive: true },
+        { id: 'item5030', code: 30, title: 'Attic Blow', isActive: true },
+        { id: 'item5035', code: 35, title: 'Master Shower Tile Labor', isActive: true },
+        { id: 'item5040', code: 40, title: 'Master Shower Tile Material', isActive: true },
+        { id: 'item5045', code: 45, title: 'Guest Showers Tile Labor', isActive: true },
+        { id: 'item5050', code: 50, title: 'Guest Shower Tile Material', isActive: true },
+        { id: 'item5055', code: 55, title: 'Tile Floors Labor', isActive: true },
+        { id: 'item5060', code: 60, title: 'Tile Floors Material', isActive: true },
+        { id: 'item5065', code: 65, title: 'Shower Doors', isActive: true },
+        { id: 'item5070', code: 70, title: 'Interior Trim Labor', isActive: true },
+        { id: 'item5075', code: 75, title: 'Interior Trim/Doors Material', isActive: true },
+        { id: 'item5080', code: 80, title: 'Vanity Material', isActive: true },
+        { id: 'item5085', code: 85, title: 'Cabinet Material', isActive: true },
+        { id: 'item5090', code: 90, title: "Interior Trim Extra's Material", isActive: true },
+        { id: 'item5095', code: 95, title: 'Interior Rails', isActive: true },
+        { id: 'item5100', code: 100, title: 'HVAC Final', isActive: true },
+        { id: 'item5105', code: 105, title: 'Electric Final', isActive: true },
+        { id: 'item5110', code: 110, title: 'Electric Final Materials', isActive: true },
+      ],
+      isExpanded: false,
+    },
+    {
+      id: 'section6',
+      title: 'INTERIOR FINAL',
+      code: 60,
+      data: [
+        { id: 'item6005', code: 5, title: 'Spray Interior Trim/Doors Labor', isActive: true },
+        { id: 'item6010', code: 10, title: 'Spray Interior Trim/Doors Material', isActive: true },
+        { id: 'item6015', code: 15, title: 'Drywall Touch Up', isActive: true },
+        { id: 'item6020', code: 20, title: 'Roll Walls Labor', isActive: true },
+        { id: 'item6025', code: 25, title: 'Roll Walls Material', isActive: true },
+        { id: 'item6030', code: 30, title: 'Flooring Labor', isActive: true },
+        { id: 'item6035', code: 35, title: 'Flooring Material', isActive: true },
+        { id: 'item6040', code: 40, title: 'Countertops', isActive: true },
+        { id: 'item6045', code: 45, title: 'Interior Trim Final Labor', isActive: true },
+        { id: 'item6050', code: 50, title: 'Interior Trim Final Materials', isActive: true },
+        { id: 'item6055', code: 55, title: 'Cabinet Hardware', isActive: true },
+        { id: 'item6060', code: 60, title: 'Backsplash Labor', isActive: true },
+        { id: 'item6065', code: 65, title: 'Backsplash Material', isActive: true },
+        { id: 'item6070', code: 70, title: 'Plumbing Final', isActive: true },
+        { id: 'item6075', code: 75, title: 'Plumbing Final Material', isActive: true },
+        { id: 'item6080', code: 80, title: 'Mirrors', isActive: true },
+        { id: 'item6085', code: 85, title: 'Shelves', isActive: true },
+        { id: 'item6090', code: 90, title: 'Basement Drape Insulation', isActive: true },
+        { id: 'item6095', code: 95, title: 'Carpet Prep Labor', isActive: true },
+        { id: 'item6100', code: 100, title: 'Carpet Install', isActive: true },
+        { id: 'item6105', code: 105, title: 'Carpet Material', isActive: true },
+        { id: 'item6110', code: 110, title: 'Appliances', isActive: true },
+        { id: 'item6115', code: 115, title: 'Initial Construction Clean', isActive: true },
+        { id: 'item6120', code: 120, title: 'Punchout Labor', isActive: true },
+        { id: 'item6125', code: 125, title: 'Punchout Materials', isActive: true },
+        { id: 'item6130', code: 130, title: 'Pressure Wash Basement', isActive: true },
+        { id: 'item6135', code: 135, title: 'Final Construction Clean', isActive: true },
+      ],
+      isExpanded: false,
+    },
+    {
+      id: 'section7',
+      code: 7,
+      title: 'OVERHEAD',
+      data: [
+        { id: 'item7005', code: 5, title: 'Tools', isActive: true },
+        { id: 'item7010', code: 10, title: 'Service', isActive: true },
+      ],
+      isExpanded: false,
+    },
+    {
+      id: 'section8',
+      code: 8,
+      title: 'INCOME',
+      data: [
+        { id: 'item8005', code: 5, title: 'Bank Draw', isActive: true },
+        { id: 'item8010', code: 10, title: 'Change Order', isActive: true },
       ],
       isExpanded: false,
     },
@@ -151,7 +308,9 @@ const JobTemplatesConfigurationScreen: React.FC = () => {
           stickySectionHeadersEnabled={false}
           sections={sectionData}
           renderItem={({ item, section }) =>
-            section.isExpanded ? renderItem(item, section.id, toggleItemActiveState, colors) : null
+            section.isExpanded
+              ? renderItem(item, section.id, section.code, toggleItemActiveState, colors)
+              : null
           }
           renderSectionHeader={({ section }) =>
             renderSectionHeader(section, toggleSection, colors, toggleAllItemsActiveState)
@@ -224,6 +383,7 @@ const renderSectionHeader = (
 const renderItem = (
   item: ItemData,
   sectionId: string,
+  sectionCode: number,
   toggleItemActiveState: (sectionId: string, itemId: string) => void,
   colors: typeof Colors.light | typeof Colors.dark,
 ) => {
@@ -244,7 +404,9 @@ const renderItem = (
         ]}
       />
       <View style={{ marginLeft: 50 }}>
-        <Text style={styles.itemText}>{item.title}</Text>
+        <Text style={styles.itemText}>
+          {sectionCode}.{item.code} - {item.title}
+        </Text>
       </View>
     </Pressable>
   );
