@@ -77,18 +77,18 @@ const EditWorkCategory = () => {
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Name"
-          value={category.Name}
+          value={category.name}
           onChangeText={(text) => handleInputChange('Name', text)}
         />
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Code"
-          value={category.Code}
+          value={category.code}
           onChangeText={(text) => handleInputChange('Code', text)}
         />
         <OkayCancelButtons
           okTitle="Save"
-          isOkEnabled={!!category.Name && !!category.Code}
+          isOkEnabled={!!category.name && !!category.code}
           onOkPress={handleSave}
         />
       </View>

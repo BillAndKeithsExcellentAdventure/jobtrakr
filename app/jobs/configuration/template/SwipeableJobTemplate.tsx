@@ -4,13 +4,14 @@ import { Colors, deleteBg } from '@/constants/Colors';
 import { JobTemplateData } from '@/models/types';
 import { useJobTemplateDataStore } from '@/stores/jobTemplateDataStore';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
 const SwipeableJobTemplate = ({ jobTemplate }: { jobTemplate: JobTemplateData }) => {
+  const router = useRouter();
   const { removeJobTemplate } = useJobTemplateDataStore();
   const colorScheme = useColorScheme();
   const colors = useMemo(

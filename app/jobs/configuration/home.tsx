@@ -2,11 +2,12 @@ import { ConfigurationEntry } from '@/components/ConfigurationEntry';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { router, Stack } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import React, { useMemo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const home = () => {
+  const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = useMemo(
     () =>

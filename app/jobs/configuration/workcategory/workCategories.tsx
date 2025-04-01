@@ -18,8 +18,8 @@ const ListWorkCategories = () => {
   const { allWorkCategories, setWorkCategories, addWorkCategory } = useWorkCategoryDataStore();
   const [showAdd, setShowAdd] = useState(false);
   const [category, setCategory] = useState<WorkCategoryData>({
-    Name: '',
-    Code: '',
+    name: '',
+    code: '',
   });
 
   const router = useRouter();
@@ -46,8 +46,8 @@ const ListWorkCategories = () => {
     // Fetch categories from API or local storage (simulated here)
     const fetchCategories = async () => {
       const categoriesData: WorkCategoryData[] = [
-        { _id: '1', Name: 'Electrical', Code: '100' },
-        { _id: '2', Name: 'Plumbing', Code: '200' },
+        { _id: '1', name: 'Electrical', code: '100' },
+        { _id: '2', name: 'Plumbing', code: '200' },
       ];
       setWorkCategories(categoriesData);
     };
@@ -81,7 +81,7 @@ const ListWorkCategories = () => {
   );
 
   const handleAddCategory = useCallback(() => {
-    if (category.Name && category.Code) {
+    if (category.name && category.code) {
       const newCategory = {
         ...category,
         _id: (allWorkCategories.length + 1).toString(),
@@ -91,7 +91,7 @@ const ListWorkCategories = () => {
       addWorkCategory(newCategory);
 
       // Clear the input fields
-      setCategory({ Name: '', Code: '', _id: '' });
+      setCategory({ name: '', code: '', _id: '' });
     }
   }, [allWorkCategories, category, setWorkCategories]);
 
@@ -120,7 +120,7 @@ const ListWorkCategories = () => {
                     <TextInput
                       style={[styles.input, { backgroundColor: colors.neutral200 }]}
                       placeholder="Code"
-                      value={category.Code}
+                      value={category.code}
                       onChangeText={(text) => handleInputChange('Code', text)}
                     />
                   </View>
@@ -128,7 +128,7 @@ const ListWorkCategories = () => {
                     <TextInput
                       style={[styles.input, { backgroundColor: colors.neutral200, marginLeft: 5 }]}
                       placeholder="Name"
-                      value={category.Name}
+                      value={category.name}
                       onChangeText={(text) => handleInputChange('Name', text)}
                     />
                   </View>
@@ -136,7 +136,7 @@ const ListWorkCategories = () => {
                 <ActionButton
                   style={{ zIndex: 1 }}
                   onPress={handleAddCategory}
-                  type={category.Code && category.Name ? 'action' : 'disabled'}
+                  type={category.code && category.name ? 'action' : 'disabled'}
                   title="Add Work Category"
                 />
               </View>

@@ -1,22 +1,24 @@
 import { StyleSheet } from 'react-native';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { ActionButton } from './ActionButton';
 import { View } from './Themed';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 
 const OkayCancelButtons = ({
   okTitle = 'Save',
   isOkEnabled,
   onOkPress,
-  onCancelPress = () => {
-    router.back();
-  },
+  onCancelPress,
 }: {
   okTitle?: string;
   isOkEnabled: boolean;
   onOkPress: () => void;
   onCancelPress?: () => void;
 }) => {
+  const router = useRouter();
+
+  const onCancel = useCallback(() => (onCancelPress ? onCancelPress() : router.back()), [useCallback]);
+
   return (
     <View style={styles.saveButtonRow}>
       <ActionButton
@@ -25,7 +27,7 @@ const OkayCancelButtons = ({
         type={isOkEnabled ? 'ok' : 'disabled'}
         title={okTitle}
       />
-      <ActionButton style={styles.cancelButton} onPress={onCancelPress} type={'cancel'} title="Cancel" />
+      <ActionButton style={styles.cancelButton} onPress={onCancel} type={'cancel'} title="Cancel" />
     </View>
   );
 };

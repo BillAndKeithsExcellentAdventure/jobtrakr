@@ -14,7 +14,7 @@ import { ShareFiles } from '@/utils/sharing';
 import { Entypo, Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import * as MediaLibrary from 'expo-media-library';
-import { Stack, router, useLocalSearchParams } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { MediaAssets } from 'jobmedia';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Button, Image, StyleSheet, TouchableOpacity } from 'react-native';
@@ -33,6 +33,7 @@ let gAssetItems: AssetsItem[] = [];
 let gJobAssetItems: AssetsItem[] = [];
 
 const JobPhotosPage = () => {
+  const router = useRouter();
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
   const [jobAssets, setJobAssets] = useState<AssetsItem[] | undefined>(undefined);
   const [assetItems, setAssetItems] = useState<AssetsItem[] | undefined>(undefined);

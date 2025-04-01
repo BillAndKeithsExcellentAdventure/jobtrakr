@@ -4,7 +4,7 @@ import { Colors, deleteBg } from '@/constants/Colors';
 import { WorkCategoryData, WorkCategoryItemData } from '@/models/types';
 import { useWorkCategoryItemDataStore } from '@/stores/categoryItemDataStore';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -17,6 +17,7 @@ const SwipeableCategoryItem = ({
   item: WorkCategoryItemData;
   category: WorkCategoryData;
 }) => {
+  const router = useRouter();
   const { removeWorkCategoryItem } = useWorkCategoryItemDataStore();
   const colorScheme = useColorScheme();
   const colors = useMemo(
@@ -87,7 +88,7 @@ const SwipeableCategoryItem = ({
           }}
         >
           <View style={styles.itemInfo}>
-            <Text style={styles.itemCode} text={`${category.Code}.${item.Code}`} />
+            <Text style={styles.itemCode} text={`${category.code}.${item.Code}`} />
             <Text style={styles.itemName}>{item.Name}</Text>
             <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
           </View>
