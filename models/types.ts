@@ -1,13 +1,15 @@
+export type TBStatus = 'Success' | 'Error' | 'NoChanges';
+
 export interface WorkCategoryData {
-  _id?: string;
-  Code: string;
-  Name: string;
-  Status?: string;
+  _id: string;
+  code: string;
+  name: string;
+  status: string;
 }
 
 export interface WorkCategoryItemData {
   _id?: string;
-  CategoryId?: string; // id of WorkCategoryData
+  categoryId?: string; // id of WorkCategoryData
   Code: string;
   Name: string;
   Status?: string;

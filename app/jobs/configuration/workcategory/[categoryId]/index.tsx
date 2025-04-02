@@ -62,7 +62,7 @@ const ShowWorkCategory = () => {
   useEffect(() => {
     if (categoryId) {
       // Simulate fetching the existing category data by ID
-      const fetchedCategoryItems = allWorkCategoryItems.filter((c) => c.CategoryId === categoryId);
+      const fetchedCategoryItems = allWorkCategoryItems.filter((c) => c.categoryId === categoryId);
       if (fetchedCategoryItems) {
         setCategorySpecificItems(fetchedCategoryItems);
       }
@@ -84,7 +84,7 @@ const ShowWorkCategory = () => {
       const newItem = {
         ...item,
         _id: (allWorkCategoryItems.length + 1).toString(),
-        CategoryId: categoryId,
+        categoryId: categoryId,
       } as WorkCategoryItemData;
       console.log('Saving item:', newItem);
 
@@ -131,8 +131,8 @@ const ShowWorkCategory = () => {
           >
             <View style={[styles.categoryContent, { borderColor: colors.borderColor, borderWidth: 1 }]}>
               <View style={styles.categoryInfo}>
-                <Text style={styles.categoryName}>{category.Name}</Text>
-                <Text>{category.Code}</Text>
+                <Text style={styles.categoryName}>{category.name}</Text>
+                <Text>{category.code}</Text>
               </View>
               <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
             </View>
