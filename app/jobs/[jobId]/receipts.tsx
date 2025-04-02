@@ -5,7 +5,7 @@ import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { useReceiptDataStore } from '@/stores/receiptDataStore';
 import { FlashList } from '@shopify/flash-list';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Platform, StyleSheet, TouchableWithoutFeedback } from 'react-native';
@@ -32,6 +32,7 @@ interface SwipeableItemProps {
 }
 
 const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPicture }) => {
+  const router = useRouter();
   const translateX = useSharedValue(0); // Shared value for horizontal translation
 
   const [isSwiped, setIsSwiped] = useState(false); // Track if item is swiped for delete
@@ -137,6 +138,7 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
 };
 
 const JobReceiptsPage = () => {
+  const router = useRouter();
   const { jobId, receiptId, jobName } = useLocalSearchParams<{
     jobId: string;
     receiptId: string;

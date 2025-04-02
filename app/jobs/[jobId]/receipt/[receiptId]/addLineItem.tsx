@@ -8,12 +8,13 @@ import { View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { ReceiptItemEntry, useItemizedReceiptDataStore } from '@/stores/itemizedReceiptDataStore';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AddReceiptLineItemPage = () => {
+  const router = useRouter();
   const { receiptId } = useLocalSearchParams<{ receiptId: string }>();
   const { allReceiptItems, updateReceiptItem } = useItemizedReceiptDataStore();
   const { jobDbHost } = useJobDb();

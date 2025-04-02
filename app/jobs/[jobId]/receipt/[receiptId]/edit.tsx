@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text } from '@/components/Themed';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { useJobDb } from '@/context/DatabaseContext';
 import { ReceiptBucketData } from 'jobdb';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,6 +17,7 @@ import BottomSheetContainer from '@/components/BottomSheetContainer';
 import { useVendorDataStore } from '@/stores/vendorDataStore';
 
 const EditReceiptDetailsPage = () => {
+  const router = useRouter();
   const { receiptId } = useLocalSearchParams<{ receiptId: string }>();
   const { allJobReceipts, updateReceiptData } = useReceiptDataStore();
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);

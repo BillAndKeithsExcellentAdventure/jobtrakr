@@ -4,7 +4,7 @@ import { Text, View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { useReceiptDataStore } from '@/stores/receiptDataStore';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, LayoutChangeEvent, Platform, StyleSheet, useColorScheme } from 'react-native';
@@ -35,7 +35,7 @@ const ReceiptDetailsPage = () => {
     PictureUri: '',
   });
   const [itemsTotalCost, setItemsTotalCost] = useState(0);
-
+  const router = useRouter();
   const fetchReceipt = useCallback(async () => {
     try {
       const match = allJobReceipts.find((r) => r._id === receiptId);

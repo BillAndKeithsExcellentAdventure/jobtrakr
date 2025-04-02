@@ -1,6 +1,6 @@
 import { ZoomImageViewer } from '@/components/ZoomImageViewer';
 import { View, Text } from '@/components/Themed';
-import { Stack, router, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

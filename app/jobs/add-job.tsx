@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useJobDataStore } from '@/stores/jobDataStore';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 
 type Job = {
   name: string;
@@ -52,7 +52,7 @@ const AddJobScreen = () => {
   }, [job]);
 
   const { jobDbHost } = useJobDb();
-
+  const router = useRouter();
   const handleSubmit = useCallback(async () => {
     const id = { value: 0n };
 

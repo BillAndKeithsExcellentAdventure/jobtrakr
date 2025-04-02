@@ -7,7 +7,7 @@ import { useJobDb } from '@/context/DatabaseContext';
 import { useJobDataStore } from '@/stores/jobDataStore';
 import { formatDate } from '@/utils/formatters';
 import * as Location from 'expo-location';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { JobData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
@@ -27,6 +27,7 @@ type Job = {
 };
 
 const EditJobScreen = () => {
+  const router = useRouter();
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
   const { updateJob } = useJobDataStore();
 

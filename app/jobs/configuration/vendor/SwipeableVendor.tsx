@@ -4,13 +4,14 @@ import { Colors, deleteBg } from '@/constants/Colors';
 import { useVendorDataStore } from '@/stores/vendorDataStore';
 import { VendorData } from 'jobdb';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
 const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
+  const router = useRouter();
   const { removeVendor } = useVendorDataStore();
   const colorScheme = useColorScheme();
   const colors = useMemo(

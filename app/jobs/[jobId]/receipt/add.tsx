@@ -11,7 +11,7 @@ import { useJobDb } from '@/context/DatabaseContext';
 import { useReceiptDataStore } from '@/stores/receiptDataStore';
 import { formatDate } from '@/utils/formatters';
 import * as ImagePicker from 'expo-image-picker';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Image, Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
@@ -59,6 +59,7 @@ const AddReceiptPage = () => {
     subCategoryName: '',
   };
 
+  const router = useRouter();
   const [jobReceipt, setJobReceipt] = useState<JobReceipt>(initJobReceipt);
   const { jobDbHost } = useJobDb();
   const { addReceiptData } = useReceiptDataStore();

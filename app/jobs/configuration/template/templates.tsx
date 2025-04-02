@@ -52,19 +52,19 @@ const ListJobTemplates = () => {
           _id: '1',
           Name: 'Standard House',
           Description: 'Standard Residential Construction',
-          WorkItems: ['1', '3'],
+          WorkItems: ['1', '3'], // not currently used in demo
         },
         {
           _id: '2',
           Name: 'Private Steel Building',
           Description: 'Privately owned steel building',
-          WorkItems: ['2'],
+          WorkItems: ['2'], // not currently used in demo
         },
         {
           _id: '3',
           Name: 'Public Steel Building',
           Description: 'State or Federally owned steel building',
-          WorkItems: ['2'],
+          WorkItems: ['2'], // not currently used in demo
         },
       ];
       setJobTemplates(jobTemplatesData);

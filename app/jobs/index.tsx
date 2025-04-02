@@ -9,7 +9,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
-import { router, Stack } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
@@ -42,6 +42,7 @@ export default function JobHomeScreen() {
   const { jobDbHost } = useJobDb();
   const { logInfo, shareLogFile } = useDbLogger();
   const colorScheme = useColorScheme();
+  const router = useRouter();
 
   // Define colors based on the color scheme (dark or light)
   const colors = useMemo(
