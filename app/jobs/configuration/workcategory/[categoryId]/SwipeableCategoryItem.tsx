@@ -88,8 +88,8 @@ const SwipeableCategoryItem = ({
           }}
         >
           <View style={styles.itemInfo}>
-            <Text style={styles.itemCode} text={`${category.code}.${item.Code}`} />
-            <Text style={styles.itemName}>{item.Name}</Text>
+            <Text style={styles.itemCode} text={`${category.code}.${item.code}`} />
+            <Text style={styles.itemName}>{item.name}</Text>
             <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
           </View>
         </Pressable>

@@ -10,9 +10,9 @@ export interface WorkCategoryData {
 export interface WorkCategoryItemData {
   _id?: string;
   categoryId?: string; // id of WorkCategoryData
-  Code: string;
-  Name: string;
-  Status?: string;
+  code: string;
+  name: string;
+  status?: string;
 }
 
 export interface JobTemplateData {

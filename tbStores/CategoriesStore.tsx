@@ -18,7 +18,7 @@ const TABLES_SCHEMA = {
   },
   workItems: {
     _id: { type: 'string' },
-    catId: { type: 'string' },
+    categoryId: { type: 'string' },
     code: { type: 'string' },
     name: { type: 'string' },
     status: { type: 'string' },
@@ -48,7 +48,7 @@ const useStoreId = () => STORE_ID_PREFIX + '9999'; // Replace 9999 with a user i
 export const useAllCategoriesCallback = () => {
   let store = useStore(useStoreId());
 
-  return useCallback((): WorkCategoryData[] => {
+  const fn = useCallback((): WorkCategoryData[] => {
     if (store) {
       const table = store.getTable('categories');
       if (table) {
@@ -60,6 +60,34 @@ export const useAllCategoriesCallback = () => {
         }));
 
         return categories;
+      }
+
+      return [];
+    }
+
+    return [];
+  }, [store]);
+
+  console.log('Returning a new allCategoriesCallback function');
+  return fn;
+};
+
+export const useAllCategoryItemsCallback = () => {
+  let store = useStore(useStoreId());
+
+  return useCallback((): WorkCategoryItemData[] => {
+    if (store) {
+      const table = store.getTable('workItems');
+      if (table) {
+        const workItems: WorkCategoryItemData[] = Object.entries(table).map(([id, row]) => ({
+          _id: row._id ?? '',
+          categoryId: row.categoryId ?? '',
+          code: row.code ?? '',
+          name: row.name ?? '',
+          status: row.status ?? '',
+        }));
+
+        return workItems;
       }
 
       return [];
@@ -115,17 +143,97 @@ export const useCategoryValue = <ValueId extends CategoriesCellId>(
   ),
 ];
 
-// Returns a callback that adds a new project to the store.
-export const useNewCategoryCallback = () => {
+// Returns a callback that adds a new category to the store.
+export const useAddCategoryCallback = () => {
   let store = useStore(useStoreId());
+  console.log('useNewCategory storeid:', useStoreId(), store);
 
   return useCallback(
-    (catData: WorkCategoryData): { status: TBStatus; id: string } => {
+    (catData: WorkCategoryData): { status: TBStatus; msg: string; id: string } => {
       const id = randomUUID();
       catData._id = id;
+
+      console.log('(In callback). useNewCategory storeid:', useStoreId());
       console.log(`Adding a new category with ID: ${id}, Name: ${catData.name}, Code: ${catData.code}`);
       if (store) {
         const storeCheck = store.setRow('categories', id, catData);
+        if (storeCheck) {
+          return { status: 'Success', msg: '', id };
+        } else {
+          return { status: 'Error', msg: 'Unable to setRow', id: '0' };
+        }
+      } else {
+        return { status: 'Error', msg: 'Store not found', id: '0' };
+      }
+    },
+    [store],
+  );
+};
+
+// Returns a callback that updates an existing category to the store.
+export const useUpdateCategoryCallback = () => {
+  let store = useStore(useStoreId());
+  console.log('useUpdateCategory storeid:', useStoreId());
+
+  return useCallback(
+    (id: string, catData: WorkCategoryData): { status: TBStatus; msg: string; id: string } => {
+      catData._id = id;
+
+      console.log('(In callback). useUpdateCategory storeid:', useStoreId());
+      console.log(`Updating a category with ID: ${id}, Name: ${catData.name}, Code: ${catData.code}`);
+      if (store) {
+        const storeCheck = store.setRow('categories', id, catData);
+        if (storeCheck) {
+          return { status: 'Success', msg: '', id };
+        } else {
+          return { status: 'Error', msg: 'Unable to setRow', id: '0' };
+        }
+      } else {
+        return { status: 'Error', msg: 'Store not found', id: '0' };
+      }
+    },
+    [store],
+  );
+};
+
+// Returns a callback that adds a new category item to the store.
+export const useAddCategoryItemCallback = () => {
+  let store = useStore(useStoreId());
+
+  return useCallback(
+    (catItemData: WorkCategoryItemData): { status: TBStatus; msg: string; id: string } => {
+      const id = randomUUID();
+      catItemData._id = id;
+      console.log(
+        `Adding a new category item with ID: ${id}, catId: ${catItemData.categoryId} Name: ${catItemData.name}, Code: ${catItemData.code}`,
+      );
+      if (store) {
+        const storeCheck = store.setRow('workItems', id, catItemData);
+        if (storeCheck) {
+          return { status: 'Success', msg: '', id };
+        } else {
+          return { status: 'Error', msg: 'Unable to setRow.', id: '0' };
+        }
+      } else {
+        return { status: 'Error', msg: 'Unable to find store.', id: '0' };
+      }
+    },
+    [store],
+  );
+};
+
+// Returns a callback that adds a new category item to the store.
+export const useUpdateCategoryItemCallback = () => {
+  let store = useStore(useStoreId());
+
+  return useCallback(
+    (id: string, catItemData: WorkCategoryItemData): { status: TBStatus; id: string } => {
+      catItemData._id = id;
+      console.log(
+        `Updating a category item with ID: ${id}, catId: ${catItemData.categoryId} Name: ${catItemData.name}, Code: ${catItemData.code}`,
+      );
+      if (store) {
+        const storeCheck = store.setRow('workItems', id, catItemData);
         if (storeCheck) {
           return { status: 'Success', id };
         }
@@ -152,7 +260,7 @@ export const useNewWorkItemCallback = () => {
       const id = randomUUID();
       workItemData._id = id;
       console.log(
-        `Adding a new workItem with ID: ${id}, Name: ${workItemData.Name}, Code: ${workItemData.Code}`,
+        `Adding a new workItem with ID: ${id}, Name: ${workItemData.name}, Code: ${workItemData.code}`,
       );
       if (store) {
         const { ...data } = workItemData;
@@ -193,15 +301,17 @@ export const useDelWorkItemCallback = (id: string) => useDelRowCallback('workIte
 // Returns the IDs of all workItems in the store for the given category.
 export const useWorkItemIds = (catId: string) => {
   const ids = useRowIds('workItems', useStoreId());
-  return ids.filter((id) => useCell('workItems', id, 'catId') === catId);
+  return ids.filter((id) => useCell('workItems', id, 'categoryId') === catId);
 };
 
 // Create, persist, and sync a store containing ALL the categories defined by the user.
 export default function CategoriesStore() {
   const storeId = useStoreId();
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
-  console.log(`Creating categories store with ID: ${storeId}`);
+  console.log(`Creating categories store with ID: ${storeId} ${store}`);
   useCreateClientPersisterAndStart(storeId, store);
   useCreateServerSynchronizerAndStart(storeId, store);
   useProvideStore(storeId, store);
+
+  return null;
 }

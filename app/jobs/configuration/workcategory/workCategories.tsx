@@ -10,16 +10,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
 import { Pressable } from 'react-native-gesture-handler';
 import SwipeableCategory from './SwipeableCategory';
-import { useAllCategoriesCallback, useNewCategoryCallback } from '@/tbStores/CategoriesStore';
+import { useAllCategoriesCallback, useAddCategoryCallback } from '@/tbStores/CategoriesStore';
 
 const ListWorkCategories = () => {
-  const addWorkCategory = useNewCategoryCallback();
-  const allWorkCategories = useAllCategoriesCallback();
+  const addWorkCategory = useAddCategoryCallback();
+  const fetchAllWorkCategories = useAllCategoriesCallback();
 
-  const { setWorkCategories } = useWorkCategoryDataStore();
   const [showAdd, setShowAdd] = useState(false);
   const [category, setCategory] = useState<WorkCategoryData>({
     _id: '',
@@ -47,19 +45,6 @@ const ListWorkCategories = () => {
           },
     [colorScheme],
   );
-
-  useEffect(() => {
-    // Fetch categories from API or local storage (simulated here)
-    const fetchCategories = async () => {
-      const categoriesData: WorkCategoryData[] = [
-        { _id: '1', name: 'Electrical', code: '100', status: 'active' },
-        { _id: '2', name: 'Plumbing', code: '200', status: 'active' },
-      ];
-      setWorkCategories(categoriesData);
-    };
-
-    fetchCategories();
-  }, []);
 
   const handleInputChange = (name: keyof WorkCategoryData, value: string) => {
     if (category) {
@@ -96,10 +81,10 @@ const ListWorkCategories = () => {
         // Clear the input fields
         setCategory({ name: '', code: '', _id: '', status: '' });
       } else {
-        console.log('Error adding category:', status.id);
+        console.log('Error adding category:', status.msg);
       }
     }
-  }, [allWorkCategories, category, setWorkCategories]);
+  }, [category]);
 
   const dismissKeyboard = useCallback(() => {
     console.log('Dismiss Keyboard');
@@ -127,7 +112,7 @@ const ListWorkCategories = () => {
                       style={[styles.input, { backgroundColor: colors.neutral200 }]}
                       placeholder="Code"
                       value={category.code}
-                      onChangeText={(text) => handleInputChange('Code', text)}
+                      onChangeText={(text) => handleInputChange('code', text)}
                     />
                   </View>
                   <View style={{ flex: 1 }}>
@@ -135,7 +120,7 @@ const ListWorkCategories = () => {
                       style={[styles.input, { backgroundColor: colors.neutral200, marginLeft: 5 }]}
                       placeholder="Name"
                       value={category.name}
-                      onChangeText={(text) => handleInputChange('Name', text)}
+                      onChangeText={(text) => handleInputChange('name', text)}
                     />
                   </View>
                 </View>
@@ -151,7 +136,7 @@ const ListWorkCategories = () => {
         )}
         <View>
           <FlatList
-            data={allWorkCategories()}
+            data={fetchAllWorkCategories()}
             keyExtractor={(item) => item._id!}
             renderItem={({ item }) => <SwipeableCategory category={item} />}
           />

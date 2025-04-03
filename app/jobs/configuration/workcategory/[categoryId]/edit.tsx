@@ -3,7 +3,7 @@ import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { WorkCategoryData } from '@/models/types';
-import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
+import { useAllCategoriesCallback, useUpdateCategoryCallback } from '@/tbStores/CategoriesStore';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
@@ -11,7 +11,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditWorkCategory = () => {
   const { categoryId } = useLocalSearchParams();
-  const { allWorkCategories, updateWorkCategory } = useWorkCategoryDataStore();
+  const fetchAllWorkCategories = useAllCategoriesCallback();
+  const updateWorkCategory = useUpdateCategoryCallback();
   const [category, setCategory] = useState<WorkCategoryData | null>(null);
   const router = useRouter();
 
@@ -29,12 +30,13 @@ const EditWorkCategory = () => {
   );
 
   useEffect(() => {
+    console.log('after edit of category. categoryId:', categoryId);
     if (categoryId) {
       // Simulate fetching the existing category data by ID
-      const fetchedCategory = allWorkCategories.find((c) => c._id === categoryId);
+      const fetchedCategory = fetchAllWorkCategories().find((c) => c._id === categoryId);
       setCategory(fetchedCategory || null);
     }
-  }, [categoryId]);
+  }, [categoryId, fetchAllWorkCategories]);
 
   const handleInputChange = (name: keyof WorkCategoryData, value: string) => {
     if (category) {
@@ -78,13 +80,13 @@ const EditWorkCategory = () => {
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Name"
           value={category.name}
-          onChangeText={(text) => handleInputChange('Name', text)}
+          onChangeText={(text) => handleInputChange('name', text)}
         />
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Code"
           value={category.code}
-          onChangeText={(text) => handleInputChange('Code', text)}
+          onChangeText={(text) => handleInputChange('code', text)}
         />
         <OkayCancelButtons
           okTitle="Save"

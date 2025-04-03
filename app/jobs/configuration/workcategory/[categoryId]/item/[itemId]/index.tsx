@@ -1,7 +1,12 @@
 import OkayCancelButtons from '@/components/OkayCancelButtons';
 import { Text, TextInput, View } from '@/components/Themed';
 import { WorkCategoryItemData } from '@/models/types';
-import { useWorkCategoryItemDataStore } from '@/stores/categoryItemDataStore';
+// import { useWorkCategoryItemDataStore } from '@/stores/categoryItemDataStore';
+import {
+  useAddCategoryItemCallback,
+  useAllCategoryItemsCallback,
+  useUpdateCategoryItemCallback,
+} from '@/tbStores/CategoriesStore';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
@@ -9,14 +14,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditWorkItem = () => {
   const { categoryId, itemId } = useLocalSearchParams();
-  const { allWorkCategoryItems, updateWorkCategoryItem } = useWorkCategoryItemDataStore();
+  const fetchAllWorkCategoryItems = useAllCategoryItemsCallback();
+  const addWorkItemCategory = useAddCategoryItemCallback();
+  const updateWorkCategoryItem = useUpdateCategoryItemCallback();
   const [item, setItem] = useState<WorkCategoryItemData | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     if (categoryId) {
       // Simulate fetching the existing category data by ID
-      const fetchedItem = allWorkCategoryItems.find((i) => i._id === itemId);
+      const fetchedItem = fetchAllWorkCategoryItems().find((i) => i._id === itemId);
       setItem(fetchedItem || null);
     }
   }, [categoryId]);
@@ -59,16 +66,16 @@ const EditWorkItem = () => {
         <TextInput
           style={styles.input}
           placeholder="Name"
-          value={item.Name}
-          onChangeText={(text) => handleInputChange('Name', text)}
+          value={item.name}
+          onChangeText={(text) => handleInputChange('name', text)}
         />
         <TextInput
           style={styles.input}
           placeholder="Code"
-          value={item.Code}
-          onChangeText={(text) => handleInputChange('Code', text)}
+          value={item.code}
+          onChangeText={(text) => handleInputChange('code', text)}
         />
-        <OkayCancelButtons okTitle="Save" isOkEnabled={!!item.Name && !!item.Code} onOkPress={handleSave} />
+        <OkayCancelButtons okTitle="Save" isOkEnabled={!!item.name && !!item.code} onOkPress={handleSave} />
       </View>
     </SafeAreaView>
   );
