@@ -1,12 +1,11 @@
 import BottomSheetContainer from '@/components/BottomSheetContainer';
 import { ActionButtonProps } from '@/components/ButtonBar';
-import OptionList, { OptionEntry } from '@/components/OptionList';
-import { OptionPickerItem } from '@/components/OptionPickerItem';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
+import { formatCurrency, formatDate } from '@/utils/formatters';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
@@ -31,6 +30,7 @@ const JobDetailsPage = () => {
   const router = useRouter();
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
   const colorScheme = useColorScheme();
+  const [totalSpent, setTotalSpent] = useState<number>(0);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const { jobDbHost } = useJobDb();
   const [job, setJob] = useState<Job>({
@@ -44,38 +44,6 @@ const JobDetailsPage = () => {
     longitude: undefined,
     latitude: undefined,
   });
-
-  const [isListPickerVisible, setIsListPickerVisible] = useState<boolean>(false);
-  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
-  const [pickedOptionLabel, setPickedOptionLabel] = useState<string | undefined>(undefined);
-  const onOptionSelected = (option: OptionEntry) => {
-    setPickedOption(option);
-    if (option) {
-      setPickedOptionLabel(option.label);
-    }
-    setIsListPickerVisible(false);
-  };
-
-  const optionLabelChanged = useCallback((optionLabel: string) => {
-    const match = pickerOptions.find((o) => o.label === optionLabel);
-    setPickedOptionLabel(optionLabel);
-    setPickedOption(match);
-  }, []);
-
-  const [pickerOptions] = useState<OptionEntry[]>([
-    { label: '' },
-    { label: 'One' },
-    { label: 'Two' },
-    { label: 'Three' },
-    { label: 'Four' },
-    { label: 'Five' },
-    { label: 'Six' },
-    { label: 'Seven' },
-    { label: 'Eight' },
-    { label: 'Nine' },
-    { label: 'Ten' },
-    { label: 'Eleven' },
-  ]);
 
   // Define colors based on the color scheme (dark or light)
   const colors = useMemo(
@@ -183,16 +151,17 @@ const JobDetailsPage = () => {
         />
 
         <View style={styles.headerContainer}>
-          <Text>JobName={job.name}</Text>
-          <Text>JobId={jobId}</Text>
-          <OptionPickerItem
-            optionLabel={pickedOptionLabel}
-            label="My Option"
-            placeholder="Define Option"
-            onOptionLabelChange={optionLabelChanged}
-            onPickerButtonPress={() => setIsListPickerVisible(true)}
-          />
+          <Text txtSize="title" text={job.name} />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+            <Text text={`start: ${formatDate(job.startDate)}`} />
+            <Text text={`bid: ${formatCurrency(job.bidPrice ?? 0)}`} />
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+            <Text text={`due: ${formatDate(job.finishDate)}`} />
+            <Text text={`spent: ${formatCurrency(totalSpent)}`} />
+          </View>
         </View>
+        <View style={{ flex: 1 }}></View>
       </View>
       {headerMenuModalVisible && (
         <RightHeaderMenu
@@ -200,15 +169,6 @@ const JobDetailsPage = () => {
           setModalVisible={setHeaderMenuModalVisible}
           buttons={rightHeaderMenuButtons}
         />
-      )}
-      {isListPickerVisible && (
-        <BottomSheetContainer isVisible={isListPickerVisible} onClose={() => setIsListPickerVisible(false)}>
-          <OptionList
-            options={pickerOptions}
-            onSelect={(option) => onOptionSelected(option)}
-            selectedOption={pickedOption}
-          />
-        </BottomSheetContainer>
       )}
     </SafeAreaView>
   );
@@ -220,9 +180,12 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   headerContainer: {
-    marginTop: 20,
+    marginTop: 10,
+    marginHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingBottom: 5,
+    borderBottomWidth: 1,
   },
   title: {
     fontSize: 24,
@@ -240,14 +203,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 4,
-  },
-  optionPickerRow: {
-    width: '100%',
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-  },
-  pickerButtonContainer: {
-    paddingLeft: 10,
   },
 });
 
