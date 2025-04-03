@@ -6,7 +6,7 @@ import { ProjectData } from './projectStore';
 import ProjectStore from './projectStore';
 import { useCreateClientPersisterAndStart } from './persistence/useCreateClientPersisterAndStart';
 import { useCreateServerSynchronizerAndStart } from './synchronization/useCreateServerSynchronizerAndStart';
-import { TBStatus, WorkCategoryData, WorkCategoryItemData } from '@/models/types';
+import { TBStatus, WorkCategoryData, WorkCategoryItemData as WorkItemData } from '@/models/types';
 
 const STORE_ID_PREFIX = 'CategoriesStore-';
 const TABLES_SCHEMA = {
@@ -75,11 +75,11 @@ export const useAllCategoriesCallback = () => {
 export const useAllCategoryItemsCallback = () => {
   let store = useStore(useStoreId());
 
-  return useCallback((): WorkCategoryItemData[] => {
+  return useCallback((): WorkItemData[] => {
     if (store) {
       const table = store.getTable('workItems');
       if (table) {
-        const workItems: WorkCategoryItemData[] = Object.entries(table).map(([id, row]) => ({
+        const workItems: WorkItemData[] = Object.entries(table).map(([id, row]) => ({
           _id: row._id ?? '',
           categoryId: row.categoryId ?? '',
           code: row.code ?? '',
@@ -146,7 +146,6 @@ export const useCategoryValue = <ValueId extends CategoriesCellId>(
 // Returns a callback that adds a new category to the store.
 export const useAddCategoryCallback = () => {
   let store = useStore(useStoreId());
-  console.log('useNewCategory storeid:', useStoreId(), store);
 
   return useCallback(
     (catData: WorkCategoryData): { status: TBStatus; msg: string; id: string } => {
@@ -197,18 +196,18 @@ export const useUpdateCategoryCallback = () => {
 };
 
 // Returns a callback that adds a new category item to the store.
-export const useAddCategoryItemCallback = () => {
+export const useAddWorkItemCallback = () => {
   let store = useStore(useStoreId());
 
   return useCallback(
-    (catItemData: WorkCategoryItemData): { status: TBStatus; msg: string; id: string } => {
+    (workItemData: WorkItemData): { status: TBStatus; msg: string; id: string } => {
       const id = randomUUID();
-      catItemData._id = id;
+      workItemData._id = id;
       console.log(
-        `Adding a new category item with ID: ${id}, catId: ${catItemData.categoryId} Name: ${catItemData.name}, Code: ${catItemData.code}`,
+        `Adding a new category item with ID: ${id}, catId: ${workItemData.categoryId} Name: ${workItemData.name}, Code: ${workItemData.code}`,
       );
       if (store) {
-        const storeCheck = store.setRow('workItems', id, catItemData);
+        const storeCheck = store.setRow('workItems', id, workItemData);
         if (storeCheck) {
           return { status: 'Success', msg: '', id };
         } else {
@@ -223,17 +222,17 @@ export const useAddCategoryItemCallback = () => {
 };
 
 // Returns a callback that adds a new category item to the store.
-export const useUpdateCategoryItemCallback = () => {
+export const useUpdateWorkItemCallback = () => {
   let store = useStore(useStoreId());
 
   return useCallback(
-    (id: string, catItemData: WorkCategoryItemData): { status: TBStatus; id: string } => {
-      catItemData._id = id;
+    (id: string, workItemData: WorkItemData): { status: TBStatus; id: string } => {
+      workItemData._id = id;
       console.log(
-        `Updating a category item with ID: ${id}, catId: ${catItemData.categoryId} Name: ${catItemData.name}, Code: ${catItemData.code}`,
+        `Updating a category item with ID: ${id}, catId: ${workItemData.categoryId} Name: ${workItemData.name}, Code: ${workItemData.code}`,
       );
       if (store) {
-        const storeCheck = store.setRow('workItems', id, catItemData);
+        const storeCheck = store.setRow('workItems', id, workItemData);
         if (storeCheck) {
           return { status: 'Success', id };
         }
@@ -256,7 +255,7 @@ export const useNewWorkItemCallback = () => {
   let store = useStore(useStoreId());
 
   return useCallback(
-    (workItemData: WorkCategoryItemData) => {
+    (workItemData: WorkItemData) => {
       const id = randomUUID();
       workItemData._id = id;
       console.log(
@@ -278,7 +277,6 @@ export const useWorkItemPropertyCallback = () => {
   let store = useStore(useStoreId());
 
   return useCallback(
-    // ask bill, is this the right of doing things?
     (id: string, propertyName: keyof typeof TABLES_SCHEMA.workItems) => {
       if (store) {
         const cell = store.getCell('workItems', id, propertyName);

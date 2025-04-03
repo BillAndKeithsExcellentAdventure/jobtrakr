@@ -3,9 +3,9 @@ import { Text, TextInput, View } from '@/components/Themed';
 import { WorkCategoryItemData } from '@/models/types';
 // import { useWorkCategoryItemDataStore } from '@/stores/categoryItemDataStore';
 import {
-  useAddCategoryItemCallback,
+  useAddWorkItemCallback,
   useAllCategoryItemsCallback,
-  useUpdateCategoryItemCallback,
+  useUpdateWorkItemCallback,
 } from '@/tbStores/CategoriesStore';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -15,8 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const EditWorkItem = () => {
   const { categoryId, itemId } = useLocalSearchParams();
   const fetchAllWorkCategoryItems = useAllCategoryItemsCallback();
-  const addWorkItemCategory = useAddCategoryItemCallback();
-  const updateWorkCategoryItem = useUpdateCategoryItemCallback();
+  const addWorkItemCategory = useAddWorkItemCallback();
+  const updateWorkCategoryItem = useUpdateWorkItemCallback();
   const [item, setItem] = useState<WorkCategoryItemData | null>(null);
   const router = useRouter();
 

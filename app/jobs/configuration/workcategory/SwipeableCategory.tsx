@@ -3,6 +3,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors, deleteBg } from '@/constants/Colors';
 import { WorkCategoryData, WorkCategoryItemData } from '@/models/types';
 import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
+import { useCategoryValue } from '@/tbStores/CategoriesStore';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
@@ -62,6 +63,9 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
     );
   };
 
+  const [name] = useCategoryValue(category._id, 'name');
+  const [code] = useCategoryValue(category._id, 'code');
+
   return (
     <ReanimatedSwipeable
       key={category._id}
@@ -82,8 +86,8 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
           }}
         >
           <View style={styles.itemInfo}>
-            <Text style={styles.itemCode} text={category.code} />
-            <Text style={styles.itemName}>{category.name}</Text>
+            <Text style={styles.itemCode} text={code} />
+            <Text style={styles.itemName}>{name}</Text>
             <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
           </View>
         </Pressable>

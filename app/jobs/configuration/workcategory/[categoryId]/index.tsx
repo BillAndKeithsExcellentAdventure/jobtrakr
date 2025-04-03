@@ -18,14 +18,17 @@ import SwipeableCategoryItem from './SwipeableCategoryItem';
 import {
   useAllCategoriesCallback,
   useAllCategoryItemsCallback,
-  useAddCategoryItemCallback,
+  useAddWorkItemCallback,
+  useCategoryValue,
 } from '@/tbStores/CategoriesStore';
 
 const ShowWorkCategory = () => {
   const { categoryId } = useLocalSearchParams();
   const fetchAllWorkCategories = useAllCategoriesCallback();
   const fetchAllWorkCategoryItems = useAllCategoryItemsCallback();
-  const addWorkItem = useAddCategoryItemCallback();
+  const addWorkItem = useAddWorkItemCallback();
+  const [name] = useCategoryValue(categoryId as string, 'name');
+  const [code] = useCategoryValue(categoryId as string, 'code');
 
   const [categorySpecificItems, setCategorySpecificItems] = useState<WorkCategoryItemData[]>([]);
   const [item, setItem] = useState<WorkCategoryItemData>({
@@ -33,6 +36,7 @@ const ShowWorkCategory = () => {
     code: '',
   });
   const [category, setCategory] = useState<WorkCategoryData | null>(null);
+
   const [showAdd, setShowAdd] = useState(false);
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -144,8 +148,8 @@ const ShowWorkCategory = () => {
           >
             <View style={[styles.categoryContent, { borderColor: colors.borderColor, borderWidth: 1 }]}>
               <View style={styles.categoryInfo}>
-                <Text style={styles.categoryName}>{category.name}</Text>
-                <Text>{category.code}</Text>
+                <Text style={styles.categoryName}>{name}</Text>
+                <Text>{code}</Text>
               </View>
               <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
             </View>
