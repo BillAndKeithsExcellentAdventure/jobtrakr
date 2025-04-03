@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableCategoryItem from './SwipeableCategoryItem';
 import {
   useAllCategoriesCallback,
-  useAllCategoryItemsCallback,
+  useAllWorkItemsCallback,
   useAddWorkItemCallback,
   useCategoryValue,
 } from '@/tbStores/CategoriesStore';
@@ -25,7 +25,7 @@ import {
 const ShowWorkCategory = () => {
   const { categoryId } = useLocalSearchParams();
   const fetchAllWorkCategories = useAllCategoriesCallback();
-  const fetchAllWorkCategoryItems = useAllCategoryItemsCallback();
+  const fetchAllWorkCategoryItems = useAllWorkItemsCallback();
   const addWorkItem = useAddWorkItemCallback();
   const [name] = useCategoryValue(categoryId as string, 'name');
   const [code] = useCategoryValue(categoryId as string, 'code');

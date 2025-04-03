@@ -4,7 +4,7 @@ import { WorkCategoryItemData } from '@/models/types';
 // import { useWorkCategoryItemDataStore } from '@/stores/categoryItemDataStore';
 import {
   useAddWorkItemCallback,
-  useAllCategoryItemsCallback,
+  useAllWorkItemsCallback,
   useUpdateWorkItemCallback,
 } from '@/tbStores/CategoriesStore';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditWorkItem = () => {
   const { categoryId, itemId } = useLocalSearchParams();
-  const fetchAllWorkCategoryItems = useAllCategoryItemsCallback();
+  const fetchAllWorkCategoryItems = useAllWorkItemsCallback();
   const addWorkItemCategory = useAddWorkItemCallback();
   const updateWorkCategoryItem = useUpdateWorkItemCallback();
   const [item, setItem] = useState<WorkCategoryItemData | null>(null);

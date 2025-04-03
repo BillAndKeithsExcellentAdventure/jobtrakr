@@ -72,7 +72,7 @@ export const useAllCategoriesCallback = () => {
   return fn;
 };
 
-export const useAllCategoryItemsCallback = () => {
+export const useAllWorkItemsCallback = () => {
   let store = useStore(useStoreId());
 
   return useCallback((): WorkItemData[] => {
