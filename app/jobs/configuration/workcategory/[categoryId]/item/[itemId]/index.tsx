@@ -6,7 +6,7 @@ import {
   useAddWorkItemCallback,
   useUpdateWorkItemCallback,
   useWorkItemValue,
-} from '@/tbStores/CategoriesStore';
+} from '@/tbStores/ConfigurationStore';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';

@@ -3,7 +3,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors, deleteBg } from '@/constants/Colors';
 import { WorkCategoryData, WorkCategoryItemData } from '@/models/types';
 import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
-import { useCategoryValue, useDeleteCategoryCallback } from '@/tbStores/CategoriesStore';
+import { useCategoryValue, useDeleteCategoryCallback } from '@/tbStores/ConfigurationStore';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
