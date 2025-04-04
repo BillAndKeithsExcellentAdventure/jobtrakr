@@ -202,9 +202,9 @@ export const useDeleteTemplateCallback = (id: string) => useDelRowCallback('temp
 // Template Items related hooks
 ///////////////////////////////////////////////////////////////////////////////
 // Needed Functions:
-//     useAllTemplateItems(templateId: string)
-//     useAddTemplateItemCallback
-//     useDeleteTemplateItemCallback
+//     useAllTemplateWorkItems(templateId: string)
+//     useAddTemplateWorkItemCallback
+//     useDeleteTemplateWorkItemCallback
 //
 /**
  * Returns all categories for the current store ID.
@@ -288,7 +288,7 @@ export const useAddTemplateWorkItemCallback = () => {
 };
 
 // Returns a callback that deletes a template workItem from the store.
-export const useDeleteTemplateItemCallback = (id: string) => {
+export const useDeleteTemplateWorkItemCallback = (id: string) => {
   useDelRowCallback('templateWorkItems', id, useStoreId());
 };
 
