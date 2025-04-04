@@ -2,8 +2,7 @@ import OkayCancelButtons from '@/components/OkayCancelButtons';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { WorkCategoryData } from '@/models/types';
-import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
+import { useCategoryValue, useUpdateCategoryCallback } from '@/tbStores/CategoriesStore';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
@@ -11,9 +10,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditWorkCategory = () => {
   const { categoryId } = useLocalSearchParams();
-  const { allWorkCategories, updateWorkCategory } = useWorkCategoryDataStore();
-  const [category, setCategory] = useState<WorkCategoryData | null>(null);
+  const catId = categoryId ? (categoryId as string) : '';
+  const applyWorkCategoryUpdates = useUpdateCategoryCallback();
   const router = useRouter();
+  const [status] = useCategoryValue(categoryId as string, 'status');
+  const [name] = useCategoryValue(categoryId as string, 'name');
+  const [newName, setNewName] = useState(name);
+  const [code] = useCategoryValue(categoryId as string, 'code');
+  const [newCode, setNewCode] = useState(code);
+
+  useEffect(() => {
+    setNewCode(code);
+  }, [code]);
+
+  useEffect(() => {
+    setNewName(name);
+  }, [name]);
 
   const colorScheme = useColorScheme();
   const colors = useMemo(
@@ -28,35 +40,21 @@ const EditWorkCategory = () => {
     [colorScheme],
   );
 
-  useEffect(() => {
-    if (categoryId) {
-      // Simulate fetching the existing category data by ID
-      const fetchedCategory = allWorkCategories.find((c) => c._id === categoryId);
-      setCategory(fetchedCategory || null);
-    }
-  }, [categoryId]);
-
-  const handleInputChange = (name: keyof WorkCategoryData, value: string) => {
-    if (category) {
-      setCategory({
-        ...category,
-        [name]: value,
-      });
-    }
-  };
-
   const handleSave = () => {
-    if (category) {
-      // Simulate saving the edited category (e.g., API call or database update)
-      console.log('Updated category:', category);
-      updateWorkCategory(categoryId as string, category);
+    if (newName && newCode) {
+      applyWorkCategoryUpdates(catId, {
+        _id: catId,
+        code: newCode,
+        name: newName,
+        status,
+      });
 
       // Go back to the categories list screen
       router.back();
     }
   };
 
-  if (!category) {
+  if (!name || !code) {
     return (
       <View style={styles.container}>
         <Text>Loading...</Text>
@@ -77,20 +75,17 @@ const EditWorkCategory = () => {
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Name"
-          value={category.Name}
-          onChangeText={(text) => handleInputChange('Name', text)}
+          value={newName}
+          onChangeText={setNewName}
         />
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Code"
-          value={category.Code}
-          onChangeText={(text) => handleInputChange('Code', text)}
+          keyboardType="number-pad"
+          value={newCode}
+          onChangeText={setNewCode}
         />
-        <OkayCancelButtons
-          okTitle="Save"
-          isOkEnabled={!!category.Name && !!category.Code}
-          onOkPress={handleSave}
-        />
+        <OkayCancelButtons okTitle="Save" isOkEnabled={!!newName && !!newCode} onOkPress={handleSave} />
       </View>
     </SafeAreaView>
   );
