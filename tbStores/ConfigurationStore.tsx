@@ -62,7 +62,7 @@ const {
   useValue,
 } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
-const useStoreId = () => STORE_ID_PREFIX + '9999'; // Replace 9999 with a user id.
+const useStoreId = () => STORE_ID_PREFIX + '9999'; // Replace 9999 with a organization id.
 
 // Create, persist, and sync a store containing ALL the categories defined by the user.
 export default function CategoriesStore() {

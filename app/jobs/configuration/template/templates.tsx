@@ -11,7 +11,7 @@ import {
   useAllTemplatesCallback,
   useAddTemplateCallback,
   useUpdateTemplateCallback,
-} from '@/tbStores/CategoriesStore';
+} from '@/tbStores/ConfigurationStore';
 import { Ionicons } from '@expo/vector-icons'; // Right caret icon
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
