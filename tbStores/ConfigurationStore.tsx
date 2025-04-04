@@ -10,6 +10,7 @@ import {
   JobTemplateData,
   JobTemplateWorkItemData,
   TBStatus,
+  VendorData,
   WorkCategoryData,
   WorkCategoryItemData as WorkItemData,
 } from '@/models/types';
@@ -39,14 +40,27 @@ const TABLES_SCHEMA = {
     templateId: { type: 'string' },
     workItemId: { type: 'string' },
   },
+  vendors: {
+    _id: { type: 'string' },
+    name: { type: 'string' },
+    address: { type: 'string' },
+    city: { type: 'string' },
+    state: { type: 'string' },
+    zip: { type: 'string' },
+    mobilePhone: { type: 'string' },
+    businessPhone: { type: 'string' },
+    notes: { type: 'string' },
+  },
 } as const;
 
 type CategorySchema = typeof TABLES_SCHEMA.categories;
 type WorkItemsSchema = typeof TABLES_SCHEMA.workItems;
 type TemplateSchema = typeof TABLES_SCHEMA.templates;
+type VendorsSchema = typeof TABLES_SCHEMA.vendors;
 type CategoriesCellId = keyof (typeof TABLES_SCHEMA)['categories'];
 type WorkItemsCellId = keyof (typeof TABLES_SCHEMA)['workItems'];
 type TemplatesCellId = keyof (typeof TABLES_SCHEMA)['templates'];
+type VendorsCellId = keyof (typeof TABLES_SCHEMA)['vendors'];
 
 const {
   useCell,
@@ -75,6 +89,117 @@ export default function CategoriesStore() {
 
   return null;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Vendors related hooks
+///////////////////////////////////////////////////////////////////////////////
+// Needed Functions:
+//    useAllVendors
+//    useAddVendorCallback
+//    useVendorValue
+//    useDeleteVendorCallback
+//
+/**
+ * Returns all categories for the current store ID.
+ */
+export const useAllVendors = () => {
+  const [allVendors, setAllVendors] = useState<VendorData[]>([]);
+  let store = useStore(useStoreId());
+
+  const fetchAllVendors = useCallback((): VendorData[] => {
+    if (!store) {
+      return []; // Return an empty array if the store is not available
+    }
+
+    const table = store.getTable('vendors');
+    if (table) {
+      const vendors: VendorData[] = Object.entries(table).map(([id, row]) => ({
+        _id: id,
+        name: row.name ?? '',
+        address: row.address ?? '',
+        city: row.city ?? '',
+        state: row.state ?? '',
+        zip: row.zip ?? '',
+        mobilePhone: row.mobilePhone ?? '',
+        businessPhone: row.businessPhone ?? '',
+        notes: row.notes ?? '',
+      }));
+
+      return vendors.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+    }
+
+    return [];
+  }, [store]);
+
+  useEffect(() => {
+    setAllVendors(fetchAllVendors());
+  }, [fetchAllVendors]);
+
+  // Function to handle table data change
+  const handleTableChange = () => {
+    setAllVendors(fetchAllVendors());
+  };
+
+  useEffect(() => {
+    if (!store) {
+      return;
+    }
+    const listenerId = store.addTableListener('vendors', handleTableChange);
+    // Cleanup: Remove the listener when the component unmounts
+    return () => {
+      store.delListener(listenerId);
+    };
+  }, []);
+
+  return allVendors;
+};
+
+// Returns a callback that adds a new template to the store.
+export const useAddVendorCallback = () => {
+  let store = useStore(useStoreId());
+
+  return useCallback(
+    (vendorData: VendorData): { status: TBStatus; msg: string; id: string } => {
+      const id = randomUUID();
+      vendorData._id = id;
+
+      console.log('(In callback). useAddVendorCallback storeid:', useStoreId());
+      console.log(`Adding a new vendor with ID: ${id}, Name: ${vendorData.name}`);
+      if (store) {
+        const storeCheck = store.setRow('vendors', id, vendorData);
+        if (storeCheck) {
+          return { status: 'Success', msg: '', id };
+        } else {
+          return { status: 'Error', msg: 'Unable to setRow', id: '0' };
+        }
+      } else {
+        return { status: 'Error', msg: 'Store not found', id: '0' };
+      }
+    },
+    [store],
+  );
+};
+
+// Returns a pair of 1) a property of the template, 2) a callback that
+// updates it, similar to the React useState pattern.
+export const useVendorValue = <ValueId extends VendorsCellId>(
+  vendorId: string,
+  valueId: ValueId,
+): [Value<VendorsSchema, ValueId>, (value: Value<VendorsSchema, ValueId>) => void] => [
+  (useCell('vendors', vendorId, valueId, useStoreId()) as Value<VendorsSchema, ValueId>) ??
+    ('' as Value<VendorsSchema, ValueId>),
+  useSetCellCallback(
+    'vendors',
+    vendorId,
+    valueId,
+    (value: Value<VendorsSchema, ValueId>) => value,
+    [],
+    useStoreId(),
+  ),
+];
+
+// Returns a callback that deletes a template from the store.
+export const useDeleteVendorCallback = (id: string) => useDelRowCallback('vendors', id, useStoreId());
 
 ///////////////////////////////////////////////////////////////////////////////
 // Template related hooks

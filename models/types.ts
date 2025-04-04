@@ -26,3 +26,15 @@ export interface JobTemplateWorkItemData {
   _id?: string;
   workItemId: string;
 }
+
+export interface VendorData {
+  _id?: string;
+  name?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  mobilePhone?: string;
+  businessPhone?: string;
+  notes?: string;
+}
