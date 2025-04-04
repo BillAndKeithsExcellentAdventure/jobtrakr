@@ -138,6 +138,17 @@ const ListWorkCategories = () => {
             data={allCategories}
             keyExtractor={(item) => item._id!}
             renderItem={({ item }) => <SwipeableCategory category={item} />}
+            ListEmptyComponent={() => (
+              <View
+                style={{
+                  padding: 20,
+                  alignItems: 'center',
+                }}
+              >
+                <Text txtSize="title" text="No work categories found." />
+                <Text text="Use the '+' in the upper right to add one." />
+              </View>
+            )}
           />
         </View>
       </View>

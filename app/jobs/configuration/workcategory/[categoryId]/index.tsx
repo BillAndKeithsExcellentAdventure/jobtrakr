@@ -156,6 +156,7 @@ const ShowWorkCategory = () => {
                         style={[styles.input, { backgroundColor: colors.neutral200 }]}
                         placeholder="Code"
                         value={item.code}
+                        keyboardType="number-pad"
                         onChangeText={(text) => handleInputChange('code', text)}
                       />
                     </View>

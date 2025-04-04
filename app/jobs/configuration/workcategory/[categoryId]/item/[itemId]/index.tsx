@@ -72,6 +72,7 @@ const EditWorkItem = () => {
         <TextInput
           style={styles.input}
           placeholder="Code"
+          keyboardType="number-pad"
           value={item.code}
           onChangeText={(text) => handleInputChange('code', text)}
         />

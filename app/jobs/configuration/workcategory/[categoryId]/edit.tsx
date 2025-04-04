@@ -86,6 +86,7 @@ const EditWorkCategory = () => {
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Code"
+          keyboardType="number-pad"
           value={newCode}
           onChangeText={setNewCode}
         />
