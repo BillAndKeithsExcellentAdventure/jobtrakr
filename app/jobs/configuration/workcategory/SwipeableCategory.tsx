@@ -3,7 +3,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors, deleteBg } from '@/constants/Colors';
 import { WorkCategoryData, WorkCategoryItemData } from '@/models/types';
 import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
-import { useCategoryValue, useDelCategoryCallback } from '@/tbStores/CategoriesStore';
+import { useCategoryValue, useDeleteCategoryCallback } from '@/tbStores/CategoriesStore';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
@@ -12,7 +12,7 @@ import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeabl
 import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
 const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
-  const processDelete = useDelCategoryCallback(category._id!);
+  const processDelete = useDeleteCategoryCallback(category._id!);
 
   const router = useRouter();
   const colorScheme = useColorScheme();
