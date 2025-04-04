@@ -90,7 +90,9 @@ const SwipeableCategoryItem = ({
         >
           <View style={styles.itemInfo}>
             <Text style={styles.itemCode} text={`${category.code}.${item.code}`} />
-            <Text style={styles.itemName}>{item.name}</Text>
+            <Text numberOfLines={1} style={styles.itemName}>
+              {item.name}
+            </Text>
             <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
           </View>
         </Pressable>
@@ -107,14 +109,18 @@ const styles = StyleSheet.create({
     height: 40,
   },
   itemName: {
-    width: 200,
+    flex: 1,
+    textOverflow: 'ellipsis',
+    overflow: 'hidden',
     marginRight: 10,
   },
   itemEntry: {
     width: '100%',
   },
   itemCode: {
-    flex: 1,
+    textOverflow: 'ellipsis',
+    overflow: 'hidden',
+    width: 100,
   },
   rightAction: {
     width: 100,
