@@ -4,8 +4,8 @@ import { WorkCategoryItemData } from '@/models/types';
 // import { useWorkCategoryItemDataStore } from '@/stores/categoryItemDataStore';
 import {
   useAddWorkItemCallback,
-  useAllWorkItemsCallback,
   useUpdateWorkItemCallback,
+  useWorkItemValue,
 } from '@/tbStores/CategoriesStore';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -14,42 +14,51 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditWorkItem = () => {
   const { categoryId, itemId } = useLocalSearchParams();
-  const fetchAllWorkCategoryItems = useAllWorkItemsCallback();
-  const addWorkItemCategory = useAddWorkItemCallback();
-  const updateWorkCategoryItem = useUpdateWorkItemCallback();
-  const [item, setItem] = useState<WorkCategoryItemData | null>(null);
+  const applyWorkItemUpdates = useUpdateWorkItemCallback();
   const router = useRouter();
-
-  useEffect(() => {
-    if (categoryId) {
-      // Simulate fetching the existing category data by ID
-      const fetchedItem = fetchAllWorkCategoryItems().find((i) => i._id === itemId);
-      setItem(fetchedItem || null);
-    }
-  }, [categoryId]);
-
-  const handleInputChange = (name: keyof WorkCategoryItemData, value: string) => {
-    if (item) {
-      setItem({
-        ...item,
-        [name]: value,
-      });
-    }
-  };
+  const [name, setName] = useWorkItemValue(itemId as string, 'name');
+  const [newName, setNewName] = useState(name);
+  const [code, setCode] = useWorkItemValue(itemId as string, 'code');
+  const [status] = useWorkItemValue(itemId as string, 'status');
+  const [newCode, setNewCode] = useState(code);
 
   const handleSave = () => {
-    if (item) {
-      console.log('Updated work item:', item);
-      updateWorkCategoryItem(itemId as string, item);
+    if (newName && newCode) {
+      applyWorkItemUpdates(itemId as string, {
+        _id: itemId as string,
+        categoryId: categoryId as string,
+        code: newCode,
+        name: newName,
+        status,
+      });
+
+      // Go back to the categories list screen
       router.back();
     }
   };
 
-  if (!item) {
+  if (!name || !code) {
     return (
       <View style={styles.container}>
         <Text>Loading...</Text>
       </View>
+    );
+  }
+
+  if (!itemId) {
+    return (
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            title: 'Edit Work Item',
+          }}
+        />
+
+        <View style={styles.container}>
+          <Text>Loading...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -63,20 +72,15 @@ const EditWorkItem = () => {
       />
 
       <View style={styles.container}>
-        <TextInput
-          style={styles.input}
-          placeholder="Name"
-          value={item.name}
-          onChangeText={(text) => handleInputChange('name', text)}
-        />
+        <TextInput style={styles.input} placeholder="Name" value={newName} onChangeText={setNewName} />
         <TextInput
           style={styles.input}
           placeholder="Code"
           keyboardType="number-pad"
-          value={item.code}
-          onChangeText={(text) => handleInputChange('code', text)}
+          value={newCode}
+          onChangeText={setNewCode}
         />
-        <OkayCancelButtons okTitle="Save" isOkEnabled={!!item.name && !!item.code} onOkPress={handleSave} />
+        <OkayCancelButtons okTitle="Save" isOkEnabled={!!newName && !!newCode} onOkPress={handleSave} />
       </View>
     </SafeAreaView>
   );

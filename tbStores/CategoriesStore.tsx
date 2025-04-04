@@ -26,6 +26,7 @@ const TABLES_SCHEMA = {
 } as const;
 
 type CategorySchema = typeof TABLES_SCHEMA.categories;
+type WorkItemsSchema = typeof TABLES_SCHEMA.workItems;
 type CategoriesCellId = keyof (typeof TABLES_SCHEMA)['categories'];
 type WorkItemsCellId = keyof (typeof TABLES_SCHEMA)['workItems'];
 
@@ -44,6 +45,22 @@ const {
 } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
 const useStoreId = () => STORE_ID_PREFIX + '9999'; // Replace 9999 with a user id.
+
+// Create, persist, and sync a store containing ALL the categories defined by the user.
+export default function CategoriesStore() {
+  const storeId = useStoreId();
+  const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
+  console.log(`Creating categories store with ID: ${storeId} ${store}`);
+  useCreateClientPersisterAndStart(storeId, store);
+  useCreateServerSynchronizerAndStart(storeId, store);
+  useProvideStore(storeId, store);
+
+  return null;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Category related hooks
+///////////////////////////////////////////////////////////////////////////////
 
 /**
  * Returns all categories for the current store ID.
@@ -95,58 +112,33 @@ export const useAllCategories = () => {
   return allCategories;
 };
 
-/**
- * Returns all workitems for the current store ID.
- */
-
-export const useCategoryPropertyCallback = () => {
+export const useCategoryFromStore = (categoryId: string) => {
+  const [category, setCategory] = useState<WorkCategoryData | null>(null);
   let store = useStore(useStoreId());
 
-  return useCallback(
-    (
-      id: string,
-      propertyName: keyof typeof TABLES_SCHEMA.categories,
-    ): {
-      status: TBStatus;
-      msg: string;
-      cell: Cell<typeof TABLES_SCHEMA, 'categories', CategoriesCellId> | undefined;
-    } => {
-      if (store) {
-        const cell = store.getCell('categories', id, propertyName);
-        if (cell) {
-          return { status: 'Success', msg: '', cell };
-        }
-
-        return { status: 'Error', msg: 'Error - cell not found', cell: undefined };
-      }
-
-      return { status: 'Error', msg: 'Error - Store not found', cell: undefined };
-    },
-    [store],
-  );
-};
-
-export const useCategoryCallback = () => {
-  let store = useStore(useStoreId());
-
-  return useCallback(
-    (id: string): WorkCategoryData | null => {
-      if (store) {
-        const row = store.getRow('categories', id);
-        if (row) {
-          return {
-            _id: row._id ?? '0',
-            name: row.name ?? '',
-            code: row.code ?? '',
-            status: row.status ?? '',
-          } as WorkCategoryData;
-        }
-      }
-
+  const fetchCategory = useCallback((): WorkCategoryData | null => {
+    if (!store) {
       return null;
-    },
-    [store],
-  );
+    }
+
+    const row = store.getRow('categories', categoryId);
+    if (row) {
+      return {
+        _id: row._id ?? '0',
+        name: row.name ?? '',
+        code: row.code ?? '',
+        status: row.status ?? '',
+      } as WorkCategoryData;
+    }
+
+    return null;
+  }, [store, categoryId]);
+
+  useEffect(() => {
+    setCategory(fetchCategory());
+  }, [fetchCategory]);
+
+  return category; // Return the category or null if not found
 };
 
 // Returns a pair of 1) a property of the shopping list, 2) a callback that
@@ -276,6 +268,24 @@ export const useAllWorkItems = () => {
   return allWorkItems;
 };
 
+// Returns a pair of 1) a property of the shopping list, 2) a callback that
+// updates it, similar to the React useState pattern.
+export const useWorkItemValue = <ValueId extends WorkItemsCellId>(
+  catId: string,
+  valueId: ValueId,
+): [Value<WorkItemsSchema, ValueId>, (value: Value<WorkItemsSchema, ValueId>) => void] => [
+  (useCell('workItems', catId, valueId, useStoreId()) as Value<WorkItemsSchema, ValueId>) ??
+    ('' as Value<WorkItemsSchema, ValueId>),
+  useSetCellCallback(
+    'workItems',
+    catId,
+    valueId,
+    (value: Value<WorkItemsSchema, ValueId>) => value,
+    [],
+    useStoreId(),
+  ),
+];
+
 // Returns a callback that adds a new project to the store.
 export const useNewWorkItemCallback = () => {
   let store = useStore(useStoreId());
@@ -327,18 +337,6 @@ export const useWorkItemIds = (catId: string) => {
   const ids = useRowIds('workItems', useStoreId());
   return ids.filter((id) => useCell('workItems', id, 'categoryId') === catId);
 };
-
-// Create, persist, and sync a store containing ALL the categories defined by the user.
-export default function CategoriesStore() {
-  const storeId = useStoreId();
-  const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
-  console.log(`Creating categories store with ID: ${storeId} ${store}`);
-  useCreateClientPersisterAndStart(storeId, store);
-  useCreateServerSynchronizerAndStart(storeId, store);
-  useProvideStore(storeId, store);
-
-  return null;
-}
 
 // Returns a callback that adds a new category item to the store.
 export const useAddWorkItemCallback = () => {

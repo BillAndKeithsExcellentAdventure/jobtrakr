@@ -19,12 +19,12 @@ import {
   useAllWorkItems,
   useAddWorkItemCallback,
   useCategoryValue,
-  useCategoryCallback,
+  useCategoryFromStore,
 } from '@/tbStores/CategoriesStore';
 
 const ShowWorkCategory = () => {
   const { categoryId } = useLocalSearchParams();
-  const fetchCategory = useCategoryCallback();
+  const category = useCategoryFromStore(categoryId as string); // Fetch the category by ID
   const allWorkItems = useAllWorkItems();
   const addWorkItem = useAddWorkItemCallback();
   const [name] = useCategoryValue(categoryId as string, 'name');
@@ -35,7 +35,6 @@ const ShowWorkCategory = () => {
     name: '',
     code: '',
   });
-  const [category, setCategory] = useState<WorkCategoryData | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -58,10 +57,6 @@ const ShowWorkCategory = () => {
           },
     [colorScheme],
   );
-
-  useEffect(() => {
-    setCategory(fetchCategory(categoryId as string));
-  }, [categoryId, fetchCategory]);
 
   useEffect(() => {
     // Simulate fetching the existing category data by ID

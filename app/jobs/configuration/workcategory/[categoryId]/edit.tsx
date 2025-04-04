@@ -2,7 +2,6 @@ import OkayCancelButtons from '@/components/OkayCancelButtons';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { WorkCategoryData } from '@/models/types';
 import { useCategoryValue, useUpdateCategoryCallback } from '@/tbStores/CategoriesStore';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -13,12 +12,11 @@ const EditWorkCategory = () => {
   const { categoryId } = useLocalSearchParams();
   const catId = categoryId ? (categoryId as string) : '';
   const applyWorkCategoryUpdates = useUpdateCategoryCallback();
-  const [category, setCategory] = useState<WorkCategoryData | null>(null);
   const router = useRouter();
   const [status] = useCategoryValue(categoryId as string, 'status');
-  const [name, setName] = useCategoryValue(categoryId as string, 'name');
+  const [name] = useCategoryValue(categoryId as string, 'name');
   const [newName, setNewName] = useState(name);
-  const [code, setCode] = useCategoryValue(categoryId as string, 'code');
+  const [code] = useCategoryValue(categoryId as string, 'code');
   const [newCode, setNewCode] = useState(code);
 
   useEffect(() => {
@@ -50,9 +48,6 @@ const EditWorkCategory = () => {
         name: newName,
         status,
       });
-      // Or Anther way
-      //setCode(newCode);
-      //setName(newName);
 
       // Go back to the categories list screen
       router.back();
