@@ -45,63 +45,64 @@ const {
 
 const useStoreId = () => STORE_ID_PREFIX + '9999'; // Replace 9999 with a user id.
 
-export const useAllCategoriesCallback = () => {
+/**
+ * Returns all categories for the current store ID.
+ */
+export const useAllCategories = () => {
+  const [allCategories, setAllCategories] = useState<WorkCategoryData[]>([]);
   let store = useStore(useStoreId());
 
-  const fn = useCallback((): WorkCategoryData[] => {
-    if (store) {
-      const table = store.getTable('categories');
-      if (table) {
-        const categories: WorkCategoryData[] = Object.entries(table).map(([id, row]) => ({
-          _id: id,
-          code: row.code ?? '',
-          name: row.name ?? '',
-          status: row.status ?? '',
-        }));
+  const fetchAllCategories = useCallback((): WorkCategoryData[] => {
+    if (!store) {
+      return []; // Return an empty array if the store is not available
+    }
 
-        return categories;
-      }
+    const table = store.getTable('categories');
+    if (table) {
+      const categories: WorkCategoryData[] = Object.entries(table).map(([id, row]) => ({
+        _id: id,
+        code: row.code ?? '',
+        name: row.name ?? '',
+        status: row.status ?? '',
+      }));
 
-      return [];
+      return categories.sort((a, b) => Number.parseInt(a.code ?? '0') - Number.parseInt(b.code ?? '0'));
     }
 
     return [];
   }, [store]);
 
-  console.log('Returning a new allCategoriesCallback function');
-  return fn;
-};
+  useEffect(() => {
+    setAllCategories(fetchAllCategories());
+  }, [fetchAllCategories]);
 
-export const useAllWorkItemsCallback = () => {
-  let store = useStore(useStoreId());
+  // Function to handle table data change
+  const handleTableChange = () => {
+    setAllCategories(fetchAllCategories());
+  };
 
-  return useCallback((): WorkItemData[] => {
-    if (store) {
-      const table = store.getTable('workItems');
-      if (table) {
-        const workItems: WorkItemData[] = Object.entries(table).map(([id, row]) => ({
-          _id: row._id ?? '',
-          categoryId: row.categoryId ?? '',
-          code: row.code ?? '',
-          name: row.name ?? '',
-          status: row.status ?? '',
-        }));
-
-        return workItems;
-      }
-
-      return [];
+  useEffect(() => {
+    if (!store) {
+      return;
     }
+    const listenerId = store.addTableListener('categories', handleTableChange);
+    // Cleanup: Remove the listener when the component unmounts
+    return () => {
+      store.delListener(listenerId);
+    };
+  }, []);
 
-    return [];
-  }, [store]);
+  return allCategories;
 };
+
+/**
+ * Returns all workitems for the current store ID.
+ */
 
 export const useCategoryPropertyCallback = () => {
   let store = useStore(useStoreId());
 
   return useCallback(
-    // ask bill, is this the right way of doing things?
     (
       id: string,
       propertyName: keyof typeof TABLES_SCHEMA.categories,
@@ -120,6 +121,29 @@ export const useCategoryPropertyCallback = () => {
       }
 
       return { status: 'Error', msg: 'Error - Store not found', cell: undefined };
+    },
+    [store],
+  );
+};
+
+export const useCategoryCallback = () => {
+  let store = useStore(useStoreId());
+
+  return useCallback(
+    (id: string): WorkCategoryData | null => {
+      if (store) {
+        const row = store.getRow('categories', id);
+        if (row) {
+          return {
+            _id: row._id ?? '0',
+            name: row.name ?? '',
+            code: row.code ?? '',
+            status: row.status ?? '',
+          } as WorkCategoryData;
+        }
+      }
+
+      return null;
     },
     [store],
   );
@@ -195,60 +219,62 @@ export const useUpdateCategoryCallback = () => {
   );
 };
 
-// Returns a callback that adds a new category item to the store.
-export const useAddWorkItemCallback = () => {
-  let store = useStore(useStoreId());
-
-  return useCallback(
-    (workItemData: WorkItemData): { status: TBStatus; msg: string; id: string } => {
-      const id = randomUUID();
-      workItemData._id = id;
-      console.log(
-        `Adding a new category item with ID: ${id}, catId: ${workItemData.categoryId} Name: ${workItemData.name}, Code: ${workItemData.code}`,
-      );
-      if (store) {
-        const storeCheck = store.setRow('workItems', id, workItemData);
-        if (storeCheck) {
-          return { status: 'Success', msg: '', id };
-        } else {
-          return { status: 'Error', msg: 'Unable to setRow.', id: '0' };
-        }
-      } else {
-        return { status: 'Error', msg: 'Unable to find store.', id: '0' };
-      }
-    },
-    [store],
-  );
-};
-
-// Returns a callback that adds a new category item to the store.
-export const useUpdateWorkItemCallback = () => {
-  let store = useStore(useStoreId());
-
-  return useCallback(
-    (id: string, workItemData: WorkItemData): { status: TBStatus; id: string } => {
-      workItemData._id = id;
-      console.log(
-        `Updating a category item with ID: ${id}, catId: ${workItemData.categoryId} Name: ${workItemData.name}, Code: ${workItemData.code}`,
-      );
-      if (store) {
-        const storeCheck = store.setRow('workItems', id, workItemData);
-        if (storeCheck) {
-          return { status: 'Success', id };
-        }
-      }
-
-      return { status: 'Error', id: '0' };
-    },
-    [store],
-  );
-};
-
 // Returns a callback that deletes a category from the store.
 export const useDelCategoryCallback = (id: string) => useDelRowCallback('categories', id, useStoreId());
 
 // Returns the IDs of all categories in the store.
 export const useCategoryIds = () => useRowIds('categories', useStoreId());
+
+///////////////////////////////////////////////////////////////////////////////
+// Work Items related hooks
+///////////////////////////////////////////////////////////////////////////////
+export const useAllWorkItems = () => {
+  const [allWorkItems, setAllWorkItems] = useState<WorkItemData[]>([]);
+  let store = useStore(useStoreId());
+
+  const fetchAllWorkItems = useCallback((): WorkItemData[] => {
+    if (!store) {
+      return []; // Return an empty array if the store is not available
+    }
+
+    const table = store.getTable('workItems');
+    if (!table) {
+      return [];
+    }
+
+    const workItems: WorkItemData[] = Object.entries(table).map(([id, row]) => ({
+      _id: row._id ?? '',
+      categoryId: row.categoryId ?? '',
+      code: row.code ?? '',
+      name: row.name ?? '',
+      status: row.status ?? '',
+    }));
+
+    return workItems.sort((a, b) => Number.parseInt(a.code ?? '0') - Number.parseInt(b.code ?? '0'));
+  }, [store]);
+
+  useEffect(() => {
+    setAllWorkItems(fetchAllWorkItems());
+  }, [fetchAllWorkItems]);
+
+  // Function to handle table data change
+  const handleTableChange = () => {
+    setAllWorkItems(fetchAllWorkItems());
+  };
+
+  useEffect(() => {
+    if (!store) {
+      return;
+    }
+    const listenerId = store.addTableListener('workItems', handleTableChange);
+    // Cleanup: Remove the listener when the component unmounts
+    return () => {
+      store.delListener(listenerId);
+    };
+  }, []);
+
+  return allWorkItems;
+};
 
 // Returns a callback that adds a new project to the store.
 export const useNewWorkItemCallback = () => {
@@ -313,3 +339,52 @@ export default function CategoriesStore() {
 
   return null;
 }
+
+// Returns a callback that adds a new category item to the store.
+export const useAddWorkItemCallback = () => {
+  let store = useStore(useStoreId());
+
+  return useCallback(
+    (workItemData: WorkItemData): { status: TBStatus; msg: string; id: string } => {
+      const id = randomUUID();
+      workItemData._id = id;
+      console.log(
+        `Adding a new category item with ID: ${id}, catId: ${workItemData.categoryId} Name: ${workItemData.name}, Code: ${workItemData.code}`,
+      );
+      if (store) {
+        const storeCheck = store.setRow('workItems', id, workItemData);
+        if (storeCheck) {
+          return { status: 'Success', msg: '', id };
+        } else {
+          return { status: 'Error', msg: 'Unable to setRow.', id: '0' };
+        }
+      } else {
+        return { status: 'Error', msg: 'Unable to find store.', id: '0' };
+      }
+    },
+    [store],
+  );
+};
+
+// Returns a callback that adds a new category item to the store.
+export const useUpdateWorkItemCallback = () => {
+  let store = useStore(useStoreId());
+
+  return useCallback(
+    (id: string, workItemData: WorkItemData): { status: TBStatus; id: string } => {
+      workItemData._id = id;
+      console.log(
+        `Updating a category item with ID: ${id}, catId: ${workItemData.categoryId} Name: ${workItemData.name}, Code: ${workItemData.code}`,
+      );
+      if (store) {
+        const storeCheck = store.setRow('workItems', id, workItemData);
+        if (storeCheck) {
+          return { status: 'Success', id };
+        }
+      }
+
+      return { status: 'Error', id: '0' };
+    },
+    [store],
+  );
+};

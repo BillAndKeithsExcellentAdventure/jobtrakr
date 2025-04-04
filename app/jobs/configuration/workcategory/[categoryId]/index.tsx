@@ -16,16 +16,16 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableCategoryItem from './SwipeableCategoryItem';
 import {
-  useAllCategoriesCallback,
-  useAllWorkItemsCallback,
+  useAllWorkItems,
   useAddWorkItemCallback,
   useCategoryValue,
+  useCategoryCallback,
 } from '@/tbStores/CategoriesStore';
 
 const ShowWorkCategory = () => {
   const { categoryId } = useLocalSearchParams();
-  const fetchAllWorkCategories = useAllCategoriesCallback();
-  const fetchAllWorkCategoryItems = useAllWorkItemsCallback();
+  const fetchCategory = useCategoryCallback();
+  const allWorkItems = useAllWorkItems();
   const addWorkItem = useAddWorkItemCallback();
   const [name] = useCategoryValue(categoryId as string, 'name');
   const [code] = useCategoryValue(categoryId as string, 'code');
@@ -36,7 +36,6 @@ const ShowWorkCategory = () => {
     code: '',
   });
   const [category, setCategory] = useState<WorkCategoryData | null>(null);
-
   const [showAdd, setShowAdd] = useState(false);
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -61,26 +60,14 @@ const ShowWorkCategory = () => {
   );
 
   useEffect(() => {
-    console.log('after edit of category. categoryId:', categoryId);
-    if (categoryId) {
-      // Simulate fetching the existing category data by ID
-      const fetchedCategory = fetchAllWorkCategories().find((c) => c._id === categoryId);
-      if (fetchedCategory && fetchedCategory._id) {
-        setCategory(fetchedCategory as WorkCategoryData);
-      } else {
-        setCategory(null);
-      }
-    }
-  }, [categoryId, fetchAllWorkCategories]);
+    setCategory(fetchCategory(categoryId as string));
+  }, [categoryId, fetchCategory]);
 
   useEffect(() => {
-    if (categoryId) {
-      // Simulate fetching the existing category data by ID
-      const fetchedCategoryItems = fetchAllWorkCategoryItems().filter((c) => c.categoryId === categoryId);
-      setCategorySpecificItems(fetchedCategoryItems);
-      console.log('Fetched category items:', fetchedCategoryItems);
-    }
-  }, [categoryId, fetchAllWorkCategoryItems]);
+    // Simulate fetching the existing category data by ID
+    const fetchedWorkItems = allWorkItems.filter((c) => c.categoryId === categoryId);
+    setCategorySpecificItems(fetchedWorkItems);
+  }, [categoryId, allWorkItems]);
 
   const handleInputChange = (name: keyof WorkCategoryItemData, value: string) => {
     if (item) {
@@ -102,11 +89,6 @@ const ShowWorkCategory = () => {
 
       const status = addWorkItem(newItem);
 
-      //if (status)
-      //  allWorkCategoryItems().sort(
-      //    (a, b) => Number.parseInt(a.code ?? '0') - Number.parseInt(b.code ?? '0')
-      //);
-
       if (status && status.status === 'Success') {
         // Clear the input fields
         setItem({ name: '', code: '' });
@@ -114,7 +96,7 @@ const ShowWorkCategory = () => {
         console.log('Error adding item:', status.msg);
       }
     }
-  }, [categoryId, item, categorySpecificItems, fetchAllWorkCategoryItems]);
+  }, [categoryId, item, addWorkItem]);
 
   const handleEditCategory = (id: string) => {
     router.push(`/jobs/configuration/workcategory/${id}/edit`);

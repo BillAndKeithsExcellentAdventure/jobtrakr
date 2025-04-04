@@ -3,17 +3,18 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors, deleteBg } from '@/constants/Colors';
 import { WorkCategoryData, WorkCategoryItemData } from '@/models/types';
 import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
-import { useCategoryValue } from '@/tbStores/CategoriesStore';
+import { useCategoryValue, useDelCategoryCallback } from '@/tbStores/CategoriesStore';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
 const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
+  const processDelete = useDelCategoryCallback(category._id!);
+
   const router = useRouter();
-  const { removeWorkCategory } = useWorkCategoryDataStore();
   const colorScheme = useColorScheme();
   const colors = useMemo(
     () =>
@@ -33,14 +34,17 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
     [colorScheme],
   );
 
-  const handleDelete = (itemId: string) => {
-    Alert.alert(
-      'Delete Work Category',
-      'Are you sure you want to delete this category?',
-      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeWorkCategory(itemId) }],
-      { cancelable: true },
-    );
-  };
+  const handleDelete = useCallback(
+    (itemId: string) => {
+      Alert.alert(
+        'Delete Work Category',
+        'Are you sure you want to delete this category?',
+        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete() }],
+        { cancelable: true },
+      );
+    },
+    [processDelete],
+  );
 
   const RightAction = (prog: SharedValue<number>, drag: SharedValue<number>) => {
     const styleAnimation = useAnimatedStyle(() => {
@@ -52,7 +56,7 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
     return (
       <Pressable
         onPress={() => {
-          //prog.value = 0;
+          prog.value = 0;
           handleDelete(category._id!);
         }}
       >

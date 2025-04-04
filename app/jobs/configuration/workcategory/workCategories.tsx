@@ -12,12 +12,11 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { Pressable } from 'react-native-gesture-handler';
 import SwipeableCategory from './SwipeableCategory';
-import { useAllCategoriesCallback, useAddCategoryCallback } from '@/tbStores/CategoriesStore';
+import { useAddCategoryCallback, useAllCategories } from '@/tbStores/CategoriesStore';
 
 const ListWorkCategories = () => {
   const addWorkCategory = useAddCategoryCallback();
-  const fetchAllWorkCategories = useAllCategoriesCallback();
-
+  const allCategories = useAllCategories();
   const [showAdd, setShowAdd] = useState(false);
   const [category, setCategory] = useState<WorkCategoryData>({
     _id: '',
@@ -136,7 +135,7 @@ const ListWorkCategories = () => {
         )}
         <View>
           <FlatList
-            data={fetchAllWorkCategories()}
+            data={allCategories}
             keyExtractor={(item) => item._id!}
             renderItem={({ item }) => <SwipeableCategory category={item} />}
           />
