@@ -111,17 +111,24 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 40,
   },
-  itemName: {
-    width: 200,
-    marginRight: 10,
-  },
+
   itemEntry: {
     width: '100%',
     paddingHorizontal: 10,
   },
-  itemCode: {
+  itemName: {
     flex: 1,
+    textOverflow: 'ellipsis',
+    overflow: 'hidden',
+    marginRight: 10,
   },
+
+  itemCode: {
+    textOverflow: 'ellipsis',
+    overflow: 'hidden',
+    width: 100,
+  },
+
   rightAction: {
     width: 100,
     height: 40,

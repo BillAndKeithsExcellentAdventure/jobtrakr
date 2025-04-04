@@ -110,6 +110,7 @@ const ListWorkCategories = () => {
                     <TextInput
                       style={[styles.input, { backgroundColor: colors.neutral200 }]}
                       placeholder="Code"
+                      keyboardType="number-pad"
                       value={category.code}
                       onChangeText={(text) => handleInputChange('code', text)}
                     />
