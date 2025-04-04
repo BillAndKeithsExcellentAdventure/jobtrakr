@@ -48,12 +48,13 @@ import { useThemeColor, View } from './Themed';
 
 interface OptionPickerItemProps {
   optionLabel?: string;
-  onOptionLabelChange: (label: string) => void;
+  onOptionLabelChange?: (label: string) => void;
   onPickerButtonPress: () => void;
   label?: string;
   placeholder?: string;
   editable?: boolean;
   containerStyle?: StyleProp<ViewStyle>;
+  inputStyle?: StyleProp<ViewStyle>;
 }
 
 export const OptionPickerItem: React.FC<OptionPickerItemProps> = ({
@@ -64,15 +65,19 @@ export const OptionPickerItem: React.FC<OptionPickerItemProps> = ({
   placeholder,
   editable = true,
   containerStyle,
+  inputStyle,
 }) => {
   const iconColor = useThemeColor({ light: undefined, dark: undefined }, 'iconColor');
+  const textDim = useThemeColor({ light: undefined, dark: undefined }, 'textDim');
 
   return (
     <View style={[styles.optionPickerRow, containerStyle]}>
       <View style={{ flex: 1 }}>
         <TextField
+          style={inputStyle}
           label={label}
           placeholder={placeholder}
+          placeholderTextColor={textDim}
           onChangeText={onOptionLabelChange}
           value={optionLabel}
           editable
