@@ -10,16 +10,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
 import { Pressable } from 'react-native-gesture-handler';
 import SwipeableCategory from './SwipeableCategory';
+import { useAddCategoryCallback, useAllCategories } from '@/tbStores/CategoriesStore';
 
 const ListWorkCategories = () => {
-  const { allWorkCategories, setWorkCategories, addWorkCategory } = useWorkCategoryDataStore();
+  const addWorkCategory = useAddCategoryCallback();
+  const allCategories = useAllCategories();
   const [showAdd, setShowAdd] = useState(false);
   const [category, setCategory] = useState<WorkCategoryData>({
-    Name: '',
-    Code: '',
+    _id: '',
+    name: '',
+    code: '',
+    status: '',
   });
 
   const router = useRouter();
@@ -41,19 +44,6 @@ const ListWorkCategories = () => {
           },
     [colorScheme],
   );
-
-  useEffect(() => {
-    // Fetch categories from API or local storage (simulated here)
-    const fetchCategories = async () => {
-      const categoriesData: WorkCategoryData[] = [
-        { _id: '1', Name: 'Electrical', Code: '100' },
-        { _id: '2', Name: 'Plumbing', Code: '200' },
-      ];
-      setWorkCategories(categoriesData);
-    };
-
-    fetchCategories();
-  }, []);
 
   const handleInputChange = (name: keyof WorkCategoryData, value: string) => {
     if (category) {
@@ -81,19 +71,19 @@ const ListWorkCategories = () => {
   );
 
   const handleAddCategory = useCallback(() => {
-    if (category.Name && category.Code) {
-      const newCategory = {
-        ...category,
-        _id: (allWorkCategories.length + 1).toString(),
-      } as WorkCategoryData;
+    if (category.name && category.code) {
+      console.log('Saving item:', category);
 
-      console.log('Saving item:', newCategory);
-      addWorkCategory(newCategory);
-
-      // Clear the input fields
-      setCategory({ Name: '', Code: '', _id: '' });
+      const status = addWorkCategory(category);
+      if (status && status.status === 'Success') {
+        console.log('Category added:', status.id);
+        // Clear the input fields
+        setCategory({ name: '', code: '', _id: '', status: '' });
+      } else {
+        console.log('Error adding category:', status.msg);
+      }
     }
-  }, [allWorkCategories, category, setWorkCategories]);
+  }, [category]);
 
   const dismissKeyboard = useCallback(() => {
     console.log('Dismiss Keyboard');
@@ -120,23 +110,23 @@ const ListWorkCategories = () => {
                     <TextInput
                       style={[styles.input, { backgroundColor: colors.neutral200 }]}
                       placeholder="Code"
-                      value={category.Code}
-                      onChangeText={(text) => handleInputChange('Code', text)}
+                      value={category.code}
+                      onChangeText={(text) => handleInputChange('code', text)}
                     />
                   </View>
                   <View style={{ flex: 1 }}>
                     <TextInput
                       style={[styles.input, { backgroundColor: colors.neutral200, marginLeft: 5 }]}
                       placeholder="Name"
-                      value={category.Name}
-                      onChangeText={(text) => handleInputChange('Name', text)}
+                      value={category.name}
+                      onChangeText={(text) => handleInputChange('name', text)}
                     />
                   </View>
                 </View>
                 <ActionButton
                   style={{ zIndex: 1 }}
                   onPress={handleAddCategory}
-                  type={category.Code && category.Name ? 'action' : 'disabled'}
+                  type={category.code && category.name ? 'action' : 'disabled'}
                   title="Add Work Category"
                 />
               </View>
@@ -145,9 +135,20 @@ const ListWorkCategories = () => {
         )}
         <View>
           <FlatList
-            data={allWorkCategories}
+            data={allCategories}
             keyExtractor={(item) => item._id!}
             renderItem={({ item }) => <SwipeableCategory category={item} />}
+            ListEmptyComponent={() => (
+              <View
+                style={{
+                  padding: 20,
+                  alignItems: 'center',
+                }}
+              >
+                <Text txtSize="title" text="No work categories found." />
+                <Text text="Use the '+' in the upper right to add one." />
+              </View>
+            )}
           />
         </View>
       </View>

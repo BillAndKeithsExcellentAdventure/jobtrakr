@@ -3,6 +3,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors, deleteBg } from '@/constants/Colors';
 import { WorkCategoryData, WorkCategoryItemData } from '@/models/types';
 import { useWorkCategoryItemDataStore } from '@/stores/categoryItemDataStore';
+import { useDelWorkItemCallback } from '@/tbStores/CategoriesStore';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
@@ -18,7 +19,7 @@ const SwipeableCategoryItem = ({
   category: WorkCategoryData;
 }) => {
   const router = useRouter();
-  const { removeWorkCategoryItem } = useWorkCategoryItemDataStore();
+  const processDelete = useDelWorkItemCallback(item._id!);
   const colorScheme = useColorScheme();
   const colors = useMemo(
     () =>
@@ -42,7 +43,7 @@ const SwipeableCategoryItem = ({
     Alert.alert(
       'Delete Work Item',
       'Are you sure you want to delete this item?',
-      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeWorkCategoryItem(itemId) }],
+      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete() }],
       { cancelable: true },
     );
   };
@@ -88,8 +89,8 @@ const SwipeableCategoryItem = ({
           }}
         >
           <View style={styles.itemInfo}>
-            <Text style={styles.itemCode} text={`${category.Code}.${item.Code}`} />
-            <Text style={styles.itemName}>{item.Name}</Text>
+            <Text style={styles.itemCode} text={`${category.code}.${item.code}`} />
+            <Text style={styles.itemName}>{item.name}</Text>
             <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
           </View>
         </Pressable>
