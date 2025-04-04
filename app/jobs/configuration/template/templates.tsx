@@ -5,7 +5,13 @@ import { TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { JobTemplateData, WorkCategoryItemData } from '@/models/types';
-import { useJobTemplateDataStore } from '@/stores/jobTemplateDataStore';
+// import { useJobTemplateDataStore } from '@/stores/jobTemplateDataStore';
+
+import {
+  useAllTemplatesCallback,
+  useAddTemplateCallback,
+  useUpdateTemplateCallback,
+} from '@/tbStores/CategoriesStore';
 import { Ionicons } from '@expo/vector-icons'; // Right caret icon
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -15,12 +21,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableJobTemplate from './SwipeableJobTemplate';
 
 const ListJobTemplates = () => {
-  const { allJobTemplates, setJobTemplates, addJobTemplate } = useJobTemplateDataStore();
+  const allJobTemplates = useAllTemplatesCallback();
+  const addJobTemplate = useAddTemplateCallback();
+  const updateJobTemplate = useUpdateTemplateCallback();
   const [showAdd, setShowAdd] = useState(false);
   const [jobTemplate, setJobTemplate] = useState<JobTemplateData>({
-    Name: '',
-    Description: '',
-    WorkItems: [],
+    name: '',
+    description: '',
+    workItems: [],
   });
   const [selectedWorkItems, setSelectedWorkItems] = useState<WorkCategoryItemData[]>([]);
 
@@ -47,27 +55,27 @@ const ListJobTemplates = () => {
   useEffect(() => {
     // Fetch job templates from API or local storage (simulated here)
     const fetchJobTemplates = async () => {
-      const jobTemplatesData: JobTemplateData[] = [
-        {
-          _id: '1',
-          Name: 'Standard House',
-          Description: 'Standard Residential Construction',
-          WorkItems: ['1', '3'], // not currently used in demo
-        },
-        {
-          _id: '2',
-          Name: 'Private Steel Building',
-          Description: 'Privately owned steel building',
-          WorkItems: ['2'], // not currently used in demo
-        },
-        {
-          _id: '3',
-          Name: 'Public Steel Building',
-          Description: 'State or Federally owned steel building',
-          WorkItems: ['2'], // not currently used in demo
-        },
-      ];
-      setJobTemplates(jobTemplatesData);
+      // const jobTemplatesData: JobTemplateData[] = [
+      //   {
+      //     _id: '1',
+      //     name: 'Standard House',
+      //     description: 'Standard Residential Construction',
+      //     workItems: ['1', '3'], // not currently used in demo
+      //   },
+      //   {
+      //     _id: '2',
+      //     name: 'Private Steel Building',
+      //     description: 'Privately owned steel building',
+      //     workItems: ['2'], // not currently used in demo
+      //   },
+      //   {
+      //     _id: '3',
+      //     name: 'Public Steel Building',
+      //     description: 'State or Federally owned steel building',
+      //     workItems: ['2'], // not currently used in demo
+      //   },
+      // ];
+      //updateJobTemplates(jobTemplatesData);
     };
 
     fetchJobTemplates();
@@ -93,10 +101,10 @@ const ListJobTemplates = () => {
   );
 
   const handleAddJobTemplate = useCallback(() => {
-    if (jobTemplate.Name && jobTemplate.Description && selectedWorkItems.length > 0) {
+    if (jobTemplate.name && jobTemplate.description) {
       const newJobTemplate = {
         ...jobTemplate,
-        _id: (allJobTemplates.length + 1).toString(),
+        _id: '0',
         WorkItems: selectedWorkItems.map((item) => item._id!),
       } as JobTemplateData;
 
@@ -104,10 +112,10 @@ const ListJobTemplates = () => {
       addJobTemplate(newJobTemplate);
 
       // Clear the input fields
-      setJobTemplate({ Name: '', Description: '', WorkItems: [] });
+      setJobTemplate({ name: '', description: '', workItems: [] });
       setSelectedWorkItems([]);
     }
-  }, [allJobTemplates, jobTemplate, selectedWorkItems, setJobTemplates]);
+  }, [allJobTemplates, jobTemplate, selectedWorkItems]);
 
   const dismissKeyboard = useCallback(() => {
     Keyboard.dismiss();
@@ -132,25 +140,21 @@ const ListJobTemplates = () => {
                   <TextInput
                     style={[styles.input, { backgroundColor: colors.neutral200 }]}
                     placeholder="Template Name"
-                    value={jobTemplate.Name}
-                    onChangeText={(text) => handleInputChange('Name', text)}
+                    value={jobTemplate.name}
+                    onChangeText={(text) => handleInputChange('name', text)}
                   />
                   <TextInput
                     style={[styles.input, { backgroundColor: colors.neutral200, marginLeft: 5 }]}
                     placeholder="Description"
-                    value={jobTemplate.Description}
-                    onChangeText={(text) => handleInputChange('Description', text)}
+                    value={jobTemplate.description}
+                    onChangeText={(text) => handleInputChange('description', text)}
                   />
                 </View>
 
                 <ActionButton
                   style={{ zIndex: 1 }}
                   onPress={handleAddJobTemplate}
-                  type={
-                    jobTemplate.Name && jobTemplate.Description && selectedWorkItems.length > 0
-                      ? 'action'
-                      : 'disabled'
-                  }
+                  type={jobTemplate.name && jobTemplate.description ? 'action' : 'disabled'}
                   title="Add Job Template"
                 />
               </View>
@@ -159,7 +163,7 @@ const ListJobTemplates = () => {
         )}
         <View>
           <FlatList
-            data={allJobTemplates}
+            data={allJobTemplates()}
             keyExtractor={(item) => item._id!}
             renderItem={({ item }) => <SwipeableJobTemplate jobTemplate={item} />}
           />
@@ -188,3 +192,6 @@ const styles = StyleSheet.create({
 });
 
 export default ListJobTemplates;
+function useAllJobTemplatesCallback() {
+  throw new Error('Function not implemented.');
+}

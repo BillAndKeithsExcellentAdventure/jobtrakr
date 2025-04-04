@@ -6,9 +6,15 @@ import { ProjectData } from './projectStore';
 import ProjectStore from './projectStore';
 import { useCreateClientPersisterAndStart } from './persistence/useCreateClientPersisterAndStart';
 import { useCreateServerSynchronizerAndStart } from './synchronization/useCreateServerSynchronizerAndStart';
-import { TBStatus, WorkCategoryData, WorkCategoryItemData as WorkItemData } from '@/models/types';
+import {
+  JobTemplateData,
+  JobTemplateWorkItemData,
+  TBStatus,
+  WorkCategoryData,
+  WorkCategoryItemData as WorkItemData,
+} from '@/models/types';
 
-const STORE_ID_PREFIX = 'CategoriesStore-';
+const STORE_ID_PREFIX = 'ConfigurationStore-';
 const TABLES_SCHEMA = {
   categories: {
     _id: { type: 'string' },
@@ -23,12 +29,24 @@ const TABLES_SCHEMA = {
     name: { type: 'string' },
     status: { type: 'string' },
   },
+  templates: {
+    _id: { type: 'string' },
+    name: { type: 'string' },
+    description: { type: 'string' },
+  },
+  templateWorkItems: {
+    _id: { type: 'string' },
+    templateId: { type: 'string' },
+    workItemId: { type: 'string' },
+  },
 } as const;
 
 type CategorySchema = typeof TABLES_SCHEMA.categories;
 type WorkItemsSchema = typeof TABLES_SCHEMA.workItems;
+type TemplateSchema = typeof TABLES_SCHEMA.templates;
 type CategoriesCellId = keyof (typeof TABLES_SCHEMA)['categories'];
 type WorkItemsCellId = keyof (typeof TABLES_SCHEMA)['workItems'];
+type TemplatesCellId = keyof (typeof TABLES_SCHEMA)['templates'];
 
 const {
   useCell,
@@ -57,6 +75,222 @@ export default function CategoriesStore() {
 
   return null;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Template related hooks
+///////////////////////////////////////////////////////////////////////////////
+// Needed Functions:
+//    useAllTemplates
+//    useAddTemplateCallback
+//    useTemplateValue
+//    useDeleteTemplateCallback
+//
+/**
+ * Returns all categories for the current store ID.
+ */
+export const useAllTemplates = () => {
+  const [allTemplates, setAllTemplates] = useState<JobTemplateData[]>([]);
+  let store = useStore(useStoreId());
+
+  const fetchAllTemplates = useCallback((): JobTemplateData[] => {
+    if (!store) {
+      return []; // Return an empty array if the store is not available
+    }
+
+    const table = store.getTable('templates');
+    if (table) {
+      const templates: JobTemplateData[] = Object.entries(table).map(([id, row]) => ({
+        _id: id,
+        name: row.name ?? '',
+        description: row.description ?? '',
+        workItems: [],
+      }));
+
+      const templateWorkItemsTable = store.getTable('templateWorkItems');
+
+      templates.forEach((template) => {
+        if (templateWorkItemsTable) {
+          const templateWorkItems = Object.entries(templateWorkItemsTable)
+            .filter(([id, row]) => row.templateId === template._id)
+            .map(([id, row]) => ({
+              _id: id,
+            }));
+
+          template.workItems = templateWorkItems.map((item) => item._id);
+        }
+      });
+
+      return templates.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return [];
+  }, [store]);
+
+  useEffect(() => {
+    setAllTemplates(fetchAllTemplates());
+  }, [fetchAllTemplates]);
+
+  // Function to handle table data change
+  const handleTableChange = () => {
+    setAllTemplates(fetchAllTemplates());
+  };
+
+  useEffect(() => {
+    if (!store) {
+      return;
+    }
+    const listenerId = store.addTableListener('templates', handleTableChange);
+    // Cleanup: Remove the listener when the component unmounts
+    return () => {
+      store.delListener(listenerId);
+    };
+  }, []);
+
+  return allTemplates;
+};
+
+// Returns a callback that adds a new template to the store.
+export const useAddTemplateCallback = () => {
+  let store = useStore(useStoreId());
+
+  return useCallback(
+    (templatesData: JobTemplateData): { status: TBStatus; msg: string; id: string } => {
+      const id = randomUUID();
+      templatesData._id = id;
+
+      console.log('(In callback). useAddTemplateCallback storeid:', useStoreId());
+      console.log(
+        `Adding a new template with ID: ${id}, Name: ${templatesData.name}, Description: ${templatesData.description}`,
+      );
+      if (store) {
+        const storeCheck = store.setRow('templates', id, templatesData);
+        if (storeCheck) {
+          return { status: 'Success', msg: '', id };
+        } else {
+          return { status: 'Error', msg: 'Unable to setRow', id: '0' };
+        }
+      } else {
+        return { status: 'Error', msg: 'Store not found', id: '0' };
+      }
+    },
+    [store],
+  );
+};
+
+// Returns a pair of 1) a property of the template, 2) a callback that
+// updates it, similar to the React useState pattern.
+export const useTemplateValue = <ValueId extends TemplatesCellId>(
+  templateId: string,
+  valueId: ValueId,
+): [Value<TemplateSchema, ValueId>, (value: Value<TemplateSchema, ValueId>) => void] => [
+  (useCell('templates', templateId, valueId, useStoreId()) as Value<TemplateSchema, ValueId>) ??
+    ('' as Value<TemplateSchema, ValueId>),
+  useSetCellCallback(
+    'templates',
+    templateId,
+    valueId,
+    (value: Value<TemplateSchema, ValueId>) => value,
+    [],
+    useStoreId(),
+  ),
+];
+
+// Returns a callback that deletes a template from the store.
+export const useDeleteTemplateCallback = (id: string) => useDelRowCallback('templates', id, useStoreId());
+
+///////////////////////////////////////////////////////////////////////////////
+// Template Items related hooks
+///////////////////////////////////////////////////////////////////////////////
+// Needed Functions:
+//     useAllTemplateItems(templateId: string)
+//     useAddTemplateItemCallback
+//     useDeleteTemplateItemCallback
+//
+/**
+ * Returns all categories for the current store ID.
+ */
+export const useAllTemplateWorkItems = (templateId: string) => {
+  const [allTemplateWorkItems, setAllTemplateWorkItems] = useState<JobTemplateWorkItemData[]>([]);
+  let store = useStore(useStoreId());
+
+  const fetchAllTemplateWorkItems = useCallback((): JobTemplateWorkItemData[] => {
+    if (!store) {
+      return []; // Return an empty array if the store is not available
+    }
+
+    const table = store.getTable('templateWorkItems');
+    if (table) {
+      const templateWorkItems = Object.entries(table)
+        .filter(([id, row]) => row.templateId === templateId)
+        .map(([id, row]) => ({
+          _id: id,
+          workItemId: row.workItemId ?? '',
+        }));
+
+      return templateWorkItems;
+    }
+
+    return [];
+  }, [store, templateId]);
+
+  useEffect(() => {
+    setAllTemplateWorkItems(fetchAllTemplateWorkItems());
+  }, [fetchAllTemplateWorkItems]);
+
+  // Function to handle table data change
+  const handleTableChange = () => {
+    setAllTemplateWorkItems(fetchAllTemplateWorkItems());
+  };
+
+  useEffect(() => {
+    if (!store) {
+      return;
+    }
+    const listenerId = store.addTableListener('templateWorkItems', handleTableChange);
+    // Cleanup: Remove the listener when the component unmounts
+    return () => {
+      store.delListener(listenerId);
+    };
+  }, []);
+
+  return allTemplateWorkItems;
+};
+
+// Returns a callback that adds a new template to the store.
+export const useAddTemplateWorkItemCallback = () => {
+  let store = useStore(useStoreId());
+
+  return useCallback(
+    (templateId: string, templateWorkItemId: string): { status: TBStatus; msg: string; id: string } => {
+      const id = randomUUID();
+
+      console.log('(In callback). useAddTemplateWorkItemCallback storeid:', useStoreId());
+      console.log(
+        `Adding a new template workItem with ID: ${id} to template : ${templateId}, WorkItemId: ${templateWorkItemId}`,
+      );
+      if (store) {
+        const storeCheck = store.setRow('templateWorkItems', id, {
+          _id: id,
+          templateId,
+          workItemId: templateWorkItemId,
+        });
+        if (storeCheck) {
+          return { status: 'Success', msg: '', id };
+        } else {
+          return { status: 'Error', msg: 'Unable to setRow', id: '0' };
+        }
+      } else {
+        return { status: 'Error', msg: 'Store not found', id: '0' };
+      }
+    },
+    [store],
+  );
+};
+
+// Returns a callback that deletes a template workItem from the store.
+export const useDeleteTemplateItemCallback = (id: string) => {
+  useDelRowCallback('templateWorkItems', id, useStoreId());
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Category related hooks
@@ -141,7 +375,7 @@ export const useCategoryFromStore = (categoryId: string) => {
   return category; // Return the category or null if not found
 };
 
-// Returns a pair of 1) a property of the shopping list, 2) a callback that
+// Returns a pair of 1) a property of the category list, 2) a callback that
 // updates it, similar to the React useState pattern.
 export const useCategoryValue = <ValueId extends CategoriesCellId>(
   catId: string,
@@ -212,7 +446,7 @@ export const useUpdateCategoryCallback = () => {
 };
 
 // Returns a callback that deletes a category from the store.
-export const useDelCategoryCallback = (id: string) => useDelRowCallback('categories', id, useStoreId());
+export const useDeleteCategoryCallback = (id: string) => useDelRowCallback('categories', id, useStoreId());
 
 // Returns the IDs of all categories in the store.
 export const useCategoryIds = () => useRowIds('categories', useStoreId());

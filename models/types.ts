@@ -17,7 +17,12 @@ export interface WorkCategoryItemData {
 
 export interface JobTemplateData {
   _id?: string;
-  Name: string;
-  Description: string;
-  WorkItems: string[]; // array of ids to WorkCategoryItemData;
+  name: string;
+  description: string;
+  workItems: string[]; // array of ids to WorkCategoryItemData;
+}
+
+export interface JobTemplateWorkItemData {
+  _id?: string;
+  workItemId: string;
 }
