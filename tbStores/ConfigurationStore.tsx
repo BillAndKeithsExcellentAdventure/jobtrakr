@@ -154,6 +154,39 @@ export const useAllVendors = () => {
   return allVendors;
 };
 
+export const useVendorFromStore = (vendorId: string) => {
+  const [vendor, setVendor] = useState<VendorData | null>(null);
+  let store = useStore(useStoreId());
+
+  const fetchVendor = useCallback((): VendorData | null => {
+    if (!store) {
+      return null;
+    }
+
+    const row = store.getRow('vendors', vendorId);
+    if (!row) {
+      return null;
+    }
+    return {
+      _id: row._id ?? '0',
+      name: row.name ?? '',
+      address: row.address ?? '',
+      city: row.city ?? '',
+      state: row.state ?? '',
+      zip: row.zip ?? '',
+      mobilePhone: row.mobilePhone ?? '',
+      businessPhone: row.businessPhone ?? '',
+      notes: row.notes ?? '',
+    } as VendorData;
+  }, [store, vendorId]);
+
+  useEffect(() => {
+    setVendor(fetchVendor());
+  }, [fetchVendor]);
+
+  return vendor; // Return the category or null if not found
+};
+
 // Returns a callback that adds a new template to the store.
 export const useAddVendorCallback = () => {
   let store = useStore(useStoreId());
@@ -197,6 +230,29 @@ export const useVendorValue = <ValueId extends VendorsCellId>(
     useStoreId(),
   ),
 ];
+
+// Returns a callback that updates an existing category to the store.
+export const useUpdateVendorCallback = () => {
+  let store = useStore(useStoreId());
+
+  return useCallback(
+    (id: string, vendorData: VendorData): { status: TBStatus; msg: string; id: string } => {
+      vendorData._id = id;
+
+      if (store) {
+        const storeCheck = store.setRow('vendors', id, vendorData);
+        if (storeCheck) {
+          return { status: 'Success', msg: '', id };
+        } else {
+          return { status: 'Error', msg: 'Unable to setRow', id: '0' };
+        }
+      } else {
+        return { status: 'Error', msg: 'Store not found', id: '0' };
+      }
+    },
+    [store],
+  );
+};
 
 // Returns a callback that deletes a template from the store.
 export const useDeleteVendorCallback = (id: string) => useDelRowCallback('vendors', id, useStoreId());
@@ -547,14 +603,11 @@ export const useAddCategoryCallback = () => {
 // Returns a callback that updates an existing category to the store.
 export const useUpdateCategoryCallback = () => {
   let store = useStore(useStoreId());
-  console.log('useUpdateCategory storeid:', useStoreId());
 
   return useCallback(
     (id: string, catData: WorkCategoryData): { status: TBStatus; msg: string; id: string } => {
       catData._id = id;
 
-      console.log('(In callback). useUpdateCategory storeid:', useStoreId());
-      console.log(`Updating a category with ID: ${id}, Name: ${catData.name}, Code: ${catData.code}`);
       if (store) {
         const storeCheck = store.setRow('categories', id, catData);
         if (storeCheck) {

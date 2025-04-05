@@ -1,8 +1,8 @@
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors, deleteBg } from '@/constants/Colors';
-import { useVendorDataStore } from '@/stores/vendorDataStore';
-import { VendorData } from 'jobdb';
+import { VendorData } from '@/models/types';
+import { useDeleteVendorCallback } from '@/tbStores/ConfigurationStore';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
@@ -12,7 +12,8 @@ import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimat
 
 const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
   const router = useRouter();
-  const { removeVendor } = useVendorDataStore();
+  const processDelete = useDeleteVendorCallback(vendor._id!);
+
   const colorScheme = useColorScheme();
   const colors = useMemo(
     () =>
@@ -36,7 +37,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
     Alert.alert(
       'Delete Vendor',
       'Are you sure you want to delete this vendor?',
-      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeVendor(itemId) }],
+      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete() }],
       { cancelable: true },
     );
   };
@@ -83,15 +84,15 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
         >
           <View style={[styles.vendorInfo, { borderColor: colors.borderColor, borderTopWidth: 1 }]}>
             <View style={styles.vendorSummary}>
-              <Text style={styles.vendorName}>{vendor.VendorName}</Text>
-              {(vendor.City || vendor.Address) && (
+              <Text style={styles.vendorName}>{vendor.name}</Text>
+              {(vendor.city || vendor.address) && (
                 <View style={{ flexDirection: 'row' }}>
-                  <Text>{vendor.Address}</Text>
-                  {vendor.City && vendor.Address && <Text>{', '}</Text>}
-                  <Text>{vendor.City}</Text>
+                  <Text>{vendor.address}</Text>
+                  {vendor.city && vendor.address && <Text>{', '}</Text>}
+                  <Text>{vendor.city}</Text>
                 </View>
               )}
-              {vendor.BusinessPhone && <Text text={vendor.BusinessPhone} />}
+              {vendor.businessPhone && <Text text={vendor.businessPhone} />}
             </View>
             <View>
               <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />

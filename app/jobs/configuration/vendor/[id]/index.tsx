@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { StyleSheet, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { VendorData } from 'jobdb';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
 import { Text, TextInput, View } from '@/components/Themed';
-import { useVendorDataStore } from '@/stores/vendorDataStore';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
+import { useUpdateVendorCallback, useVendorFromStore } from '@/tbStores/ConfigurationStore';
+import { VendorData } from '@/models/types';
 
 const EditVendor = () => {
   const { id } = useLocalSearchParams();
-  const [vendor, setVendor] = useState<VendorData | null>(null);
+  const applyVendorUpdates = useUpdateVendorCallback();
+
   const router = useRouter();
-  const { allVendors, updateVendor } = useVendorDataStore();
   const colorScheme = useColorScheme();
   const colors = useMemo(
     () =>
@@ -29,47 +29,41 @@ const EditVendor = () => {
     [colorScheme],
   );
 
+  const [updatedVendor, setUpdatedVendor] = useState<VendorData>({
+    name: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: '',
+    mobilePhone: '',
+    businessPhone: '',
+    notes: '',
+  });
+
+  const vendorFromStore = useVendorFromStore(id as string);
+
   useEffect(() => {
-    if (id && allVendors) {
-      // Simulate fetching vendor details based on the `id`
-      const fetchedVendor: VendorData | undefined = allVendors.find((v) => v._id === id);
-      if (!fetchedVendor) {
-        Alert.alert('Vendor Not Found', 'The vendor you are trying to edit does not exist.');
-        router.back();
-        return; // Exit early if the vendor is not found
-      }
-
-      setVendor(fetchedVendor);
-    }
-  }, [id, allVendors]);
-
-  const handleInputChange = (name: keyof VendorData, value: string) => {
-    if (vendor) {
-      setVendor({
-        ...vendor,
-        [name]: value,
+    if (vendorFromStore) {
+      setUpdatedVendor({
+        ...vendorFromStore,
       });
     }
+  }, [vendorFromStore]);
+
+  const handleInputChange = (name: keyof VendorData, value: string) => {
+    setUpdatedVendor((prevVendor) => ({
+      ...prevVendor,
+      [name]: value,
+    }));
   };
 
   const handleSave = () => {
-    if (vendor && vendor._id) {
-      if (!vendor.VendorName) {
-        Alert.alert('Vendor Name Required', 'Please enter a name for the vendor.');
-        return;
-      }
-      updateVendor(vendor._id, vendor);
-      router.back();
+    if (!!updatedVendor.name) {
+      applyVendorUpdates(id as string, updatedVendor);
     }
+    // Go back to the categories list screen
+    router.back();
   };
-
-  if (!vendor) {
-    return (
-      <View style={styles.container}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -82,35 +76,35 @@ const EditVendor = () => {
       <View style={styles.container}>
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
-          placeholder="Vendor Name"
-          value={vendor.VendorName}
-          onChangeText={(text) => handleInputChange('VendorName', text)}
+          placeholder="Name"
+          value={updatedVendor.name}
+          onChangeText={(text) => handleInputChange('name', text)}
         />
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Address"
-          value={vendor.Address}
-          onChangeText={(text) => handleInputChange('Address', text)}
+          value={updatedVendor.address}
+          onChangeText={(text) => handleInputChange('address', text)}
         />
         <View style={{ flexDirection: 'row' }}>
           <TextInput
             style={[styles.input, { flex: 1, marginRight: 8, backgroundColor: colors.neutral200 }]}
             placeholder="City"
-            value={vendor.City}
-            onChangeText={(text) => handleInputChange('City', text)}
+            value={updatedVendor.city}
+            onChangeText={(text) => handleInputChange('city', text)}
           />
           <TextInput
             style={[styles.input, { width: 75, marginRight: 8, backgroundColor: colors.neutral200 }]}
             placeholder="State"
-            value={vendor.State}
-            onChangeText={(text) => handleInputChange('State', text)}
+            value={updatedVendor.state}
+            onChangeText={(text) => handleInputChange('state', text)}
           />
           <TextInput
             style={[styles.input, { width: 80, backgroundColor: colors.neutral200 }]}
             placeholder="Zip"
-            value={vendor.Zip}
+            value={updatedVendor.zip}
             keyboardType="number-pad"
-            onChangeText={(text) => handleInputChange('Zip', text)}
+            onChangeText={(text) => handleInputChange('zip', text)}
           />
         </View>
         <View style={{ flexDirection: 'row' }}>
@@ -118,29 +112,29 @@ const EditVendor = () => {
             style={[styles.input, { flex: 1, marginRight: 8, backgroundColor: colors.neutral200 }]}
             placeholder="Mobile Phone"
             keyboardType="phone-pad"
-            value={vendor.MobilePhone}
-            onChangeText={(text) => handleInputChange('MobilePhone', text)}
+            value={updatedVendor.mobilePhone}
+            onChangeText={(text) => handleInputChange('mobilePhone', text)}
           />
           <TextInput
             style={[styles.input, { flex: 1, backgroundColor: colors.neutral200 }]}
             placeholder="Business Phone"
-            value={vendor.BusinessPhone}
+            value={updatedVendor.businessPhone}
             keyboardType="phone-pad"
-            onChangeText={(text) => handleInputChange('BusinessPhone', text)}
+            onChangeText={(text) => handleInputChange('businessPhone', text)}
           />
         </View>
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Notes"
-          value={vendor.Notes}
-          onChangeText={(text) => handleInputChange('Notes', text)}
+          value={updatedVendor.notes}
+          onChangeText={(text) => handleInputChange('notes', text)}
         />
 
         <View style={styles.saveButtonRow}>
           <ActionButton
             style={styles.saveButton}
             onPress={handleSave}
-            type={vendor.VendorName ? 'ok' : 'disabled'}
+            type={updatedVendor.name ? 'ok' : 'disabled'}
             title="Save"
           />
           <ActionButton

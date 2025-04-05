@@ -1,32 +1,33 @@
 // screens/ListVendors.tsx
 
 import { ActionButton } from '@/components/ActionButton';
-import { TextInput, View } from '@/components/Themed';
+import { TextInput, Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { useVendorDataStore } from '@/stores/vendorDataStore';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-import { VendorData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Keyboard, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableVendor from './SwipeableVendor';
+import { VendorData } from '@/models/types';
+import { useAllVendors, useAddVendorCallback } from '@/tbStores/ConfigurationStore';
 
 const VendorsScreen = () => {
-  const { allVendors, setVendorData, addVendor } = useVendorDataStore();
   const router = useRouter();
+  const allVendors = useAllVendors();
+  const addVendorToStore = useAddVendorCallback();
   const [showAdd, setShowAdd] = useState(false);
   const [vendor, setVendor] = useState<VendorData>({
-    VendorName: '',
-    Address: '',
-    City: '',
-    State: '',
-    Zip: '',
-    MobilePhone: '',
-    BusinessPhone: '',
-    Notes: '',
+    name: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: '',
+    mobilePhone: '',
+    businessPhone: '',
+    notes: '',
   });
 
   const colorScheme = useColorScheme();
@@ -48,30 +49,6 @@ const VendorsScreen = () => {
     [colorScheme],
   );
 
-  useEffect(() => {
-    // Fetch vendors from API or local storage (simulated here)
-    const fetchVendors = async () => {
-      const vendorsData: VendorData[] = [
-        {
-          _id: '1',
-          VendorName: 'Vendor 1',
-          City: 'City 1',
-          Address: '101 West Hwy 22',
-          BusinessPhone: '123-456-7890',
-        },
-        {
-          _id: '2',
-          VendorName: 'Vendor 2',
-          Address: '2044 Bardstown Rd',
-          BusinessPhone: '123-456-0780',
-        },
-      ];
-      setVendorData(vendorsData);
-    };
-
-    fetchVendors();
-  }, []);
-
   const handleEditVendor = (id: string) => {
     router.push(`/jobs/configuration/vendor/${id}`);
   };
@@ -84,28 +61,24 @@ const VendorsScreen = () => {
   };
 
   const handleSave = useCallback(() => {
-    if (vendor.VendorName) {
-      const newVendor = {
-        ...vendor,
-        _id: (allVendors.length + 1).toString(),
-      } as VendorData;
+    const result = addVendorToStore(vendor);
 
-      console.log('Saving item:', newVendor);
-      addVendor(newVendor);
-
-      // Clear the input fields
-      setVendor({
-        VendorName: '',
-        Address: '',
-        City: '',
-        State: '',
-        Zip: '',
-        MobilePhone: '',
-        BusinessPhone: '',
-        Notes: '',
-      });
+    if (result && result.status !== 'Success') {
+      console.error('Failed to add vendor:', result ? result.msg : 'Unknown error');
     }
-  }, [allVendors, vendor]);
+
+    // Clear the input fields
+    setVendor({
+      name: '',
+      address: '',
+      city: '',
+      state: '',
+      zip: '',
+      mobilePhone: '',
+      businessPhone: '',
+      notes: '',
+    });
+  }, [addVendorToStore, vendor]);
 
   const renderHeaderRight = () => (
     <Pressable
@@ -140,34 +113,34 @@ const VendorsScreen = () => {
                 <TextInput
                   style={[styles.input, { backgroundColor: colors.neutral200 }]}
                   placeholder="Vendor Name"
-                  value={vendor.VendorName}
-                  onChangeText={(text) => handleInputChange('VendorName', text)}
+                  value={vendor.name}
+                  onChangeText={(text) => handleInputChange('name', text)}
                 />
                 <TextInput
                   style={[styles.input, { backgroundColor: colors.neutral200 }]}
                   placeholder="Address"
-                  value={vendor.Address}
-                  onChangeText={(text) => handleInputChange('Address', text)}
+                  value={vendor.address}
+                  onChangeText={(text) => handleInputChange('address', text)}
                 />
                 <View style={{ flexDirection: 'row' }}>
                   <TextInput
                     style={[styles.input, { flex: 1, marginRight: 8, backgroundColor: colors.neutral200 }]}
                     placeholder="City"
-                    value={vendor.City}
-                    onChangeText={(text) => handleInputChange('City', text)}
+                    value={vendor.city}
+                    onChangeText={(text) => handleInputChange('city', text)}
                   />
                   <TextInput
                     style={[styles.input, { width: 75, marginRight: 8, backgroundColor: colors.neutral200 }]}
                     placeholder="State"
-                    value={vendor.State}
-                    onChangeText={(text) => handleInputChange('State', text)}
+                    value={vendor.state}
+                    onChangeText={(text) => handleInputChange('state', text)}
                   />
                   <TextInput
                     style={[styles.input, { width: 80, backgroundColor: colors.neutral200 }]}
                     placeholder="Zip"
-                    value={vendor.Zip}
+                    value={vendor.zip}
                     keyboardType="number-pad"
-                    onChangeText={(text) => handleInputChange('Zip', text)}
+                    onChangeText={(text) => handleInputChange('zip', text)}
                   />
                 </View>
                 <View style={{ flexDirection: 'row' }}>
@@ -175,27 +148,27 @@ const VendorsScreen = () => {
                     style={[styles.input, { flex: 1, marginRight: 8, backgroundColor: colors.neutral200 }]}
                     placeholder="Mobile Phone"
                     keyboardType="phone-pad"
-                    value={vendor.MobilePhone}
-                    onChangeText={(text) => handleInputChange('MobilePhone', text)}
+                    value={vendor.mobilePhone}
+                    onChangeText={(text) => handleInputChange('mobilePhone', text)}
                   />
                   <TextInput
                     style={[styles.input, { flex: 1, backgroundColor: colors.neutral200 }]}
                     placeholder="Business Phone"
-                    value={vendor.BusinessPhone}
+                    value={vendor.businessPhone}
                     keyboardType="phone-pad"
-                    onChangeText={(text) => handleInputChange('BusinessPhone', text)}
+                    onChangeText={(text) => handleInputChange('businessPhone', text)}
                   />
                 </View>
                 <TextInput
                   style={[styles.input, { backgroundColor: colors.neutral200 }]}
                   placeholder="Notes"
-                  value={vendor.Notes}
-                  onChangeText={(text) => handleInputChange('Notes', text)}
+                  value={vendor.notes}
+                  onChangeText={(text) => handleInputChange('notes', text)}
                 />
 
                 <ActionButton
                   onPress={handleSave}
-                  type={vendor.VendorName ? 'action' : 'disabled'}
+                  type={vendor.name ? 'action' : 'disabled'}
                   title="Add Vendor"
                 />
               </View>
@@ -208,6 +181,17 @@ const VendorsScreen = () => {
           data={allVendors}
           keyExtractor={(item) => item._id!}
           renderItem={({ item }) => <SwipeableVendor vendor={item} />}
+          ListEmptyComponent={() => (
+            <View
+              style={{
+                padding: 20,
+                alignItems: 'center',
+              }}
+            >
+              <Text txtSize="title" text="No vendors found." />
+              <Text text="Use the '+' in the upper right to add one." />
+            </View>
+          )}
         />
       </View>
     </SafeAreaView>
