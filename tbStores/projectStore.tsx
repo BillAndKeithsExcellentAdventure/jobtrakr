@@ -1,31 +1,14 @@
 import { useCallback } from 'react';
 import { randomUUID } from 'expo-crypto';
-import { useRemoteRowId } from 'tinybase/ui-react';
+import { useRemoteRowId, useSetPartialValuesCallback, useValues } from 'tinybase/ui-react';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { Cell, createMergeableStore, createRelationships, Value } from 'tinybase/with-schemas';
 import { Store } from 'tinybase/store';
 import { useCreateClientPersisterAndStart } from './persistence/useCreateClientPersisterAndStart';
 import { useCreateServerSynchronizerAndStart } from './synchronization/useCreateServerSynchronizerAndStart';
+import { ProjectData } from '@/models/types';
 
 const STORE_ID_PREFIX = 'projectStore-';
-
-export interface ProjectData {
-  projId: any;
-  code?: string;
-  name: string;
-  jobTypeId?: string;
-  location?: string;
-  ownerName?: string;
-  startDate?: Date;
-  plannedFinish?: Date;
-  bidPrice?: number;
-  longitude?: number;
-  latitude?: number;
-  radius?: number;
-  favorite?: number;
-  thumbnail?: string;
-  jobStatus?: string;
-}
 
 // TODO: Figure out how to generate schema from ProjectData. SchemaUtils.ts is not working as
 //       expected. For now, we will manually define the schema.
@@ -100,13 +83,44 @@ const useUserId = () => '8888-KMB'; // Replace with a userId
 
 // Returns a pair of 1) a property of the shopping list, 2) a callback that
 // updates it, similar to the React useState pattern.
-export const useProjectValue = <ValueId extends ProjectDataId>(
-  projId: string,
-  valueId: ValueId,
-): [Value<Schemas[1], ValueId>, (value: Value<Schemas[1], ValueId>) => void] => [
-  useValue(valueId, useStoreId(projId)) ?? ('' as Value<Schemas[1], ValueId>),
-  useSetValueCallback(valueId, (value: Value<Schemas[1], ValueId>) => value, [], useStoreId(projId)),
-];
+export const useProjectData = (projId: string): [ProjectData, (value: Partial<ProjectData>) => void] => {
+  // Get the raw values from TinyBase
+  const values = useValues(useStoreId(projId));
+
+  // Create a properly typed ProjectData object with defaults
+  const projectData: ProjectData = {
+    projId: values?.projId ?? projId,
+    code: values?.code ? String(values.code) : undefined,
+    name: values?.name ? String(values.name) : undefined,
+    jobTypeId: values?.jobTypeId ? String(values.jobTypeId) : undefined,
+    location: values?.location ? String(values.location) : undefined,
+    ownerName: values?.ownerName ? String(values.ownerName) : undefined,
+    startDate: values?.startDate ? new Date(Number(values.startDate)) : undefined,
+    plannedFinish: values?.plannedFinish ? new Date(Number(values.plannedFinish)) : undefined,
+    bidPrice: values?.bidPrice ? Number(values.bidPrice) : undefined,
+    longitude: values?.longitude ? Number(values.longitude) : undefined,
+    latitude: values?.latitude ? Number(values.latitude) : undefined,
+    radius: values?.radius ? Number(values.radius) : undefined,
+    favorite: values?.favorite ? Number(values.favorite) : undefined,
+    thumbnail: values?.thumbnail ? String(values.thumbnail) : undefined,
+    jobStatus: values?.jobStatus ? String(values.jobStatus) : undefined,
+  };
+
+  // Create a setter that handles type conversion
+  const setProjectData = useSetPartialValuesCallback(
+    (value: Partial<ProjectData>) => {
+      // Convert dates to numbers for storage
+      const converted: Record<string, any> = { ...value };
+      if (value.startDate) converted.startDate = value.startDate.getTime();
+      if (value.plannedFinish) converted.plannedFinish = value.plannedFinish.getTime();
+      return converted;
+    },
+    [],
+    useStoreId(projId),
+  );
+
+  return [projectData, setProjectData];
+};
 
 // Returns a callback that adds a new category to the project.
 export const useAddCategoryCallback = (projId: string) => {

@@ -10,6 +10,7 @@ import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { useDbLogger } from '@/context/LoggerContext';
 import { useJobDataStore } from '@/stores/jobDataStore';
+import { useProjectValue } from '@/tbStores/ListOfProjectsStore';
 import { ShareFiles } from '@/utils/sharing';
 import { Entypo, Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
@@ -53,6 +54,7 @@ const JobPhotosPage = () => {
   const [hasSelectedAssets, setHasSelectedAssets] = useState<boolean>(false);
   const { logInfo, logError } = useDbLogger();
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
+  const [, setThumbnail] = useProjectValue(jobId, 'thumbnail');
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -234,12 +236,8 @@ const JobPhotosPage = () => {
       if (asset) {
         const tn = await mediaTools.current?.createThumbnail(asset.asset.uri, jobName, 100, 100);
 
-        const status = await jobDbHost?.GetJobDB().UpdateThumbnail(tn, jobId);
-        if (status === 'Success' && tn) {
-          // Update the JobStore.
-          updateJob(jobId, { Thumbnail: tn });
-
-          await logInfo('Thumbnail set successfully');
+        if (tn) {
+          setThumbnail(tn);
         }
       }
     }

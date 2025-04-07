@@ -79,7 +79,7 @@ const {
 const useStoreId = () => STORE_ID_PREFIX + '9999'; // Replace 9999 with a organization id.
 
 // Create, persist, and sync a store containing ALL the categories defined by the user.
-export default function CategoriesStore() {
+export default function ConfigurationStore() {
   const storeId = useStoreId();
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
   console.log(`Creating categories store with ID: ${storeId} ${store}`);
@@ -100,7 +100,7 @@ export default function CategoriesStore() {
 //    useDeleteVendorCallback
 //
 /**
- * Returns all categories for the current store ID.
+ * Returns all vendors for the current store ID.
  */
 export const useAllVendors = () => {
   const [allVendors, setAllVendors] = useState<VendorData[]>([]);
@@ -187,7 +187,7 @@ export const useVendorFromStore = (vendorId: string) => {
   return vendor; // Return the category or null if not found
 };
 
-// Returns a callback that adds a new template to the store.
+// Returns a callback that adds a new vendor to the store.
 export const useAddVendorCallback = () => {
   let store = useStore(useStoreId());
 
@@ -213,7 +213,7 @@ export const useAddVendorCallback = () => {
   );
 };
 
-// Returns a pair of 1) a property of the template, 2) a callback that
+// Returns a pair of 1) a property of the vendor, 2) a callback that
 // updates it, similar to the React useState pattern.
 export const useVendorValue = <ValueId extends VendorsCellId>(
   vendorId: string,
