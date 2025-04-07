@@ -82,8 +82,8 @@ const SwipeableJobTemplate = ({ jobTemplate }: { jobTemplate: JobTemplateData })
         >
           <View style={styles.itemInfo}>
             <View style={{ flex: 1 }}>
-              <Text txtSize="title" text={jobTemplate.Name} />
-              <Text style={styles.itemName}>{jobTemplate.Description}</Text>
+              <Text txtSize="title" text={jobTemplate.name} />
+              <Text style={styles.itemName}>{jobTemplate.description}</Text>
             </View>
             <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
           </View>

@@ -38,7 +38,7 @@ const TABLES_SCHEMA = {
   templateWorkItems: {
     _id: { type: 'string' },
     templateId: { type: 'string' },
-    workItemId: { type: 'string' },
+    workItemIds: { type: 'string' }, // Comma separated list of workItemIds
   },
   vendors: {
     _id: { type: 'string' },
@@ -284,7 +284,6 @@ export const useAllTemplates = () => {
         _id: id,
         name: row.name ?? '',
         description: row.description ?? '',
-        workItems: [],
       }));
 
       return templates.sort((a, b) => a.name.localeCompare(b.name));
@@ -355,7 +354,6 @@ export const useAddTemplateCallback = () => {
       const id = randomUUID();
       templatesData._id = id;
 
-      console.log('(In callback). useAddTemplateCallback storeid:', useStoreId());
       console.log(
         `Adding a new template with ID: ${id}, Name: ${templatesData.name}, Description: ${templatesData.description}`,
       );
@@ -429,38 +427,39 @@ export const useDeleteTemplateCallback = (id: string) => useDelRowCallback('temp
 /**
  * Returns all categories for the current store ID.
  */
-export const useAllTemplateWorkItems = (templateId: string) => {
-  const [templateWorkItems, setTemplateWorkItems] = useState<JobTemplateWorkItemData[]>([]);
+export const useTemplateWorkItemData = (templateId: string) => {
+  const [templateWorkItemData, setTemplateWorkItemData] = useState<JobTemplateWorkItemData | null>();
+  const [templateWorkItemIds, setTemplateWorkItemIds] = useState<string[]>([]);
   let store = useStore(useStoreId());
 
-  const fetchAllTemplateWorkItems = useCallback((): JobTemplateWorkItemData[] => {
+  const fetchTemplateWorkItemData = useCallback((): JobTemplateWorkItemData | null => {
     if (!store) {
-      return []; // Return an empty array if the store is not available
+      return null;
     }
 
     const table = store.getTable('templateWorkItems');
     if (table) {
-      const workItems = Object.entries(table)
-        .filter(([id, row]) => row.templateId === templateId)
-        .map(([id, row]) => ({
+      const row = Object.entries(table).find(([id, row]) => row.templateId === templateId);
+      if (row) {
+        const [id, rowData] = row;
+        return {
           _id: id,
-          workItemId: row.workItemId ?? '',
-          templateId: row.templateId ?? '',
-        }));
-
-      return workItems;
+          templateId: rowData.templateId ?? '',
+          workItemIds: rowData.workItemIds ?? '',
+        } as JobTemplateWorkItemData;
+      }
     }
 
-    return [];
+    return null;
   }, [store, templateId]);
 
   useEffect(() => {
-    setTemplateWorkItems(fetchAllTemplateWorkItems());
-  }, [fetchAllTemplateWorkItems]);
+    setTemplateWorkItemData(fetchTemplateWorkItemData());
+  }, [fetchTemplateWorkItemData]);
 
   // Function to handle table data change
   const handleTableChange = () => {
-    setTemplateWorkItems(fetchAllTemplateWorkItems());
+    setTemplateWorkItemData(fetchTemplateWorkItemData());
   };
 
   useEffect(() => {
@@ -474,26 +473,68 @@ export const useAllTemplateWorkItems = (templateId: string) => {
     };
   }, []);
 
-  return templateWorkItems;
+  useEffect(() => {
+    if (templateWorkItemData) {
+      const workItemIds = templateWorkItemData.workItemIds.split(',');
+      setTemplateWorkItemIds(workItemIds);
+    }
+  }, [templateWorkItemData]);
+
+  const toggleWorkItemId = useCallback(
+    (workItemId: string) => {
+      const updatedWorkItemIds = templateWorkItemIds.includes(workItemId)
+        ? templateWorkItemIds.filter((id) => id !== workItemId)
+        : [...templateWorkItemIds, workItemId];
+
+      // create a comma separated list of workItemIds
+      const workItemIdsString = updatedWorkItemIds.join(',');
+
+      //update the store
+      if (store) {
+        store.setRow('templateWorkItems', templateId, {
+          _id: templateId,
+          templateId: templateId,
+          workItemIds: workItemIdsString,
+        });
+      }
+    },
+    [templateWorkItemIds, store, templateId],
+  );
+
+  const setActiveWorkItemIds = useCallback(
+    (workItemIds: string[]) => {
+      const workItemIdsString = workItemIds.join(',');
+
+      if (store) {
+        store.setRow('templateWorkItems', templateId, {
+          _id: templateId,
+          templateId: templateId,
+          workItemIds: workItemIdsString,
+        });
+      }
+    },
+    [store, templateId],
+  );
+
+  return { templateWorkItemIds, toggleWorkItemId, setActiveWorkItemIds }; // Return the template work item data or null if not found
 };
 
 // Returns a callback that adds a new template to the store.
-export const useAddTemplateWorkItemIdCallback = () => {
+export const useAddTemplateWorkItemDataCallback = () => {
   let store = useStore(useStoreId());
 
   return useCallback(
-    (templateId: string, templateWorkItemId: string): { status: TBStatus; msg: string; id: string } => {
+    (templateId: string, activeWorkItemIds: string): { status: TBStatus; msg: string; id: string } => {
       const id = randomUUID();
 
-      console.log('(In callback). useAddTemplateWorkItemCallback storeid:', useStoreId());
       console.log(
-        `Adding a new template workItem with ID: ${id} to template : ${templateId}, WorkItemId: ${templateWorkItemId}`,
+        `Adding following WorkItemData id= ${id} to template : ${templateId} with templateWorkItemIds=[${activeWorkItemIds}]`,
       );
       if (store) {
         const storeCheck = store.setRow('templateWorkItems', id, {
           _id: id,
           templateId,
-          workItemId: templateWorkItemId,
+          workItemIds: activeWorkItemIds,
         });
         if (storeCheck) {
           return { status: 'Success', msg: '', id };
