@@ -1,17 +1,11 @@
 // screens/ListJobTemplates.tsx
 
 import { ActionButton } from '@/components/ActionButton';
-import { TextInput, View } from '@/components/Themed';
+import { TextInput, Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { JobTemplateData, WorkItemData } from '@/models/types';
-// import { useJobTemplateDataStore } from '@/stores/jobTemplateDataStore';
-
-import {
-  useAllTemplates,
-  useAddTemplateCallback,
-  useUpdateTemplateCallback,
-} from '@/tbStores/ConfigurationStore';
+import { useAllTemplates, useAddTemplateCallback } from '@/tbStores/ConfigurationStore';
 import { Ionicons } from '@expo/vector-icons'; // Right caret icon
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -23,12 +17,10 @@ import SwipeableJobTemplate from './SwipeableJobTemplate';
 const ListJobTemplates = () => {
   const allJobTemplates = useAllTemplates();
   const addJobTemplate = useAddTemplateCallback();
-  const updateJobTemplate = useUpdateTemplateCallback();
   const [showAdd, setShowAdd] = useState(false);
   const [jobTemplate, setJobTemplate] = useState<JobTemplateData>({
     name: '',
     description: '',
-    workItems: [],
   });
   const [selectedWorkItems, setSelectedWorkItems] = useState<WorkItemData[]>([]);
 
@@ -51,35 +43,6 @@ const ListJobTemplates = () => {
           },
     [colorScheme],
   );
-
-  useEffect(() => {
-    // Fetch job templates from API or local storage (simulated here)
-    const fetchJobTemplates = async () => {
-      // const jobTemplatesData: JobTemplateData[] = [
-      //   {
-      //     _id: '1',
-      //     name: 'Standard House',
-      //     description: 'Standard Residential Construction',
-      //     workItems: ['1', '3'], // not currently used in demo
-      //   },
-      //   {
-      //     _id: '2',
-      //     name: 'Private Steel Building',
-      //     description: 'Privately owned steel building',
-      //     workItems: ['2'], // not currently used in demo
-      //   },
-      //   {
-      //     _id: '3',
-      //     name: 'Public Steel Building',
-      //     description: 'State or Federally owned steel building',
-      //     workItems: ['2'], // not currently used in demo
-      //   },
-      // ];
-      //updateJobTemplates(jobTemplatesData);
-    };
-
-    fetchJobTemplates();
-  }, []);
 
   const handleInputChange = (name: keyof JobTemplateData, value: string) => {
     if (jobTemplate) {
@@ -105,17 +68,14 @@ const ListJobTemplates = () => {
       const newJobTemplate = {
         ...jobTemplate,
         _id: '0',
-        WorkItems: selectedWorkItems.map((item) => item._id!),
       } as JobTemplateData;
 
-      console.log('Saving item:', newJobTemplate);
       addJobTemplate(newJobTemplate);
 
       // Clear the input fields
-      setJobTemplate({ name: '', description: '', workItems: [] });
-      setSelectedWorkItems([]);
+      setJobTemplate({ name: '', description: '' });
     }
-  }, [allJobTemplates, jobTemplate, selectedWorkItems]);
+  }, [allJobTemplates, jobTemplate]);
 
   const dismissKeyboard = useCallback(() => {
     Keyboard.dismiss();
@@ -163,9 +123,20 @@ const ListJobTemplates = () => {
         )}
         <View>
           <FlatList
-            data={allJobTemplates()}
+            data={allJobTemplates}
             keyExtractor={(item) => item._id!}
             renderItem={({ item }) => <SwipeableJobTemplate jobTemplate={item} />}
+            ListEmptyComponent={() => (
+              <View
+                style={{
+                  padding: 20,
+                  alignItems: 'center',
+                }}
+              >
+                <Text txtSize="title" text="No job templates found." />
+                <Text text="Use the '+' in the upper right to add one." />
+              </View>
+            )}
           />
         </View>
       </View>

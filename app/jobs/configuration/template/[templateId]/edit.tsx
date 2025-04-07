@@ -1,48 +1,41 @@
-import { Text, TextInput, View } from '@/components/Themed';
-import { JobTemplateData, WorkItemData } from '@/models/types';
+import OkayCancelButtons from '@/components/OkayCancelButtons'; // Assuming you have this component
+import { TextInput, View } from '@/components/Themed';
+import { useTemplateValue, useUpdateTemplateCallback } from '@/tbStores/ConfigurationStore';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import OkayCancelButtons from '@/components/OkayCancelButtons'; // Assuming you have this component
 
 const EditJobTemplate = () => {
-  const { jobTemplateId } = useLocalSearchParams(); // Assuming the route includes jobTemplateId
-  const [jobTemplate, setJobTemplate] = useState<JobTemplateData | null>(null);
+  const { templateId } = useLocalSearchParams(); // Assuming the route includes jobTemplateId
+  const applyTemplateUpdates = useUpdateTemplateCallback();
+  const jobTemplateId = templateId as string; // Ensure this is a string for the store hooks
   const router = useRouter();
+  const [name] = useTemplateValue(jobTemplateId, 'name');
+  const [newName, setNewName] = useState(name);
+  const [description] = useTemplateValue(jobTemplateId, 'description');
+  const [newDescription, setNewDescription] = useState(description);
 
   useEffect(() => {
-    if (jobTemplateId) {
-      // Find the existing job template by ID
-      const fetchedJobTemplate = allJobTemplates.find((item) => item._id === jobTemplateId);
-      setJobTemplate(fetchedJobTemplate || null);
-    }
-  }, [jobTemplateId]);
+    setNewName(name);
+  }, [name]);
 
-  const handleInputChange = (name: keyof JobTemplateData, value: string) => {
-    if (jobTemplate) {
-      setJobTemplate({
-        ...jobTemplate,
-        [name]: value,
-      });
-    }
-  };
+  useEffect(() => {
+    setNewDescription(description);
+  }, [description]);
 
   const handleSave = () => {
-    if (jobTemplate) {
-      console.log('Updated job template:', jobTemplate);
-      updateJobTemplate(jobTemplateId as string, jobTemplate);
-      router.back(); // Navigate back after saving
+    if (newName && newDescription) {
+      applyTemplateUpdates(jobTemplateId, {
+        _id: jobTemplateId,
+        description: newDescription,
+        name: newName,
+      });
+
+      // Go back to the categories list screen
+      router.back();
     }
   };
-
-  if (!jobTemplate) {
-    return (
-      <View style={styles.container}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -57,19 +50,19 @@ const EditJobTemplate = () => {
         <TextInput
           style={styles.input}
           placeholder="Template Name"
-          value={jobTemplate.name}
-          onChangeText={(text) => handleInputChange('name', text)}
+          value={newName}
+          onChangeText={setNewName}
         />
         <TextInput
           style={styles.input}
           placeholder="Description"
-          value={jobTemplate.description}
-          onChangeText={(text) => handleInputChange('description', text)}
+          value={newDescription}
+          onChangeText={setNewDescription}
         />
 
         <OkayCancelButtons
           okTitle="Save"
-          isOkEnabled={!!jobTemplate.name && !!jobTemplate.description}
+          isOkEnabled={!!newName && !!newDescription}
           onOkPress={handleSave}
         />
       </View>

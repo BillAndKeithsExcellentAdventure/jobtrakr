@@ -24,7 +24,7 @@ export interface JobTemplateData {
 export interface JobTemplateWorkItemData {
   _id?: string;
   templateId: string;
-  workItemId: string;
+  workItemIds: string;
 }
 
 export interface VendorData {
