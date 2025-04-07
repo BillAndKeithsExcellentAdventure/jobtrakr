@@ -7,7 +7,7 @@ export interface WorkCategoryData {
   status: string;
 }
 
-export interface WorkCategoryItemData {
+export interface WorkItemData {
   _id?: string;
   categoryId?: string; // id of WorkCategoryData
   code: string;
@@ -19,17 +19,17 @@ export interface JobTemplateData {
   _id?: string;
   name: string;
   description: string;
-  workItems: string[]; // array of ids to WorkCategoryItemData;
 }
 
 export interface JobTemplateWorkItemData {
   _id?: string;
+  templateId: string;
   workItemId: string;
 }
 
 export interface VendorData {
   _id?: string;
-  name?: string;
+  name: string;
   address?: string;
   city?: string;
   state?: string;

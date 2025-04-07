@@ -1,6 +1,6 @@
 import OkayCancelButtons from '@/components/OkayCancelButtons';
 import { Text, TextInput, View } from '@/components/Themed';
-import { WorkCategoryItemData } from '@/models/types';
+import { WorkItemData } from '@/models/types';
 // import { useWorkCategoryItemDataStore } from '@/stores/categoryItemDataStore';
 import {
   useAddWorkItemCallback,

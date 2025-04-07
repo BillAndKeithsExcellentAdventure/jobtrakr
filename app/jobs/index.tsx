@@ -17,7 +17,6 @@ import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { useJobDb } from '@/context/DatabaseContext';
 import { useDbLogger } from '@/context/LoggerContext';
 import { useJobDataStore } from '@/stores/jobDataStore';
-import { useVendorDataStore } from '@/stores/vendorDataStore';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { VendorData } from 'jobdb';
@@ -35,7 +34,6 @@ function isEntry(obj: any): obj is TwoColumnListEntry {
 
 export default function JobHomeScreen() {
   const { allJobs, updateJob, setAllJobs } = useJobDataStore();
-  const { setVendorData } = useVendorDataStore();
   const [jobListEntries, setJobListEntries] = useState<TwoColumnListEntry[]>([]);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const navigation = useNavigation();
@@ -76,20 +74,6 @@ export default function JobHomeScreen() {
     const jobs = result ? result.jobs : [];
     setAllJobs(jobs); // update the jobDataStore
   }, [jobDbHost]);
-
-  // set the vendor data on initial screen render
-  useEffect(() => {
-    const vendorOptions: VendorData[] = [
-      { VendorName: 'Home Depot', _id: '1' },
-      { VendorName: "Lowe's", _id: '2' },
-      { VendorName: 'Tractor Supply', _id: '3' },
-      { VendorName: 'Master Plumbing', _id: '4' },
-      { VendorName: 'Ace Hardware', _id: '5' },
-      { VendorName: 'Johnson Fence', _id: '6' },
-    ];
-
-    setVendorData(vendorOptions);
-  }, [allJobs]);
 
   useEffect(() => {
     if (allJobs) {

@@ -1,7 +1,7 @@
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors, deleteBg } from '@/constants/Colors';
-import { WorkCategoryData, WorkCategoryItemData } from '@/models/types';
+import { WorkCategoryData, WorkItemData } from '@/models/types';
 import { useWorkCategoryItemDataStore } from '@/stores/categoryItemDataStore';
 import { useDelWorkItemCallback } from '@/tbStores/ConfigurationStore';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -11,13 +11,7 @@ import { Alert, Pressable, StyleSheet } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
-const SwipeableCategoryItem = ({
-  item,
-  category,
-}: {
-  item: WorkCategoryItemData;
-  category: WorkCategoryData;
-}) => {
+const SwipeableCategoryItem = ({ item, category }: { item: WorkItemData; category: WorkCategoryData }) => {
   const router = useRouter();
   const processDelete = useDelWorkItemCallback(item._id!);
   const colorScheme = useColorScheme();

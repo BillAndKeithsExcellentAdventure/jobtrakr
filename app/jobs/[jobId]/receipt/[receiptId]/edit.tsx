@@ -14,7 +14,7 @@ import { ActionButton } from '@/components/ActionButton';
 import OptionList, { OptionEntry } from '@/components/OptionList';
 import { OptionPickerItem } from '@/components/OptionPickerItem';
 import BottomSheetContainer from '@/components/BottomSheetContainer';
-import { useVendorDataStore } from '@/stores/vendorDataStore';
+import { useAllVendors } from '@/tbStores/ConfigurationStore';
 
 const EditReceiptDetailsPage = () => {
   const router = useRouter();
@@ -32,14 +32,18 @@ const EditReceiptDetailsPage = () => {
   };
 
   const { jobDbHost } = useJobDb();
-  const { allVendors } = useVendorDataStore();
+  const allVendors = useAllVendors();
 
   useEffect(() => {
-    if (allVendors && allVendors.length) {
-      const vendorMap = allVendors.map((v) => {
-        return { label: v.VendorName ?? 'unknown', value: v._id };
-      });
-      setVendors(vendorMap);
+    if (allVendors && allVendors.length > 0) {
+      const vendorOptions: OptionEntry[] = allVendors.map((vendor) => ({
+        label: `${vendor.name} ${
+          vendor.address ? ` - ${vendor.address}` : vendor.city ? ` - ${vendor.city}` : ''
+        }`,
+        value: vendor._id,
+      }));
+
+      setVendors(vendorOptions);
     } else {
       setVendors([]);
     }

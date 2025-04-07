@@ -1,6 +1,5 @@
 import { Text, TextInput, View } from '@/components/Themed';
-import { JobTemplateData, WorkCategoryItemData } from '@/models/types';
-import { useJobTemplateDataStore } from '@/stores/jobTemplateDataStore';
+import { JobTemplateData, WorkItemData } from '@/models/types';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
@@ -9,7 +8,6 @@ import OkayCancelButtons from '@/components/OkayCancelButtons'; // Assuming you 
 
 const EditJobTemplate = () => {
   const { jobTemplateId } = useLocalSearchParams(); // Assuming the route includes jobTemplateId
-  const { allJobTemplates, updateJobTemplate } = useJobTemplateDataStore();
   const [jobTemplate, setJobTemplate] = useState<JobTemplateData | null>(null);
   const router = useRouter();
 
@@ -59,19 +57,19 @@ const EditJobTemplate = () => {
         <TextInput
           style={styles.input}
           placeholder="Template Name"
-          value={jobTemplate.Name}
-          onChangeText={(text) => handleInputChange('Name', text)}
+          value={jobTemplate.name}
+          onChangeText={(text) => handleInputChange('name', text)}
         />
         <TextInput
           style={styles.input}
           placeholder="Description"
-          value={jobTemplate.Description}
-          onChangeText={(text) => handleInputChange('Description', text)}
+          value={jobTemplate.description}
+          onChangeText={(text) => handleInputChange('description', text)}
         />
 
         <OkayCancelButtons
           okTitle="Save"
-          isOkEnabled={!!jobTemplate.Name && !!jobTemplate.Description}
+          isOkEnabled={!!jobTemplate.name && !!jobTemplate.description}
           onOkPress={handleSave}
         />
       </View>

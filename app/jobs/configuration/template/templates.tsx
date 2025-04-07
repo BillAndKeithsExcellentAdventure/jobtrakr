@@ -4,11 +4,11 @@ import { ActionButton } from '@/components/ActionButton';
 import { TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { JobTemplateData, WorkCategoryItemData } from '@/models/types';
+import { JobTemplateData, WorkItemData } from '@/models/types';
 // import { useJobTemplateDataStore } from '@/stores/jobTemplateDataStore';
 
 import {
-  useAllTemplatesCallback,
+  useAllTemplates,
   useAddTemplateCallback,
   useUpdateTemplateCallback,
 } from '@/tbStores/ConfigurationStore';
@@ -21,7 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableJobTemplate from './SwipeableJobTemplate';
 
 const ListJobTemplates = () => {
-  const allJobTemplates = useAllTemplatesCallback();
+  const allJobTemplates = useAllTemplates();
   const addJobTemplate = useAddTemplateCallback();
   const updateJobTemplate = useUpdateTemplateCallback();
   const [showAdd, setShowAdd] = useState(false);
@@ -30,7 +30,7 @@ const ListJobTemplates = () => {
     description: '',
     workItems: [],
   });
-  const [selectedWorkItems, setSelectedWorkItems] = useState<WorkCategoryItemData[]>([]);
+  const [selectedWorkItems, setSelectedWorkItems] = useState<WorkItemData[]>([]);
 
   const router = useRouter();
   const colorScheme = useColorScheme();

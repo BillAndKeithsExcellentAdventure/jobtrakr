@@ -1,7 +1,7 @@
 import { ActionButton } from '@/components/ActionButton';
 import { Text, TextInput, View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
-import { WorkCategoryData, WorkCategoryItemData } from '@/models/types';
+import { WorkCategoryData, WorkItemData } from '@/models/types';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -30,8 +30,8 @@ const ShowWorkCategory = () => {
   const [name] = useCategoryValue(categoryId as string, 'name');
   const [code] = useCategoryValue(categoryId as string, 'code');
 
-  const [categorySpecificItems, setCategorySpecificItems] = useState<WorkCategoryItemData[]>([]);
-  const [item, setItem] = useState<WorkCategoryItemData>({
+  const [categorySpecificItems, setCategorySpecificItems] = useState<WorkItemData[]>([]);
+  const [item, setItem] = useState<WorkItemData>({
     name: '',
     code: '',
   });
@@ -64,7 +64,7 @@ const ShowWorkCategory = () => {
     setCategorySpecificItems(fetchedWorkItems);
   }, [categoryId, allWorkItems]);
 
-  const handleInputChange = (name: keyof WorkCategoryItemData, value: string) => {
+  const handleInputChange = (name: keyof WorkItemData, value: string) => {
     if (item) {
       setItem({
         ...item,
@@ -79,7 +79,7 @@ const ShowWorkCategory = () => {
       const newItem = {
         ...item,
         categoryId: categoryId,
-      } as WorkCategoryItemData;
+      } as WorkItemData;
       console.log('Saving item:', newItem);
 
       const status = addWorkItem(newItem);

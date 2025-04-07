@@ -12,7 +12,7 @@ import {
   TBStatus,
   VendorData,
   WorkCategoryData,
-  WorkCategoryItemData as WorkItemData,
+  WorkItemData as WorkItemData,
 } from '@/models/types';
 
 const STORE_ID_PREFIX = 'ConfigurationStore-';
@@ -231,7 +231,7 @@ export const useVendorValue = <ValueId extends VendorsCellId>(
   ),
 ];
 
-// Returns a callback that updates an existing category to the store.
+// Returns a callback that updates an existing vendor to the store.
 export const useUpdateVendorCallback = () => {
   let store = useStore(useStoreId());
 
@@ -287,20 +287,6 @@ export const useAllTemplates = () => {
         workItems: [],
       }));
 
-      const templateWorkItemsTable = store.getTable('templateWorkItems');
-
-      templates.forEach((template) => {
-        if (templateWorkItemsTable) {
-          const templateWorkItems = Object.entries(templateWorkItemsTable)
-            .filter(([id, row]) => row.templateId === template._id)
-            .map(([id, row]) => ({
-              _id: id,
-            }));
-
-          template.workItems = templateWorkItems.map((item) => item._id);
-        }
-      });
-
       return templates.sort((a, b) => a.name.localeCompare(b.name));
     }
 
@@ -330,6 +316,36 @@ export const useAllTemplates = () => {
   return allTemplates;
 };
 
+export const useTemplateFromStore = (templateId: string) => {
+  const [template, setTemplate] = useState<JobTemplateData | null>(null);
+  let store = useStore(useStoreId());
+
+  const fetchTemplate = useCallback((): JobTemplateData | null => {
+    if (!store) {
+      return null;
+    }
+
+    const row = store.getRow('templates', templateId);
+    if (!row) {
+      return null;
+    }
+
+    const template: JobTemplateData = {
+      _id: row._id ?? '0',
+      name: row.name ?? '',
+      description: row.description ?? '',
+    };
+
+    return template;
+  }, [store, templateId]);
+
+  useEffect(() => {
+    setTemplate(fetchTemplate());
+  }, [fetchTemplate]);
+
+  return template; // Return the category or null if not found
+};
+
 // Returns a callback that adds a new template to the store.
 export const useAddTemplateCallback = () => {
   let store = useStore(useStoreId());
@@ -345,6 +361,29 @@ export const useAddTemplateCallback = () => {
       );
       if (store) {
         const storeCheck = store.setRow('templates', id, templatesData);
+        if (storeCheck) {
+          return { status: 'Success', msg: '', id };
+        } else {
+          return { status: 'Error', msg: 'Unable to setRow', id: '0' };
+        }
+      } else {
+        return { status: 'Error', msg: 'Store not found', id: '0' };
+      }
+    },
+    [store],
+  );
+};
+
+// Returns a callback that updates an existing template to the store.
+export const useUpdateTemplateCallback = () => {
+  let store = useStore(useStoreId());
+
+  return useCallback(
+    (id: string, templateData: JobTemplateData): { status: TBStatus; msg: string; id: string } => {
+      templateData._id = id;
+
+      if (store) {
+        const storeCheck = store.setRow('templates', id, templateData);
         if (storeCheck) {
           return { status: 'Success', msg: '', id };
         } else {
@@ -391,7 +430,7 @@ export const useDeleteTemplateCallback = (id: string) => useDelRowCallback('temp
  * Returns all categories for the current store ID.
  */
 export const useAllTemplateWorkItems = (templateId: string) => {
-  const [allTemplateWorkItems, setAllTemplateWorkItems] = useState<JobTemplateWorkItemData[]>([]);
+  const [templateWorkItems, setTemplateWorkItems] = useState<JobTemplateWorkItemData[]>([]);
   let store = useStore(useStoreId());
 
   const fetchAllTemplateWorkItems = useCallback((): JobTemplateWorkItemData[] => {
@@ -401,26 +440,27 @@ export const useAllTemplateWorkItems = (templateId: string) => {
 
     const table = store.getTable('templateWorkItems');
     if (table) {
-      const templateWorkItems = Object.entries(table)
+      const workItems = Object.entries(table)
         .filter(([id, row]) => row.templateId === templateId)
         .map(([id, row]) => ({
           _id: id,
           workItemId: row.workItemId ?? '',
+          templateId: row.templateId ?? '',
         }));
 
-      return templateWorkItems;
+      return workItems;
     }
 
     return [];
   }, [store, templateId]);
 
   useEffect(() => {
-    setAllTemplateWorkItems(fetchAllTemplateWorkItems());
+    setTemplateWorkItems(fetchAllTemplateWorkItems());
   }, [fetchAllTemplateWorkItems]);
 
   // Function to handle table data change
   const handleTableChange = () => {
-    setAllTemplateWorkItems(fetchAllTemplateWorkItems());
+    setTemplateWorkItems(fetchAllTemplateWorkItems());
   };
 
   useEffect(() => {
@@ -434,11 +474,11 @@ export const useAllTemplateWorkItems = (templateId: string) => {
     };
   }, []);
 
-  return allTemplateWorkItems;
+  return templateWorkItems;
 };
 
 // Returns a callback that adds a new template to the store.
-export const useAddTemplateWorkItemCallback = () => {
+export const useAddTemplateWorkItemIdCallback = () => {
   let store = useStore(useStoreId());
 
   return useCallback(

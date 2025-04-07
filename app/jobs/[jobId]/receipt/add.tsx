@@ -9,6 +9,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { useReceiptDataStore } from '@/stores/receiptDataStore';
+import { useAllVendors } from '@/tbStores/ConfigurationStore';
 import { formatDate } from '@/utils/formatters';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
@@ -17,7 +18,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Image, Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useVendorDataStore } from '@/stores/vendorDataStore';
 
 const AddReceiptPage = () => {
   const defaultDate = new Date();
@@ -66,14 +66,18 @@ const AddReceiptPage = () => {
   const colorScheme = useColorScheme();
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [canAddReceipt, setCanAddReceipt] = useState(false);
-  const { allVendors } = useVendorDataStore();
+  const allVendors = useAllVendors();
 
   useEffect(() => {
-    if (allVendors && allVendors.length) {
-      const vendorMap = allVendors.map((v) => {
-        return { label: v.VendorName ?? 'unknown', value: v._id };
-      });
-      setVendors(vendorMap);
+    if (allVendors && allVendors.length > 0) {
+      const vendorOptions: OptionEntry[] = allVendors.map((vendor) => ({
+        label: `${vendor.name} ${
+          vendor.address ? ` - ${vendor.address}` : vendor.city ? ` - ${vendor.city}` : ''
+        }`,
+        value: vendor._id,
+      }));
+
+      setVendors(vendorOptions);
     } else {
       setVendors([]);
     }

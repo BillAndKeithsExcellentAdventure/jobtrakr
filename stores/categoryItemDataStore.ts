@@ -1,12 +1,12 @@
-import { WorkCategoryItemData } from '@/models/types';
+import { WorkItemData } from '@/models/types';
 import { create } from 'zustand';
 
 export type WorkCategoryItemDataStore = {
-  allWorkCategoryItems: WorkCategoryItemData[];
-  setWorkCategoryItems: (data: WorkCategoryItemData[]) => void;
-  addWorkCategoryItem: (receipt: WorkCategoryItemData) => void;
+  allWorkCategoryItems: WorkItemData[];
+  setWorkCategoryItems: (data: WorkItemData[]) => void;
+  addWorkCategoryItem: (receipt: WorkItemData) => void;
   removeWorkCategoryItem: (id: string) => void;
-  updateWorkCategoryItem: (id: string, updatedItem: Partial<WorkCategoryItemData>) => void;
+  updateWorkCategoryItem: (id: string, updatedItem: Partial<WorkItemData>) => void;
 };
 
 export const useWorkCategoryItemDataStore = create<WorkCategoryItemDataStore>((set) => ({
