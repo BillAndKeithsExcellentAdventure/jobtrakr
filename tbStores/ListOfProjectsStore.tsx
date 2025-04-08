@@ -160,6 +160,31 @@ export const useProjectValue = <ValueId extends ProjectsCellId>(
   ),
 ];
 
+export const setProjectValue = <ValueId extends ProjectsCellId>(
+  projectId: string,
+  valueId: ValueId,
+  value: Value<ProjectsSchema, ValueId>,
+) => {
+  const store = useStore(useStoreId());
+  if (store) {
+    store.setCell('projects', projectId, valueId, value);
+  }
+};
+
+export const getProjectValue = <ValueId extends ProjectsCellId>(
+  projectId: string,
+  valueId: ValueId,
+): Value<ProjectsSchema, ValueId> | undefined => {
+  const store = useStore(useStoreId());
+  let value = undefined;
+
+  if (store) {
+    value = store?.getCell('projects', projectId, valueId);
+  }
+
+  return value;
+};
+
 // Create, persist, and sync a store containing the IDs of the projects
 export default function ProjectsStore() {
   const storeId = useStoreId();

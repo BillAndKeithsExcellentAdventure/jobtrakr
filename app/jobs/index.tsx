@@ -19,7 +19,12 @@ import { useDbLogger } from '@/context/LoggerContext';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useAllProjects, useProjectValue } from '@/tbStores/ListOfProjectsStore';
+import {
+  getProjectValue,
+  setProjectValue,
+  useAllProjects,
+  useProjectValue,
+} from '@/tbStores/ListOfProjectsStore';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -95,14 +100,9 @@ export default function JobHomeScreen() {
     }
   }, [allProjects]);
 
-  const onLikePressed = useCallback(
-    async (projId: string) => {
-      const [favorite, setFavorite] = useProjectValue(projId, 'favorite');
-      const newFavorite = favorite ? 0 : 1;
-      setFavorite(newFavorite);
-    },
-    [allProjects],
-  );
+  const onLikePressed = (projId: string) => {
+    setProjectValue(projId, 'favorite', getProjectValue(projId, 'favorite') ? 0 : 1);
+  };
 
   const jobActionButtons: ActionButtonProps[] = useMemo(
     () => [
