@@ -84,7 +84,7 @@ export const useAllProjects = () => {
         jobStatus: row.jobStatus ?? '',
       }));
 
-      return projects.sort((a, b) => (a.code ?? '').localeCompare(b.code ?? ''));
+      return projects.sort((a, b) => (b.favorite ?? 0) - (a.favorite ?? 0));
     }
 
     return [];
@@ -183,6 +183,28 @@ export const getProjectValue = <ValueId extends ProjectsCellId>(
   }
 
   return value;
+};
+
+// Returns a callback that toggles the favorite status of a project.
+export const useToggleFavoriteCallback = () => {
+  let store = useStore(useStoreId());
+
+  return useCallback(
+    (projectId: string): { status: TBStatus; msg: string } => {
+      if (store) {
+        const currentValue = store.getCell('projects', projectId, 'favorite');
+        const storeCheck = store.setCell('projects', projectId, 'favorite', currentValue ? 0 : 1);
+        if (storeCheck) {
+          return { status: 'Success', msg: '' };
+        } else {
+          return { status: 'Error', msg: 'Unable to setRow' };
+        }
+      } else {
+        return { status: 'Error', msg: 'Store not found' };
+      }
+    },
+    [store],
+  );
 };
 
 // Create, persist, and sync a store containing the IDs of the projects

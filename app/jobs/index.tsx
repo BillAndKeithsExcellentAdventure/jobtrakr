@@ -24,6 +24,7 @@ import {
   setProjectValue,
   useAllProjects,
   useProjectValue,
+  useToggleFavoriteCallback,
 } from '@/tbStores/ListOfProjectsStore';
 
 function MaterialDesignTabBarIcon(props: {
@@ -39,7 +40,7 @@ function isEntry(obj: any): obj is TwoColumnListEntry {
 
 export default function JobHomeScreen() {
   const allProjects = useAllProjects();
-
+  const toggleFavorite = useToggleFavoriteCallback();
   const [jobListEntries, setJobListEntries] = useState<TwoColumnListEntry[]>([]);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const navigation = useNavigation();
@@ -73,7 +74,6 @@ export default function JobHomeScreen() {
   );
 
   useEffect(() => {
-    console.log('JobHomeScreen: useEffect - allProjects:', allProjects);
     if (allProjects) {
       const listData: TwoColumnListEntry[] = allProjects.map((project) => {
         return {
@@ -101,7 +101,7 @@ export default function JobHomeScreen() {
   }, [allProjects]);
 
   const onLikePressed = (projId: string) => {
-    setProjectValue(projId, 'favorite', getProjectValue(projId, 'favorite') ? 0 : 1);
+    toggleFavorite(projId);
   };
 
   const jobActionButtons: ActionButtonProps[] = useMemo(
