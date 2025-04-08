@@ -12,8 +12,9 @@ import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import CategoriesStore from '@/tbStores/ConfigurationStore';
+import ConfigurationStore from '@/tbStores/ConfigurationStore';
 import { Provider as TinyBaseProvider } from 'tinybase/ui-react';
+import ProjectsStore from '@/tbStores/ListOfProjectsStore';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -54,7 +55,8 @@ function RootLayoutNav() {
       <SessionProvider>
         <DatabaseHostProvider>
           <TinyBaseProvider>
-            <CategoriesStore />
+            <ConfigurationStore />
+            <ProjectsStore />
             <LoggerHostProvider>
               <SafeAreaProvider>
                 <GestureHandlerRootView>

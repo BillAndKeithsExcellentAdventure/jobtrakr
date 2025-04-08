@@ -14,12 +14,18 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
 import RightHeaderMenu from '@/components/RightHeaderMenu';
-import { useJobDb } from '@/context/DatabaseContext';
 import { useDbLogger } from '@/context/LoggerContext';
-import { useJobDataStore } from '@/stores/jobDataStore';
+
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { VendorData } from 'jobdb';
+
+import {
+  getProjectValue,
+  setProjectValue,
+  useAllProjects,
+  useProjectValue,
+  useToggleFavoriteCallback,
+} from '@/tbStores/ListOfProjectsStore';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -33,11 +39,11 @@ function isEntry(obj: any): obj is TwoColumnListEntry {
 }
 
 export default function JobHomeScreen() {
-  const { allJobs, updateJob, setAllJobs } = useJobDataStore();
+  const allProjects = useAllProjects();
+  const toggleFavorite = useToggleFavoriteCallback();
   const [jobListEntries, setJobListEntries] = useState<TwoColumnListEntry[]>([]);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const navigation = useNavigation();
-  const { jobDbHost } = useJobDb();
   const { logInfo, shareLogFile } = useDbLogger();
   const colorScheme = useColorScheme();
   const router = useRouter();
@@ -67,31 +73,23 @@ export default function JobHomeScreen() {
     [colorScheme],
   );
 
-  const loadJobs = useCallback(async () => {
-    const today = new Date();
-    const result = await jobDbHost?.GetJobDB().FetchAllJobs();
-    console.log('Fetched jobs:', result?.status);
-    const jobs = result ? result.jobs : [];
-    setAllJobs(jobs); // update the jobDataStore
-  }, [jobDbHost]);
-
   useEffect(() => {
-    if (allJobs) {
-      const listData: TwoColumnListEntry[] = allJobs.map((job) => {
+    if (allProjects) {
+      const listData: TwoColumnListEntry[] = allProjects.map((project) => {
         return {
-          primaryTitle: job.Name ? job.Name : 'unknown',
-          isFavorite: undefined !== job.Favorite ? job.Favorite > 0 : false,
-          entryId: job._id ?? '1',
-          imageUri: job.Thumbnail ?? 'x',
-          secondaryTitle: job.Location,
-          tertiaryTitle: job.OwnerName ?? 'Owner',
+          primaryTitle: project.name ? project.name : 'unknown',
+          isFavorite: undefined !== project.favorite ? project.favorite > 0 : false,
+          entryId: project._id ?? '1',
+          imageUri: project.thumbnail ?? 'x',
+          secondaryTitle: project.location,
+          tertiaryTitle: project.ownerName ?? 'Owner',
           lines: [
             {
-              left: `start: ${formatDate(job.StartDate)}`,
-              right: `bid: ${formatCurrency(job.BidPrice)}`,
+              left: `start: ${formatDate(new Date(Number(project.startDate)))}`,
+              right: `bid: ${formatCurrency(project.bidPrice)}`,
             },
             {
-              left: `due: ${formatDate(job.PlannedFinish)}`,
+              left: `due: ${formatDate(new Date(Number(project.plannedFinish)))}`,
               right: `spent: ${formatCurrency(0)}`,
             },
           ],
@@ -100,27 +98,11 @@ export default function JobHomeScreen() {
 
       setJobListEntries(listData);
     }
-  }, [allJobs]);
+  }, [allProjects]);
 
-  const onLikePressed = useCallback(
-    async (jobId: string) => {
-      const matchingJob = allJobs.find((j) => j._id! === jobId);
-      if (matchingJob) {
-        const updatedJob = {
-          ...matchingJob,
-          Favorite: matchingJob.Favorite === undefined ? 1 : matchingJob.Favorite > 0 ? 0 : 1,
-        };
-        const status = await jobDbHost?.GetJobDB().UpdateJob(updatedJob);
-        if (status === 'Success') {
-          updateJob(updatedJob._id!, updatedJob); // update the jobDataStore
-          await logInfo(`Job successfully updated: ${updatedJob.Name}`);
-        } else {
-          await logInfo(`Job update failed: %{updatedJob.Name}`);
-        }
-      }
-    },
-    [allJobs, jobDbHost, loadJobs, logInfo],
-  );
+  const onLikePressed = (projId: string) => {
+    toggleFavorite(projId);
+  };
 
   const jobActionButtons: ActionButtonProps[] = useMemo(
     () => [
@@ -177,36 +159,24 @@ export default function JobHomeScreen() {
     [colors, onLikePressed],
   );
 
-  useEffect(() => {
-    loadJobs();
-  }, [jobDbHost]);
-
   const handleSelection = useCallback(
     (entry: TwoColumnListEntry) => {
-      const job = allJobs.find((j) => (j._id ?? '') === entry.entryId);
+      const job = allProjects.find((j) => (j._id ?? '') === entry.entryId);
       if (job && job._id) router.push(`/jobs/${job._id}`);
       console.log(`Hello from item ${entry.primaryTitle}`);
     },
-    [allJobs],
+    [allProjects],
   );
-
-  const handleJobDbShare = useCallback(async () => {
-    console.log(`Sharing job db file... ${jobDbHost}`);
-    await jobDbHost?.Share();
-    console.log('Job db file shared');
-  }, [jobDbHost]);
 
   const handleMenuItemPress = useCallback(
     async (item: string, actionContext: any) => {
       setHeaderMenuModalVisible(false);
-      if (item === 'AddJob') {
-        router.push(`/jobs/add-job`);
+      if (item === 'AddProject') {
+        router.push(`/jobs/add-project`);
       } else if (item === 'ShareLog') {
         console.log('Sharing log file...');
         shareLogFile();
         console.log('Log file shared');
-      } else if (item === 'ShareJobDb') {
-        handleJobDbShare();
       } else if (item === 'Configuration') {
         router.push('/jobs/configuration/home');
       }
@@ -218,9 +188,9 @@ export default function JobHomeScreen() {
     () => [
       {
         icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
-        label: 'Add Job',
+        label: 'Add Project',
         onPress: (e, actionContext) => {
-          handleMenuItemPress('AddJob', actionContext);
+          handleMenuItemPress('AddProject', actionContext);
         },
       },
       {
@@ -246,7 +216,7 @@ export default function JobHomeScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Jobs',
+          title: 'Projects',
           headerRight: () => (
             <Pressable
               onPress={() => {
@@ -273,7 +243,7 @@ export default function JobHomeScreen() {
           </View>
         ) : (
           <View style={[styles.container, { padding: 20, backgroundColor: colors.screenBackground }]}>
-            <Text text="No Jobs Found!" txtSize="xl" />
+            <Text text="No Projects Found!" txtSize="xl" />
             <Text text="Use menu in upper right to add one." />
           </View>
         )}

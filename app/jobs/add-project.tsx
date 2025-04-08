@@ -9,11 +9,12 @@ import { Modal, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useJobDataStore } from '@/stores/jobDataStore';
 import { Stack, useRouter } from 'expo-router';
-import { JobTemplateData } from '@/models/types';
+import { JobTemplateData, ProjectData } from '@/models/types';
 import { useJobTemplateDataStore } from '@/stores/jobTemplateDataStore';
 import OptionList, { OptionEntry } from '@/components/OptionList';
 import { OptionPickerItem } from '@/components/OptionPickerItem';
 import BottomSheetContainer from '@/components/BottomSheetContainer';
+import { useAddProjectCallback } from '@/tbStores/ListOfProjectsStore';
 
 type Job = {
   name: string;
@@ -22,13 +23,13 @@ type Job = {
 };
 
 const AddJobScreen = () => {
-  const { addJob } = useJobDataStore();
-
-  const [job, setJob] = useState<Job>({
+  const [project, setProject] = useState<ProjectData>({
     name: '',
     location: '',
-    owner: '',
+    ownerName: '',
   });
+
+  const addProject = useAddProjectCallback();
 
   const colorScheme = useColorScheme();
 
@@ -52,7 +53,6 @@ const AddJobScreen = () => {
     [colorScheme],
   );
 
-  const { jobDbHost } = useJobDb();
   const router = useRouter();
   const { allJobTemplates, setJobTemplates, addJobTemplate } = useJobTemplateDataStore();
   const [isTemplateListPickerVisible, setIsTemplateListPickerVisible] = useState<boolean>(false);
@@ -71,21 +71,18 @@ const AddJobScreen = () => {
       const jobTemplatesData: JobTemplateData[] = [
         {
           _id: '1',
-          Name: 'Standard House',
-          Description: 'Standard Residential Construction',
-          WorkItems: ['1', '3'], // not currently used in demo
+          name: 'Standard House',
+          description: 'Standard Residential Construction',
         },
         {
           _id: '2',
-          Name: 'Private Steel Building',
-          Description: 'Privately owned steel building',
-          WorkItems: ['2'], // not currently used in demo
+          name: 'Private Steel Building',
+          description: 'Privately owned steel building',
         },
         {
           _id: '3',
-          Name: 'Public Steel Building',
-          Description: 'State or Federally owned steel building',
-          WorkItems: ['2'], // not currently used in demo
+          name: 'Public Steel Building',
+          description: 'State or Federally owned steel building',
         },
       ];
       setJobTemplates(jobTemplatesData);
@@ -96,62 +93,63 @@ const AddJobScreen = () => {
 
   useEffect(() => {
     const options = allJobTemplates.map((t) => {
-      return { label: t.Name, value: t._id };
+      return { label: t.name, value: t._id };
     });
     setTemplateOptions(options);
   }, [allJobTemplates]);
 
   useEffect(() => {
-    setCanAddJob(job.name?.length > 4 && !!pickedTemplate);
-  }, [job, pickedTemplate]);
+    setCanAddJob((project ? (project.name ? project.name.length : 0) : 0) > 0 && !!pickedTemplate);
+  }, [project, pickedTemplate]);
 
   const handleSubmit = useCallback(async () => {
-    const id = { value: 0n };
+    console.log('Job submitted:', project);
 
-    const jobData: JobData = {
-      Name: job.name,
-      Location: job.location,
-      OwnerName: job.owner,
+    console.log('Adding project to database:', addProject);
+
+    const projData: ProjectData = {
+      name: project.name,
+      location: project.location,
+      ownerName: project.ownerName,
     };
 
-    const result = await jobDbHost?.GetJobDB().CreateJob(jobData);
+    const result = addProject(projData);
+    console.log('Job creation result:', result);
     if (result?.status === 'Success') {
-      jobData._id = result.id.toString();
-      addJob(jobData);
-      console.log('Job created:', job);
+      console.log('Job created:', project);
     } else {
-      console.log('Job creation failed:', job);
+      console.log('Job creation failed:', project);
     }
     router.back();
-  }, [job]);
+  }, [project]);
 
   return (
     <SafeAreaView
       edges={['right', 'bottom', 'left']}
       style={[styles.modalBackground, { backgroundColor: colors.modalOverlayBackgroundColor }]}
     >
-      <Stack.Screen options={{ title: 'Add Job' }} />
+      <Stack.Screen options={{ title: 'Add Project' }} />
 
       <View style={styles.modalContainer}>
-        <Text style={styles.modalTitle}>Create New Job</Text>
+        <Text style={styles.modalTitle}>Create New Project</Text>
 
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
-          placeholder="Job Name"
-          value={job.name}
-          onChangeText={(text) => setJob({ ...job, name: text })}
+          placeholder="Project Name"
+          value={project.name}
+          onChangeText={(text) => setProject({ ...project, name: text })}
         />
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Location"
-          value={job.location}
-          onChangeText={(text) => setJob({ ...job, location: text })}
+          value={project.location}
+          onChangeText={(text) => setProject({ ...project, location: text })}
         />
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Owner"
-          value={job.owner}
-          onChangeText={(text) => setJob({ ...job, owner: text })}
+          value={project.ownerName}
+          onChangeText={(text) => setProject({ ...project, ownerName: text })}
         />
         <OptionPickerItem
           containerStyle={{ backgroundColor: colors.neutral200, height: 36 }}
