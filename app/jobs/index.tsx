@@ -85,11 +85,11 @@ export default function JobHomeScreen() {
           tertiaryTitle: project.ownerName ?? 'Owner',
           lines: [
             {
-              left: `start: ${formatDate(new Date(Number(project.startDate)))}`,
+              left: `start: ${formatDate(new Date(project.startDate ?? 0))}`,
               right: `bid: ${formatCurrency(project.bidPrice)}`,
             },
             {
-              left: `due: ${formatDate(new Date(Number(project.plannedFinish)))}`,
+              left: `due: ${formatDate(new Date(project.plannedFinish ?? 0))}`,
               right: `spent: ${formatCurrency(0)}`,
             },
           ],

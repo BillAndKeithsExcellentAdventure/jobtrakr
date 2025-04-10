@@ -56,3 +56,9 @@ export interface VendorData {
   businessPhone?: string;
   notes?: string;
 }
+
+export interface NoteData {
+  id?: string;
+  task: string;
+  completed: boolean;
+}

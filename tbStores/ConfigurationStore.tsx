@@ -2,8 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { Cell, createMergeableStore, createStore, NoValuesSchema, Row, Value } from 'tinybase/with-schemas';
-import { ProjectData } from './projectStore';
-import ProjectStore from './projectStore';
 import { useCreateClientPersisterAndStart } from './persistence/useCreateClientPersisterAndStart';
 import { useCreateServerSynchronizerAndStart } from './synchronization/useCreateServerSynchronizerAndStart';
 import {
@@ -196,8 +194,6 @@ export const useAddVendorCallback = () => {
       const id = randomUUID();
       vendorData._id = id;
 
-      console.log('(In callback). useAddVendorCallback storeid:', useStoreId());
-      console.log(`Adding a new vendor with ID: ${id}, Name: ${vendorData.name}`);
       if (store) {
         const storeCheck = store.setRow('vendors', id, vendorData);
         if (storeCheck) {
@@ -664,8 +660,6 @@ export const useAddCategoryCallback = () => {
       const id = randomUUID();
       catData._id = id;
 
-      console.log('(In callback). useNewCategory storeid:', useStoreId());
-      console.log(`Adding a new category with ID: ${id}, Name: ${catData.name}, Code: ${catData.code}`);
       if (store) {
         const storeCheck = store.setRow('categories', id, catData);
         if (storeCheck) {

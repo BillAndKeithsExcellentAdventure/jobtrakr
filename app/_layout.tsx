@@ -15,6 +15,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ConfigurationStore from '@/tbStores/ConfigurationStore';
 import { Provider as TinyBaseProvider } from 'tinybase/ui-react';
 import ProjectsStore from '@/tbStores/ListOfProjectsStore';
+import { ActiveProjectIdProvider } from '@/context/ActiveProjectIdContext';
+import ProjectDetailsStoreProvider from '@/tbStores/projectDetailsStore';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -55,20 +57,23 @@ function RootLayoutNav() {
       <SessionProvider>
         <DatabaseHostProvider>
           <TinyBaseProvider>
-            <ConfigurationStore />
-            <ProjectsStore />
-            <LoggerHostProvider>
-              <SafeAreaProvider>
-                <GestureHandlerRootView>
-                  <Stack screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="index" />
-                    <Stack.Screen name="jobs" />
-                    <Stack.Screen name="(auth)" />
-                  </Stack>
-                  <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-                </GestureHandlerRootView>
-              </SafeAreaProvider>
-            </LoggerHostProvider>
+            <ActiveProjectIdProvider>
+              <ConfigurationStore />
+              <ProjectsStore />
+              <ProjectDetailsStoreProvider />
+              <LoggerHostProvider>
+                <SafeAreaProvider>
+                  <GestureHandlerRootView>
+                    <Stack screenOptions={{ headerShown: false }}>
+                      <Stack.Screen name="index" />
+                      <Stack.Screen name="jobs" />
+                      <Stack.Screen name="(auth)" />
+                    </Stack>
+                    <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+                  </GestureHandlerRootView>
+                </SafeAreaProvider>
+              </LoggerHostProvider>
+            </ActiveProjectIdProvider>
           </TinyBaseProvider>
         </DatabaseHostProvider>
       </SessionProvider>

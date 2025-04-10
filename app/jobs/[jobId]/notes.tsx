@@ -1,38 +1,35 @@
 import { ActionButton } from '@/components/ActionButton';
 import { Text, TextInput, View } from '@/components/Themed';
-import { useJobDb } from '@/context/DatabaseContext';
+import { useActiveProjectId } from '@/context/ActiveProjectIdContext';
+import { NoteData } from '@/models/types';
+import {
+  useAddNoteCallback,
+  useAllNotes,
+  useDeleteNoteCallback,
+  useUpdateNoteCallback,
+} from '@/tbStores/projectDetailsStore';
 import FontAwesomeIcon from '@expo/vector-icons/FontAwesome';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { TodoData } from 'jobdb';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const JobNotes = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
-  const [notes, setNotes] = useState<TodoData[]>([]);
+  const { activeProjectId, setActiveProjectId } = useActiveProjectId();
   const [newNoteTitle, setNewNoteTitle] = useState('');
-  const [editingNote, setEditingNote] = useState<TodoData | null>(null);
-  const { jobDbHost } = useJobDb();
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchNotes = useCallback(async () => {
-    try {
-      const response = await jobDbHost?.GetTodoDB().FetchJobTodos(jobId);
-      if (!response) return;
-
-      if (response.status === 'Success') {
-        setNotes(response.todos);
-      }
-    } catch (err) {
-      setError('An error occurred while fetching the notes');
-    }
-  }, [jobId]);
+  const [editingNote, setEditingNote] = useState<NoteData | null>(null);
 
   useEffect(() => {
-    // Fetch notes when the component mounts
-    fetchNotes();
-  }, [fetchNotes]);
+    if (activeProjectId !== jobId) {
+      setActiveProjectId(jobId);
+    }
+  }, [jobId, activeProjectId, setActiveProjectId]);
+
+  const notes = useAllNotes(activeProjectId);
+  const addNewNote = useAddNoteCallback(activeProjectId);
+  const removeNote = useDeleteNoteCallback(activeProjectId);
+  const processUpdateNote = useUpdateNoteCallback(activeProjectId);
 
   const addNote = useCallback(async () => {
     if (!newNoteTitle.trim()) {
@@ -40,21 +37,10 @@ const JobNotes = () => {
       return;
     }
 
-    const newTodo: TodoData = { Todo: newNoteTitle, JobId: jobId, Completed: false };
-    try {
-      const response = await jobDbHost?.GetTodoDB().CreateTodo(newTodo);
-      if (!response) return;
-
-      if (response.status === 'Success') {
-        await fetchNotes();
-        setNewNoteTitle(''); // Clear input after successful creation
-      } else {
-        alert('Failed to create note.');
-      }
-    } catch (err) {
-      alert('An error occurred while creating the todo.');
-    }
-  }, [newNoteTitle, jobDbHost, jobId]);
+    const newNote: NoteData = { task: newNoteTitle, completed: false };
+    addNewNote(newNote);
+    setNewNoteTitle('');
+  }, [addNewNote, newNoteTitle]);
 
   const deleteNote = useCallback(
     (id: string) => {
@@ -63,68 +49,36 @@ const JobNotes = () => {
         {
           text: 'Delete',
           onPress: async () => {
-            try {
-              const status = await jobDbHost?.GetTodoDB().DeleteTodo(id);
-              if (status === 'Success') {
-                await fetchNotes();
-              } else {
-                alert('Failed to delete note.');
-              }
-            } catch (err) {
-              alert('An error occurred while deleting the note.');
-            }
+            removeNote(id);
           },
         },
       ]);
     },
-    [jobDbHost, fetchNotes],
+    [removeNote],
   );
 
   const toggleCompleted = useCallback(
-    async (id: string, completed: boolean) => {
-      const matchingNote = notes.find((note) => note._id === id);
+    (id: string, completed: boolean) => {
+      const matchingNote = notes.find((note) => note.id === id);
       if (!matchingNote) return;
 
       console.log('Toggling completed', id, completed);
       const noteToUpdate = { ...matchingNote };
-      noteToUpdate.Completed = !completed;
-
-      try {
-        const status = await jobDbHost?.GetTodoDB().UpdateTodo(noteToUpdate);
-        if (status === 'Success') {
-          await fetchNotes();
-        } else {
-          alert('Failed to update note.');
-        }
-      } catch (err) {
-        alert('An error occurred while deleting the note.');
-      }
+      noteToUpdate.completed = !completed;
+      processUpdateNote(noteToUpdate);
     },
-    [jobDbHost, fetchNotes, notes],
+    [processUpdateNote, notes],
   );
 
-  const editNote = useCallback((note: TodoData) => {
-    setEditingNote(note);
-  }, []);
-
   const saveEdit = useCallback(async () => {
-    if (!editingNote || !editingNote.Todo || !editingNote.Todo.trim()) {
+    if (!editingNote || !editingNote.task || !editingNote.task.trim()) {
       Alert.alert('Error', 'Please enter note text.');
       return;
     }
 
-    try {
-      const status = await jobDbHost?.GetTodoDB().UpdateTodo(editingNote);
-      if (status === 'Success') {
-        fetchNotes(); // Refresh after editing
-        setEditingNote(null); // Clear editing state
-      } else {
-        alert('Failed to update note.');
-      }
-    } catch (err) {
-      alert('An error occurred while deleting the note.');
-    }
-  }, [jobDbHost, fetchNotes, editingNote]);
+    processUpdateNote(editingNote);
+    setEditingNote(null);
+  }, [processUpdateNote, editingNote]);
 
   const cancelEdit = useCallback(() => {
     setEditingNote(null); // Cancel editing
@@ -152,8 +106,8 @@ const JobNotes = () => {
           {editingNote && (
             <View>
               <TextInput
-                value={editingNote.Todo ?? ''}
-                onChangeText={(title) => setEditingNote({ ...editingNote, Todo: title })}
+                value={editingNote.task ?? ''}
+                onChangeText={(title) => setEditingNote({ ...editingNote, task: title })}
                 placeholder="Edit note title"
                 style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
               />
@@ -173,7 +127,7 @@ const JobNotes = () => {
           <FlatList
             style={{ marginTop: 20 }}
             data={notes}
-            keyExtractor={(item) => item._id ?? ''}
+            keyExtractor={(item) => item.id ?? ''}
             renderItem={({ item }) => (
               <View
                 style={{
@@ -191,25 +145,25 @@ const JobNotes = () => {
                     alignSelf: 'center',
                     justifyContent: 'center',
                     marginBottom: 5,
-                    textDecorationLine: item.Completed ? 'line-through' : 'none',
+                    textDecorationLine: item.completed ? 'line-through' : 'none',
                   }}
                 >
-                  {item.Todo}
+                  {item.task}
                 </Text>
                 <View style={{ flexDirection: 'row', marginLeft: 10, alignSelf: 'center' }}>
-                  <TouchableOpacity onPress={() => toggleCompleted(item._id!, item.Completed!)}>
+                  <TouchableOpacity onPress={() => toggleCompleted(item.id!, item.completed!)}>
                     <FontAwesomeIcon
-                      name={item.Completed ? 'undo' : 'check-circle'}
+                      name={item.completed ? 'undo' : 'check-circle'}
                       size={28}
-                      color={item.Completed ? 'gray' : 'green'}
+                      color={item.completed ? 'gray' : 'green'}
                     />
                   </TouchableOpacity>
 
-                  <TouchableOpacity onPress={() => deleteNote(item._id!)}>
+                  <TouchableOpacity onPress={() => deleteNote(item.id!)}>
                     <FontAwesomeIcon name="trash" size={28} color="red" style={{ marginLeft: 10 }} />
                   </TouchableOpacity>
 
-                  <TouchableOpacity onPress={() => editNote(item)}>
+                  <TouchableOpacity onPress={() => setEditingNote({ ...item })}>
                     <FontAwesomeIcon name="edit" size={28} color="blue" style={{ marginLeft: 10 }} />
                   </TouchableOpacity>
                 </View>
