@@ -55,27 +55,22 @@ const {
   useValuesListener,
 } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
-const useStoreId = (projId: string) => STORE_ID_PREFIX + projId;
-
-const useUserId = () => '8888-KMB'; // Replace with a userId
+const getStoreId = (projId: string) => STORE_ID_PREFIX + projId;
+const getUserId = () => '8888-KMB'; // Replace with a userId
 
 // Create, persist, and sync a store containing the project and its categories.
 function ProjectDetailsStore({ activeProjectId }: { activeProjectId: string }) {
-  const storeId = useStoreId(activeProjectId);
-  console.log('ProjectDetailsStore - storeId:', storeId);
-
+  const storeId = getStoreId(activeProjectId);
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
-  console.log('ProjectDetailsStore - store:', store.getJson());
   useCreateClientPersisterAndStart(storeId, store);
   useCreateServerSynchronizerAndStart(storeId, store);
   useProvideStore(storeId, store);
-
   return null;
 }
 
 export default function ProjectDetailsStoreProvider() {
   const { activeProjectId } = useActiveProjectId(); // get activeProjectId from context
-
+  if (!activeProjectId) return null; // Don't render if no active project ID
   return <ProjectDetailsStore key={activeProjectId} activeProjectId={activeProjectId} />;
 }
 
@@ -84,56 +79,47 @@ export default function ProjectDetailsStoreProvider() {
 ///////////////////////////////////////////////////////////////////////////////
 /* Hook to return an array of all notes for a specific project. */
 export const useAllNotes = (activeProjectId: string) => {
-  const storeId = useStoreId(activeProjectId);
+  const storeId = getStoreId(activeProjectId);
   const [allNotes, setAllNotes] = useState<NoteData[]>([]);
-
-  console.log('useAllNotes - storeId:', storeId);
-  let store = useStore(storeId);
-
-  const fetchAllNotes = useCallback((): NoteData[] => {
-    if (!store) {
-      return []; // Return an empty array if the store is not available
-    }
-
-    const table = store.getTable('notes');
-    if (table) {
-      const notes: NoteData[] = Object.entries(table).map(([id, row]) => ({
-        id: id,
-        task: row.task ?? '',
-        completed: !!row.completed,
-      }));
-
-      return notes;
-    }
-
-    return [];
-  }, [store]);
-
-  useEffect(() => {
-    setAllNotes(fetchAllNotes());
-  }, [fetchAllNotes]);
+  const store = useStore(storeId);
 
   useEffect(() => {
     if (!store) return;
+    const table = store.getTable('notes');
+    const notes = table
+      ? Object.entries(table).map(([id, row]) => ({
+          id,
+          task: row.task ?? '',
+          completed: !!row.completed,
+        }))
+      : [];
 
-    const handleTableChange = () => {
-      setAllNotes(fetchAllNotes());
-    };
+    setAllNotes(notes);
 
-    const listenerId = store.addTableListener('notes', handleTableChange);
-    // Cleanup: Remove the listener when the component unmounts
+    const listenerId = store.addTableListener('notes', () => {
+      const updatedTable = store.getTable('notes');
+      const updatedNotes = updatedTable
+        ? Object.entries(updatedTable).map(([id, row]) => ({
+            id,
+            task: row.task ?? '',
+            completed: !!row.completed,
+          }))
+        : [];
+      setAllNotes(updatedNotes);
+    });
+
     return () => {
       console.log('useAllNotes - removing listenerId:', listenerId);
       store.delListener(listenerId);
     };
-  }, [store, fetchAllNotes]);
+  }, [store]);
 
   return allNotes;
 };
 
 // Returns a callback that adds a new note to the store.
 export const useAddNoteCallback = (activeProjectId: string) => {
-  const storeId = useStoreId(activeProjectId);
+  const storeId = getStoreId(activeProjectId);
   let store = useStore(storeId);
 
   return useCallback(
@@ -159,7 +145,7 @@ export const useAddNoteCallback = (activeProjectId: string) => {
 
 // Returns a callback that updates an existing note in the store.
 export const useUpdateNoteCallback = (activeProjectId: string) => {
-  const storeId = useStoreId(activeProjectId);
+  const storeId = getStoreId(activeProjectId);
   let store = useStore(storeId);
 
   return useCallback(
@@ -181,7 +167,7 @@ export const useUpdateNoteCallback = (activeProjectId: string) => {
 
 // Returns a callback that deletes a note from the store.
 export const useDeleteNoteCallback = (activeProjectId: string) => {
-  const storeId = useStoreId(activeProjectId);
+  const storeId = getStoreId(activeProjectId);
   let store = useStore(storeId);
 
   return useCallback(

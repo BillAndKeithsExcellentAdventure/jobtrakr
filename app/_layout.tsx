@@ -57,22 +57,20 @@ function RootLayoutNav() {
       <SessionProvider>
         <DatabaseHostProvider>
           <TinyBaseProvider>
+            <ConfigurationStore />
+            <ProjectsStore />
             <ActiveProjectIdProvider>
-              <ConfigurationStore />
-              <ProjectsStore />
               <ProjectDetailsStoreProvider />
-              <LoggerHostProvider>
-                <SafeAreaProvider>
-                  <GestureHandlerRootView>
-                    <Stack screenOptions={{ headerShown: false }}>
-                      <Stack.Screen name="index" />
-                      <Stack.Screen name="jobs" />
-                      <Stack.Screen name="(auth)" />
-                    </Stack>
-                    <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-                  </GestureHandlerRootView>
-                </SafeAreaProvider>
-              </LoggerHostProvider>
+              <SafeAreaProvider>
+                <GestureHandlerRootView>
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="jobs" />
+                    <Stack.Screen name="(auth)" />
+                  </Stack>
+                  <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+                </GestureHandlerRootView>
+              </SafeAreaProvider>
             </ActiveProjectIdProvider>
           </TinyBaseProvider>
         </DatabaseHostProvider>
