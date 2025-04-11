@@ -80,7 +80,6 @@ const useStoreId = () => STORE_ID_PREFIX + '9999'; // Replace 9999 with a organi
 export default function ConfigurationStore() {
   const storeId = useStoreId();
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
-  console.log(`Creating categories store with ID: ${storeId} ${store}`);
   useCreateClientPersisterAndStart(storeId, store);
   useCreateServerSynchronizerAndStart(storeId, store);
   useProvideStore(storeId, store);

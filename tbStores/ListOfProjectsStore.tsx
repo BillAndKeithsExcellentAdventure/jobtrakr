@@ -213,11 +213,8 @@ export const useToggleFavoriteCallback = () => {
 export default function ProjectsStore() {
   const storeId = useStoreId();
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
-  console.log(`Creating projects store with ID: ${storeId}`);
   useCreateClientPersisterAndStart(storeId, store);
   useCreateServerSynchronizerAndStart(storeId, store);
   useProvideStore(storeId, store);
-
-  // In turn 'render' (i.e. create) all of the shopping lists themselves.
   return null;
 }
