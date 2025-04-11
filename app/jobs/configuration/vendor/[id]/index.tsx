@@ -6,7 +6,10 @@ import { ActionButton } from '@/components/ActionButton';
 import { Text, TextInput, View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import { useUpdateVendorCallback, useVendorFromStore } from '@/tbStores/ConfigurationStore';
+import {
+  useUpdateVendorCallback,
+  useVendorFromStore,
+} from '@/tbStores/configurationStore/ConfigurationStore';
 import { VendorData } from '@/models/types';
 
 const EditVendor = () => {

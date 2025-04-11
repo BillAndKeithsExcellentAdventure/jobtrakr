@@ -20,7 +20,7 @@ import {
   useAddWorkItemCallback,
   useCategoryValue,
   useCategoryFromStore,
-} from '@/tbStores/ConfigurationStore';
+} from '@/tbStores/configurationStore/ConfigurationStore';
 
 const ShowWorkCategory = () => {
   const { categoryId } = useLocalSearchParams();

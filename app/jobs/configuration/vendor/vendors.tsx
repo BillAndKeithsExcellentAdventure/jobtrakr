@@ -12,7 +12,7 @@ import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableVendor from './SwipeableVendor';
 import { VendorData } from '@/models/types';
-import { useAllVendors, useAddVendorCallback } from '@/tbStores/ConfigurationStore';
+import { useAllVendors, useAddVendorCallback } from '@/tbStores/configurationStore/ConfigurationStore';
 
 const VendorsScreen = () => {
   const router = useRouter();

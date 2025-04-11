@@ -2,7 +2,10 @@ import OkayCancelButtons from '@/components/OkayCancelButtons';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { useCategoryValue, useUpdateCategoryCallback } from '@/tbStores/ConfigurationStore';
+import {
+  useCategoryValue,
+  useUpdateCategoryCallback,
+} from '@/tbStores/configurationStore/ConfigurationStore';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';

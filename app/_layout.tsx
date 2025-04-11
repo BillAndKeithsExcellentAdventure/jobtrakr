@@ -12,10 +12,10 @@ import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import ConfigurationStore from '@/tbStores/ConfigurationStore';
+import ConfigurationStore from '@/tbStores/configurationStore/ConfigurationStore';
 import { Provider as TinyBaseProvider } from 'tinybase/ui-react';
 import ProjectsStore from '@/tbStores/ListOfProjectsStore';
-import { ActiveProjectIdProvider } from '@/context/ActiveProjectIdContext';
+import { ActiveProjectIdsProvider } from '@/context/ActiveProjectIdsContext';
 import ProjectDetailsStoreProvider from '@/tbStores/projectDetails/ProjectDetailsStore';
 import { ClerkProvider } from '@clerk/clerk-expo';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
@@ -65,31 +65,28 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
   console.log(`Publishable Key: ${PUBLISHABLE_KEY}`);
   return (
-    <ClerkProvider tokenCache={tokenCache} publishableKey={PUBLISHABLE_KEY}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <SessionProvider>
-          <DatabaseHostProvider>
-            <TinyBaseProvider>
-              <ConfigurationStore />
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <SessionProvider>
+        <DatabaseHostProvider>
+          <TinyBaseProvider>
+            <ConfigurationStore />
+            <ActiveProjectIdsProvider>
               <ProjectsStore />
-              <ActiveProjectIdProvider>
-                <ProjectDetailsStoreProvider />
-                <SafeAreaProvider>
-                  <GestureHandlerRootView>
-                    <Stack screenOptions={{ headerShown: false }}>
-                      <Stack.Screen name="index" />
-                      <Stack.Screen name="jobs" />
-                      <Stack.Screen name="(auth)" />
-                    </Stack>
-                    <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-                  </GestureHandlerRootView>
-                </SafeAreaProvider>
-              </ActiveProjectIdProvider>
-            </TinyBaseProvider>
-          </DatabaseHostProvider>
-        </SessionProvider>
-      </ThemeProvider>
-    </ClerkProvider>
+              <SafeAreaProvider>
+                <GestureHandlerRootView>
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="jobs" />
+                    <Stack.Screen name="(auth)" />
+                  </Stack>
+                  <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+                </GestureHandlerRootView>
+              </SafeAreaProvider>
+            </ActiveProjectIdsProvider>
+          </TinyBaseProvider>
+        </DatabaseHostProvider>
+      </SessionProvider>
+    </ThemeProvider>
   );
 }
 

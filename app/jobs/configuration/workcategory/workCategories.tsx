@@ -12,7 +12,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { Pressable } from 'react-native-gesture-handler';
 import SwipeableCategory from './SwipeableCategory';
-import { useAddCategoryCallback, useAllCategories } from '@/tbStores/ConfigurationStore';
+import { useAddCategoryCallback, useAllCategories } from '@/tbStores/configurationStore/ConfigurationStore';
 
 const ListWorkCategories = () => {
   const addWorkCategory = useAddCategoryCallback();

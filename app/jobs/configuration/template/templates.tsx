@@ -5,7 +5,7 @@ import { TextInput, Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { JobTemplateData, WorkItemData } from '@/models/types';
-import { useAllTemplates, useAddTemplateCallback } from '@/tbStores/ConfigurationStore';
+import { useAllTemplates, useAddTemplateCallback } from '@/tbStores/configurationStore/ConfigurationStore';
 import { Ionicons } from '@expo/vector-icons'; // Right caret icon
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';

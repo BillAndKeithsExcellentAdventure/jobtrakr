@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { Cell, createMergeableStore, createStore, NoValuesSchema, Row, Value } from 'tinybase/with-schemas';
-import { useCreateClientPersisterAndStart } from './persistence/useCreateClientPersisterAndStart';
-import { useCreateServerSynchronizerAndStart } from './synchronization/useCreateServerSynchronizerAndStart';
+import { useCreateClientPersisterAndStart } from '../persistence/useCreateClientPersisterAndStart';
+import { useCreateServerSynchronizerAndStart } from '../synchronization/useCreateServerSynchronizerAndStart';
 import {
   JobTemplateData,
   JobTemplateWorkItemData,
@@ -15,7 +15,7 @@ import {
 import { useAuth } from '@clerk/clerk-expo';
 
 const STORE_ID_PREFIX = 'ConfigurationStore-';
-const TABLES_SCHEMA = {
+export const TABLES_SCHEMA = {
   categories: {
     _id: { type: 'string' },
     code: { type: 'string' },
@@ -94,12 +94,6 @@ export default function ConfigurationStore() {
 ///////////////////////////////////////////////////////////////////////////////
 // Vendors related hooks
 ///////////////////////////////////////////////////////////////////////////////
-// Needed Functions:
-//    useAllVendors
-//    useAddVendorCallback
-//    useVendorValue
-//    useDeleteVendorCallback
-//
 /**
  * Returns all vendors for the current store ID.
  */
@@ -155,37 +149,25 @@ export const useAllVendors = () => {
   return allVendors;
 };
 
-export const useVendorFromStore = (vendorId: string) => {
-  const [vendor, setVendor] = useState<VendorData | null>(null);
-  let store = useStore(useStoreId());
+export const useVendorFromStore = (vendorId: string): VendorData | null => {
+  const store = useStore(useStoreId());
 
-  const fetchVendor = useCallback((): VendorData | null => {
-    if (!store) {
-      return null;
-    }
+  if (!store) return null;
 
-    const row = store.getRow('vendors', vendorId);
-    if (!row) {
-      return null;
-    }
-    return {
-      _id: row._id ?? '0',
-      name: row.name ?? '',
-      address: row.address ?? '',
-      city: row.city ?? '',
-      state: row.state ?? '',
-      zip: row.zip ?? '',
-      mobilePhone: row.mobilePhone ?? '',
-      businessPhone: row.businessPhone ?? '',
-      notes: row.notes ?? '',
-    } as VendorData;
-  }, [store, vendorId]);
+  const row = store.getRow('vendors', vendorId);
+  if (!row) return null;
 
-  useEffect(() => {
-    setVendor(fetchVendor());
-  }, [fetchVendor]);
-
-  return vendor; // Return the category or null if not found
+  return {
+    _id: row._id ?? '0',
+    name: row.name ?? '',
+    address: row.address ?? '',
+    city: row.city ?? '',
+    state: row.state ?? '',
+    zip: row.zip ?? '',
+    mobilePhone: row.mobilePhone ?? '',
+    businessPhone: row.businessPhone ?? '',
+    notes: row.notes ?? '',
+  };
 };
 
 // Returns a callback that adds a new vendor to the store.
@@ -259,12 +241,6 @@ export const useDeleteVendorCallback = (id: string) => useDelRowCallback('vendor
 ///////////////////////////////////////////////////////////////////////////////
 // Template related hooks
 ///////////////////////////////////////////////////////////////////////////////
-// Needed Functions:
-//    useAllTemplates
-//    useAddTemplateCallback
-//    useTemplateValue
-//    useDeleteTemplateCallback
-//
 /**
  * Returns all categories for the current store ID.
  */
@@ -418,11 +394,6 @@ export const useDeleteTemplateCallback = (id: string) => useDelRowCallback('temp
 ///////////////////////////////////////////////////////////////////////////////
 // Template Items related hooks
 ///////////////////////////////////////////////////////////////////////////////
-// Needed Functions:
-//     useAllTemplateWorkItems(templateId: string)
-//     useAddTemplateWorkItemCallback
-//     useDeleteTemplateWorkItemCallback
-//
 /**
  * Returns all categories for the current store ID.
  */
@@ -549,9 +520,8 @@ export const useAddTemplateWorkItemDataCallback = () => {
 };
 
 // Returns a callback that deletes a template workItem from the store.
-export const useDeleteTemplateWorkItemCallback = (id: string) => {
+export const useDeleteTemplateWorkItemCallback = (id: string) =>
   useDelRowCallback('templateWorkItems', id, useStoreId());
-};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Category related hooks
