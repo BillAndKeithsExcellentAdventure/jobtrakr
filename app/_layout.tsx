@@ -65,28 +65,30 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
   console.log(`Publishable Key: ${PUBLISHABLE_KEY}`);
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <SessionProvider>
-        <DatabaseHostProvider>
-          <TinyBaseProvider>
-            <ConfigurationStore />
-            <ActiveProjectIdsProvider>
-              <ProjectsStore />
-              <SafeAreaProvider>
-                <GestureHandlerRootView>
-                  <Stack screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="index" />
-                    <Stack.Screen name="jobs" />
-                    <Stack.Screen name="(auth)" />
-                  </Stack>
-                  <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-                </GestureHandlerRootView>
-              </SafeAreaProvider>
-            </ActiveProjectIdsProvider>
-          </TinyBaseProvider>
-        </DatabaseHostProvider>
-      </SessionProvider>
-    </ThemeProvider>
+    <ClerkProvider tokenCache={tokenCache} publishableKey={PUBLISHABLE_KEY}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <SessionProvider>
+          <DatabaseHostProvider>
+            <TinyBaseProvider>
+              <ConfigurationStore />
+              <ActiveProjectIdsProvider>
+                <ProjectsStore />
+                <SafeAreaProvider>
+                  <GestureHandlerRootView>
+                    <Stack screenOptions={{ headerShown: false }}>
+                      <Stack.Screen name="index" />
+                      <Stack.Screen name="jobs" />
+                      <Stack.Screen name="(auth)" />
+                    </Stack>
+                    <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+                  </GestureHandlerRootView>
+                </SafeAreaProvider>
+              </ActiveProjectIdsProvider>
+            </TinyBaseProvider>
+          </DatabaseHostProvider>
+        </SessionProvider>
+      </ThemeProvider>
+    </ClerkProvider>
   );
 }
 
