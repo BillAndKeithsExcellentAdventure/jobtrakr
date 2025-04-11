@@ -14,6 +14,7 @@ import {
   WorkCategoryData,
   WorkItemData as WorkItemData,
 } from '@/models/types';
+import { useAuth } from '@clerk/clerk-expo';
 
 const STORE_ID_PREFIX = 'ConfigurationStore-';
 const TABLES_SCHEMA = {
@@ -76,11 +77,17 @@ const {
   useValue,
 } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
-const useStoreId = () => STORE_ID_PREFIX + '9999'; // Replace 9999 with a organization id.
+const useStoreId = (orgId: string) => STORE_ID_PREFIX + orgId;
 
 // Create, persist, and sync a store containing ALL the categories defined by the user.
 export default function ConfigurationStore() {
-  const storeId = useStoreId();
+  const { userId } = useAuth();
+  const { orgId } = useAuth();
+
+  console.log('ConfigurationStore: userId:', userId);
+  console.log('ConfigurationStore: orgId:', orgId);
+
+  const storeId = useStoreId(orgId ? orgId : userId ? userId : '0');
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
   console.log(`Creating categories store with ID: ${storeId} ${store}`);
   useCreateClientPersisterAndStart(storeId, store);
