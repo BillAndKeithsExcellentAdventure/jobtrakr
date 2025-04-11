@@ -16,7 +16,7 @@ import ConfigurationStore from '@/tbStores/ConfigurationStore';
 import { Provider as TinyBaseProvider } from 'tinybase/ui-react';
 import ProjectsStore from '@/tbStores/ListOfProjectsStore';
 import { ActiveProjectIdProvider } from '@/context/ActiveProjectIdContext';
-import ProjectDetailsStoreProvider from '@/tbStores/projectDetailsStore';
+import ProjectDetailsStoreProvider from '@/tbStores/projectDetails/ProjectDetailsStore';
 
 export {
   // Catch any errors thrown by the Layout component.

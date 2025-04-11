@@ -2,12 +2,7 @@ import { ActionButton } from '@/components/ActionButton';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useActiveProjectId } from '@/context/ActiveProjectIdContext';
 import { NoteData } from '@/models/types';
-import {
-  useAddNoteCallback,
-  useAllNotes,
-  useDeleteNoteCallback,
-  useUpdateNoteCallback,
-} from '@/tbStores/projectDetailsStore';
+import { useAddNote, useAllNotes, useDeleteNote, useUpdateNote } from '@/tbStores/projectDetails/notes';
 import FontAwesomeIcon from '@expo/vector-icons/FontAwesome';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -27,9 +22,9 @@ const JobNotes = () => {
   }, [jobId, activeProjectId, setActiveProjectId]);
 
   const notes = useAllNotes(activeProjectId);
-  const addNewNote = useAddNoteCallback(activeProjectId);
-  const removeNote = useDeleteNoteCallback(activeProjectId);
-  const processUpdateNote = useUpdateNoteCallback(activeProjectId);
+  const addNewNote = useAddNote(activeProjectId);
+  const removeNote = useDeleteNote(activeProjectId);
+  const updateNote = useUpdateNote(activeProjectId);
 
   const addNote = useCallback(async () => {
     if (!newNoteTitle.trim()) {
@@ -65,9 +60,9 @@ const JobNotes = () => {
       console.log('Toggling completed', id, completed);
       const noteToUpdate = { ...matchingNote };
       noteToUpdate.completed = !completed;
-      processUpdateNote(noteToUpdate);
+      updateNote(noteToUpdate);
     },
-    [processUpdateNote, notes],
+    [updateNote, notes],
   );
 
   const saveEdit = useCallback(async () => {
@@ -76,9 +71,9 @@ const JobNotes = () => {
       return;
     }
 
-    processUpdateNote(editingNote);
+    updateNote(editingNote);
     setEditingNote(null);
-  }, [processUpdateNote, editingNote]);
+  }, [updateNote, editingNote]);
 
   const cancelEdit = useCallback(() => {
     setEditingNote(null); // Cancel editing
