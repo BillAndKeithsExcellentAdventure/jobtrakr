@@ -56,13 +56,11 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
-//  afterSignOutUrl="/(auth)/sign-in"
-
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   console.log(`Publishable Key: ${PUBLISHABLE_KEY}`);
   return (
-    <ClerkProvider tokenCache={tokenCache} publishableKey={PUBLISHABLE_KEY}>
+    <ClerkProvider tokenCache={tokenCache} publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/(auth)/sign-in">
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <SessionProvider>
           <DatabaseHostProvider>

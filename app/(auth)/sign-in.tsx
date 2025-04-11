@@ -1,9 +1,12 @@
-import { useAuth, useSignIn } from '@clerk/clerk-expo';
-import { Link, Redirect, useRouter } from 'expo-router';
-import { Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
-import React from 'react';
-import { SignedIn, SignedOut } from '@clerk/clerk-expo';
+import { ActionButton } from '@/components/ActionButton';
+import { TextInput, Text, View } from '@/components/Themed';
+import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { SignedIn, SignedOut, useAuth, useSignIn } from '@clerk/clerk-expo';
+import { Link, Redirect, Stack, useRouter } from 'expo-router';
+import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet } from 'react-native';
 
 export default function Page() {
   const auth = useAuth();
@@ -30,12 +33,14 @@ function SignInForm() {
             borderColor: Colors.dark.borderColor,
             iconColor: Colors.dark.iconColor,
             textColor: Colors.dark.text,
+            neutral200: Colors.dark.neutral200,
           }
         : {
             listBackground: Colors.light.listBackground,
             borderColor: Colors.light.borderColor,
             iconColor: Colors.light.iconColor,
             textColor: Colors.light.text,
+            neutral200: Colors.light.neutral200,
           },
     [colorScheme],
   );
@@ -77,55 +82,57 @@ function SignInForm() {
   };
 
   return (
-    <View style={{ ...styles.container, backgroundColor: colors.listBackground }}>
-      <Text style={{ ...styles.title, backgroundColor: colors.listBackground }}>Sign In</Text>
-      <TextInput
-        style={{ ...styles.input, color: colors.textColor }}
-        autoCapitalize="none"
-        value={emailAddress}
-        placeholder="Enter email"
-        placeholderTextColor={colors.textColor}
-        onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
+    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Sign In',
+          headerTitleAlign: 'center',
+        }}
       />
-      <TextInput
-        style={{ ...styles.input, color: colors.textColor }}
-        value={password}
-        placeholder="Enter password"
-        placeholderTextColor={colors.textColor}
-        secureTextEntry={true}
-        onChangeText={(password) => setPassword(password)}
-      />
-      <TouchableOpacity style={styles.button} onPress={onSignInPress}>
-        <Text style={styles.buttonText}>Continue</Text>
-      </TouchableOpacity>
-      <View style={styles.footer}>
-        <Text style={{ color: colors.textColor }}>Don't have an account? </Text>
-        <Link href="/sign-up">
-          <Text style={styles.link}>Sign up</Text>
-        </Link>
+      <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
+        <Text
+          txtSize="xl"
+          style={{ marginBottom: 20, backgroundColor: colors.listBackground }}
+          text="Sign In"
+        />
+        <TextInput
+          style={{ ...styles.input, backgroundColor: colors.neutral200 }}
+          autoCapitalize="none"
+          value={emailAddress}
+          placeholder="Email"
+          keyboardType="email-address"
+          placeholderTextColor={colors.textColor}
+          onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
+        />
+        <TextInput
+          style={{ ...styles.input, color: colors.textColor }}
+          value={password}
+          placeholder="Password"
+          placeholderTextColor={colors.textColor}
+          secureTextEntry={true}
+          onChangeText={(password) => setPassword(password)}
+        />
+        <ActionButton
+          onPress={onSignInPress}
+          type={emailAddress && password ? 'action' : 'disabled'}
+          title="Sign In"
+        />
+        <View style={styles.footer}>
+          <Text text="Don't have an account?" style={{ backgroundColor: 'transparent', marginRight: 20 }} />
+          <Link href="/sign-up">
+            <Text style={styles.link}>Sign up</Text>
+          </Link>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
   },
   button: {
     backgroundColor: '#000',
@@ -133,17 +140,20 @@ const styles = {
     borderRadius: 5,
     marginTop: 10,
   },
-  buttonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 20,
+    backgroundColor: 'transparent',
   },
   link: {
     color: '#007AFF',
   },
-} as const;
+  input: {
+    height: 40,
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingLeft: 10,
+    borderRadius: 4,
+  },
+});
