@@ -23,10 +23,16 @@ type Job = {
 };
 
 const AddJobScreen = () => {
+  const defaultStart = new Date();
+  const defaultFinish = new Date();
+  defaultFinish.setMonth(defaultFinish.getMonth() + 9);
+
   const [project, setProject] = useState<ProjectData>({
     name: '',
     location: '',
     ownerName: '',
+    startDate: defaultStart.getTime(),
+    plannedFinish: defaultFinish.getTime(),
   });
 
   const addProject = useAddProjectCallback();

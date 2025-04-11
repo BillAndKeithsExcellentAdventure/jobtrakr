@@ -59,6 +59,10 @@ export const useAllProjects = () => {
   let store = useStore(useStoreId());
 
   const fetchAllProjects = useCallback((): ProjectData[] => {
+    const defaultStart = new Date();
+    const defaultFinish = new Date();
+    defaultFinish.setMonth(defaultFinish.getMonth() + 9);
+
     if (!store) {
       return []; // Return an empty array if the store is not available
     }
@@ -72,8 +76,8 @@ export const useAllProjects = () => {
         jobTypeId: row.jobTypeId ?? '',
         location: row.location ?? '',
         ownerName: row.ownerName ?? '',
-        startDate: Number(row.startDate) ?? 0,
-        plannedFinish: Number(row.plannedFinish) ?? 0,
+        startDate: row.startDate ?? defaultStart.getTime(),
+        plannedFinish: row.plannedFinish ?? defaultFinish.getTime(),
         bidPrice: row.bidPrice ?? 0,
         amountSpent: row.amountSpent ?? 0,
         longitude: row.longitude ?? 0,
@@ -122,8 +126,6 @@ export const useAddProjectCallback = () => {
       const id = randomUUID();
       projectData._id = id;
 
-      console.log('(In callback). useAddProjectCallback storeid:', useStoreId());
-      console.log(`Adding a new project with ID: ${id}, Name: ${projectData.name}`);
       if (store) {
         const storeCheck = store.setRow('projects', id, projectData);
         if (storeCheck) {
@@ -211,11 +213,8 @@ export const useToggleFavoriteCallback = () => {
 export default function ProjectsStore() {
   const storeId = useStoreId();
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
-  console.log(`Creating projects store with ID: ${storeId}`);
   useCreateClientPersisterAndStart(storeId, store);
   useCreateServerSynchronizerAndStart(storeId, store);
   useProvideStore(storeId, store);
-
-  // In turn 'render' (i.e. create) all of the shopping lists themselves.
   return null;
 }
