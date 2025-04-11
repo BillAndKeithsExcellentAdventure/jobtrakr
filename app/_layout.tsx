@@ -12,7 +12,7 @@ import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import ConfigurationStore from '@/tbStores/ConfigurationStore';
+import ConfigurationStore from '@/tbStores/configurationStore/ConfigurationStore';
 import { Provider as TinyBaseProvider } from 'tinybase/ui-react';
 import ProjectsStore from '@/tbStores/ListOfProjectsStore';
 import { ActiveProjectIdProvider } from '@/context/ActiveProjectIdContext';

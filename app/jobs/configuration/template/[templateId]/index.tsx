@@ -6,7 +6,7 @@ import {
   useAllWorkItems,
   useTemplateValue,
   useTemplateWorkItemData,
-} from '@/tbStores/ConfigurationStore';
+} from '@/tbStores/configurationStore/ConfigurationStore';
 import { createItemsArray } from '@/utils/array';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';

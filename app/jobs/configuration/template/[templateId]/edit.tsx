@@ -1,6 +1,9 @@
 import OkayCancelButtons from '@/components/OkayCancelButtons'; // Assuming you have this component
 import { TextInput, View } from '@/components/Themed';
-import { useTemplateValue, useUpdateTemplateCallback } from '@/tbStores/ConfigurationStore';
+import {
+  useTemplateValue,
+  useUpdateTemplateCallback,
+} from '@/tbStores/configurationStore/ConfigurationStore';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';

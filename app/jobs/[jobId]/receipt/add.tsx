@@ -9,7 +9,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { useReceiptDataStore } from '@/stores/receiptDataStore';
-import { useAllVendors } from '@/tbStores/ConfigurationStore';
+import { useAllVendors } from '@/tbStores/configurationStore/ConfigurationStore';
 import { formatDate } from '@/utils/formatters';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';

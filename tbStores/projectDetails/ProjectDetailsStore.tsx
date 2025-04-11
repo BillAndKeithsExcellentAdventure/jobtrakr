@@ -25,6 +25,14 @@ export const TABLES_SCHEMA = {
     documentationUri: { type: 'string' }, // URI to the receipt or invoice photo
   },
 
+  mediaEntries: {
+    id: { type: 'string' },
+    assetId: { type: 'string' }, // only used when media is on local device
+    deviceName: { type: 'string' }, // only used when media is on local device
+    mediaType: { type: 'string' }, // 'video' or 'photo'
+    mediaUri: { type: 'string' }, // URI to the receipt or invoice photo
+  },
+
   notes: {
     id: { type: 'string' },
     task: { type: 'string' },
@@ -36,22 +44,9 @@ type WorkItemSummarySchema = typeof TABLES_SCHEMA.workItemSummary;
 type WorkItemCostEntriesSchema = typeof TABLES_SCHEMA.workItemCostEntries;
 type NotesSchema = typeof TABLES_SCHEMA.notes;
 
-const {
-  useCell,
-  useCreateMergeableStore,
-  useDelRowCallback,
-  useProvideRelationships,
-  useProvideStore,
-  useRowCount,
-  useSetCellCallback,
-  useSetValueCallback,
-  useSortedRowIds,
-  useStore,
-  useCreateRelationships,
-  useTable,
-  useValue,
-  useValuesListener,
-} = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
+const { useCreateMergeableStore, useProvideStore } = UiReact as UiReact.WithSchemas<
+  [typeof TABLES_SCHEMA, NoValuesSchema]
+>;
 
 export const getStoreId = (projId: string) => STORE_ID_PREFIX + projId;
 const getUserId = () => '8888-KMB'; // Replace with a userId
