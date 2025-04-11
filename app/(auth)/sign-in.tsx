@@ -11,13 +11,9 @@ export default function Page() {
   return (
     <>
       <SignedIn>
-        (auth && auth.orgId) ? ({/* User is signed in, redirect them to the home page */}
-        <Redirect href="/jobs" />
-        ) : (
-        <Redirect href="/(auth)/createOrganization" />)
+        {auth && auth.orgId ? <Redirect href="/jobs" /> : <Redirect href="/(auth)/createOrganization" />}
       </SignedIn>
       <SignedOut>
-        {/* Show sign in form when user is signed out */}
         <SignInForm />
       </SignedOut>
     </>

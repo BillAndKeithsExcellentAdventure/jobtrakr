@@ -1,24 +1,21 @@
+import AuthorizedStoresProvider from '@/components/AuthorizedStoresProvider';
 import { useColorScheme } from '@/components/useColorScheme';
+import { ActiveProjectIdsProvider } from '@/context/ActiveProjectIdsContext';
 import { SessionProvider } from '@/context/AuthSessionContext';
 import { DatabaseHostProvider } from '@/context/DatabaseContext';
-import { LoggerHostProvider } from '@/context/LoggerContext';
+import { ClerkProvider } from '@clerk/clerk-expo';
+import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Link, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import ConfigurationStore from '@/tbStores/configurationStore/ConfigurationStore';
 import { Provider as TinyBaseProvider } from 'tinybase/ui-react';
-import ProjectsStore from '@/tbStores/ListOfProjectsStore';
-import { ActiveProjectIdsProvider } from '@/context/ActiveProjectIdsContext';
-import ProjectDetailsStoreProvider from '@/tbStores/projectDetails/ProjectDetailsStore';
-import { ClerkProvider } from '@clerk/clerk-expo';
-import { tokenCache } from '@clerk/clerk-expo/token-cache';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -70,9 +67,8 @@ function RootLayoutNav() {
         <SessionProvider>
           <DatabaseHostProvider>
             <TinyBaseProvider>
-              <ConfigurationStore />
               <ActiveProjectIdsProvider>
-                <ProjectsStore />
+                <AuthorizedStoresProvider />
                 <SafeAreaProvider>
                   <GestureHandlerRootView>
                     <Stack screenOptions={{ headerShown: false }}>
