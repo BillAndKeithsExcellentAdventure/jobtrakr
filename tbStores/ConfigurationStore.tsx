@@ -75,17 +75,14 @@ const {
   useValue,
 } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
-const useStoreId = (orgId: string) => STORE_ID_PREFIX + orgId;
+const useStoreId = () => {
+  const { orgId } = useAuth();
+  return STORE_ID_PREFIX + '_' + orgId;
+};
 
 // Create, persist, and sync a store containing ALL the categories defined by the user.
 export default function ConfigurationStore() {
-  const { userId } = useAuth();
-  const { orgId } = useAuth();
-
-  console.log('ConfigurationStore: userId:', userId);
-  console.log('ConfigurationStore: orgId:', orgId);
-
-  const storeId = useStoreId(orgId ? orgId : userId ? userId : '0');
+  const storeId = useStoreId();
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
   useCreateClientPersisterAndStart(storeId, store);
   useCreateServerSynchronizerAndStart(storeId, store);

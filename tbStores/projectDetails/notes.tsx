@@ -19,7 +19,7 @@ const {
 
 import { useCallback, useEffect, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
-\import { TABLES_SCHEMA, getStoreId } from './ProjectDetailsStore';
+import { TABLES_SCHEMA, getStoreId } from './ProjectDetailsStore';
 import { NoValuesSchema } from 'tinybase/with-schemas';
 
 const NOTES_TABLE = 'notes';

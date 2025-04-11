@@ -5,6 +5,7 @@ import { createMergeableStore, createStore, NoValuesSchema, Value } from 'tinyba
 import { useCreateClientPersisterAndStart } from './persistence/useCreateClientPersisterAndStart';
 import { useCreateServerSynchronizerAndStart } from './synchronization/useCreateServerSynchronizerAndStart';
 import { ProjectData, TBStatus } from '@/models/types';
+import { useAuth } from '@clerk/clerk-expo';
 
 const STORE_ID_PREFIX = 'projectListStore-';
 const TABLES_SCHEMA = {
@@ -43,7 +44,10 @@ const {
   useTable,
 } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
-const useStoreId = () => STORE_ID_PREFIX + '9999'; // Replace 9999 with an organization id.
+const useStoreId = () => {
+  const { orgId } = useAuth();
+  return STORE_ID_PREFIX + '_' + orgId;
+};
 
 /// Functions to create:
 //  List all projects returning ProjectData[]. Pass in a status.

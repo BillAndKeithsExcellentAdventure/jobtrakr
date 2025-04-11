@@ -54,7 +54,6 @@ const {
 } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
 export const getStoreId = (projId: string) => STORE_ID_PREFIX + projId;
-const getUserId = () => '8888-KMB'; // Replace with a userId
 
 // Create, persist, and sync a store containing the project and its categories.
 function ProjectDetailsStore({ activeProjectId }: { activeProjectId: string }) {

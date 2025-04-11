@@ -46,9 +46,10 @@ export default function CreateOrganization() {
     try {
       const organizationData = {
         name: name,
-        created_by: userId,
+        userId: userId,
         slug: slug,
       };
+      console.log(' token:', token);
       const response = await fetch(
         'https://projecthoundbackend.keith-m-bertram.workers.dev/addOrganization',
         {
@@ -62,7 +63,9 @@ export default function CreateOrganization() {
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorBody = await response.text();
+        console.error('Error response:', errorBody);
+        throw new Error(`HTTP error! status: ${response.status}. Response: ${errorBody}`);
       }
 
       const data = await response.json();
