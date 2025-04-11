@@ -1,4 +1,3 @@
-// src/features/notes/notesSlice.ts
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 
 const {
@@ -20,11 +19,16 @@ const {
 
 import { useCallback, useEffect, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
-import { NoteData, TBStatus } from '@/models/types';
-import { TABLES_SCHEMA, getStoreId } from './ProjectDetailsStore';
+\import { TABLES_SCHEMA, getStoreId } from './ProjectDetailsStore';
 import { NoValuesSchema } from 'tinybase/with-schemas';
 
 const NOTES_TABLE = 'notes';
+
+export interface NoteData {
+  id?: string;
+  task: string;
+  completed: boolean;
+}
 
 /**
  * Hook to return all notes for a project.
@@ -69,7 +73,7 @@ export const useAddNote = (projectId: string) => {
   const store = useStore(getStoreId(projectId));
 
   return useCallback(
-    (noteData: Omit<NoteData, 'id'>): { status: TBStatus; msg: string; id: string } => {
+    (noteData: Omit<NoteData, 'id'>) => {
       if (!store) return { status: 'Error', msg: 'Store not available', id: '' };
 
       const id = randomUUID();
@@ -91,7 +95,7 @@ export const useUpdateNote = (projectId: string) => {
   const store = useStore(getStoreId(projectId));
 
   return useCallback(
-    (note: NoteData): { status: TBStatus; msg: string } => {
+    (note: NoteData) => {
       if (!store) return { status: 'Error', msg: 'Store not available' };
       const result = store.setRow(NOTES_TABLE, note.id!, note);
       return result ? { status: 'Success', msg: '' } : { status: 'Error', msg: 'Failed to update note' };
@@ -107,7 +111,7 @@ export const useDeleteNote = (projectId: string) => {
   const store = useStore(getStoreId(projectId));
 
   return useCallback(
-    (id: string): { status: TBStatus; msg: string } => {
+    (id: string) => {
       if (!store) return { status: 'Error', msg: 'Store not available' };
       const result = store.delRow(NOTES_TABLE, id);
       return result

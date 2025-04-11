@@ -1,8 +1,13 @@
 import { ActionButton } from '@/components/ActionButton';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useActiveProjectId } from '@/context/ActiveProjectIdContext';
-import { NoteData } from '@/models/types';
-import { useAddNote, useAllNotes, useDeleteNote, useUpdateNote } from '@/tbStores/projectDetails/notes';
+import {
+  NoteData,
+  useAddNote,
+  useAllNotes,
+  useDeleteNote,
+  useUpdateNote,
+} from '@/tbStores/projectDetails/notes';
 import FontAwesomeIcon from '@expo/vector-icons/FontAwesome';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
