@@ -1,6 +1,6 @@
 import { ActionButton } from '@/components/ActionButton';
 import { Text, TextInput, View } from '@/components/Themed';
-import { useActiveProjectId } from '@/context/ActiveProjectIdContext';
+import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import {
   NoteData,
   useAddNote,
@@ -16,20 +16,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const JobNotes = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
-  const { activeProjectId, setActiveProjectId } = useActiveProjectId();
+  const { addActiveProjectIds } = useActiveProjectIds();
   const [newNoteTitle, setNewNoteTitle] = useState('');
   const [editingNote, setEditingNote] = useState<NoteData | null>(null);
 
   useEffect(() => {
-    if (activeProjectId !== jobId) {
-      setActiveProjectId(jobId);
+    if (jobId) {
+      addActiveProjectIds([jobId]);
     }
-  }, [jobId, activeProjectId, setActiveProjectId]);
+  }, [jobId]);
 
-  const notes = useAllNotes(activeProjectId);
-  const addNewNote = useAddNote(activeProjectId);
-  const removeNote = useDeleteNote(activeProjectId);
-  const updateNote = useUpdateNote(activeProjectId);
+  const notes = useAllNotes(jobId);
+  const addNewNote = useAddNote(jobId);
+  const removeNote = useDeleteNote(jobId);
+  const updateNote = useUpdateNote(jobId);
 
   const addNote = useCallback(async () => {
     if (!newNoteTitle.trim()) {
@@ -37,7 +37,7 @@ const JobNotes = () => {
       return;
     }
 
-    const newNote: NoteData = { task: newNoteTitle, completed: false };
+    const newNote: Omit<NoteData, 'id'> = { task: newNoteTitle, completed: false };
     addNewNote(newNote);
     setNewNoteTitle('');
   }, [addNewNote, newNoteTitle]);

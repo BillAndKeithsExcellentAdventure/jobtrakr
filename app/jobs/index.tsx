@@ -26,6 +26,7 @@ import {
   useProjectValue,
   useToggleFavoriteCallback,
 } from '@/tbStores/ListOfProjectsStore';
+import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -40,6 +41,7 @@ function isEntry(obj: any): obj is TwoColumnListEntry {
 
 export default function JobHomeScreen() {
   const allProjects = useAllProjects();
+  const { addActiveProjectIds } = useActiveProjectIds();
   const toggleFavorite = useToggleFavoriteCallback();
   const [jobListEntries, setJobListEntries] = useState<TwoColumnListEntry[]>([]);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
@@ -72,6 +74,14 @@ export default function JobHomeScreen() {
           },
     [colorScheme],
   );
+
+  useEffect(() => {
+    // create an array of projectId that have been favorited
+    const favoriteProjectIds = allProjects
+      .filter((project) => project._id && project.favorite && project.favorite > 0)
+      .map((project) => project._id);
+    addActiveProjectIds(favoriteProjectIds);
+  }, [allProjects, addActiveProjectIds]);
 
   useEffect(() => {
     if (allProjects) {

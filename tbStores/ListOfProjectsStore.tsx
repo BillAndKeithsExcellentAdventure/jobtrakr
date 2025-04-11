@@ -1,10 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { createMergeableStore, createStore, NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { useCreateClientPersisterAndStart } from './persistence/useCreateClientPersisterAndStart';
 import { useCreateServerSynchronizerAndStart } from './synchronization/useCreateServerSynchronizerAndStart';
 import { ProjectData, TBStatus } from '@/models/types';
+import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
+import ProjectDetailsStore from './projectDetails/ProjectDetailsStore';
 
 const STORE_ID_PREFIX = 'projectListStore-';
 const TABLES_SCHEMA = {
@@ -216,5 +218,17 @@ export default function ProjectsStore() {
   useCreateClientPersisterAndStart(storeId, store);
   useCreateServerSynchronizerAndStart(storeId, store);
   useProvideStore(storeId, store);
-  return null;
+  const { activeProjectIds } = useActiveProjectIds();
+  const allAvailableProjectIds = useRowIds('projects', storeId);
+  const allProjectDetailsStoreToBuild = useMemo(
+    () => allAvailableProjectIds.filter((id) => activeProjectIds.includes(id)),
+    [activeProjectIds, allAvailableProjectIds],
+  );
+
+  if (allProjectDetailsStoreToBuild.length === 0) {
+    return null;
+  }
+
+  // In turn 'render' (i.e. create) all of the active projectDetailStores for active projects.
+  return allProjectDetailsStoreToBuild.map((id) => <ProjectDetailsStore projectId={id} key={id} />);
 }

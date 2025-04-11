@@ -15,7 +15,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ConfigurationStore from '@/tbStores/configurationStore/ConfigurationStore';
 import { Provider as TinyBaseProvider } from 'tinybase/ui-react';
 import ProjectsStore from '@/tbStores/ListOfProjectsStore';
-import { ActiveProjectIdProvider } from '@/context/ActiveProjectIdContext';
+import { ActiveProjectIdsProvider } from '@/context/ActiveProjectIdsContext';
 import ProjectDetailsStoreProvider from '@/tbStores/projectDetails/ProjectDetailsStore';
 
 export {
@@ -58,9 +58,8 @@ function RootLayoutNav() {
         <DatabaseHostProvider>
           <TinyBaseProvider>
             <ConfigurationStore />
-            <ProjectsStore />
-            <ActiveProjectIdProvider>
-              <ProjectDetailsStoreProvider />
+            <ActiveProjectIdsProvider>
+              <ProjectsStore />
               <SafeAreaProvider>
                 <GestureHandlerRootView>
                   <Stack screenOptions={{ headerShown: false }}>
@@ -71,7 +70,7 @@ function RootLayoutNav() {
                   <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
                 </GestureHandlerRootView>
               </SafeAreaProvider>
-            </ActiveProjectIdProvider>
+            </ActiveProjectIdsProvider>
           </TinyBaseProvider>
         </DatabaseHostProvider>
       </SessionProvider>
