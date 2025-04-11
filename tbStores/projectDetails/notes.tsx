@@ -1,27 +1,10 @@
 import * as UiReact from 'tinybase/ui-react/with-schemas';
-
-const {
-  useCell,
-  useCreateMergeableStore,
-  useDelRowCallback,
-  useProvideRelationships,
-  useProvideStore,
-  useRowCount,
-  useSetCellCallback,
-  useSetValueCallback,
-  useSortedRowIds,
-  useStore,
-  useCreateRelationships,
-  useTable,
-  useValue,
-  useValuesListener,
-} = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
-
 import { useCallback, useEffect, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import { TABLES_SCHEMA, getStoreId } from './ProjectDetailsStore';
 import { NoValuesSchema } from 'tinybase/with-schemas';
 
+const { useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 const NOTES_TABLE = 'notes';
 
 export interface NoteData {
