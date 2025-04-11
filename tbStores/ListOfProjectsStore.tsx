@@ -7,6 +7,7 @@ import { useCreateServerSynchronizerAndStart } from './synchronization/useCreate
 import { ProjectData, TBStatus } from '@/models/types';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import ProjectDetailsStore from './projectDetails/ProjectDetailsStore';
+import { useAuth } from '@clerk/clerk-expo';
 
 const STORE_ID_PREFIX = 'projectListStore-';
 const TABLES_SCHEMA = {
@@ -45,7 +46,10 @@ const {
   useTable,
 } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
-const useStoreId = () => STORE_ID_PREFIX + '9999'; // Replace 9999 with an organization id.
+const useStoreId = () => {
+  const { orgId } = useAuth();
+  return STORE_ID_PREFIX + '_' + orgId;
+};
 
 /// Functions to create:
 //  List all projects returning ProjectData[]. Pass in a status.

@@ -49,7 +49,6 @@ const { useCreateMergeableStore, useProvideStore } = UiReact as UiReact.WithSche
 >;
 
 export const getStoreId = (projId: string) => STORE_ID_PREFIX + projId;
-const getUserId = () => '8888-KMB'; // Replace with a userId
 
 // Create, persist, and sync a store containing the project and its categories.
 export default function ProjectDetailsStore({ projectId: projectId }: { projectId: string }) {

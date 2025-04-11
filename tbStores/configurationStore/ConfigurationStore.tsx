@@ -12,6 +12,7 @@ import {
   WorkCategoryData,
   WorkItemData as WorkItemData,
 } from '@/models/types';
+import { useAuth } from '@clerk/clerk-expo';
 
 const STORE_ID_PREFIX = 'ConfigurationStore-';
 export const TABLES_SCHEMA = {
@@ -74,7 +75,10 @@ const {
   useValue,
 } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
-const useStoreId = () => STORE_ID_PREFIX + '9999'; // Replace 9999 with a organization id.
+const useStoreId = () => {
+  const { orgId } = useAuth();
+  return STORE_ID_PREFIX + '_' + orgId;
+};
 
 // Create, persist, and sync a store containing ALL the categories defined by the user.
 export default function ConfigurationStore() {

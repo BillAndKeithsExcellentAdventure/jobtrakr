@@ -189,6 +189,8 @@ export default function JobHomeScreen() {
         console.log('Log file shared');
       } else if (item === 'Configuration') {
         router.push('/jobs/configuration/home');
+      } else if (item === 'Invite') {
+        router.push('/(auth)/invite');
       }
     },
     [shareLogFile, logInfo],
@@ -215,6 +217,13 @@ export default function JobHomeScreen() {
         label: 'Share Log',
         onPress: (e, actionContext) => {
           handleMenuItemPress('ShareLog', actionContext);
+        },
+      },
+      {
+        icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
+        label: 'Invite Team Members',
+        onPress: (e, actionContext) => {
+          handleMenuItemPress('Invite', actionContext);
         },
       },
     ],

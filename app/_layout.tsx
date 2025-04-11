@@ -5,7 +5,7 @@ import { LoggerHostProvider } from '@/context/LoggerContext';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Link, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
@@ -17,6 +17,8 @@ import { Provider as TinyBaseProvider } from 'tinybase/ui-react';
 import ProjectsStore from '@/tbStores/ListOfProjectsStore';
 import { ActiveProjectIdsProvider } from '@/context/ActiveProjectIdsContext';
 import ProjectDetailsStoreProvider from '@/tbStores/projectDetails/ProjectDetailsStore';
+import { ClerkProvider } from '@clerk/clerk-expo';
+import { tokenCache } from '@clerk/clerk-expo/token-cache';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -25,6 +27,13 @@ export {
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+// Import your Publishable Key
+const PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+if (!PUBLISHABLE_KEY) {
+  throw new Error('Add your Clerk Publishable Key to the .env file');
+}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -50,30 +59,41 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
+//  afterSignOutUrl="/(auth)/sign-in"
+
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  console.log(`Publishable Key: ${PUBLISHABLE_KEY}`);
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <SessionProvider>
-        <DatabaseHostProvider>
-          <TinyBaseProvider>
-            <ConfigurationStore />
-            <ActiveProjectIdsProvider>
-              <ProjectsStore />
-              <SafeAreaProvider>
-                <GestureHandlerRootView>
-                  <Stack screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="index" />
-                    <Stack.Screen name="jobs" />
-                    <Stack.Screen name="(auth)" />
-                  </Stack>
-                  <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-                </GestureHandlerRootView>
-              </SafeAreaProvider>
-            </ActiveProjectIdsProvider>
-          </TinyBaseProvider>
-        </DatabaseHostProvider>
-      </SessionProvider>
-    </ThemeProvider>
+    <ClerkProvider tokenCache={tokenCache} publishableKey={PUBLISHABLE_KEY}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <SessionProvider>
+          <DatabaseHostProvider>
+            <TinyBaseProvider>
+              <ConfigurationStore />
+              <ActiveProjectIdsProvider>
+                <ProjectsStore />
+                <SafeAreaProvider>
+                  <GestureHandlerRootView>
+                    <Stack screenOptions={{ headerShown: false }}>
+                      <Stack.Screen name="index" />
+                      <Stack.Screen name="jobs" />
+                      <Stack.Screen name="(auth)" />
+                    </Stack>
+                    <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+                  </GestureHandlerRootView>
+                </SafeAreaProvider>
+              </ActiveProjectIdsProvider>
+            </TinyBaseProvider>
+          </DatabaseHostProvider>
+        </SessionProvider>
+      </ThemeProvider>
+    </ClerkProvider>
   );
 }
+
+/*           
+          
+
+          
+          */
