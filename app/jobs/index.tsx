@@ -204,6 +204,12 @@ export default function JobHomeScreen() {
     [shareLogFile, logInfo],
   );
 
+  const handleSignOut = useCallback(async () => {
+    await signOut(() => {
+      router.replace('/(auth)/sign-in');
+    });
+  }, [signOut]);
+
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
       {
@@ -237,8 +243,8 @@ export default function JobHomeScreen() {
       {
         icon: <Entypo name="log-out" size={28} color={colors.iconColor} />,
         label: 'Logout',
-        onPress: (e, actionContext) => {
-          handleMenuItemPress('Logout', actionContext);
+        onPress: async (e, actionContext) => {
+          handleSignOut();
         },
       },
     ],

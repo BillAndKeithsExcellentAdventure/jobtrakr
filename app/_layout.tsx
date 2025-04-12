@@ -3,7 +3,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { ActiveProjectIdsProvider } from '@/context/ActiveProjectIdsContext';
 import { SessionProvider } from '@/context/AuthSessionContext';
 import { DatabaseHostProvider } from '@/context/DatabaseContext';
-import { ClerkProvider } from '@clerk/clerk-expo';
+import { ClerkLoaded, ClerkProvider } from '@clerk/clerk-expo';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
@@ -58,36 +58,31 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  console.log(`Publishable Key: ${PUBLISHABLE_KEY}`);
   return (
-    <ClerkProvider tokenCache={tokenCache} publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/(auth)/sign-in">
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <SessionProvider>
-          <DatabaseHostProvider>
-            <TinyBaseProvider>
-              <ActiveProjectIdsProvider>
-                <AuthorizedStoresProvider />
-                <SafeAreaProvider>
-                  <GestureHandlerRootView>
-                    <Stack screenOptions={{ headerShown: false }}>
-                      <Stack.Screen name="index" />
-                      <Stack.Screen name="jobs" />
-                      <Stack.Screen name="(auth)" />
-                    </Stack>
-                    <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-                  </GestureHandlerRootView>
-                </SafeAreaProvider>
-              </ActiveProjectIdsProvider>
-            </TinyBaseProvider>
-          </DatabaseHostProvider>
-        </SessionProvider>
-      </ThemeProvider>
+    <ClerkProvider tokenCache={tokenCache} publishableKey={PUBLISHABLE_KEY}>
+      <ClerkLoaded>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <SessionProvider>
+            <DatabaseHostProvider>
+              <TinyBaseProvider>
+                <ActiveProjectIdsProvider>
+                  <AuthorizedStoresProvider />
+                  <SafeAreaProvider>
+                    <GestureHandlerRootView>
+                      <Stack screenOptions={{ headerShown: false }}>
+                        <Stack.Screen name="index" />
+                        <Stack.Screen name="jobs" />
+                        <Stack.Screen name="(auth)" />
+                      </Stack>
+                      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+                    </GestureHandlerRootView>
+                  </SafeAreaProvider>
+                </ActiveProjectIdsProvider>
+              </TinyBaseProvider>
+            </DatabaseHostProvider>
+          </SessionProvider>
+        </ThemeProvider>
+      </ClerkLoaded>
     </ClerkProvider>
   );
 }
-
-/*           
-          
-
-          
-          */
