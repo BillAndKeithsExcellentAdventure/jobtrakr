@@ -12,12 +12,12 @@ import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableVendor from './SwipeableVendor';
 import { VendorData } from '@/models/types';
-import { useAllVendors, useAddVendorCallback } from '@/tbStores/configurationStore/ConfigurationStore';
+import { useAddRowCallback, useAllRows } from '@/tbStores/configurationStore/hooks';
 
 const VendorsScreen = () => {
   const router = useRouter();
-  const allVendors = useAllVendors();
-  const addVendorToStore = useAddVendorCallback();
+  const addVendorToStore = useAddRowCallback('vendors');
+  const allVendors = useAllRows('vendors');
   const [showAdd, setShowAdd] = useState(false);
   const [vendor, setVendor] = useState<VendorData>({
     name: '',

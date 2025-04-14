@@ -19,7 +19,7 @@ export interface ProjectData {
 }
 
 export interface WorkCategoryData {
-  _id: string;
+  _id?: string;
   code: string;
   name: string;
   status: string;

@@ -6,15 +6,12 @@ import { ActionButton } from '@/components/ActionButton';
 import { Text, TextInput, View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import {
-  useUpdateVendorCallback,
-  useVendorFromStore,
-} from '@/tbStores/configurationStore/ConfigurationStore';
 import { VendorData } from '@/models/types';
+import { useUpdateRowCallback, useTypedRow } from '@/tbStores/configurationStore/hooks';
 
 const EditVendor = () => {
   const { id } = useLocalSearchParams();
-  const applyVendorUpdates = useUpdateVendorCallback();
+  const applyVendorUpdates = useUpdateRowCallback('vendors');
 
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -43,7 +40,7 @@ const EditVendor = () => {
     notes: '',
   });
 
-  const vendorFromStore = useVendorFromStore(id as string);
+  const vendorFromStore = useTypedRow('vendors', id as string);
 
   useEffect(() => {
     if (vendorFromStore) {

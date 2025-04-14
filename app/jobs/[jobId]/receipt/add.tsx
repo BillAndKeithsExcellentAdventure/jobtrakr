@@ -9,7 +9,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { useReceiptDataStore } from '@/stores/receiptDataStore';
-import { useAllVendors } from '@/tbStores/configurationStore/ConfigurationStore';
+import { useAllRows } from '@/tbStores/configurationStore/hooks';
 import { formatDate } from '@/utils/formatters';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
@@ -66,7 +66,7 @@ const AddReceiptPage = () => {
   const colorScheme = useColorScheme();
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [canAddReceipt, setCanAddReceipt] = useState(false);
-  const allVendors = useAllVendors();
+  const allVendors = useAllRows('vendors');
 
   useEffect(() => {
     if (allVendors && allVendors.length > 0) {

@@ -2,7 +2,8 @@ import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors, deleteBg } from '@/constants/Colors';
 import { VendorData } from '@/models/types';
-import { useDeleteVendorCallback } from '@/tbStores/configurationStore/ConfigurationStore';
+import { useDeleteRowCallback } from '@/tbStores/configurationStore/hooks';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
@@ -12,7 +13,8 @@ import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimat
 
 const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
   const router = useRouter();
-  const processDelete = useDeleteVendorCallback(vendor._id!);
+
+  const processDelete = useDeleteRowCallback('vendors');
 
   const colorScheme = useColorScheme();
   const colors = useMemo(
@@ -37,7 +39,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
     Alert.alert(
       'Delete Vendor',
       'Are you sure you want to delete this vendor?',
-      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete() }],
+      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete(itemId) }],
       { cancelable: true },
     );
   };
