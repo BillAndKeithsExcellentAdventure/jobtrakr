@@ -9,7 +9,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
-import { useRouter, Stack } from 'expo-router';
+import { useRouter, Stack, Redirect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
@@ -26,7 +26,10 @@ import {
   useProjectValue,
   useToggleFavoriteCallback,
 } from '@/tbStores/ListOfProjectsStore';
+
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
+import { AntDesign } from '@expo/vector-icons';
+import { useAuth, useClerk } from '@clerk/clerk-expo';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -49,6 +52,8 @@ export default function JobHomeScreen() {
   const { logInfo, shareLogFile } = useDbLogger();
   const colorScheme = useColorScheme();
   const router = useRouter();
+  const { signOut } = useClerk();
+  const auth = useAuth();
 
   // Define colors based on the color scheme (dark or light)
   const colors = useMemo(
@@ -191,10 +196,19 @@ export default function JobHomeScreen() {
         router.push('/jobs/configuration/home');
       } else if (item === 'Invite') {
         router.push('/(auth)/invite');
+      } else if (item === 'Logout') {
+        signOut();
+        router.replace('/(auth)/sign-in');
       }
     },
     [shareLogFile, logInfo],
   );
+
+  const handleSignOut = useCallback(async () => {
+    await signOut(() => {
+      router.replace('/(auth)/sign-in');
+    });
+  }, [signOut]);
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
@@ -220,10 +234,17 @@ export default function JobHomeScreen() {
         },
       },
       {
-        icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
+        icon: <AntDesign name="adduser" size={28} color={colors.iconColor} />,
         label: 'Invite Team Members',
         onPress: (e, actionContext) => {
           handleMenuItemPress('Invite', actionContext);
+        },
+      },
+      {
+        icon: <Entypo name="log-out" size={28} color={colors.iconColor} />,
+        label: 'Logout',
+        onPress: async (e, actionContext) => {
+          handleSignOut();
         },
       },
     ],

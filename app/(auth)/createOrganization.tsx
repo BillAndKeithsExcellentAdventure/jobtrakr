@@ -127,21 +127,19 @@ export default function CreateOrganization() {
 
   return (
     <View>
-      <>
-        (!organizationExists && (<Text>Create Organization</Text>
-        <TextInput
-          style={{ ...styles.input, color: colors.textColor }}
-          autoCapitalize="none"
-          value={organizationName}
-          placeholderTextColor={colors.textColor}
-          placeholder="Enter Organization name"
-          onChangeText={(orgName) => setOrganizationName(orgName)}
-        />
-        <TouchableOpacity onPress={onCreateOrganizationPress}>
-          <Text style={{ ...styles.input, color: colors.textColor }}>Create Organization</Text>
-        </TouchableOpacity>
-        ))
-      </>
+      (!organizationExists && (<Text>Create Organization</Text>
+      <TextInput
+        style={{ ...styles.input, color: colors.textColor }}
+        autoCapitalize="none"
+        value={organizationName}
+        placeholderTextColor={colors.textColor}
+        placeholder="Enter Organization name"
+        onChangeText={(orgName) => setOrganizationName(orgName)}
+      />
+      <TouchableOpacity onPress={onCreateOrganizationPress}>
+        <Text style={{ ...styles.input, color: colors.textColor }}>Create Organization</Text>
+      </TouchableOpacity>
+      ))
     </View>
   );
 }

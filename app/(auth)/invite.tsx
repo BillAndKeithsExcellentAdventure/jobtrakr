@@ -1,9 +1,12 @@
 import * as React from 'react';
-import { Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { TextInput, Text, View } from '@/components/Themed';
+import { TouchableOpacity } from 'react-native';
 import { useSignUp, useClerk, useAuth } from '@clerk/clerk-expo';
-import { Link, Redirect, useRouter } from 'expo-router';
+import { Link, Redirect, Stack, useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { useEffect } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useColorScheme } from '@/components/useColorScheme';
 
 export default function InviteUser() {
   const colorScheme = useColorScheme();
@@ -26,11 +29,16 @@ export default function InviteUser() {
   );
 
   return (
-    <View>
-      <>
-        <Text style={{ ...styles.input, color: colors.textColor }}>Invite User</Text>
-      </>
-    </View>
+    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Invite User',
+          headerTitleAlign: 'center',
+        }}
+      />
+      <Text style={{ ...styles.input, color: colors.textColor }}>Invite User</Text>
+    </SafeAreaView>
   );
 }
 

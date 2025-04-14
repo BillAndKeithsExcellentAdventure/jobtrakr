@@ -1,8 +1,12 @@
 import * as React from 'react';
-import { Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
+import { TextInput, Text, View } from '@/components/Themed';
+
 import { useSignUp, useClerk, useAuth } from '@clerk/clerk-expo';
-import { Link, useRouter } from 'expo-router';
+import { Link, Stack, useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActionButton } from '@/components/ActionButton';
 
 export default function SignUpScreen() {
   const colorScheme = useColorScheme();
@@ -14,12 +18,14 @@ export default function SignUpScreen() {
             borderColor: Colors.dark.borderColor,
             iconColor: Colors.dark.iconColor,
             textColor: Colors.dark.text,
+            neutral200: Colors.dark.neutral200,
           }
         : {
             listBackground: Colors.light.listBackground,
             borderColor: Colors.light.borderColor,
             iconColor: Colors.light.iconColor,
             textColor: Colors.light.text,
+            neutral200: Colors.dark.neutral200,
           },
     [colorScheme],
   );
@@ -130,91 +136,98 @@ export default function SignUpScreen() {
 
   if (pendingVerification) {
     return (
-      <>
-        <Text style={{ ...styles.title, color: colors.textColor }}>Verify your email</Text>
-        <TextInput
-          style={{ ...styles.input, color: colors.textColor }}
-          value={code}
-          placeholder="Enter your verification code"
-          onChangeText={(code) => setCode(code)}
+      <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            title: 'Verify Sign Up',
+          }}
         />
-        <TouchableOpacity onPress={onVerifyPress}>
-          <Text style={{ ...styles.input, color: colors.textColor }}>Verify</Text>
-        </TouchableOpacity>
-      </>
+        <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
+          <Text
+            txtSize="xl"
+            style={{ marginBottom: 20, backgroundColor: colors.listBackground }}
+            text="Verify your email"
+          />
+          <TextInput
+            style={{ ...styles.input, backgroundColor: colors.neutral200 }}
+            value={code}
+            placeholder="Enter your verification code"
+            onChangeText={(code) => setCode(code)}
+          />
+          <ActionButton type={code ? 'action' : 'disabled'} onPress={onVerifyPress} title="Verify" />
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View>
-      <>
-        <Text>Sign up</Text>
+    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Sign Up',
+        }}
+      />
+
+      <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
+        <Text
+          txtSize="xl"
+          style={{ marginBottom: 20, backgroundColor: colors.listBackground }}
+          text="Sign Up"
+        />
         <TextInput
-          style={{ ...styles.input, color: colors.textColor }}
+          style={{ ...styles.input, backgroundColor: colors.neutral200 }}
           autoCapitalize="none"
           value={emailAddress}
           placeholderTextColor={colors.textColor}
-          placeholder="Enter email"
+          keyboardType="email-address"
+          placeholder="Email"
           onChangeText={(email) => setEmailAddress(email)}
         />
         <TextInput
-          style={{ ...styles.input, color: colors.textColor }}
+          style={{ ...styles.input, backgroundColor: colors.neutral200 }}
           value={password}
           placeholderTextColor={colors.textColor}
-          placeholder="Enter password"
+          placeholder="Password"
           secureTextEntry={true}
           onChangeText={(password) => setPassword(password)}
         />
-        <TouchableOpacity onPress={onSignUpPress}>
-          <Text style={{ ...styles.input, color: colors.textColor }}>Continue</Text>
-        </TouchableOpacity>
-        <View style={{ display: 'flex', flexDirection: 'row', gap: 3 }}>
-          <Text style={{ ...styles.input, color: colors.textColor }}>Already have an account?</Text>
+        <ActionButton
+          type={emailAddress && password ? 'action' : 'disabled'}
+          onPress={onSignUpPress}
+          title="Continue"
+        />
+        <View style={styles.footer}>
+          <Text text="Already have an account?" style={{ backgroundColor: 'transparent', marginRight: 20 }} />
           <Link href="/sign-in">
-            <Text style={{ ...styles.input, color: colors.textColor }}>Sign in</Text>
+            <Text style={styles.link}>Sign in</Text>
           </Link>
         </View>
-      </>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
-  },
-  button: {
-    backgroundColor: '#000',
-    padding: 15,
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 20,
+    backgroundColor: 'transparent',
   },
   link: {
     color: '#007AFF',
   },
-} as const;
+  input: {
+    height: 40,
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingLeft: 10,
+    borderRadius: 4,
+  },
+});
