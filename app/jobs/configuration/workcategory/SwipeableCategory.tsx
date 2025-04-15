@@ -1,11 +1,11 @@
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors, deleteBg } from '@/constants/Colors';
-import { WorkCategoryData, WorkItemData } from '@/models/types';
 import {
-  useCategoryValue,
-  useDeleteCategoryCallback,
-} from '@/tbStores/configurationStore/ConfigurationStore';
+  useDeleteRowCallback,
+  useTableValue,
+  WorkCategoryData,
+} from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
@@ -14,8 +14,7 @@ import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeabl
 import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
 const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
-  const processDelete = useDeleteCategoryCallback(category._id!);
-
+  const processDelete = useDeleteRowCallback('categories');
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = useMemo(
@@ -41,7 +40,7 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
       Alert.alert(
         'Delete Work Category',
         'Are you sure you want to delete this category?',
-        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete() }],
+        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete(itemId) }],
         { cancelable: true },
       );
     },
@@ -59,7 +58,7 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
       <Pressable
         onPress={() => {
           prog.value = 0;
-          handleDelete(category._id!);
+          handleDelete(category.id);
         }}
       >
         <Reanimated.View style={[styleAnimation, styles.rightAction]}>
@@ -69,12 +68,12 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
     );
   };
 
-  const [name] = useCategoryValue(category._id, 'name');
-  const [code] = useCategoryValue(category._id, 'code');
+  const name = useTableValue('categories', category.id, 'name');
+  const code = useTableValue('categories', category.id, 'code');
 
   return (
     <ReanimatedSwipeable
-      key={category._id}
+      key={category.id}
       friction={2}
       enableTrackpadTwoFingerGesture
       rightThreshold={40}
@@ -87,7 +86,7 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
           onPress={() => {
             router.push({
               pathname: '/jobs/configuration/workcategory/[categoryId]',
-              params: { categoryId: category._id! },
+              params: { categoryId: category.id },
             });
           }}
         >

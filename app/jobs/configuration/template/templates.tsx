@@ -1,11 +1,7 @@
-// screens/ListJobTemplates.tsx
-
 import { ActionButton } from '@/components/ActionButton';
 import { TextInput, Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { JobTemplateData, WorkItemData } from '@/models/types';
-import { useAllTemplates, useAddTemplateCallback } from '@/tbStores/configurationStore/ConfigurationStore';
 import { Ionicons } from '@expo/vector-icons'; // Right caret icon
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -13,12 +9,19 @@ import { FlatList, Keyboard, StyleSheet, TouchableWithoutFeedback } from 'react-
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableJobTemplate from './SwipeableJobTemplate';
+import {
+  JobTemplateData,
+  useAddRowCallback,
+  useAllRows,
+  WorkItemData,
+} from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 
 const ListJobTemplates = () => {
-  const allJobTemplates = useAllTemplates();
-  const addJobTemplate = useAddTemplateCallback();
+  const allJobTemplates = useAllRows('templates');
+  const addJobTemplate = useAddRowCallback('templates');
   const [showAdd, setShowAdd] = useState(false);
   const [jobTemplate, setJobTemplate] = useState<JobTemplateData>({
+    id: '',
     name: '',
     description: '',
   });
@@ -67,13 +70,13 @@ const ListJobTemplates = () => {
     if (jobTemplate.name && jobTemplate.description) {
       const newJobTemplate = {
         ...jobTemplate,
-        _id: '0',
+        id: '0',
       } as JobTemplateData;
 
       addJobTemplate(newJobTemplate);
 
       // Clear the input fields
-      setJobTemplate({ name: '', description: '' });
+      setJobTemplate({ id: '', name: '', description: '' });
     }
   }, [allJobTemplates, jobTemplate]);
 
@@ -124,7 +127,7 @@ const ListJobTemplates = () => {
         <View>
           <FlatList
             data={allJobTemplates}
-            keyExtractor={(item) => item._id!}
+            keyExtractor={(item) => item.id}
             renderItem={({ item }) => <SwipeableJobTemplate jobTemplate={item} />}
             ListEmptyComponent={() => (
               <View
@@ -163,6 +166,3 @@ const styles = StyleSheet.create({
 });
 
 export default ListJobTemplates;
-function useAllJobTemplatesCallback() {
-  throw new Error('Function not implemented.');
-}

@@ -7,14 +7,15 @@ import { Text, TextInput, View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import {
-  useUpdateVendorCallback,
-  useVendorFromStore,
-} from '@/tbStores/configurationStore/ConfigurationStore';
-import { VendorData } from '@/models/types';
+  useUpdateRowCallback,
+  useTypedRow,
+  VendorData,
+} from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 
 const EditVendor = () => {
   const { id } = useLocalSearchParams();
-  const applyVendorUpdates = useUpdateVendorCallback();
+  const vendorId = useMemo(() => id as string, [id]);
+  const applyVendorUpdates = useUpdateRowCallback('vendors');
 
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -33,6 +34,7 @@ const EditVendor = () => {
   );
 
   const [updatedVendor, setUpdatedVendor] = useState<VendorData>({
+    id: '',
     name: '',
     address: '',
     city: '',
@@ -43,16 +45,12 @@ const EditVendor = () => {
     notes: '',
   });
 
-  const vendorFromStore = useVendorFromStore(id as string);
-
+  const vendorFromStore = useTypedRow('vendors', vendorId);
   useEffect(() => {
     if (vendorFromStore) {
-      setUpdatedVendor({
-        ...vendorFromStore,
-      });
+      setUpdatedVendor((prevVendor) => (prevVendor.id !== vendorId ? vendorFromStore : prevVendor));
     }
-  }, [vendorFromStore]);
-
+  }, [vendorFromStore, vendorId]);
   const handleInputChange = (name: keyof VendorData, value: string) => {
     setUpdatedVendor((prevVendor) => ({
       ...prevVendor,

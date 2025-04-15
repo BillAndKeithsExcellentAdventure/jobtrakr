@@ -1,4 +1,4 @@
-import { JobTemplateData } from '@/models/types';
+import { JobTemplateData } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { create } from 'zustand';
 
 export type JobTemplateDataStore = {

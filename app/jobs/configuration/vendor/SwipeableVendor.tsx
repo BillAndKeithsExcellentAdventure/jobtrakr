@@ -1,8 +1,8 @@
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors, deleteBg } from '@/constants/Colors';
-import { VendorData } from '@/models/types';
-import { useDeleteVendorCallback } from '@/tbStores/configurationStore/ConfigurationStore';
+import { useDeleteRowCallback, VendorData } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
@@ -12,7 +12,8 @@ import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimat
 
 const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
   const router = useRouter();
-  const processDelete = useDeleteVendorCallback(vendor._id!);
+
+  const processDelete = useDeleteRowCallback('vendors');
 
   const colorScheme = useColorScheme();
   const colors = useMemo(
@@ -37,7 +38,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
     Alert.alert(
       'Delete Vendor',
       'Are you sure you want to delete this vendor?',
-      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete() }],
+      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete(itemId) }],
       { cancelable: true },
     );
   };
@@ -53,7 +54,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
       <Pressable
         onPress={() => {
           prog.value = 0;
-          handleDelete(vendor._id!);
+          handleDelete(vendor.id);
         }}
       >
         <Reanimated.View style={[styleAnimation, styles.rightAction]}>
@@ -65,7 +66,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
 
   return (
     <ReanimatedSwipeable
-      key={vendor._id}
+      key={vendor.id}
       friction={2}
       enableTrackpadTwoFingerGesture
       rightThreshold={40}
@@ -78,7 +79,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
           onPress={() => {
             router.push({
               pathname: '/jobs/configuration/vendor/[id]',
-              params: { id: vendor._id! },
+              params: { id: vendor.id },
             });
           }}
         >

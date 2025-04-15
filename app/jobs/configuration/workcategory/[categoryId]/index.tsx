@@ -1,7 +1,6 @@
 import { ActionButton } from '@/components/ActionButton';
 import { Text, TextInput, View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
-import { WorkCategoryData, WorkItemData } from '@/models/types';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -15,23 +14,28 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableCategoryItem from './SwipeableCategoryItem';
+
 import {
-  useAllWorkItems,
-  useAddWorkItemCallback,
-  useCategoryValue,
-  useCategoryFromStore,
-} from '@/tbStores/configurationStore/ConfigurationStore';
+  useTableValue,
+  useAllRows,
+  useAddRowCallback,
+  useTypedRow,
+  WorkItemData,
+} from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 
 const ShowWorkCategory = () => {
   const { categoryId } = useLocalSearchParams();
-  const category = useCategoryFromStore(categoryId as string); // Fetch the category by ID
-  const allWorkItems = useAllWorkItems();
-  const addWorkItem = useAddWorkItemCallback();
-  const [name] = useCategoryValue(categoryId as string, 'name');
-  const [code] = useCategoryValue(categoryId as string, 'code');
+
+  const category = useTypedRow('categories', categoryId as string); // Fetch the category by ID
+  const allWorkItems = useAllRows('workItems');
+  const addWorkItem = useAddRowCallback('workItems');
+
+  const name = useTableValue('categories', categoryId as string, 'name');
+  const code = useTableValue('categories', categoryId as string, 'code');
 
   const [categorySpecificItems, setCategorySpecificItems] = useState<WorkItemData[]>([]);
   const [item, setItem] = useState<WorkItemData>({
+    id: '',
     name: '',
     code: '',
   });
@@ -86,7 +90,7 @@ const ShowWorkCategory = () => {
 
       if (status && status.status === 'Success') {
         // Clear the input fields
-        setItem({ name: '', code: '' });
+        setItem({ id: '', name: '', code: '' });
       } else if (status) {
         console.log('Error adding item:', status.msg);
       }
@@ -121,7 +125,7 @@ const ShowWorkCategory = () => {
       <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
         <View style={{ backgroundColor: colors.listBackground, padding: 10 }}>
           <TouchableOpacity
-            onPress={() => handleEditCategory(category._id!)} // Edit on item press
+            onPress={() => handleEditCategory(category.id)} // Edit on item press
           >
             <View style={[styles.categoryContent, { borderColor: colors.borderColor, borderWidth: 1 }]}>
               <View style={styles.categoryInfo}>
@@ -179,7 +183,7 @@ const ShowWorkCategory = () => {
               <FlatList
                 style={{ borderTopWidth: 1, borderColor: colors.borderColor }}
                 data={categorySpecificItems}
-                keyExtractor={(item) => item._id!}
+                keyExtractor={(item) => item.id}
                 renderItem={({ item }) => <SwipeableCategoryItem item={item} category={category} />}
               />
             ) : (

@@ -1,8 +1,7 @@
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors, deleteBg } from '@/constants/Colors';
-import { JobTemplateData } from '@/models/types';
-import { useJobTemplateDataStore } from '@/stores/jobTemplateDataStore';
+import { JobTemplateData, useDeleteRowCallback } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
@@ -12,7 +11,7 @@ import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimat
 
 const SwipeableJobTemplate = ({ jobTemplate }: { jobTemplate: JobTemplateData }) => {
   const router = useRouter();
-  const { removeJobTemplate } = useJobTemplateDataStore();
+  const removeJobTemplate = useDeleteRowCallback('templates');
   const colorScheme = useColorScheme();
   const colors = useMemo(
     () =>
@@ -51,7 +50,7 @@ const SwipeableJobTemplate = ({ jobTemplate }: { jobTemplate: JobTemplateData })
     return (
       <Pressable
         onPress={() => {
-          handleDelete(jobTemplate._id!);
+          handleDelete(jobTemplate.id);
         }}
       >
         <Reanimated.View style={[styleAnimation, styles.rightAction]}>
@@ -63,7 +62,7 @@ const SwipeableJobTemplate = ({ jobTemplate }: { jobTemplate: JobTemplateData })
 
   return (
     <ReanimatedSwipeable
-      key={jobTemplate._id}
+      key={jobTemplate.id}
       friction={2}
       enableTrackpadTwoFingerGesture
       rightThreshold={40}
@@ -76,7 +75,7 @@ const SwipeableJobTemplate = ({ jobTemplate }: { jobTemplate: JobTemplateData })
           onPress={() => {
             router.push({
               pathname: '/jobs/configuration/template/[templateId]',
-              params: { templateId: jobTemplate._id! },
+              params: { templateId: jobTemplate.id },
             });
           }}
         >

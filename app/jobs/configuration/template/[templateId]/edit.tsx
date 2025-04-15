@@ -1,9 +1,6 @@
 import OkayCancelButtons from '@/components/OkayCancelButtons'; // Assuming you have this component
 import { TextInput, View } from '@/components/Themed';
-import {
-  useTemplateValue,
-  useUpdateTemplateCallback,
-} from '@/tbStores/configurationStore/ConfigurationStore';
+import { useTableValue, useUpdateRowCallback } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
@@ -11,12 +8,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditJobTemplate = () => {
   const { templateId } = useLocalSearchParams(); // Assuming the route includes jobTemplateId
-  const applyTemplateUpdates = useUpdateTemplateCallback();
+  const applyTemplateUpdates = useUpdateRowCallback('templates');
   const jobTemplateId = templateId as string; // Ensure this is a string for the store hooks
   const router = useRouter();
-  const [name] = useTemplateValue(jobTemplateId, 'name');
+  const name = useTableValue('templates', jobTemplateId, 'name');
   const [newName, setNewName] = useState(name);
-  const [description] = useTemplateValue(jobTemplateId, 'description');
+  const description = useTableValue('templates', jobTemplateId, 'description');
   const [newDescription, setNewDescription] = useState(description);
 
   useEffect(() => {
@@ -30,7 +27,7 @@ const EditJobTemplate = () => {
   const handleSave = () => {
     if (newName && newDescription) {
       applyTemplateUpdates(jobTemplateId, {
-        _id: jobTemplateId,
+        id: jobTemplateId,
         description: newDescription,
         name: newName,
       });

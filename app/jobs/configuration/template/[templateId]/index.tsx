@@ -2,11 +2,10 @@ import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import {
-  useAllCategories,
-  useAllWorkItems,
-  useTemplateValue,
+  useAllRows,
+  useTableValue,
   useTemplateWorkItemData,
-} from '@/tbStores/configurationStore/ConfigurationStore';
+} from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { createItemsArray } from '@/utils/array';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -32,13 +31,13 @@ interface SectionData {
 const JobTemplatesConfigurationScreen: React.FC = () => {
   const { templateId } = useLocalSearchParams();
   const jobTemplateId = templateId as string;
-  const [templateName] = useTemplateValue(jobTemplateId, 'name');
-  const [templateDescription] = useTemplateValue(jobTemplateId, 'description');
+  const templateName = useTableValue('templates', jobTemplateId, 'name');
+  const templateDescription = useTableValue('templates', jobTemplateId, 'description');
   const colorScheme = useColorScheme();
   const colors = colorScheme === 'dark' ? Colors.dark : Colors.light;
   const router = useRouter();
-  const allJobCategories = useAllCategories();
-  const allWorkItems = useAllWorkItems();
+  const allJobCategories = useAllRows('categories');
+  const allWorkItems = useAllRows('workItems');
   const { setActiveWorkItemIds, templateWorkItemIds, toggleWorkItemId } =
     useTemplateWorkItemData(jobTemplateId);
   const [sectionData, setSectionData] = useState<SectionData[]>([]);
@@ -48,19 +47,19 @@ const JobTemplatesConfigurationScreen: React.FC = () => {
   useEffect(() => {
     const fetchAllSectionsData = () => {
       const sections: SectionData[] = allJobCategories.map((category) => {
-        const items = allWorkItems.filter((item) => item.categoryId! === category._id);
+        const items = allWorkItems.filter((item) => item.categoryId === category.id);
         const activeWorkItemIds = templateWorkItemIds ?? [];
 
         return {
-          id: category._id,
+          id: category.id,
           code: category.code,
           title: category.name,
-          isExpanded: expandedSectionIdRef.current === category._id,
+          isExpanded: expandedSectionIdRef.current === category.id,
           data: items.map((item) => ({
-            id: item._id!,
+            id: item.id,
             code: item.code,
             title: item.name,
-            isActive: !!activeWorkItemIds.find((id) => id === item._id), // Check if the item is in the activeWorkItemIds
+            isActive: !!activeWorkItemIds.find((id) => id === item.id), // Check if the item is in the activeWorkItemIds
           })),
         };
       });

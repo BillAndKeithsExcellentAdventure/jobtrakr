@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text } from '@/components/Themed';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { useJobDb } from '@/context/DatabaseContext';
-import { ReceiptBucketData } from 'jobdb';
+import { ReceiptBucketData, VendorData } from 'jobdb';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NumberInputField } from '@/components/NumberInputField';
 import { TextField } from '@/components/TextField';
@@ -14,7 +14,7 @@ import { ActionButton } from '@/components/ActionButton';
 import OptionList, { OptionEntry } from '@/components/OptionList';
 import { OptionPickerItem } from '@/components/OptionPickerItem';
 import BottomSheetContainer from '@/components/BottomSheetContainer';
-import { useAllVendors } from '@/tbStores/configurationStore/ConfigurationStore';
+import { useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 
 const EditReceiptDetailsPage = () => {
   const router = useRouter();
@@ -32,7 +32,7 @@ const EditReceiptDetailsPage = () => {
   };
 
   const { jobDbHost } = useJobDb();
-  const allVendors = useAllVendors();
+  const allVendors = useAllRows<VendorData>('vendors');
 
   useEffect(() => {
     if (allVendors && allVendors.length > 0) {
