@@ -5,16 +5,16 @@ import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { JobData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, StyleSheet } from 'react-native';
+import { Alert, Modal, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useJobDataStore } from '@/stores/jobDataStore';
 import { Stack, useRouter } from 'expo-router';
-import { JobTemplateData, ProjectData } from '@/models/types';
 import { useJobTemplateDataStore } from '@/stores/jobTemplateDataStore';
 import OptionList, { OptionEntry } from '@/components/OptionList';
 import { OptionPickerItem } from '@/components/OptionPickerItem';
 import BottomSheetContainer from '@/components/BottomSheetContainer';
-import { useAddProjectCallback } from '@/tbStores/ListOfProjectsStore';
+import { ProjectData, useAddProjectCallback } from '@/tbStores/ListOfProjectsStore';
+import { JobTemplateData, useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 
 type Job = {
   name: string;
@@ -28,9 +28,19 @@ const AddJobScreen = () => {
   defaultFinish.setMonth(defaultFinish.getMonth() + 9);
 
   const [project, setProject] = useState<ProjectData>({
+    id: '',
     name: '',
     location: '',
     ownerName: '',
+    bidPrice: 0,
+    amountSpent: 0,
+    longitude: 0,
+    latitude: 0,
+    radius: 50,
+    favorite: 0,
+    thumbnail: '',
+    status: 'active', // 'active', 'on-hold'  or 'completed'
+    seedJobWorkitems: '', // comma separated list of workItemIds
     startDate: defaultStart.getTime(),
     plannedFinish: defaultFinish.getTime(),
   });
@@ -60,7 +70,8 @@ const AddJobScreen = () => {
   );
 
   const router = useRouter();
-  const { allJobTemplates, setJobTemplates, addJobTemplate } = useJobTemplateDataStore();
+  const allJobTemplates = useAllRows('templates');
+  const allJobTemplateWorkItems = useAllRows('templateWorkItems');
   const [isTemplateListPickerVisible, setIsTemplateListPickerVisible] = useState<boolean>(false);
   const [pickedTemplate, setPickedTemplate] = useState<OptionEntry | undefined>(undefined);
   const [templateOptions, setTemplateOptions] = useState<OptionEntry[]>([]);
@@ -72,62 +83,44 @@ const AddJobScreen = () => {
   };
 
   useEffect(() => {
-    // Fetch job templates from API or local storage (simulated here)
-    const fetchJobTemplates = async () => {
-      const jobTemplatesData: JobTemplateData[] = [
-        {
-          _id: '1',
-          name: 'Standard House',
-          description: 'Standard Residential Construction',
-        },
-        {
-          _id: '2',
-          name: 'Private Steel Building',
-          description: 'Privately owned steel building',
-        },
-        {
-          _id: '3',
-          name: 'Public Steel Building',
-          description: 'State or Federally owned steel building',
-        },
-      ];
-      setJobTemplates(jobTemplatesData);
-    };
-
-    fetchJobTemplates();
-  }, []);
-
-  useEffect(() => {
-    const options = allJobTemplates.map((t) => {
-      return { label: t.name, value: t._id };
+    const availableOptions = allJobTemplates.map((t) => {
+      return { label: t.name, value: t.id };
     });
-    setTemplateOptions(options);
+    if (availableOptions.length === 0) {
+      availableOptions.push({ label: 'No templates available', value: '' });
+      setTemplateOptions(availableOptions);
+    } else {
+      availableOptions.sort((a, b) => a.label.localeCompare(b.label));
+      setTemplateOptions([{ label: 'None', value: '' }, ...availableOptions]);
+    }
   }, [allJobTemplates]);
 
   useEffect(() => {
-    setCanAddJob((project ? (project.name ? project.name.length : 0) : 0) > 0 && !!pickedTemplate);
+    setCanAddJob(project.name.length > 0 && undefined !== pickedTemplate);
   }, [project, pickedTemplate]);
 
   const handleSubmit = useCallback(async () => {
-    console.log('Job submitted:', project);
+    if (!canAddJob) {
+      console.log('Cannot add job, missing required fields.');
+      return;
+    }
 
-    console.log('Adding project to database:', addProject);
+    if (pickedTemplate?.value) {
+      const template = allJobTemplates.find((t) => t.id === pickedTemplate?.value);
+      if (template) {
+        const templateWorkItems = allJobTemplateWorkItems.filter((t) => t.templateId === template.id);
+        const workItemIds = templateWorkItems.map((t) => t.id);
+        project.seedJobWorkitems = workItemIds.join(',');
+      }
+    }
 
-    const projData: ProjectData = {
-      name: project.name,
-      location: project.location,
-      ownerName: project.ownerName,
-    };
-
-    const result = addProject(projData);
+    const result = addProject(project);
     console.log('Job creation result:', result);
-    if (result?.status === 'Success') {
-      console.log('Job created:', project);
-    } else {
-      console.log('Job creation failed:', project);
+    if (result.status !== 'Success') {
+      Alert.alert(`Job creation failed for project ${project.name}: ${result.msg}`);
     }
     router.back();
-  }, [project]);
+  }, [project, canAddJob, pickedTemplate, allJobTemplates, allJobTemplateWorkItems, addProject, router]);
 
   return (
     <SafeAreaView
