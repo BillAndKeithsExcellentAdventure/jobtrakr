@@ -1,9 +1,11 @@
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors, deleteBg } from '@/constants/Colors';
-import { WorkCategoryData, WorkItemData } from '@/models/types';
-import { useWorkCategoryItemDataStore } from '@/stores/categoryItemDataStore';
-import { useDelWorkItemCallback } from '@/tbStores/configurationStore/ConfigurationStore';
+import {
+  WorkCategoryData,
+  WorkItemData,
+  useDeleteRowCallback,
+} from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
@@ -13,7 +15,7 @@ import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimat
 
 const SwipeableCategoryItem = ({ item, category }: { item: WorkItemData; category: WorkCategoryData }) => {
   const router = useRouter();
-  const processDelete = useDelWorkItemCallback(item._id!);
+  const processDelete = useDeleteRowCallback('workItems');
   const colorScheme = useColorScheme();
   const colors = useMemo(
     () =>
@@ -37,7 +39,7 @@ const SwipeableCategoryItem = ({ item, category }: { item: WorkItemData; categor
     Alert.alert(
       'Delete Work Item',
       'Are you sure you want to delete this item?',
-      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete() }],
+      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete(itemId) }],
       { cancelable: true },
     );
   };
@@ -53,7 +55,7 @@ const SwipeableCategoryItem = ({ item, category }: { item: WorkItemData; categor
       <Pressable
         onPress={() => {
           prog.value = 0;
-          handleDelete(item._id!);
+          handleDelete(item.id);
         }}
       >
         <Reanimated.View style={[styleAnimation, styles.rightAction]}>
@@ -65,7 +67,7 @@ const SwipeableCategoryItem = ({ item, category }: { item: WorkItemData; categor
 
   return (
     <ReanimatedSwipeable
-      key={item._id}
+      key={item.id}
       friction={2}
       enableTrackpadTwoFingerGesture
       rightThreshold={40}
@@ -78,7 +80,7 @@ const SwipeableCategoryItem = ({ item, category }: { item: WorkItemData; categor
           onPress={() => {
             router.push({
               pathname: '/jobs/configuration/workcategory/[categoryId]/item/[itemId]',
-              params: { categoryId: category._id!, itemId: item._id! },
+              params: { categoryId: category.id, itemId: item.id },
             });
           }}
         >

@@ -1,9 +1,13 @@
 import * as React from 'react';
-import { Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { TextInput, Text, View } from '@/components/Themed';
+import { TouchableOpacity } from 'react-native';
 import { useSignUp, useClerk, useAuth, useOrganizationList } from '@clerk/clerk-expo';
-import { Link, Redirect, useRouter } from 'expo-router';
+import { Link, Redirect, Stack, useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { useEffect } from 'react';
+import { useColorScheme } from '@/components/useColorScheme';
+import { ActionButton } from '@/components/ActionButton';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CreateOrganization() {
   const colorScheme = useColorScheme();
@@ -15,12 +19,14 @@ export default function CreateOrganization() {
             borderColor: Colors.dark.borderColor,
             iconColor: Colors.dark.iconColor,
             textColor: Colors.dark.text,
+            neutral200: Colors.dark.neutral200,
           }
         : {
             listBackground: Colors.light.listBackground,
             borderColor: Colors.light.borderColor,
             iconColor: Colors.light.iconColor,
             textColor: Colors.light.text,
+            neutral200: Colors.light.neutral200,
           },
     [colorScheme],
   );
@@ -126,42 +132,46 @@ export default function CreateOrganization() {
   }
 
   return (
-    <View>
-      (!organizationExists && (<Text>Create Organization</Text>
-      <TextInput
-        style={{ ...styles.input, color: colors.textColor }}
-        autoCapitalize="none"
-        value={organizationName}
-        placeholderTextColor={colors.textColor}
-        placeholder="Enter Organization name"
-        onChangeText={(orgName) => setOrganizationName(orgName)}
+    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Create Organization',
+          headerTitleAlign: 'center',
+        }}
       />
-      <TouchableOpacity onPress={onCreateOrganizationPress}>
-        <Text style={{ ...styles.input, color: colors.textColor }}>Create Organization</Text>
-      </TouchableOpacity>
-      ))
-    </View>
+
+      <View style={styles.container}>
+        <Text txtSize="xl" text="Create Organization" style={{ marginBottom: 20 }} />
+        <TextInput
+          style={{ ...styles.input, backgroundColor: colors.neutral200 }}
+          autoCapitalize="none"
+          value={organizationName}
+          placeholderTextColor={colors.textColor}
+          placeholder="Enter Organization name"
+          onChangeText={(orgName) => setOrganizationName(orgName)}
+        />
+        <ActionButton
+          type={organizationName ? 'action' : 'disabled'}
+          onPress={onCreateOrganizationPress}
+          title="Create Organization"
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = {
   container: {
     flex: 1,
-    justifyContent: 'center',
     padding: 20,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
   input: {
+    height: 40,
     borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 10,
     marginBottom: 10,
-    borderRadius: 5,
+    paddingLeft: 10,
+    borderRadius: 4,
   },
   button: {
     backgroundColor: '#000',

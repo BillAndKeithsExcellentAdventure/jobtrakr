@@ -2,10 +2,7 @@ import OkayCancelButtons from '@/components/OkayCancelButtons';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import {
-  useCategoryValue,
-  useUpdateCategoryCallback,
-} from '@/tbStores/configurationStore/ConfigurationStore';
+import { useTableValue, useUpdateRowCallback } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
@@ -14,12 +11,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const EditWorkCategory = () => {
   const { categoryId } = useLocalSearchParams();
   const catId = categoryId ? (categoryId as string) : '';
-  const applyWorkCategoryUpdates = useUpdateCategoryCallback();
+  const applyWorkCategoryUpdates = useUpdateRowCallback('categories');
   const router = useRouter();
-  const [status] = useCategoryValue(categoryId as string, 'status');
-  const [name] = useCategoryValue(categoryId as string, 'name');
+  const status = useTableValue('categories', categoryId as string, 'status');
+  const name = useTableValue('categories', categoryId as string, 'name');
   const [newName, setNewName] = useState(name);
-  const [code] = useCategoryValue(categoryId as string, 'code');
+  const code = useTableValue('categories', categoryId as string, 'code');
   const [newCode, setNewCode] = useState(code);
 
   useEffect(() => {
@@ -46,7 +43,7 @@ const EditWorkCategory = () => {
   const handleSave = () => {
     if (newName && newCode) {
       applyWorkCategoryUpdates(catId, {
-        _id: catId,
+        id: catId,
         code: newCode,
         name: newName,
         status,

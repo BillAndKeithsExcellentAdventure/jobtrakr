@@ -1,4 +1,4 @@
-import { WorkCategoryData } from '@/models/types';
+import { WorkCategoryData } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { create } from 'zustand';
 
 export type WorkCategoryDataStore = {

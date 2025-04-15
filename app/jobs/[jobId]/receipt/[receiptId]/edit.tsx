@@ -14,7 +14,7 @@ import { ActionButton } from '@/components/ActionButton';
 import OptionList, { OptionEntry } from '@/components/OptionList';
 import { OptionPickerItem } from '@/components/OptionPickerItem';
 import BottomSheetContainer from '@/components/BottomSheetContainer';
-import { useAllRows } from '@/tbStores/configurationStore/hooks';
+import { useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 
 const EditReceiptDetailsPage = () => {
   const router = useRouter();

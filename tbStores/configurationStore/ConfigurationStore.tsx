@@ -3,34 +3,35 @@ import { createMergeableStore, NoValuesSchema } from 'tinybase/with-schemas';
 import { useCreateClientPersisterAndStart } from '../persistence/useCreateClientPersisterAndStart';
 import { useCreateServerSynchronizerAndStart } from '../synchronization/useCreateServerSynchronizerAndStart';
 import { useAuth } from '@clerk/clerk-expo';
+import { useMemo } from 'react';
 
-const STORE_ID_PREFIX = 'ConfigurationStore-';
+const STORE_ID_PREFIX = 'PHV1_ConfigurationStore';
 export const TABLES_SCHEMA = {
   categories: {
-    _id: { type: 'string' },
+    id: { type: 'string' },
     code: { type: 'string' },
     name: { type: 'string' },
     status: { type: 'string' },
   },
   workItems: {
-    _id: { type: 'string' },
+    id: { type: 'string' },
     categoryId: { type: 'string' },
     code: { type: 'string' },
     name: { type: 'string' },
     status: { type: 'string' },
   },
   templates: {
-    _id: { type: 'string' },
+    id: { type: 'string' },
     name: { type: 'string' },
     description: { type: 'string' },
   },
   templateWorkItems: {
-    _id: { type: 'string' },
+    id: { type: 'string' },
     templateId: { type: 'string' },
     workItemIds: { type: 'string' }, // Comma separated list of workItemIds
   },
   vendors: {
-    _id: { type: 'string' },
+    id: { type: 'string' },
     name: { type: 'string' },
     address: { type: 'string' },
     city: { type: 'string' },
@@ -48,7 +49,8 @@ const { useCreateMergeableStore, useProvideStore } = UiReact as UiReact.WithSche
 
 export const useStoreId = () => {
   const { orgId } = useAuth();
-  return STORE_ID_PREFIX + '_' + orgId;
+  const storeId = useMemo(() => `${STORE_ID_PREFIX}_${orgId}`, [orgId]);
+  return storeId;
 };
 
 // Create, persist, and sync a store containing ALL the categories defined by the user.

@@ -1,25 +1,28 @@
 // screens/ListWorkCategories.tsx
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, TouchableOpacity, StyleSheet, Keyboard, TouchableWithoutFeedback } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons'; // Right caret icon
-import { Text, TextInput, View } from '@/components/Themed';
-import { WorkCategoryData } from '@/models/types';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
+import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import {
+  useAddRowCallback,
+  useAllRows,
+  WorkCategoryData,
+} from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import { Ionicons } from '@expo/vector-icons'; // Right caret icon
+import { Stack, useRouter } from 'expo-router';
+import React, { useCallback, useMemo, useState } from 'react';
+import { FlatList, Keyboard, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableCategory from './SwipeableCategory';
-import { useAddCategoryCallback, useAllCategories } from '@/tbStores/configurationStore/ConfigurationStore';
 
 const ListWorkCategories = () => {
-  const addWorkCategory = useAddCategoryCallback();
-  const allCategories = useAllCategories();
+  const addWorkCategory = useAddRowCallback('categories');
+  const allCategories = useAllRows('categories');
   const [showAdd, setShowAdd] = useState(false);
   const [category, setCategory] = useState<WorkCategoryData>({
-    _id: '',
+    id: '',
     name: '',
     code: '',
     status: '',
@@ -78,7 +81,7 @@ const ListWorkCategories = () => {
       if (status && status.status === 'Success') {
         console.log('Category added:', status.id);
         // Clear the input fields
-        setCategory({ name: '', code: '', _id: '', status: '' });
+        setCategory({ name: '', code: '', id: '', status: '' });
       } else {
         console.log('Error adding category:', status.msg);
       }
@@ -137,7 +140,7 @@ const ListWorkCategories = () => {
         <View>
           <FlatList
             data={allCategories}
-            keyExtractor={(item) => item._id!}
+            keyExtractor={(item) => item.id}
             renderItem={({ item }) => <SwipeableCategory category={item} />}
             ListEmptyComponent={() => (
               <View

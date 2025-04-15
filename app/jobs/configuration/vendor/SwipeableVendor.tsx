@@ -1,8 +1,7 @@
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors, deleteBg } from '@/constants/Colors';
-import { VendorData } from '@/models/types';
-import { useDeleteRowCallback } from '@/tbStores/configurationStore/hooks';
+import { useDeleteRowCallback, VendorData } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -55,7 +54,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
       <Pressable
         onPress={() => {
           prog.value = 0;
-          handleDelete(vendor._id!);
+          handleDelete(vendor.id);
         }}
       >
         <Reanimated.View style={[styleAnimation, styles.rightAction]}>
@@ -67,7 +66,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
 
   return (
     <ReanimatedSwipeable
-      key={vendor._id}
+      key={vendor.id}
       friction={2}
       enableTrackpadTwoFingerGesture
       rightThreshold={40}
@@ -80,7 +79,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
           onPress={() => {
             router.push({
               pathname: '/jobs/configuration/vendor/[id]',
-              params: { id: vendor._id! },
+              params: { id: vendor.id },
             });
           }}
         >
