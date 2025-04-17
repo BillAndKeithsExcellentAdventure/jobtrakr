@@ -96,11 +96,9 @@ export type CellIdMap = {
 };
 
 // --- Retrieve all rows of a table ---
-export const useAllRows = <K extends keyof TableDataMap>(
-  tableName: K,
-): (TableDataMap[K] & { id: string })[] => {
+export const useAllRows = <K extends keyof TableDataMap>(tableName: K): TableDataMap[K][] => {
   const store = useStore(useStoreId());
-  const [rows, setRows] = useState<(TableDataMap[K] & { id: string })[]>([]);
+  const [rows, setRows] = useState<TableDataMap[K][]>([]);
 
   const fetchRows = useCallback(() => {
     if (!store) return [];
@@ -109,7 +107,7 @@ export const useAllRows = <K extends keyof TableDataMap>(
       ? (Object.entries(table).map(([id, row]) => ({
           id: id,
           ...row,
-        })) as (TableDataMap[K] & { id: string })[])
+        })) as TableDataMap[K][])
       : [];
   }, [store, tableName]);
 

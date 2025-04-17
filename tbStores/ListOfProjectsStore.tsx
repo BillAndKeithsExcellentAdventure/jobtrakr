@@ -4,18 +4,34 @@ import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { createMergeableStore, createStore, NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { useCreateClientPersisterAndStart } from './persistence/useCreateClientPersisterAndStart';
 import { useCreateServerSynchronizerAndStart } from './synchronization/useCreateServerSynchronizerAndStart';
-import { ProjectData, TBStatus } from '@/models/types';
+import { TBStatus } from '@/models/types';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import ProjectDetailsStore from './projectDetails/ProjectDetailsStore';
 import { useAuth } from '@clerk/clerk-expo';
 
-const STORE_ID_PREFIX = 'projectListStore-';
+export interface ProjectData {
+  id: string;
+  name: string;
+  location: string;
+  ownerName: string;
+  startDate: number;
+  plannedFinish: number;
+  bidPrice: number;
+  amountSpent: number;
+  longitude: number;
+  latitude: number;
+  radius: number;
+  favorite: number;
+  thumbnail: string;
+  status: string; // 'active', 'on-hold'  or 'completed'
+  seedJobWorkitems: string; // comma separated list of workItemIds
+}
+
+const STORE_ID_PREFIX = 'PHV1_projectListStore';
 const TABLES_SCHEMA = {
   projects: {
-    _id: { type: 'string' },
-    code: { type: 'string' },
+    id: { type: 'string' },
     name: { type: 'string' },
-    jobTypeId: { type: 'string' },
     location: { type: 'string' },
     ownerName: { type: 'string' },
     startDate: { type: 'number' },
@@ -28,6 +44,7 @@ const TABLES_SCHEMA = {
     favorite: { type: 'number' },
     thumbnail: { type: 'string' },
     jobStatus: { type: 'string' },
+    seedJobWorkitems: { type: 'string' }, // comma separated list of workItemIds
   },
 } as const;
 
@@ -48,14 +65,9 @@ const {
 
 const useStoreId = () => {
   const { orgId } = useAuth();
-  return STORE_ID_PREFIX + '_' + orgId;
+  const storeId = useMemo(() => `${STORE_ID_PREFIX}_${orgId}`, [orgId]);
+  return storeId;
 };
-
-/// Functions to create:
-//  List all projects returning ProjectData[]. Pass in a status.
-//  Add a new Project
-//  Delete a project
-//  Update a project property.
 
 /**
  * Returns all projects for the current store ID.
@@ -76,7 +88,7 @@ export const useAllProjects = () => {
     const table = store.getTable('projects');
     if (table) {
       const projects: ProjectData[] = Object.entries(table).map(([id, row]) => ({
-        _id: id,
+        id: id,
         code: row.code ?? '',
         name: row.name ?? '',
         jobTypeId: row.jobTypeId ?? '',
