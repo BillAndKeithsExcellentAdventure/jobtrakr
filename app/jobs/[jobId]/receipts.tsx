@@ -21,6 +21,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ReceiptSummary } from '@/components/ReceiptSummary';
 import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
 import { useAuth } from '@clerk/clerk-expo';
+import { randomUUID } from 'expo-crypto';
+import { useAddImageCallback } from '@/utils/images';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
   return actionContext && typeof actionContext.PictureUri === 'string';
@@ -150,6 +152,7 @@ const JobReceiptsPage = () => {
   const { allWorkCategories: allJobCategories, setWorkCategories: setJobCategories } =
     useWorkCategoryDataStore();
   const auth = useAuth();
+  const addReceiptImage = useAddImageCallback();
 
   const fetchReceipts = useCallback(async () => {
     try {
@@ -235,51 +238,6 @@ const JobReceiptsPage = () => {
     [colorScheme],
   );
 
-  const uploadReceipt = async (token: string, userId: string, orgId: string, localImageUrl: string) => {
-    try {
-      // Create FormData instance
-      const formData = new FormData();
-
-      // Add the text fields
-      formData.append('userId', userId);
-      formData.append('organizationId', orgId);
-
-      // Add the image file
-      const uri = Platform.OS === 'ios' ? localImageUrl.replace('file://', '') : localImageUrl;
-      const filename = localImageUrl.split('/').pop() || 'image.jpg';
-      const match = /\.(\w+)$/.exec(filename);
-      const type = match ? `image/${match[1]}` : 'image/jpeg';
-
-      formData.append('image', {
-        uri,
-        name: filename,
-        type,
-      } as any);
-
-      const response = await fetch('https://projecthoundbackend.keith-m-bertram.workers.dev/addReceipt', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        console.error('Error response:', errorBody);
-        throw new Error(`HTTP error! status: ${response.status}. Response: ${errorBody}`);
-      }
-
-      const data = await response.json();
-      console.log('Image uploaded successfully:', data);
-      return data;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      throw error;
-    }
-  };
-
   const handleAddPhotoReceipt = useCallback(async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
@@ -299,18 +257,10 @@ const JobReceiptsPage = () => {
         AssetId: asset.assetId ?? undefined,
       };
 
-      const token = await auth.getToken();
-      const userId = auth.userId;
-      const orgId = auth.orgId;
-      console.log('Token', token);
-      console.log('UserId', userId);
-      console.log('OrgId', orgId);
-      if (token && userId && orgId) {
-        const result = await uploadReceipt(token, userId, orgId, asset.uri || '');
-        if (result) {
-          console.log('Image upload result:', result);
-        }
-      }
+      console.log('Adding a new Receipt.', newReceipt);
+      // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
+      const imageAddResult = await addReceiptImage(asset.uri, jobId, 'receipt');
+      console.log('Finished adding Receipt.', imageAddResult);
 
       const response = await jobDbHost?.GetReceiptBucketDB().InsertReceipt(jobId, newReceipt);
       if (response?.status === 'Success') {
