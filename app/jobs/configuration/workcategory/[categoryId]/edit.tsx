@@ -9,14 +9,13 @@ import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditWorkCategory = () => {
-  const { categoryId } = useLocalSearchParams();
-  const catId = categoryId ? (categoryId as string) : '';
+  const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
   const applyWorkCategoryUpdates = useUpdateRowCallback('categories');
   const router = useRouter();
-  const status = useTableValue('categories', categoryId as string, 'status');
-  const name = useTableValue('categories', categoryId as string, 'name');
+  const status = useTableValue('categories', categoryId, 'status');
+  const name = useTableValue('categories', categoryId, 'name');
   const [newName, setNewName] = useState(name);
-  const code = useTableValue('categories', categoryId as string, 'code');
+  const code = useTableValue('categories', categoryId, 'code');
   const [newCode, setNewCode] = useState(code);
 
   useEffect(() => {
@@ -42,8 +41,8 @@ const EditWorkCategory = () => {
 
   const handleSave = () => {
     if (newName && newCode) {
-      applyWorkCategoryUpdates(catId, {
-        id: catId,
+      applyWorkCategoryUpdates(categoryId, {
+        id: categoryId,
         code: newCode,
         name: newName,
         status,

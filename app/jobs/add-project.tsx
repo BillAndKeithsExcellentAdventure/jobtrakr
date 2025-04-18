@@ -15,6 +15,7 @@ import { OptionPickerItem } from '@/components/OptionPickerItem';
 import BottomSheetContainer from '@/components/BottomSheetContainer';
 import { ProjectData, useAddProjectCallback } from '@/tbStores/ListOfProjectsStore';
 import { JobTemplateData, useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 
 type Job = {
   name: string;
@@ -40,7 +41,7 @@ const AddJobScreen = () => {
     favorite: 0,
     thumbnail: '',
     status: 'active', // 'active', 'on-hold'  or 'completed'
-    seedJobWorkitems: '', // comma separated list of workItemIds
+    seedJobWorkItems: '', // comma separated list of workItemIds
     startDate: defaultStart.getTime(),
     plannedFinish: defaultFinish.getTime(),
   });
@@ -76,7 +77,7 @@ const AddJobScreen = () => {
   const [pickedTemplate, setPickedTemplate] = useState<OptionEntry | undefined>(undefined);
   const [templateOptions, setTemplateOptions] = useState<OptionEntry[]>([]);
   const [canAddJob, setCanAddJob] = useState(false);
-
+  const { addActiveProjectIds } = useActiveProjectIds();
   const handleTemplateOptionChange = (option: OptionEntry) => {
     setPickedTemplate(option);
     setIsTemplateListPickerVisible(false);
@@ -110,14 +111,15 @@ const AddJobScreen = () => {
       if (template) {
         const templateWorkItems = allJobTemplateWorkItems.filter((t) => t.templateId === template.id);
         const workItemIds = templateWorkItems.map((t) => t.id);
-        project.seedJobWorkitems = workItemIds.join(',');
+        project.seedJobWorkItems = workItemIds.join(',');
       }
     }
 
     const result = addProject(project);
-    console.log('Job creation result:', result);
     if (result.status !== 'Success') {
       Alert.alert(`Job creation failed for project ${project.name}: ${result.msg}`);
+    } else {
+      addActiveProjectIds(result.id);
     }
     router.back();
   }, [project, canAddJob, pickedTemplate, allJobTemplates, allJobTemplateWorkItems, addProject, router]);

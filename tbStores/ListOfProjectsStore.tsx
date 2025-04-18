@@ -4,7 +4,7 @@ import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { createMergeableStore, createStore, NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { useCreateClientPersisterAndStart } from './persistence/useCreateClientPersisterAndStart';
 import { useCreateServerSynchronizerAndStart } from './synchronization/useCreateServerSynchronizerAndStart';
-import { TBStatus } from '@/models/types';
+import { CrudResult, TBStatus } from '@/models/types';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import ProjectDetailsStore from './projectDetails/ProjectDetailsStore';
 import { useAuth } from '@clerk/clerk-expo';
@@ -24,7 +24,7 @@ export interface ProjectData {
   favorite: number;
   thumbnail: string;
   status: string; // 'active', 'on-hold'  or 'completed'
-  seedJobWorkitems: string; // comma separated list of workItemIds
+  seedJobWorkItems: string; // comma separated list of workItemIds
 }
 
 const STORE_ID_PREFIX = 'PHV1_projectListStore';
@@ -44,7 +44,7 @@ const TABLES_SCHEMA = {
     favorite: { type: 'number' },
     thumbnail: { type: 'string' },
     jobStatus: { type: 'string' },
-    seedJobWorkitems: { type: 'string' }, // comma separated list of workItemIds
+    seedJobWorkItems: { type: 'string' }, // comma separated list of workItemIds
   },
 } as const;
 
@@ -77,34 +77,19 @@ export const useAllProjects = () => {
   let store = useStore(useStoreId());
 
   const fetchAllProjects = useCallback((): ProjectData[] => {
-    const defaultStart = new Date();
-    const defaultFinish = new Date();
-    defaultFinish.setMonth(defaultFinish.getMonth() + 9);
-
     if (!store) {
       return []; // Return an empty array if the store is not available
     }
 
     const table = store.getTable('projects');
     if (table) {
-      const projects: ProjectData[] = Object.entries(table).map(([id, row]) => ({
-        id: id,
-        code: row.code ?? '',
-        name: row.name ?? '',
-        jobTypeId: row.jobTypeId ?? '',
-        location: row.location ?? '',
-        ownerName: row.ownerName ?? '',
-        startDate: row.startDate ?? defaultStart.getTime(),
-        plannedFinish: row.plannedFinish ?? defaultFinish.getTime(),
-        bidPrice: row.bidPrice ?? 0,
-        amountSpent: row.amountSpent ?? 0,
-        longitude: row.longitude ?? 0,
-        latitude: row.latitude ?? 0,
-        radius: row.radius ?? 0,
-        favorite: row.favorite ?? 0,
-        thumbnail: row.thumbnail ?? '',
-        jobStatus: row.jobStatus ?? '',
-      }));
+      const projects: ProjectData[] = Object.entries(table).map(
+        ([id, row]) =>
+          ({
+            ...row,
+            id: id,
+          } as ProjectData),
+      );
 
       return projects.sort((a, b) => (b.favorite ?? 0) - (a.favorite ?? 0));
     }
@@ -142,7 +127,7 @@ export const useAddProjectCallback = () => {
   return useCallback(
     (projectData: ProjectData): { status: TBStatus; msg: string; id: string } => {
       const id = randomUUID();
-      projectData._id = id;
+      projectData.id = id;
 
       if (store) {
         const storeCheck = store.setRow('projects', id, projectData);
@@ -159,8 +144,30 @@ export const useAddProjectCallback = () => {
   );
 };
 
+export const useProject = (id: string): ProjectData | undefined => {
+  const store = useStore(useStoreId());
+  if (!store) return undefined;
+
+  const row = store.getRow('projects', id);
+  if (!row) return undefined;
+
+  return { id, ...row } as ProjectData;
+};
+
 // Returns a callback that deletes a project from the store.
-export const useDeleteProjectCallback = (id: string) => useDelRowCallback('projects', id, useStoreId());
+export function useDeleteProjectCallback() {
+  const store = useStore(useStoreId());
+  return useCallback(
+    (id: string): CrudResult => {
+      if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
+      const success = store.delRow('projects', id);
+      return success
+        ? { status: 'Success', id, msg: '' }
+        : { status: 'Error', id: '0', msg: 'Failed to delete' };
+    },
+    [store],
+  );
+}
 
 // Returns a pair of 1) a property of the vendor, 2) a callback that
 // updates it, similar to the React useState pattern.
@@ -228,23 +235,38 @@ export const useToggleFavoriteCallback = () => {
 };
 
 // Create, persist, and sync a store containing the IDs of the projects
-export default function ProjectsStore() {
+export default function ListOfProjectsStore() {
   const storeId = useStoreId();
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
   useCreateClientPersisterAndStart(storeId, store);
-  useCreateServerSynchronizerAndStart(storeId, store);
+  //useCreateServerSynchronizerAndStart(storeId, store);
   useProvideStore(storeId, store);
+
+  // get all active projectIds from the ActiveProjectIdsContext
   const { activeProjectIds } = useActiveProjectIds();
   const allAvailableProjectIds = useRowIds('projects', storeId);
-  const allProjectDetailsStoreToBuild = useMemo(
-    () => allAvailableProjectIds.filter((id) => activeProjectIds.includes(id)),
-    [activeProjectIds, allAvailableProjectIds],
-  );
+
+  const allProjectDetailsStoreToBuild = useMemo(() => {
+    if (
+      !activeProjectIds ||
+      !allAvailableProjectIds ||
+      allAvailableProjectIds.length === 0 ||
+      activeProjectIds.length === 0
+    ) {
+      return [];
+    }
+
+    const filterProjectIds = allAvailableProjectIds.filter((id) => activeProjectIds.includes(id));
+    return filterProjectIds;
+  }, [activeProjectIds, allAvailableProjectIds]);
 
   if (allProjectDetailsStoreToBuild.length === 0) {
     return null;
   }
 
   // In turn 'render' (i.e. create) all of the active projectDetailStores for active projects.
-  return allProjectDetailsStoreToBuild.map((id) => <ProjectDetailsStore projectId={id} key={id} />);
+  return allProjectDetailsStoreToBuild.map((id) => {
+    console.log('Rendering ProjectDetailsStore for projectId:', id);
+    return <ProjectDetailsStore projectId={id} key={id} />;
+  });
 }

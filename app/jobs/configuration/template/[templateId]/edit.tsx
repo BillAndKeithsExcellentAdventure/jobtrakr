@@ -7,13 +7,12 @@ import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditJobTemplate = () => {
-  const { templateId } = useLocalSearchParams(); // Assuming the route includes jobTemplateId
+  const { templateId } = useLocalSearchParams<{ templateId: string }>(); // Assuming the route includes jobTemplateId
   const applyTemplateUpdates = useUpdateRowCallback('templates');
-  const jobTemplateId = templateId as string; // Ensure this is a string for the store hooks
   const router = useRouter();
-  const name = useTableValue('templates', jobTemplateId, 'name');
+  const name = useTableValue('templates', templateId, 'name');
   const [newName, setNewName] = useState(name);
-  const description = useTableValue('templates', jobTemplateId, 'description');
+  const description = useTableValue('templates', templateId, 'description');
   const [newDescription, setNewDescription] = useState(description);
 
   useEffect(() => {
@@ -26,8 +25,8 @@ const EditJobTemplate = () => {
 
   const handleSave = () => {
     if (newName && newDescription) {
-      applyTemplateUpdates(jobTemplateId, {
-        id: jobTemplateId,
+      applyTemplateUpdates(templateId, {
+        id: templateId,
         description: newDescription,
         name: newName,
       });

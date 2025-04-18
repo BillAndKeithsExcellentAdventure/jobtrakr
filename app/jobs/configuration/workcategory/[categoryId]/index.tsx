@@ -24,15 +24,12 @@ import {
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 
 const ShowWorkCategory = () => {
-  const { categoryId } = useLocalSearchParams();
-
-  const category = useTypedRow('categories', categoryId as string); // Fetch the category by ID
+  const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
+  const category = useTypedRow('categories', categoryId); // Fetch the category by ID
   const allWorkItems = useAllRows('workItems');
   const addWorkItem = useAddRowCallback('workItems');
-
-  const name = useTableValue('categories', categoryId as string, 'name');
-  const code = useTableValue('categories', categoryId as string, 'code');
-
+  const name = useTableValue('categories', categoryId, 'name');
+  const code = useTableValue('categories', categoryId, 'code');
   const [categorySpecificItems, setCategorySpecificItems] = useState<WorkItemData[]>([]);
   const [item, setItem] = useState<WorkItemData>({
     id: '',

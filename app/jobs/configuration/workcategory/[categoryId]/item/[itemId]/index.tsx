@@ -8,20 +8,20 @@ import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditWorkItem = () => {
-  const { categoryId, itemId } = useLocalSearchParams();
+  const { categoryId, itemId } = useLocalSearchParams<{ categoryId: string; itemId: string }>();
   const applyWorkItemUpdates = useUpdateRowCallback('workItems');
   const router = useRouter();
-  const name = useTableValue('workItems', itemId as string, 'name');
+  const name = useTableValue('workItems', itemId, 'name');
   const [newName, setNewName] = useState(name);
-  const code = useTableValue('workItems', itemId as string, 'code');
-  const status = useTableValue('workItems', itemId as string, 'status');
+  const code = useTableValue('workItems', itemId, 'code');
+  const status = useTableValue('workItems', itemId, 'status');
   const [newCode, setNewCode] = useState(code);
 
   const handleSave = () => {
     if (newName && newCode) {
-      applyWorkItemUpdates(itemId as string, {
-        id: itemId as string,
-        categoryId: categoryId as string,
+      applyWorkItemUpdates(itemId, {
+        id: itemId,
+        categoryId: categoryId,
         code: newCode,
         name: newName,
         status,

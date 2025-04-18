@@ -11,7 +11,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter, Stack, Redirect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
 
 import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { useDbLogger } from '@/context/LoggerContext';
@@ -83,8 +83,8 @@ export default function JobHomeScreen() {
   useEffect(() => {
     // create an array of projectId that have been favorited
     const favoriteProjectIds = allProjects
-      .filter((project) => project._id && project.favorite && project.favorite > 0)
-      .map((project) => project._id);
+      .filter((project) => project.id && project.favorite && project.favorite > 0)
+      .map((project) => project.id);
     addActiveProjectIds(favoriteProjectIds);
   }, [allProjects, addActiveProjectIds]);
 
@@ -94,7 +94,7 @@ export default function JobHomeScreen() {
         return {
           primaryTitle: project.name ? project.name : 'unknown',
           isFavorite: undefined !== project.favorite ? project.favorite > 0 : false,
-          entryId: project._id ?? '1',
+          entryId: project.id ?? 'unknown',
           imageUri: project.thumbnail ?? 'x',
           secondaryTitle: project.location,
           tertiaryTitle: project.ownerName ?? 'Owner',
@@ -176,9 +176,9 @@ export default function JobHomeScreen() {
 
   const handleSelection = useCallback(
     (entry: TwoColumnListEntry) => {
-      const job = allProjects.find((j) => (j._id ?? '') === entry.entryId);
-      if (job && job._id) router.push(`/jobs/${job._id}`);
-      console.log(`Hello from item ${entry.primaryTitle}`);
+      const job = allProjects.find((j) => (j.id ?? '') === entry.entryId);
+      if (job && job.id) router.push(`/jobs/${job.id}`);
+      else Alert.alert(`Project not found: ${entry.primaryTitle} (${entry.entryId})`);
     },
     [allProjects],
   );

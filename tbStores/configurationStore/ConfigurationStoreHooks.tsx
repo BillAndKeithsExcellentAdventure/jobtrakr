@@ -19,6 +19,7 @@ const {
 
 import { useCallback, useEffect, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
+import { CrudResult } from '@/models/types';
 
 export interface WorkCategoryData {
   id: string;
@@ -59,17 +60,10 @@ export interface VendorData {
   notes?: string;
 }
 
-type CrudResult = { status: 'Success' | 'Error'; id: string; msg: string };
-
 export type CategorySchema = typeof TABLES_SCHEMA.categories;
 export type WorkItemsSchema = typeof TABLES_SCHEMA.workItems;
 export type TemplateSchema = typeof TABLES_SCHEMA.templates;
 export type VendorsSchema = typeof TABLES_SCHEMA.vendors;
-
-export type CategoriesCellId = keyof (typeof TABLES_SCHEMA)['categories'];
-export type WorkItemsCellId = keyof (typeof TABLES_SCHEMA)['workItems'];
-export type TemplatesCellId = keyof (typeof TABLES_SCHEMA)['templates'];
-export type VendorsCellId = keyof (typeof TABLES_SCHEMA)['vendors'];
 
 export type SchemaMap = {
   templates: TemplateSchema;
@@ -105,8 +99,8 @@ export const useAllRows = <K extends keyof TableDataMap>(tableName: K): TableDat
     const table = store.getTable(tableName);
     return table
       ? (Object.entries(table).map(([id, row]) => ({
-          id: id,
           ...row,
+          id: id,
         })) as TableDataMap[K][])
       : [];
   }, [store, tableName]);
@@ -260,7 +254,7 @@ export const useTemplateWorkItemData = (templateId: string) => {
       //update the store
       if (store) {
         store.setRow('templateWorkItems', templateId, {
-          _id: templateId,
+          id: templateId,
           templateId: templateId,
           workItemIds: workItemIdsString,
         });
@@ -275,7 +269,7 @@ export const useTemplateWorkItemData = (templateId: string) => {
 
       if (store) {
         store.setRow('templateWorkItems', templateId, {
-          _id: templateId,
+          id: templateId,
           templateId: templateId,
           workItemIds: workItemIdsString,
         });

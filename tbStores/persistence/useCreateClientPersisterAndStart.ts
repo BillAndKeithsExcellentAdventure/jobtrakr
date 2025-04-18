@@ -15,17 +15,15 @@ export const useCreateClientPersisterAndStart = <Schemas extends OptionalSchemas
     [storeId],
     async (persister) => {
       // Determine if there is initial content for a newly-created store.
-      if (initialValues) {
-        let initialContent: Content<Schemas> | undefined = undefined;
-        try {
-          initialContent = [{}, JSON.parse(initialValues)];
-        } catch {}
+      let initialContent: Content<Schemas> | undefined = undefined;
+      try {
+        if (initialValues) initialContent = [{}, JSON.parse(initialValues)];
+      } catch {}
 
-        // Start the persistence.
-        await persister.load(initialContent);
-      }
+      // Start the persistence.
+      await persister.load(initialContent);
       await persister.startAutoSave();
       then?.();
     },
-    [initialValues],
+    [storeId, initialValues],
   );

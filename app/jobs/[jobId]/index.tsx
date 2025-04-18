@@ -4,46 +4,27 @@ import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { useJobDb } from '@/context/DatabaseContext';
+import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
+import { useProject, useDeleteProjectCallback } from '@/tbStores/ListOfProjectsStore';
+import { useAllWorkItemSummaries } from '@/tbStores/projectDetails/workItemsSummary';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams, Redirect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet } from 'react-native';
-import { Pressable } from 'react-native-gesture-handler';
+import { StyleSheet, Alert } from 'react-native';
+import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-type Job = {
-  jobId?: string;
-  name: string;
-  location?: string;
-  owner?: string;
-  finishDate?: Date;
-  startDate?: Date;
-  bidPrice?: number;
-  longitude?: number;
-  latitude?: number;
-};
 
 const JobDetailsPage = () => {
   const router = useRouter();
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
+  const projectData = useProject(jobId);
+  const processDeleteProject = useDeleteProjectCallback();
+  const { removeActiveProjectId } = useActiveProjectIds();
+  const allWorkItemSummaries = useAllWorkItemSummaries(jobId);
   const colorScheme = useColorScheme();
-  const [totalSpent, setTotalSpent] = useState<number>(0);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
-  const { jobDbHost } = useJobDb();
-  const [job, setJob] = useState<Job>({
-    jobId,
-    name: '',
-    location: '',
-    owner: '',
-    startDate: undefined,
-    finishDate: undefined,
-    bidPrice: 0,
-    longitude: undefined,
-    latitude: undefined,
-  });
 
   // Define colors based on the color scheme (dark or light)
   const colors = useMemo(
@@ -72,35 +53,31 @@ const JobDetailsPage = () => {
     [colorScheme],
   );
 
-  const loadJobData = useCallback(async () => {
-    const result = await jobDbHost?.GetJobDB().FetchJobById(jobId);
-    const fetchedJob = result ? result.job : undefined;
-    if (!!fetchedJob) {
-      const fetchedJobData: Job = {
-        ...job,
-        name: fetchedJob.Name,
-        location: fetchedJob.Location,
-        owner: fetchedJob.OwnerName,
-        bidPrice: fetchedJob.BidPrice,
-        longitude: fetchedJob.Longitude,
-        latitude: fetchedJob.Latitude,
-      };
-
-      setJob(fetchedJobData);
-    }
-  }, [jobDbHost, jobId]);
-
-  useEffect(() => {
-    loadJobData();
-  }, [loadJobData]);
-
   const handleMenuItemPress = useCallback(
     (menuItem: string, actionContext: any) => {
       setHeaderMenuModalVisible(false);
-      if (menuItem === 'Edit' && jobId) router.push(`/jobs/${jobId}/edit/?jobName=${job.name}`);
-      //if (menuItem === 'Edit' && jobId) router.push(`/jobs/[jobId]/edit/${jobId}?jobName=${job.name}`);
+      if (menuItem === 'Edit' && jobId) {
+        router.push(`/jobs/${jobId}/edit/?jobName=${projectData!.name}`);
+        return;
+      } else if (menuItem === 'Delete' && jobId) {
+        Alert.alert('Delete Project', 'Are you sure you want to delete this project?', [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            onPress: () => {
+              const result = processDeleteProject(jobId);
+              if (result.status === 'Success') {
+                removeActiveProjectId(jobId);
+              }
+              router.replace('/jobs');
+            },
+          },
+        ]);
+
+        return;
+      }
     },
-    [jobId, job],
+    [jobId, projectData, router, processDeleteProject],
   );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
@@ -122,6 +99,11 @@ const JobDetailsPage = () => {
     ],
     [colors],
   );
+
+  if (!projectData) {
+    // Redirect to the jobs list if no project data is found
+    return <Redirect href="/jobs" />;
+  }
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
@@ -151,17 +133,42 @@ const JobDetailsPage = () => {
         />
 
         <View style={styles.headerContainer}>
-          <Text txtSize="title" text={job.name} />
+          <Text txtSize="title" text={projectData.name} />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-            <Text text={`start: ${formatDate(job.startDate)}`} />
-            <Text text={`bid: ${formatCurrency(job.bidPrice ?? 0)}`} />
+            <Text text={`start: ${formatDate(projectData.startDate)}`} />
+            <Text text={`bid: ${formatCurrency(projectData.bidPrice)}`} />
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-            <Text text={`due: ${formatDate(job.finishDate)}`} />
-            <Text text={`spent: ${formatCurrency(totalSpent)}`} />
+            <Text text={`due: ${formatDate(projectData.plannedFinish)}`} />
+            <Text text={`spent: ${formatCurrency(projectData.amountSpent)}`} />
           </View>
         </View>
-        <View style={{ flex: 1 }}></View>
+        <View style={{ flex: 1, padding: 10 }}>
+          <View style={{ marginBottom: 10, alignItems: 'center' }}>
+            <Text txtSize="title" text="Cost Items" />
+          </View>
+          <FlatList
+            data={allWorkItemSummaries}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View>
+                <Text text={item.workItemId} />
+                <Text text={`Bid ${formatCurrency(item.bidAmount)}`} />
+                <Text text={`Spent ${formatCurrency(item.spentAmount)}`} />
+              </View>
+            )}
+            ListEmptyComponent={() => (
+              <View
+                style={{
+                  padding: 20,
+                  alignItems: 'center',
+                }}
+              >
+                <Text txtSize="title" text="No cost items found." />
+              </View>
+            )}
+          />
+        </View>
       </View>
       {headerMenuModalVisible && (
         <RightHeaderMenu

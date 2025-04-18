@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, ReactNode, useCallback } fr
 type ActiveProjectIdsContextType = {
   activeProjectIds: string[];
   addActiveProjectIds: (ids: string | string[]) => void;
+  removeActiveProjectId: (id: string) => void;
 };
 
 // Create the context with an initial undefined value
@@ -29,8 +30,21 @@ export const ActiveProjectIdsProvider: React.FC<ActiveProjectIdsProviderProps> =
       return [...prevIds, ...newIds];
     });
   }, []);
+
+  const removeActiveProjectId = useCallback((id: string) => {
+    setActiveProjectIds((prevIds) => {
+      const newIds = prevIds.filter((prevId) => prevId !== id);
+      if (newIds.length === prevIds.length) {
+        return prevIds; // No change needed
+      }
+      return newIds;
+    });
+  }, []);
+
   return (
-    <ActiveProjectIdsContext.Provider value={{ activeProjectIds, addActiveProjectIds }}>
+    <ActiveProjectIdsContext.Provider
+      value={{ activeProjectIds, addActiveProjectIds, removeActiveProjectId }}
+    >
       {children}
     </ActiveProjectIdsContext.Provider>
   );

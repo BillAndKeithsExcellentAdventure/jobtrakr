@@ -1,7 +1,12 @@
-export function formatDate(date?: Date | string, notSpecifiedString = 'Not Specified'): string {
+export function formatDate(date?: Date | string | number, notSpecifiedString = 'Not Specified'): string {
   if (!date) return notSpecifiedString;
 
   if (typeof date === 'string') {
+    const actDate = new Date(date);
+    return formatDate(actDate);
+  }
+
+  if (typeof date === 'number') {
     const actDate = new Date(date);
     return formatDate(actDate);
   }

@@ -23,7 +23,7 @@ export const useItemizedReceiptDataStore = create<ItemizedReceiptDataStore>((set
   addReceiptItem: (vendor) => set((state) => ({ allReceiptItems: [...state.allReceiptItems, vendor] })),
   removeReceiptItem: (id) =>
     set((state) => ({
-      allReceiptItems: state.allReceiptItems.filter((i) => i._id! !== id),
+      allReceiptItems: state.allReceiptItems.filter((i) => i._id !== id),
     })),
   updateReceiptItem: (id, updatedItem) =>
     set((state) => ({

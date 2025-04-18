@@ -16,12 +16,12 @@ export const useWorkCategoryItemDataStore = create<WorkCategoryItemDataStore>((s
     set((state) => ({ allWorkCategoryItems: [...state.allWorkCategoryItems, vendor] })),
   removeWorkCategoryItem: (id) =>
     set((state) => ({
-      allWorkCategoryItems: state.allWorkCategoryItems.filter((i) => i._id! !== id),
+      allWorkCategoryItems: state.allWorkCategoryItems.filter((i) => i.id !== id),
     })),
   updateWorkCategoryItem: (id, updatedItem) =>
     set((state) => ({
       allWorkCategoryItems: state.allWorkCategoryItems.map((item) =>
-        item._id === id ? { ...item, ...updatedItem } : item,
+        item.id === id ? { ...item, ...updatedItem } : item,
       ),
     })),
 }));

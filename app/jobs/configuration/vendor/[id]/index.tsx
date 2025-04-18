@@ -13,8 +13,7 @@ import {
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 
 const EditVendor = () => {
-  const { id } = useLocalSearchParams();
-  const vendorId = useMemo(() => id as string, [id]);
+  const { id } = useLocalSearchParams<{ id: string }>();
   const applyVendorUpdates = useUpdateRowCallback('vendors');
 
   const router = useRouter();
@@ -45,12 +44,12 @@ const EditVendor = () => {
     notes: '',
   });
 
-  const vendorFromStore = useTypedRow('vendors', vendorId);
+  const vendorFromStore = useTypedRow('vendors', id);
   useEffect(() => {
     if (vendorFromStore) {
-      setUpdatedVendor((prevVendor) => (prevVendor.id !== vendorId ? vendorFromStore : prevVendor));
+      setUpdatedVendor((prevVendor) => (prevVendor.id !== id ? vendorFromStore : prevVendor));
     }
-  }, [vendorFromStore, vendorId]);
+  }, [vendorFromStore, id]);
   const handleInputChange = (name: keyof VendorData, value: string) => {
     setUpdatedVendor((prevVendor) => ({
       ...prevVendor,
@@ -60,7 +59,7 @@ const EditVendor = () => {
 
   const handleSave = () => {
     if (!!updatedVendor.name) {
-      applyVendorUpdates(id as string, updatedVendor);
+      applyVendorUpdates(id, updatedVendor);
     }
     // Go back to the categories list screen
     router.back();

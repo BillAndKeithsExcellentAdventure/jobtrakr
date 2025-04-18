@@ -29,17 +29,15 @@ interface SectionData {
 }
 
 const JobTemplatesConfigurationScreen: React.FC = () => {
-  const { templateId } = useLocalSearchParams();
-  const jobTemplateId = templateId as string;
-  const templateName = useTableValue('templates', jobTemplateId, 'name');
-  const templateDescription = useTableValue('templates', jobTemplateId, 'description');
+  const { templateId } = useLocalSearchParams<{ templateId: string }>();
+  const templateName = useTableValue('templates', templateId, 'name');
+  const templateDescription = useTableValue('templates', templateId, 'description');
   const colorScheme = useColorScheme();
   const colors = colorScheme === 'dark' ? Colors.dark : Colors.light;
   const router = useRouter();
   const allJobCategories = useAllRows('categories');
   const allWorkItems = useAllRows('workItems');
-  const { setActiveWorkItemIds, templateWorkItemIds, toggleWorkItemId } =
-    useTemplateWorkItemData(jobTemplateId);
+  const { setActiveWorkItemIds, templateWorkItemIds, toggleWorkItemId } = useTemplateWorkItemData(templateId);
   const [sectionData, setSectionData] = useState<SectionData[]>([]);
 
   const expandedSectionIdRef = useRef<string>(''); // Ref to keep track of the expanded section ID
