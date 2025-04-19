@@ -237,19 +237,24 @@ export const useTemplateWorkItemData = (templateId: string) => {
 
   useEffect(() => {
     if (templateWorkItemData) {
-      const workItemIds = templateWorkItemData.workItemIds.split(',');
+      const workItemIds =
+        templateWorkItemData.workItemIds.length > 0 ? templateWorkItemData.workItemIds.split(',') : [];
       setTemplateWorkItemIds(workItemIds);
     }
   }, [templateWorkItemData]);
 
   const toggleWorkItemId = useCallback(
     (workItemId: string) => {
+      if (workItemId === '') return;
+
       const updatedWorkItemIds = templateWorkItemIds.includes(workItemId)
-        ? templateWorkItemIds.filter((id) => id !== workItemId)
-        : [...templateWorkItemIds, workItemId];
+        ? templateWorkItemIds.filter((id) => id !== workItemId) // remove the workItemId
+        : templateWorkItemIds.length > 0
+        ? [...templateWorkItemIds, workItemId]
+        : [workItemId]; // add the workItemId
 
       // create a comma separated list of workItemIds
-      const workItemIdsString = updatedWorkItemIds.join(',');
+      const workItemIdsString = updatedWorkItemIds.length > 0 ? updatedWorkItemIds.join(',') : '';
 
       //update the store
       if (store) {

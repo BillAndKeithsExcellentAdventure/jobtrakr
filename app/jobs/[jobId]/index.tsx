@@ -5,26 +5,93 @@ import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
+import { useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useProject, useDeleteProjectCallback } from '@/tbStores/ListOfProjectsStore';
 import { useAllWorkItemSummaries } from '@/tbStores/projectDetails/workItemsSummary';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter, Stack, useLocalSearchParams, Redirect } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet, Alert } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, Alert, SectionList } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+interface CostItemData {
+  id: string;
+  code: string;
+  title: string;
+  bidAmount: number;
+  spentAmount: number;
+}
+
+interface CostSectionData {
+  id: string;
+  code: string;
+  title: string;
+  data: CostItemData[];
+  isExpanded: boolean;
+}
 
 const JobDetailsPage = () => {
   const router = useRouter();
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
   const projectData = useProject(jobId);
   const processDeleteProject = useDeleteProjectCallback();
-  const { removeActiveProjectId } = useActiveProjectIds();
+  const { removeActiveProjectId, addActiveProjectIds } = useActiveProjectIds();
   const allWorkItemSummaries = useAllWorkItemSummaries(jobId);
+  const allJobCategories = useAllRows('categories');
+  const allWorkItems = useAllRows('workItems');
   const colorScheme = useColorScheme();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
+  const [sectionData, setSectionData] = useState<CostSectionData[]>([]);
+  const expandedSectionIdRef = useRef<string>(''); // Ref to keep track of the expanded section ID
+
+  useEffect(() => {
+    if (jobId) {
+      addActiveProjectIds([jobId]);
+    }
+  }, [jobId]);
+
+  useEffect(() => {
+    const sections: CostSectionData[] = [];
+    for (const costItem of allWorkItemSummaries) {
+      const workItem = allWorkItems.find((item) => item.id === costItem.workItemId);
+      if (workItem) {
+        const category = allJobCategories.find((cat) => cat.id === workItem.categoryId);
+        if (category) {
+          const section = sections.find((sec) => sec.id === category.id);
+          if (section) {
+            section.data.push({
+              id: workItem.id,
+              code: workItem.code,
+              title: workItem.name,
+              bidAmount: costItem.bidAmount,
+              spentAmount: costItem.spentAmount,
+            });
+          } else {
+            sections.push({
+              id: category.id,
+              code: category.code,
+              title: category.name,
+              isExpanded: expandedSectionIdRef.current === category.id,
+              data: [
+                {
+                  id: workItem.id,
+                  code: workItem.code,
+                  title: workItem.name,
+                  bidAmount: costItem.bidAmount,
+                  spentAmount: costItem.spentAmount,
+                },
+              ],
+            });
+          }
+        }
+      }
+    }
+    setSectionData(sections);
+  }, [allWorkItemSummaries, allJobCategories, allWorkItems]);
 
   // Define colors based on the color scheme (dark or light)
   const colors = useMemo(
@@ -100,6 +167,18 @@ const JobDetailsPage = () => {
     [colors],
   );
 
+  const toggleSection = (id: string) => {
+    expandedSectionIdRef.current = expandedSectionIdRef.current === id ? '' : id;
+
+    setSectionData((prevData) =>
+      prevData.map((section) =>
+        section.id === id
+          ? { ...section, isExpanded: !section.isExpanded }
+          : { ...section, isExpanded: false },
+      ),
+    );
+  };
+
   if (!projectData) {
     // Redirect to the jobs list if no project data is found
     return <Redirect href="/jobs" />;
@@ -147,26 +226,16 @@ const JobDetailsPage = () => {
           <View style={{ marginBottom: 10, alignItems: 'center' }}>
             <Text txtSize="title" text="Cost Items" />
           </View>
-          <FlatList
-            data={allWorkItemSummaries}
+          <SectionList
+            showsVerticalScrollIndicator={false}
+            stickySectionHeadersEnabled={false}
+            sections={sectionData}
+            renderItem={({ item, section }) =>
+              section.isExpanded ? renderItem(item, section.id, section.code, colors) : null
+            }
+            renderSectionHeader={({ section }) => renderSectionHeader(section, toggleSection, colors)}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View>
-                <Text text={item.workItemId} />
-                <Text text={`Bid ${formatCurrency(item.bidAmount)}`} />
-                <Text text={`Spent ${formatCurrency(item.spentAmount)}`} />
-              </View>
-            )}
-            ListEmptyComponent={() => (
-              <View
-                style={{
-                  padding: 20,
-                  alignItems: 'center',
-                }}
-              >
-                <Text txtSize="title" text="No cost items found." />
-              </View>
-            )}
+            ListEmptyComponent={<Text>No data available</Text>}
           />
         </View>
       </View>
@@ -181,11 +250,72 @@ const JobDetailsPage = () => {
   );
 };
 
+const renderSectionHeader = (
+  section: CostSectionData,
+  toggleSection: (id: string) => void,
+  colors: typeof Colors.light | typeof Colors.dark,
+) => {
+  return (
+    <View
+      style={[
+        styles.header,
+        {
+          borderColor: colors.borderColor,
+          backgroundColor: colors.listBackground,
+          borderBottomWidth: 1,
+          alignItems: 'center',
+          height: 50,
+        },
+      ]}
+    >
+      <Pressable style={{ flex: 1 }} onPress={() => toggleSection(section.id)} hitSlop={10}>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            backgroundColor: colors.listBackground,
+          }}
+        >
+          <Text txtSize="section-header" text={`${section.title}`} />
+          <Ionicons
+            name={section.isExpanded ? 'chevron-up-sharp' : 'chevron-down-sharp'}
+            size={24}
+            color={colors.iconColor}
+          />
+        </View>
+      </Pressable>
+    </View>
+  );
+};
+
+const renderItem = (
+  item: CostItemData,
+  sectionId: string,
+  sectionCode: string,
+  colors: typeof Colors.light | typeof Colors.dark,
+) => {
+  return (
+    <View style={{ marginLeft: 50 }}>
+      <Text style={styles.itemText}>
+        {sectionCode}.{item.code} - {item.title}
+      </Text>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: '100%',
   },
+  header: {
+    flexDirection: 'row',
+    padding: 5,
+    borderTopWidth: 1,
+    height: 45,
+  },
+
   headerContainer: {
     marginTop: 10,
     marginHorizontal: 10,
@@ -210,6 +340,15 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 4,
+  },
+  item: {
+    height: 45,
+    flexDirection: 'row',
+    padding: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  itemText: {
+    fontSize: 16,
   },
 });
 

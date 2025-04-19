@@ -121,7 +121,7 @@ const JobTemplatesConfigurationScreen: React.FC = () => {
         <View style={{ alignItems: 'center' }}>
           <View style={{ backgroundColor: colors.listBackground, padding: 10, width: '100%' }}>
             <TouchableOpacity
-              onPress={() => handleEditTemplate(jobTemplateId)} // Edit on item press
+              onPress={() => handleEditTemplate(templateId)} // Edit on item press
             >
               <View style={[styles.categoryContent, { borderColor: colors.borderColor, borderWidth: 1 }]}>
                 <View style={styles.categoryInfo}>

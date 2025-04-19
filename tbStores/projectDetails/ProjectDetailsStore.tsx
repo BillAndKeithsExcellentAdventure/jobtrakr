@@ -57,6 +57,7 @@ export default function ProjectDetailsStore({ projectId }: { projectId: string }
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
 
   const seedWorkItems = getProjectValue(projectId, 'seedJobWorkItems');
+  console.log(`Value of seedJobWorkItems =  ${seedWorkItems}`);
 
   const seedInitialData = useCallback((): void => {
     if (!seedWorkItems) return;
@@ -71,6 +72,7 @@ export default function ProjectDetailsStore({ projectId }: { projectId: string }
     console.log('Initializing project with the following workitems.', workItemIds);
 
     for (const workItemId of workItemIds) {
+      if (!workItemId) continue;
       const id = randomUUID();
       store.setRow('workItemSummary', id, {
         id,

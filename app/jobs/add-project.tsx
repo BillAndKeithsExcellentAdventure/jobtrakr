@@ -13,9 +13,9 @@ import { useJobTemplateDataStore } from '@/stores/jobTemplateDataStore';
 import OptionList, { OptionEntry } from '@/components/OptionList';
 import { OptionPickerItem } from '@/components/OptionPickerItem';
 import BottomSheetContainer from '@/components/BottomSheetContainer';
-import { ProjectData, useAddProjectCallback } from '@/tbStores/ListOfProjectsStore';
 import { JobTemplateData, useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
+import { ProjectData, useAddProjectCallback } from '@/tbStores/ListOfProjectsStore';
 
 type Job = {
   name: string;
@@ -109,9 +109,10 @@ const AddJobScreen = () => {
     if (pickedTemplate?.value) {
       const template = allJobTemplates.find((t) => t.id === pickedTemplate?.value);
       if (template) {
-        const templateWorkItems = allJobTemplateWorkItems.filter((t) => t.templateId === template.id);
-        const workItemIds = templateWorkItems.map((t) => t.id);
-        project.seedJobWorkItems = workItemIds.join(',');
+        const templateWorkItems = allJobTemplateWorkItems.find((t) => t.templateId === template.id);
+        if (templateWorkItems) {
+          project.seedJobWorkItems = templateWorkItems.workItemIds;
+        }
       }
     }
 
