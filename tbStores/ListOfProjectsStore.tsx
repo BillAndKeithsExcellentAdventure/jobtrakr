@@ -4,28 +4,10 @@ import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { createMergeableStore, createStore, NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { useCreateClientPersisterAndStart } from './persistence/useCreateClientPersisterAndStart';
 import { useCreateServerSynchronizerAndStart } from './synchronization/useCreateServerSynchronizerAndStart';
-import { CrudResult, TBStatus } from '@/models/types';
+import { CrudResult, ProjectData, TBStatus } from '@/models/types';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import ProjectDetailsStore from './projectDetails/ProjectDetailsStore';
 import { useAuth } from '@clerk/clerk-expo';
-
-export interface ProjectData {
-  id: string;
-  name: string;
-  location: string;
-  ownerName: string;
-  startDate: number;
-  plannedFinish: number;
-  bidPrice: number;
-  amountSpent: number;
-  longitude: number;
-  latitude: number;
-  radius: number;
-  favorite: number;
-  thumbnail: string;
-  status: string; // 'active', 'on-hold'  or 'completed'
-  seedJobWorkItems: string; // comma separated list of workItemIds
-}
 
 const STORE_ID_PREFIX = 'PHV1_projectListStore';
 const TABLES_SCHEMA = {
@@ -63,7 +45,7 @@ const {
   useTable,
 } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
-const useStoreId = () => {
+const useProjectListStoreId = () => {
   const { orgId } = useAuth();
   const storeId = useMemo(() => `${STORE_ID_PREFIX}_${orgId}`, [orgId]);
   return storeId;
@@ -74,7 +56,7 @@ const useStoreId = () => {
  */
 export const useAllProjects = () => {
   const [allProjects, setAllProjects] = useState<ProjectData[]>([]);
-  let store = useStore(useStoreId());
+  let store = useStore(useProjectListStoreId());
 
   const fetchAllProjects = useCallback((): ProjectData[] => {
     if (!store) {
@@ -122,7 +104,7 @@ export const useAllProjects = () => {
 
 // Returns a callback that adds a new project to the store.
 export const useAddProjectCallback = () => {
-  let store = useStore(useStoreId());
+  let store = useStore(useProjectListStoreId());
 
   return useCallback(
     (projectData: ProjectData): { status: TBStatus; msg: string; id: string } => {
@@ -145,7 +127,7 @@ export const useAddProjectCallback = () => {
 };
 
 export const useProject = (id: string): ProjectData | undefined => {
-  const store = useStore(useStoreId());
+  const store = useStore(useProjectListStoreId());
   if (!store) return undefined;
 
   const row = store.getRow('projects', id);
@@ -156,7 +138,7 @@ export const useProject = (id: string): ProjectData | undefined => {
 
 // Returns a callback that deletes a project from the store.
 export function useDeleteProjectCallback() {
-  const store = useStore(useStoreId());
+  const store = useStore(useProjectListStoreId());
   return useCallback(
     (id: string): CrudResult => {
       if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
@@ -175,7 +157,7 @@ export const useProjectValue = <ValueId extends ProjectsCellId>(
   projectId: string,
   valueId: ValueId,
 ): [Value<ProjectsSchema, ValueId>, (value: Value<ProjectsSchema, ValueId>) => void] => [
-  (useCell('projects', projectId, valueId, useStoreId()) as Value<ProjectsSchema, ValueId>) ??
+  (useCell('projects', projectId, valueId, useProjectListStoreId()) as Value<ProjectsSchema, ValueId>) ??
     ('' as Value<ProjectsSchema, ValueId>),
   useSetCellCallback(
     'projects',
@@ -183,7 +165,7 @@ export const useProjectValue = <ValueId extends ProjectsCellId>(
     valueId,
     (value: Value<ProjectsSchema, ValueId>) => value,
     [],
-    useStoreId(),
+    useProjectListStoreId(),
   ),
 ];
 
@@ -192,7 +174,7 @@ export const setProjectValue = <ValueId extends ProjectsCellId>(
   valueId: ValueId,
   value: Value<ProjectsSchema, ValueId>,
 ) => {
-  const store = useStore(useStoreId());
+  const store = useStore(useProjectListStoreId());
   if (store) {
     store.setCell('projects', projectId, valueId, value);
   }
@@ -202,7 +184,7 @@ export const getProjectValue = <ValueId extends ProjectsCellId>(
   projectId: string,
   valueId: ValueId,
 ): Value<ProjectsSchema, ValueId> | undefined => {
-  const store = useStore(useStoreId());
+  const store = useStore(useProjectListStoreId());
   let value = undefined;
 
   if (store) {
@@ -214,7 +196,7 @@ export const getProjectValue = <ValueId extends ProjectsCellId>(
 
 // Returns a callback that toggles the favorite status of a project.
 export const useToggleFavoriteCallback = () => {
-  let store = useStore(useStoreId());
+  let store = useStore(useProjectListStoreId());
 
   return useCallback(
     (projectId: string): { status: TBStatus; msg: string } => {
@@ -236,7 +218,7 @@ export const useToggleFavoriteCallback = () => {
 
 // Create, persist, and sync a store containing the IDs of the projects
 export default function ListOfProjectsStore() {
-  const storeId = useStoreId();
+  const storeId = useProjectListStoreId();
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
   useCreateClientPersisterAndStart(storeId, store);
   //useCreateServerSynchronizerAndStart(storeId, store);

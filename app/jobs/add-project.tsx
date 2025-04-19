@@ -15,13 +15,8 @@ import { OptionPickerItem } from '@/components/OptionPickerItem';
 import BottomSheetContainer from '@/components/BottomSheetContainer';
 import { JobTemplateData, useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
-import { ProjectData, useAddProjectCallback } from '@/tbStores/ListOfProjectsStore';
-
-type Job = {
-  name: string;
-  location: string;
-  owner: string;
-};
+import { useAddProjectCallback } from '@/tbStores/ListOfProjectsStore';
+import { ProjectData } from '@/models/types';
 
 const AddJobScreen = () => {
   const defaultStart = new Date();
