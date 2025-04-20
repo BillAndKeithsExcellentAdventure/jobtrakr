@@ -5,7 +5,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import { useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useProject, useDeleteProjectCallback, getProjectValue } from '@/tbStores/ListOfProjectsStore';
+import { useProject, useDeleteProjectCallback, useProjectValue } from '@/tbStores/ListOfProjectsStore';
 import { useAddWorkItemSummary, useAllWorkItemSummaries } from '@/tbStores/projectDetails/workItemsSummary';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -29,6 +29,8 @@ interface CostSectionData {
   id: string;
   code: string;
   title: string;
+  totalBidAmount: number;
+  totalSpentAmount: number;
   data: CostItemData[];
   isExpanded: boolean;
 }
@@ -38,7 +40,7 @@ const JobDetailsPage = () => {
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
   const projectData = useProject(jobId);
   const processDeleteProject = useDeleteProjectCallback();
-  const { removeActiveProjectId, addActiveProjectIds } = useActiveProjectIds();
+  const { removeActiveProjectId, addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const allWorkItemSummaries = useAllWorkItemSummaries(jobId);
   const allJobCategories = useAllRows('categories');
   const allWorkItems = useAllRows('workItems');
@@ -46,14 +48,21 @@ const JobDetailsPage = () => {
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [sectionData, setSectionData] = useState<CostSectionData[]>([]);
   const expandedSectionIdRef = useRef<string>(''); // Ref to keep track of the expanded section ID
-  const seedWorkItems = getProjectValue(jobId, 'seedJobWorkItems');
+  const [seedWorkItems, setSeedWorkItems] = useProjectValue(jobId, 'seedJobWorkItems');
   const addWorkItemSummary = useAddWorkItemSummary(jobId);
+
+  useEffect(() => {
+    if (jobId) {
+      addActiveProjectIds([jobId]);
+    }
+  }, [jobId]);
+
   const seedInitialData = useCallback((): void => {
     if (allWorkItemSummaries.length > 0 || !seedWorkItems) return;
 
     const workItemIds = seedWorkItems.split(',');
     console.log('Initializing project with the following workitems.', workItemIds);
-
+    setSeedWorkItems(''); // Clear the seedWorkItems after seeding
     for (const workItemId of workItemIds) {
       if (!workItemId) continue;
       addWorkItemSummary({
@@ -65,16 +74,13 @@ const JobDetailsPage = () => {
   }, [seedWorkItems, allWorkItemSummaries]);
 
   useEffect(() => {
-    if (jobId && seedWorkItems) {
-      seedInitialData();
+    if (activeProjectIds.includes(jobId)) {
+      if (jobId && seedWorkItems && allWorkItemSummaries.length === 0) {
+        console.log('Seeding initial data for project', jobId);
+        seedInitialData();
+      }
     }
   }, [jobId, seedWorkItems, allWorkItemSummaries]);
-
-  useEffect(() => {
-    if (jobId) {
-      addActiveProjectIds([jobId]);
-    }
-  }, [jobId]);
 
   useEffect(() => {
     const sections: CostSectionData[] = [];
@@ -97,6 +103,8 @@ const JobDetailsPage = () => {
               id: category.id,
               code: category.code,
               title: category.name,
+              totalBidAmount: 0,
+              totalSpentAmount: 0,
               isExpanded: expandedSectionIdRef.current === category.id,
               data: [
                 {
@@ -112,6 +120,21 @@ const JobDetailsPage = () => {
         }
       }
     }
+    // Sort sections by code
+    sections.sort((a, b) => a.code.localeCompare(b.code));
+
+    // Sort items within each section
+    sections.forEach((section) => {
+      section.data.sort((a, b) => a.code.localeCompare(b.code));
+    });
+
+    // sum up the bid and spent amounts for each section
+    sections.forEach((section) => {
+      section.totalBidAmount = section.data.reduce((sum, item) => sum + item.bidAmount, 0);
+      section.totalSpentAmount = section.data.reduce((sum, item) => sum + item.spentAmount, 0);
+    });
+
+    // Set the section data state
     setSectionData(sections);
   }, [allWorkItemSummaries, allJobCategories, allWorkItems]);
 
@@ -300,6 +323,10 @@ const renderSectionHeader = (
           }}
         >
           <Text txtSize="section-header" text={`${section.title}`} />
+          <View style={{ backgroundColor: colors.listBackground }}>
+            <Text text={`Bid: ${formatCurrency(section.totalBidAmount)}`} />
+            <Text text={`Spent: ${formatCurrency(section.totalSpentAmount)}`} />
+          </View>
           <Ionicons
             name={section.isExpanded ? 'chevron-up-sharp' : 'chevron-down-sharp'}
             size={24}
@@ -318,10 +345,12 @@ const renderItem = (
   colors: typeof Colors.light | typeof Colors.dark,
 ) => {
   return (
-    <View style={{ marginLeft: 50 }}>
-      <Text style={styles.itemText}>
+    <View style={{ marginLeft: 20, flexDirection: 'row' }}>
+      <Text style={[styles.itemText, { marginRight: 10 }]}>
         {sectionCode}.{item.code} - {item.title}
       </Text>
+      <Text text={`Bid: ${formatCurrency(item.bidAmount)}`} />
+      <Text text={`Spent: ${formatCurrency(item.spentAmount)}`} />
     </View>
   );
 };

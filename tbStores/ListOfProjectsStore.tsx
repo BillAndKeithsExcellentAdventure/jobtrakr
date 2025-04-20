@@ -169,31 +169,6 @@ export const useProjectValue = <ValueId extends ProjectsCellId>(
   ),
 ];
 
-export const setProjectValue = <ValueId extends ProjectsCellId>(
-  projectId: string,
-  valueId: ValueId,
-  value: Value<ProjectsSchema, ValueId>,
-) => {
-  const store = useStore(useProjectListStoreId());
-  if (store) {
-    store.setCell('projects', projectId, valueId, value);
-  }
-};
-
-export const getProjectValue = <ValueId extends ProjectsCellId>(
-  projectId: string,
-  valueId: ValueId,
-): Value<ProjectsSchema, ValueId> | undefined => {
-  const store = useStore(useProjectListStoreId());
-  let value = undefined;
-
-  if (store) {
-    value = store?.getCell('projects', projectId, valueId);
-  }
-
-  return value;
-};
-
 // Returns a callback that toggles the favorite status of a project.
 export const useToggleFavoriteCallback = () => {
   let store = useStore(useProjectListStoreId());

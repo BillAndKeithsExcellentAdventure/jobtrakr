@@ -19,13 +19,7 @@ import { useDbLogger } from '@/context/LoggerContext';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  getProjectValue,
-  setProjectValue,
-  useAllProjects,
-  useProjectValue,
-  useToggleFavoriteCallback,
-} from '@/tbStores/ListOfProjectsStore';
+import { useAllProjects, useProjectValue, useToggleFavoriteCallback } from '@/tbStores/ListOfProjectsStore';
 
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import { AntDesign } from '@expo/vector-icons';
