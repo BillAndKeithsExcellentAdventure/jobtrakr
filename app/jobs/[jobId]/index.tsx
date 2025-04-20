@@ -1,4 +1,3 @@
-import BottomSheetContainer from '@/components/BottomSheetContainer';
 import { ActionButtonProps } from '@/components/ButtonBar';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { Text, View } from '@/components/Themed';
@@ -6,8 +5,8 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import { useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useProject, useDeleteProjectCallback } from '@/tbStores/ListOfProjectsStore';
-import { useAllWorkItemSummaries } from '@/tbStores/projectDetails/workItemsSummary';
+import { useProject, useDeleteProjectCallback, getProjectValue } from '@/tbStores/ListOfProjectsStore';
+import { useAddWorkItemSummary, useAllWorkItemSummaries } from '@/tbStores/projectDetails/workItemsSummary';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -47,6 +46,29 @@ const JobDetailsPage = () => {
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [sectionData, setSectionData] = useState<CostSectionData[]>([]);
   const expandedSectionIdRef = useRef<string>(''); // Ref to keep track of the expanded section ID
+  const seedWorkItems = getProjectValue(jobId, 'seedJobWorkItems');
+  const addWorkItemSummary = useAddWorkItemSummary(jobId);
+  const seedInitialData = useCallback((): void => {
+    if (allWorkItemSummaries.length > 0 || !seedWorkItems) return;
+
+    const workItemIds = seedWorkItems.split(',');
+    console.log('Initializing project with the following workitems.', workItemIds);
+
+    for (const workItemId of workItemIds) {
+      if (!workItemId) continue;
+      addWorkItemSummary({
+        workItemId,
+        bidAmount: 0,
+        spentAmount: 0,
+      });
+    }
+  }, [seedWorkItems, allWorkItemSummaries]);
+
+  useEffect(() => {
+    if (jobId && seedWorkItems) {
+      seedInitialData();
+    }
+  }, [jobId, seedWorkItems, allWorkItemSummaries]);
 
   useEffect(() => {
     if (jobId) {

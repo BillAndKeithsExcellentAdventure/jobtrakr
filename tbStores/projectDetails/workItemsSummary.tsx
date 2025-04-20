@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { getStoreId, TABLES_SCHEMA } from './ProjectDetailsStore';
 import { NoValuesSchema } from 'tinybase/with-schemas';
+import { randomUUID } from 'expo-crypto';
 
 const { useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
@@ -48,6 +49,28 @@ export const useAllWorkItemSummaries = (projectId: string): WorkItemSummary[] =>
   }, [store]);
 
   return items;
+};
+
+/**
+ * Hook to add a summary.
+ */
+export const useAddWorkItemSummary = (projectId: string) => {
+  const store = useStore(getStoreId(projectId));
+
+  return useCallback(
+    (entry: Omit<WorkItemSummary, 'id'>) => {
+      if (!store) return { status: 'Error', msg: 'Store not found', id: '' };
+
+      const id = randomUUID();
+      const newEntry: WorkItemSummary = { ...entry, id };
+
+      const result = store.setRow(SUMMARY_TABLE, id, newEntry);
+      return result
+        ? { status: 'Success', msg: '', id }
+        : { status: 'Error', msg: 'Failed to add entry', id: '' };
+    },
+    [store],
+  );
 };
 
 /**
