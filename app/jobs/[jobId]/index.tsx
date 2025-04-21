@@ -6,13 +6,14 @@ import { Colors } from '@/constants/Colors';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import { useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useProject, useDeleteProjectCallback, useProjectValue } from '@/tbStores/ListOfProjectsStore';
+import { isValidProjectDetailsStoreCallback } from '@/tbStores/projectDetails/workItemCostEntries';
 import { useAddWorkItemSummary, useAllWorkItemSummaries } from '@/tbStores/projectDetails/workItemsSummary';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { MaterialIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useRouter, Stack, useLocalSearchParams, Redirect } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams, Redirect, Router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Alert, SectionList } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
@@ -290,7 +291,7 @@ const JobDetailsPage = () => {
             stickySectionHeadersEnabled={false}
             sections={sectionData}
             renderItem={({ item, section }) =>
-              section.isExpanded ? renderItem(item, section.id, section.code, colors) : null
+              section.isExpanded ? renderItem(item, section.id, section.code, colors, jobId, router) : null
             }
             renderSectionHeader={({ section }) => renderSectionHeader(section, toggleSection, colors)}
             keyExtractor={(item) => item.id}
@@ -343,10 +344,18 @@ const renderSectionHeader = (
             style={{ width: 100, textAlign: 'right' }}
             text={formatCurrency(section.totalSpentAmount, false, true)}
           />
-          <View style={{ width: 36, backgroundColor: colors.listBackground, paddingLeft: 10 }}>
+          <View
+            style={{
+              width: 36,
+              paddingLeft: 5,
+              alignItems: 'center',
+              backgroundColor: colors.listBackground,
+              justifyContent: 'center',
+            }}
+          >
             <Ionicons
               name={section.isExpanded ? 'chevron-up-sharp' : 'chevron-down-sharp'}
-              size={24}
+              size={20}
               color={colors.iconColor}
             />
           </View>
@@ -361,33 +370,41 @@ const renderItem = (
   sectionId: string,
   sectionCode: string,
   colors: typeof Colors.light | typeof Colors.dark,
+  jobId: string,
+  router: Router,
 ) => {
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        height: 40,
-        paddingHorizontal: 10,
-        alignItems: 'center',
-        borderBottomWidth: StyleSheet.hairlineWidth,
+    <Pressable
+      onPress={() => {
+        router.push(`/jobs/${jobId}/${item.id}`);
       }}
     >
-      <Text
-        style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
-        text={`${sectionCode}.${item.code} - ${item.title}`}
-      />
-      <Text
-        style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
-        text={formatCurrency(item.bidAmount, false, true)}
-      />
-      <Text
-        style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
-        text={formatCurrency(item.spentAmount, false, true)}
-      />
-      <View style={{ width: 36, paddingLeft: 10, alignItems: 'center', justifyContent: 'center' }}>
-        <MaterialIcons name="chevron-right" size={28} color={colors.iconColor} />
+      <View
+        style={{
+          flexDirection: 'row',
+          height: 40,
+          paddingLeft: 5,
+          alignItems: 'center',
+          borderBottomWidth: StyleSheet.hairlineWidth,
+        }}
+      >
+        <Text
+          style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
+          text={`${sectionCode}.${item.code} - ${item.title}`}
+        />
+        <Text
+          style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
+          text={formatCurrency(item.bidAmount, false, true)}
+        />
+        <Text
+          style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
+          text={formatCurrency(item.spentAmount, false, true)}
+        />
+        <View style={{ width: 41, paddingLeft: 5, alignItems: 'center' }}>
+          <MaterialIcons name="chevron-right" size={28} color={colors.iconColor} />
+        </View>
       </View>
-    </View>
+    </Pressable>
   );
 };
 
