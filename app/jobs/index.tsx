@@ -95,7 +95,7 @@ export default function JobHomeScreen() {
           lines: [
             {
               left: `start: ${formatDate(new Date(project.startDate ?? 0))}`,
-              right: `bid: ${formatCurrency(project.bidPrice, true)}`,
+              right: `estimate: ${formatCurrency(project.bidPrice, true)}`,
             },
             {
               left: `due: ${formatDate(new Date(project.plannedFinish ?? 0))}`,
