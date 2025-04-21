@@ -20,6 +20,9 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ReceiptSummary } from '@/components/ReceiptSummary';
 import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
+import { useAuth } from '@clerk/clerk-expo';
+import { randomUUID } from 'expo-crypto';
+import { useAddImageCallback } from '@/utils/images';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
   return actionContext && typeof actionContext.PictureUri === 'string';
@@ -148,6 +151,8 @@ const JobReceiptsPage = () => {
   const { allJobReceipts, addReceiptData, removeReceiptData, setReceiptData } = useReceiptDataStore();
   const { allWorkCategories: allJobCategories, setWorkCategories: setJobCategories } =
     useWorkCategoryDataStore();
+  const auth = useAuth();
+  const addReceiptImage = useAddImageCallback();
 
   const fetchReceipts = useCallback(async () => {
     try {
@@ -251,6 +256,11 @@ const JobReceiptsPage = () => {
         PictureUri: asset.uri,
         AssetId: asset.assetId ?? undefined,
       };
+
+      console.log('Adding a new Receipt.', newReceipt);
+      // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
+      const imageAddResult = await addReceiptImage(asset.uri, jobId, 'receipt');
+      console.log('Finished adding Receipt.', imageAddResult);
 
       const response = await jobDbHost?.GetReceiptBucketDB().InsertReceipt(jobId, newReceipt);
       if (response?.status === 'Success') {

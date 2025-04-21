@@ -11,6 +11,7 @@ import { useJobDb } from '@/context/DatabaseContext';
 import { useDbLogger } from '@/context/LoggerContext';
 import { useJobDataStore } from '@/stores/jobDataStore';
 import { useProjectValue } from '@/tbStores/ListOfProjectsStore';
+import { useAddImageCallback } from '@/utils/images';
 import { ShareFiles } from '@/utils/sharing';
 import { Entypo, Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
@@ -55,6 +56,7 @@ const JobPhotosPage = () => {
   const { logInfo, logError } = useDbLogger();
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
   const [, setThumbnail] = useProjectValue(jobId, 'thumbnail');
+  const addPhotoImage = useAddImageCallback();
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -281,6 +283,11 @@ const JobPhotosPage = () => {
     if (assetItems) {
       for (const asset of assetItems) {
         if (!hasSelectedAssets || asset.selected) {
+          console.log('Adding a new Photo.', asset.asset.uri);
+          // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
+          const imageAddResult = await addPhotoImage(asset.asset.uri, jobId, 'photo');
+          console.log('Finished adding Photo.', imageAddResult);
+
           const status = await jobDbHost?.GetPictureBucketDB().InsertPicture(jobId, asset.asset);
           if (status?.status === 'Success') {
             gJobAssetItems = gJobAssetItems?.concat({ _id: status.id, selected: false, asset: asset.asset });
