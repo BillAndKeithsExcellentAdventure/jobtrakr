@@ -261,7 +261,7 @@ const JobDetailsPage = () => {
           <Text txtSize="title" text={projectData.name} />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
             <Text text={`start: ${formatDate(projectData.startDate)}`} />
-            <Text text={`bid: ${formatCurrency(projectData.bidPrice, true)}`} />
+            <Text text={`estimate: ${formatCurrency(projectData.bidPrice, true)}`} />
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
             <Text text={`due: ${formatDate(projectData.plannedFinish)}`} />
@@ -282,7 +282,7 @@ const JobDetailsPage = () => {
             }}
           >
             <Text style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }} text="Description" />
-            <Text style={{ width: 100, textAlign: 'right' }} text="Bid $" />
+            <Text style={{ width: 100, textAlign: 'right' }} text="Estimate $" />
             <Text style={{ width: 100, textAlign: 'right' }} text="Spent $" />
           </View>
           <SectionList

@@ -257,8 +257,8 @@ const EditJobScreen = () => {
               <TextField
                 style={[styles.input, { borderColor: colors.transparent }]}
                 containerStyle={styles.inputContainer}
-                placeholder="Bid Price"
-                label="Bid Price"
+                placeholder="Estimated Price"
+                label="Estimated Price"
                 value={job.bidPrice ? job.bidPrice.toString() : undefined}
                 onChangeText={(text) => setJob({ ...job, bidPrice: parseFloat(text) })}
                 keyboardType="numeric"
