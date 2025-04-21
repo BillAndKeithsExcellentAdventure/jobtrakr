@@ -14,35 +14,40 @@ export const TABLES_SCHEMA = {
     spentAmount: { type: 'number' },
   },
 
-  workItemCostEntries: {
-    id: { type: 'string' },
-    workItemId: { type: 'string' },
-    vendor: { type: 'string' },
-    itemDescription: { type: 'string' },
-    amount: { type: 'number' },
-    documentationType: { type: 'string' }, // 'receipt' or 'invoice'
-    documentationUri: { type: 'string' }, // URI to the receipt or invoice photo
-  },
-
-  receiptEntries: {
+  receipts: {
     id: { type: 'string' },
     vendor: { type: 'string' },
     description: { type: 'string' },
-    amount: { type: 'number' },
-    receiptDate: { type: 'number' },
+    amount: { type: 'number' }, // Total Amount
+    numLineItems: { type: 'number' }, // Number of line items in the receipt
+    receiptDate: { type: 'number' }, // Date on the receipt.
     thumbnail: { type: 'string' },
-    pictureDate: { type: 'number' },
+    pictureDate: { type: 'number' }, // Date the picture was taken.
+    pictureUri: { type: 'string' },
+    notes: { type: 'string' },
+    markedComplete: { type: 'boolean' },
+  },
+
+  invoices: {
+    id: { type: 'string' },
+    vendor: { type: 'string' },
+    description: { type: 'string' },
+    amount: { type: 'number' }, // Total Amount
+    invoiceDate: { type: 'number' }, // Date on the invoice.
+    invoiceNumber: { type: 'string' }, // Vendor's invoice number
+    thumbnail: { type: 'string' },
+    pictureDate: { type: 'number' }, // Date the picture was taken.
     pictureUri: { type: 'string' },
     notes: { type: 'string' },
   },
 
-  receiptItemEntries: {
+  workItemCostEntries: {
     id: { type: 'string' },
     label: { type: 'string' },
     amount: { type: 'number' },
-    receiptId: { type: 'string' },
-    category: { type: 'string' },
-    workItem: { type: 'string' },
+    workItemId: { type: 'string' },
+    parentId: { type: 'string' }, // ReceiptId or InvoiceId
+    documentationType: { type: 'string' }, // 'receipt' or 'invoice'
   },
 
   mediaEntries: {

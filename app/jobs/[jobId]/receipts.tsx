@@ -20,7 +20,7 @@ import { ReceiptSummary } from '@/components/ReceiptSummary';
 import { useAuth } from '@clerk/clerk-expo';
 import { useAddImageCallback } from '@/utils/images';
 import {
-  receiptEntriesData,
+  receiptData,
   useAddRowCallback,
   useAllRows,
   useDeleteRowCallback,
@@ -32,7 +32,7 @@ function isReceiptEntry(actionContext: any): actionContext is { PictureUri: stri
 
 interface SwipeableItemProps {
   projectId: string;
-  item: receiptEntriesData;
+  item: receiptData;
   onDelete: (id: string) => void;
   onShowPicture: (uri: string) => void;
 }
@@ -43,7 +43,7 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ projectId, item, onDelete
 
   const [isSwiped, setIsSwiped] = useState(false); // Track if item is swiped for delete
 
-  const onShowDetails = useCallback((item: receiptEntriesData) => {
+  const onShowDetails = useCallback((item: receiptData) => {
     router.push(`/jobs/${projectId}/receipt/${item.id}`);
   }, []);
 
@@ -159,10 +159,10 @@ const JobReceiptsPage = () => {
   }, [jobId]);
 
   const auth = useAuth();
-  const allReceipts = useAllRows(jobId, 'receiptEntries');
+  const allReceipts = useAllRows(jobId, 'receipts');
   const addReceiptImage = useAddImageCallback();
-  const addReceipt = useAddRowCallback(jobId, 'receiptEntries');
-  const deleteReceipt = useDeleteRowCallback(jobId, 'receiptEntries');
+  const addReceipt = useAddRowCallback(jobId, 'receipts');
+  const deleteReceipt = useDeleteRowCallback(jobId, 'receipts');
 
   const showPicture = useCallback((uri: string) => {
     router.push(`/jobs/${jobId}/receipt/${receiptId}/showImage/?uri=${uri}`);

@@ -28,35 +28,40 @@ export interface workItemSummaryData {
   spentAmount: number;
 }
 
-export interface workItemCostEntriesData {
+export type receiptData = {
   id: string;
-  workItemId: string;
-  vendor: string;
-  itemDescription: string;
-  amount: number;
-  documentationType: string;
-  documentationUri: string;
-}
-
-export type receiptEntriesData = {
-  id?: string;
   vendor?: string;
   description?: string;
   amount?: number;
+  numLineItems?: number;
   receiptDate?: number;
+  thumbnail?: string;
+  pictureDate?: number;
+  pictureUri?: string;
+  notes?: string;
+  markedComplete?: boolean;
+};
+
+export type invoiceData = {
+  id: string;
+  vendor?: string;
+  description?: string;
+  amount?: number;
+  invoiceDate?: number;
+  invoiceNumber?: string;
   thumbnail?: string;
   pictureDate?: number;
   pictureUri?: string;
   notes?: string;
 };
 
-export type receiptItemEntriesData = {
+export type workItemCostEntriesData = {
   id: string;
-  label: string;
-  amount: number;
-  receiptId: string;
-  category: string;
-  workItem: string;
+  label?: string;
+  amount?: number;
+  workItemId?: string;
+  parentId?: string; // To either the receipt or invoice table.
+  documentationType?: string; // 'receipt' or 'invoice'
 };
 
 export interface mediaEntriesData {
@@ -74,17 +79,17 @@ export interface notesData {
 }
 
 export type WorkItemSummarySchema = typeof TABLES_SCHEMA.workItemSummary;
+export type ReceiptsSchema = typeof TABLES_SCHEMA.receipts;
+export type InvoicesSchema = typeof TABLES_SCHEMA.invoices;
 export type WorkItemCostEntriesSchema = typeof TABLES_SCHEMA.workItemCostEntries;
-export type ReceiptEntriesSchema = typeof TABLES_SCHEMA.receiptEntries;
-export type ReceiptItemEntriesSchema = typeof TABLES_SCHEMA.receiptItemEntries;
 export type MediaEntriesSchema = typeof TABLES_SCHEMA.mediaEntries;
 export type NotesSchema = typeof TABLES_SCHEMA.notes;
 
 export type SchemaMap = {
   workItemSummary: WorkItemSummarySchema;
   workItemCostEntries: WorkItemCostEntriesSchema;
-  receiptEntries: ReceiptEntriesSchema;
-  receiptItemEntries: ReceiptItemEntriesSchema;
+  receipts: ReceiptsSchema;
+  invoices: InvoicesSchema;
   mediaEntries: MediaEntriesSchema;
   notes: NotesSchema;
 };
@@ -93,8 +98,8 @@ export type SchemaMap = {
 export type TableDataMap = {
   workItemSummary: workItemSummaryData;
   workItemCostEntries: workItemCostEntriesData;
-  receiptEntries: receiptEntriesData;
-  receiptItemEntries: receiptItemEntriesData;
+  receipts: receiptData;
+  invoices: invoiceData;
   mediaEntries: mediaEntriesData;
   notes: notesData;
 };
