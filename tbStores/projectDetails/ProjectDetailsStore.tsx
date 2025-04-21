@@ -14,14 +14,40 @@ export const TABLES_SCHEMA = {
     spentAmount: { type: 'number' },
   },
 
+  receipts: {
+    id: { type: 'string' },
+    vendor: { type: 'string' },
+    description: { type: 'string' },
+    amount: { type: 'number' }, // Total Amount
+    numLineItems: { type: 'number' }, // Number of line items in the receipt
+    receiptDate: { type: 'number' }, // Date on the receipt.
+    thumbnail: { type: 'string' },
+    pictureDate: { type: 'number' }, // Date the picture was taken.
+    pictureUri: { type: 'string' },
+    notes: { type: 'string' },
+    markedComplete: { type: 'boolean' },
+  },
+
+  invoices: {
+    id: { type: 'string' },
+    vendor: { type: 'string' },
+    description: { type: 'string' },
+    amount: { type: 'number' }, // Total Amount
+    invoiceDate: { type: 'number' }, // Date on the invoice.
+    invoiceNumber: { type: 'string' }, // Vendor's invoice number
+    thumbnail: { type: 'string' },
+    pictureDate: { type: 'number' }, // Date the picture was taken.
+    pictureUri: { type: 'string' },
+    notes: { type: 'string' },
+  },
+
   workItemCostEntries: {
     id: { type: 'string' },
-    workItemId: { type: 'string' },
-    vendor: { type: 'string' },
-    itemDescription: { type: 'string' },
+    label: { type: 'string' },
     amount: { type: 'number' },
+    workItemId: { type: 'string' },
+    parentId: { type: 'string' }, // ReceiptId or InvoiceId
     documentationType: { type: 'string' }, // 'receipt' or 'invoice'
-    documentationUri: { type: 'string' }, // URI to the receipt or invoice photo
   },
 
   mediaEntries: {
@@ -29,7 +55,7 @@ export const TABLES_SCHEMA = {
     assetId: { type: 'string' }, // only used when media is on local device
     deviceName: { type: 'string' }, // only used when media is on local device
     mediaType: { type: 'string' }, // 'video' or 'photo'
-    mediaUri: { type: 'string' }, // URI to the receipt or invoice photo
+    mediaUri: { type: 'string' }, // URI to the video or photo
   },
 
   notes: {

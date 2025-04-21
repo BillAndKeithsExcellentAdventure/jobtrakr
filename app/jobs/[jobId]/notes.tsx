@@ -8,6 +8,12 @@ import {
   useDeleteNote,
   useUpdateNote,
 } from '@/tbStores/projectDetails/notes';
+import {
+  useAddRowCallback,
+  useAllRows,
+  useDeleteRowCallback,
+  useUpdateRowCallback,
+} from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import FontAwesomeIcon from '@expo/vector-icons/FontAwesome';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -26,10 +32,10 @@ const JobNotes = () => {
     }
   }, [jobId]);
 
-  const notes = useAllNotes(jobId);
-  const addNewNote = useAddNote(jobId);
-  const removeNote = useDeleteNote(jobId);
-  const updateNote = useUpdateNote(jobId);
+  const notes = useAllRows(jobId, 'notes');
+  const addNewNote = useAddRowCallback(jobId, 'notes');
+  const removeNote = useDeleteRowCallback(jobId, 'notes');
+  const updateNote = useUpdateRowCallback(jobId, 'notes');
 
   const addNote = useCallback(async () => {
     if (!newNoteTitle.trim()) {
@@ -37,7 +43,7 @@ const JobNotes = () => {
       return;
     }
 
-    const newNote: Omit<NoteData, 'id'> = { task: newNoteTitle, completed: false };
+    const newNote: NoteData = { id: '', task: newNoteTitle, completed: false };
     addNewNote(newNote);
     setNewNoteTitle('');
   }, [addNewNote, newNoteTitle]);
@@ -65,7 +71,7 @@ const JobNotes = () => {
       console.log('Toggling completed', id, completed);
       const noteToUpdate = { ...matchingNote };
       noteToUpdate.completed = !completed;
-      updateNote(noteToUpdate);
+      updateNote(id, noteToUpdate);
     },
     [updateNote, notes],
   );
@@ -76,7 +82,7 @@ const JobNotes = () => {
       return;
     }
 
-    updateNote(editingNote);
+    updateNote(editingNote.id, editingNote);
     setEditingNote(null);
   }, [updateNote, editingNote]);
 

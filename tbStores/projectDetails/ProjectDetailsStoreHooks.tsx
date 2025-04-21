@@ -1,0 +1,217 @@
+import { NoValuesSchema, Value } from 'tinybase/with-schemas';
+import { getStoreId, TABLES_SCHEMA } from './ProjectDetailsStore';
+import * as UiReact from 'tinybase/ui-react/with-schemas';
+
+const {
+  useCell,
+  useCreateMergeableStore,
+  useDelRowCallback,
+  useProvideStore,
+  useRowIds,
+  useSetCellCallback,
+  useSetValueCallback,
+  useSortedRowIds,
+  useStore,
+  useRow,
+  useTable,
+  useValue,
+} = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
+
+import { useCallback, useEffect, useState } from 'react';
+import { randomUUID } from 'expo-crypto';
+import { CrudResult } from '@/models/types';
+
+export interface workItemSummaryData {
+  id: string;
+  workItemId: string;
+  bidAmount: number;
+  spentAmount: number;
+}
+
+export type receiptData = {
+  id: string;
+  vendor?: string;
+  description?: string;
+  amount?: number;
+  numLineItems?: number;
+  receiptDate?: number;
+  thumbnail?: string;
+  pictureDate?: number;
+  pictureUri?: string;
+  notes?: string;
+  markedComplete?: boolean;
+};
+
+export type invoiceData = {
+  id: string;
+  vendor?: string;
+  description?: string;
+  amount?: number;
+  invoiceDate?: number;
+  invoiceNumber?: string;
+  thumbnail?: string;
+  pictureDate?: number;
+  pictureUri?: string;
+  notes?: string;
+};
+
+export type workItemCostEntriesData = {
+  id: string;
+  label?: string;
+  amount?: number;
+  workItemId?: string;
+  parentId?: string; // To either the receipt or invoice table.
+  documentationType?: string; // 'receipt' or 'invoice'
+};
+
+export interface mediaEntriesData {
+  id: string;
+  assetId: string;
+  deviceName: string;
+  mediaType: string;
+  meduaUri: string;
+}
+
+export interface notesData {
+  id: string;
+  task: string;
+  completed: boolean;
+}
+
+export type WorkItemSummarySchema = typeof TABLES_SCHEMA.workItemSummary;
+export type ReceiptsSchema = typeof TABLES_SCHEMA.receipts;
+export type InvoicesSchema = typeof TABLES_SCHEMA.invoices;
+export type WorkItemCostEntriesSchema = typeof TABLES_SCHEMA.workItemCostEntries;
+export type MediaEntriesSchema = typeof TABLES_SCHEMA.mediaEntries;
+export type NotesSchema = typeof TABLES_SCHEMA.notes;
+
+export type SchemaMap = {
+  workItemSummary: WorkItemSummarySchema;
+  workItemCostEntries: WorkItemCostEntriesSchema;
+  receipts: ReceiptsSchema;
+  invoices: InvoicesSchema;
+  mediaEntries: MediaEntriesSchema;
+  notes: NotesSchema;
+};
+
+// Type mapping between table names and data types
+export type TableDataMap = {
+  workItemSummary: workItemSummaryData;
+  workItemCostEntries: workItemCostEntriesData;
+  receipts: receiptData;
+  invoices: invoiceData;
+  mediaEntries: mediaEntriesData;
+  notes: notesData;
+};
+
+export type PROJECTDETAILS_TABLES = keyof TableDataMap;
+
+//  Extract table names and cell ID types
+export type TableName = keyof typeof TABLES_SCHEMA;
+export type CellIdMap = {
+  [K in TableName]: keyof (typeof TABLES_SCHEMA)[K];
+};
+
+// --- Retrieve all rows of a table ---
+export const useAllRows = <K extends keyof TableDataMap>(
+  projectId: string,
+  tableName: K,
+): TableDataMap[K][] => {
+  const store = useStore(getStoreId(projectId));
+  const [rows, setRows] = useState<TableDataMap[K][]>([]);
+
+  const fetchRows = useCallback(() => {
+    if (!store) return [];
+    const table = store.getTable(tableName);
+    return table
+      ? (Object.entries(table).map(([id, row]) => ({
+          ...row,
+          id: id,
+        })) as TableDataMap[K][])
+      : [];
+  }, [store, tableName]);
+
+  useEffect(() => {
+    setRows(fetchRows());
+  }, [fetchRows]);
+
+  useEffect(() => {
+    if (!store) return;
+    const listenerId = store.addTableListener(tableName, () => setRows(fetchRows()));
+    return () => {
+      store.delListener(listenerId);
+    };
+  }, [store, tableName]);
+
+  return rows;
+};
+
+// --- ADD ROW ---
+export function useAddRowCallback<K extends PROJECTDETAILS_TABLES>(projectId: string, tableId: K) {
+  const store = useStore(getStoreId(projectId));
+  return useCallback(
+    (data: TableDataMap[K]): CrudResult => {
+      if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
+
+      const id = randomUUID();
+      const success = store.setRow(tableId, id, { ...data, id } as any);
+      return success
+        ? { status: 'Success', id, msg: '' }
+        : { status: 'Error', id: '0', msg: 'Failed to write' };
+    },
+    [store, projectId, tableId],
+  );
+}
+
+// --- UPDATE ROW ---
+export function useUpdateRowCallback<K extends PROJECTDETAILS_TABLES>(projectId: string, tableId: K) {
+  const store = useStore(getStoreId(projectId));
+  return useCallback(
+    (id: string, updates: Partial<TableDataMap[K]>): CrudResult => {
+      if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
+      const existing = store.getRow(tableId, id);
+      if (!existing) return { status: 'Error', id: '0', msg: 'Row not found' };
+      const success = store.setRow(tableId, id, { ...existing, ...updates });
+      return success
+        ? { status: 'Success', id, msg: '' }
+        : { status: 'Error', id: '0', msg: 'Failed to update' };
+    },
+    [store, tableId],
+  );
+}
+
+// --- DELETE ROW ---
+export function useDeleteRowCallback<K extends PROJECTDETAILS_TABLES>(projectId: string, tableId: K) {
+  const store = useStore(getStoreId(projectId));
+  return useCallback(
+    (id: string): CrudResult => {
+      if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
+      const success = store.delRow(tableId, id);
+      return success
+        ? { status: 'Success', id, msg: '' }
+        : { status: 'Error', id: '0', msg: 'Failed to delete' };
+    },
+    [store, tableId],
+  );
+}
+
+// --- READ ROW ---
+export function useTypedRow<K extends PROJECTDETAILS_TABLES>(
+  projectId: string,
+  tableId: K,
+  id: string,
+): (TableDataMap[K] & { id: string }) | undefined {
+  const store = useStore(getStoreId(projectId));
+  if (!store) return undefined;
+  const row = store.getRow(tableId, id);
+  if (!row) return undefined;
+  return { id, ...row } as TableDataMap[K];
+}
+
+// --- VALUE HOOK ---
+export const useTableValue = <T extends keyof SchemaMap, C extends Extract<keyof SchemaMap[T], string>>(
+  projectId: string,
+  tableId: T,
+  rowId: string,
+  cellId: C,
+): Value<SchemaMap[T], C> => useCell(tableId, rowId, cellId, getStoreId(projectId)) as Value<SchemaMap[T], C>;
