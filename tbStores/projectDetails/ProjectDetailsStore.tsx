@@ -24,12 +24,33 @@ export const TABLES_SCHEMA = {
     documentationUri: { type: 'string' }, // URI to the receipt or invoice photo
   },
 
+  receiptEntries: {
+    id: { type: 'string' },
+    vendor: { type: 'string' },
+    description: { type: 'string' },
+    amount: { type: 'number' },
+    receiptDate: { type: 'number' },
+    thumbnail: { type: 'string' },
+    pictureDate: { type: 'number' },
+    pictureUri: { type: 'string' },
+    notes: { type: 'string' },
+  },
+
+  receiptItemEntries: {
+    id: { type: 'string' },
+    label: { type: 'string' },
+    amount: { type: 'number' },
+    receiptId: { type: 'string' },
+    category: { type: 'string' },
+    workItem: { type: 'string' },
+  },
+
   mediaEntries: {
     id: { type: 'string' },
     assetId: { type: 'string' }, // only used when media is on local device
     deviceName: { type: 'string' }, // only used when media is on local device
     mediaType: { type: 'string' }, // 'video' or 'photo'
-    mediaUri: { type: 'string' }, // URI to the receipt or invoice photo
+    mediaUri: { type: 'string' }, // URI to the video or photo
   },
 
   notes: {

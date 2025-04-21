@@ -2,11 +2,9 @@ import { ActionButton } from '@/components/ActionButton';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { useJobDb } from '@/context/DatabaseContext';
-import { useReceiptDataStore } from '@/stores/receiptDataStore';
 import { FlashList } from '@shopify/flash-list';
+import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
-import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Platform, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import {
@@ -19,29 +17,34 @@ import * as ImagePicker from 'expo-image-picker';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ReceiptSummary } from '@/components/ReceiptSummary';
-import { useWorkCategoryDataStore } from '@/stores/categoryDataStore';
 import { useAuth } from '@clerk/clerk-expo';
-import { randomUUID } from 'expo-crypto';
 import { useAddImageCallback } from '@/utils/images';
+import {
+  receiptEntriesData,
+  useAddRowCallback,
+  useAllRows,
+  useDeleteRowCallback,
+} from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
   return actionContext && typeof actionContext.PictureUri === 'string';
 }
 
 interface SwipeableItemProps {
-  item: ReceiptBucketData;
+  projectId: string;
+  item: receiptEntriesData;
   onDelete: (id: string) => void;
   onShowPicture: (uri: string) => void;
 }
 
-const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPicture }) => {
+const SwipeableItem: React.FC<SwipeableItemProps> = ({ projectId, item, onDelete, onShowPicture }) => {
   const router = useRouter();
   const translateX = useSharedValue(0); // Shared value for horizontal translation
 
   const [isSwiped, setIsSwiped] = useState(false); // Track if item is swiped for delete
 
-  const onShowDetails = useCallback((item: ReceiptBucketData) => {
-    router.push(`/jobs/${item.JobId}/receipt/${item._id}`);
+  const onShowDetails = useCallback((item: receiptEntriesData) => {
+    router.push(`/jobs/${projectId}/receipt/${item.id}`);
   }, []);
 
   // Gesture handler for the swipe action
@@ -77,7 +80,7 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, onDelete, onShowPic
     Alert.alert(
       'Delete Receipt',
       'Are you sure you want to delete this receipt?',
-      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => onDelete(item._id!) }],
+      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => onDelete(item.id!) }],
       { cancelable: true },
     );
   };
@@ -147,54 +150,19 @@ const JobReceiptsPage = () => {
     receiptId: string;
     jobName: string;
   }>();
-  const { jobDbHost } = useJobDb();
-  const { allJobReceipts, addReceiptData, removeReceiptData, setReceiptData } = useReceiptDataStore();
-  const { allWorkCategories: allJobCategories, setWorkCategories: setJobCategories } =
-    useWorkCategoryDataStore();
-  const auth = useAuth();
-  const addReceiptImage = useAddImageCallback();
+  const { addActiveProjectIds } = useActiveProjectIds();
 
-  const fetchReceipts = useCallback(async () => {
-    try {
-      const response = await jobDbHost?.GetReceiptBucketDB().FetchJobReceipts(jobId);
-
-      if (!response) return;
-
-      if (response.status === 'Success' && response.data) {
-        setReceiptData(response.data);
-      }
-    } catch (err) {
-      alert('An error occurred while fetching the receipts');
-      console.log('An error occurred while fetching the receipts', err);
+  useEffect(() => {
+    if (jobId) {
+      addActiveProjectIds([jobId]);
     }
-  }, [jobId, jobDbHost, setReceiptData]);
+  }, [jobId]);
 
-  // Fetch receipts for the given job and user
-  useEffect(() => {
-    fetchReceipts();
-  }, []);
-
-  // Fetch receipts for the given job and user
-  /*
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await jobDbHost?.GetCategoryDB().FetchAllCategories();
-
-        if (!response) return;
-
-        if (response.status === 'Success' && response.data) {
-          setReceiptData(response.data);
-        }
-      } catch (err) {
-        alert('An error occurred while fetching the receipts');
-        console.log('An error occurred while fetching the receipts', err);
-      }
-    };
-
-    fetchReceipts();
-  }, [jobId, jobDbHost, setJobCategories]);
-  */
+  const auth = useAuth();
+  const allReceipts = useAllRows(jobId, 'receiptEntries');
+  const addReceiptImage = useAddImageCallback();
+  const addReceipt = useAddRowCallback(jobId, 'receiptEntries');
+  const deleteReceipt = useDeleteRowCallback(jobId, 'receiptEntries');
 
   const showPicture = useCallback((uri: string) => {
     router.push(`/jobs/${jobId}/receipt/${receiptId}/showImage/?uri=${uri}`);
@@ -204,11 +172,11 @@ const JobReceiptsPage = () => {
     async (id: string | undefined) => {
       if (id !== undefined) {
         const strId = id;
-        const response = await jobDbHost?.GetReceiptBucketDB().DeleteReceipt(strId);
-        if (response === 'Success') removeReceiptData(strId);
+        const response = await deleteReceipt(strId);
+        //  if (response.status === 'Success') removeReceiptData(strId);
       }
     },
-    [removeReceiptData],
+    [deleteReceipt],
   );
 
   const colorScheme = useColorScheme();
@@ -252,21 +220,19 @@ const JobReceiptsPage = () => {
       const asset = cameraResponse.assets[0];
       if (!cameraResponse.assets || cameraResponse.assets.length === 0 || !asset) return;
 
-      const newReceipt: ReceiptBucketData = {
-        PictureUri: asset.uri,
-        AssetId: asset.assetId ?? undefined,
+      const newReceipt: receiptEntriesData = {
+        pictureUri: asset.uri,
+        pictureDate: new Date().getTime(),
       };
 
       console.log('Adding a new Receipt.', newReceipt);
       // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
       const imageAddResult = await addReceiptImage(asset.uri, jobId, 'receipt');
-      console.log('Finished adding Receipt.', imageAddResult);
+      console.log('Finished adding Receipt Image.', imageAddResult);
 
-      const response = await jobDbHost?.GetReceiptBucketDB().InsertReceipt(jobId, newReceipt);
+      const response = addReceipt(newReceipt);
       if (response?.status === 'Success') {
-        newReceipt._id = response.id;
-        newReceipt.JobId = jobId;
-        addReceiptData(newReceipt);
+        newReceipt.id = response.id;
         console.log('Job receipt successfully added:', newReceipt);
       } else {
         alert(`Unable to inset Job receipt: ${JSON.stringify(newReceipt)}`);
@@ -311,7 +277,7 @@ const JobReceiptsPage = () => {
               />
             </View>
           </View>
-          {allJobReceipts.length === 0 ? (
+          {allReceipts.length === 0 ? (
             <View style={{ alignItems: 'center', margin: 40 }}>
               <Text txtSize="xl" text="No receipts found." />
             </View>
@@ -320,10 +286,15 @@ const JobReceiptsPage = () => {
               <View style={{ flex: 1, width: '100%', backgroundColor: colors.listBackground }}>
                 <FlashList
                   estimatedItemSize={150}
-                  data={allJobReceipts}
-                  keyExtractor={(item, index) => item._id ?? index.toString()}
+                  data={allReceipts}
+                  keyExtractor={(item, index) => item.id ?? index.toString()}
                   renderItem={({ item }) => (
-                    <SwipeableItem item={item} onDelete={handleRemoveReceipt} onShowPicture={showPicture} />
+                    <SwipeableItem
+                      projectId={jobId}
+                      item={item}
+                      onDelete={handleRemoveReceipt}
+                      onShowPicture={showPicture}
+                    />
                   )}
                 />
               </View>

@@ -1,35 +1,35 @@
 import { View, Text } from '@/components/Themed';
+import { receiptEntriesData } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/utils/formatters';
-import { ReceiptBucketData } from 'jobdb';
 import React from 'react';
 import { TouchableWithoutFeedback, Image, StyleSheet } from 'react-native';
 
 interface ReceiptSummaryProps {
-  item: ReceiptBucketData;
+  item: receiptEntriesData;
   onShowPicture: (uri: string) => void;
-  onShowDetails: (item: ReceiptBucketData) => void;
+  onShowDetails: (item: receiptEntriesData) => void;
 }
 
 export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({ item, onShowPicture, onShowDetails }) => {
   return (
     <View style={{ flex: 1, flexDirection: 'row' }}>
       <View style={styles.imageContentContainer}>
-        {item.PictureUri ? (
-          <TouchableWithoutFeedback onPress={() => onShowPicture(item.PictureUri!)}>
-            <Image source={{ uri: item.PictureUri }} style={{ height: 80, width: 120 }} />
+        {item.pictureUri ? (
+          <TouchableWithoutFeedback onPress={() => onShowPicture(item.pictureUri!)}>
+            <Image source={{ uri: item.pictureUri }} style={{ height: 80, width: 120 }} />
           </TouchableWithoutFeedback>
         ) : (
           <Text txtSize="sub-title">No Image</Text>
         )}
       </View>
-      <View style={[{ flex: 1, alignItems: 'flex-start' }, !!!item.Amount && { alignItems: 'center' }]}>
+      <View style={[{ flex: 1, alignItems: 'flex-start' }, !!!item.amount && { alignItems: 'center' }]}>
         <TouchableWithoutFeedback onPress={() => onShowDetails(item)}>
-          {item.Amount ? (
+          {item.amount ? (
             <View style={{ flex: 1, justifyContent: 'center' }}>
-              <Text>Amount: {formatCurrency(item.Amount, true, true)}</Text>
-              <Text>Vendor: {item.Vendor}</Text>
-              <Text>Description: {item.Description}</Text>
-              {item.Notes && <Text>Notes: {item.Notes}</Text>}
+              <Text>Amount: {formatCurrency(item.amount, true, true)}</Text>
+              <Text>Vendor: {item.vendor}</Text>
+              <Text>Description: {item.description}</Text>
+              {item.notes && <Text>Notes: {item.notes}</Text>}
             </View>
           ) : (
             <View style={{ flex: 1, justifyContent: 'center' }}>
