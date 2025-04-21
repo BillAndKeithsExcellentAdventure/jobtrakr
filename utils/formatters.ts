@@ -18,14 +18,18 @@ export function formatDate(date?: Date | string | number, notSpecifiedString = '
   return `${month}/${day}/${year}`;
 }
 
-export function formatCurrency(amount?: number, includeCents = false): string {
+export function formatCurrency(amount?: number, addDollarSign = false, includeCents = false): string {
   if (amount === undefined || amount === null) return '';
-
+  const prefix = addDollarSign ? '$' : '';
   if (!includeCents) {
     const roundedAmount = Math.round(amount); // Round the amount to the nearest whole number
-    return `$${roundedAmount.toLocaleString()}`; // Format with commas and add dollar sign
+    return `${prefix}${roundedAmount.toLocaleString()}`; // Format with commas
   }
-  return `$${amount.toFixed(2)}`;
+
+  return `${prefix}${amount.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 export function formatNumber(amount?: number, numDecimalPlaces = 2): string {

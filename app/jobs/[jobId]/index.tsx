@@ -8,6 +8,7 @@ import { useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHook
 import { useProject, useDeleteProjectCallback, useProjectValue } from '@/tbStores/ListOfProjectsStore';
 import { useAddWorkItemSummary, useAllWorkItemSummaries } from '@/tbStores/projectDetails/workItemsSummary';
 import { formatCurrency, formatDate } from '@/utils/formatters';
+import { MaterialIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -231,45 +232,58 @@ const JobDetailsPage = () => {
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
-      <View style={styles.container}>
-        <Stack.Screen
-          options={{
-            headerShown: true,
-            title: 'Job Overview',
-            headerRight: () => (
-              <Pressable
-                style={{ marginRight: 12 }}
-                onPress={() => {
-                  setHeaderMenuModalVisible(!headerMenuModalVisible);
-                }}
-              >
-                {({ pressed }) => (
-                  <MaterialCommunityIcons
-                    name="menu"
-                    size={28}
-                    color={colors.iconColor}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            ),
-          }}
-        />
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Job Overview',
+          headerRight: () => (
+            <Pressable
+              style={{ marginRight: 0 }}
+              onPress={() => {
+                setHeaderMenuModalVisible(!headerMenuModalVisible);
+              }}
+            >
+              {({ pressed }) => (
+                <MaterialCommunityIcons
+                  name="menu"
+                  size={28}
+                  color={colors.iconColor}
+                  style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                />
+              )}
+            </Pressable>
+          ),
+        }}
+      />
 
+      <View style={styles.container}>
         <View style={styles.headerContainer}>
           <Text txtSize="title" text={projectData.name} />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
             <Text text={`start: ${formatDate(projectData.startDate)}`} />
-            <Text text={`bid: ${formatCurrency(projectData.bidPrice)}`} />
+            <Text text={`bid: ${formatCurrency(projectData.bidPrice, true)}`} />
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
             <Text text={`due: ${formatDate(projectData.plannedFinish)}`} />
-            <Text text={`spent: ${formatCurrency(projectData.amountSpent)}`} />
+            <Text text={`spent: ${formatCurrency(projectData.amountSpent, true)}`} />
           </View>
         </View>
-        <View style={{ flex: 1, padding: 10 }}>
-          <View style={{ marginBottom: 10, alignItems: 'center' }}>
+        <View style={{ flex: 1, paddingBottom: 5 }}>
+          <View style={{ marginBottom: 5, alignItems: 'center' }}>
             <Text txtSize="title" text="Cost Items" />
+          </View>
+          <View
+            style={{
+              width: '100%',
+              paddingLeft: 10,
+              paddingRight: 36,
+              flexDirection: 'row',
+              backgroundColor: colors.borderColor,
+            }}
+          >
+            <Text style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }} text="Description" />
+            <Text style={{ width: 100, textAlign: 'right' }} text="Bid $" />
+            <Text style={{ width: 100, textAlign: 'right' }} text="Spent $" />
           </View>
           <SectionList
             showsVerticalScrollIndicator={false}
@@ -309,7 +323,7 @@ const renderSectionHeader = (
           backgroundColor: colors.listBackground,
           borderBottomWidth: 1,
           alignItems: 'center',
-          height: 50,
+          height: 40,
         },
       ]}
     >
@@ -317,21 +331,25 @@ const renderSectionHeader = (
         <View
           style={{
             flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
             backgroundColor: colors.listBackground,
           }}
         >
-          <Text txtSize="section-header" text={`${section.title}`} />
-          <View style={{ backgroundColor: colors.listBackground }}>
-            <Text text={`Bid: ${formatCurrency(section.totalBidAmount)}`} />
-            <Text text={`Spent: ${formatCurrency(section.totalSpentAmount)}`} />
-          </View>
-          <Ionicons
-            name={section.isExpanded ? 'chevron-up-sharp' : 'chevron-down-sharp'}
-            size={24}
-            color={colors.iconColor}
+          <Text style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }} text={section.title} />
+          <Text
+            style={{ width: 100, textAlign: 'right' }}
+            text={formatCurrency(section.totalBidAmount, false, true)}
           />
+          <Text
+            style={{ width: 100, textAlign: 'right' }}
+            text={formatCurrency(section.totalSpentAmount, false, true)}
+          />
+          <View style={{ width: 36, backgroundColor: colors.listBackground, paddingLeft: 10 }}>
+            <Ionicons
+              name={section.isExpanded ? 'chevron-up-sharp' : 'chevron-down-sharp'}
+              size={24}
+              color={colors.iconColor}
+            />
+          </View>
         </View>
       </Pressable>
     </View>
@@ -345,12 +363,30 @@ const renderItem = (
   colors: typeof Colors.light | typeof Colors.dark,
 ) => {
   return (
-    <View style={{ marginLeft: 20, flexDirection: 'row' }}>
-      <Text style={[styles.itemText, { marginRight: 10 }]}>
-        {sectionCode}.{item.code} - {item.title}
-      </Text>
-      <Text text={`Bid: ${formatCurrency(item.bidAmount)}`} />
-      <Text text={`Spent: ${formatCurrency(item.spentAmount)}`} />
+    <View
+      style={{
+        flexDirection: 'row',
+        height: 40,
+        paddingHorizontal: 10,
+        alignItems: 'center',
+        borderBottomWidth: StyleSheet.hairlineWidth,
+      }}
+    >
+      <Text
+        style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
+        text={`${sectionCode}.${item.code} - ${item.title}`}
+      />
+      <Text
+        style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
+        text={formatCurrency(item.bidAmount, false, true)}
+      />
+      <Text
+        style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
+        text={formatCurrency(item.spentAmount, false, true)}
+      />
+      <View style={{ width: 36, paddingLeft: 10, alignItems: 'center', justifyContent: 'center' }}>
+        <MaterialIcons name="chevron-right" size={28} color={colors.iconColor} />
+      </View>
     </View>
   );
 };
@@ -364,11 +400,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 5,
     borderTopWidth: 1,
-    height: 45,
   },
 
   headerContainer: {
-    marginTop: 10,
+    marginTop: 5,
     marginHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center',

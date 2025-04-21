@@ -26,7 +26,7 @@ export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({ item, onShowPict
         <TouchableWithoutFeedback onPress={() => onShowDetails(item)}>
           {item.Amount ? (
             <View style={{ flex: 1, justifyContent: 'center' }}>
-              <Text>Amount: {formatCurrency(item.Amount, true)}</Text>
+              <Text>Amount: {formatCurrency(item.Amount, true, true)}</Text>
               <Text>Vendor: {item.Vendor}</Text>
               <Text>Description: {item.Description}</Text>
               {item.Notes && <Text>Notes: {item.Notes}</Text>}
