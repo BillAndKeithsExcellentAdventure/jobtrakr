@@ -4,14 +4,13 @@ import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
-import { useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useAllRows as useAllConfigRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   useProject,
   useDeleteProjectCallback,
   useProjectValue,
 } from '@/tbStores/listOfProjects/ListOfProjectsStore';
-import { isValidProjectDetailsStoreCallback } from '@/tbStores/projectDetails/workItemCostEntries';
-import { useAddWorkItemSummary, useAllWorkItemSummaries } from '@/tbStores/projectDetails/workItemsSummary';
+import { useAddRowCallback, useAllRows } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { MaterialIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -47,15 +46,16 @@ const JobDetailsPage = () => {
   const projectData = useProject(jobId);
   const processDeleteProject = useDeleteProjectCallback();
   const { removeActiveProjectId, addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
-  const allWorkItemSummaries = useAllWorkItemSummaries(jobId);
-  const allJobCategories = useAllRows('categories');
-  const allWorkItems = useAllRows('workItems');
+  const allJobCategories = useAllConfigRows('categories');
+  const allWorkItems = useAllConfigRows('workItems');
   const colorScheme = useColorScheme();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [sectionData, setSectionData] = useState<CostSectionData[]>([]);
   const expandedSectionIdRef = useRef<string>(''); // Ref to keep track of the expanded section ID
   const [seedWorkItems, setSeedWorkItems] = useProjectValue(jobId, 'seedJobWorkItems');
-  const addWorkItemSummary = useAddWorkItemSummary(jobId);
+
+  const allWorkItemSummaries = useAllRows(jobId, 'workItemSummary');
+  const addWorkItemSummary = useAddRowCallback(jobId, 'workItemSummary');
 
   useEffect(() => {
     if (jobId) {

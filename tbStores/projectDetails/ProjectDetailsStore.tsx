@@ -65,10 +65,6 @@ export const TABLES_SCHEMA = {
   },
 } as const;
 
-type WorkItemSummarySchema = typeof TABLES_SCHEMA.workItemSummary;
-type WorkItemCostEntriesSchema = typeof TABLES_SCHEMA.workItemCostEntries;
-type NotesSchema = typeof TABLES_SCHEMA.notes;
-
 const { useCreateMergeableStore, useProvideStore } = UiReact as UiReact.WithSchemas<
   [typeof TABLES_SCHEMA, NoValuesSchema]
 >;

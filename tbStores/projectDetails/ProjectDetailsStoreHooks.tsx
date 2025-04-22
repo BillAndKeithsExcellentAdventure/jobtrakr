@@ -21,7 +21,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import { CrudResult } from '@/models/types';
 
-export interface workItemSummaryData {
+export interface WorkItemSummaryData {
   id: string;
   workItemId: string;
   bidAmount: number;
@@ -96,7 +96,7 @@ export type SchemaMap = {
 
 // Type mapping between table names and data types
 export type TableDataMap = {
-  workItemSummary: workItemSummaryData;
+  workItemSummary: WorkItemSummaryData;
   workItemCostEntries: workItemCostEntriesData;
   receipts: receiptData;
   invoices: invoiceData;

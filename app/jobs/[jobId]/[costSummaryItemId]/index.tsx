@@ -6,14 +6,21 @@ import { ActionButton } from '@/components/ActionButton';
 import { Text, TextInput, View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import { useAddWorkItemSummary, useWorkItemSummary } from '@/tbStores/projectDetails/workItemsSummary';
 import { formatCurrency } from '@/utils/formatters';
+import {
+  useAddRowCallback,
+  useAllRows,
+  WorkItemSummaryData,
+} from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 
 const CostItemDetails = () => {
   const { jobId, costSummaryItemId } = useLocalSearchParams<{
     jobId: string;
     costSummaryItemId: string;
   }>();
+
+  const allWorkItemSummaries = useAllRows(jobId, 'workItemSummary');
+  const addWorkItemSummary = useAddRowCallback(jobId, 'workItemSummary');
 
   const colorScheme = useColorScheme();
   // Define colors based on the color scheme (dark or light)
@@ -43,7 +50,16 @@ const CostItemDetails = () => {
     [colorScheme],
   );
 
-  const workItemSummary = undefined; //useWorkItemSummary(jobId, costSummaryItemId);
+  const workItemSummary: WorkItemSummaryData | null = useMemo(() => {
+    const workItem = allWorkItemSummaries.find((item) => item.workItemId === costSummaryItemId);
+    if (workItem) {
+      return {
+        ...workItem,
+      };
+    }
+    return null;
+  }, [allWorkItemSummaries, costSummaryItemId]);
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
