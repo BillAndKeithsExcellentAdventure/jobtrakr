@@ -19,8 +19,8 @@ const CostItemDetails = () => {
     costSummaryItemId: string;
   }>();
 
-  const allWorkItemSummaries = useAllRows(jobId, 'workItemSummary');
-  const addWorkItemSummary = useAddRowCallback(jobId, 'workItemSummary');
+  const allWorkItemSummaries = useAllRows(jobId, 'workItemSummaries');
+  const addWorkItemSummary = useAddRowCallback(jobId, 'workItemSummaries');
 
   const colorScheme = useColorScheme();
   // Define colors based on the color scheme (dark or light)

@@ -7,7 +7,7 @@ import { useCreateServerSynchronizerAndStart } from '../synchronization/useCreat
 const STORE_ID_PREFIX = 'projectDetailsStore-';
 
 export const TABLES_SCHEMA = {
-  workItemSummary: {
+  workItemSummaries: {
     id: { type: 'string' },
     workItemId: { type: 'string' },
     bidAmount: { type: 'number' },

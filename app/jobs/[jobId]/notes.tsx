@@ -6,6 +6,7 @@ import {
   useAddRowCallback,
   useAllRows,
   useDeleteRowCallback,
+  useIsStoreAvailableCallback,
   useUpdateRowCallback,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import FontAwesomeIcon from '@expo/vector-icons/FontAwesome';
@@ -16,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const JobNotes = () => {
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
-  const { addActiveProjectIds } = useActiveProjectIds();
+  const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const [newNoteTitle, setNewNoteTitle] = useState('');
   const [editingNote, setEditingNote] = useState<NoteData | null>(null);
 
@@ -25,6 +26,19 @@ const JobNotes = () => {
       addActiveProjectIds([jobId]);
     }
   }, [jobId]);
+
+  const [projectIsReady, setProjectIsReady] = useState(false);
+  const isStoreReady = useIsStoreAvailableCallback(jobId);
+
+  useEffect(() => {
+    if (jobId) {
+      addActiveProjectIds([jobId]);
+    }
+  }, [jobId]);
+
+  useEffect(() => {
+    setProjectIsReady(!!jobId && activeProjectIds.includes(jobId) && isStoreReady());
+  }, [jobId, activeProjectIds, isStoreReady]);
 
   const notes = useAllRows(jobId, 'notes');
   const addNewNote = useAddRowCallback(jobId, 'notes');
@@ -88,89 +102,99 @@ const JobNotes = () => {
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
       <View style={styles.container}>
-        <View style={styles.centeredView}>
-          {/* Show Add Note Section only if no note is being edited */}
-          {!editingNote && (
-            <View>
-              <TextInput
-                value={newNoteTitle}
-                onChangeText={setNewNoteTitle}
-                placeholder="Enter job note"
-                style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
-              />
-              <ActionButton onPress={addNote} type={newNoteTitle ? 'action' : 'disabled'} title="Add Note" />
-            </View>
-          )}
-
-          {/* Editing Note Section */}
-          {editingNote && (
-            <View>
-              <TextInput
-                value={editingNote.task ?? ''}
-                onChangeText={(title) => setEditingNote({ ...editingNote, task: title })}
-                placeholder="Edit note title"
-                style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
-              />
-
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <ActionButton style={styles.saveButton} onPress={saveEdit} type={'ok'} title="Save" />
-                <ActionButton
-                  style={styles.cancelButton}
-                  onPress={cancelEdit}
-                  type={'cancel'}
-                  title="Cancel"
-                />
-              </View>
-            </View>
-          )}
-
-          <FlatList
-            style={{ marginTop: 20 }}
-            data={notes}
-            keyExtractor={(item) => item.id ?? ''}
-            renderItem={({ item }) => (
-              <View
-                style={{
-                  flexDirection: 'row',
-                  marginVertical: 5,
-                  borderBottomWidth: 1,
-                  borderBottomColor: 'gray',
-                  paddingBottom: 5,
-                }}
-              >
-                <Text
-                  style={{
-                    flex: 1,
-                    textOverflow: 'ellipsis',
-                    alignSelf: 'center',
-                    justifyContent: 'center',
-                    marginBottom: 5,
-                    textDecorationLine: item.completed ? 'line-through' : 'none',
-                  }}
-                >
-                  {item.task}
-                </Text>
-                <View style={{ flexDirection: 'row', marginLeft: 10, alignSelf: 'center' }}>
-                  <TouchableOpacity onPress={() => toggleCompleted(item.id!, item.completed!)}>
-                    <FontAwesomeIcon
-                      name={item.completed ? 'undo' : 'check-circle'}
-                      size={28}
-                      color={item.completed ? 'gray' : 'green'}
-                    />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity onPress={() => deleteNote(item.id!)}>
-                    <FontAwesomeIcon name="trash" size={28} color="red" style={{ marginLeft: 10 }} />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity onPress={() => setEditingNote({ ...item })}>
-                    <FontAwesomeIcon name="edit" size={28} color="blue" style={{ marginLeft: 10 }} />
-                  </TouchableOpacity>
+        {!projectIsReady ? (
+          <Text>Loading...</Text>
+        ) : (
+          <>
+            <View style={styles.centeredView}>
+              {/* Show Add Note Section only if no note is being edited */}
+              {!editingNote && (
+                <View>
+                  <TextInput
+                    value={newNoteTitle}
+                    onChangeText={setNewNoteTitle}
+                    placeholder="Enter job note"
+                    style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
+                  />
+                  <ActionButton
+                    onPress={addNote}
+                    type={newNoteTitle ? 'action' : 'disabled'}
+                    title="Add Note"
+                  />
                 </View>
-              </View>
-            )}
-          />
-        </View>
+              )}
+
+              {/* Editing Note Section */}
+              {editingNote && (
+                <View>
+                  <TextInput
+                    value={editingNote.task ?? ''}
+                    onChangeText={(title) => setEditingNote({ ...editingNote, task: title })}
+                    placeholder="Edit note title"
+                    style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
+                  />
+
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <ActionButton style={styles.saveButton} onPress={saveEdit} type={'ok'} title="Save" />
+                    <ActionButton
+                      style={styles.cancelButton}
+                      onPress={cancelEdit}
+                      type={'cancel'}
+                      title="Cancel"
+                    />
+                  </View>
+                </View>
+              )}
+
+              <FlatList
+                style={{ marginTop: 20 }}
+                data={notes}
+                keyExtractor={(item) => item.id ?? ''}
+                renderItem={({ item }) => (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      marginVertical: 5,
+                      borderBottomWidth: 1,
+                      borderBottomColor: 'gray',
+                      paddingBottom: 5,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        flex: 1,
+                        textOverflow: 'ellipsis',
+                        alignSelf: 'center',
+                        justifyContent: 'center',
+                        marginBottom: 5,
+                        textDecorationLine: item.completed ? 'line-through' : 'none',
+                      }}
+                    >
+                      {item.task}
+                    </Text>
+                    <View style={{ flexDirection: 'row', marginLeft: 10, alignSelf: 'center' }}>
+                      <TouchableOpacity onPress={() => toggleCompleted(item.id!, item.completed!)}>
+                        <FontAwesomeIcon
+                          name={item.completed ? 'undo' : 'check-circle'}
+                          size={28}
+                          color={item.completed ? 'gray' : 'green'}
+                        />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity onPress={() => deleteNote(item.id!)}>
+                        <FontAwesomeIcon name="trash" size={28} color="red" style={{ marginLeft: 10 }} />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity onPress={() => setEditingNote({ ...item })}>
+                        <FontAwesomeIcon name="edit" size={28} color="blue" style={{ marginLeft: 10 }} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              />
+            </View>
+          </>
+        )}
       </View>
     </SafeAreaView>
   );

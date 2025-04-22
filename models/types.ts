@@ -17,5 +17,5 @@ export interface ProjectData {
   favorite: number;
   thumbnail: string;
   status: string; // 'active', 'on-hold'  or 'completed'
-  seedJobWorkItems: string; // comma separated list of workItemIds
+  seedWorkItems: string; // comma separated list of workItemIds
 }

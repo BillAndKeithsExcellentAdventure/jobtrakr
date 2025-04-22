@@ -25,8 +25,8 @@ const TABLES_SCHEMA = {
     radius: { type: 'number' },
     favorite: { type: 'number' },
     thumbnail: { type: 'string' },
-    jobStatus: { type: 'string' },
-    seedJobWorkItems: { type: 'string' }, // comma separated list of workItemIds
+    status: { type: 'string' },
+    seedWorkItems: { type: 'string' }, // comma separated list of workItemIds
   },
 } as const;
 
@@ -168,6 +168,25 @@ export const useProjectValue = <ValueId extends ProjectsCellId>(
     useProjectListStoreId(),
   ),
 ];
+
+// --- UPDATE ROW ---
+export function useUpdateProjectCallback() {
+  const store = useStore(useProjectListStoreId());
+  if (!store) return undefined;
+
+  return useCallback(
+    (id: string, updates: Partial<ProjectData>): CrudResult => {
+      if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
+      const existing = store.getRow('projects', id);
+      if (!existing) return { status: 'Error', id: '0', msg: 'Row not found' };
+      const success = store.setRow('projects', id, { ...existing, ...updates });
+      return success
+        ? { status: 'Success', id, msg: '' }
+        : { status: 'Error', id: '0', msg: 'Failed to update' };
+    },
+    [store],
+  );
+}
 
 // Returns a callback that toggles the favorite status of a project.
 export const useToggleFavoriteCallback = () => {

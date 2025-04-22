@@ -36,7 +36,7 @@ const AddJobScreen = () => {
     favorite: 0,
     thumbnail: '',
     status: 'active', // 'active', 'on-hold'  or 'completed'
-    seedJobWorkItems: '', // comma separated list of workItemIds
+    seedWorkItems: '', // comma separated list of workItemIds
     startDate: defaultStart.getTime(),
     plannedFinish: defaultFinish.getTime(),
   });
@@ -106,7 +106,7 @@ const AddJobScreen = () => {
       if (template) {
         const templateWorkItems = allJobTemplateWorkItems.find((t) => t.templateId === template.id);
         if (templateWorkItems) {
-          project.seedJobWorkItems = templateWorkItems.workItemIds;
+          project.seedWorkItems = templateWorkItems.workItemIds;
         }
       }
     }

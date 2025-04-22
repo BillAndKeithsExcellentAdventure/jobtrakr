@@ -1,13 +1,13 @@
 import { View, Text } from '@/components/Themed';
-import { receiptEntriesData } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { ReceiptData } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/utils/formatters';
 import React from 'react';
 import { TouchableWithoutFeedback, Image, StyleSheet } from 'react-native';
 
 interface ReceiptSummaryProps {
-  item: receiptEntriesData;
+  item: ReceiptData;
   onShowPicture: (uri: string) => void;
-  onShowDetails: (item: receiptEntriesData) => void;
+  onShowDetails: (item: ReceiptData) => void;
 }
 
 export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({ item, onShowPicture, onShowDetails }) => {

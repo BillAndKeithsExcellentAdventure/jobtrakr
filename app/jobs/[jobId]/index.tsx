@@ -10,7 +10,11 @@ import {
   useDeleteProjectCallback,
   useProjectValue,
 } from '@/tbStores/listOfProjects/ListOfProjectsStore';
-import { useAddRowCallback, useAllRows } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import {
+  useAddRowCallback,
+  useAllRows,
+  useIsStoreAvailableCallback,
+} from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { MaterialIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -19,7 +23,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter, Stack, useLocalSearchParams, Redirect, Router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Alert, SectionList } from 'react-native';
-import { FlatList, Pressable } from 'react-native-gesture-handler';
+import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface CostItemData {
@@ -52,16 +56,21 @@ const JobDetailsPage = () => {
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [sectionData, setSectionData] = useState<CostSectionData[]>([]);
   const expandedSectionIdRef = useRef<string>(''); // Ref to keep track of the expanded section ID
-  const [seedWorkItems, setSeedWorkItems] = useProjectValue(jobId, 'seedJobWorkItems');
-
-  const allWorkItemSummaries = useAllRows(jobId, 'workItemSummary');
-  const addWorkItemSummary = useAddRowCallback(jobId, 'workItemSummary');
+  const [seedWorkItems, setSeedWorkItems] = useProjectValue(jobId, 'seedWorkItems');
+  const allWorkItemSummaries = useAllRows(jobId, 'workItemSummaries');
+  const addWorkItemSummary = useAddRowCallback(jobId, 'workItemSummaries');
+  const [projectIsReady, setProjectIsReady] = useState(false);
+  const isStoreReady = useIsStoreAvailableCallback(jobId);
 
   useEffect(() => {
     if (jobId) {
       addActiveProjectIds([jobId]);
     }
   }, [jobId]);
+
+  useEffect(() => {
+    setProjectIsReady(!!jobId && activeProjectIds.includes(jobId) && isStoreReady());
+  }, [jobId, activeProjectIds, isStoreReady]);
 
   const seedInitialData = useCallback((): void => {
     if (allWorkItemSummaries.length > 0 || !seedWorkItems) return;
@@ -72,6 +81,7 @@ const JobDetailsPage = () => {
     for (const workItemId of workItemIds) {
       if (!workItemId) continue;
       addWorkItemSummary({
+        id: '',
         workItemId,
         bidAmount: 0,
         spentAmount: 0,
@@ -262,46 +272,54 @@ const JobDetailsPage = () => {
       />
 
       <View style={styles.container}>
-        <View style={styles.headerContainer}>
-          <Text txtSize="title" text={projectData.name} />
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-            <Text text={`start: ${formatDate(projectData.startDate)}`} />
-            <Text text={`estimate: ${formatCurrency(projectData.bidPrice, true)}`} />
-          </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-            <Text text={`due: ${formatDate(projectData.plannedFinish)}`} />
-            <Text text={`spent: ${formatCurrency(projectData.amountSpent, true)}`} />
-          </View>
-        </View>
-        <View style={{ flex: 1, paddingBottom: 5 }}>
-          <View style={{ marginBottom: 5, alignItems: 'center' }}>
-            <Text txtSize="title" text="Cost Items" />
-          </View>
-          <View
-            style={{
-              width: '100%',
-              paddingLeft: 10,
-              paddingRight: 36,
-              flexDirection: 'row',
-              backgroundColor: colors.borderColor,
-            }}
-          >
-            <Text style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }} text="Description" />
-            <Text style={{ width: 100, textAlign: 'right' }} text="Estimate $" />
-            <Text style={{ width: 100, textAlign: 'right' }} text="Spent $" />
-          </View>
-          <SectionList
-            showsVerticalScrollIndicator={false}
-            stickySectionHeadersEnabled={false}
-            sections={sectionData}
-            renderItem={({ item, section }) =>
-              section.isExpanded ? renderItem(item, section.id, section.code, colors, jobId, router) : null
-            }
-            renderSectionHeader={({ section }) => renderSectionHeader(section, toggleSection, colors)}
-            keyExtractor={(item) => item.id}
-            ListEmptyComponent={<Text>No data available</Text>}
-          />
-        </View>
+        {!projectIsReady ? (
+          <Text>Loading...</Text>
+        ) : (
+          <>
+            <View style={styles.headerContainer}>
+              <Text txtSize="title" text={projectData.name} />
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                <Text text={`start: ${formatDate(projectData.startDate)}`} />
+                <Text text={`estimate: ${formatCurrency(projectData.bidPrice, true)}`} />
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                <Text text={`due: ${formatDate(projectData.plannedFinish)}`} />
+                <Text text={`spent: ${formatCurrency(projectData.amountSpent, true)}`} />
+              </View>
+            </View>
+            <View style={{ flex: 1, paddingBottom: 5 }}>
+              <View style={{ marginBottom: 5, alignItems: 'center' }}>
+                <Text txtSize="title" text="Cost Items" />
+              </View>
+              <View
+                style={{
+                  width: '100%',
+                  paddingLeft: 10,
+                  paddingRight: 36,
+                  flexDirection: 'row',
+                  backgroundColor: colors.borderColor,
+                }}
+              >
+                <Text style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }} text="Description" />
+                <Text style={{ width: 100, textAlign: 'right' }} text="Estimate $" />
+                <Text style={{ width: 100, textAlign: 'right' }} text="Spent $" />
+              </View>
+              <SectionList
+                showsVerticalScrollIndicator={false}
+                stickySectionHeadersEnabled={false}
+                sections={sectionData}
+                renderItem={({ item, section }) =>
+                  section.isExpanded
+                    ? renderItem(item, section.id, section.code, colors, jobId, router)
+                    : null
+                }
+                renderSectionHeader={({ section }) => renderSectionHeader(section, toggleSection, colors)}
+                keyExtractor={(item) => item.id}
+                ListEmptyComponent={<Text>No data available</Text>}
+              />
+            </View>
+          </>
+        )}
       </View>
       {headerMenuModalVisible && (
         <RightHeaderMenu
@@ -317,7 +335,7 @@ const JobDetailsPage = () => {
 const renderSectionHeader = (
   section: CostSectionData,
   toggleSection: (id: string) => void,
-  colors: typeof Colors.light | typeof Colors.dark,
+  colors: Partial<typeof Colors.light | typeof Colors.dark>,
 ) => {
   return (
     <View
@@ -373,7 +391,7 @@ const renderItem = (
   item: CostItemData,
   sectionId: string,
   sectionCode: string,
-  colors: typeof Colors.light | typeof Colors.dark,
+  colors: Partial<typeof Colors.light | typeof Colors.dark>,
   jobId: string,
   router: Router,
 ) => {

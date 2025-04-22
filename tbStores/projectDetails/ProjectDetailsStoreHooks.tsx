@@ -28,43 +28,43 @@ export interface WorkItemSummaryData {
   spentAmount: number;
 }
 
-export type receiptData = {
+export type ReceiptData = {
   id: string;
-  vendor?: string;
-  description?: string;
-  amount?: number;
-  numLineItems?: number;
-  receiptDate?: number;
-  thumbnail?: string;
-  pictureDate?: number;
-  pictureUri?: string;
-  notes?: string;
-  markedComplete?: boolean;
+  vendor: string;
+  description: string;
+  amount: number;
+  numLineItems: number;
+  receiptDate: number;
+  thumbnail: string;
+  pictureDate: number;
+  pictureUri: string;
+  notes: string;
+  markedComplete: boolean;
 };
 
-export type invoiceData = {
+export type InvoiceData = {
   id: string;
-  vendor?: string;
-  description?: string;
-  amount?: number;
-  invoiceDate?: number;
-  invoiceNumber?: string;
-  thumbnail?: string;
-  pictureDate?: number;
-  pictureUri?: string;
-  notes?: string;
+  vendor: string;
+  description: string;
+  amount: number;
+  invoiceDate: number;
+  invoiceNumber: string;
+  thumbnail: string;
+  pictureDate: number;
+  pictureUri: string;
+  notes: string;
 };
 
-export type workItemCostEntriesData = {
+export type WorkItemCostEntry = {
   id: string;
-  label?: string;
-  amount?: number;
-  workItemId?: string;
-  parentId?: string; // To either the receipt or invoice table.
-  documentationType?: string; // 'receipt' or 'invoice'
+  label: string;
+  amount: number;
+  workItemId: string;
+  parentId: string; // To either the receipt or invoice table.
+  documentationType: string; // 'receipt' or 'invoice'
 };
 
-export interface mediaEntriesData {
+export interface MediaEntryData {
   id: string;
   assetId: string;
   deviceName: string;
@@ -78,7 +78,7 @@ export interface NoteData {
   completed: boolean;
 }
 
-export type WorkItemSummarySchema = typeof TABLES_SCHEMA.workItemSummary;
+export type WorkItemSummarySchema = typeof TABLES_SCHEMA.workItemSummaries;
 export type ReceiptsSchema = typeof TABLES_SCHEMA.receipts;
 export type InvoicesSchema = typeof TABLES_SCHEMA.invoices;
 export type WorkItemCostEntriesSchema = typeof TABLES_SCHEMA.workItemCostEntries;
@@ -86,7 +86,7 @@ export type MediaEntriesSchema = typeof TABLES_SCHEMA.mediaEntries;
 export type NotesSchema = typeof TABLES_SCHEMA.notes;
 
 export type SchemaMap = {
-  workItemSummary: WorkItemSummarySchema;
+  workItemSummaries: WorkItemSummarySchema;
   workItemCostEntries: WorkItemCostEntriesSchema;
   receipts: ReceiptsSchema;
   invoices: InvoicesSchema;
@@ -96,11 +96,11 @@ export type SchemaMap = {
 
 // Type mapping between table names and data types
 export type TableDataMap = {
-  workItemSummary: WorkItemSummaryData;
-  workItemCostEntries: workItemCostEntriesData;
-  receipts: receiptData;
-  invoices: invoiceData;
-  mediaEntries: mediaEntriesData;
+  workItemSummaries: WorkItemSummaryData;
+  workItemCostEntries: WorkItemCostEntry;
+  receipts: ReceiptData;
+  invoices: InvoiceData;
+  mediaEntries: MediaEntryData;
   notes: NoteData;
 };
 
@@ -215,3 +215,11 @@ export const useTableValue = <T extends keyof SchemaMap, C extends Extract<keyof
   rowId: string,
   cellId: C,
 ): Value<SchemaMap[T], C> => useCell(tableId, rowId, cellId, getStoreId(projectId)) as Value<SchemaMap[T], C>;
+
+export function useIsStoreAvailableCallback(projectId: string) {
+  const store = useStore(getStoreId(projectId));
+  return useCallback((): boolean => {
+    if (!store) return false;
+    return true;
+  }, [store]);
+}

@@ -2,10 +2,8 @@ import { ReceiptSummary } from '@/components/ReceiptSummary';
 import { TextField } from '@/components/TextField';
 import { Text, View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
-import { useJobDb } from '@/context/DatabaseContext';
 import { useReceiptDataStore } from '@/stores/receiptDataStore';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
-import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, LayoutChangeEvent, Platform, StyleSheet, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,106 +11,38 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import { ActionButton } from '@/components/ActionButton';
 import { useItemizedReceiptDataStore } from '@/stores/itemizedReceiptDataStore';
 import { formatCurrency, formatNumber } from '@/utils/formatters';
+import {
+  ReceiptData,
+  useAllRows,
+  WorkItemCostEntry,
+} from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 
 const ReceiptDetailsPage = () => {
-  const { receiptId } = useLocalSearchParams<{ receiptId: string }>();
-  const { allJobReceipts } = useReceiptDataStore();
-  const { allReceiptItems, setReceiptItems } = useItemizedReceiptDataStore();
-  const { jobDbHost } = useJobDb();
-  const [receipt, setReceipt] = useState<ReceiptBucketData>({
-    _id: '',
-    UserId: '',
-    JobId: '',
-    DeviceId: '',
-    Amount: 0,
-    Vendor: '',
-    Description: '',
-    Notes: '',
-    CategoryId: '',
-    ItemId: '',
-    AssetId: '',
-    AlbumId: '',
-    PictureUri: '',
+  const defaultDate = new Date();
+  const { jobId, receiptId } = useLocalSearchParams<{ jobId: string; receiptId: string }>();
+  const allJobReceipts = useAllRows(jobId, 'receipts');
+  const allCostItems = useAllRows(jobId, 'workItemCostEntries');
+  const [allReceiptItems, setReceiptItems] = useState<WorkItemCostEntry[]>([]);
+
+  const [receipt, setReceipt] = useState<ReceiptData>({
+    id: '',
+    vendor: '',
+    description: '',
+    amount: 0,
+    numLineItems: 0,
+    thumbnail: '',
+    receiptDate: defaultDate.getTime(),
+    pictureDate: defaultDate.getTime(),
+    pictureUri: '',
+    notes: '',
+    markedComplete: false,
   });
   const [itemsTotalCost, setItemsTotalCost] = useState(0);
   const router = useRouter();
-  const fetchReceipt = useCallback(async () => {
-    try {
-      const match = allJobReceipts.find((r) => r._id === receiptId);
-      if (!match) return;
-
-      if (match) {
-        setReceipt((prevReceipt) => ({
-          ...prevReceipt,
-          ...match,
-        }));
-      }
-    } catch (err) {
-      alert(`An error occurred while fetching the receipt with _id=${receiptId}`);
-      console.log('An error occurred while fetching the receipt', err);
-    }
-  }, [receiptId, jobDbHost, allJobReceipts]);
-
-  // Fetch receipts for the given job and user
-  useEffect(() => {
-    fetchReceipt();
-  }, [fetchReceipt]);
-
-  const fetchItemizedReceipts = useCallback(async () => {
-    try {
-      const receiptItems = [
-        {
-          label: 'Nails',
-          amount: 103.85,
-          _id: '1',
-          receiptId: '1',
-          category: 'Hardware',
-          subCategory: 'Nails',
-        },
-        {
-          label: "3 - 500' rolls of silt fencing",
-          amount: 223.0,
-          _id: '3',
-          receiptId: '1',
-        },
-        {
-          label: "5 - 20' 20in PVC pipe",
-          amount: 223.0,
-          _id: '4',
-          receiptId: '1',
-        },
-        {
-          label: "5 - 100' Roofing Felt",
-          amount: 185.0,
-          _id: '5',
-          receiptId: '1',
-        },
-        {
-          label: "5 - 100' Roofing Felt",
-          amount: 185.0,
-          _id: '6',
-          receiptId: '1',
-        },
-        {
-          label: '10# 2.5in Deck Screws',
-          amount: 48.75,
-          _id: '7',
-          receiptId: '1',
-          category: 'Hardware',
-          subCategory: 'Screws',
-        },
-      ];
-
-      setReceiptItems(receiptItems);
-    } catch (err) {
-      alert(`An error occurred while fetching the receipt with _id=${receiptId}`);
-      console.log('An error occurred while fetching the receipt', err);
-    }
-  }, [receiptId, jobDbHost, allJobReceipts]);
 
   useEffect(() => {
-    fetchItemizedReceipts();
-  }, [fetchItemizedReceipts]);
+    setReceiptItems(allCostItems.filter((item) => item.parentId === receiptId));
+  }, [allCostItems, receiptId]);
 
   useEffect(() => {
     setItemsTotalCost(allReceiptItems.reduce((acc, item) => acc + item.amount, 0));
@@ -120,14 +50,14 @@ const ReceiptDetailsPage = () => {
 
   const showPicture = useCallback(
     (uri: string) => {
-      router.push(`/jobs/${receipt.JobId}/receipt/${receiptId}/showImage/?uri=${uri}`);
+      router.push(`/jobs/${jobId}/receipt/${receiptId}/showImage/?uri=${uri}`);
     },
     [receipt, receiptId],
   );
 
   const editDetails = useCallback(
-    (item: ReceiptBucketData) => {
-      router.push(`/jobs/${receipt.JobId}/receipt/${receiptId}/edit`);
+    (item: ReceiptData) => {
+      router.push(`/jobs/${jobId}/receipt/${receiptId}/edit`);
     },
     [receipt, receiptId],
   );
@@ -150,8 +80,8 @@ const ReceiptDetailsPage = () => {
   );
 
   const addLineItem = useCallback(() => {
-    console.log(`addLineItem - route = /jobs/${receipt.JobId}/receipt/${receiptId}/addLineItem`);
-    router.push(`/jobs/${receipt.JobId}/receipt/${receiptId}/addLineItem`);
+    console.log(`addLineItem - route = /jobs/${jobId}/receipt/${receiptId}/addLineItem`);
+    router.push(`/jobs/${jobId}/receipt/${receiptId}/addLineItem`);
   }, [receipt, receiptId]);
 
   const requestAIProcessing = useCallback(() => {}, []);
@@ -239,7 +169,7 @@ const ReceiptDetailsPage = () => {
                       txtSize="xs"
                       text={item.label}
                     />
-                    {item.category && item.subCategory ? (
+                    {item.workItemId ? (
                       <View
                         style={{
                           width: 40,

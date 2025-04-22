@@ -74,7 +74,7 @@ const AddReceiptPage = () => {
         label: `${vendor.name} ${
           vendor.address ? ` - ${vendor.address}` : vendor.city ? ` - ${vendor.city}` : ''
         }`,
-        value: vendor._id,
+        value: vendor.id,
       }));
 
       setVendors(vendorOptions);

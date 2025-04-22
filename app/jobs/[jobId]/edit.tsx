@@ -3,74 +3,18 @@ import { TextField } from '@/components/TextField';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { useJobDb } from '@/context/DatabaseContext';
-import { useJobDataStore } from '@/stores/jobDataStore';
+import { ProjectData } from '@/models/types';
+import { useProject, useUpdateProjectCallback } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatDate } from '@/utils/formatters';
 import * as Location from 'expo-location';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { JobData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-type Job = {
-  jobId?: string;
-  name: string;
-  location?: string;
-  owner?: string;
-  finishDate: Date;
-  startDate: Date;
-  bidPrice?: number;
-  longitude?: number;
-  latitude?: number;
-};
-
 const EditJobScreen = () => {
-  const router = useRouter();
-  const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
-  const { updateJob } = useJobDataStore();
-
-  const defaultStartDate = new Date();
-  const defaultFinishDate = new Date();
-  defaultFinishDate.setMonth(defaultFinishDate.getMonth() + 9);
-
-  const [job, setJob] = useState<Job>({
-    jobId,
-    name: '',
-    location: '',
-    owner: '',
-    startDate: defaultStartDate,
-    finishDate: defaultFinishDate,
-    bidPrice: 0,
-    longitude: undefined,
-    latitude: undefined,
-  });
-
-  const [currentJob, setExistingJob] = useState<JobData | undefined>();
-  const [visible, setVisible] = useState(false);
   const colorScheme = useColorScheme();
-
-  const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
-  const [finishDatePickerVisible, setFinishDatePickerVisible] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
-  const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
-
-  useEffect(() => {
-    const requestLocationPermission = async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        return;
-      }
-      // Fetch the current location after permission is granted
-      const location = await Location.getCurrentPositionAsync({});
-      setCurrentLocation(location);
-      setHasLocationPermission(true);
-    };
-
-    requestLocationPermission();
-  }, [hasLocationPermission]);
-
   const colors = useMemo(
     () =>
       colorScheme === 'dark'
@@ -93,6 +37,58 @@ const EditJobScreen = () => {
     [colorScheme],
   );
 
+  const router = useRouter();
+  const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
+
+  const [job, setJob] = useState<ProjectData>({
+    id: '',
+    name: '',
+    location: '',
+    ownerName: '',
+    bidPrice: 0,
+    amountSpent: 0,
+    longitude: 0,
+    latitude: 0,
+    radius: 50,
+    favorite: 0,
+    thumbnail: '',
+    status: 'active',
+    seedWorkItems: '',
+    startDate: 0,
+    plannedFinish: 0,
+  });
+
+  const currentJob = useProject(jobId);
+
+  useEffect(() => {
+    if (currentJob && job.id !== currentJob.id) {
+      setJob((prevJob) => ({
+        ...currentJob,
+      }));
+    }
+  }, [currentJob]);
+
+  const updatedProject = useUpdateProjectCallback();
+  const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
+  const [finishDatePickerVisible, setFinishDatePickerVisible] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
+  const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
+
+  useEffect(() => {
+    const requestLocationPermission = async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        return;
+      }
+      // Fetch the current location after permission is granted
+      const location = await Location.getCurrentPositionAsync({});
+      setCurrentLocation(location);
+      setHasLocationPermission(true);
+    };
+
+    requestLocationPermission();
+  }, []);
+
   const showStartDatePicker = () => {
     setStartDatePickerVisible(true);
   };
@@ -104,7 +100,7 @@ const EditJobScreen = () => {
   const handleStartDateConfirm = (date: Date) => {
     setJob((prevJob) => ({
       ...prevJob,
-      startDate: date,
+      startDate: date.getTime(),
     }));
 
     hideStartDatePicker();
@@ -135,91 +131,31 @@ const EditJobScreen = () => {
     (date: Date) => {
       setJob((prevJob) => ({
         ...prevJob,
-        finishDate: date,
+        plannedFinish: date.getTime(),
       }));
-
       hideFinishDatePicker();
     },
-    [setJob],
+    [], // no dependencies needed since we're using the function form of setJob
   );
 
-  const [canAddJob, setCanAddJob] = useState(false);
-
-  useEffect(() => {
-    setCanAddJob(job.name?.length > 4);
-  }, [job]);
-
-  const { jobDbHost } = useJobDb();
-
-  useEffect(() => {
-    if (jobId === undefined) setVisible(false);
-  }, [jobId]);
-
-  useEffect(() => {
-    async function loadJobData() {
-      if (!jobId) return;
-
-      const result = await jobDbHost?.GetJobDB().FetchJobById(jobId);
-      const fetchedJob = result ? result.job : undefined;
-      if (!!fetchedJob) {
-        const jobData: Job = {
-          ...job,
-          name: fetchedJob.Name,
-          location: fetchedJob.Location,
-          owner: fetchedJob.OwnerName,
-          bidPrice: fetchedJob.BidPrice,
-          longitude: fetchedJob.Longitude,
-          latitude: fetchedJob.Latitude,
-        };
-
-        if (fetchedJob.PlannedFinish) {
-          jobData.finishDate = fetchedJob.PlannedFinish;
-        }
-
-        if (fetchedJob.StartDate) {
-          jobData.startDate = fetchedJob.StartDate;
-        }
-
-        setExistingJob(fetchedJob);
-        setJob(jobData);
-        setVisible(true);
-      }
-    }
-
-    loadJobData();
-  }, [jobId, jobDbHost, visible]);
+  const canAddJob = useMemo(() => job.name?.length > 4, [job.name]);
 
   const handleSubmit = useCallback(async () => {
-    if (!jobId || !currentJob) return;
+    if (!job || !jobId || !updatedProject) return;
 
-    const modifiedJob: JobData = {
-      ...currentJob,
-      Name: job.name,
-      Location: job.location,
-      OwnerName: job.owner,
-      PlannedFinish: job.finishDate,
-      StartDate: job.startDate,
-      BidPrice: job.bidPrice,
-      Latitude: job.latitude,
-      Longitude: job.longitude,
-    };
-
-    const status = await jobDbHost?.GetJobDB().UpdateJob(modifiedJob);
-    if (status === 'Success') {
-      if (modifiedJob._id) updateJob(modifiedJob._id, modifiedJob);
-      console.log('Job successfully updated:', job);
-    } else {
+    const result = updatedProject(jobId, job);
+    if (result.status !== 'Success') {
       console.log('Job update failed:', job);
     }
     router.back();
-  }, [job]);
+  }, [job, jobId, updatedProject, router]);
 
   const dismissKeyboard = useCallback(() => {
     Keyboard.dismiss();
   }, []);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <View
         style={[
           styles.container,
@@ -251,8 +187,8 @@ const EditJobScreen = () => {
                 style={[styles.input, { borderColor: colors.transparent }]}
                 placeholder="Owner"
                 label="Owner"
-                value={job.owner}
-                onChangeText={(text) => setJob({ ...job, owner: text })}
+                value={job.ownerName}
+                onChangeText={(text) => setJob({ ...job, ownerName: text })}
               />
               <TextField
                 style={[styles.input, { borderColor: colors.transparent }]}
@@ -276,7 +212,7 @@ const EditJobScreen = () => {
                 </TouchableOpacity>
                 <DateTimePickerModal
                   style={{ alignSelf: 'stretch' }}
-                  date={job.startDate}
+                  date={new Date(job.startDate)}
                   isVisible={startDatePickerVisible}
                   mode="date"
                   onConfirm={handleStartDateConfirm}
@@ -290,12 +226,12 @@ const EditJobScreen = () => {
                     style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
                     placeholder="Finish Date"
                     onPressIn={showFinishDatePicker}
-                    value={job.startDate ? formatDate(job.finishDate) : 'No date selected'}
+                    value={job.plannedFinish ? formatDate(job.plannedFinish) : 'No date selected'}
                   />
                 </TouchableOpacity>
                 <DateTimePickerModal
                   style={{ alignSelf: 'stretch', height: 200 }}
-                  date={job.finishDate}
+                  date={new Date(job.plannedFinish)}
                   isVisible={finishDatePickerVisible}
                   mode="date"
                   onConfirm={handleFinishDateConfirm}
