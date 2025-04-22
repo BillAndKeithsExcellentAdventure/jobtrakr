@@ -69,10 +69,10 @@ export interface mediaEntriesData {
   assetId: string;
   deviceName: string;
   mediaType: string;
-  meduaUri: string;
+  mediaUri: string;
 }
 
-export interface notesData {
+export interface NoteData {
   id: string;
   task: string;
   completed: boolean;
@@ -101,7 +101,7 @@ export type TableDataMap = {
   receipts: receiptData;
   invoices: invoiceData;
   mediaEntries: mediaEntriesData;
-  notes: notesData;
+  notes: NoteData;
 };
 
 export type PROJECTDETAILS_TABLES = keyof TableDataMap;

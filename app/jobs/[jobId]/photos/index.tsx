@@ -10,7 +10,7 @@ import { Colors } from '@/constants/Colors';
 import { useJobDb } from '@/context/DatabaseContext';
 import { useDbLogger } from '@/context/LoggerContext';
 import { useJobDataStore } from '@/stores/jobDataStore';
-import { useProjectValue } from '@/tbStores/ListOfProjectsStore';
+import { useProjectValue } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { useAddImageCallback } from '@/utils/images';
 import { ShareFiles } from '@/utils/sharing';
 import { Entypo, Ionicons } from '@expo/vector-icons';

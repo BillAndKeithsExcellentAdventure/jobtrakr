@@ -5,7 +5,11 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import { useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useProject, useDeleteProjectCallback, useProjectValue } from '@/tbStores/ListOfProjectsStore';
+import {
+  useProject,
+  useDeleteProjectCallback,
+  useProjectValue,
+} from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { isValidProjectDetailsStoreCallback } from '@/tbStores/projectDetails/workItemCostEntries';
 import { useAddWorkItemSummary, useAllWorkItemSummaries } from '@/tbStores/projectDetails/workItemsSummary';
 import { formatCurrency, formatDate } from '@/utils/formatters';

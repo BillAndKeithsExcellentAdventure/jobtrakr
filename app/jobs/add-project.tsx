@@ -15,7 +15,7 @@ import { OptionPickerItem } from '@/components/OptionPickerItem';
 import BottomSheetContainer from '@/components/BottomSheetContainer';
 import { JobTemplateData, useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
-import { useAddProjectCallback } from '@/tbStores/ListOfProjectsStore';
+import { useAddProjectCallback } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { ProjectData } from '@/models/types';
 
 const AddJobScreen = () => {

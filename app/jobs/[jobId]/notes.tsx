@@ -3,12 +3,6 @@ import { Text, TextInput, View } from '@/components/Themed';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import {
   NoteData,
-  useAddNote,
-  useAllNotes,
-  useDeleteNote,
-  useUpdateNote,
-} from '@/tbStores/projectDetails/notes';
-import {
   useAddRowCallback,
   useAllRows,
   useDeleteRowCallback,

@@ -2,11 +2,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { createMergeableStore, createStore, NoValuesSchema, Value } from 'tinybase/with-schemas';
-import { useCreateClientPersisterAndStart } from './persistence/useCreateClientPersisterAndStart';
-import { useCreateServerSynchronizerAndStart } from './synchronization/useCreateServerSynchronizerAndStart';
+import { useCreateClientPersisterAndStart } from '../persistence/useCreateClientPersisterAndStart';
+import { useCreateServerSynchronizerAndStart } from '../synchronization/useCreateServerSynchronizerAndStart';
 import { CrudResult, ProjectData, TBStatus } from '@/models/types';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
-import ProjectDetailsStore from './projectDetails/ProjectDetailsStore';
+import ProjectDetailsStore from '../projectDetails/ProjectDetailsStore';
 import { useAuth } from '@clerk/clerk-expo';
 
 const STORE_ID_PREFIX = 'PHV1_projectListStore';
