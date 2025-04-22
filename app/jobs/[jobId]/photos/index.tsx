@@ -22,6 +22,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Button, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useIsStoreAvailableCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 
 export type PhotoCapturedCallback = (asset: MediaLibrary.Asset) => void;
 
@@ -57,6 +59,20 @@ const JobPhotosPage = () => {
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
   const [, setThumbnail] = useProjectValue(jobId, 'thumbnail');
   const addPhotoImage = useAddImageCallback();
+
+  const [projectIsReady, setProjectIsReady] = useState(false);
+  const isStoreReady = useIsStoreAvailableCallback(jobId);
+  const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
+
+  useEffect(() => {
+    if (jobId) {
+      addActiveProjectIds([jobId]);
+    }
+  }, [jobId]);
+
+  useEffect(() => {
+    setProjectIsReady(!!jobId && activeProjectIds.includes(jobId) && isStoreReady());
+  }, [jobId, activeProjectIds, isStoreReady]);
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -513,177 +529,92 @@ const JobPhotosPage = () => {
           ),
         }}
       />
-
-      <View style={styles.headerInfo}>
-        {!showAssetItems && (
-          <ActionButton
-            style={{ alignSelf: 'stretch', marginTop: 5 }}
-            type={'action'}
-            title={'Take Picture / Video'}
-            onPress={OnTakePictureClicked}
-          />
-        )}
-        {showAssetItems && (
-          <View
-            style={{
-              marginTop: 5,
-              marginBottom: 5,
-              alignSelf: 'center',
-              alignItems: 'center',
-              flexDirection: 'row',
-            }}
-          >
-            <Text text="Filter:" txtSize="standard" style={{ marginRight: 10 }} />
-            <Text text="All" txtSize="standard" style={{ marginRight: 10 }} />
-            <Switch value={useJobLocation} onValueChange={onSwitchValueChanged} size="large" />
-            <Text text="Near Job" txtSize="standard" style={{ marginLeft: 10 }} />
-          </View>
-        )}
-      </View>
-      <View style={styles.listsContainer}>
-        {/* Left side - Job Assets */}
-        <View style={styles.listColumn}>
-          <View style={{ alignItems: 'center' }}>
-            <Text txtSize="title" style={styles.listTitle}>
-              Job Photos
-            </Text>
-            <Text txtSize="sub-title" style={{ marginLeft: 10 }}>
-              {`Job contains ${jobAssets ? jobAssets?.length : 0} pictures.`}
-            </Text>
-          </View>
-          {!jobAssets ? (
-            <View style={{ alignItems: 'center' }}>
-              <Text>Use menu button to add photos.</Text>
-            </View>
-          ) : (
-            <>
-              <View style={styles.selectRow}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Pressable
-                    onPress={() => {
-                      onJobAllOrClearChanged();
-                    }}
-                  >
-                    {({ pressed }) => (
-                      <Ionicons
-                        name={numSelectedJobAssets > 0 ? 'ellipse-sharp' : 'ellipse-outline'}
-                        size={24}
-                        color={colors.iconColor}
-                        style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                      />
-                    )}
-                  </Pressable>
-                  <Text>
-                    {!showAssetItems ? (numSelectedJobAssets > 0 ? 'Clear Selection' : 'Select All') : ''}
-                  </Text>
-                </View>
-                <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                  {numSelectedJobAssets > 0 && (
-                    <Text style={{ alignSelf: 'center' }}>
-                      {jobAssets?.filter((asset) => asset.selected).length} selected
-                    </Text>
-                  )}
-                </View>
-              </View>
-              <FlashList
-                numColumns={showAssetItems ? 1 : 2}
-                data={jobAssets}
-                estimatedItemSize={200}
-                renderItem={({ item }) => {
-                  const photoDate = new Date(item.asset.creationTime * 1).toLocaleString();
-                  return (
-                    <View style={styles.imageContainer}>
-                      <TouchableOpacity
-                        style={[styles.imageContainer, item.selected && styles.imageSelected]}
-                        onPress={() => handleJobAssetSelection(item.asset.id)}
-                        onLongPress={() => handleImagePress(item.asset.uri, item.asset.mediaType, photoDate)}
-                      >
-                        <View>
-                          <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
-                          <Text style={styles.dateOverlay}>{photoDate}</Text>
-                          {item.asset.mediaType === 'video' && (
-                            <View style={styles.playButtonOverlay}>
-                              <Ionicons name="play" size={30} color="white" />
-                            </View>
-                          )}
-                        </View>
-                      </TouchableOpacity>
-                    </View>
-                  );
-                }}
+      {!projectIsReady ? (
+        <Text>Loading...</Text>
+      ) : (
+        <>
+          <View style={styles.headerInfo}>
+            {!showAssetItems && (
+              <ActionButton
+                style={{ alignSelf: 'stretch', marginTop: 5 }}
+                type={'action'}
+                title={'Take Picture / Video'}
+                onPress={OnTakePictureClicked}
               />
-              <View style={styles.buttonContainer}>
-                {numSelectedJobAssets > 0 && (
-                  <View style={styles.buttonRow}>
-                    <View style={styles.buttonWrapper}>
-                      <ActionButton title="Remove" onPress={OnRemoveFromJobClicked} type={'action'} />
-                    </View>
-                    <View style={styles.buttonWrapper}>
-                      <ActionButton title="Share" onPress={OnShareJobPhotosClicked} type={'action'} />
-                    </View>
-                    {numSelectedJobAssets === 1 && (
-                      <View style={styles.buttonWrapper}>
-                        <ActionButton
-                          title="Thumbnail"
-                          style={{ paddingHorizontal: 1 }}
-                          onPress={OnSetThumbnailClicked}
-                          type={'action'}
-                        />
-                      </View>
-                    )}
-                  </View>
-                )}
+            )}
+            {showAssetItems && (
+              <View
+                style={{
+                  marginTop: 5,
+                  marginBottom: 5,
+                  alignSelf: 'center',
+                  alignItems: 'center',
+                  flexDirection: 'row',
+                }}
+              >
+                <Text text="Filter:" txtSize="standard" style={{ marginRight: 10 }} />
+                <Text text="All" txtSize="standard" style={{ marginRight: 10 }} />
+                <Switch value={useJobLocation} onValueChange={onSwitchValueChanged} size="large" />
+                <Text text="Near Job" txtSize="standard" style={{ marginLeft: 10 }} />
               </View>
-            </>
-          )}
-        </View>
-
-        {/* Right side - Only show when showAssetItems is true.                      */}
-        {showAssetItems && (
-          <>
-            <View style={styles.separator} />
+            )}
+          </View>
+          <View style={styles.listsContainer}>
+            {/* Left side - Job Assets */}
             <View style={styles.listColumn}>
-              <Text style={styles.listTitle}>Photos</Text>
-              {loadingNearest ? (
-                <View style={styles.loadingContainer}>
-                  <Text>Loading...{fetchStatus}</Text>
-                  <ActivityIndicator size="large" color="#007AFF" style={styles.loadingIndicator} />
+              <View style={{ alignItems: 'center' }}>
+                <Text txtSize="title" style={styles.listTitle}>
+                  Job Photos
+                </Text>
+                <Text txtSize="sub-title" style={{ marginLeft: 10 }}>
+                  {`Job contains ${jobAssets ? jobAssets?.length : 0} pictures.`}
+                </Text>
+              </View>
+              {!jobAssets ? (
+                <View style={{ alignItems: 'center' }}>
+                  <Text>Use menu button to add photos.</Text>
                 </View>
               ) : (
                 <>
                   <View style={styles.selectRow}>
-                    <Pressable
-                      onPress={() => {
-                        onAssetAllOrClearChanged();
-                      }}
-                    >
-                      {({ pressed }) => (
-                        <Ionicons
-                          name={hasSelectedAssets ? 'ellipse-sharp' : 'ellipse-outline'}
-                          size={24}
-                          color={colors.iconColor}
-                          style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                        />
-                      )}
-                    </Pressable>
-
-                    {hasSelectedAssets && (
-                      <Text style={{ alignSelf: 'center' }}>
-                        {assetItems?.filter((asset) => asset.selected).length} selected
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Pressable
+                        onPress={() => {
+                          onJobAllOrClearChanged();
+                        }}
+                      >
+                        {({ pressed }) => (
+                          <Ionicons
+                            name={numSelectedJobAssets > 0 ? 'ellipse-sharp' : 'ellipse-outline'}
+                            size={24}
+                            color={colors.iconColor}
+                            style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                          />
+                        )}
+                      </Pressable>
+                      <Text>
+                        {!showAssetItems ? (numSelectedJobAssets > 0 ? 'Clear Selection' : 'Select All') : ''}
                       </Text>
-                    )}
+                    </View>
+                    <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                      {numSelectedJobAssets > 0 && (
+                        <Text style={{ alignSelf: 'center' }}>
+                          {jobAssets?.filter((asset) => asset.selected).length} selected
+                        </Text>
+                      )}
+                    </View>
                   </View>
                   <FlashList
-                    data={assetItems}
+                    numColumns={showAssetItems ? 1 : 2}
+                    data={jobAssets}
                     estimatedItemSize={200}
-                    ListFooterComponent={renderFooter}
                     renderItem={({ item }) => {
                       const photoDate = new Date(item.asset.creationTime * 1).toLocaleString();
                       return (
-                        <View style={styles.assetContainer}>
+                        <View style={styles.imageContainer}>
                           <TouchableOpacity
                             style={[styles.imageContainer, item.selected && styles.imageSelected]}
-                            onPress={() => handleAssetSelection(item.asset.id)}
+                            onPress={() => handleJobAssetSelection(item.asset.id)}
                             onLongPress={() =>
                               handleImagePress(item.asset.uri, item.asset.mediaType, photoDate)
                             }
@@ -703,49 +634,141 @@ const JobPhotosPage = () => {
                     }}
                   />
                   <View style={styles.buttonContainer}>
-                    <View style={styles.buttonRow}>
-                      {(useJobLocation || (!useJobLocation && hasSelectedAssets)) && (
+                    {numSelectedJobAssets > 0 && (
+                      <View style={styles.buttonRow}>
                         <View style={styles.buttonWrapper}>
-                          <ActionButton
-                            type={'action'}
-                            title={getAddButtonTitle()}
-                            onPress={OnAddToJobClicked}
-                          />
+                          <ActionButton title="Remove" onPress={OnRemoveFromJobClicked} type={'action'} />
                         </View>
-                      )}
-                      <View style={styles.buttonWrapper}>
-                        <ActionButton title="Close" onPress={handleClose} type={'action'} />
+                        <View style={styles.buttonWrapper}>
+                          <ActionButton title="Share" onPress={OnShareJobPhotosClicked} type={'action'} />
+                        </View>
+                        {numSelectedJobAssets === 1 && (
+                          <View style={styles.buttonWrapper}>
+                            <ActionButton
+                              title="Thumbnail"
+                              style={{ paddingHorizontal: 1 }}
+                              onPress={OnSetThumbnailClicked}
+                              type={'action'}
+                            />
+                          </View>
+                        )}
                       </View>
-                    </View>
+                    )}
                   </View>
                 </>
               )}
             </View>
-          </>
-        )}
-        {headerMenuModalVisible && (
-          <RightHeaderMenu
-            modalVisible={headerMenuModalVisible}
-            setModalVisible={setHeaderMenuModalVisible}
-            buttons={rightHeaderMenuButtons}
-          />
-        )}
-      </View>
-      {selectedVideo && (
-        <VideoPlayerModal
-          isVisible={isVideoPlayerVisible}
-          videoUri={selectedVideo}
-          onClose={() => setIsVideoPlayerVisible(false)}
-        />
-      )}
-      {isCameraVisible && (
-        <JobCameraView
-          visible={isCameraVisible}
-          jobName={jobName}
-          onMediaCaptured={handlePhotoCaptured}
-          onClose={onCameraClosed}
-          showPreview={false}
-        ></JobCameraView>
+
+            {/* Right side - Only show when showAssetItems is true.                      */}
+            {showAssetItems && (
+              <>
+                <View style={styles.separator} />
+                <View style={styles.listColumn}>
+                  <Text style={styles.listTitle}>Photos</Text>
+                  {loadingNearest ? (
+                    <View style={styles.loadingContainer}>
+                      <Text>Loading...{fetchStatus}</Text>
+                      <ActivityIndicator size="large" color="#007AFF" style={styles.loadingIndicator} />
+                    </View>
+                  ) : (
+                    <>
+                      <View style={styles.selectRow}>
+                        <Pressable
+                          onPress={() => {
+                            onAssetAllOrClearChanged();
+                          }}
+                        >
+                          {({ pressed }) => (
+                            <Ionicons
+                              name={hasSelectedAssets ? 'ellipse-sharp' : 'ellipse-outline'}
+                              size={24}
+                              color={colors.iconColor}
+                              style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                            />
+                          )}
+                        </Pressable>
+
+                        {hasSelectedAssets && (
+                          <Text style={{ alignSelf: 'center' }}>
+                            {assetItems?.filter((asset) => asset.selected).length} selected
+                          </Text>
+                        )}
+                      </View>
+                      <FlashList
+                        data={assetItems}
+                        estimatedItemSize={200}
+                        ListFooterComponent={renderFooter}
+                        renderItem={({ item }) => {
+                          const photoDate = new Date(item.asset.creationTime * 1).toLocaleString();
+                          return (
+                            <View style={styles.assetContainer}>
+                              <TouchableOpacity
+                                style={[styles.imageContainer, item.selected && styles.imageSelected]}
+                                onPress={() => handleAssetSelection(item.asset.id)}
+                                onLongPress={() =>
+                                  handleImagePress(item.asset.uri, item.asset.mediaType, photoDate)
+                                }
+                              >
+                                <View>
+                                  <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
+                                  <Text style={styles.dateOverlay}>{photoDate}</Text>
+                                  {item.asset.mediaType === 'video' && (
+                                    <View style={styles.playButtonOverlay}>
+                                      <Ionicons name="play" size={30} color="white" />
+                                    </View>
+                                  )}
+                                </View>
+                              </TouchableOpacity>
+                            </View>
+                          );
+                        }}
+                      />
+                      <View style={styles.buttonContainer}>
+                        <View style={styles.buttonRow}>
+                          {(useJobLocation || (!useJobLocation && hasSelectedAssets)) && (
+                            <View style={styles.buttonWrapper}>
+                              <ActionButton
+                                type={'action'}
+                                title={getAddButtonTitle()}
+                                onPress={OnAddToJobClicked}
+                              />
+                            </View>
+                          )}
+                          <View style={styles.buttonWrapper}>
+                            <ActionButton title="Close" onPress={handleClose} type={'action'} />
+                          </View>
+                        </View>
+                      </View>
+                    </>
+                  )}
+                </View>
+              </>
+            )}
+            {headerMenuModalVisible && (
+              <RightHeaderMenu
+                modalVisible={headerMenuModalVisible}
+                setModalVisible={setHeaderMenuModalVisible}
+                buttons={rightHeaderMenuButtons}
+              />
+            )}
+          </View>
+          {selectedVideo && (
+            <VideoPlayerModal
+              isVisible={isVideoPlayerVisible}
+              videoUri={selectedVideo}
+              onClose={() => setIsVideoPlayerVisible(false)}
+            />
+          )}
+          {isCameraVisible && (
+            <JobCameraView
+              visible={isCameraVisible}
+              jobName={jobName}
+              onMediaCaptured={handlePhotoCaptured}
+              onClose={onCameraClosed}
+              showPreview={false}
+            ></JobCameraView>
+          )}
+        </>
       )}
     </SafeAreaView>
   );

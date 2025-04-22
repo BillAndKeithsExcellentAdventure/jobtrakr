@@ -24,6 +24,7 @@ import {
   useAddRowCallback,
   useAllRows,
   useDeleteRowCallback,
+  useIsStoreAvailableCallback,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
@@ -150,13 +151,20 @@ const JobReceiptsPage = () => {
     receiptId: string;
     jobName: string;
   }>();
-  const { addActiveProjectIds } = useActiveProjectIds();
+
+  const [projectIsReady, setProjectIsReady] = useState(false);
+  const isStoreReady = useIsStoreAvailableCallback(jobId);
+  const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
 
   useEffect(() => {
     if (jobId) {
       addActiveProjectIds([jobId]);
     }
   }, [jobId]);
+
+  useEffect(() => {
+    setProjectIsReady(!!jobId && activeProjectIds.includes(jobId) && isStoreReady());
+  }, [jobId, activeProjectIds, isStoreReady]);
 
   const auth = useAuth();
   const allReceipts = useAllRows(jobId, 'receipts');
@@ -220,7 +228,16 @@ const JobReceiptsPage = () => {
       const asset = cameraResponse.assets[0];
       if (!cameraResponse.assets || cameraResponse.assets.length === 0 || !asset) return;
 
-      const newReceipt: receiptEntriesData = {
+      const newReceipt: ReceiptData = {
+        id: '',
+        vendor: '',
+        description: '',
+        amount: 0,
+        numLineItems: 0,
+        thumbnail: '',
+        receiptDate: new Date().getTime(),
+        notes: '',
+        markedComplete: false,
         pictureUri: asset.uri,
         pictureDate: new Date().getTime(),
       };
@@ -248,59 +265,66 @@ const JobReceiptsPage = () => {
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
       <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
       <View style={styles.viewCenteringContainer}>
-        <View style={styles.viewContentContainer}>
-          <View
-            style={{
-              marginHorizontal: 10,
-              marginTop: 10,
-              marginBottom: 10,
-            }}
-          >
-            <View
-              style={{
-                flexDirection: 'row',
-                width: '100%',
-                gap: 10,
-              }}
-            >
-              <ActionButton
-                style={{ flex: 1 }}
-                onPress={handleAddPhotoReceipt}
-                type={'action'}
-                title="Add Photo"
-              />
-              <ActionButton
-                style={{ flex: 1 }}
-                onPress={handleAddReceipt}
-                type={'action'}
-                title="Add Manual"
-              />
-            </View>
-          </View>
-          {allReceipts.length === 0 ? (
-            <View style={{ alignItems: 'center', margin: 40 }}>
-              <Text txtSize="xl" text="No receipts found." />
-            </View>
-          ) : (
-            <View style={{ flex: 1 }}>
-              <View style={{ flex: 1, width: '100%', backgroundColor: colors.listBackground }}>
-                <FlashList
-                  estimatedItemSize={150}
-                  data={allReceipts}
-                  keyExtractor={(item, index) => item.id ?? index.toString()}
-                  renderItem={({ item }) => (
-                    <SwipeableItem
-                      projectId={jobId}
-                      item={item}
-                      onDelete={handleRemoveReceipt}
-                      onShowPicture={showPicture}
-                    />
-                  )}
-                />
+        {!projectIsReady ? (
+          <Text>Loading...</Text>
+        ) : (
+          <>
+            {' '}
+            <View style={styles.viewContentContainer}>
+              <View
+                style={{
+                  marginHorizontal: 10,
+                  marginTop: 10,
+                  marginBottom: 10,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    width: '100%',
+                    gap: 10,
+                  }}
+                >
+                  <ActionButton
+                    style={{ flex: 1 }}
+                    onPress={handleAddPhotoReceipt}
+                    type={'action'}
+                    title="Add Photo"
+                  />
+                  <ActionButton
+                    style={{ flex: 1 }}
+                    onPress={handleAddReceipt}
+                    type={'action'}
+                    title="Add Manual"
+                  />
+                </View>
               </View>
+              {allReceipts.length === 0 ? (
+                <View style={{ alignItems: 'center', margin: 40 }}>
+                  <Text txtSize="xl" text="No receipts found." />
+                </View>
+              ) : (
+                <View style={{ flex: 1 }}>
+                  <View style={{ flex: 1, width: '100%', backgroundColor: colors.listBackground }}>
+                    <FlashList
+                      estimatedItemSize={150}
+                      data={allReceipts}
+                      keyExtractor={(item, index) => item.id ?? index.toString()}
+                      renderItem={({ item }) => (
+                        <SwipeableItem
+                          projectId={jobId}
+                          item={item}
+                          onDelete={handleRemoveReceipt}
+                          onShowPicture={showPicture}
+                        />
+                      )}
+                    />
+                  </View>
+                </View>
+              )}
             </View>
-          )}
-        </View>
+          </>
+        )}
       </View>
     </SafeAreaView>
   );
