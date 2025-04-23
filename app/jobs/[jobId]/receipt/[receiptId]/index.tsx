@@ -2,14 +2,12 @@ import { ReceiptSummary } from '@/components/ReceiptSummary';
 import { TextField } from '@/components/TextField';
 import { Text, View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
-import { useReceiptDataStore } from '@/stores/receiptDataStore';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, LayoutChangeEvent, Platform, StyleSheet, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { ActionButton } from '@/components/ActionButton';
-import { useItemizedReceiptDataStore } from '@/stores/itemizedReceiptDataStore';
 import { formatCurrency, formatNumber } from '@/utils/formatters';
 import {
   ReceiptData,
@@ -22,6 +20,7 @@ const ReceiptDetailsPage = () => {
   const { jobId, receiptId } = useLocalSearchParams<{ jobId: string; receiptId: string }>();
   const allJobReceipts = useAllRows(jobId, 'receipts');
   const allCostItems = useAllRows(jobId, 'workItemCostEntries');
+
   const [allReceiptItems, setReceiptItems] = useState<WorkItemCostEntry[]>([]);
 
   const [receipt, setReceipt] = useState<ReceiptData>({
@@ -37,6 +36,14 @@ const ReceiptDetailsPage = () => {
     notes: '',
     markedComplete: false,
   });
+
+  useEffect(() => {
+    const match = allJobReceipts.find((r) => r.id === receiptId);
+    if (match) {
+      setReceipt({ ...match });
+    }
+  }, [receiptId, allJobReceipts]);
+
   const [itemsTotalCost, setItemsTotalCost] = useState(0);
   const router = useRouter();
 

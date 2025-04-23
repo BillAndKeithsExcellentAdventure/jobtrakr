@@ -1,28 +1,32 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text } from '@/components/Themed';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
-import { useJobDb } from '@/context/DatabaseContext';
-import { ReceiptBucketData, VendorData } from 'jobdb';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NumberInputField } from '@/components/NumberInputField';
 import { TextField } from '@/components/TextField';
 import { StyleSheet } from 'react-native';
-import { useReceiptDataStore } from '@/stores/receiptDataStore';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { ActionButton } from '@/components/ActionButton';
 import OptionList, { OptionEntry } from '@/components/OptionList';
 import { OptionPickerItem } from '@/components/OptionPickerItem';
 import BottomSheetContainer from '@/components/BottomSheetContainer';
-import { useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useAllRows as useAllConfigurationRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  ReceiptData,
+  useAllRows,
+  useUpdateRowCallback,
+} from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 
 const EditReceiptDetailsPage = () => {
+  const defaultDate = new Date();
+
   const router = useRouter();
-  const { receiptId } = useLocalSearchParams<{ receiptId: string }>();
-  const { allJobReceipts, updateReceiptData } = useReceiptDataStore();
+  const { jobId, receiptId } = useLocalSearchParams<{ jobId: string; receiptId: string }>();
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
-  const [vendors, setVendors] = useState<OptionEntry[]>([]);
+  const allJobReceipts = useAllRows(jobId, 'receipts');
+  const updateReceipt = useUpdateRowCallback(jobId, 'receipts');
 
   const handleVendorOptionChange = (option: OptionEntry) => {
     if (option) {
@@ -31,8 +35,8 @@ const EditReceiptDetailsPage = () => {
     setIsVendorListPickerVisible(false);
   };
 
-  const { jobDbHost } = useJobDb();
-  const allVendors = useAllRows<VendorData>('vendors');
+  const allVendors = useAllConfigurationRows('vendors');
+  const [vendors, setVendors] = useState<OptionEntry[]>([]);
 
   useEffect(() => {
     if (allVendors && allVendors.length > 0) {
@@ -40,7 +44,7 @@ const EditReceiptDetailsPage = () => {
         label: `${vendor.name} ${
           vendor.address ? ` - ${vendor.address}` : vendor.city ? ` - ${vendor.city}` : ''
         }`,
-        value: vendor._id,
+        value: vendor.id,
       }));
 
       setVendors(vendorOptions);
@@ -49,47 +53,29 @@ const EditReceiptDetailsPage = () => {
     }
   }, [allVendors]);
 
-  const [receipt, setReceipt] = useState<ReceiptBucketData>({
-    _id: '',
-    UserId: '',
-    JobId: '',
-    DeviceId: '',
-    Amount: 0,
-    Vendor: '',
-    Description: '',
-    Notes: '',
-    CategoryId: '',
-    ItemId: '',
-    AssetId: '',
-    AlbumId: '',
-    PictureUri: '',
+  const [receipt, setReceipt] = useState<ReceiptData>({
+    id: '',
+    vendor: '',
+    description: '',
+    amount: 0,
+    numLineItems: 0,
+    receiptDate: defaultDate.getTime(),
+    thumbnail: '',
+    pictureDate: 0,
+    pictureUri: '',
+    notes: '',
+    markedComplete: false,
   });
 
-  const fetchReceipt = useCallback(async () => {
-    try {
-      const match = allJobReceipts.find((r) => r._id === receiptId);
-      if (!match) return;
-
-      if (match) {
-        setReceipt((prevReceipt) => ({
-          ...prevReceipt,
-          ...match,
-        }));
-        pickedOption;
-      }
-    } catch (err) {
-      alert(`An error occurred while fetching the receipt with _id=${receiptId}`);
-      console.log('An error occurred while fetching the receipt', err);
+  useEffect(() => {
+    const match = allJobReceipts.find((r) => r.id === receiptId);
+    if (match) {
+      setReceipt({ ...match });
     }
-  }, [receiptId, jobDbHost, allJobReceipts]);
-
-  // Fetch receipts for the given job and user
-  useEffect(() => {
-    fetchReceipt();
-  }, [fetchReceipt]);
+  }, [receiptId, allJobReceipts]);
 
   useEffect(() => {
-    const match = vendors.find((o) => o.label === receipt.Vendor);
+    const match = vendors.find((o) => o.label === receipt.vendor);
     setPickedOption(match);
   }, [receipt, vendors]);
 
@@ -125,18 +111,11 @@ const EditReceiptDetailsPage = () => {
   }, []);
 
   const handleSubmit = useCallback(async () => {
-    if (receipt._id) {
-      const status = await jobDbHost?.GetReceiptBucketDB().UpdateReceipt(receipt);
-      if (status === 'Success') {
-        updateReceiptData(receipt._id, receipt);
-      } else {
-        console.log('Receipt update failed:', receipt);
-      }
-    }
+    updateReceipt(receiptId, receipt);
     router.back();
   }, [receipt]);
 
-  const receiptAmount = receipt.Amount ?? 0;
+  const receiptAmount = receipt.amount ?? 0;
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -161,7 +140,7 @@ const EditReceiptDetailsPage = () => {
           {vendors && vendors.length ? (
             <OptionPickerItem
               containerStyle={styles.inputContainer}
-              optionLabel={receipt.Vendor}
+              optionLabel={receipt.vendor}
               label="Vendor"
               placeholder="Vendor"
               onOptionLabelChange={handleVendorChange}
@@ -172,7 +151,7 @@ const EditReceiptDetailsPage = () => {
               containerStyle={styles.inputContainer}
               placeholder="Vendor"
               label="Vendor"
-              value={receipt.Vendor}
+              value={receipt.vendor}
               onChangeText={handleVendorChange}
             />
           )}
@@ -181,7 +160,7 @@ const EditReceiptDetailsPage = () => {
             containerStyle={styles.inputContainer}
             placeholder="Description"
             label="Description"
-            value={receipt.Description}
+            value={receipt.description}
             onChangeText={(text): void => {
               setReceipt((prevReceipt) => ({
                 ...prevReceipt,
@@ -193,7 +172,7 @@ const EditReceiptDetailsPage = () => {
             containerStyle={styles.inputContainer}
             placeholder="Notes"
             label="Notes"
-            value={receipt.Notes}
+            value={receipt.notes}
             onChangeText={(text): void => {
               setReceipt((prevReceipt) => ({
                 ...prevReceipt,
