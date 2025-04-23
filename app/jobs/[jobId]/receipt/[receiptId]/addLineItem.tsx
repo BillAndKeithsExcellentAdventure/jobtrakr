@@ -6,8 +6,13 @@ import { OptionPickerItem } from '@/components/OptionPickerItem';
 import { TextField } from '@/components/TextField';
 import { View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
-import { useJobDb } from '@/context/DatabaseContext';
-import { ReceiptItemEntry, useItemizedReceiptDataStore } from '@/stores/itemizedReceiptDataStore';
+import {
+  useAddRowCallback,
+  useAllRows,
+  useDeleteRowCallback,
+  useUpdateRowCallback,
+  WorkItemCostEntry,
+} from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, useColorScheme } from 'react-native';
@@ -15,9 +20,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AddReceiptLineItemPage = () => {
   const router = useRouter();
-  const { receiptId } = useLocalSearchParams<{ receiptId: string }>();
-  const { allReceiptItems, updateReceiptItem } = useItemizedReceiptDataStore();
-  const { jobDbHost } = useJobDb();
+  const { jobId, receiptId } = useLocalSearchParams<{ jobId: string; receiptId: string }>();
+  const allReceipts = useAllRows(jobId, 'receipts');
+  const allLineItemCostEntries = useAllRows(jobId, 'workItemCostEntries');
+  const addLineItem = useAddRowCallback(jobId, 'workItemCostEntries');
+  const updateLineItem = useUpdateRowCallback(jobId, 'workItemCostEntries');
+  const deleteLineItem = useDeleteRowCallback(jobId, 'workItemCostEntries');
+
   const colorScheme = useColorScheme();
   const colors = useMemo(
     () =>
@@ -69,42 +78,29 @@ const AddReceiptLineItemPage = () => {
     setIsCategoryPickerVisible(false);
   };
 
-  const initItemizedEntry: ReceiptItemEntry = {
+  const initItemizedEntry: WorkItemCostEntry = {
+    id: '',
     label: '',
     amount: 0,
-    receiptId,
+    workItemId: '',
+    parentId: receiptId,
+    documentationType: 'receipt',
   };
 
-  const [itemizedEntry, setItemizedEntry] = useState<ReceiptItemEntry>(initItemizedEntry);
+  const [itemizedEntry, setItemizedEntry] = useState<WorkItemCostEntry>(initItemizedEntry);
 
-  const handleSubCategoryChange = useCallback((selectedSubCategory: string) => {
-    setItemizedEntry((prevItem) => ({
-      ...prevItem,
-      subCategory: selectedSubCategory,
-    }));
-  }, []);
+  const handleSubCategoryChange = useCallback((selectedSubCategory: string) => {}, []);
 
-  const handleCategoryChange = useCallback((selectedCategory: string) => {
-    setItemizedEntry((prevItem) => ({
-      ...prevItem,
-      category: selectedCategory,
-    }));
-  }, []);
+  const handleCategoryChange = useCallback((selectedCategory: string) => {}, []);
 
+  /*
   useEffect(() => {
     const match = categories.find((o) => o.label === itemizedEntry.category);
     setPickedCategoryOption(match);
   }, [itemizedEntry, categories]);
-
+*/
   const handleOkPress = useCallback(async () => {
-    if (itemizedEntry._id) {
-      const status = 'Success'; // await jobDbHost?.GetReceiptBucketDB().UpdateReceipt(itemizedEntry);
-      if (status === 'Success') {
-        updateReceiptItem(itemizedEntry._id, itemizedEntry);
-      } else {
-        console.log('Receipt update failed:', itemizedEntry);
-      }
-    }
+    //updateReceiptItem(itemizedEntry._id, itemizedEntry);
     router.back();
   }, [itemizedEntry]);
 
@@ -137,7 +133,7 @@ const AddReceiptLineItemPage = () => {
         />
         <OptionPickerItem
           containerStyle={styles.inputContainer}
-          optionLabel={itemizedEntry.category}
+          optionLabel=""
           label="Category"
           placeholder="Category"
           onOptionLabelChange={handleCategoryChange}
@@ -145,7 +141,7 @@ const AddReceiptLineItemPage = () => {
         />
         <OptionPickerItem
           containerStyle={styles.inputContainer}
-          optionLabel={itemizedEntry.subCategory}
+          optionLabel=""
           label="Sub-category"
           placeholder="Sub-category"
           onOptionLabelChange={handleSubCategoryChange}

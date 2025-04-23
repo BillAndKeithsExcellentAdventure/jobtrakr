@@ -1,8 +1,6 @@
 import AuthorizedStoresProvider from '@/components/AuthorizedStoresProvider';
 import { useColorScheme } from '@/components/useColorScheme';
 import { ActiveProjectIdsProvider } from '@/context/ActiveProjectIdsContext';
-import { SessionProvider } from '@/context/AuthSessionContext';
-import { DatabaseHostProvider } from '@/context/DatabaseContext';
 import { ClerkLoaded, ClerkProvider } from '@clerk/clerk-expo';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -62,25 +60,21 @@ function RootLayoutNav() {
     <ClerkProvider tokenCache={tokenCache} publishableKey={PUBLISHABLE_KEY}>
       <ClerkLoaded>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <SessionProvider>
-            <DatabaseHostProvider>
-              <TinyBaseProvider>
-                <ActiveProjectIdsProvider>
-                  <AuthorizedStoresProvider />
-                  <SafeAreaProvider>
-                    <GestureHandlerRootView>
-                      <Stack screenOptions={{ headerShown: false }}>
-                        <Stack.Screen name="index" />
-                        <Stack.Screen name="jobs" />
-                        <Stack.Screen name="(auth)" />
-                      </Stack>
-                      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-                    </GestureHandlerRootView>
-                  </SafeAreaProvider>
-                </ActiveProjectIdsProvider>
-              </TinyBaseProvider>
-            </DatabaseHostProvider>
-          </SessionProvider>
+          <TinyBaseProvider>
+            <ActiveProjectIdsProvider>
+              <AuthorizedStoresProvider />
+              <SafeAreaProvider>
+                <GestureHandlerRootView>
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="jobs" />
+                    <Stack.Screen name="(auth)" />
+                  </Stack>
+                  <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+                </GestureHandlerRootView>
+              </SafeAreaProvider>
+            </ActiveProjectIdsProvider>
+          </TinyBaseProvider>
         </ThemeProvider>
       </ClerkLoaded>
     </ClerkProvider>

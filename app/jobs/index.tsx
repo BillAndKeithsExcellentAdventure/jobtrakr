@@ -14,7 +14,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 
 import RightHeaderMenu from '@/components/RightHeaderMenu';
-import { useDbLogger } from '@/context/LoggerContext';
 
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -47,7 +46,7 @@ export default function JobHomeScreen() {
   const [jobListEntries, setJobListEntries] = useState<TwoColumnListEntry[]>([]);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const navigation = useNavigation();
-  const { logInfo, shareLogFile } = useDbLogger();
+
   const colorScheme = useColorScheme();
   const router = useRouter();
   const { signOut } = useClerk();
@@ -186,10 +185,6 @@ export default function JobHomeScreen() {
       setHeaderMenuModalVisible(false);
       if (item === 'AddProject') {
         router.push(`/jobs/add-project`);
-      } else if (item === 'ShareLog') {
-        console.log('Sharing log file...');
-        shareLogFile();
-        console.log('Log file shared');
       } else if (item === 'Configuration') {
         router.push('/jobs/configuration/home');
       } else if (item === 'Invite') {
@@ -199,7 +194,7 @@ export default function JobHomeScreen() {
         router.replace('/(auth)/sign-in');
       }
     },
-    [shareLogFile, logInfo],
+    [router, signOut],
   );
 
   const handleSignOut = useCallback(async () => {
@@ -222,13 +217,6 @@ export default function JobHomeScreen() {
         label: 'Configuration',
         onPress: (e, actionContext) => {
           handleMenuItemPress('Configuration', actionContext);
-        },
-      },
-      {
-        icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
-        label: 'Share Log',
-        onPress: (e, actionContext) => {
-          handleMenuItemPress('ShareLog', actionContext);
         },
       },
       {

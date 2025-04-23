@@ -1,6 +1,11 @@
 import * as FileSystem from 'expo-file-system';
 import JSZip from 'jszip';
-import { PictureBucketAsset } from 'jobdb';
+import * as MediaLibrary from 'expo-media-library';
+
+interface PictureBucketAsset {
+  _id?: string | null;
+  asset?: MediaLibrary.Asset;
+}
 
 export const countFiles = async (folderPath: string): Promise<number> => {
   try {

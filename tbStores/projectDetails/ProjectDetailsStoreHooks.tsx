@@ -60,7 +60,7 @@ export type WorkItemCostEntry = {
   label: string;
   amount: number;
   workItemId: string;
-  parentId: string; // To either the receipt or invoice table.
+  parentId: string; // the receiptId or invoiceId
   documentationType: string; // 'receipt' or 'invoice'
 };
 

@@ -7,9 +7,6 @@ import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { VideoPlayerModal } from '@/components/VideoPlayerModal';
 import { Colors } from '@/constants/Colors';
-import { useJobDb } from '@/context/DatabaseContext';
-import { useDbLogger } from '@/context/LoggerContext';
-import { useJobDataStore } from '@/stores/jobDataStore';
 import { useProjectValue } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { useAddImageCallback } from '@/utils/images';
 import { ShareFiles } from '@/utils/sharing';
@@ -17,7 +14,6 @@ import { Entypo, Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
-import { MediaAssets } from 'jobmedia';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Button, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
@@ -37,13 +33,13 @@ let gAssetItems: AssetsItem[] = [];
 let gJobAssetItems: AssetsItem[] = [];
 
 const JobPhotosPage = () => {
+  /*
   const router = useRouter();
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
   const [jobAssets, setJobAssets] = useState<AssetsItem[] | undefined>(undefined);
   const [assetItems, setAssetItems] = useState<AssetsItem[] | undefined>(undefined);
   const mediaTools = useRef<MediaAssets | null>(null);
   const [fetchStatus, setFetchStatus] = useState<string>('');
-  const { jobDbHost } = useJobDb();
   const [useJobLocation, setUseJobLocation] = useState<boolean>(false);
   const [showAssetItems, setShowAssetItems] = useState<boolean>(false);
   const [loadingNearest, setLoadingNearest] = useState<boolean>(false);
@@ -53,9 +49,7 @@ const JobPhotosPage = () => {
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
   const [isCameraVisible, setIsCameraVisible] = useState(false);
-  const { updateJob } = useJobDataStore();
   const [hasSelectedAssets, setHasSelectedAssets] = useState<boolean>(false);
-  const { logInfo, logError } = useDbLogger();
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
   const [, setThumbnail] = useProjectValue(jobId, 'thumbnail');
   const addPhotoImage = useAddImageCallback();
@@ -92,7 +86,6 @@ const JobPhotosPage = () => {
 
   useEffect(() => {
     async function loadMediaAssetsObj() {
-      await logInfo(`Loading MediaAssets object ${mediaTools.current}`);
       if (mediaTools.current === null) {
         mediaTools.current = new MediaAssets();
         console.log('   instantiated MediaAssets object');
@@ -114,7 +107,6 @@ const JobPhotosPage = () => {
         } assets for job ${jobName}`,
       );
       console.log('   result:', result);
-      await logInfo(`Fetched ${result?.assets?.length} assets for job ${jobName}`);
       if (result?.status === 'Success' && result && result.assets && result.assets.length > 0) {
         gJobAssetItems = result.assets.map((asset) => ({
           _id: asset._id!,
@@ -155,7 +147,6 @@ const JobPhotosPage = () => {
               const location = await jobDbHost?.GetJobDB().FetchJobLocation(jobId);
               if (location) {
                 setShowAssetItems(true); // Show the panel when assets are loaded
-                await logInfo(`Current location: ${location.latitude}, ${location.longitude}`);
                 const foundAssets: MediaLibrary.Asset[] | undefined =
                   await mediaTools.current?.getAllAssetsNearLocation(
                     location.longitude,
@@ -163,8 +154,6 @@ const JobPhotosPage = () => {
                     100, // Need to make this configurable
                     OnStatusUpdate,
                   );
-
-                await logInfo(`Found ${foundAssets ? foundAssets?.length : 0} pictures`);
 
                 if (foundAssets) {
                   // Filter out assets that are already in jobAssets
@@ -183,7 +172,6 @@ const JobPhotosPage = () => {
                   setAssetItems(gAssetItems);
 
                   const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
-                  await logInfo(filteredStatus);
                   OnStatusUpdate(filteredStatus);
                 }
               }
@@ -200,9 +188,7 @@ const JobPhotosPage = () => {
   const LoadAllPhotos = useCallback(async () => {
     setShowAssetItems(true); // Show the panel when assets are loaded
 
-    await logInfo(`Loading all photos ${mediaTools.current}`);
     const foundAssets: MediaLibrary.Asset[] | undefined = await mediaTools.current?.getFirstAssetPage(100);
-    await logInfo(`Found ${foundAssets ? foundAssets?.length : 0} pictures`);
     console.log('Found x assets:', foundAssets?.length);
 
     if (foundAssets) {
@@ -222,7 +208,6 @@ const JobPhotosPage = () => {
       setAssetItems(gAssetItems);
 
       const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
-      await logInfo(filteredStatus);
       OnStatusUpdate(filteredStatus);
     }
   }, [jobAssets, assetItems]);
@@ -290,7 +275,6 @@ const JobPhotosPage = () => {
       gAssetItems = gAssetItems.concat(selectionList);
       setAssetItems(gAssetItems);
       const filteredStatus = `Added ${filteredAssets.length} assets into assetItems`;
-      await logInfo(filteredStatus);
       OnStatusUpdate(filteredStatus);
     }
   }, [assetItems]);
@@ -326,7 +310,6 @@ const JobPhotosPage = () => {
           if (jobAssets) {
             for (const asset of jobAssets) {
               if (asset.selected) {
-                await logInfo(`Removing asset ${asset._id}`);
                 await jobDbHost?.GetPictureBucketDB().RemovePicture(asset._id);
                 gJobAssetItems = gJobAssetItems?.filter((item) => item._id !== asset._id);
                 setJobAssets(gJobAssetItems);
@@ -347,14 +330,12 @@ const JobPhotosPage = () => {
   }, []);
 
   const handleAssetSelection = useCallback(async (assetId: string) => {
-    await logInfo(`Toggling asset ${assetId}`);
     setAssetItems((prevAssets) =>
       prevAssets?.map((item) => (item.asset.id === assetId ? { ...item, selected: !item.selected } : item)),
     );
   }, []);
 
   const handleJobAssetSelection = useCallback(async (assetId: string) => {
-    await logInfo(`Toggling job asset ${assetId}`);
     setJobAssets((prevAssets) =>
       prevAssets?.map((item) => (item.asset.id === assetId ? { ...item, selected: !item.selected } : item)),
     );
@@ -467,10 +448,8 @@ const JobPhotosPage = () => {
 
   const onJobAllOrClearChanged = useCallback(async () => {
     if (numSelectedJobAssets > 0) {
-      await logInfo('Clearing all job assets');
       setJobAssets((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: false } as AssetsItem)));
     } else {
-      await logInfo('Selecting all job pictures');
       setJobAssets((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: true })));
     }
   }, [jobAssets, setJobAssets]);
@@ -480,7 +459,6 @@ const JobPhotosPage = () => {
       const status = await jobDbHost?.GetPictureBucketDB().InsertPicture(jobId, asset);
       if (status?.status === 'Success') {
         console.log();
-        await logInfo(`Added asset ${status.id}`);
         gJobAssetItems = gJobAssetItems?.concat({ _id: status.id, selected: false, asset: asset });
         setJobAssets(gJobAssetItems);
       }
@@ -497,10 +475,8 @@ const JobPhotosPage = () => {
 
   const onAssetAllOrClearChanged = useCallback(async () => {
     if (hasSelectedAssets) {
-      await logInfo('Clearing all assets');
       setAssetItems((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: false } as AssetsItem)));
     } else {
-      await logInfo('Selecting all pictures');
       setAssetItems((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: true })));
     }
   }, [assetItems, hasSelectedAssets]);
@@ -560,7 +536,6 @@ const JobPhotosPage = () => {
             )}
           </View>
           <View style={styles.listsContainer}>
-            {/* Left side - Job Assets */}
             <View style={styles.listColumn}>
               <View style={{ alignItems: 'center' }}>
                 <Text txtSize="title" style={styles.listTitle}>
@@ -659,7 +634,6 @@ const JobPhotosPage = () => {
               )}
             </View>
 
-            {/* Right side - Only show when showAssetItems is true.                      */}
             {showAssetItems && (
               <>
                 <View style={styles.separator} />
@@ -770,6 +744,20 @@ const JobPhotosPage = () => {
           )}
         </>
       )}
+    </SafeAreaView>
+  );
+  */
+  return (
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Job Photos',
+        }}
+      />
+      <View style={styles.headerInfo}>
+        <Text>Job Photos Page - Under Construction</Text>
+      </View>
     </SafeAreaView>
   );
 };
