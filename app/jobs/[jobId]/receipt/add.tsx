@@ -7,21 +7,20 @@ import { TextField } from '@/components/TextField';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { useJobDb } from '@/context/DatabaseContext';
-import { useReceiptDataStore } from '@/stores/receiptDataStore';
-import { useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useAllRows as useAllConfigurationRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useAddRowCallback, ReceiptData } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/utils/formatters';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
-import { ReceiptBucketData } from 'jobdb';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Image, Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import { Alert, Image, Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AddReceiptPage = () => {
   const defaultDate = new Date();
   const { jobId, jobName } = useLocalSearchParams<{ jobId: string; jobName: string }>();
+  const addReceipt = useAddRowCallback(jobId, 'receipts');
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
@@ -34,39 +33,25 @@ const AddReceiptPage = () => {
     setIsVendorListPickerVisible(false);
   };
 
-  type JobReceipt = {
-    date: Date;
-    jobId: string;
-    amount: number;
-    vendor: string;
-    description: string;
-    notes: string;
-    categoryName: string;
-    subCategoryName: string;
-    pictureUri?: string;
-    albumId?: string;
-    assetId?: string;
-  };
-
-  const initJobReceipt: JobReceipt = {
-    jobId,
-    date: defaultDate,
-    amount: 0,
+  const router = useRouter();
+  const [jobReceipt, setJobReceipt] = useState<ReceiptData>({
+    id: '',
     vendor: '',
     description: '',
+    amount: 0,
+    numLineItems: 0,
+    receiptDate: defaultDate.getTime(),
+    thumbnail: '',
+    pictureDate: 0,
+    pictureUri: '',
     notes: '',
-    categoryName: '',
-    subCategoryName: '',
-  };
+    markedComplete: false,
+  });
 
-  const router = useRouter();
-  const [jobReceipt, setJobReceipt] = useState<JobReceipt>(initJobReceipt);
-  const { jobDbHost } = useJobDb();
-  const { addReceiptData } = useReceiptDataStore();
   const colorScheme = useColorScheme();
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [canAddReceipt, setCanAddReceipt] = useState(false);
-  const allVendors = useAllRows('vendors');
+  const allVendors = useAllConfigurationRows('vendors');
 
   useEffect(() => {
     if (allVendors && allVendors.length > 0) {
@@ -148,20 +133,6 @@ const AddReceiptPage = () => {
     }));
   }, []);
 
-  const handleCategoryChange = useCallback((categoryName: string) => {
-    setJobReceipt((prevReceipt) => ({
-      ...prevReceipt,
-      categoryName,
-    }));
-  }, []);
-
-  const handleSubCategoryChange = useCallback((subCategoryName: string) => {
-    setJobReceipt((prevReceipt) => ({
-      ...prevReceipt,
-      subCategoryName,
-    }));
-  }, []);
-
   useEffect(() => {
     setCanAddReceipt(
       (jobReceipt.amount > 0 && !!jobReceipt.vendor && !!jobReceipt.description) || !!jobReceipt.pictureUri,
@@ -171,26 +142,13 @@ const AddReceiptPage = () => {
   const handleAddReceipt = useCallback(async () => {
     if (!canAddReceipt) return;
 
-    const newReceipt: ReceiptBucketData = {
-      Amount: jobReceipt.amount,
-      Vendor: jobReceipt.vendor,
-      Description: jobReceipt.description,
-      Notes: jobReceipt.notes,
-      AssetId: jobReceipt.assetId,
-      PictureUri: jobReceipt.pictureUri,
-    };
+    const result = addReceipt(jobReceipt);
 
-    const response = await jobDbHost?.GetReceiptBucketDB().InsertReceipt(jobId, newReceipt);
-    if (response?.status === 'Success') {
-      newReceipt._id = response.id;
-      newReceipt.JobId = jobId;
-      addReceiptData(newReceipt);
-      console.log('Job receipt successfully added:', newReceipt);
-    } else {
-      console.log('Job receipt update failed:', jobReceipt);
+    if (result.status !== 'Success') {
+      console.log('Add Job receipt failed:', jobReceipt);
     }
     router.back();
-  }, [jobReceipt, jobDbHost, addReceiptData, canAddReceipt]);
+  }, [jobReceipt, canAddReceipt]);
 
   const dismissKeyboard = useCallback(() => {
     Keyboard.dismiss();
@@ -200,7 +158,7 @@ const AddReceiptPage = () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
     if (permissionResult.granted === false) {
-      alert("You've refused to allow this app to access your camera!");
+      Alert.alert("You've refused to allow this app to access your camera!");
       return;
     }
 
@@ -240,12 +198,12 @@ const AddReceiptPage = () => {
                   style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
                   placeholder="Date"
                   onPressIn={showDatePicker}
-                  value={jobReceipt.date ? formatDate(jobReceipt.date) : 'No date selected'}
+                  value={formatDate(jobReceipt.receiptDate)}
                 />
               </TouchableOpacity>
               <DateTimePickerModal
                 style={{ alignSelf: 'stretch' }}
-                date={jobReceipt.date}
+                date={jobReceipt.receiptDate ? new Date(jobReceipt.receiptDate) : defaultDate}
                 isVisible={datePickerVisible}
                 mode="date"
                 onConfirm={handleDateConfirm}
@@ -328,7 +286,19 @@ const AddReceiptPage = () => {
               <ActionButton
                 style={styles.cancelButton}
                 onPress={() => {
-                  setJobReceipt(initJobReceipt);
+                  setJobReceipt({
+                    id: '',
+                    vendor: '',
+                    description: '',
+                    amount: 0,
+                    numLineItems: 0,
+                    receiptDate: defaultDate.getTime(),
+                    thumbnail: '',
+                    pictureDate: 0,
+                    pictureUri: '',
+                    notes: '',
+                    markedComplete: false,
+                  });
                   router.back();
                 }}
                 type={'cancel'}

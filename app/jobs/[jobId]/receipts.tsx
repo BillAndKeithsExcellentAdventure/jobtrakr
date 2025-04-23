@@ -269,7 +269,6 @@ const JobReceiptsPage = () => {
           <Text>Loading...</Text>
         ) : (
           <>
-            {' '}
             <View style={styles.viewContentContainer}>
               <View
                 style={{
