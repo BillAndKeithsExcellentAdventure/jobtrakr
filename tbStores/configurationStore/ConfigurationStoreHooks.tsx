@@ -36,13 +36,13 @@ export interface WorkItemData {
   status?: string;
 }
 
-export interface JobTemplateData {
+export interface ProjectTemplateData {
   id: string;
   name: string;
   description: string;
 }
 
-export interface JobTemplateWorkItemData {
+export interface TemplateWorkItemData {
   id: string;
   templateId: string;
   workItemIds: string;
@@ -75,8 +75,8 @@ export type SchemaMap = {
 // Type mapping between table names and data types
 export type TableDataMap = {
   vendors: VendorData;
-  templates: JobTemplateData;
-  templateWorkItems: JobTemplateWorkItemData;
+  templates: ProjectTemplateData;
+  templateWorkItems: TemplateWorkItemData;
   categories: WorkCategoryData;
   workItems: WorkItemData;
 };
@@ -190,11 +190,11 @@ export const useTableValue = <T extends keyof SchemaMap, C extends Extract<keyof
 
 // --- HOOKS TO SET WORKITEMIDS FOR A TEMPLATE ---
 export const useTemplateWorkItemData = (templateId: string) => {
-  const [templateWorkItemData, setTemplateWorkItemData] = useState<JobTemplateWorkItemData | null>();
+  const [templateWorkItemData, setTemplateWorkItemData] = useState<TemplateWorkItemData | null>();
   const [templateWorkItemIds, setTemplateWorkItemIds] = useState<string[]>([]);
   let store = useStore(useStoreId());
 
-  const fetchTemplateWorkItemData = useCallback((): JobTemplateWorkItemData | null => {
+  const fetchTemplateWorkItemData = useCallback((): TemplateWorkItemData | null => {
     if (!store) {
       return null;
     }
@@ -208,7 +208,7 @@ export const useTemplateWorkItemData = (templateId: string) => {
           id: id,
           templateId: rowData.templateId ?? '',
           workItemIds: rowData.workItemIds ?? '',
-        } as JobTemplateWorkItemData;
+        } as TemplateWorkItemData;
       }
     }
 

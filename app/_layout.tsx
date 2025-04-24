@@ -67,7 +67,7 @@ function RootLayoutNav() {
                 <GestureHandlerRootView>
                   <Stack screenOptions={{ headerShown: false }}>
                     <Stack.Screen name="index" />
-                    <Stack.Screen name="jobs" />
+                    <Stack.Screen name="projects" />
                     <Stack.Screen name="(auth)" />
                   </Stack>
                   <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />

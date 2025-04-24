@@ -5,18 +5,18 @@ import * as MediaLibrary from 'expo-media-library';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Image, Modal, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-interface JobCameraViewProps {
+interface ProjectCameraViewProps {
   visible: boolean;
-  jobName: string;
+  projectName: string;
   onMediaCaptured: (asset: MediaLibrary.Asset) => void;
   onClose: () => void;
   showPreview?: boolean; // Add new prop with default true
   showVideo?: boolean; // Add new prop
 }
 
-export const JobCameraView: React.FC<JobCameraViewProps> = ({
+export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   visible,
-  jobName,
+  projectName,
   onMediaCaptured,
   onClose,
   showPreview = true, // Set default value
@@ -200,7 +200,7 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
     <Modal visible={visible} animationType="slide" transparent={true}>
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.jobName}>{jobName}</Text>
+          <Text style={styles.projectName}>{projectName}</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Ionicons name="close" size={28} color="white" />
           </TouchableOpacity>
@@ -296,7 +296,7 @@ export const JobCameraView: React.FC<JobCameraViewProps> = ({
   );
 };
 
-export default JobCameraView;
+export default ProjectCameraView;
 
 const styles = StyleSheet.create({
   container: {
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
-  jobName: {
+  projectName: {
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',

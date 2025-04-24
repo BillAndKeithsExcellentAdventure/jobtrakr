@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 
-// Add this new component near the top of the file, before JobPhotosPage
+// Add this new component near the top of the file, before ProjectPhotosPage
 interface HorizontalLoadingIndicatorProps {
   width?: number; // Make it optional with a default value
 }
