@@ -1,4 +1,4 @@
-import { JobCameraView } from '@/app/(modals)/CameraView';
+import { ProjectCameraView } from '@/app/(modals)/CameraView';
 import { ActionButton } from '@/components/ActionButton';
 import { ActionButtonProps } from '@/components/ButtonBar';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
@@ -30,17 +30,17 @@ type AssetsItem = {
 };
 
 let gAssetItems: AssetsItem[] = [];
-let gJobAssetItems: AssetsItem[] = [];
+let gProjectAssetItems: AssetsItem[] = [];
 
-const JobPhotosPage = () => {
+const ProjectPhotosPage = () => {
   /*
   const router = useRouter();
-  const { projectId, jobName } = useLocalSearchParams<{ projectId: string; jobName: string }>();
-  const [jobAssets, setJobAssets] = useState<AssetsItem[] | undefined>(undefined);
+  const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
+  const [jobAssets, setProjectAssets] = useState<AssetsItem[] | undefined>(undefined);
   const [assetItems, setAssetItems] = useState<AssetsItem[] | undefined>(undefined);
   const mediaTools = useRef<MediaAssets | null>(null);
   const [fetchStatus, setFetchStatus] = useState<string>('');
-  const [useJobLocation, setUseJobLocation] = useState<boolean>(false);
+  const [useProjectLocation, setUseProjectLocation] = useState<boolean>(false);
   const [showAssetItems, setShowAssetItems] = useState<boolean>(false);
   const [loadingNearest, setLoadingNearest] = useState<boolean>(false);
   const colorScheme = useColorScheme();
@@ -97,23 +97,23 @@ const JobPhotosPage = () => {
 
   useEffect(() => {
     async function loadMedia(projectId: string) {
-      setJobAssets(undefined);
-      gJobAssetItems.length = 0;
+      setProjectAssets(undefined);
+      gProjectAssetItems.length = 0;
 
-      const result = await jobDbHost?.GetPictureBucketDB().FetchJobAssets(projectId);
+      const result = await jobDbHost?.GetPictureBucketDB().FetchProjectAssets(projectId);
       console.log(
         `Fetched ${result?.assets?.length}:${
           result?.assets?.at(0)?.asset?.creationTime
-        } assets for job ${jobName}`,
+        } assets for job ${projectName}`,
       );
       console.log('   result:', result);
       if (result?.status === 'Success' && result && result.assets && result.assets.length > 0) {
-        gJobAssetItems = result.assets.map((asset) => ({
+        gProjectAssetItems = result.assets.map((asset) => ({
           _id: asset._id!,
           selected: false,
           asset: asset.asset!,
         }));
-        setJobAssets(gJobAssetItems);
+        setProjectAssets(gProjectAssetItems);
       }
     }
 
@@ -127,7 +127,7 @@ const JobPhotosPage = () => {
     [setFetchStatus],
   );
 
-  const LoadPhotosNearestToJob = useCallback(async () => {
+  const LoadPhotosNearestToProject = useCallback(async () => {
     Alert.alert(
       'Find Pictures Near Project',
       "Press Ok to find pictures near the designated job's location. This may take a few minutes to process.",
@@ -136,7 +136,7 @@ const JobPhotosPage = () => {
           text: 'Cancel',
           style: 'cancel',
           onPress: async () => {
-            setUseJobLocation(false);
+            setUseProjectLocation(false);
           },
         },
         {
@@ -144,7 +144,7 @@ const JobPhotosPage = () => {
           onPress: async () => {
             try {
               setLoadingNearest(true);
-              const location = await jobDbHost?.GetJobDB().FetchJobLocation(projectId);
+              const location = await jobDbHost?.GetProjectDB().FetchProjectLocation(projectId);
               if (location) {
                 setShowAssetItems(true); // Show the panel when assets are loaded
                 const foundAssets: MediaLibrary.Asset[] | undefined =
@@ -221,7 +221,7 @@ const JobPhotosPage = () => {
       }));
   };
 
-  const OnShareJobPhotosClicked = useCallback(async () => {
+  const OnShareProjectPhotosClicked = useCallback(async () => {
     if (jobAssets) {
       const assets = createPictureBucketDataArray(jobAssets);
       try {
@@ -237,7 +237,7 @@ const JobPhotosPage = () => {
     if (jobAssets) {
       const asset = jobAssets.find((asset) => asset.selected);
       if (asset) {
-        const tn = await mediaTools.current?.createThumbnail(asset.asset.uri, jobName, 100, 100);
+        const tn = await mediaTools.current?.createThumbnail(asset.asset.uri, projectName, 100, 100);
 
         if (tn) {
           setThumbnail(tn);
@@ -247,14 +247,14 @@ const JobPhotosPage = () => {
   }, [jobAssets]);
 
   const OnLoadPhotosClicked = useCallback(
-    async (useNewJobLocation: boolean) => {
-      if (useNewJobLocation) {
-        await LoadPhotosNearestToJob();
+    async (useNewProjectLocation: boolean) => {
+      if (useNewProjectLocation) {
+        await LoadPhotosNearestToProject();
       } else {
         await LoadAllPhotos();
       }
     },
-    [LoadPhotosNearestToJob, LoadAllPhotos],
+    [LoadPhotosNearestToProject, LoadAllPhotos],
   );
 
   const LoadMore = useCallback(async () => {
@@ -279,7 +279,7 @@ const JobPhotosPage = () => {
     }
   }, [assetItems]);
 
-  const OnAddToJobClicked = useCallback(async () => {
+  const OnAddToProjectClicked = useCallback(async () => {
     if (assetItems) {
       for (const asset of assetItems) {
         if (!hasSelectedAssets || asset.selected) {
@@ -290,8 +290,8 @@ const JobPhotosPage = () => {
 
           const status = await jobDbHost?.GetPictureBucketDB().InsertPicture(projectId, asset.asset);
           if (status?.status === 'Success') {
-            gJobAssetItems = gJobAssetItems?.concat({ _id: status.id, selected: false, asset: asset.asset });
-            setJobAssets(gJobAssetItems);
+            gProjectAssetItems = gProjectAssetItems?.concat({ _id: status.id, selected: false, asset: asset.asset });
+            setProjectAssets(gProjectAssetItems);
           }
         }
       }
@@ -301,7 +301,7 @@ const JobPhotosPage = () => {
     }
   }, [assetItems, projectId, jobDbHost, hasSelectedAssets]);
 
-  const OnRemoveFromJobClicked = useCallback(async () => {
+  const OnRemoveFromProjectClicked = useCallback(async () => {
     Alert.alert('Remove Photos', 'Are you sure you want to remove these photos from this job?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -311,8 +311,8 @@ const JobPhotosPage = () => {
             for (const asset of jobAssets) {
               if (asset.selected) {
                 await jobDbHost?.GetPictureBucketDB().RemovePicture(asset._id);
-                gJobAssetItems = gJobAssetItems?.filter((item) => item._id !== asset._id);
-                setJobAssets(gJobAssetItems);
+                gProjectAssetItems = gProjectAssetItems?.filter((item) => item._id !== asset._id);
+                setProjectAssets(gProjectAssetItems);
               }
             }
 
@@ -335,8 +335,8 @@ const JobPhotosPage = () => {
     );
   }, []);
 
-  const handleJobAssetSelection = useCallback(async (assetId: string) => {
-    setJobAssets((prevAssets) =>
+  const handleProjectAssetSelection = useCallback(async (assetId: string) => {
+    setProjectAssets((prevAssets) =>
       prevAssets?.map((item) => (item.asset.id === assetId ? { ...item, selected: !item.selected } : item)),
     );
   }, []);
@@ -349,14 +349,14 @@ const JobPhotosPage = () => {
     }
   }, [assetItems]);
 
-  const [numSelectedJobAssets, setNumSelectedJobAssets] = useState<number>(0);
+  const [numSelectedProjectAssets, setNumSelectedProjectAssets] = useState<number>(0);
 
   useEffect(() => {
     if (jobAssets) {
       const num = jobAssets?.filter((item) => item.selected === true).length;
-      setNumSelectedJobAssets(num ? num : 0);
+      setNumSelectedProjectAssets(num ? num : 0);
     } else {
-      setNumSelectedJobAssets(0);
+      setNumSelectedProjectAssets(0);
     }
   }, [jobAssets]);
 
@@ -369,7 +369,7 @@ const JobPhotosPage = () => {
   const renderFooter = () => {
     return (
       <View style={styles.footer}>
-        {!useJobLocation && <Button title="Load More" onPress={LoadMore}></Button>}
+        {!useProjectLocation && <Button title="Load More" onPress={LoadMore}></Button>}
       </View>
     );
   };
@@ -414,12 +414,12 @@ const JobPhotosPage = () => {
   const handleMenuItemPress = useCallback(
     (item: string) => {
       if (item === 'AddPhotos') {
-        setUseJobLocation(false);
+        setUseProjectLocation(false);
         OnLoadPhotosClicked(false);
       }
       setHeaderMenuModalVisible(false);
     },
-    [useJobLocation, OnLoadPhotosClicked],
+    [useProjectLocation, OnLoadPhotosClicked],
   );
 
   const playVideo = (videoUri: string) => {
@@ -434,33 +434,33 @@ const JobPhotosPage = () => {
       } else if (type === 'photo') {
         console.log(`photoDate=${photoDate}`);
         const dateString = photoDate ?? 'No Date Info Available';
-        router.push(`/projects/${projectId}/photos/showImage/?uri=${uri}&jobName=${jobName}&photoDate=${dateString}`);
+        router.push(`/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${projectName}&photoDate=${dateString}`);
       }
     },
     [],
   );
 
   const onSwitchValueChanged = useCallback(() => {
-    const newValue = !useJobLocation;
-    setUseJobLocation(newValue);
+    const newValue = !useProjectLocation;
+    setUseProjectLocation(newValue);
     OnLoadPhotosClicked(newValue);
-  }, [useJobLocation, OnLoadPhotosClicked]);
+  }, [useProjectLocation, OnLoadPhotosClicked]);
 
-  const onJobAllOrClearChanged = useCallback(async () => {
-    if (numSelectedJobAssets > 0) {
-      setJobAssets((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: false } as AssetsItem)));
+  const onProjectAllOrClearChanged = useCallback(async () => {
+    if (numSelectedProjectAssets > 0) {
+      setProjectAssets((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: false } as AssetsItem)));
     } else {
-      setJobAssets((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: true })));
+      setProjectAssets((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: true })));
     }
-  }, [jobAssets, setJobAssets]);
+  }, [jobAssets, setProjectAssets]);
 
   const handlePhotoCaptured: PhotoCapturedCallback = async (asset) => {
     if (asset) {
       const status = await jobDbHost?.GetPictureBucketDB().InsertPicture(projectId, asset);
       if (status?.status === 'Success') {
         console.log();
-        gJobAssetItems = gJobAssetItems?.concat({ _id: status.id, selected: false, asset: asset });
-        setJobAssets(gJobAssetItems);
+        gProjectAssetItems = gProjectAssetItems?.concat({ _id: status.id, selected: false, asset: asset });
+        setProjectAssets(gProjectAssetItems);
       }
     }
   };
@@ -486,7 +486,7 @@ const JobPhotosPage = () => {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: jobName,
+          title: projectName,
           headerRight: () => (
             <Pressable
               onPress={() => {
@@ -530,7 +530,7 @@ const JobPhotosPage = () => {
               >
                 <Text text="Filter:" txtSize="standard" style={{ marginRight: 10 }} />
                 <Text text="All" txtSize="standard" style={{ marginRight: 10 }} />
-                <Switch value={useJobLocation} onValueChange={onSwitchValueChanged} size="large" />
+                <Switch value={useProjectLocation} onValueChange={onSwitchValueChanged} size="large" />
                 <Text text="Near Project" txtSize="standard" style={{ marginLeft: 10 }} />
               </View>
             )}
@@ -555,12 +555,12 @@ const JobPhotosPage = () => {
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <Pressable
                         onPress={() => {
-                          onJobAllOrClearChanged();
+                          onProjectAllOrClearChanged();
                         }}
                       >
                         {({ pressed }) => (
                           <Ionicons
-                            name={numSelectedJobAssets > 0 ? 'ellipse-sharp' : 'ellipse-outline'}
+                            name={numSelectedProjectAssets > 0 ? 'ellipse-sharp' : 'ellipse-outline'}
                             size={24}
                             color={colors.iconColor}
                             style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
@@ -568,11 +568,11 @@ const JobPhotosPage = () => {
                         )}
                       </Pressable>
                       <Text>
-                        {!showAssetItems ? (numSelectedJobAssets > 0 ? 'Clear Selection' : 'Select All') : ''}
+                        {!showAssetItems ? (numSelectedProjectAssets > 0 ? 'Clear Selection' : 'Select All') : ''}
                       </Text>
                     </View>
                     <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                      {numSelectedJobAssets > 0 && (
+                      {numSelectedProjectAssets > 0 && (
                         <Text style={{ alignSelf: 'center' }}>
                           {jobAssets?.filter((asset) => asset.selected).length} selected
                         </Text>
@@ -589,7 +589,7 @@ const JobPhotosPage = () => {
                         <View style={styles.imageContainer}>
                           <TouchableOpacity
                             style={[styles.imageContainer, item.selected && styles.imageSelected]}
-                            onPress={() => handleJobAssetSelection(item.asset.id)}
+                            onPress={() => handleProjectAssetSelection(item.asset.id)}
                             onLongPress={() =>
                               handleImagePress(item.asset.uri, item.asset.mediaType, photoDate)
                             }
@@ -609,15 +609,15 @@ const JobPhotosPage = () => {
                     }}
                   />
                   <View style={styles.buttonContainer}>
-                    {numSelectedJobAssets > 0 && (
+                    {numSelectedProjectAssets > 0 && (
                       <View style={styles.buttonRow}>
                         <View style={styles.buttonWrapper}>
-                          <ActionButton title="Remove" onPress={OnRemoveFromJobClicked} type={'action'} />
+                          <ActionButton title="Remove" onPress={OnRemoveFromProjectClicked} type={'action'} />
                         </View>
                         <View style={styles.buttonWrapper}>
-                          <ActionButton title="Share" onPress={OnShareJobPhotosClicked} type={'action'} />
+                          <ActionButton title="Share" onPress={OnShareProjectPhotosClicked} type={'action'} />
                         </View>
-                        {numSelectedJobAssets === 1 && (
+                        {numSelectedProjectAssets === 1 && (
                           <View style={styles.buttonWrapper}>
                             <ActionButton
                               title="Thumbnail"
@@ -699,12 +699,12 @@ const JobPhotosPage = () => {
                       />
                       <View style={styles.buttonContainer}>
                         <View style={styles.buttonRow}>
-                          {(useJobLocation || (!useJobLocation && hasSelectedAssets)) && (
+                          {(useProjectLocation || (!useProjectLocation && hasSelectedAssets)) && (
                             <View style={styles.buttonWrapper}>
                               <ActionButton
                                 type={'action'}
                                 title={getAddButtonTitle()}
-                                onPress={OnAddToJobClicked}
+                                onPress={OnAddToProjectClicked}
                               />
                             </View>
                           )}
@@ -734,13 +734,13 @@ const JobPhotosPage = () => {
             />
           )}
           {isCameraVisible && (
-            <JobCameraView
+            <ProjectCameraView
               visible={isCameraVisible}
-              jobName={jobName}
+              projectName={projectName}
               onMediaCaptured={handlePhotoCaptured}
               onClose={onCameraClosed}
               showPreview={false}
-            ></JobCameraView>
+            ></ProjectCameraView>
           )}
         </>
       )}
@@ -899,4 +899,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default JobPhotosPage;
+export default ProjectPhotosPage;

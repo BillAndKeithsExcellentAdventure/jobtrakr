@@ -44,13 +44,13 @@ interface CostSectionData {
   isExpanded: boolean;
 }
 
-const JobDetailsPage = () => {
+const ProjectDetailsPage = () => {
   const router = useRouter();
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
   const projectData = useProject(projectId);
   const processDeleteProject = useDeleteProjectCallback();
   const { removeActiveProjectId, addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
-  const allJobCategories = useAllConfigRows('categories');
+  const allProjectCategories = useAllConfigRows('categories');
   const allWorkItems = useAllConfigRows('workItems');
   const colorScheme = useColorScheme();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
@@ -103,7 +103,7 @@ const JobDetailsPage = () => {
     for (const costItem of allWorkItemSummaries) {
       const workItem = allWorkItems.find((item) => item.id === costItem.workItemId);
       if (workItem) {
-        const category = allJobCategories.find((cat) => cat.id === workItem.categoryId);
+        const category = allProjectCategories.find((cat) => cat.id === workItem.categoryId);
         if (category) {
           const section = sections.find((sec) => sec.id === category.id);
           if (section) {
@@ -152,7 +152,7 @@ const JobDetailsPage = () => {
 
     // Set the section data state
     setSectionData(sections);
-  }, [allWorkItemSummaries, allJobCategories, allWorkItems]);
+  }, [allWorkItemSummaries, allProjectCategories, allWorkItems]);
 
   // Define colors based on the color scheme (dark or light)
   const colors = useMemo(
@@ -185,7 +185,7 @@ const JobDetailsPage = () => {
     (menuItem: string, actionContext: any) => {
       setHeaderMenuModalVisible(false);
       if (menuItem === 'Edit' && projectId) {
-        router.push(`/projects/${projectId}/edit/?jobName=${projectData!.name}`);
+        router.push(`/projects/${projectId}/edit/?projectName=${projectData!.name}`);
         return;
       } else if (menuItem === 'Delete' && projectId) {
         Alert.alert('Delete Project', 'Are you sure you want to delete this project?', [
@@ -477,4 +477,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default JobDetailsPage;
+export default ProjectDetailsPage;

@@ -28,14 +28,14 @@ interface SectionData {
   isExpanded: boolean;
 }
 
-const JobTemplatesConfigurationScreen: React.FC = () => {
+const ProjectTemplatesConfigurationScreen: React.FC = () => {
   const { templateId } = useLocalSearchParams<{ templateId: string }>();
   const templateName = useTableValue('templates', templateId, 'name');
   const templateDescription = useTableValue('templates', templateId, 'description');
   const colorScheme = useColorScheme();
   const colors = colorScheme === 'dark' ? Colors.dark : Colors.light;
   const router = useRouter();
-  const allJobCategories = useAllRows('categories');
+  const allProjectCategories = useAllRows('categories');
   const allWorkItems = useAllRows('workItems');
   const { setActiveWorkItemIds, templateWorkItemIds, toggleWorkItemId } = useTemplateWorkItemData(templateId);
   const [sectionData, setSectionData] = useState<SectionData[]>([]);
@@ -44,7 +44,7 @@ const JobTemplatesConfigurationScreen: React.FC = () => {
 
   useEffect(() => {
     const fetchAllSectionsData = () => {
-      const sections: SectionData[] = allJobCategories.map((category) => {
+      const sections: SectionData[] = allProjectCategories.map((category) => {
         const items = allWorkItems.filter((item) => item.categoryId === category.id);
         const activeWorkItemIds = templateWorkItemIds ?? [];
 
@@ -65,7 +65,7 @@ const JobTemplatesConfigurationScreen: React.FC = () => {
       setSectionData(sections);
     };
     fetchAllSectionsData();
-  }, [allJobCategories, allWorkItems, templateWorkItemIds]);
+  }, [allProjectCategories, allWorkItems, templateWorkItemIds]);
 
   const toggleSection = (id: string) => {
     expandedSectionIdRef.current = expandedSectionIdRef.current === id ? '' : id;
@@ -282,4 +282,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default JobTemplatesConfigurationScreen;
+export default ProjectTemplatesConfigurationScreen;

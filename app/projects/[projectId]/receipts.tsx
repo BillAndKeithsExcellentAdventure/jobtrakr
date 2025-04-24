@@ -144,12 +144,12 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ projectId, item, onDelete
   );
 };
 
-const JobReceiptsPage = () => {
+const ProjectReceiptsPage = () => {
   const router = useRouter();
-  const { projectId, receiptId, jobName } = useLocalSearchParams<{
+  const { projectId, receiptId, projectName } = useLocalSearchParams<{
     projectId: string;
     receiptId: string;
-    jobName: string;
+    projectName: string;
   }>();
 
   const [projectIsReady, setProjectIsReady] = useState(false);
@@ -258,12 +258,12 @@ const JobReceiptsPage = () => {
   }, []);
 
   const handleAddReceipt = useCallback(() => {
-    router.push(`/projects/${projectId}/receipt/add/?jobName=${jobName}`);
+    router.push(`/projects/${projectId}/receipt/add/?projectName=${projectName}`);
   }, []);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
-      <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
+      <Stack.Screen options={{ title: `${projectName}`, headerShown: true }} />
       <View style={styles.viewCenteringContainer}>
         {!projectIsReady ? (
           <Text>Loading...</Text>
@@ -376,4 +376,4 @@ export const styles = StyleSheet.create({
   },
 });
 
-export default JobReceiptsPage;
+export default ProjectReceiptsPage;

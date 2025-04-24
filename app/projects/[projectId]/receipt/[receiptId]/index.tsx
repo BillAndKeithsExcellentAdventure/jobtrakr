@@ -18,7 +18,7 @@ import {
 const ReceiptDetailsPage = () => {
   const defaultDate = new Date();
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
-  const allJobReceipts = useAllRows(projectId, 'receipts');
+  const allProjectReceipts = useAllRows(projectId, 'receipts');
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
 
   const [allReceiptItems, setReceiptItems] = useState<WorkItemCostEntry[]>([]);
@@ -38,11 +38,11 @@ const ReceiptDetailsPage = () => {
   });
 
   useEffect(() => {
-    const match = allJobReceipts.find((r) => r.id === receiptId);
+    const match = allProjectReceipts.find((r) => r.id === receiptId);
     if (match) {
       setReceipt({ ...match });
     }
-  }, [receiptId, allJobReceipts]);
+  }, [receiptId, allProjectReceipts]);
 
   const [itemsTotalCost, setItemsTotalCost] = useState(0);
   const router = useRouter();

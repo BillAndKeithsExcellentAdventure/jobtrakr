@@ -13,7 +13,7 @@ import { Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const EditJobScreen = () => {
+const EditProjectScreen = () => {
   const colorScheme = useColorScheme();
   const colors = useMemo(
     () =>
@@ -38,9 +38,9 @@ const EditJobScreen = () => {
   );
 
   const router = useRouter();
-  const { projectId, jobName } = useLocalSearchParams<{ projectId: string; jobName: string }>();
+  const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
 
-  const [job, setJob] = useState<ProjectData>({
+  const [project, setProject] = useState<ProjectData>({
     id: '',
     name: '',
     location: '',
@@ -58,15 +58,15 @@ const EditJobScreen = () => {
     plannedFinish: 0,
   });
 
-  const currentJob = useProject(projectId);
+  const currentProject = useProject(projectId);
 
   useEffect(() => {
-    if (currentJob && job.id !== currentJob.id) {
-      setJob((prevJob) => ({
-        ...currentJob,
-      }));
+    if (currentProject && project.id !== currentProject.id) {
+      setProject({
+        ...currentProject,
+      });
     }
-  }, [currentJob]);
+  }, [currentProject]);
 
   const updatedProject = useUpdateProjectCallback();
   const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
@@ -98,8 +98,8 @@ const EditJobScreen = () => {
   };
 
   const handleStartDateConfirm = (date: Date) => {
-    setJob((prevJob) => ({
-      ...prevJob,
+    setProject((prev) => ({
+      ...prev,
       startDate: date.getTime(),
     }));
 
@@ -119,36 +119,33 @@ const EditJobScreen = () => {
   const handleSetCurrentGpsLocation = useCallback(async () => {
     if (currentLocation) {
       console.log('Current location:', currentLocation);
-      setJob((prevJob) => ({
-        ...prevJob,
+      setProject((prevProject) => ({
+        ...prevProject,
         longitude: currentLocation.coords.longitude,
         latitude: currentLocation.coords.latitude,
       }));
     }
   }, [currentLocation]);
 
-  const handleFinishDateConfirm = useCallback(
-    (date: Date) => {
-      setJob((prevJob) => ({
-        ...prevJob,
-        plannedFinish: date.getTime(),
-      }));
-      hideFinishDatePicker();
-    },
-    [], // no dependencies needed since we're using the function form of setJob
-  );
+  const handleFinishDateConfirm = useCallback((date: Date) => {
+    setProject((prevProject) => ({
+      ...prevProject,
+      plannedFinish: date.getTime(),
+    }));
+    hideFinishDatePicker();
+  }, []);
 
-  const canAddJob = useMemo(() => job.name?.length > 4, [job.name]);
+  const canAddProject = useMemo(() => project.name?.length > 4, [project.name]);
 
   const handleSubmit = useCallback(async () => {
-    if (!job || !projectId || !updatedProject) return;
+    if (!project || !projectId || !updatedProject) return;
 
-    const result = updatedProject(projectId, job);
+    const result = updatedProject(projectId, project);
     if (result.status !== 'Success') {
-      console.log('Project update failed:', job);
+      console.log('Project update failed:', project);
     }
     router.back();
-  }, [job, projectId, updatedProject, router]);
+  }, [project, projectId, updatedProject, router]);
 
   const dismissKeyboard = useCallback(() => {
     Keyboard.dismiss();
@@ -171,32 +168,32 @@ const EditJobScreen = () => {
                 style={[styles.input, { borderColor: colors.transparent }]}
                 label="Project Name"
                 placeholder="Project Name"
-                value={job.name}
-                onChangeText={(text) => setJob({ ...job, name: text })}
+                value={project.name}
+                onChangeText={(text) => setProject({ ...project, name: text })}
               />
               <TextField
                 containerStyle={styles.inputContainer}
                 style={[styles.input, { borderColor: colors.transparent }]}
                 placeholder="Location"
                 label="Location"
-                value={job.location}
-                onChangeText={(text) => setJob({ ...job, location: text })}
+                value={project.location}
+                onChangeText={(text) => setProject({ ...project, location: text })}
               />
               <TextField
                 containerStyle={styles.inputContainer}
                 style={[styles.input, { borderColor: colors.transparent }]}
                 placeholder="Owner"
                 label="Owner"
-                value={job.ownerName}
-                onChangeText={(text) => setJob({ ...job, ownerName: text })}
+                value={project.ownerName}
+                onChangeText={(text) => setProject({ ...project, ownerName: text })}
               />
               <TextField
                 style={[styles.input, { borderColor: colors.transparent }]}
                 containerStyle={styles.inputContainer}
                 placeholder="Estimated Price"
                 label="Estimated Price"
-                value={job.bidPrice ? job.bidPrice.toString() : undefined}
-                onChangeText={(text) => setJob({ ...job, bidPrice: parseFloat(text) })}
+                value={project.bidPrice ? project.bidPrice.toString() : undefined}
+                onChangeText={(text) => setProject({ ...project, bidPrice: parseFloat(text) })}
                 keyboardType="numeric"
               />
               <View style={styles.dateContainer}>
@@ -207,12 +204,12 @@ const EditJobScreen = () => {
                     style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
                     placeholder="Start Date"
                     onPressIn={showStartDatePicker}
-                    value={job.startDate ? formatDate(job.startDate) : 'No date selected'}
+                    value={project.startDate ? formatDate(project.startDate) : 'No date selected'}
                   />
                 </TouchableOpacity>
                 <DateTimePickerModal
                   style={{ alignSelf: 'stretch' }}
-                  date={new Date(job.startDate)}
+                  date={new Date(project.startDate)}
                   isVisible={startDatePickerVisible}
                   mode="date"
                   onConfirm={handleStartDateConfirm}
@@ -226,22 +223,22 @@ const EditJobScreen = () => {
                     style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
                     placeholder="Finish Date"
                     onPressIn={showFinishDatePicker}
-                    value={job.plannedFinish ? formatDate(job.plannedFinish) : 'No date selected'}
+                    value={project.plannedFinish ? formatDate(project.plannedFinish) : 'No date selected'}
                   />
                 </TouchableOpacity>
                 <DateTimePickerModal
                   style={{ alignSelf: 'stretch', height: 200 }}
-                  date={new Date(job.plannedFinish)}
+                  date={new Date(project.plannedFinish)}
                   isVisible={finishDatePickerVisible}
                   mode="date"
                   onConfirm={handleFinishDateConfirm}
                   onCancel={hideFinishDatePicker}
                 />
               </View>
-              {job.latitude && job.longitude ? (
-                <Text style={styles.inputLabel}>{`GPS Coordinates  (${job.latitude.toFixed(
+              {project.latitude && project.longitude ? (
+                <Text style={styles.inputLabel}>{`GPS Coordinates  (${project.latitude.toFixed(
                   4,
-                )}/${job.longitude.toFixed(4)})`}</Text>
+                )}/${project.longitude.toFixed(4)})`}</Text>
               ) : (
                 <Text style={styles.inputLabel}>GPS Coordinates</Text>
               )}
@@ -266,7 +263,7 @@ const EditJobScreen = () => {
               <ActionButton
                 style={styles.saveButton}
                 onPress={handleSubmit}
-                type={canAddJob ? 'ok' : 'disabled'}
+                type={canAddProject ? 'ok' : 'disabled'}
                 title="Save"
               />
 
@@ -374,4 +371,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EditJobScreen;
+export default EditProjectScreen;

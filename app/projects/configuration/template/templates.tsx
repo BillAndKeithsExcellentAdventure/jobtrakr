@@ -8,19 +8,19 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Keyboard, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableJobTemplate from './SwipeableJobTemplate';
+import SwipeableProjectTemplate from './SwipeableProjectTemplate';
 import {
-  JobTemplateData,
+  ProjectTemplateData,
   useAddRowCallback,
   useAllRows,
   WorkItemData,
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 
-const ListJobTemplates = () => {
-  const allJobTemplates = useAllRows('templates');
-  const addJobTemplate = useAddRowCallback('templates');
+const ListProjectTemplates = () => {
+  const allProjectTemplates = useAllRows('templates');
+  const addProjectTemplate = useAddRowCallback('templates');
   const [showAdd, setShowAdd] = useState(false);
-  const [jobTemplate, setJobTemplate] = useState<JobTemplateData>({
+  const [projectTemplate, setProjectTemplate] = useState<ProjectTemplateData>({
     id: '',
     name: '',
     description: '',
@@ -47,16 +47,16 @@ const ListJobTemplates = () => {
     [colorScheme],
   );
 
-  const handleInputChange = (name: keyof JobTemplateData, value: string) => {
-    if (jobTemplate) {
-      setJobTemplate({
-        ...jobTemplate,
+  const handleInputChange = (name: keyof ProjectTemplateData, value: string) => {
+    if (projectTemplate) {
+      setProjectTemplate({
+        ...projectTemplate,
         [name]: value,
       });
     }
   };
 
-  const handleEditJobTemplate = (id: string) => {
+  const handleEditProjectTemplate = (id: string) => {
     router.push(`/projects/configuration/template/${id}`);
   };
 
@@ -66,19 +66,19 @@ const ListJobTemplates = () => {
     </Pressable>
   );
 
-  const handleAddJobTemplate = useCallback(() => {
-    if (jobTemplate.name && jobTemplate.description) {
-      const newJobTemplate = {
-        ...jobTemplate,
+  const handleAddProjectTemplate = useCallback(() => {
+    if (projectTemplate.name && projectTemplate.description) {
+      const newTemplate = {
+        ...projectTemplate,
         id: '0',
-      } as JobTemplateData;
+      } as ProjectTemplateData;
 
-      addJobTemplate(newJobTemplate);
+      addProjectTemplate(newTemplate);
 
       // Clear the input fields
-      setJobTemplate({ id: '', name: '', description: '' });
+      setProjectTemplate({ id: '', name: '', description: '' });
     }
-  }, [allJobTemplates, jobTemplate]);
+  }, [allProjectTemplates, projectTemplate]);
 
   const dismissKeyboard = useCallback(() => {
     Keyboard.dismiss();
@@ -103,21 +103,21 @@ const ListJobTemplates = () => {
                   <TextInput
                     style={[styles.input, { backgroundColor: colors.neutral200 }]}
                     placeholder="Template Name"
-                    value={jobTemplate.name}
+                    value={projectTemplate.name}
                     onChangeText={(text) => handleInputChange('name', text)}
                   />
                   <TextInput
                     style={[styles.input, { backgroundColor: colors.neutral200, marginLeft: 5 }]}
                     placeholder="Description"
-                    value={jobTemplate.description}
+                    value={projectTemplate.description}
                     onChangeText={(text) => handleInputChange('description', text)}
                   />
                 </View>
 
                 <ActionButton
                   style={{ zIndex: 1 }}
-                  onPress={handleAddJobTemplate}
-                  type={jobTemplate.name && jobTemplate.description ? 'action' : 'disabled'}
+                  onPress={handleAddProjectTemplate}
+                  type={projectTemplate.name && projectTemplate.description ? 'action' : 'disabled'}
                   title="Add Project Template"
                 />
               </View>
@@ -126,9 +126,9 @@ const ListJobTemplates = () => {
         )}
         <View>
           <FlatList
-            data={allJobTemplates}
+            data={allProjectTemplates}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => <SwipeableJobTemplate jobTemplate={item} />}
+            renderItem={({ item }) => <SwipeableProjectTemplate projectTemplate={item} />}
             ListEmptyComponent={() => (
               <View
                 style={{
@@ -165,4 +165,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ListJobTemplates;
+export default ListProjectTemplates;

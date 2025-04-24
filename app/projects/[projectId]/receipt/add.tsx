@@ -19,7 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AddReceiptPage = () => {
   const defaultDate = new Date();
-  const { projectId, jobName } = useLocalSearchParams<{ projectId: string; jobName: string }>();
+  const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const addReceipt = useAddRowCallback(projectId, 'receipts');
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
@@ -34,7 +34,7 @@ const AddReceiptPage = () => {
   };
 
   const router = useRouter();
-  const [jobReceipt, setJobReceipt] = useState<ReceiptData>({
+  const [projectReceipt, setProjectReceipt] = useState<ReceiptData>({
     id: '',
     vendor: '',
     description: '',
@@ -97,7 +97,7 @@ const AddReceiptPage = () => {
   };
 
   const handleDateConfirm = useCallback((date: Date) => {
-    setJobReceipt((prevReceipt) => ({
+    setProjectReceipt((prevReceipt) => ({
       ...prevReceipt,
       date,
     }));
@@ -106,28 +106,28 @@ const AddReceiptPage = () => {
   }, []);
 
   const handleAmountChange = useCallback((amount: number) => {
-    setJobReceipt((prevReceipt) => ({
+    setProjectReceipt((prevReceipt) => ({
       ...prevReceipt,
       amount,
     }));
   }, []);
 
   const handleVendorChange = useCallback((vendor: string) => {
-    setJobReceipt((prevReceipt) => ({
+    setProjectReceipt((prevReceipt) => ({
       ...prevReceipt,
       vendor,
     }));
   }, []);
 
   const handleDescriptionChange = useCallback((description: string) => {
-    setJobReceipt((prevReceipt) => ({
+    setProjectReceipt((prevReceipt) => ({
       ...prevReceipt,
       description,
     }));
   }, []);
 
   const handleNotesChange = useCallback((notes: string) => {
-    setJobReceipt((prevReceipt) => ({
+    setProjectReceipt((prevReceipt) => ({
       ...prevReceipt,
       notes,
     }));
@@ -135,20 +135,21 @@ const AddReceiptPage = () => {
 
   useEffect(() => {
     setCanAddReceipt(
-      (jobReceipt.amount > 0 && !!jobReceipt.vendor && !!jobReceipt.description) || !!jobReceipt.pictureUri,
+      (projectReceipt.amount > 0 && !!projectReceipt.vendor && !!projectReceipt.description) ||
+        !!projectReceipt.pictureUri,
     );
-  }, [jobReceipt]);
+  }, [projectReceipt]);
 
   const handleAddReceipt = useCallback(async () => {
     if (!canAddReceipt) return;
 
-    const result = addReceipt(jobReceipt);
+    const result = addReceipt(projectReceipt);
 
     if (result.status !== 'Success') {
-      console.log('Add Project receipt failed:', jobReceipt);
+      console.log('Add Project receipt failed:', projectReceipt);
     }
     router.back();
-  }, [jobReceipt, canAddReceipt]);
+  }, [projectReceipt, canAddReceipt]);
 
   const dismissKeyboard = useCallback(() => {
     Keyboard.dismiss();
@@ -167,7 +168,7 @@ const AddReceiptPage = () => {
     if (!response.canceled) {
       const asset = response.assets[0];
       if (!response.assets || response.assets.length === 0 || !asset) return;
-      setJobReceipt((prevReceipt) => ({
+      setProjectReceipt((prevReceipt) => ({
         ...prevReceipt,
         pictureUri: asset.uri,
         assetId: asset.assetId ?? undefined,
@@ -187,7 +188,7 @@ const AddReceiptPage = () => {
       >
         <TouchableWithoutFeedback onPress={dismissKeyboard}>
           <View style={[styles.modalContainer, { marginTop: 30 }]}>
-            <Text txtSize="sub-title" style={styles.modalTitle} text={jobName} />
+            <Text txtSize="sub-title" style={styles.modalTitle} text={projectName} />
             <Text txtSize="title" style={styles.modalTitle} text="Add Receipt" />
 
             <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.borderColor }}>
@@ -198,12 +199,12 @@ const AddReceiptPage = () => {
                   style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
                   placeholder="Date"
                   onPressIn={showDatePicker}
-                  value={formatDate(jobReceipt.receiptDate)}
+                  value={formatDate(projectReceipt.receiptDate)}
                 />
               </TouchableOpacity>
               <DateTimePickerModal
                 style={{ alignSelf: 'stretch' }}
-                date={jobReceipt.receiptDate ? new Date(jobReceipt.receiptDate) : defaultDate}
+                date={projectReceipt.receiptDate ? new Date(projectReceipt.receiptDate) : defaultDate}
                 isVisible={datePickerVisible}
                 mode="date"
                 onConfirm={handleDateConfirm}
@@ -213,7 +214,7 @@ const AddReceiptPage = () => {
               {vendors && vendors.length ? (
                 <OptionPickerItem
                   containerStyle={styles.inputContainer}
-                  optionLabel={jobReceipt.vendor}
+                  optionLabel={projectReceipt.vendor}
                   label="Vendor"
                   placeholder="Vendor"
                   onOptionLabelChange={handleVendorChange}
@@ -225,7 +226,7 @@ const AddReceiptPage = () => {
                   style={[styles.input, { borderColor: colors.transparent }]}
                   placeholder="Vendor"
                   label="Vendor"
-                  value={jobReceipt.vendor}
+                  value={projectReceipt.vendor}
                   onChangeText={handleVendorChange}
                 />
               )}
@@ -234,7 +235,7 @@ const AddReceiptPage = () => {
                 style={styles.inputContainer}
                 placeholder="Amount"
                 label="Amount"
-                value={jobReceipt.amount}
+                value={projectReceipt.amount}
                 onChange={handleAmountChange}
               />
               <TextField
@@ -242,7 +243,7 @@ const AddReceiptPage = () => {
                 style={[styles.input, { borderColor: colors.transparent }]}
                 placeholder="Description"
                 label="Description"
-                value={jobReceipt.description}
+                value={projectReceipt.description}
                 onChangeText={handleDescriptionChange}
               />
               <TextField
@@ -250,15 +251,15 @@ const AddReceiptPage = () => {
                 style={[styles.input, { borderColor: colors.transparent }]}
                 placeholder="Notes"
                 label="Notes"
-                value={jobReceipt.notes}
+                value={projectReceipt.notes}
                 onChangeText={handleNotesChange}
               />
 
-              {jobReceipt.pictureUri && (
+              {projectReceipt.pictureUri && (
                 <>
                   <View style={{ alignItems: 'center', justifyContent: 'center' }}>
                     <Image
-                      source={{ uri: jobReceipt.pictureUri }}
+                      source={{ uri: projectReceipt.pictureUri }}
                       style={{ width: 275, height: 180, marginVertical: 10 }}
                     />
                   </View>
@@ -270,7 +271,7 @@ const AddReceiptPage = () => {
                   style={styles.saveButton}
                   onPress={handleCaptureImage}
                   type={'action'}
-                  title={jobReceipt.pictureUri ? 'Retake Picture' : 'Take Picture'}
+                  title={projectReceipt.pictureUri ? 'Retake Picture' : 'Take Picture'}
                 />
               </View>
             </View>
@@ -286,7 +287,7 @@ const AddReceiptPage = () => {
               <ActionButton
                 style={styles.cancelButton}
                 onPress={() => {
-                  setJobReceipt({
+                  setProjectReceipt({
                     id: '',
                     vendor: '',
                     description: '',

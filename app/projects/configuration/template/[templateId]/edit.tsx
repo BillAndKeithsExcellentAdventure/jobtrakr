@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const EditJobTemplate = () => {
+const EditProjectTemplate = () => {
   const { templateId } = useLocalSearchParams<{ templateId: string }>(); // Assuming the route includes jobTemplateId
   const applyTemplateUpdates = useUpdateRowCallback('templates');
   const router = useRouter();
@@ -84,4 +84,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EditJobTemplate;
+export default EditProjectTemplate;

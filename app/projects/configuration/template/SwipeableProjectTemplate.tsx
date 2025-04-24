@@ -1,7 +1,10 @@
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors, deleteBg } from '@/constants/Colors';
-import { JobTemplateData, useDeleteRowCallback } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  ProjectTemplateData,
+  useDeleteRowCallback,
+} from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
@@ -9,9 +12,9 @@ import { Alert, Pressable, StyleSheet } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
-const SwipeableJobTemplate = ({ jobTemplate }: { jobTemplate: JobTemplateData }) => {
+const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: ProjectTemplateData }) => {
   const router = useRouter();
-  const removeJobTemplate = useDeleteRowCallback('templates');
+  const removeProjectTemplate = useDeleteRowCallback('templates');
   const colorScheme = useColorScheme();
   const colors = useMemo(
     () =>
@@ -34,8 +37,8 @@ const SwipeableJobTemplate = ({ jobTemplate }: { jobTemplate: JobTemplateData })
   const handleDelete = (itemId: string) => {
     Alert.alert(
       'Delete Project Template',
-      'Are you sure you want to delete this job template?',
-      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeJobTemplate(itemId) }],
+      'Are you sure you want to delete this project template?',
+      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeProjectTemplate(itemId) }],
       { cancelable: true },
     );
   };
@@ -50,7 +53,7 @@ const SwipeableJobTemplate = ({ jobTemplate }: { jobTemplate: JobTemplateData })
     return (
       <Pressable
         onPress={() => {
-          handleDelete(jobTemplate.id);
+          handleDelete(projectTemplate.id);
         }}
       >
         <Reanimated.View style={[styleAnimation, styles.rightAction]}>
@@ -62,7 +65,7 @@ const SwipeableJobTemplate = ({ jobTemplate }: { jobTemplate: JobTemplateData })
 
   return (
     <ReanimatedSwipeable
-      key={jobTemplate.id}
+      key={projectTemplate.id}
       friction={2}
       enableTrackpadTwoFingerGesture
       rightThreshold={40}
@@ -75,14 +78,14 @@ const SwipeableJobTemplate = ({ jobTemplate }: { jobTemplate: JobTemplateData })
           onPress={() => {
             router.push({
               pathname: '/projects/configuration/template/[templateId]',
-              params: { templateId: jobTemplate.id },
+              params: { templateId: projectTemplate.id },
             });
           }}
         >
           <View style={styles.itemInfo}>
             <View style={{ flex: 1 }}>
-              <Text txtSize="title" text={jobTemplate.name} />
-              <Text style={styles.itemName}>{jobTemplate.description}</Text>
+              <Text txtSize="title" text={projectTemplate.name} />
+              <Text style={styles.itemName}>{projectTemplate.description}</Text>
             </View>
             <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
           </View>
@@ -120,4 +123,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SwipeableJobTemplate;
+export default SwipeableProjectTemplate;

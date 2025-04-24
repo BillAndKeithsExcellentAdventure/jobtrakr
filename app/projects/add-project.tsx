@@ -1,20 +1,20 @@
 import { ActionButton } from '@/components/ActionButton';
+import BottomSheetContainer from '@/components/BottomSheetContainer';
+import OptionList, { OptionEntry } from '@/components/OptionList';
+import { OptionPickerItem } from '@/components/OptionPickerItem';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Modal, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
-import OptionList, { OptionEntry } from '@/components/OptionList';
-import { OptionPickerItem } from '@/components/OptionPickerItem';
-import BottomSheetContainer from '@/components/BottomSheetContainer';
-import { JobTemplateData, useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
-import { useAddProjectCallback } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { ProjectData } from '@/models/types';
+import { useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useAddProjectCallback } from '@/tbStores/listOfProjects/ListOfProjectsStore';
+import { Stack, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const AddJobScreen = () => {
+const AddProjectScreen = () => {
   const defaultStart = new Date();
   const defaultFinish = new Date();
   defaultFinish.setMonth(defaultFinish.getMonth() + 9);
@@ -62,12 +62,12 @@ const AddJobScreen = () => {
   );
 
   const router = useRouter();
-  const allJobTemplates = useAllRows('templates');
-  const allJobTemplateWorkItems = useAllRows('templateWorkItems');
+  const allProjectTemplates = useAllRows('templates');
+  const allTemplateWorkItems = useAllRows('templateWorkItems');
   const [isTemplateListPickerVisible, setIsTemplateListPickerVisible] = useState<boolean>(false);
   const [pickedTemplate, setPickedTemplate] = useState<OptionEntry | undefined>(undefined);
   const [templateOptions, setTemplateOptions] = useState<OptionEntry[]>([]);
-  const [canAddJob, setCanAddJob] = useState(false);
+  const [canAddProject, setCanAddProject] = useState(false);
   const { addActiveProjectIds } = useActiveProjectIds();
   const handleTemplateOptionChange = (option: OptionEntry) => {
     setPickedTemplate(option);
@@ -75,7 +75,7 @@ const AddJobScreen = () => {
   };
 
   useEffect(() => {
-    const availableOptions = allJobTemplates.map((t) => {
+    const availableOptions = allProjectTemplates.map((t) => {
       return { label: t.name, value: t.id };
     });
     if (availableOptions.length === 0) {
@@ -85,22 +85,22 @@ const AddJobScreen = () => {
       availableOptions.sort((a, b) => a.label.localeCompare(b.label));
       setTemplateOptions([{ label: 'None', value: '' }, ...availableOptions]);
     }
-  }, [allJobTemplates]);
+  }, [allProjectTemplates]);
 
   useEffect(() => {
-    setCanAddJob(project.name.length > 0 && undefined !== pickedTemplate);
+    setCanAddProject(project.name.length > 0 && undefined !== pickedTemplate);
   }, [project, pickedTemplate]);
 
   const handleSubmit = useCallback(async () => {
-    if (!canAddJob) {
-      console.log('Cannot add job, missing required fields.');
+    if (!canAddProject) {
+      console.log('Cannot add project, missing required fields.');
       return;
     }
 
     if (pickedTemplate?.value) {
-      const template = allJobTemplates.find((t) => t.id === pickedTemplate?.value);
+      const template = allProjectTemplates.find((t) => t.id === pickedTemplate?.value);
       if (template) {
-        const templateWorkItems = allJobTemplateWorkItems.find((t) => t.templateId === template.id);
+        const templateWorkItems = allTemplateWorkItems.find((t) => t.templateId === template.id);
         if (templateWorkItems) {
           project.seedWorkItems = templateWorkItems.workItemIds;
         }
@@ -114,7 +114,7 @@ const AddJobScreen = () => {
       addActiveProjectIds(result.id);
     }
     router.back();
-  }, [project, canAddJob, pickedTemplate, allJobTemplates, allJobTemplateWorkItems, addProject, router]);
+  }, [project, canAddProject, pickedTemplate, allProjectTemplates, allTemplateWorkItems, addProject, router]);
 
   return (
     <SafeAreaView
@@ -155,7 +155,7 @@ const AddJobScreen = () => {
           <ActionButton
             style={styles.saveButton}
             onPress={handleSubmit}
-            type={canAddJob ? 'ok' : 'disabled'}
+            type={canAddProject ? 'ok' : 'disabled'}
             title="Save"
           />
           <ActionButton
@@ -224,4 +224,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddJobScreen;
+export default AddProjectScreen;

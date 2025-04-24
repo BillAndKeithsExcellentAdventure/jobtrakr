@@ -15,8 +15,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const JobNotes = () => {
-  const { projectId, jobName } = useLocalSearchParams<{ projectId: string; jobName: string }>();
+const ProjectNotes = () => {
+  const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const [newNoteTitle, setNewNoteTitle] = useState('');
   const [editingNote, setEditingNote] = useState<NoteData | null>(null);
@@ -100,7 +100,7 @@ const JobNotes = () => {
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: `${jobName}`, headerShown: true }} />
+      <Stack.Screen options={{ title: `${projectName}`, headerShown: true }} />
       <View style={styles.container}>
         {!projectIsReady ? (
           <Text>Loading...</Text>
@@ -200,7 +200,7 @@ const JobNotes = () => {
   );
 };
 
-export default JobNotes;
+export default ProjectNotes;
 
 const styles = StyleSheet.create({
   container: {

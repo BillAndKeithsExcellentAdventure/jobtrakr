@@ -39,11 +39,11 @@ function isEntry(obj: any): obj is TwoColumnListEntry {
   return typeof obj.primaryTitle === 'string' && typeof obj.secondaryTitle === 'string';
 }
 
-export default function JobHomeScreen() {
+export default function ProjectHomeScreen() {
   const allProjects = useAllProjects();
   const { addActiveProjectIds } = useActiveProjectIds();
   const toggleFavorite = useToggleFavoriteCallback();
-  const [jobListEntries, setJobListEntries] = useState<TwoColumnListEntry[]>([]);
+  const [projectListEntries, setProjectListEntries] = useState<TwoColumnListEntry[]>([]);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const navigation = useNavigation();
 
@@ -108,7 +108,7 @@ export default function JobHomeScreen() {
         };
       });
 
-      setJobListEntries(listData);
+      setProjectListEntries(listData);
     }
   }, [allProjects]);
 
@@ -116,7 +116,7 @@ export default function JobHomeScreen() {
     toggleFavorite(projId);
   };
 
-  const jobActionButtons: ActionButtonProps[] = useMemo(
+  const projectActionButtons: ActionButtonProps[] = useMemo(
     () => [
       {
         icon: <FontAwesome name="heart-o" size={24} color={colors.iconColor} />,
@@ -134,7 +134,9 @@ export default function JobHomeScreen() {
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
             if (actionContext && actionContext.entryId)
-              router.push(`/projects/${actionContext.entryId}/notes/?jobName=${actionContext.primaryTitle}`);
+              router.push(
+                `/projects/${actionContext.entryId}/notes/?projectName=${actionContext.primaryTitle}`,
+              );
           }
         },
       },
@@ -144,7 +146,9 @@ export default function JobHomeScreen() {
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
             if (actionContext && actionContext.entryId)
-              router.push(`/projects/${actionContext.entryId}/photos/?jobName=${actionContext.primaryTitle}`);
+              router.push(
+                `/projects/${actionContext.entryId}/photos/?projectName=${actionContext.primaryTitle}`,
+              );
           }
         },
       },
@@ -155,7 +159,7 @@ export default function JobHomeScreen() {
           if (isEntry(actionContext)) {
             if (actionContext && actionContext.entryId)
               router.push(
-                `/projects/${actionContext.entryId}/receipts/?jobName=${actionContext.primaryTitle}`,
+                `/projects/${actionContext.entryId}/receipts/?projectName=${actionContext.primaryTitle}`,
               );
           }
         },
@@ -166,7 +170,9 @@ export default function JobHomeScreen() {
         label: 'Invoices',
         onPress: (e, actionContext) => {
           if (actionContext && actionContext.entryId)
-            router.push(`/projects/${actionContext.entryId}/invoices/?jobName=${actionContext.primaryTitle}`);
+            router.push(
+              `/projects/${actionContext.entryId}/invoices/?projectName=${actionContext.primaryTitle}`,
+            );
         },
       },
     ],
@@ -175,8 +181,8 @@ export default function JobHomeScreen() {
 
   const handleSelection = useCallback(
     (entry: TwoColumnListEntry) => {
-      const job = allProjects.find((j) => (j.id ?? '') === entry.entryId);
-      if (job && job.id) router.push(`/projects/${job.id}`);
+      const project = allProjects.find((j) => (j.id ?? '') === entry.entryId);
+      if (project && project.id) router.push(`/projects/${project.id}`);
       else Alert.alert(`Project not found: ${entry.primaryTitle} (${entry.entryId})`);
     },
     [allProjects],
@@ -265,9 +271,13 @@ export default function JobHomeScreen() {
       />
 
       <View style={{ flex: 1, width: '100%' }}>
-        {jobListEntries.length > 0 ? (
+        {projectListEntries.length > 0 ? (
           <View style={[styles.twoColListContainer, { backgroundColor: colors.screenBackground }]}>
-            <TwoColumnList data={jobListEntries} onPress={handleSelection} buttons={jobActionButtons} />
+            <TwoColumnList
+              data={projectListEntries}
+              onPress={handleSelection}
+              buttons={projectActionButtons}
+            />
           </View>
         ) : (
           <View style={[styles.container, { padding: 20, backgroundColor: colors.screenBackground }]}>

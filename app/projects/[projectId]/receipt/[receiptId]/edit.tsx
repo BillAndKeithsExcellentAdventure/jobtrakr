@@ -25,7 +25,7 @@ const EditReceiptDetailsPage = () => {
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
-  const allJobReceipts = useAllRows(projectId, 'receipts');
+  const allProjectReceipts = useAllRows(projectId, 'receipts');
   const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
 
   const handleVendorOptionChange = (option: OptionEntry) => {
@@ -68,11 +68,11 @@ const EditReceiptDetailsPage = () => {
   });
 
   useEffect(() => {
-    const match = allJobReceipts.find((r) => r.id === receiptId);
+    const match = allProjectReceipts.find((r) => r.id === receiptId);
     if (match) {
       setReceipt({ ...match });
     }
-  }, [receiptId, allJobReceipts]);
+  }, [receiptId, allProjectReceipts]);
 
   useEffect(() => {
     const match = vendors.find((o) => o.label === receipt.vendor);

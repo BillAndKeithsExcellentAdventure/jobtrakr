@@ -1,17 +1,16 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { StyleSheet, Alert } from 'react-native';
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ActionButton } from '@/components/ActionButton';
-import { Text, TextInput, View } from '@/components/Themed';
-import { Colors } from '@/constants/Colors';
+import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
-import { formatCurrency } from '@/utils/formatters';
+import { Colors } from '@/constants/Colors';
 import {
   useAddRowCallback,
   useAllRows,
   WorkItemSummaryData,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { formatCurrency } from '@/utils/formatters';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import React, { useMemo } from 'react';
+import { StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CostItemDetails = () => {
   const { projectId, costSummaryItemId } = useLocalSearchParams<{

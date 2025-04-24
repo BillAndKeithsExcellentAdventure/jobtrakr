@@ -5,10 +5,10 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const ShowJobPhotoPage = () => {
-  const { uri, jobName, photoDate } = useLocalSearchParams<{
+const ShowProjectPhotoPage = () => {
+  const { uri, projectName, photoDate } = useLocalSearchParams<{
     projectId: string;
-    jobName: string;
+    projectName: string;
     uri: string;
     photoDate: string;
   }>();
@@ -18,14 +18,14 @@ const ShowJobPhotoPage = () => {
         <Text txtSize="title" text={photoDate} />
       </View>
       <View style={styles.container}>
-        <Stack.Screen options={{ title: jobName, headerShown: true }} />
+        <Stack.Screen options={{ title: projectName, headerShown: true }} />
         <ZoomImageViewer imageUri={uri} />
       </View>
     </SafeAreaView>
   );
 };
 
-export default ShowJobPhotoPage;
+export default ShowProjectPhotoPage;
 
 const styles = StyleSheet.create({
   container: {

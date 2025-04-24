@@ -6,8 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useIsStoreAvailableCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 
-const JobInvoicesPage = () => {
-  const { projectId, jobName } = useLocalSearchParams<{ projectId: string; jobName: string }>();
+const ProjectInvoicesPage = () => {
+  const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
@@ -31,8 +31,8 @@ const JobInvoicesPage = () => {
             <Text>Waiting....ices</Text>
           ) : (
             <>
-              <Text>JobName={jobName}</Text>
-              <Text>JobId={projectId}</Text>
+              <Text>ProjectName={projectName}</Text>
+              <Text>ProjectId={projectId}</Text>
             </>
           )}
         </View>
@@ -41,7 +41,7 @@ const JobInvoicesPage = () => {
   );
 };
 
-export default JobInvoicesPage;
+export default ProjectInvoicesPage;
 
 const styles = StyleSheet.create({
   container: {
