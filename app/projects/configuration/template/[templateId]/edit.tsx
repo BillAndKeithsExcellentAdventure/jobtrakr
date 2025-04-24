@@ -7,7 +7,7 @@ import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditProjectTemplate = () => {
-  const { templateId } = useLocalSearchParams<{ templateId: string }>(); // Assuming the route includes jobTemplateId
+  const { templateId } = useLocalSearchParams<{ templateId: string }>();
   const applyTemplateUpdates = useUpdateRowCallback('templates');
   const router = useRouter();
   const name = useTableValue('templates', templateId, 'name');

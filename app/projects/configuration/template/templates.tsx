@@ -136,7 +136,7 @@ const ListProjectTemplates = () => {
                   alignItems: 'center',
                 }}
               >
-                <Text txtSize="title" text="No job templates found." />
+                <Text txtSize="title" text="No project templates found." />
                 <Text text="Use the '+' in the upper right to add one." />
               </View>
             )}

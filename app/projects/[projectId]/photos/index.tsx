@@ -36,7 +36,7 @@ const ProjectPhotosPage = () => {
   /*
   const router = useRouter();
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
-  const [jobAssets, setProjectAssets] = useState<AssetsItem[] | undefined>(undefined);
+  const [projectAssets, setProjectAssets] = useState<AssetsItem[] | undefined>(undefined);
   const [assetItems, setAssetItems] = useState<AssetsItem[] | undefined>(undefined);
   const mediaTools = useRef<MediaAssets | null>(null);
   const [fetchStatus, setFetchStatus] = useState<string>('');
@@ -104,7 +104,7 @@ const ProjectPhotosPage = () => {
       console.log(
         `Fetched ${result?.assets?.length}:${
           result?.assets?.at(0)?.asset?.creationTime
-        } assets for job ${projectName}`,
+        } assets for project ${projectName}`,
       );
       console.log('   result:', result);
       if (result?.status === 'Success' && result && result.assets && result.assets.length > 0) {
@@ -130,7 +130,7 @@ const ProjectPhotosPage = () => {
   const LoadPhotosNearestToProject = useCallback(async () => {
     Alert.alert(
       'Find Pictures Near Project',
-      "Press Ok to find pictures near the designated job's location. This may take a few minutes to process.",
+      "Press Ok to find pictures near the designated project's location. This may take a few minutes to process.",
       [
         {
           text: 'Cancel',
@@ -156,9 +156,9 @@ const ProjectPhotosPage = () => {
                   );
 
                 if (foundAssets) {
-                  // Filter out assets that are already in jobAssets
+                  // Filter out assets that are already in projectAssets
                   const filteredAssets = foundAssets.filter(
-                    (foundAsset) => !jobAssets?.some((jobAsset) => jobAsset.asset.id === foundAsset.id),
+                    (foundAsset) => !projectAssets?.some((projectAsset) => projectAsset.asset.id === foundAsset.id),
                   );
 
                   const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
@@ -183,7 +183,7 @@ const ProjectPhotosPage = () => {
         },
       ],
     );
-  }, [jobAssets]);
+  }, [projectAssets]);
 
   const LoadAllPhotos = useCallback(async () => {
     setShowAssetItems(true); // Show the panel when assets are loaded
@@ -192,9 +192,9 @@ const ProjectPhotosPage = () => {
     console.log('Found x assets:', foundAssets?.length);
 
     if (foundAssets) {
-      // Filter out assets that are already in jobAssets
+      // Filter out assets that are already in projectAssets
       const filteredAssets = foundAssets.filter(
-        (foundAsset) => !jobAssets?.some((jobAsset) => jobAsset.asset.id === foundAsset.id),
+        (foundAsset) => !projectAssets?.some((projectAsset) => projectAsset.asset.id === foundAsset.id),
       );
 
       const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
@@ -210,7 +210,7 @@ const ProjectPhotosPage = () => {
       const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
       OnStatusUpdate(filteredStatus);
     }
-  }, [jobAssets, assetItems]);
+  }, [projectAssets, assetItems]);
 
   const createPictureBucketDataArray = (assets: AssetsItem[]) => {
     return assets
@@ -222,8 +222,8 @@ const ProjectPhotosPage = () => {
   };
 
   const OnShareProjectPhotosClicked = useCallback(async () => {
-    if (jobAssets) {
-      const assets = createPictureBucketDataArray(jobAssets);
+    if (projectAssets) {
+      const assets = createPictureBucketDataArray(projectAssets);
       try {
         const paths = assets.map((asset) => asset.asset.uri);
         await ShareFiles(paths);
@@ -231,11 +231,11 @@ const ProjectPhotosPage = () => {
         await logError(`Error creating/sharing file: ${error}`);
       }
     }
-  }, [jobAssets]);
+  }, [projectAssets]);
 
   const OnSetThumbnailClicked = useCallback(async () => {
-    if (jobAssets) {
-      const asset = jobAssets.find((asset) => asset.selected);
+    if (projectAssets) {
+      const asset = projectAssets.find((asset) => asset.selected);
       if (asset) {
         const tn = await mediaTools.current?.createThumbnail(asset.asset.uri, projectName, 100, 100);
 
@@ -244,7 +244,7 @@ const ProjectPhotosPage = () => {
         }
       }
     }
-  }, [jobAssets]);
+  }, [projectAssets]);
 
   const OnLoadPhotosClicked = useCallback(
     async (useNewProjectLocation: boolean) => {
@@ -261,9 +261,9 @@ const ProjectPhotosPage = () => {
     const foundAssets: MediaLibrary.Asset[] | undefined = await mediaTools.current?.getNextAssetPage();
 
     if (foundAssets) {
-      // Filter out assets that are already in jobAssets
+      // Filter out assets that are already in projectAssets
       const filteredAssets = foundAssets.filter(
-        (foundAsset) => !jobAssets?.some((jobAsset) => jobAsset._id === foundAsset.id),
+        (foundAsset) => !projectAssets?.some((projectAsset) => projectAsset._id === foundAsset.id),
       );
 
       const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
@@ -302,13 +302,13 @@ const ProjectPhotosPage = () => {
   }, [assetItems, projectId, jobDbHost, hasSelectedAssets]);
 
   const OnRemoveFromProjectClicked = useCallback(async () => {
-    Alert.alert('Remove Photos', 'Are you sure you want to remove these photos from this job?', [
+    Alert.alert('Remove Photos', 'Are you sure you want to remove these photos from this project?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Remove',
         onPress: async () => {
-          if (jobAssets) {
-            for (const asset of jobAssets) {
+          if (projectAssets) {
+            for (const asset of projectAssets) {
               if (asset.selected) {
                 await jobDbHost?.GetPictureBucketDB().RemovePicture(asset._id);
                 gProjectAssetItems = gProjectAssetItems?.filter((item) => item._id !== asset._id);
@@ -321,7 +321,7 @@ const ProjectPhotosPage = () => {
         },
       },
     ]);
-  }, [jobAssets, projectId, jobDbHost]);
+  }, [projectAssets, projectId, jobDbHost]);
 
   const handleClose = useCallback(() => {
     setShowAssetItems(false);
@@ -352,13 +352,13 @@ const ProjectPhotosPage = () => {
   const [numSelectedProjectAssets, setNumSelectedProjectAssets] = useState<number>(0);
 
   useEffect(() => {
-    if (jobAssets) {
-      const num = jobAssets?.filter((item) => item.selected === true).length;
+    if (projectAssets) {
+      const num = projectAssets?.filter((item) => item.selected === true).length;
       setNumSelectedProjectAssets(num ? num : 0);
     } else {
       setNumSelectedProjectAssets(0);
     }
-  }, [jobAssets]);
+  }, [projectAssets]);
 
   const getAddButtonTitle = useCallback(() => {
     if (!assetItems) return 'Add All';
@@ -452,7 +452,7 @@ const ProjectPhotosPage = () => {
     } else {
       setProjectAssets((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: true })));
     }
-  }, [jobAssets, setProjectAssets]);
+  }, [projectAssets, setProjectAssets]);
 
   const handlePhotoCaptured: PhotoCapturedCallback = async (asset) => {
     if (asset) {
@@ -542,10 +542,10 @@ const ProjectPhotosPage = () => {
                   Project Photos
                 </Text>
                 <Text txtSize="sub-title" style={{ marginLeft: 10 }}>
-                  {`Project contains ${jobAssets ? jobAssets?.length : 0} pictures.`}
+                  {`Project contains ${projectAssets ? projectAssets?.length : 0} pictures.`}
                 </Text>
               </View>
-              {!jobAssets ? (
+              {!projectAssets ? (
                 <View style={{ alignItems: 'center' }}>
                   <Text>Use menu button to add photos.</Text>
                 </View>
@@ -574,14 +574,14 @@ const ProjectPhotosPage = () => {
                     <View style={{ justifyContent: 'center', alignItems: 'center' }}>
                       {numSelectedProjectAssets > 0 && (
                         <Text style={{ alignSelf: 'center' }}>
-                          {jobAssets?.filter((asset) => asset.selected).length} selected
+                          {projectAssets?.filter((asset) => asset.selected).length} selected
                         </Text>
                       )}
                     </View>
                   </View>
                   <FlashList
                     numColumns={showAssetItems ? 1 : 2}
-                    data={jobAssets}
+                    data={projectAssets}
                     estimatedItemSize={200}
                     renderItem={({ item }) => {
                       const photoDate = new Date(item.asset.creationTime * 1).toLocaleString();

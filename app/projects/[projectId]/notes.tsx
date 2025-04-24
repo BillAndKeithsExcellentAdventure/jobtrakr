@@ -113,7 +113,7 @@ const ProjectNotes = () => {
                   <TextInput
                     value={newNoteTitle}
                     onChangeText={setNewNoteTitle}
-                    placeholder="Enter job note"
+                    placeholder="Enter note"
                     style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
                   />
                   <ActionButton
