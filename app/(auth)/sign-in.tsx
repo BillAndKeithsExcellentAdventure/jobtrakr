@@ -14,7 +14,7 @@ export default function Page() {
   return (
     <>
       <SignedIn>
-        {auth && auth.orgId ? <Redirect href="/jobs" /> : <Redirect href="/(auth)/createOrganization" />}
+        {auth && auth.orgId ? <Redirect href="/projects" /> : <Redirect href="/(auth)/createOrganization" />}
       </SignedIn>
       <SignedOut>
         <SignInForm />

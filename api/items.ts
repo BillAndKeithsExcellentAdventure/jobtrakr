@@ -3,7 +3,7 @@ import { JobCategoryItemEntry } from '@/models/jobCategoryItemEntry';
 // Simulate an async function to load JSON data (like fetching from an API or reading from a file)
 const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
   {
-    jobId: 1,
+    projectId: 1,
     categoryName: 'Pre-Construction',
     itemName: 'Sewer Permit',
     bidPrice: 1500,
@@ -11,7 +11,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 2,
+    projectId: 2,
     categoryName: 'Pre-Construction',
     itemName: 'Building Permit',
     bidPrice: 3000,
@@ -19,7 +19,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 3,
+    projectId: 3,
     categoryName: 'Pre-Construction',
     itemName: 'Sewer Permit',
     bidPrice: 5000,
@@ -27,7 +27,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 4,
+    projectId: 4,
     categoryName: 'Pre-Construction',
     itemName: 'Building Permit',
     bidPrice: 7500,
@@ -35,7 +35,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 5,
+    projectId: 5,
     categoryName: 'Pre-Construction',
     itemName: 'Sewer Permit',
     bidPrice: 12000,
@@ -43,7 +43,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 6,
+    projectId: 6,
     categoryName: 'Pre-Construction',
     itemName: 'Building Permit',
     bidPrice: 15000,
@@ -51,7 +51,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 7,
+    projectId: 7,
     categoryName: 'Pre-Construction',
     itemName: 'Sewer Permit',
     bidPrice: 20000,
@@ -59,7 +59,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 8,
+    projectId: 8,
     categoryName: 'Pre-Construction',
     itemName: 'Building Permit',
     bidPrice: 35000,
@@ -67,7 +67,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 9,
+    projectId: 9,
     categoryName: 'Pre-Construction',
     itemName: 'Sewer Permit',
     bidPrice: 40000,
@@ -75,7 +75,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 1,
+    projectId: 1,
     categoryName: 'Site Work',
     itemName: 'Silt Fence',
     bidPrice: 1500,
@@ -83,7 +83,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 2,
+    projectId: 2,
     categoryName: 'Site Work',
     itemName: 'Basement Excavation',
     bidPrice: 3000,
@@ -91,7 +91,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 3,
+    projectId: 3,
     categoryName: 'Site Work',
     itemName: 'Site Grading',
     bidPrice: 5000,
@@ -99,7 +99,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 4,
+    projectId: 4,
     categoryName: 'Site Work',
     itemName: 'Silt Fence',
     bidPrice: 8000,
@@ -107,7 +107,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 5,
+    projectId: 5,
     categoryName: 'Site Work',
     itemName: 'Basement Excavation',
     bidPrice: 12000,
@@ -115,7 +115,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 6,
+    projectId: 6,
     categoryName: 'Site Work',
     itemName: 'Site Grading',
     bidPrice: 15000,
@@ -123,7 +123,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 7,
+    projectId: 7,
     categoryName: 'Site Work',
     itemName: 'Silt Fence',
     bidPrice: 20000,
@@ -131,7 +131,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 8,
+    projectId: 8,
     categoryName: 'Site Work',
     itemName: 'Basement Excavation',
     bidPrice: 35000,
@@ -139,7 +139,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 9,
+    projectId: 9,
     categoryName: 'Site Work',
     itemName: 'Site Grading',
     bidPrice: 40000,
@@ -148,17 +148,31 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
   },
 
   {
-    jobId: 1,
+    projectId: 1,
     categoryName: 'Framing',
     itemName: 'Wall Framing',
     bidPrice: 2000,
     spentToDate: 750,
     categoryComplete: false,
   },
-  { jobId: 2, categoryName: 'Framing', itemName: 'Roof', bidPrice: 4000, spentToDate: 2500, categoryComplete: false },
-  { jobId: 3, categoryName: 'Framing', itemName: 'Decks', bidPrice: 6000, spentToDate: 5500, categoryComplete: true },
   {
-    jobId: 4,
+    projectId: 2,
+    categoryName: 'Framing',
+    itemName: 'Roof',
+    bidPrice: 4000,
+    spentToDate: 2500,
+    categoryComplete: false,
+  },
+  {
+    projectId: 3,
+    categoryName: 'Framing',
+    itemName: 'Decks',
+    bidPrice: 6000,
+    spentToDate: 5500,
+    categoryComplete: true,
+  },
+  {
+    projectId: 4,
     categoryName: 'Framing',
     itemName: 'Install Windows',
     bidPrice: 8000,
@@ -166,17 +180,31 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 5,
+    projectId: 5,
     categoryName: 'Framing',
     itemName: 'Wall Framing',
     bidPrice: 10000,
     spentToDate: 6500,
     categoryComplete: false,
   },
-  { jobId: 6, categoryName: 'Framing', itemName: 'Roof', bidPrice: 15000, spentToDate: 3000, categoryComplete: false },
-  { jobId: 7, categoryName: 'Framing', itemName: 'Decks', bidPrice: 18000, spentToDate: 850, categoryComplete: true },
   {
-    jobId: 8,
+    projectId: 6,
+    categoryName: 'Framing',
+    itemName: 'Roof',
+    bidPrice: 15000,
+    spentToDate: 3000,
+    categoryComplete: false,
+  },
+  {
+    projectId: 7,
+    categoryName: 'Framing',
+    itemName: 'Decks',
+    bidPrice: 18000,
+    spentToDate: 850,
+    categoryComplete: true,
+  },
+  {
+    projectId: 8,
     categoryName: 'Framing',
     itemName: 'Install Windows',
     bidPrice: 25000,
@@ -184,7 +212,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 9,
+    projectId: 9,
     categoryName: 'Framing',
     itemName: 'Wall Framing',
     bidPrice: 35000,
@@ -192,7 +220,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 1,
+    projectId: 1,
     categoryName: 'Exterior Finishes',
     itemName: 'Exterior Painting',
     bidPrice: 1500,
@@ -200,7 +228,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 2,
+    projectId: 2,
     categoryName: 'Exterior Finishes',
     itemName: 'Siding',
     bidPrice: 2500,
@@ -208,7 +236,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 3,
+    projectId: 3,
     categoryName: 'Exterior Finishes',
     itemName: 'Install Windows',
     bidPrice: 5000,
@@ -216,7 +244,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 4,
+    projectId: 4,
     categoryName: 'Exterior Finishes',
     itemName: 'Shutters',
     bidPrice: 7000,
@@ -224,7 +252,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 5,
+    projectId: 5,
     categoryName: 'Exterior Finishes',
     itemName: 'Exterior Painting',
     bidPrice: 12000,
@@ -232,7 +260,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 6,
+    projectId: 6,
     categoryName: 'Exterior Finishes',
     itemName: 'Siding',
     bidPrice: 15000,
@@ -240,7 +268,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 7,
+    projectId: 7,
     categoryName: 'Exterior Finishes',
     itemName: 'Install Windows',
     bidPrice: 20000,
@@ -248,7 +276,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 8,
+    projectId: 8,
     categoryName: 'Exterior Finishes',
     itemName: 'Shutters',
     bidPrice: 35000,
@@ -256,7 +284,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 9,
+    projectId: 9,
     categoryName: 'Exterior Finishes',
     itemName: 'Exterior Painting',
     bidPrice: 40000,
@@ -264,7 +292,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 1,
+    projectId: 1,
     categoryName: 'Interior Finishes',
     itemName: 'Painting',
     bidPrice: 1500,
@@ -272,7 +300,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 2,
+    projectId: 2,
     categoryName: 'Interior Finishes',
     itemName: 'Carpet',
     bidPrice: 2500,
@@ -280,7 +308,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 3,
+    projectId: 3,
     categoryName: 'Interior Finishes',
     itemName: 'Laminate Flooring',
     bidPrice: 5000,
@@ -288,7 +316,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 4,
+    projectId: 4,
     categoryName: 'Interior Finishes',
     itemName: 'Hardwood Flooring',
     bidPrice: 7000,
@@ -296,7 +324,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 5,
+    projectId: 5,
     categoryName: 'Interior Finishes',
     itemName: 'Painting',
     bidPrice: 12000,
@@ -304,7 +332,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 6,
+    projectId: 6,
     categoryName: 'Interior Finishes',
     itemName: 'Carpet',
     bidPrice: 15000,
@@ -312,7 +340,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 7,
+    projectId: 7,
     categoryName: 'Interior Finishes',
     itemName: 'Laminate Flooring',
     bidPrice: 20000,
@@ -320,7 +348,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 8,
+    projectId: 8,
     categoryName: 'Interior Finishes',
     itemName: 'Hardwood Flooring',
     bidPrice: 35000,
@@ -328,7 +356,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 9,
+    projectId: 9,
     categoryName: 'Interior Finishes',
     itemName: 'Painting',
     bidPrice: 40000,
@@ -336,7 +364,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 1,
+    projectId: 1,
     categoryName: 'Mechanical',
     itemName: 'Furnace',
     bidPrice: 2500,
@@ -344,7 +372,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 2,
+    projectId: 2,
     categoryName: 'Mechanical',
     itemName: 'Hot Water Heater',
     bidPrice: 3000,
@@ -352,7 +380,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 3,
+    projectId: 3,
     categoryName: 'Mechanical',
     itemName: 'Gas Lines',
     bidPrice: 5000,
@@ -360,7 +388,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 4,
+    projectId: 4,
     categoryName: 'Mechanical',
     itemName: 'Plumbing',
     bidPrice: 7000,
@@ -368,7 +396,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 5,
+    projectId: 5,
     categoryName: 'Mechanical',
     itemName: 'Furnace',
     bidPrice: 12000,
@@ -376,7 +404,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 6,
+    projectId: 6,
     categoryName: 'Mechanical',
     itemName: 'Hot Water Heater',
     bidPrice: 15000,
@@ -384,7 +412,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 7,
+    projectId: 7,
     categoryName: 'Mechanical',
     itemName: 'Gas Lines',
     bidPrice: 20000,
@@ -392,7 +420,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 8,
+    projectId: 8,
     categoryName: 'Mechanical',
     itemName: 'Plumbing',
     bidPrice: 35000,
@@ -400,7 +428,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 9,
+    projectId: 9,
     categoryName: 'Mechanical',
     itemName: 'Furnace',
     bidPrice: 40000,
@@ -408,7 +436,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 1,
+    projectId: 1,
     categoryName: 'Electrical',
     itemName: 'Breakbox',
     bidPrice: 2500,
@@ -416,7 +444,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 2,
+    projectId: 2,
     categoryName: 'Electrical',
     itemName: 'Back-up Generator',
     bidPrice: 3500,
@@ -424,7 +452,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 3,
+    projectId: 3,
     categoryName: 'Electrical',
     itemName: 'Rough Wiring',
     bidPrice: 6000,
@@ -432,7 +460,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 4,
+    projectId: 4,
     categoryName: 'Electrical',
     itemName: 'Final Wiring',
     bidPrice: 8000,
@@ -440,7 +468,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 5,
+    projectId: 5,
     categoryName: 'Electrical',
     itemName: 'Breakbox',
     bidPrice: 12000,
@@ -448,7 +476,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 6,
+    projectId: 6,
     categoryName: 'Electrical',
     itemName: 'Back-up Generator',
     bidPrice: 15000,
@@ -456,7 +484,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 7,
+    projectId: 7,
     categoryName: 'Electrical',
     itemName: 'Rough Wiring',
     bidPrice: 20000,
@@ -464,7 +492,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: true,
   },
   {
-    jobId: 8,
+    projectId: 8,
     categoryName: 'Electrical',
     itemName: 'Final Wiring',
     bidPrice: 35000,
@@ -472,7 +500,7 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
     categoryComplete: false,
   },
   {
-    jobId: 9,
+    projectId: 9,
     categoryName: 'Electrical',
     itemName: 'Breakbox',
     bidPrice: 40000,
@@ -481,13 +509,18 @@ const ALLJOBCATEGORYITEMS: JobCategoryItemEntry[] = [
   },
 ];
 
-export function fetchItemsForCategories(category: string, jobId: number): Promise<JobCategoryItemEntry[]> {
+export function fetchItemsForCategories(
+  category: string,
+  projectId: number,
+): Promise<JobCategoryItemEntry[]> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       // Simulating a successful data load with a slight delay
       const success = true; // You can toggle this to simulate errors
       if (success) {
-        const specifiedItems = ALLJOBCATEGORYITEMS.filter((e) => e.jobId === jobId && category === e.categoryName);
+        const specifiedItems = ALLJOBCATEGORYITEMS.filter(
+          (e) => e.projectId === projectId && category === e.categoryName,
+        );
         resolve(specifiedItems);
       } else {
         reject(new Error('Failed to load data'));

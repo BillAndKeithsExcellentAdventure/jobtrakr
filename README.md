@@ -1,2 +1,3 @@
 # jobtrakr
-Job Tracker - React Native 
+
+Project Tracker - React Native

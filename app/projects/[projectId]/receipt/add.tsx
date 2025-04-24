@@ -1,0 +1,387 @@
+import { ActionButton } from '@/components/ActionButton';
+import BottomSheetContainer from '@/components/BottomSheetContainer';
+import { NumberInputField } from '@/components/NumberInputField';
+import OptionList, { OptionEntry } from '@/components/OptionList';
+import { OptionPickerItem } from '@/components/OptionPickerItem';
+import { TextField } from '@/components/TextField';
+import { Text, TextInput, View } from '@/components/Themed';
+import { useColorScheme } from '@/components/useColorScheme';
+import { Colors } from '@/constants/Colors';
+import { useAllRows as useAllConfigurationRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useAddRowCallback, ReceiptData } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { formatDate } from '@/utils/formatters';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Image, Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+const AddReceiptPage = () => {
+  const defaultDate = new Date();
+  const { projectId, jobName } = useLocalSearchParams<{ projectId: string; jobName: string }>();
+  const addReceipt = useAddRowCallback(projectId, 'receipts');
+  const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
+  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
+  const [vendors, setVendors] = useState<OptionEntry[]>([]);
+
+  const handleVendorOptionChange = (option: OptionEntry) => {
+    setPickedOption(option);
+    if (option) {
+      handleVendorChange(option.label);
+    }
+    setIsVendorListPickerVisible(false);
+  };
+
+  const router = useRouter();
+  const [jobReceipt, setJobReceipt] = useState<ReceiptData>({
+    id: '',
+    vendor: '',
+    description: '',
+    amount: 0,
+    numLineItems: 0,
+    receiptDate: defaultDate.getTime(),
+    thumbnail: '',
+    pictureDate: 0,
+    pictureUri: '',
+    notes: '',
+    markedComplete: false,
+  });
+
+  const colorScheme = useColorScheme();
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [canAddReceipt, setCanAddReceipt] = useState(false);
+  const allVendors = useAllConfigurationRows('vendors');
+
+  useEffect(() => {
+    if (allVendors && allVendors.length > 0) {
+      const vendorOptions: OptionEntry[] = allVendors.map((vendor) => ({
+        label: `${vendor.name} ${
+          vendor.address ? ` - ${vendor.address}` : vendor.city ? ` - ${vendor.city}` : ''
+        }`,
+        value: vendor.id,
+      }));
+
+      setVendors(vendorOptions);
+    } else {
+      setVendors([]);
+    }
+  }, [allVendors]);
+
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            background: Colors.dark.background,
+            borderColor: Colors.dark.inputBorder,
+            modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
+            neutral200: Colors.dark.neutral200,
+            transparent: Colors.dark.transparent,
+          }
+        : {
+            background: Colors.light.background,
+            borderColor: Colors.light.inputBorder,
+            modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
+            neutral200: Colors.light.neutral200,
+            transparent: Colors.light.transparent,
+          },
+    [colorScheme],
+  );
+
+  const showDatePicker = () => {
+    setDatePickerVisible(true);
+  };
+
+  const hideDatePicker = () => {
+    setDatePickerVisible(false);
+  };
+
+  const handleDateConfirm = useCallback((date: Date) => {
+    setJobReceipt((prevReceipt) => ({
+      ...prevReceipt,
+      date,
+    }));
+
+    hideDatePicker();
+  }, []);
+
+  const handleAmountChange = useCallback((amount: number) => {
+    setJobReceipt((prevReceipt) => ({
+      ...prevReceipt,
+      amount,
+    }));
+  }, []);
+
+  const handleVendorChange = useCallback((vendor: string) => {
+    setJobReceipt((prevReceipt) => ({
+      ...prevReceipt,
+      vendor,
+    }));
+  }, []);
+
+  const handleDescriptionChange = useCallback((description: string) => {
+    setJobReceipt((prevReceipt) => ({
+      ...prevReceipt,
+      description,
+    }));
+  }, []);
+
+  const handleNotesChange = useCallback((notes: string) => {
+    setJobReceipt((prevReceipt) => ({
+      ...prevReceipt,
+      notes,
+    }));
+  }, []);
+
+  useEffect(() => {
+    setCanAddReceipt(
+      (jobReceipt.amount > 0 && !!jobReceipt.vendor && !!jobReceipt.description) || !!jobReceipt.pictureUri,
+    );
+  }, [jobReceipt]);
+
+  const handleAddReceipt = useCallback(async () => {
+    if (!canAddReceipt) return;
+
+    const result = addReceipt(jobReceipt);
+
+    if (result.status !== 'Success') {
+      console.log('Add Project receipt failed:', jobReceipt);
+    }
+    router.back();
+  }, [jobReceipt, canAddReceipt]);
+
+  const dismissKeyboard = useCallback(() => {
+    Keyboard.dismiss();
+  }, []);
+
+  const handleCaptureImage = useCallback(async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      Alert.alert("You've refused to allow this app to access your camera!");
+      return;
+    }
+
+    const response = await ImagePicker.launchCameraAsync();
+
+    if (!response.canceled) {
+      const asset = response.assets[0];
+      if (!response.assets || response.assets.length === 0 || !asset) return;
+      setJobReceipt((prevReceipt) => ({
+        ...prevReceipt,
+        pictureUri: asset.uri,
+        assetId: asset.assetId ?? undefined,
+      }));
+    }
+  }, []);
+
+  return (
+    <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={{ flex: 1 }}>
+      <Stack.Screen options={{ title: 'Add Receipt', headerShown: false }} />
+      <View
+        style={[
+          styles.container,
+          styles.modalBackground,
+          { backgroundColor: colors.modalOverlayBackgroundColor },
+        ]}
+      >
+        <TouchableWithoutFeedback onPress={dismissKeyboard}>
+          <View style={[styles.modalContainer, { marginTop: 30 }]}>
+            <Text txtSize="sub-title" style={styles.modalTitle} text={jobName} />
+            <Text txtSize="title" style={styles.modalTitle} text="Add Receipt" />
+
+            <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.borderColor }}>
+              <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
+                <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
+                <TextInput
+                  readOnly={true}
+                  style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                  placeholder="Date"
+                  onPressIn={showDatePicker}
+                  value={formatDate(jobReceipt.receiptDate)}
+                />
+              </TouchableOpacity>
+              <DateTimePickerModal
+                style={{ alignSelf: 'stretch' }}
+                date={jobReceipt.receiptDate ? new Date(jobReceipt.receiptDate) : defaultDate}
+                isVisible={datePickerVisible}
+                mode="date"
+                onConfirm={handleDateConfirm}
+                onCancel={hideDatePicker}
+              />
+
+              {vendors && vendors.length ? (
+                <OptionPickerItem
+                  containerStyle={styles.inputContainer}
+                  optionLabel={jobReceipt.vendor}
+                  label="Vendor"
+                  placeholder="Vendor"
+                  onOptionLabelChange={handleVendorChange}
+                  onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
+                />
+              ) : (
+                <TextField
+                  containerStyle={styles.inputContainer}
+                  style={[styles.input, { borderColor: colors.transparent }]}
+                  placeholder="Vendor"
+                  label="Vendor"
+                  value={jobReceipt.vendor}
+                  onChangeText={handleVendorChange}
+                />
+              )}
+
+              <NumberInputField
+                style={styles.inputContainer}
+                placeholder="Amount"
+                label="Amount"
+                value={jobReceipt.amount}
+                onChange={handleAmountChange}
+              />
+              <TextField
+                containerStyle={styles.inputContainer}
+                style={[styles.input, { borderColor: colors.transparent }]}
+                placeholder="Description"
+                label="Description"
+                value={jobReceipt.description}
+                onChangeText={handleDescriptionChange}
+              />
+              <TextField
+                containerStyle={styles.inputContainer}
+                style={[styles.input, { borderColor: colors.transparent }]}
+                placeholder="Notes"
+                label="Notes"
+                value={jobReceipt.notes}
+                onChangeText={handleNotesChange}
+              />
+
+              {jobReceipt.pictureUri && (
+                <>
+                  <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                    <Image
+                      source={{ uri: jobReceipt.pictureUri }}
+                      style={{ width: 275, height: 180, marginVertical: 10 }}
+                    />
+                  </View>
+                </>
+              )}
+
+              <View style={styles.takePictureButtonRow}>
+                <ActionButton
+                  style={styles.saveButton}
+                  onPress={handleCaptureImage}
+                  type={'action'}
+                  title={jobReceipt.pictureUri ? 'Retake Picture' : 'Take Picture'}
+                />
+              </View>
+            </View>
+
+            <View style={styles.saveButtonRow}>
+              <ActionButton
+                style={styles.saveButton}
+                onPress={handleAddReceipt}
+                type={canAddReceipt ? 'ok' : 'disabled'}
+                title="Save"
+              />
+
+              <ActionButton
+                style={styles.cancelButton}
+                onPress={() => {
+                  setJobReceipt({
+                    id: '',
+                    vendor: '',
+                    description: '',
+                    amount: 0,
+                    numLineItems: 0,
+                    receiptDate: defaultDate.getTime(),
+                    thumbnail: '',
+                    pictureDate: 0,
+                    pictureUri: '',
+                    notes: '',
+                    markedComplete: false,
+                  });
+                  router.back();
+                }}
+                type={'cancel'}
+                title="Cancel"
+              />
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+        {vendors && isVendorListPickerVisible && (
+          <BottomSheetContainer
+            isVisible={isVendorListPickerVisible}
+            onClose={() => setIsVendorListPickerVisible(false)}
+          >
+            <OptionList
+              options={vendors}
+              onSelect={(option) => handleVendorOptionChange(option)}
+              selectedOption={pickedOption}
+            />
+          </BottomSheetContainer>
+        )}
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  modalBackground: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  container: {
+    flex: 1,
+    justifyContent: 'flex-start', // Align items at the top vertically
+    alignItems: 'center', // Center horizontally
+    width: '100%',
+  },
+  modalContainer: {
+    maxWidth: 550,
+    width: '90%',
+    padding: 10,
+    borderRadius: 20,
+  },
+  modalTitle: {
+    textAlign: 'center',
+  },
+  inputContainer: {
+    marginTop: 6,
+  },
+  inputLabel: {
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  input: {
+    borderWidth: 1,
+    alignContent: 'stretch',
+    justifyContent: 'center',
+    borderRadius: 5,
+  },
+  dateInput: {
+    borderWidth: 1,
+    alignContent: 'stretch',
+    justifyContent: 'center',
+    borderRadius: 5,
+    paddingHorizontal: 8,
+    height: 40,
+    paddingVertical: 0,
+  },
+  takePictureButtonRow: {
+    flexDirection: 'row',
+    marginTop: 10,
+  },
+  saveButtonRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  saveButton: {
+    flex: 1,
+    marginRight: 5,
+  },
+  cancelButton: {
+    flex: 1,
+    marginLeft: 5,
+  },
+});
+
+export default AddReceiptPage;
