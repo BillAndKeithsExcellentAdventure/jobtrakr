@@ -30,10 +30,10 @@ export interface WorkCategoryData {
 
 export interface WorkItemData {
   id: string;
-  categoryId?: string; // id of WorkCategoryData
+  categoryId: string; // id of WorkCategoryData
   code: string;
   name: string;
-  status?: string;
+  status: string;
 }
 
 export interface ProjectTemplateData {

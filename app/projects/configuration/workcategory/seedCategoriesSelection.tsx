@@ -2,10 +2,14 @@ import OkayCancelButtons from '@/components/OkayCancelButtons';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { useTableValue, useUpdateRowCallback } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  useTableValue,
+  useUpdateRowCallback,
+  useAddRowCallback,
+} from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SeedProjectWorkItems } from '@/constants/seedWorkItems';
@@ -18,7 +22,9 @@ export interface ProjectTypesPickerEntry {
 
 const SeedWorkItemSelectorPage = () => {
   const router = useRouter();
-  const [selectedProjectType, setSelectedProjectType] = useState<string>('');
+  const addWorkCategory = useAddRowCallback('categories');
+  const addWorkItem = useAddRowCallback('workItems');
+  const [selectedProjectType, setSelectedProjectType] = useState<string>('None');
   const colorScheme = useColorScheme();
   const projectTypes = useMemo(() => {
     const types: ProjectTypesPickerEntry[] = [];
@@ -44,10 +50,51 @@ const SeedWorkItemSelectorPage = () => {
   );
 
   const handleSave = () => {
-    //TODO: Implement the save logic
+    if (!selectedProjectType || selectedProjectType === 'None') {
+      return;
+    }
 
-    // Go back to the categories list screen
-    router.back();
+    const selectedProjectTypeData = SeedProjectWorkItems.find(
+      (item) => item.projectType === selectedProjectType,
+    );
+    if (!selectedProjectTypeData) {
+      return;
+    }
+    Alert.alert('Add Multiple Categories and WorkItems ', 'Are you sure you want to continue?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Add',
+        onPress: () => {
+          for (const category of selectedProjectTypeData.categories) {
+            const workCategory = {
+              name: category.name,
+              code: category.code.toString(),
+              status: 'active',
+              id: '',
+            };
+            const result = addWorkCategory(workCategory);
+            if (result && result.id) {
+              const workItems = category.workItems.map((item) => ({
+                name: item.name,
+                code: item.code.toString(),
+                status: 'active',
+                id: '',
+                categoryId: result.id,
+              }));
+              for (const workItem of workItems) {
+                const itemResult = addWorkItem(workItem);
+                if (itemResult.status !== 'Success') {
+                  console.error(`Failed to add work item: ${workItem.name} ${itemResult.msg}`);
+                }
+              }
+            }
+          }
+
+          // Go back to the categories list screen
+          router.back();
+        },
+      },
+    ]);
   };
 
   return (
@@ -60,7 +107,7 @@ const SeedWorkItemSelectorPage = () => {
       />
       <View style={styles.container}>
         <TextField
-          label="Select Project Type"
+          label="Selected Project Type"
           style={[styles.input, { borderColor: colors.neutral200 }]}
           value={selectedProjectType}
           readOnly
@@ -92,17 +139,6 @@ const SeedWorkItemSelectorPage = () => {
                     <Text style={{ fontSize: 14 }}>{item.description}</Text>
                   </View>
                 </Pressable>
-              )}
-              ListEmptyComponent={() => (
-                <View
-                  style={{
-                    padding: 20,
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text txtSize="title" text="No work categories found." />
-                  <Text text="Use the '+' in the upper right to add one." />
-                </View>
               )}
             />
           </View>
