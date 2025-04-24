@@ -151,6 +151,12 @@ const ListWorkCategories = () => {
               >
                 <Text txtSize="title" text="No work categories found." />
                 <Text text="Use the '+' in the upper right to add one." />
+                <ActionButton
+                  style={{ zIndex: 1, marginTop: 10 }}
+                  onPress={() => router.push(`/projects/configuration/workcategory/seedCategoriesSelection/`)}
+                  type="action"
+                  title="Or, use one of our sets of Work Categories..."
+                />
               </View>
             )}
           />
