@@ -13,19 +13,56 @@ import {
   useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useAllRows as useAllRowsConfiguration } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { Alert, StyleSheet, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AddReceiptLineItemPage = () => {
   const router = useRouter();
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
   const allReceipts = useAllRows(projectId, 'receipts');
+  const allWorkItemCostSummaries = useAllRows(projectId, 'workItemSummaries');
   const allLineItemCostEntries = useAllRows(projectId, 'workItemCostEntries');
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
   const updateLineItem = useUpdateRowCallback(projectId, 'workItemCostEntries');
   const deleteLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
+  const allWorkItems = useAllRowsConfiguration('workItems');
+  const allWorkCategories = useAllRowsConfiguration('categories');
+
+  const availableCategoriesOptions: OptionEntry[] = useMemo(() => {
+    // get a list of all unique workitemids from allWorkItemCostSummaries available in the project
+    const uniqueWorkItemIds = allWorkItemCostSummaries.map((item) => item.workItemId);
+
+    // now get list of all unique categoryIds from allWorkItems given list of uniqueWorkItemIds
+    const uniqueCategoryIds = allWorkItems
+      .filter((item) => uniqueWorkItemIds.includes(item.id))
+      .map((item) => item.categoryId);
+
+    // now get an array of OptionEntry for each entry in uniqueCategoryIds using allWorkCategories
+    const uniqueCategories = allWorkCategories
+      .filter((item) => uniqueCategoryIds.includes(item.id))
+      .map((item) => ({
+        label: item.name,
+        value: item.id,
+      }));
+    return uniqueCategories;
+  }, [allWorkItemCostSummaries, allWorkItems, allWorkCategories]);
+
+  const allAvailableCostItemOptions: OptionEntry[] = useMemo(() => {
+    const uniqueWorkItemIds = allWorkItemCostSummaries.map((item) => item.workItemId);
+    const uniqueWorkItems = allWorkItems.filter((item) => uniqueWorkItemIds.includes(item.id));
+    const uniqueCostItems = uniqueWorkItems.map((item) => {
+      const category = allWorkCategories.find((o) => o.id === item.categoryId);
+      const categoryCode = category ? `${category.code}.` : '';
+      return {
+        label: `${categoryCode}${item.code} - ${item.name}`,
+        value: item.id,
+      };
+    });
+    return uniqueCostItems;
+  }, [allWorkItemCostSummaries, allWorkItems]);
 
   const colorScheme = useColorScheme();
   const colors = useMemo(
@@ -46,34 +83,27 @@ const AddReceiptLineItemPage = () => {
 
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
-  const [categories, setCategories] = useState<OptionEntry[]>([
-    { label: 'Site', value: 1 },
-    { label: 'Concrete', value: 2 },
-    { label: 'Framing', value: 3 },
-    { label: 'Window & Doors', value: 4 },
-    { label: 'Plumbing', value: 5 },
-    { label: 'HVAC', value: 6 },
-    { label: 'Wiring', value: 7 },
-    { label: 'Other', value: 999 },
-  ]);
 
   const [isSubCategoryPickerVisible, setIsSubCategoryPickerVisible] = useState<boolean>(false);
-  const [pickedSubCategoryOption, setSubPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
-  const [subCategories, setSubCategories] = useState<OptionEntry[]>([
-    { label: 'Not Specified', value: 0 },
-    { label: 'Other', value: 999 },
-  ]);
+  const [pickedSubCategoryOption, setPickedSubCategoryOption] = useState<OptionEntry | undefined>(undefined);
+  const [subCategories, setSubCategories] = useState<OptionEntry[]>([]);
+
+  useEffect(() => {
+    if (pickedCategoryOption === undefined || pickedCategoryOption.value === '') {
+      setSubCategories(allAvailableCostItemOptions);
+    }
+  }, [pickedCategoryOption, allAvailableCostItemOptions]);
 
   const handleSubCategoryOptionChange = (option: OptionEntry) => {
     if (option) {
-      handleSubCategoryChange(option.label);
+      handleSubCategoryChange(option);
     }
     setIsSubCategoryPickerVisible(false);
   };
 
   const handleCategoryOptionChange = (option: OptionEntry) => {
     if (option) {
-      handleCategoryChange(option.label);
+      handleCategoryChange(option);
     }
     setIsCategoryPickerVisible(false);
   };
@@ -89,20 +119,42 @@ const AddReceiptLineItemPage = () => {
 
   const [itemizedEntry, setItemizedEntry] = useState<WorkItemCostEntry>(initItemizedEntry);
 
-  const handleSubCategoryChange = useCallback((selectedSubCategory: string) => {}, []);
+  const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
+    setPickedSubCategoryOption(selectedSubCategory);
+  }, []);
 
-  const handleCategoryChange = useCallback((selectedCategory: string) => {}, []);
+  const handleCategoryChange = useCallback(
+    (selectedCategory: OptionEntry) => {
+      setPickedCategoryOption(selectedCategory);
+      if (selectedCategory) {
+        const workItems = allWorkItems.filter((item) => item.categoryId === selectedCategory.value);
+        const subCategories = workItems.map((item) => {
+          return allAvailableCostItemOptions.find((o) => o.value === item.id) ?? { label: '', value: '' };
+        });
 
-  /*
-  useEffect(() => {
-    const match = categories.find((o) => o.label === itemizedEntry.category);
-    setPickedCategoryOption(match);
-  }, [itemizedEntry, categories]);
-*/
+        setSubCategories(subCategories);
+        setPickedSubCategoryOption(undefined);
+      }
+    },
+    [availableCategoriesOptions, allWorkItems],
+  );
+
   const handleOkPress = useCallback(async () => {
-    //updateReceiptItem(itemizedEntry._id, itemizedEntry);
+    if (!itemizedEntry.label || !itemizedEntry.amount || !pickedSubCategoryOption) {
+      Alert.alert('Error', 'Please fill in all required fields.');
+      return;
+    }
+    const newItemizedEntry: WorkItemCostEntry = {
+      ...itemizedEntry,
+      workItemId: pickedSubCategoryOption.value,
+    };
+    const result = addLineItem(newItemizedEntry);
+    if (result.status !== 'Success') {
+      Alert.alert('Error', 'Failed to add line item.');
+      return;
+    }
     router.back();
-  }, [itemizedEntry]);
+  }, [itemizedEntry, pickedSubCategoryOption]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1, overflowY: 'hidden' }}>
@@ -115,7 +167,7 @@ const AddReceiptLineItemPage = () => {
           onChange={(value: number): void => {
             setItemizedEntry((prevItem) => ({
               ...prevItem,
-              Amount: value,
+              amount: value,
             }));
           }}
         />
@@ -127,29 +179,36 @@ const AddReceiptLineItemPage = () => {
           onChangeText={(text): void => {
             setItemizedEntry((prevItem) => ({
               ...prevItem,
-              Description: text,
+              label: text,
             }));
           }}
         />
         <OptionPickerItem
           containerStyle={styles.inputContainer}
-          optionLabel=""
+          optionLabel={pickedCategoryOption?.label}
           label="Category"
           placeholder="Category"
-          onOptionLabelChange={handleCategoryChange}
+          editable={false}
           onPickerButtonPress={() => setIsCategoryPickerVisible(true)}
         />
         <OptionPickerItem
           containerStyle={styles.inputContainer}
-          optionLabel=""
-          label="Sub-category"
-          placeholder="Sub-category"
-          onOptionLabelChange={handleSubCategoryChange}
+          optionLabel={pickedSubCategoryOption?.label}
+          label="Cost Item Type"
+          placeholder="Cost Item Type"
+          editable={false}
           onPickerButtonPress={() => setIsSubCategoryPickerVisible(true)}
         />
 
         <View style={styles.saveButtonRow}>
-          <ActionButton style={styles.saveButton} onPress={handleOkPress} type={'ok'} title="Save" />
+          <ActionButton
+            style={styles.saveButton}
+            onPress={handleOkPress}
+            type={
+              !itemizedEntry.label || !itemizedEntry.amount || !pickedSubCategoryOption ? 'disabled' : 'ok'
+            }
+            title="Save"
+          />
 
           <ActionButton
             style={styles.cancelButton}
@@ -166,7 +225,7 @@ const AddReceiptLineItemPage = () => {
             onClose={() => setIsCategoryPickerVisible(false)}
           >
             <OptionList
-              options={categories}
+              options={availableCategoriesOptions}
               onSelect={(option) => handleCategoryOptionChange(option)}
               selectedOption={pickedCategoryOption}
             />
@@ -178,6 +237,8 @@ const AddReceiptLineItemPage = () => {
             onClose={() => setIsSubCategoryPickerVisible(false)}
           >
             <OptionList
+              centerOptions={false}
+              boldSelectedOption={false}
               options={subCategories}
               onSelect={(option) => handleSubCategoryOptionChange(option)}
               selectedOption={pickedSubCategoryOption}

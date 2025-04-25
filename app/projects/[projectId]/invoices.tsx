@@ -28,7 +28,7 @@ const ProjectInvoicesPage = () => {
         <Stack.Screen options={{ title: `Project Invoices`, headerShown: true }} />
         <View style={styles.headerContainer}>
           {!projectIsReady ? (
-            <Text>Waiting....ices</Text>
+            <Text>Waiting....</Text>
           ) : (
             <>
               <Text>ProjectName={projectName}</Text>
