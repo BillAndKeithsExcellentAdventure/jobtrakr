@@ -1,19 +1,15 @@
 import OkayCancelButtons from '@/components/OkayCancelButtons';
-import { Text, TextInput, View } from '@/components/Themed';
+import { TextField } from '@/components/TextField';
+import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import {
-  useTableValue,
-  useUpdateRowCallback,
-  useAddRowCallback,
-} from '@/tbStores/configurationStore/ConfigurationStoreHooks';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import { SeedProjectWorkItems } from '@/constants/seedWorkItems';
+import { useAddRowCallback } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import { Stack, useRouter } from 'expo-router';
+import React, { useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SeedProjectWorkItems } from '@/constants/seedWorkItems';
-import { TextField } from '@/components/TextField';
 
 export interface ProjectTypesPickerEntry {
   projectType: string;

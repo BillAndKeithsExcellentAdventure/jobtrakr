@@ -76,7 +76,7 @@ const ProjectDetailsPage = () => {
     if (allWorkItemSummaries.length > 0 || !seedWorkItems) return;
 
     const workItemIds = seedWorkItems.split(',');
-    console.log('Initializing project with the following workitems.', workItemIds);
+    //console.log('Initializing project with the following workitems.', workItemIds);
     setSeedWorkItems(''); // Clear the seedWorkItems after seeding
     for (const workItemId of workItemIds) {
       if (!workItemId) continue;
@@ -185,7 +185,7 @@ const ProjectDetailsPage = () => {
     (menuItem: string, actionContext: any) => {
       setHeaderMenuModalVisible(false);
       if (menuItem === 'Edit' && projectId) {
-        router.push(`/projects/${projectId}/edit/?projectName=${projectData!.name}`);
+        router.push(`/projects/${projectId}/edit/?projectName=${encodeURIComponent(projectData!.name)}`);
         return;
       } else if (menuItem === 'Delete' && projectId) {
         Alert.alert('Delete Project', 'Are you sure you want to delete this project?', [

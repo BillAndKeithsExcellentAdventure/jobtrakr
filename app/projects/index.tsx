@@ -135,7 +135,9 @@ export default function ProjectHomeScreen() {
           if (isEntry(actionContext)) {
             if (actionContext && actionContext.entryId)
               router.push(
-                `/projects/${actionContext.entryId}/notes/?projectName=${actionContext.primaryTitle}`,
+                `/projects/${actionContext.entryId}/notes/?projectName=${encodeURIComponent(
+                  actionContext.primaryTitle,
+                )}`,
               );
           }
         },
@@ -147,7 +149,9 @@ export default function ProjectHomeScreen() {
           if (isEntry(actionContext)) {
             if (actionContext && actionContext.entryId)
               router.push(
-                `/projects/${actionContext.entryId}/photos/?projectName=${actionContext.primaryTitle}`,
+                `/projects/${actionContext.entryId}/photos/?projectName=${encodeURIComponent(
+                  actionContext.primaryTitle,
+                )}`,
               );
           }
         },
@@ -159,7 +163,9 @@ export default function ProjectHomeScreen() {
           if (isEntry(actionContext)) {
             if (actionContext && actionContext.entryId)
               router.push(
-                `/projects/${actionContext.entryId}/receipts/?projectName=${actionContext.primaryTitle}`,
+                `/projects/${actionContext.entryId}/receipts/?projectName=${encodeURIComponent(
+                  actionContext.primaryTitle,
+                )}`,
               );
           }
         },
@@ -171,7 +177,9 @@ export default function ProjectHomeScreen() {
         onPress: (e, actionContext) => {
           if (actionContext && actionContext.entryId)
             router.push(
-              `/projects/${actionContext.entryId}/invoices/?projectName=${actionContext.primaryTitle}`,
+              `/projects/${actionContext.entryId}/invoices/?projectName=${encodeURIComponent(
+                actionContext.primaryTitle,
+              )}`,
             );
         },
       },
