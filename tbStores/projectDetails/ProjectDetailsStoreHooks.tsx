@@ -70,6 +70,7 @@ export interface MediaEntryData {
   deviceName: string;
   mediaType: string;
   mediaUri: string;
+  thumbnail: string;
 }
 
 export interface NoteData {

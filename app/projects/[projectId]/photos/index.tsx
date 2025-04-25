@@ -10,6 +10,7 @@ import { Colors } from '@/constants/Colors';
 import { useProjectValue } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { useAddImageCallback } from '@/utils/images';
 import { ShareFiles } from '@/utils/sharing';
+import { MediaAssets } from '@/utils/mediaAssets';
 import { Entypo, Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import * as MediaLibrary from 'expo-media-library';
@@ -18,8 +19,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Button, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useIsStoreAvailableCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import {
+  useAddRowCallback,
+  useIsStoreAvailableCallback,
+} from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
+import { MediaEntryData, useAllRows } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useProject, useUpdateProjectCallback } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 
 export type PhotoCapturedCallback = (asset: MediaLibrary.Asset) => void;
 
@@ -30,12 +36,14 @@ type AssetsItem = {
 };
 
 let gAssetItems: AssetsItem[] = [];
-let gProjectAssetItems: AssetsItem[] = [];
 
 const ProjectPhotosPage = () => {
-  /*
   const router = useRouter();
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
+  const allProjectMedia = useAllRows(projectId, 'mediaEntries');
+  const currentProject = useProject(projectId);
+
+  // Need to evaluate if these items are used
   const [projectAssets, setProjectAssets] = useState<AssetsItem[] | undefined>(undefined);
   const [assetItems, setAssetItems] = useState<AssetsItem[] | undefined>(undefined);
   const mediaTools = useRef<MediaAssets | null>(null);
@@ -53,6 +61,9 @@ const ProjectPhotosPage = () => {
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
   const [, setThumbnail] = useProjectValue(projectId, 'thumbnail');
   const addPhotoImage = useAddImageCallback();
+  const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
+
+  // Bottom need to evaluate if these items are used
 
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
@@ -95,31 +106,6 @@ const ProjectPhotosPage = () => {
     loadMediaAssetsObj();
   }, []);
 
-  useEffect(() => {
-    async function loadMedia(projectId: string) {
-      setProjectAssets(undefined);
-      gProjectAssetItems.length = 0;
-
-      const result = await jobDbHost?.GetPictureBucketDB().FetchProjectAssets(projectId);
-      console.log(
-        `Fetched ${result?.assets?.length}:${
-          result?.assets?.at(0)?.asset?.creationTime
-        } assets for project ${projectName}`,
-      );
-      console.log('   result:', result);
-      if (result?.status === 'Success' && result && result.assets && result.assets.length > 0) {
-        gProjectAssetItems = result.assets.map((asset) => ({
-          _id: asset._id!,
-          selected: false,
-          asset: asset.asset!,
-        }));
-        setProjectAssets(gProjectAssetItems);
-      }
-    }
-
-    loadMedia(projectId);
-  }, [projectId, jobDbHost]);
-
   const OnStatusUpdate = useCallback(
     (status: string) => {
       setFetchStatus(status);
@@ -144,13 +130,14 @@ const ProjectPhotosPage = () => {
           onPress: async () => {
             try {
               setLoadingNearest(true);
-              const location = await jobDbHost?.GetProjectDB().FetchProjectLocation(projectId);
-              if (location) {
+              const lat = currentProject?.latitude;
+              const long = currentProject?.longitude;
+              if (lat != 0 && long != 0) {
                 setShowAssetItems(true); // Show the panel when assets are loaded
                 const foundAssets: MediaLibrary.Asset[] | undefined =
                   await mediaTools.current?.getAllAssetsNearLocation(
-                    location.longitude,
-                    location.latitude,
+                    long!,
+                    lat!,
                     100, // Need to make this configurable
                     OnStatusUpdate,
                   );
@@ -158,7 +145,8 @@ const ProjectPhotosPage = () => {
                 if (foundAssets) {
                   // Filter out assets that are already in projectAssets
                   const filteredAssets = foundAssets.filter(
-                    (foundAsset) => !projectAssets?.some((projectAsset) => projectAsset.asset.id === foundAsset.id),
+                    (foundAsset) =>
+                      !projectAssets?.some((projectAsset) => projectAsset.asset.id === foundAsset.id),
                   );
 
                   const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
@@ -228,7 +216,7 @@ const ProjectPhotosPage = () => {
         const paths = assets.map((asset) => asset.asset.uri);
         await ShareFiles(paths);
       } catch (error) {
-        await logError(`Error creating/sharing file: ${error}`);
+        console.error(`Error creating/sharing file: ${error}`);
       }
     }
   }, [projectAssets]);
@@ -287,11 +275,22 @@ const ProjectPhotosPage = () => {
           // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
           const imageAddResult = await addPhotoImage(asset.asset.uri, projectId, 'photo');
           console.log('Finished adding Photo.', imageAddResult);
+          if (imageAddResult.status === 'Success') {
+            let tn = '';
+            if (imageAddResult.uri) {
+              let tn = await mediaTools.current?.createThumbnail(imageAddResult?.uri, projectName, 100, 100);
+            }
 
-          const status = await jobDbHost?.GetPictureBucketDB().InsertPicture(projectId, asset.asset);
-          if (status?.status === 'Success') {
-            gProjectAssetItems = gProjectAssetItems?.concat({ _id: status.id, selected: false, asset: asset.asset });
-            setProjectAssets(gProjectAssetItems);
+            const newPhoto: MediaEntryData = {
+              id: '',
+              assetId: imageAddResult.id ?? '',
+              deviceName: 'Device Name', // TODO: Get the device name
+              mediaType: asset.asset.mediaType,
+              mediaUri: imageAddResult.uri ?? '',
+              thumbnail: tn,
+            };
+
+            const status = addPhotoData(newPhoto);
           }
         }
       }
@@ -299,7 +298,7 @@ const ProjectPhotosPage = () => {
       setShowAssetItems(false); // Hide the panel after adding
       assetItems.length = 0; // Clear the assets
     }
-  }, [assetItems, projectId, jobDbHost, hasSelectedAssets]);
+  }, [assetItems, projectId, hasSelectedAssets]);
 
   const OnRemoveFromProjectClicked = useCallback(async () => {
     Alert.alert('Remove Photos', 'Are you sure you want to remove these photos from this project?', [
@@ -310,9 +309,6 @@ const ProjectPhotosPage = () => {
           if (projectAssets) {
             for (const asset of projectAssets) {
               if (asset.selected) {
-                await jobDbHost?.GetPictureBucketDB().RemovePicture(asset._id);
-                gProjectAssetItems = gProjectAssetItems?.filter((item) => item._id !== asset._id);
-                setProjectAssets(gProjectAssetItems);
               }
             }
 
@@ -321,7 +317,7 @@ const ProjectPhotosPage = () => {
         },
       },
     ]);
-  }, [projectAssets, projectId, jobDbHost]);
+  }, [projectAssets, projectId]);
 
   const handleClose = useCallback(() => {
     setShowAssetItems(false);
@@ -434,7 +430,9 @@ const ProjectPhotosPage = () => {
       } else if (type === 'photo') {
         console.log(`photoDate=${photoDate}`);
         const dateString = photoDate ?? 'No Date Info Available';
-        router.push(`/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${projectName}&photoDate=${dateString}`);
+        router.push(
+          `/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${projectName}&photoDate=${dateString}`,
+        );
       }
     },
     [],
@@ -448,7 +446,9 @@ const ProjectPhotosPage = () => {
 
   const onProjectAllOrClearChanged = useCallback(async () => {
     if (numSelectedProjectAssets > 0) {
-      setProjectAssets((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: false } as AssetsItem)));
+      setProjectAssets((prevAssets) =>
+        prevAssets?.map((item) => ({ ...item, selected: false } as AssetsItem)),
+      );
     } else {
       setProjectAssets((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: true })));
     }
@@ -456,11 +456,27 @@ const ProjectPhotosPage = () => {
 
   const handlePhotoCaptured: PhotoCapturedCallback = async (asset) => {
     if (asset) {
-      const status = await jobDbHost?.GetPictureBucketDB().InsertPicture(projectId, asset);
-      if (status?.status === 'Success') {
-        console.log();
-        gProjectAssetItems = gProjectAssetItems?.concat({ _id: status.id, selected: false, asset: asset });
-        setProjectAssets(gProjectAssetItems);
+      console.log('Adding a new Photo.', asset.uri);
+      // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
+      const imageAddResult = await addPhotoImage(asset.uri, projectId, 'photo');
+      console.log('Finished adding Photo.', imageAddResult);
+      if (imageAddResult.status === 'Success') {
+        let tn = '';
+        if (imageAddResult.uri) {
+          let tn = await mediaTools.current?.createThumbnail(imageAddResult?.uri, projectName, 100, 100);
+        }
+
+        const newPhoto: MediaEntryData = {
+          id: '',
+          assetId: imageAddResult.id ?? '',
+          deviceName: 'Device Name', // TODO: Get the device name
+          mediaType: asset.mediaType,
+          mediaUri: imageAddResult.uri ?? '',
+          thumbnail: tn,
+        };
+
+        const status = addPhotoData(newPhoto);
+        console.log('Finished adding Photo.', status);
       }
     }
   };
@@ -481,6 +497,7 @@ const ProjectPhotosPage = () => {
     }
   }, [assetItems, hasSelectedAssets]);
 
+  /*
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen
@@ -568,7 +585,11 @@ const ProjectPhotosPage = () => {
                         )}
                       </Pressable>
                       <Text>
-                        {!showAssetItems ? (numSelectedProjectAssets > 0 ? 'Clear Selection' : 'Select All') : ''}
+                        {!showAssetItems
+                          ? numSelectedProjectAssets > 0
+                            ? 'Clear Selection'
+                            : 'Select All'
+                          : ''}
                       </Text>
                     </View>
                     <View style={{ justifyContent: 'center', alignItems: 'center' }}>
@@ -747,19 +768,8 @@ const ProjectPhotosPage = () => {
     </SafeAreaView>
   );
   */
-  return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: 'Project Photos',
-        }}
-      />
-      <View style={styles.headerInfo}>
-        <Text>Project Photos Page - Under Construction</Text>
-      </View>
-    </SafeAreaView>
-  );
+
+  return <Text>Loading...</Text>;
 };
 
 const styles = StyleSheet.create({
