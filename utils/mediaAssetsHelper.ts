@@ -1,18 +1,15 @@
 import * as MediaLibrary from 'expo-media-library';
-import React, { useState, useEffect } from 'react';
-import { ImageManipulator } from 'expo-image-manipulator';
 import * as FileSystem from 'expo-file-system';
 import { Stack } from './stack';
 
-// hello keith
-export class MediaAssets {
+export class MediaAssetsHelper {
   private _hasNextPage = true;
   private _after: string | undefined = undefined;
   private _pageSize: number = 0;
   private _stack: Stack<string | undefined>;
 
   constructor() {
-    console.log('MediaAssets constructor');
+    console.log('MediaAssetsHelper constructor');
 
     this._pageSize = 10;
     this._hasNextPage = true;
@@ -22,7 +19,7 @@ export class MediaAssets {
     this.getFirstAssetPage = this.getFirstAssetPage.bind(this);
     this.getNextAssetPage = this.getNextAssetPage.bind(this);
 
-    console.log('MediaAssets ended constructor');
+    console.log('MediaAssetsHelper ended constructor');
   }
 
   public setPageSize(pageSize: number) {
@@ -198,46 +195,6 @@ export class MediaAssets {
     }
 
     return assets;
-  }
-
-  async createThumbnail(
-    uri: string,
-    jobName: string,
-    width: number,
-    height: number,
-  ): Promise<string | undefined> {
-    let thumbnailUrlInBase64: string | undefined = undefined;
-
-    try {
-      let thumbnailUri: string | undefined = undefined;
-
-      // Copy the original image
-      thumbnailUri = `${FileSystem.documentDirectory}Thumbnail_${jobName}.jpg`;
-      console.log(`Creating thumbnail for ${uri}...`);
-      console.log(`   by copying file to for ${thumbnailUri}...`);
-
-      await FileSystem.copyAsync({
-        from: uri,
-        to: thumbnailUri,
-      });
-
-      // Manipulate the copied image to create a thumbnail
-      const manipContext = await ImageManipulator.manipulate(thumbnailUri);
-
-      manipContext.resize({ width: width, height: height });
-
-      thumbnailUrlInBase64 = await FileSystem.readAsStringAsync(thumbnailUri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      if (thumbnailUrlInBase64) {
-        await FileSystem.deleteAsync(thumbnailUri);
-      }
-    } catch (error) {
-      console.error(`Error creating thumbnail: ${error}`);
-      thumbnailUrlInBase64 = undefined;
-    }
-
-    return thumbnailUrlInBase64;
   }
 
   public async getAssetLocation(assetId: string): Promise<{ latitude: number; longitude: number } | null> {

@@ -68,9 +68,10 @@ export interface MediaEntryData {
   id: string;
   assetId: string;
   deviceName: string;
-  mediaType: string;
+  mediaType: 'video' | 'photo';
   mediaUri: string;
   thumbnail: string;
+  creationDate: number;
 }
 
 export interface NoteData {

@@ -1,375 +1,45 @@
-import { ProjectCameraView } from '@/app/(modals)/CameraView';
 import { ActionButton } from '@/components/ActionButton';
-import { ActionButtonProps } from '@/components/ButtonBar';
-import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { Switch } from '@/components/Switch';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
-import { VideoPlayerModal } from '@/components/VideoPlayerModal';
 import { Colors } from '@/constants/Colors';
-import { useProjectValue } from '@/tbStores/listOfProjects/ListOfProjectsStore';
-import { useAddImageCallback } from '@/utils/images';
-import { ShareFiles } from '@/utils/sharing';
-import { MediaAssets } from '@/utils/mediaAssets';
+import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
+import {
+  MediaEntryData,
+  useAddRowCallback,
+  useAllRows,
+  useDeleteRowCallback,
+  useIsStoreAvailableCallback,
+} from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { Entypo, Ionicons } from '@expo/vector-icons';
-import { FlashList } from '@shopify/flash-list';
-import * as MediaLibrary from 'expo-media-library';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
+import * as MediaLibrary from 'expo-media-library';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Button, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  useAddRowCallback,
-  useIsStoreAvailableCallback,
-} from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
-import { MediaEntryData, useAllRows } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { useProject, useUpdateProjectCallback } from '@/tbStores/listOfProjects/ListOfProjectsStore';
-
-export type PhotoCapturedCallback = (asset: MediaLibrary.Asset) => void;
-
-type AssetsItem = {
-  _id: string;
-  selected: boolean;
-  asset: MediaLibrary.Asset;
-};
-
-let gAssetItems: AssetsItem[] = [];
+import { ActionButtonProps } from '@/components/ButtonBar';
+import RightHeaderMenu from '@/components/RightHeaderMenu';
+import { VideoPlayerModal } from '@/components/VideoPlayerModal';
+import ProjectCameraView from '@/app/(modals)/CameraView';
+import { useAddImageCallback } from '@/utils/images';
+import { FlashList } from '@shopify/flash-list';
+import { formatDate } from '@/utils/formatters';
+import { MediaAssetsHelper } from '@/utils/mediaAssetsHelper';
+import { useProjectValue } from '@/tbStores/listOfProjects/ListOfProjectsStore';
+import * as ImageManipulator from 'expo-image-manipulator';
+import * as FileSystem from 'expo-file-system';
 
 const ProjectPhotosPage = () => {
-  const router = useRouter();
-  const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
-  const allProjectMedia = useAllRows(projectId, 'mediaEntries');
-  const currentProject = useProject(projectId);
+  const mediaTools = useRef<MediaAssetsHelper | null>(null);
 
-  // Need to evaluate if these items are used
-  const [projectAssets, setProjectAssets] = useState<AssetsItem[] | undefined>(undefined);
-  const [assetItems, setAssetItems] = useState<AssetsItem[] | undefined>(undefined);
-  const mediaTools = useRef<MediaAssets | null>(null);
-  const [fetchStatus, setFetchStatus] = useState<string>('');
-  const [useProjectLocation, setUseProjectLocation] = useState<boolean>(false);
-  const [showAssetItems, setShowAssetItems] = useState<boolean>(false);
-  const [loadingNearest, setLoadingNearest] = useState<boolean>(false);
+  useEffect(() => {
+    if (mediaTools.current === null) {
+      mediaTools.current = new MediaAssetsHelper();
+    }
+  }, []);
+
   const colorScheme = useColorScheme();
-  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
-  const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
-  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
-  const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
-  const [isCameraVisible, setIsCameraVisible] = useState(false);
-  const [hasSelectedAssets, setHasSelectedAssets] = useState<boolean>(false);
-  const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
-  const [, setThumbnail] = useProjectValue(projectId, 'thumbnail');
-  const addPhotoImage = useAddImageCallback();
-  const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
-
-  // Bottom need to evaluate if these items are used
-
-  const [projectIsReady, setProjectIsReady] = useState(false);
-  const isStoreReady = useIsStoreAvailableCallback(projectId);
-  const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
-
-  useEffect(() => {
-    if (projectId) {
-      addActiveProjectIds([projectId]);
-    }
-  }, [projectId]);
-
-  useEffect(() => {
-    setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
-  }, [projectId, activeProjectIds, isStoreReady]);
-
-  useEffect(() => {
-    const checkPermissions = async () => {
-      console.info('Checking media permissions');
-      if (permissionResponse) {
-        console.info(`Permission status: ${permissionResponse.status}`);
-        if (permissionResponse.status !== 'granted') {
-          console.info('Requesting media permissions...');
-          await requestPermission();
-          console.info('Media permissions requested');
-        }
-      }
-    };
-
-    checkPermissions();
-  }, [permissionResponse]);
-
-  useEffect(() => {
-    async function loadMediaAssetsObj() {
-      if (mediaTools.current === null) {
-        mediaTools.current = new MediaAssets();
-        console.log('   instantiated MediaAssets object');
-      }
-    }
-
-    loadMediaAssetsObj();
-  }, []);
-
-  const OnStatusUpdate = useCallback(
-    (status: string) => {
-      setFetchStatus(status);
-    },
-    [setFetchStatus],
-  );
-
-  const LoadPhotosNearestToProject = useCallback(async () => {
-    Alert.alert(
-      'Find Pictures Near Project',
-      "Press Ok to find pictures near the designated project's location. This may take a few minutes to process.",
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-          onPress: async () => {
-            setUseProjectLocation(false);
-          },
-        },
-        {
-          text: 'Ok',
-          onPress: async () => {
-            try {
-              setLoadingNearest(true);
-              const lat = currentProject?.latitude;
-              const long = currentProject?.longitude;
-              if (lat != 0 && long != 0) {
-                setShowAssetItems(true); // Show the panel when assets are loaded
-                const foundAssets: MediaLibrary.Asset[] | undefined =
-                  await mediaTools.current?.getAllAssetsNearLocation(
-                    long!,
-                    lat!,
-                    100, // Need to make this configurable
-                    OnStatusUpdate,
-                  );
-
-                if (foundAssets) {
-                  // Filter out assets that are already in projectAssets
-                  const filteredAssets = foundAssets.filter(
-                    (foundAsset) =>
-                      !projectAssets?.some((projectAsset) => projectAsset.asset.id === foundAsset.id),
-                  );
-
-                  const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
-                    _id: asset.id ?? '',
-                    selected: true,
-                    asset: asset,
-                  }));
-
-                  gAssetItems.length = 0;
-                  gAssetItems = gAssetItems.concat(selectionList);
-                  setAssetItems(gAssetItems);
-
-                  const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
-                  OnStatusUpdate(filteredStatus);
-                }
-              }
-              setLoadingNearest(false);
-            } catch (err) {
-              alert('An error while finding pictures.');
-            }
-          },
-        },
-      ],
-    );
-  }, [projectAssets]);
-
-  const LoadAllPhotos = useCallback(async () => {
-    setShowAssetItems(true); // Show the panel when assets are loaded
-
-    const foundAssets: MediaLibrary.Asset[] | undefined = await mediaTools.current?.getFirstAssetPage(100);
-    console.log('Found x assets:', foundAssets?.length);
-
-    if (foundAssets) {
-      // Filter out assets that are already in projectAssets
-      const filteredAssets = foundAssets.filter(
-        (foundAsset) => !projectAssets?.some((projectAsset) => projectAsset.asset.id === foundAsset.id),
-      );
-
-      const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
-        _id: asset.id ?? '',
-        selected: false,
-        asset: asset,
-      }));
-
-      gAssetItems.length = 0;
-      gAssetItems = gAssetItems.concat(selectionList);
-      setAssetItems(gAssetItems);
-
-      const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
-      OnStatusUpdate(filteredStatus);
-    }
-  }, [projectAssets, assetItems]);
-
-  const createPictureBucketDataArray = (assets: AssetsItem[]) => {
-    return assets
-      .filter((asset) => asset.selected)
-      .map((asset) => ({
-        _id: asset._id,
-        asset: asset.asset,
-      }));
-  };
-
-  const OnShareProjectPhotosClicked = useCallback(async () => {
-    if (projectAssets) {
-      const assets = createPictureBucketDataArray(projectAssets);
-      try {
-        const paths = assets.map((asset) => asset.asset.uri);
-        await ShareFiles(paths);
-      } catch (error) {
-        console.error(`Error creating/sharing file: ${error}`);
-      }
-    }
-  }, [projectAssets]);
-
-  const OnSetThumbnailClicked = useCallback(async () => {
-    if (projectAssets) {
-      const asset = projectAssets.find((asset) => asset.selected);
-      if (asset) {
-        const tn = await mediaTools.current?.createThumbnail(asset.asset.uri, projectName, 100, 100);
-
-        if (tn) {
-          setThumbnail(tn);
-        }
-      }
-    }
-  }, [projectAssets]);
-
-  const OnLoadPhotosClicked = useCallback(
-    async (useNewProjectLocation: boolean) => {
-      if (useNewProjectLocation) {
-        await LoadPhotosNearestToProject();
-      } else {
-        await LoadAllPhotos();
-      }
-    },
-    [LoadPhotosNearestToProject, LoadAllPhotos],
-  );
-
-  const LoadMore = useCallback(async () => {
-    const foundAssets: MediaLibrary.Asset[] | undefined = await mediaTools.current?.getNextAssetPage();
-
-    if (foundAssets) {
-      // Filter out assets that are already in projectAssets
-      const filteredAssets = foundAssets.filter(
-        (foundAsset) => !projectAssets?.some((projectAsset) => projectAsset._id === foundAsset.id),
-      );
-
-      const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
-        _id: asset.id ?? '',
-        selected: false,
-        asset: asset,
-      }));
-
-      gAssetItems = gAssetItems.concat(selectionList);
-      setAssetItems(gAssetItems);
-      const filteredStatus = `Added ${filteredAssets.length} assets into assetItems`;
-      OnStatusUpdate(filteredStatus);
-    }
-  }, [assetItems]);
-
-  const OnAddToProjectClicked = useCallback(async () => {
-    if (assetItems) {
-      for (const asset of assetItems) {
-        if (!hasSelectedAssets || asset.selected) {
-          console.log('Adding a new Photo.', asset.asset.uri);
-          // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
-          const imageAddResult = await addPhotoImage(asset.asset.uri, projectId, 'photo');
-          console.log('Finished adding Photo.', imageAddResult);
-          if (imageAddResult.status === 'Success') {
-            let tn = '';
-            if (imageAddResult.uri) {
-              let tn = await mediaTools.current?.createThumbnail(imageAddResult?.uri, projectName, 100, 100);
-            }
-
-            const newPhoto: MediaEntryData = {
-              id: '',
-              assetId: imageAddResult.id ?? '',
-              deviceName: 'Device Name', // TODO: Get the device name
-              mediaType: asset.asset.mediaType,
-              mediaUri: imageAddResult.uri ?? '',
-              thumbnail: tn,
-            };
-
-            const status = addPhotoData(newPhoto);
-          }
-        }
-      }
-
-      setShowAssetItems(false); // Hide the panel after adding
-      assetItems.length = 0; // Clear the assets
-    }
-  }, [assetItems, projectId, hasSelectedAssets]);
-
-  const OnRemoveFromProjectClicked = useCallback(async () => {
-    Alert.alert('Remove Photos', 'Are you sure you want to remove these photos from this project?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        onPress: async () => {
-          if (projectAssets) {
-            for (const asset of projectAssets) {
-              if (asset.selected) {
-              }
-            }
-
-            setShowAssetItems(false); // Hide the panel after adding
-          }
-        },
-      },
-    ]);
-  }, [projectAssets, projectId]);
-
-  const handleClose = useCallback(() => {
-    setShowAssetItems(false);
-    gAssetItems.length = 0;
-    setAssetItems(gAssetItems);
-  }, []);
-
-  const handleAssetSelection = useCallback(async (assetId: string) => {
-    setAssetItems((prevAssets) =>
-      prevAssets?.map((item) => (item.asset.id === assetId ? { ...item, selected: !item.selected } : item)),
-    );
-  }, []);
-
-  const handleProjectAssetSelection = useCallback(async (assetId: string) => {
-    setProjectAssets((prevAssets) =>
-      prevAssets?.map((item) => (item.asset.id === assetId ? { ...item, selected: !item.selected } : item)),
-    );
-  }, []);
-
-  useEffect(() => {
-    if (assetItems) {
-      setHasSelectedAssets(assetItems.some((item) => item.selected));
-    } else {
-      setHasSelectedAssets(false);
-    }
-  }, [assetItems]);
-
-  const [numSelectedProjectAssets, setNumSelectedProjectAssets] = useState<number>(0);
-
-  useEffect(() => {
-    if (projectAssets) {
-      const num = projectAssets?.filter((item) => item.selected === true).length;
-      setNumSelectedProjectAssets(num ? num : 0);
-    } else {
-      setNumSelectedProjectAssets(0);
-    }
-  }, [projectAssets]);
-
-  const getAddButtonTitle = useCallback(() => {
-    if (!assetItems) return 'Add All';
-    const hasSelectedAssets = assetItems.some((item) => item.selected);
-    return hasSelectedAssets ? 'Add Selected' : 'Add All';
-  }, [assetItems]);
-
-  const renderFooter = () => {
-    return (
-      <View style={styles.footer}>
-        {!useProjectLocation && <Button title="Load More" onPress={LoadMore}></Button>}
-      </View>
-    );
-  };
-
   const colors = useMemo(
     () =>
       colorScheme === 'dark'
@@ -394,6 +64,43 @@ const ProjectPhotosPage = () => {
     [colorScheme],
   );
 
+  const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
+  const [projectIsReady, setProjectIsReady] = useState(false);
+  const isStoreReady = useIsStoreAvailableCallback(projectId);
+  const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
+
+  useEffect(() => {
+    if (projectId) {
+      addActiveProjectIds([projectId]);
+    }
+  }, [projectId]);
+
+  useEffect(() => {
+    setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
+  }, [projectId, activeProjectIds, isStoreReady]);
+  const [, setThumbnail] = useProjectValue(projectId, 'thumbnail');
+  const router = useRouter();
+  const addPhotoImage = useAddImageCallback();
+  const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
+  useEffect(() => {
+    const checkPermissions = async () => {
+      console.info('Checking media permissions');
+      if (permissionResponse) {
+        console.info(`Permission status: ${permissionResponse.status}`);
+        if (permissionResponse.status !== 'granted') {
+          console.info('Requesting media permissions...');
+          await requestPermission();
+          console.info('Media permissions requested');
+        }
+      }
+    };
+
+    checkPermissions();
+  }, [permissionResponse, requestPermission]);
+
+  const allProjectMedia = useAllRows(projectId, 'mediaEntries');
+  const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
+  const removePhotoData = useDeleteRowCallback(projectId, 'mediaEntries');
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
       {
@@ -406,55 +113,81 @@ const ProjectPhotosPage = () => {
     ],
     [colors],
   );
+  const [showAssetItems, setShowAssetItems] = useState<boolean>(false);
+  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
+  const [useProjectLocation, setUseProjectLocation] = useState<boolean>(false);
+  const [isCameraVisible, setIsCameraVisible] = useState(false);
+  const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  const [selectedProjectAssetIds, setSelectedProjectAssetIds] = useState<string[]>([]);
+
+  async function createThumbnail(
+    uri: string,
+    jobName: string,
+    width: number,
+    height: number,
+  ): Promise<string | undefined> {
+    let thumbnailUrlInBase64: string | undefined = undefined;
+
+    try {
+      let thumbnailUri: string | undefined = undefined;
+
+      // Copy the original image
+      thumbnailUri = `${FileSystem.documentDirectory}Thumbnail_${jobName}.jpg`;
+      console.log(`Creating thumbnail for ${uri}...`);
+      console.log(`   by copying file to for ${thumbnailUri}...`);
+
+      await FileSystem.copyAsync({
+        from: uri,
+        to: thumbnailUri,
+      });
+
+      // Manipulate the copied image to create a thumbnail
+      const manipContext = await ImageManipulator.manipulate(thumbnailUri);
+
+      manipContext.resize({ width: width, height: height });
+
+      thumbnailUrlInBase64 = await FileSystem.readAsStringAsync(thumbnailUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      if (thumbnailUrlInBase64) {
+        await FileSystem.deleteAsync(thumbnailUri);
+      }
+    } catch (error) {
+      console.error(`Error creating thumbnail: ${error}`);
+      thumbnailUrlInBase64 = undefined;
+    }
+
+    return thumbnailUrlInBase64;
+  }
+
+  const onLoadPhotosClicked = useCallback(async (useNewProjectLocation: boolean) => {
+    /*
+    if (useNewProjectLocation) {
+      await LoadPhotosNearestToProject();
+    } else {
+      await LoadAllPhotos();
+    }*/
+  }, []);
 
   const handleMenuItemPress = useCallback(
     (item: string) => {
       if (item === 'AddPhotos') {
         setUseProjectLocation(false);
-        OnLoadPhotosClicked(false);
+        onLoadPhotosClicked(false);
       }
       setHeaderMenuModalVisible(false);
     },
-    [useProjectLocation, OnLoadPhotosClicked],
-  );
-
-  const playVideo = (videoUri: string) => {
-    setSelectedVideo(videoUri);
-    setIsVideoPlayerVisible(true);
-  };
-
-  const handleImagePress = useCallback(
-    (uri: string, type: MediaLibrary.MediaTypeValue, photoDate?: string) => {
-      if (type === 'video') {
-        playVideo(uri);
-      } else if (type === 'photo') {
-        console.log(`photoDate=${photoDate}`);
-        const dateString = photoDate ?? 'No Date Info Available';
-        router.push(
-          `/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${projectName}&photoDate=${dateString}`,
-        );
-      }
-    },
-    [],
+    [useProjectLocation, onLoadPhotosClicked],
   );
 
   const onSwitchValueChanged = useCallback(() => {
     const newValue = !useProjectLocation;
     setUseProjectLocation(newValue);
-    OnLoadPhotosClicked(newValue);
-  }, [useProjectLocation, OnLoadPhotosClicked]);
+    onLoadPhotosClicked(newValue);
+  }, [useProjectLocation, onLoadPhotosClicked]);
 
-  const onProjectAllOrClearChanged = useCallback(async () => {
-    if (numSelectedProjectAssets > 0) {
-      setProjectAssets((prevAssets) =>
-        prevAssets?.map((item) => ({ ...item, selected: false } as AssetsItem)),
-      );
-    } else {
-      setProjectAssets((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: true })));
-    }
-  }, [projectAssets, setProjectAssets]);
-
-  const handlePhotoCaptured: PhotoCapturedCallback = async (asset) => {
+  const handlePhotoCaptured = async (asset: MediaLibrary.Asset) => {
     if (asset) {
       console.log('Adding a new Photo.', asset.uri);
       // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
@@ -462,17 +195,18 @@ const ProjectPhotosPage = () => {
       console.log('Finished adding Photo.', imageAddResult);
       if (imageAddResult.status === 'Success') {
         let tn = '';
-        if (imageAddResult.uri) {
-          let tn = await mediaTools.current?.createThumbnail(imageAddResult?.uri, projectName, 100, 100);
+        if (imageAddResult.uri && mediaTools.current) {
+          let tn = await mediaTools.current.createThumbnail(imageAddResult.uri, projectName, 100, 100);
         }
 
         const newPhoto: MediaEntryData = {
           id: '',
           assetId: imageAddResult.id ?? '',
           deviceName: 'Device Name', // TODO: Get the device name
-          mediaType: asset.mediaType,
+          mediaType: 'photo',
           mediaUri: imageAddResult.uri ?? '',
           thumbnail: tn,
+          creationDate: Date.now(),
         };
 
         const status = addPhotoData(newPhoto);
@@ -481,25 +215,73 @@ const ProjectPhotosPage = () => {
     }
   };
 
-  const onCameraClosed = useCallback(async () => {
-    setIsCameraVisible(false);
-  }, [isCameraVisible]);
+  const handleProjectAssetSelection = useCallback(
+    async (id: string) => {
+      // if the id is already in the selectedProjectAssetIds array, remove it, otherwise add it
+      if (selectedProjectAssetIds.includes(id)) {
+        setSelectedProjectAssetIds((prevAssets) => prevAssets.filter((item) => item !== id));
+      } else {
+        setSelectedProjectAssetIds((prevAssets) => [...prevAssets, id]);
+      }
+    },
+    [selectedProjectAssetIds],
+  );
 
-  const OnTakePictureClicked = useCallback(async () => {
-    setIsCameraVisible(true);
-  }, [isCameraVisible]);
+  const removeFromProjectClicked = useCallback(async () => {
+    Alert.alert('Remove Photos', 'Are you sure you want to remove these photos from this project?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        onPress: () => {
+          for (const uId of selectedProjectAssetIds) {
+            removePhotoData(uId);
+          }
+          setSelectedProjectAssetIds([]);
+        },
+      },
+    ]);
+  }, [removePhotoData, projectId]);
 
-  const onAssetAllOrClearChanged = useCallback(async () => {
-    if (hasSelectedAssets) {
-      setAssetItems((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: false } as AssetsItem)));
+  const playVideo = (videoUri: string) => {
+    setSelectedVideo(videoUri);
+    setIsVideoPlayerVisible(true);
+  };
+
+  const onProjectAllOrClearChanged = useCallback(() => {
+    if (selectedProjectAssetIds.length > 0) {
+      setSelectedProjectAssetIds([]);
     } else {
-      setAssetItems((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: true })));
+      const allIds = allProjectMedia.map((m) => m.id);
+      setSelectedProjectAssetIds(allIds);
     }
-  }, [assetItems, hasSelectedAssets]);
+  }, [selectedProjectAssetIds, allProjectMedia]);
 
-  /*
+  const handleImagePress = useCallback((uri: string, type: 'video' | 'photo', photoDate: string) => {
+    if (type === 'video') {
+      playVideo(uri);
+    } else if (type === 'photo') {
+      console.log(`photoDate=${photoDate}`);
+      const dateString = photoDate ?? 'No Date Info Available';
+      router.push(
+        `/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${projectName}&photoDate=${dateString}`,
+      );
+    }
+  }, []);
+
+  const setThumbnailClicked = useCallback(async () => {
+    if (selectedProjectAssetIds.length === 1) {
+      const asset = allProjectMedia.find((asset) => asset.id === selectedProjectAssetIds[0]);
+      if (asset && mediaTools.current) {
+        const tn = await mediaTools.current?.createThumbnail(asset.mediaUri, projectName, 100, 100);
+        if (tn) {
+          setThumbnail(tn);
+        }
+      }
+    }
+  }, [selectedProjectAssetIds, allProjectMedia]);
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
       <Stack.Screen
         options={{
           headerShown: true,
@@ -522,6 +304,7 @@ const ProjectPhotosPage = () => {
           ),
         }}
       />
+
       {!projectIsReady ? (
         <Text>Loading...</Text>
       ) : (
@@ -532,7 +315,7 @@ const ProjectPhotosPage = () => {
                 style={{ alignSelf: 'stretch', marginTop: 5 }}
                 type={'action'}
                 title={'Take Picture / Video'}
-                onPress={OnTakePictureClicked}
+                onPress={() => setIsCameraVisible(true)}
               />
             )}
             {showAssetItems && (
@@ -559,10 +342,10 @@ const ProjectPhotosPage = () => {
                   Project Photos
                 </Text>
                 <Text txtSize="sub-title" style={{ marginLeft: 10 }}>
-                  {`Project contains ${projectAssets ? projectAssets?.length : 0} pictures.`}
+                  {`Project contains ${allProjectMedia.length} pictures.`}
                 </Text>
               </View>
-              {!projectAssets ? (
+              {allProjectMedia.length === 0 ? (
                 <View style={{ alignItems: 'center' }}>
                   <Text>Use menu button to add photos.</Text>
                 </View>
@@ -577,7 +360,7 @@ const ProjectPhotosPage = () => {
                       >
                         {({ pressed }) => (
                           <Ionicons
-                            name={numSelectedProjectAssets > 0 ? 'ellipse-sharp' : 'ellipse-outline'}
+                            name={selectedProjectAssetIds.length > 0 ? 'ellipse-sharp' : 'ellipse-outline'}
                             size={24}
                             color={colors.iconColor}
                             style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
@@ -586,39 +369,41 @@ const ProjectPhotosPage = () => {
                       </Pressable>
                       <Text>
                         {!showAssetItems
-                          ? numSelectedProjectAssets > 0
+                          ? selectedProjectAssetIds.length > 0
                             ? 'Clear Selection'
                             : 'Select All'
                           : ''}
                       </Text>
                     </View>
                     <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                      {numSelectedProjectAssets > 0 && (
-                        <Text style={{ alignSelf: 'center' }}>
-                          {projectAssets?.filter((asset) => asset.selected).length} selected
-                        </Text>
+                      {selectedProjectAssetIds.length > 0 && (
+                        <Text
+                          style={{ alignSelf: 'center' }}
+                          text={`${selectedProjectAssetIds.length} selected`}
+                        />
                       )}
                     </View>
                   </View>
                   <FlashList
                     numColumns={showAssetItems ? 1 : 2}
-                    data={projectAssets}
+                    data={allProjectMedia}
                     estimatedItemSize={200}
                     renderItem={({ item }) => {
-                      const photoDate = new Date(item.asset.creationTime * 1).toLocaleString();
+                      const photoDate = formatDate(item.creationDate);
                       return (
                         <View style={styles.imageContainer}>
                           <TouchableOpacity
-                            style={[styles.imageContainer, item.selected && styles.imageSelected]}
-                            onPress={() => handleProjectAssetSelection(item.asset.id)}
-                            onLongPress={() =>
-                              handleImagePress(item.asset.uri, item.asset.mediaType, photoDate)
-                            }
+                            style={[
+                              styles.imageContainer,
+                              selectedProjectAssetIds.includes(item.id) && styles.imageSelected,
+                            ]}
+                            onPress={() => handleProjectAssetSelection(item.id)}
+                            onLongPress={() => handleImagePress(item.mediaUri, item.mediaType, photoDate)}
                           >
                             <View>
-                              <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
+                              <Image source={{ uri: item.thumbnail }} style={styles.thumbnail} />
                               <Text style={styles.dateOverlay}>{photoDate}</Text>
-                              {item.asset.mediaType === 'video' && (
+                              {item.mediaType === 'video' && (
                                 <View style={styles.playButtonOverlay}>
                                   <Ionicons name="play" size={30} color="white" />
                                 </View>
@@ -630,20 +415,17 @@ const ProjectPhotosPage = () => {
                     }}
                   />
                   <View style={styles.buttonContainer}>
-                    {numSelectedProjectAssets > 0 && (
+                    {selectedProjectAssetIds.length > 0 && (
                       <View style={styles.buttonRow}>
                         <View style={styles.buttonWrapper}>
-                          <ActionButton title="Remove" onPress={OnRemoveFromProjectClicked} type={'action'} />
+                          <ActionButton title="Remove" onPress={removeFromProjectClicked} type={'action'} />
                         </View>
-                        <View style={styles.buttonWrapper}>
-                          <ActionButton title="Share" onPress={OnShareProjectPhotosClicked} type={'action'} />
-                        </View>
-                        {numSelectedProjectAssets === 1 && (
+                        {selectedProjectAssetIds.length === 1 && (
                           <View style={styles.buttonWrapper}>
                             <ActionButton
                               title="Thumbnail"
                               style={{ paddingHorizontal: 1 }}
-                              onPress={OnSetThumbnailClicked}
+                              onPress={setThumbnailClicked}
                               type={'action'}
                             />
                           </View>
@@ -654,122 +436,34 @@ const ProjectPhotosPage = () => {
                 </>
               )}
             </View>
-
-            {showAssetItems && (
-              <>
-                <View style={styles.separator} />
-                <View style={styles.listColumn}>
-                  <Text style={styles.listTitle}>Photos</Text>
-                  {loadingNearest ? (
-                    <View style={styles.loadingContainer}>
-                      <Text>Loading...{fetchStatus}</Text>
-                      <ActivityIndicator size="large" color="#007AFF" style={styles.loadingIndicator} />
-                    </View>
-                  ) : (
-                    <>
-                      <View style={styles.selectRow}>
-                        <Pressable
-                          onPress={() => {
-                            onAssetAllOrClearChanged();
-                          }}
-                        >
-                          {({ pressed }) => (
-                            <Ionicons
-                              name={hasSelectedAssets ? 'ellipse-sharp' : 'ellipse-outline'}
-                              size={24}
-                              color={colors.iconColor}
-                              style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                            />
-                          )}
-                        </Pressable>
-
-                        {hasSelectedAssets && (
-                          <Text style={{ alignSelf: 'center' }}>
-                            {assetItems?.filter((asset) => asset.selected).length} selected
-                          </Text>
-                        )}
-                      </View>
-                      <FlashList
-                        data={assetItems}
-                        estimatedItemSize={200}
-                        ListFooterComponent={renderFooter}
-                        renderItem={({ item }) => {
-                          const photoDate = new Date(item.asset.creationTime * 1).toLocaleString();
-                          return (
-                            <View style={styles.assetContainer}>
-                              <TouchableOpacity
-                                style={[styles.imageContainer, item.selected && styles.imageSelected]}
-                                onPress={() => handleAssetSelection(item.asset.id)}
-                                onLongPress={() =>
-                                  handleImagePress(item.asset.uri, item.asset.mediaType, photoDate)
-                                }
-                              >
-                                <View>
-                                  <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
-                                  <Text style={styles.dateOverlay}>{photoDate}</Text>
-                                  {item.asset.mediaType === 'video' && (
-                                    <View style={styles.playButtonOverlay}>
-                                      <Ionicons name="play" size={30} color="white" />
-                                    </View>
-                                  )}
-                                </View>
-                              </TouchableOpacity>
-                            </View>
-                          );
-                        }}
-                      />
-                      <View style={styles.buttonContainer}>
-                        <View style={styles.buttonRow}>
-                          {(useProjectLocation || (!useProjectLocation && hasSelectedAssets)) && (
-                            <View style={styles.buttonWrapper}>
-                              <ActionButton
-                                type={'action'}
-                                title={getAddButtonTitle()}
-                                onPress={OnAddToProjectClicked}
-                              />
-                            </View>
-                          )}
-                          <View style={styles.buttonWrapper}>
-                            <ActionButton title="Close" onPress={handleClose} type={'action'} />
-                          </View>
-                        </View>
-                      </View>
-                    </>
-                  )}
-                </View>
-              </>
-            )}
-            {headerMenuModalVisible && (
-              <RightHeaderMenu
-                modalVisible={headerMenuModalVisible}
-                setModalVisible={setHeaderMenuModalVisible}
-                buttons={rightHeaderMenuButtons}
-              />
-            )}
           </View>
-          {selectedVideo && (
-            <VideoPlayerModal
-              isVisible={isVideoPlayerVisible}
-              videoUri={selectedVideo}
-              onClose={() => setIsVideoPlayerVisible(false)}
-            />
-          )}
-          {isCameraVisible && (
-            <ProjectCameraView
-              visible={isCameraVisible}
-              projectName={projectName}
-              onMediaCaptured={handlePhotoCaptured}
-              onClose={onCameraClosed}
-              showPreview={false}
-            ></ProjectCameraView>
-          )}
         </>
+      )}
+      {headerMenuModalVisible && (
+        <RightHeaderMenu
+          modalVisible={headerMenuModalVisible}
+          setModalVisible={setHeaderMenuModalVisible}
+          buttons={rightHeaderMenuButtons}
+        />
+      )}
+      {selectedVideo && (
+        <VideoPlayerModal
+          isVisible={isVideoPlayerVisible}
+          videoUri={selectedVideo}
+          onClose={() => setIsVideoPlayerVisible(false)}
+        />
+      )}
+      {isCameraVisible && (
+        <ProjectCameraView
+          visible={isCameraVisible}
+          projectName={projectName}
+          onMediaCaptured={handlePhotoCaptured}
+          onClose={() => setIsCameraVisible(false)}
+          showPreview={false}
+        ></ProjectCameraView>
       )}
     </SafeAreaView>
   );
-  */
-
-  return <Text>Loading...</Text>;
 };
 
 const styles = StyleSheet.create({

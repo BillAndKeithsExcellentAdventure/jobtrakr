@@ -148,13 +148,11 @@ export default function ProjectHomeScreen() {
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
             if (actionContext && actionContext.entryId) {
-              const whereTo = `/projects/${actionContext.entryId}/photos/?projectName=${encodeURIComponent(
-                actionContext.primaryTitle,
-              )}`;
-
-              console.log('whereTo:', whereTo);
-
-              router.push(whereTo);
+              router.push(
+                `/projects/${actionContext.entryId}/photos/?projectName=${encodeURIComponent(
+                  actionContext.primaryTitle,
+                )}`,
+              );
             }
           }
         },
