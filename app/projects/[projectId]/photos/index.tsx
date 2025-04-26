@@ -143,9 +143,9 @@ const ProjectPhotosPage = () => {
       });
 
       // Manipulate the copied image to create a thumbnail
-      const manipContext = await ImageManipulator.manipulate(thumbnailUri);
+      const manipulationContext = await ImageManipulator.ImageManipulator.manipulate(thumbnailUri);
 
-      manipContext.resize({ width: width, height: height });
+      manipulationContext.resize({ width: width, height: height });
 
       thumbnailUrlInBase64 = await FileSystem.readAsStringAsync(thumbnailUri, {
         encoding: FileSystem.EncodingType.Base64,
@@ -196,7 +196,7 @@ const ProjectPhotosPage = () => {
       if (imageAddResult.status === 'Success') {
         let tn = '';
         if (imageAddResult.uri && mediaTools.current) {
-          let tn = await mediaTools.current.createThumbnail(imageAddResult.uri, projectName, 100, 100);
+          let tn = await createThumbnail(imageAddResult.uri, projectName, 100, 100);
         }
 
         const newPhoto: MediaEntryData = {
@@ -272,7 +272,7 @@ const ProjectPhotosPage = () => {
     if (selectedProjectAssetIds.length === 1) {
       const asset = allProjectMedia.find((asset) => asset.id === selectedProjectAssetIds[0]);
       if (asset && mediaTools.current) {
-        const tn = await mediaTools.current?.createThumbnail(asset.mediaUri, projectName, 100, 100);
+        const tn = await createThumbnail(asset.mediaUri, projectName, 100, 100);
         if (tn) {
           setThumbnail(tn);
         }
