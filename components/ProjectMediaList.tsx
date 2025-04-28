@@ -1,38 +1,108 @@
-import React, { useCallback } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { View, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/Themed';
 import { ActionButton } from '@/components/ActionButton';
 import Base64Image from '@/components/Base64Image';
 import { formatDate } from '@/utils/formatters';
-import { MediaEntryData } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { MediaEntryData, useDeleteRowCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { createThumbnail } from '@/utils/thumbnailUtils';
+import { useProjectValue } from '@/tbStores/listOfProjects/ListOfProjectsStore';
+import { useRouter } from 'expo-router';
+import { useAddImageCallback } from '@/utils/images';
 
 export interface MediaEntryDisplayData extends MediaEntryData {
   isSelected: boolean;
 }
 
 interface ProjectMediaListProps {
-  mediaItems: MediaEntryDisplayData[];
-  onSelectItem: (id: string) => void;
-  onImagePress: (uri: string, type: 'video' | 'photo', photoDate: string) => void;
-  onSelectAll: () => void;
-  onRemove: () => void;
-  onSetThumbnail: () => void;
-  showDeviceAssets: boolean;
+  projectMediaItems: MediaEntryData[];
+  projectId: string;
+  projectName: string;
+  showInSingleColum: boolean;
+  playVideo: (videoUri: string) => void;
 }
 
 export const ProjectMediaList = ({
-  mediaItems,
-  onSelectItem,
-  onImagePress,
-  onSelectAll,
-  onRemove,
-  onSetThumbnail,
-  showDeviceAssets,
+  projectMediaItems,
+  projectId,
+  projectName,
+  showInSingleColum,
+  playVideo,
 }: ProjectMediaListProps) => {
-  const selectedCount = mediaItems.filter((media) => media.isSelected).length;
-  const hasSelectedItems = mediaItems.some((media) => media.isSelected);
+  const [mediaItems, setMediaItems] = useState<MediaEntryDisplayData[]>([]);
+  const [, setThumbnail] = useProjectValue(projectId, 'thumbnail');
+  const removePhotoData = useDeleteRowCallback(projectId, 'mediaEntries');
+  const router = useRouter();
+
+  useEffect(() => {
+    // Initialize selectableProjectMedia whenever allProjectMedia changes
+    setMediaItems(projectMediaItems.map((m) => ({ ...m, isSelected: false })));
+  }, [projectMediaItems]);
+
+  const selectedCount = useMemo(() => mediaItems.filter((media) => media.isSelected).length, [mediaItems]);
+  const hasSelectedItems = useMemo(() => mediaItems.some((media) => media.isSelected), [mediaItems]);
+
+  const onSetThumbnail = useCallback(async () => {
+    const selectedIds = mediaItems.filter((media) => media.isSelected).map((media) => media.id);
+    if (selectedIds.length === 1) {
+      const asset = mediaItems.find((asset) => asset.id === selectedIds[0]);
+      if (asset) {
+        const tn = await createThumbnail(asset.mediaUri, projectName, 100, 100);
+        if (tn) {
+          setThumbnail(tn);
+        }
+      }
+    }
+  }, [mediaItems]);
+
+  const onSelectAll = useCallback(() => {
+    const hasSelectedItems = mediaItems.some((media) => media.isSelected);
+    setMediaItems((prevMedia) =>
+      prevMedia.map((media) => ({
+        ...media,
+        isSelected: !hasSelectedItems,
+      })),
+    );
+  }, [mediaItems]);
+
+  const getSelectedIds = useCallback(() => {
+    return mediaItems.filter((media) => media.isSelected).map((media) => media.id);
+  }, [mediaItems]);
+
+  const handleSelection = useCallback(async (id: string) => {
+    setMediaItems((prevMedia) =>
+      prevMedia.map((media) => (media.id === id ? { ...media, isSelected: !media.isSelected } : media)),
+    );
+  }, []);
+
+  const handleImageLongPress = useCallback((uri: string, type: 'video' | 'photo', photoDate: string) => {
+    if (type === 'video') {
+      playVideo(uri);
+    } else if (type === 'photo') {
+      console.log(`photoDate=${photoDate}`);
+      const dateString = photoDate ?? 'No Date Info Available';
+      router.push(
+        `/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${projectName}&photoDate=${dateString}`,
+      );
+    }
+  }, []);
+
+  const onRemove = useCallback(async () => {
+    const selectedIds = mediaItems.filter((media) => media.isSelected).map((media) => media.id);
+    Alert.alert('Remove Photos', 'Are you sure you want to remove these photos from this project?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        onPress: () => {
+          for (const uId of selectedIds) {
+            removePhotoData(uId);
+          }
+        },
+      },
+    ]);
+  }, [removePhotoData]);
 
   const renderItem = useCallback(
     ({ item }: { item: MediaEntryDisplayData }) => {
@@ -41,8 +111,8 @@ export const ProjectMediaList = ({
         <View style={styles.imageContainer}>
           <TouchableOpacity
             style={[styles.imageContainer, item.isSelected && styles.imageSelected]}
-            onPress={() => onSelectItem(item.id)}
-            onLongPress={() => onImagePress(item.mediaUri, item.mediaType, photoDate)}
+            onPress={() => handleSelection(item.id)}
+            onLongPress={() => handleImageLongPress(item.mediaUri, item.mediaType, photoDate)}
           >
             <View style={styles.mediaContentContainer}>
               <Base64Image base64String={item.thumbnail} height={100} width={100} />
@@ -57,7 +127,7 @@ export const ProjectMediaList = ({
         </View>
       );
     },
-    [onSelectItem, onImagePress],
+    [handleSelection, handleImageLongPress],
   );
 
   return (
@@ -90,7 +160,7 @@ export const ProjectMediaList = ({
           </View>
 
           <FlashList
-            numColumns={showDeviceAssets ? 1 : 2}
+            numColumns={showInSingleColum ? 1 : 2}
             data={mediaItems}
             estimatedItemSize={200}
             renderItem={renderItem}

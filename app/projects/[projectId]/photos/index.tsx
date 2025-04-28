@@ -2,7 +2,7 @@ import ProjectCameraView from '@/app/(modals)/CameraView';
 import { ActionButton } from '@/components/ActionButton';
 import { ActionButtonProps } from '@/components/ButtonBar';
 import { DeviceMediaList } from '@/components/DeviceMediaList';
-import { MediaEntryDisplayData, ProjectMediaList } from '@/components/ProjectMediaList';
+import { ProjectMediaList } from '@/components/ProjectMediaList';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { Switch } from '@/components/Switch';
 import { Text, View } from '@/components/Themed';
@@ -10,21 +10,19 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { VideoPlayerModal } from '@/components/VideoPlayerModal';
 import { Colors } from '@/constants/Colors';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
-import { useProjectValue } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   MediaEntryData,
   useAddRowCallback,
   useAllRows,
-  useDeleteRowCallback,
   useIsStoreAvailableCallback,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useAddImageCallback } from '@/utils/images';
 import { createThumbnail } from '@/utils/thumbnailUtils';
 import { Entypo, Ionicons } from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -69,8 +67,7 @@ const ProjectPhotosPage = () => {
   useEffect(() => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
   }, [projectId, activeProjectIds, isStoreReady]);
-  const [, setThumbnail] = useProjectValue(projectId, 'thumbnail');
-  const router = useRouter();
+
   const addPhotoImage = useAddImageCallback();
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
 
@@ -98,15 +95,7 @@ const ProjectPhotosPage = () => {
   }, [permissionResponse, requestPermission]);
 
   const allProjectMedia = useAllRows(projectId, 'mediaEntries');
-  const [selectableProjectMedia, setSelectableProjectMedia] = useState<MediaEntryDisplayData[]>([]);
-
-  useEffect(() => {
-    // Initialize selectableProjectMedia whenever allProjectMedia changes
-    setSelectableProjectMedia(allProjectMedia.map((m) => ({ ...m, isSelected: false })));
-  }, [allProjectMedia]);
-
   const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
-  const removePhotoData = useDeleteRowCallback(projectId, 'mediaEntries');
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
@@ -126,78 +115,10 @@ const ProjectPhotosPage = () => {
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
 
-  /////////////////////////////////////////////////////////
-  // Project Media
-  /////////////////////////////////////////////////////////
-  const selectedProjectMediaCount = useMemo(
-    () => selectableProjectMedia.filter((media) => media.isSelected).length,
-    [selectableProjectMedia],
-  );
-
-  const handleProjectAssetSelection = useCallback(async (id: string) => {
-    setSelectableProjectMedia((prevMedia) =>
-      prevMedia.map((media) => (media.id === id ? { ...media, isSelected: !media.isSelected } : media)),
-    );
-  }, []);
-
-  const removeFromProjectClicked = useCallback(async () => {
-    const selectedIds = selectableProjectMedia.filter((media) => media.isSelected).map((media) => media.id);
-    Alert.alert('Remove Photos', 'Are you sure you want to remove these photos from this project?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        onPress: () => {
-          for (const uId of selectedIds) {
-            removePhotoData(uId);
-          }
-        },
-      },
-    ]);
-  }, [removePhotoData]);
-
   const playVideo = (videoUri: string) => {
     setSelectedVideo(videoUri);
     setIsVideoPlayerVisible(true);
   };
-
-  const onProjectAllOrClearChanged = useCallback(() => {
-    const hasSelectedItems = selectableProjectMedia.some((media) => media.isSelected);
-    setSelectableProjectMedia((prevMedia) =>
-      prevMedia.map((media) => ({
-        ...media,
-        isSelected: !hasSelectedItems,
-      })),
-    );
-  }, [selectableProjectMedia]);
-
-  const getSelectedIds = useCallback(() => {
-    return selectableProjectMedia.filter((media) => media.isSelected).map((media) => media.id);
-  }, [selectableProjectMedia]);
-
-  const handleImagePress = useCallback((uri: string, type: 'video' | 'photo', photoDate: string) => {
-    if (type === 'video') {
-      playVideo(uri);
-    } else if (type === 'photo') {
-      console.log(`photoDate=${photoDate}`);
-      const dateString = photoDate ?? 'No Date Info Available';
-      router.push(
-        `/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${projectName}&photoDate=${dateString}`,
-      );
-    }
-  }, []);
-
-  const setThumbnailClicked = useCallback(async () => {
-    const selectedIds = selectableProjectMedia.filter((media) => media.isSelected).map((media) => media.id);
-    if (selectedIds.length === 1) {
-      const asset = selectableProjectMedia.find((asset) => asset.id === selectedIds[0]);
-      if (asset) {
-        const tn = await createThumbnail(asset.mediaUri, projectName, 100, 100);
-        if (tn) {
-          setThumbnail(tn);
-        }
-      }
-    }
-  }, [selectableProjectMedia]);
 
   const handlePhotoCaptured = async (asset: MediaLibrary.Asset) => {
     if (asset) {
@@ -291,13 +212,11 @@ const ProjectPhotosPage = () => {
           </View>
           <View style={styles.listsContainer}>
             <ProjectMediaList
-              mediaItems={selectableProjectMedia}
-              onSelectItem={handleProjectAssetSelection}
-              onImagePress={handleImagePress}
-              onSelectAll={onProjectAllOrClearChanged}
-              onRemove={removeFromProjectClicked}
-              onSetThumbnail={setThumbnailClicked}
-              showDeviceAssets={showDeviceAssets}
+              projectId={projectId}
+              projectName={projectName}
+              showInSingleColum={showDeviceAssets}
+              projectMediaItems={allProjectMedia}
+              playVideo={playVideo}
             />
 
             {showDeviceAssets && (
