@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import { FailedToUploadData, useAddItemCallback } from '@/tbStores/UploadSyncStore';
 
-type ImageResult = { status: 'Success' | 'Error'; id: string; msg: string };
+type ImageResult = { status: 'Success' | 'Error'; id: string; uri?: string | undefined; msg: string };
 
 interface imageDetails {
   id: string;
@@ -97,6 +97,7 @@ const downloadImage = async (
     return {
       status: 'Success',
       id: details.id,
+      uri: localUri,
       msg: 'Successfully downloaded and saved image',
     };
   } catch (error) {
@@ -164,7 +165,7 @@ const uploadImage = async (
 
     const data = await response.json();
     console.log('Image uploaded successfully:', data);
-    return { status: 'Success', id: details.id, msg: 'Successfully uploaded image' };
+    return { status: 'Success', id: details.id, uri: localImageUrl, msg: 'Successfully uploaded image' };
   } catch (error) {
     console.error('Error uploading image:', error);
     throw error;

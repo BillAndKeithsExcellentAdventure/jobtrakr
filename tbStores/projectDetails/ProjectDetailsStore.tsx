@@ -56,6 +56,8 @@ export const TABLES_SCHEMA = {
     deviceName: { type: 'string' }, // only used when media is on local device
     mediaType: { type: 'string' }, // 'video' or 'photo'
     mediaUri: { type: 'string' }, // URI to the video or photo
+    thumbnail: { type: 'string' }, // thumbnail image.
+    creationDate: { type: 'number' }, // Date the picture was taken.
   },
 
   notes: {

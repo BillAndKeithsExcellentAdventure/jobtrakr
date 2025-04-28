@@ -147,12 +147,13 @@ export default function ProjectHomeScreen() {
         label: 'Photos',
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
-            if (actionContext && actionContext.entryId)
+            if (actionContext && actionContext.entryId) {
               router.push(
                 `/projects/${actionContext.entryId}/photos/?projectName=${encodeURIComponent(
                   actionContext.primaryTitle,
                 )}`,
               );
+            }
           }
         },
       },
