@@ -27,6 +27,8 @@ type Props = {
   showOkCancel?: boolean;
   onCancel?: () => void;
   selectedOption?: OptionEntry;
+  centerOptions?: boolean;
+  boldSelectedOption?: boolean;
 };
 
 export default function OptionList({
@@ -36,6 +38,8 @@ export default function OptionList({
   showOkCancel,
   onCancel,
   selectedOption,
+  centerOptions = true,
+  boldSelectedOption = true,
 }: Props) {
   const [isOkToSaveSelectedValue, setIsOkToSaveSelectedValue] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
@@ -101,15 +105,17 @@ export default function OptionList({
             <View>
               <Pressable
                 key={index}
-                style={{
-                  width: '100%',
-                  alignSelf: 'stretch',
-                  alignItems: 'center',
-                  borderBottomWidth: 1,
-                  borderBottomColor: colors.borderColor,
-                  justifyContent: 'center',
-                  height: 45,
-                }}
+                style={[
+                  {
+                    width: '100%',
+                    paddingHorizontal: 10,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.borderColor,
+                    justifyContent: 'center',
+                    height: 45,
+                  },
+                  centerOptions && { alignItems: 'center' },
+                ]}
                 onPress={() => {
                   onOptionSelected(item);
                 }}
@@ -119,7 +125,9 @@ export default function OptionList({
                   style={[
                     { fontWeight: 500 },
                     textStyle,
-                    pickedOption && item.label === pickedOption.label && { fontSize: 20, fontWeight: 800 },
+                    pickedOption &&
+                      boldSelectedOption &&
+                      item.label === pickedOption.label && { fontSize: 18, fontWeight: 800 },
                   ]}
                 />
               </Pressable>

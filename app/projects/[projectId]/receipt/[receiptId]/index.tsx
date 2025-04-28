@@ -14,6 +14,7 @@ import {
   useAllRows,
   WorkItemCostEntry,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import SwipeableLineItem from './SwipeableLineItem';
 
 const ReceiptDetailsPage = () => {
   const defaultDate = new Date();
@@ -21,7 +22,12 @@ const ReceiptDetailsPage = () => {
   const allProjectReceipts = useAllRows(projectId, 'receipts');
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
 
-  const [allReceiptItems, setReceiptItems] = useState<WorkItemCostEntry[]>([]);
+  const [allReceiptLineItems, setAllReceiptLineItems] = useState<WorkItemCostEntry[]>([]);
+
+  useEffect(() => {
+    const receipts = allCostItems.filter((item) => item.parentId === receiptId);
+    setAllReceiptLineItems(receipts);
+  }, [allCostItems, receiptId]);
 
   const [receipt, setReceipt] = useState<ReceiptData>({
     id: '',
@@ -48,12 +54,8 @@ const ReceiptDetailsPage = () => {
   const router = useRouter();
 
   useEffect(() => {
-    setReceiptItems(allCostItems.filter((item) => item.parentId === receiptId));
-  }, [allCostItems, receiptId]);
-
-  useEffect(() => {
-    setItemsTotalCost(allReceiptItems.reduce((acc, item) => acc + item.amount, 0));
-  }, [allReceiptItems]);
+    setItemsTotalCost(allReceiptLineItems.reduce((acc, item) => acc + item.amount, 0));
+  }, [allReceiptLineItems]);
 
   const showPicture = useCallback(
     (uri: string) => {
@@ -112,19 +114,23 @@ const ReceiptDetailsPage = () => {
           </View>
 
           <View style={styles.container}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
+            <View
+              style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}
+            >
               <ActionButton
                 style={styles.leftButton}
                 onPress={addLineItem}
                 type={'action'}
                 title="Add Line Item"
               />
-              <ActionButton
-                style={styles.rightButton}
-                onPress={requestAIProcessing}
-                type={'action'}
-                title="Load from Photo"
-              />
+              {allReceiptLineItems.length === 0 && (
+                <ActionButton
+                  style={styles.rightButton}
+                  onPress={requestAIProcessing}
+                  type={'action'}
+                  title="Load from Photo"
+                />
+              )}
             </View>
 
             <View
@@ -153,54 +159,8 @@ const ReceiptDetailsPage = () => {
             <View style={{ maxHeight: containerHeight - 290 }}>
               <FlatList
                 showsVerticalScrollIndicator={Platform.OS === 'web'}
-                data={allReceiptItems}
-                renderItem={({ item, index }) => (
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      width: '100%',
-                      borderTopColor: colors.separatorColor,
-                      borderTopWidth: 1,
-
-                      minHeight: 40,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Text
-                      style={{ width: 90, textAlign: 'right' }}
-                      txtSize="standard"
-                      text={formatNumber(item.amount)}
-                    />
-                    <Text
-                      style={{ flex: 1, marginHorizontal: 20, textAlign: 'left' }}
-                      txtSize="xs"
-                      text={item.label}
-                    />
-                    {item.workItemId ? (
-                      <View
-                        style={{
-                          width: 40,
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          backgroundColor: 'transparent',
-                        }}
-                      >
-                        <AntDesign name="checkcircleo" size={24} color={colors.iconColor} />
-                      </View>
-                    ) : (
-                      <View
-                        style={{
-                          width: 40,
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          backgroundColor: 'transparent',
-                        }}
-                      >
-                        <AntDesign name="questioncircleo" size={24} color={colors.iconColor} />
-                      </View>
-                    )}
-                  </View>
-                )}
+                data={allReceiptLineItems}
+                renderItem={({ item }) => <SwipeableLineItem lineItem={item} projectId={projectId} />}
               />
             </View>
 
@@ -222,8 +182,8 @@ const ReceiptDetailsPage = () => {
               <Text
                 style={{ flex: 1, marginHorizontal: 10, textAlign: 'center', fontWeight: '600' }}
                 txtSize="standard"
-                text={`Total for ${allReceiptItems.length} line ${
-                  allReceiptItems.length?.toString() === '1' ? 'item' : 'items'
+                text={`Total for ${allReceiptLineItems.length} line ${
+                  allReceiptLineItems.length?.toString() === '1' ? 'item' : 'items'
                 }`}
               />
             </View>
@@ -258,11 +218,9 @@ const styles = StyleSheet.create({
   },
 
   leftButton: {
-    marginRight: 5,
     flex: 1,
   },
   rightButton: {
     flex: 1,
-    marginLeft: 5,
   },
 });

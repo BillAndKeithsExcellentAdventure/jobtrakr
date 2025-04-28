@@ -61,7 +61,7 @@ export type WorkItemCostEntry = {
   amount: number;
   workItemId: string;
   parentId: string; // the receiptId or invoiceId
-  documentationType: string; // 'receipt' or 'invoice'
+  documentationType: 'receipt' | 'invoice';
 };
 
 export interface MediaEntryData {
