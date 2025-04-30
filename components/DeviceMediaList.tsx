@@ -206,7 +206,7 @@ export const DeviceMediaList = ({
           if (imageAddResult.status === 'Success') {
             let tn = '';
             if (imageAddResult.uri) {
-              let tn = await createThumbnail(imageAddResult?.uri, projectName);
+              let tn = await createThumbnail(imageAddResult?.uri);
             }
             if (asset.asset.mediaType === 'photo' || asset.asset.mediaType === 'video') {
               const newPhoto: MediaEntryData = {

@@ -1,11 +1,6 @@
 import * as ImageManipulator from 'expo-image-manipulator';
 
-export async function createThumbnail(
-  uri: string,
-  jobName: string,
-  width = 100,
-  height = 100,
-): Promise<string | undefined> {
+export async function createThumbnail(uri: string, width = 100, height = 100): Promise<string | undefined> {
   let thumbnailUrlInBase64: string | undefined = undefined;
 
   try {

@@ -93,7 +93,7 @@ const ProjectPhotosPage = () => {
       const imageAddResult = await addPhotoImage(asset.uri, projectId, 'photo');
 
       if (imageAddResult.status === 'Success' && imageAddResult.uri) {
-        const thumbnail = await createThumbnail(asset.uri, projectName);
+        const thumbnail = await createThumbnail(asset.uri);
 
         const newPhoto: MediaEntryData = {
           id: '',
