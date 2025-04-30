@@ -49,7 +49,7 @@ export const ProjectMediaList = ({
     if (selectedIds.length === 1) {
       const asset = mediaItems.find((asset) => asset.id === selectedIds[0]);
       if (asset) {
-        const tn = await createThumbnail(asset.mediaUri, projectName, 100, 100);
+        const tn = await createThumbnail(asset.mediaUri, projectName);
         if (tn) {
           setThumbnail(tn);
         }
@@ -84,7 +84,9 @@ export const ProjectMediaList = ({
       console.log(`photoDate=${photoDate}`);
       const dateString = photoDate ?? 'No Date Info Available';
       router.push(
-        `/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${projectName}&photoDate=${dateString}`,
+        `/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${encodeURIComponent(
+          projectName,
+        )}&photoDate=${dateString}`,
       );
     }
   }, []);
@@ -102,7 +104,7 @@ export const ProjectMediaList = ({
         },
       },
     ]);
-  }, [removePhotoData]);
+  }, [removePhotoData, mediaItems]);
 
   const renderItem = useCallback(
     ({ item }: { item: MediaEntryDisplayData }) => {

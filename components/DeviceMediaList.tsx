@@ -206,7 +206,7 @@ export const DeviceMediaList = ({
           if (imageAddResult.status === 'Success') {
             let tn = '';
             if (imageAddResult.uri) {
-              let tn = await createThumbnail(imageAddResult?.uri, projectName, 200, 200);
+              let tn = await createThumbnail(imageAddResult?.uri, projectName);
             }
             if (asset.asset.mediaType === 'photo' || asset.asset.mediaType === 'video') {
               const newPhoto: MediaEntryData = {
@@ -272,7 +272,9 @@ export const DeviceMediaList = ({
       console.log(`photoDate=${photoDate}`);
       const dateString = photoDate ?? 'No Date Info Available';
       router.push(
-        `/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${projectName}&photoDate=${dateString}`,
+        `/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${encodeURIComponent(
+          projectName,
+        )}&photoDate=${dateString}`,
       );
     }
   }, []);

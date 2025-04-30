@@ -71,31 +71,45 @@ const ProjectPhotosPage = () => {
   const addPhotoImage = useAddImageCallback();
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
 
-  const handleMenuItemPress = useCallback((item: string) => {
-    if (item === 'AddPhotos') {
-      setShowDeviceAssets(true);
+  // Memoize the permission check callback
+  const checkPermissions = useCallback(async () => {
+    if (permissionResponse?.status !== 'granted') {
+      await requestPermission();
     }
-    setHeaderMenuModalVisible(false);
-  }, []);
+  }, [permissionResponse, requestPermission]);
 
   useEffect(() => {
-    const checkPermissions = async () => {
-      console.info('Checking media permissions');
-      if (permissionResponse) {
-        console.info(`Permission status: ${permissionResponse.status}`);
-        if (permissionResponse.status !== 'granted') {
-          console.info('Requesting media permissions...');
-          await requestPermission();
-          console.info('Media permissions requested');
-        }
-      }
-    };
-
     checkPermissions();
-  }, [permissionResponse, requestPermission]);
+  }, [checkPermissions]);
 
   const allProjectMedia = useAllRows(projectId, 'mediaEntries');
   const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
+
+  // Memoize handlePhotoCaptured to prevent unnecessary recreations
+  const handlePhotoCaptured = useCallback(
+    async (asset: MediaLibrary.Asset) => {
+      if (!asset) return;
+
+      const imageAddResult = await addPhotoImage(asset.uri, projectId, 'photo');
+
+      if (imageAddResult.status === 'Success' && imageAddResult.uri) {
+        const thumbnail = await createThumbnail(asset.uri, projectName);
+
+        const newPhoto: MediaEntryData = {
+          id: '',
+          assetId: asset.id,
+          deviceName: 'Device Name',
+          mediaType: 'photo',
+          mediaUri: imageAddResult.uri,
+          thumbnail: thumbnail ?? '',
+          creationDate: Date.now(),
+        };
+
+        addPhotoData(newPhoto);
+      }
+    },
+    [projectId, projectName, addPhotoImage, addPhotoData],
+  );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
@@ -120,32 +134,12 @@ const ProjectPhotosPage = () => {
     setIsVideoPlayerVisible(true);
   };
 
-  const handlePhotoCaptured = async (asset: MediaLibrary.Asset) => {
-    if (asset) {
-      console.log('Adding a new Photo.', asset.uri);
-      // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
-      const imageAddResult = await addPhotoImage(asset.uri, projectId, 'photo');
-      console.log('Finished adding Photo.', imageAddResult);
-      if (imageAddResult.status === 'Success') {
-        const newPhoto: MediaEntryData = {
-          id: '',
-          assetId: asset.id, //imageAddResult.id ?? '',
-          deviceName: 'Device Name', // TODO: Get the device name
-          mediaType: 'photo',
-          mediaUri: imageAddResult.uri ?? '',
-          thumbnail: '',
-          creationDate: Date.now(),
-        };
-
-        if (imageAddResult.uri) {
-          newPhoto.thumbnail = (await createThumbnail(asset.uri, projectName, 200, 200)) ?? '';
-        }
-
-        const status = addPhotoData(newPhoto);
-        console.log('Finished adding Photo.', status);
-      }
+  const handleMenuItemPress = useCallback((item: string) => {
+    if (item === 'AddPhotos') {
+      setShowDeviceAssets(true);
     }
-  };
+    setHeaderMenuModalVisible(false);
+  }, []);
 
   const handleDeviceMediaClose = useCallback(() => {
     setShowDeviceAssets(false);
