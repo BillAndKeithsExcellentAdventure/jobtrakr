@@ -1,4 +1,3 @@
-import * as FileSystem from 'expo-file-system';
 import * as ImageManipulator from 'expo-image-manipulator';
 
 export async function createThumbnail(
@@ -10,26 +9,11 @@ export async function createThumbnail(
   let thumbnailUrlInBase64: string | undefined = undefined;
 
   try {
-    let thumbnailUri: string | undefined = undefined;
-
-    // Copy the original image
-    thumbnailUri = `${FileSystem.documentDirectory}Thumbnail_${jobName}.jpg`;
-    console.log(`Creating thumbnail for ${uri}...`);
-    console.log(`   by copying thumbnail file to ${thumbnailUri}...`);
-
-    await FileSystem.copyAsync({ from: uri, to: thumbnailUri });
-
-    // Manipulate the copied image to create a thumbnail
-    const manipulationContext = await ImageManipulator.ImageManipulator.manipulate(thumbnailUri);
-
-    manipulationContext.resize({ width, height });
-
-    thumbnailUrlInBase64 = await FileSystem.readAsStringAsync(thumbnailUri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    if (thumbnailUrlInBase64) {
-      await FileSystem.deleteAsync(thumbnailUri);
-    }
+    const manipulationContext = await ImageManipulator.ImageManipulator.manipulate(uri);
+    await manipulationContext.resize({ width, height });
+    const imageResult = await (await manipulationContext.renderAsync()).saveAsync({ base64: true });
+    //console.log(`Creating thumbnail ...Base64 Length: ${imageResult.base64?.length}`);
+    thumbnailUrlInBase64 = imageResult.base64;
   } catch (error) {
     console.error(`Error creating thumbnail: ${error}`);
     thumbnailUrlInBase64 = undefined;
