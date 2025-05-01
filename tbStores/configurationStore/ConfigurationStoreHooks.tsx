@@ -60,6 +60,18 @@ export interface VendorData {
   notes?: string;
 }
 
+export function WorkCategoryCodeCompareAsNumber(a: WorkCategoryData, b: WorkCategoryData) {
+  const aValue = Number(a.code);
+  const bValue = Number(b.code);
+  return (aValue as number) - (bValue as number);
+}
+
+export function WorkItemDataCodeCompareAsNumber(a: WorkItemData, b: WorkItemData) {
+  const aValue = Number(a.code);
+  const bValue = Number(b.code);
+  return (aValue as number) - (bValue as number);
+}
+
 export type CategorySchema = typeof TABLES_SCHEMA.categories;
 export type WorkItemsSchema = typeof TABLES_SCHEMA.workItems;
 export type TemplateSchema = typeof TABLES_SCHEMA.templates;
@@ -90,19 +102,24 @@ export type CellIdMap = {
 };
 
 // --- Retrieve all rows of a table ---
-export const useAllRows = <K extends keyof TableDataMap>(tableName: K): TableDataMap[K][] => {
+export const useAllRows = <K extends keyof TableDataMap>(
+  tableName: K,
+  compareFn?: (a: TableDataMap[K], b: TableDataMap[K]) => number,
+): TableDataMap[K][] => {
   const store = useStore(useStoreId());
   const [rows, setRows] = useState<TableDataMap[K][]>([]);
 
   const fetchRows = useCallback(() => {
     if (!store) return [];
     const table = store.getTable(tableName);
-    return table
+    const array = table
       ? (Object.entries(table).map(([id, row]) => ({
           ...row,
           id: id,
         })) as TableDataMap[K][])
       : [];
+    if (!compareFn) return array;
+    return array.sort(compareFn);
   }, [store, tableName]);
 
   useEffect(() => {

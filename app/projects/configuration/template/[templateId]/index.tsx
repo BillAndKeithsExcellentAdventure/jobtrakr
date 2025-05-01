@@ -5,6 +5,10 @@ import {
   useAllRows,
   useTableValue,
   useTemplateWorkItemData,
+  WorkCategoryCodeCompareAsNumber,
+  WorkCategoryData,
+  WorkItemData,
+  WorkItemDataCodeCompareAsNumber,
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { createItemsArray } from '@/utils/array';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -35,8 +39,8 @@ const ProjectTemplatesConfigurationScreen: React.FC = () => {
   const colorScheme = useColorScheme();
   const colors = colorScheme === 'dark' ? Colors.dark : Colors.light;
   const router = useRouter();
-  const allProjectCategories = useAllRows('categories');
-  const allWorkItems = useAllRows('workItems');
+  const allProjectCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
+  const allWorkItems = useAllRows('workItems', WorkItemDataCodeCompareAsNumber);
   const { setActiveWorkItemIds, templateWorkItemIds, toggleWorkItemId } = useTemplateWorkItemData(templateId);
   const [sectionData, setSectionData] = useState<SectionData[]>([]);
 
