@@ -2,8 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { CameraType, CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Button, Image, Modal, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Button, Image, Modal, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
+import { Text, View } from '@/components/Themed';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
+import ZoomPicker from '@/components/ZoomPicker';
 
 interface ProjectCameraViewProps {
   visible: boolean;
@@ -34,6 +38,30 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   const [videoPromise, setVideoPromise] = useState<Promise<any> | null>(null);
   const [cameraModeSwitch, setCameraModeSwitch] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const colorScheme = useColorScheme();
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            background: Colors.dark.background,
+            borderColor: Colors.dark.inputBorder,
+            modalOverlayBackgroundColor: Colors.dark.opaqueModalOverlayBackgroundColor,
+            transparent: Colors.dark.transparent,
+            neutral200: Colors.dark.neutral200,
+            buttonBlue: Colors.dark.buttonBlue,
+            iconColor: Colors.dark.iconColor,
+          }
+        : {
+            background: Colors.light.background,
+            borderColor: Colors.light.inputBorder,
+            modalOverlayBackgroundColor: Colors.light.opaqueModalOverlayBackgroundColor,
+            transparent: Colors.light.transparent,
+            neutral200: Colors.light.neutral200,
+            buttonBlue: Colors.light.buttonBlue,
+            iconColor: Colors.light.iconColor,
+          },
+    [colorScheme],
+  );
 
   // Move the callback definition here, before any conditional returns
   const onCameraModeChanged = useCallback(
@@ -200,9 +228,12 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
     <Modal visible={visible} animationType="slide" transparent={true}>
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.projectName}>{projectName}</Text>
+          <Text txtSize="screen-header">{projectName}</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={28} color="white" />
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text text="Close" txtSize="screen-header" style={{ marginRight: 5 }} />
+              <Ionicons name="close" size={28} color={colors.iconColor} />
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -227,25 +258,14 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
             mode={cameraModeSwitch ? 'video' : 'picture'} // Switch mode based on the switch state
           >
             <View style={styles.zoomContainer}>
-              <Picker
-                selectedValue={zoom}
-                onValueChange={handleZoom}
-                style={styles.zoomPicker}
-                dropdownIconColor="white"
-                mode="dropdown"
-                itemStyle={{ color: 'white' }} // Ensure picker items are visible
-              >
-                {[0.0, 0.25, 0.5, 0.75, 1.0].map((zoomLevel) => (
-                  <Picker.Item key={zoomLevel} label={`${zoomLevel + 1}x`} value={zoomLevel} color="black" />
-                ))}
-              </Picker>
+              <ZoomPicker />
             </View>
-            <View style={styles.buttonContainer}>
+            <View style={[styles.buttonContainer]}>
               <TouchableOpacity style={[styles.button, { marginTop: 10 }]} onPress={toggleCameraType}>
                 <Ionicons name="camera-reverse" size={30} color="white" />
               </TouchableOpacity>
 
-              <View style={styles.captureContainer}>
+              <View style={[styles.captureContainer, { backgroundColor: 'transparent' }]}>
                 {isRecording && <Text style={styles.timerText}>{formatTime(recordingTime)}</Text>}
                 <TouchableOpacity
                   style={[
@@ -265,7 +285,9 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
               </View>
 
               {showVideo && (
-                <View style={{ flexDirection: 'column', alignItems: 'center' }}>
+                <View
+                  style={{ flexDirection: 'column', alignItems: 'center', backgroundColor: 'transparent' }}
+                >
                   <TouchableOpacity
                     style={[
                       styles.cameraModeButton,
@@ -307,11 +329,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingHorizontal: 5,
+    paddingVertical: 10,
   },
   projectName: {
-    color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -373,9 +394,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     right: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     borderRadius: 15,
-    width: 125,
     overflow: 'hidden',
   },
   zoomPicker: {
