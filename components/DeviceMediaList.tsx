@@ -269,7 +269,6 @@ export const DeviceMediaList = ({
     if (type === 'video') {
       playVideo(uri);
     } else if (type === 'photo') {
-      console.log(`photoDate=${photoDate}`);
       const dateString = photoDate ?? 'No Date Info Available';
       router.push(
         `/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${encodeURIComponent(

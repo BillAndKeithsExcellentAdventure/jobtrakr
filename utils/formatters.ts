@@ -1,21 +1,28 @@
-export function formatDate(date?: Date | string | number, notSpecifiedString = 'Not Specified'): string {
+export function formatDate(
+  date?: Date | string | number,
+  notSpecifiedString = 'Not Specified',
+  includeTime = false,
+): string {
   if (!date) return notSpecifiedString;
 
   if (typeof date === 'string') {
     const actDate = new Date(date);
-    return formatDate(actDate);
+    return formatDate(actDate, notSpecifiedString, includeTime);
   }
 
   if (typeof date === 'number') {
     const actDate = new Date(date);
-    return formatDate(actDate);
+    return formatDate(actDate, notSpecifiedString, includeTime);
   }
 
   const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed, so add 1
   const day = String(date.getDate()).padStart(2, '0'); // Ensure day is two digits
   const year = String(date.getFullYear()).slice(-2); // Get the last two digits of the year
 
-  return `${month}/${day}/${year}`;
+  if (!includeTime) return `${month}/${day}/${year}`;
+
+  const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return `${month}/${day}/${year}  ${timeStr}`;
 }
 
 export function formatCurrency(amount?: number, addDollarSign = false, includeCents = false): string {

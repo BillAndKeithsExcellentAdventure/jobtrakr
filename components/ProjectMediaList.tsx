@@ -11,6 +11,8 @@ import { createThumbnail } from '@/utils/thumbnailUtils';
 import { useProjectValue } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { useRouter } from 'expo-router';
 import { useAddImageCallback } from '@/utils/images';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from './useColorScheme';
 
 export interface MediaEntryDisplayData extends MediaEntryData {
   isSelected: boolean;
@@ -20,7 +22,7 @@ interface ProjectMediaListProps {
   projectMediaItems: MediaEntryData[];
   projectId: string;
   projectName: string;
-  showInSingleColum: boolean;
+  showInSingleColumn: boolean;
   playVideo: (videoUri: string) => void;
 }
 
@@ -28,13 +30,37 @@ export const ProjectMediaList = ({
   projectMediaItems,
   projectId,
   projectName,
-  showInSingleColum,
+  showInSingleColumn,
   playVideo,
 }: ProjectMediaListProps) => {
   const [mediaItems, setMediaItems] = useState<MediaEntryDisplayData[]>([]);
   const [, setThumbnail] = useProjectValue(projectId, 'thumbnail');
   const removePhotoData = useDeleteRowCallback(projectId, 'mediaEntries');
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? {
+            screenBackground: Colors.dark.background,
+            listBackground: Colors.dark.listBackground,
+            itemBackground: Colors.dark.itemBackground,
+            iconColor: Colors.dark.iconColor,
+            shadowColor: Colors.dark.shadowColor,
+            bottomSheetBackground: Colors.dark.bottomSheetBackground,
+            text: Colors.dark.text,
+          }
+        : {
+            screenBackground: Colors.light.background,
+            listBackground: Colors.light.listBackground,
+            itemBackground: Colors.light.itemBackground,
+            iconColor: Colors.light.iconColor,
+            shadowColor: Colors.light.shadowColor,
+            bottomSheetBackground: Colors.light.bottomSheetBackground,
+            text: Colors.light.text,
+          },
+    [colorScheme],
+  );
 
   useEffect(() => {
     // Initialize selectableProjectMedia whenever allProjectMedia changes
@@ -81,7 +107,6 @@ export const ProjectMediaList = ({
     if (type === 'video') {
       playVideo(uri);
     } else if (type === 'photo') {
-      console.log(`photoDate=${photoDate}`);
       const dateString = photoDate ?? 'No Date Info Available';
       router.push(
         `/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${encodeURIComponent(
@@ -107,12 +132,16 @@ export const ProjectMediaList = ({
   }, [removePhotoData, mediaItems]);
 
   const renderItem = useCallback(
-    ({ item }: { item: MediaEntryDisplayData }) => {
-      const photoDate = formatDate(item.creationDate);
+    ({ item, index }: { item: MediaEntryDisplayData; index: number }) => {
+      const photoDate = formatDate(item.creationDate, undefined, true);
       return (
-        <View style={styles.imageContainer}>
+        <View style={[{ flex: 1 }, index % 2 ? { paddingLeft: 5 } : { paddingRight: 5 }, { paddingTop: 5 }]}>
           <TouchableOpacity
-            style={[styles.imageContainer, item.isSelected && styles.imageSelected]}
+            style={[
+              styles.imageContainer,
+              { backgroundColor: colors.listBackground, borderColor: colors.listBackground },
+              item.isSelected && styles.imageSelected,
+            ]}
             onPress={() => handleSelection(item.id)}
             onLongPress={() => handleImageLongPress(item.mediaUri, item.mediaType, photoDate)}
           >
@@ -136,10 +165,7 @@ export const ProjectMediaList = ({
     <View style={styles.listColumn}>
       <View style={{ alignItems: 'center' }}>
         <Text txtSize="title" style={styles.listTitle}>
-          Project Photos
-        </Text>
-        <Text txtSize="sub-title" style={{ marginLeft: 10 }}>
-          {`Project contains ${mediaItems.length} pictures.`}
+          Project Photos/Videos
         </Text>
       </View>
 
@@ -156,13 +182,13 @@ export const ProjectMediaList = ({
                 size={24}
                 color="#007AFF"
               />
-              <Text>{hasSelectedItems ? 'Clear Selection' : 'Select All'}</Text>
+              <Text style={{ marginLeft: 10 }}>{hasSelectedItems ? 'Clear Selection' : 'Select All'}</Text>
             </TouchableOpacity>
             {hasSelectedItems && <Text>{`${selectedCount} selected`}</Text>}
           </View>
 
           <FlashList
-            numColumns={showInSingleColum ? 1 : 2}
+            numColumns={showInSingleColumn ? 1 : 2}
             data={mediaItems}
             estimatedItemSize={200}
             renderItem={renderItem}
@@ -204,6 +230,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
   buttonRow: {
     flexDirection: 'row',
@@ -214,6 +241,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   mediaContentContainer: {
+    position: 'relative',
     alignItems: 'center',
     alignContent: 'center',
     justifyContent: 'center',
@@ -224,17 +252,17 @@ const styles = StyleSheet.create({
   imageContainer: {
     position: 'relative',
     flex: 1,
-    marginBottom: 10,
     borderWidth: 3,
-    borderColor: 'transparent',
   },
   dateOverlay: {
     position: 'absolute',
-    bottom: 10,
-    right: 60,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    bottom: 5, // Adjust as needed
+    left: 0,
+    right: 0,
+    textAlign: 'center',
     color: 'white',
-    padding: 5,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingVertical: 2,
     borderRadius: 4,
     fontSize: 12,
   },

@@ -1,8 +1,10 @@
 import ProjectCameraView from '@/app/(modals)/CameraView';
 import { ActionButton } from '@/components/ActionButton';
 import { ActionButtonProps } from '@/components/ButtonBar';
+import { DeviceMediaList } from '@/components/DeviceMediaList';
 import { ProjectMediaList } from '@/components/ProjectMediaList';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
+import { Switch } from '@/components/Switch';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { VideoPlayerModal } from '@/components/VideoPlayerModal';
@@ -24,7 +26,7 @@ import { StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const ProjectPhotosPage = () => {
+const ImportDevicePhotosPage = () => {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = useMemo(
@@ -52,6 +54,7 @@ const ProjectPhotosPage = () => {
   );
 
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
+  const [useProjectLocation, setUseProjectLocation] = useState(false);
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
@@ -83,6 +86,7 @@ const ProjectPhotosPage = () => {
   const allProjectMedia = useAllRows(projectId, 'mediaEntries');
   const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
 
+  // Memoize handlePhotoCaptured to prevent unnecessary recreations
   const handlePhotoCaptured = useCallback(
     async (asset: MediaLibrary.Asset) => {
       if (!asset) return;
@@ -108,21 +112,6 @@ const ProjectPhotosPage = () => {
     [projectId, projectName, addPhotoImage, addPhotoData],
   );
 
-  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
-    () => [
-      {
-        icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
-        label: 'Import Photos',
-        onPress: () => {
-          handleMenuItemPress('AddPhotos');
-        },
-      },
-    ],
-    [colors],
-  );
-  const [showDeviceAssets, setShowDeviceAssets] = useState<boolean>(false);
-  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
-  const [isCameraVisible, setIsCameraVisible] = useState(false);
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
 
@@ -131,41 +120,12 @@ const ProjectPhotosPage = () => {
     setIsVideoPlayerVisible(true);
   };
 
-  const handleMenuItemPress = useCallback((item: string) => {
-    if (item === 'AddPhotos') {
-      setHeaderMenuModalVisible(false);
-      router.push(
-        `/projects/${projectId}/photos/importFromDevice/?projectName=${encodeURIComponent(projectName)}`,
-      );
-    }
-  }, []);
-
-  const handleDeviceMediaClose = useCallback(() => {
-    setShowDeviceAssets(false);
-  }, []);
-
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
       <Stack.Screen
         options={{
           headerShown: true,
-          title: projectName,
-          headerRight: () => (
-            <Pressable
-              onPress={() => {
-                setHeaderMenuModalVisible(!headerMenuModalVisible);
-              }}
-            >
-              {({ pressed }) => (
-                <Ionicons
-                  name="menu-outline"
-                  size={24}
-                  color={colors.iconColor}
-                  style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                />
-              )}
-            </Pressable>
-          ),
+          title: 'Import photos from device',
         }}
       />
 
@@ -174,30 +134,40 @@ const ProjectPhotosPage = () => {
       ) : (
         <>
           <View style={styles.headerInfo}>
-            <ActionButton
-              style={{ alignSelf: 'stretch', marginTop: 5 }}
-              type={'action'}
-              title={'Take Picture / Video'}
-              onPress={() => setIsCameraVisible(true)}
-            />
+            <View
+              style={{
+                marginTop: 5,
+                marginBottom: 5,
+                alignSelf: 'center',
+                alignItems: 'center',
+                flexDirection: 'row',
+              }}
+            >
+              <Text text="Filter:" txtSize="standard" style={{ marginRight: 10 }} />
+              <Text text="All" txtSize="standard" style={{ marginRight: 10 }} />
+              <Switch
+                value={useProjectLocation}
+                onValueChange={() => setUseProjectLocation(!useProjectLocation)}
+                size="large"
+              />
+              <Text text="Near Project" txtSize="standard" style={{ marginLeft: 10 }} />
+            </View>
           </View>
           <View style={styles.listsContainer}>
-            <ProjectMediaList
-              projectId={projectId}
-              projectName={projectName}
-              showInSingleColumn={showDeviceAssets}
-              projectMediaItems={allProjectMedia}
-              playVideo={playVideo}
-            />
+            <>
+              <View style={styles.separator} />
+              <DeviceMediaList
+                projectId={projectId}
+                projectName={projectName}
+                useProjectLocation={useProjectLocation}
+                allProjectMedia={allProjectMedia}
+                onClose={() => router.back}
+                playVideo={playVideo}
+                setUseProjectLocation={setUseProjectLocation}
+              />
+            </>
           </View>
         </>
-      )}
-      {headerMenuModalVisible && (
-        <RightHeaderMenu
-          modalVisible={headerMenuModalVisible}
-          setModalVisible={setHeaderMenuModalVisible}
-          buttons={rightHeaderMenuButtons}
-        />
       )}
       {selectedVideo && (
         <VideoPlayerModal
@@ -205,15 +175,6 @@ const ProjectPhotosPage = () => {
           videoUri={selectedVideo}
           onClose={() => setIsVideoPlayerVisible(false)}
         />
-      )}
-      {isCameraVisible && (
-        <ProjectCameraView
-          visible={isCameraVisible}
-          projectName={projectName}
-          onMediaCaptured={handlePhotoCaptured}
-          onClose={() => setIsCameraVisible(false)}
-          showPreview={false}
-        ></ProjectCameraView>
       )}
     </SafeAreaView>
   );
@@ -224,7 +185,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerInfo: {
-    marginHorizontal: 10,
     paddingHorizontal: 10,
     alignItems: 'center',
   },
@@ -240,4 +200,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProjectPhotosPage;
+export default ImportDevicePhotosPage;
