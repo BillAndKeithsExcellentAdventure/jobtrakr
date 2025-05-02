@@ -6,21 +6,26 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from './useColorScheme';
 import { Text, View } from '@/components/Themed';
 
-const ZoomPicker = () => {
+const ZoomPicker = ({
+  value,
+  onZoomChange,
+}: {
+  value: number;
+  onZoomChange: (zoomFactor: number) => void;
+}) => {
   const [modalVisible, setModalVisible] = useState(false);
 
   const options: OptionEntry[] = useMemo(
     () => [
-      { label: '1x', value: 1.0 },
-      { label: '1.25x', value: 1.25 },
-      { label: '1.5x', value: 1.5 },
-      { label: '1.75x', value: 1.75 },
-      { label: '2x', value: 2.0 },
+      { label: 'None', value: 0.0 },
+      { label: '25%', value: 0.25 },
+      { label: '50%', value: 0.5 },
+      { label: '75%', value: 0.75 },
+      { label: 'Max', value: 1.0 },
     ],
     [],
   );
 
-  const [selectedValue, setSelectedValue] = useState(options[0].value);
   const colorScheme = useColorScheme();
   const colors = useMemo(
     () =>
@@ -51,16 +56,13 @@ const ZoomPicker = () => {
       {Platform.OS === 'ios' ? (
         <>
           <TouchableOpacity style={styles.selector} onPress={() => setModalVisible(true)}>
-            <Text style={styles.selectorText}>Zoom: {selectedValue}</Text>
+            <Text style={styles.selectorText}>Zoom: {value}</Text>
           </TouchableOpacity>
 
           <Modal animationType="slide" transparent={true} visible={modalVisible}>
             <View style={styles.modalOverlay}>
               <View style={styles.modalContent}>
-                <Picker
-                  selectedValue={selectedValue}
-                  onValueChange={(itemValue) => setSelectedValue(itemValue)}
-                >
+                <Picker selectedValue={value} onValueChange={onZoomChange}>
                   {options.map((option) => (
                     <Picker.Item key={option.label} label={option.label} value={option.value} color="black" />
                   ))}
@@ -90,8 +92,8 @@ const ZoomPicker = () => {
               Zoom:
             </Text>
             <Picker
-              selectedValue={selectedValue}
-              onValueChange={(itemValue) => setSelectedValue(itemValue)}
+              selectedValue={value}
+              onValueChange={onZoomChange}
               style={[styles.androidPicker]}
               dropdownIconColor={'black'}
               mode="dropdown"

@@ -2,23 +2,15 @@ import { ActionButton } from '@/components/ActionButton';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { FlashList } from '@shopify/flash-list';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
-import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
+import { FlashList } from '@shopify/flash-list';
+import * as ImagePicker from 'expo-image-picker';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Platform, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import {
-  GestureHandlerRootView,
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
-import * as ImagePicker from 'expo-image-picker';
+import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { ReceiptSummary } from '@/components/ReceiptSummary';
-import { useAuth } from '@clerk/clerk-expo';
-import { useAddImageCallback } from '@/utils/images';
 import {
   ReceiptData,
   useAddRowCallback,
@@ -26,6 +18,10 @@ import {
   useDeleteRowCallback,
   useIsStoreAvailableCallback,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useAddImageCallback } from '@/utils/images';
+import { useAuth } from '@clerk/clerk-expo';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
   return actionContext && typeof actionContext.PictureUri === 'string';
@@ -222,7 +218,7 @@ const ProjectReceiptsPage = () => {
       return;
     }
 
-    const cameraResponse = await ImagePicker.launchCameraAsync();
+    const cameraResponse = await ImagePicker.launchCameraAsync({ quality: 0.25 });
 
     if (!cameraResponse.canceled) {
       const asset = cameraResponse.assets[0];
@@ -252,10 +248,10 @@ const ProjectReceiptsPage = () => {
         newReceipt.id = response.id;
         console.log('Project receipt successfully added:', newReceipt);
       } else {
-        alert(`Unable to inset Project receipt: ${JSON.stringify(newReceipt)}`);
+        alert(`Unable to insert Project receipt: ${JSON.stringify(newReceipt)} - ${response.msg}`);
       }
     }
-  }, []);
+  }, [projectId]);
 
   const handleAddReceipt = useCallback(() => {
     router.push(`/projects/${projectId}/receipt/add/?projectName=${projectName}`);

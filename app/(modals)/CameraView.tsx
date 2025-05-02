@@ -1,8 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 import { CameraType, CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Image, Modal, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
@@ -31,13 +30,13 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   const [permission, requestPermission] = useCameraPermissions();
   const [micPermission, requestMicPermission] = useMicrophonePermissions();
   const [isRecording, setIsRecording] = useState(false);
-  const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
   const [previewUri, setPreviewUri] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(0);
+  const [zoom, setZoom] = useState(0.0);
   const [video, setVideo] = useState<string | undefined>();
   const [videoPromise, setVideoPromise] = useState<Promise<any> | null>(null);
   const [cameraModeSwitch, setCameraModeSwitch] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const cameraRef = useRef<CameraView>(null);
   const colorScheme = useColorScheme();
   const colors = useMemo(
     () =>
@@ -126,10 +125,10 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   };
 
   const takePicture = async () => {
-    if (!cameraRef) return;
+    if (!cameraRef.current) return;
 
     try {
-      const photo = await cameraRef?.takePictureAsync({ exif: true });
+      const photo = await cameraRef.current.takePictureAsync({ exif: true });
       if (photo) {
         if (showPreview) {
           setPreviewUri(photo.uri);
@@ -145,14 +144,14 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   };
 
   const startRecording = async () => {
-    if (!cameraRef) return;
+    if (!cameraRef.current) return;
 
     console.log('Starting recording...');
     setIsRecording(true);
     try {
       console.log('Before recordAsync...');
 
-      const promise = cameraRef.recordAsync();
+      const promise = cameraRef.current.recordAsync();
       setVideoPromise(promise);
 
       const v = await promise;
@@ -172,10 +171,10 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   };
 
   const stopRecording = async () => {
-    if (!cameraRef) return;
+    if (!cameraRef.current) return;
     console.log('Stopping recording...');
 
-    await cameraRef?.stopRecording();
+    await cameraRef.current.stopRecording();
     console.log('After Stopping recording...');
 
     if (videoPromise) {
@@ -251,14 +250,14 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
           </View>
         ) : (
           <CameraView
-            ref={(ref) => setCameraRef(ref)}
+            ref={cameraRef}
             style={styles.camera}
             facing={type}
             zoom={zoom}
             mode={cameraModeSwitch ? 'video' : 'picture'} // Switch mode based on the switch state
           >
             <View style={styles.zoomContainer}>
-              <ZoomPicker />
+              <ZoomPicker value={zoom} onZoomChange={(zoomFactor: number) => setZoom(zoomFactor)} />
             </View>
             <View style={[styles.buttonContainer]}>
               <TouchableOpacity style={[styles.button, { marginTop: 10 }]} onPress={toggleCameraType}>
