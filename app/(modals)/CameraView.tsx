@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { CameraType, CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Image, Modal, Platform, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image, Modal, Platform, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -33,7 +33,6 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   const [zoom, setZoom] = useState(0.0);
-  const [video, setVideo] = useState<string | undefined>();
   const [videoPromise, setVideoPromise] = useState<Promise<any> | null>(null);
   const [cameraModeSwitch, setCameraModeSwitch] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -222,6 +221,7 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
 
   const onSetVideoMode = () => {
     setCameraModeSwitch(true);
+  };
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
@@ -256,7 +256,6 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
             zoom={zoom}
             mode={cameraModeSwitch ? 'video' : 'picture'}
           >
-            {/* Zooming is not working on IOS so just leave at zoom of 0.0 */}
             {Platform.OS === 'android' && (
               <View style={styles.zoomContainer}>
                 <ZoomPicker value={zoom} onZoomChange={(zoomFactor: number) => setZoom(zoomFactor)} />
