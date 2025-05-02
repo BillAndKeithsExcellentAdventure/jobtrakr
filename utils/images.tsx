@@ -199,14 +199,13 @@ const copyToLocalFolder = async (
       to: destinationUri,
     });
 
-    console.log(`File copied successfully to ${destinationUri}`);
-
     // Update imageUri to use the new location
     imageUri = destinationUri;
 
     return {
       status: 'Success',
       id: details.id,
+      uri: destinationUri,
       msg: `Successfully copied file to local app folder.`,
     };
   } catch (error) {
@@ -261,17 +260,17 @@ export const useAddImageCallback = () => {
       };
 
       const copyLocalResult = await copyToLocalFolder(imageUri, details, resourceType);
-      if (copyLocalResult.status !== 'Success') {
+      if (copyLocalResult.status !== 'Success' || !!copyLocalResult.uri) {
         return copyLocalResult;
       }
 
       // Upload to backend
-      const uploadResult = await uploadImage(details, token, resourceType, imageUri);
+      const uploadResult = await uploadImage(details, token, resourceType, copyLocalResult.uri!);
       if (uploadResult.status !== 'Success') {
         const data: FailedToUploadData = {
           id: id,
           resourceType: resourceType,
-          localUri: imageUri,
+          localUri: copyLocalResult.uri!,
           organizationId: orgId,
           projectId: projectId,
           itemId: id,

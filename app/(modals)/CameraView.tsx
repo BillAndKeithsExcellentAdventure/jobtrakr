@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { CameraType, CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Image, Modal, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
+import { Button, Image, Modal, Platform, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -254,11 +254,14 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
             style={styles.camera}
             facing={type}
             zoom={zoom}
-            mode={cameraModeSwitch ? 'video' : 'picture'} // Switch mode based on the switch state
+            mode={cameraModeSwitch ? 'video' : 'picture'}
           >
-            <View style={styles.zoomContainer}>
-              <ZoomPicker value={zoom} onZoomChange={(zoomFactor: number) => setZoom(zoomFactor)} />
-            </View>
+            {/* Zooming is not working on IOS so just leave at zoom of 0.0 */}
+            {Platform.OS === 'android' && (
+              <View style={styles.zoomContainer}>
+                <ZoomPicker value={zoom} onZoomChange={(zoomFactor: number) => setZoom(zoomFactor)} />
+              </View>
+            )}
             <View style={[styles.buttonContainer]}>
               <TouchableOpacity style={[styles.button, { marginTop: 10 }]} onPress={toggleCameraType}>
                 <Ionicons name="camera-reverse" size={30} color="white" />
