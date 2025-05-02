@@ -7,6 +7,7 @@ import { Text, View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import ZoomPicker from '@/components/ZoomPicker';
+import { ActionButton } from '@/components/ActionButton';
 
 interface ProjectCameraViewProps {
   visible: boolean;
@@ -105,7 +106,7 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
     return (
       <View style={styles.container}>
         <Text style={styles.message}>We need your permission to show the camera</Text>
-        <Button onPress={requestPermission} title="grant permission" />
+        <ActionButton type="action" onPress={requestPermission} title="Grant Permission" />
       </View>
     );
   }
@@ -115,7 +116,7 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
     return (
       <View style={styles.container}>
         <Text style={styles.message}>We need your permission to show the camera</Text>
-        <Button onPress={requestMicPermission} title="grant permission" />
+        <ActionButton type="action" onPress={requestMicPermission} title="Grant Permission" />
       </View>
     );
   }
@@ -221,7 +222,6 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
 
   const onSetVideoMode = () => {
     setCameraModeSwitch(true);
-  };
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
