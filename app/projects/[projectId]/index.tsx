@@ -54,8 +54,6 @@ const ProjectDetailsPage = () => {
   const allWorkItems = useAllConfigRows('workItems');
   const colorScheme = useColorScheme();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
-  const [sectionData, setSectionData] = useState<CostSectionData[]>([]);
-  const expandedSectionIdRef = useRef<string>(''); // Ref to keep track of the expanded section ID
   const [seedWorkItems, setSeedWorkItems] = useProjectValue(projectId, 'seedWorkItems');
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const addWorkItemSummary = useAddRowCallback(projectId, 'workItemSummaries');
@@ -98,61 +96,52 @@ const ProjectDetailsPage = () => {
     }
   }, [projectId, seedWorkItems, allWorkItemSummaries]);
 
-  useEffect(() => {
-    const sections: CostSectionData[] = [];
-    for (const costItem of allWorkItemSummaries) {
-      const workItem = allWorkItems.find((item) => item.id === costItem.workItemId);
-      if (workItem) {
-        const category = allProjectCategories.find((cat) => cat.id === workItem.categoryId);
-        if (category) {
-          const section = sections.find((sec) => sec.id === category.id);
-          if (section) {
-            section.data.push({
-              id: workItem.id,
-              code: workItem.code,
-              title: workItem.name,
-              bidAmount: costItem.bidAmount,
-              spentAmount: costItem.spentAmount,
-            });
-          } else {
-            sections.push({
-              id: category.id,
-              code: category.code,
-              title: category.name,
-              totalBidAmount: 0,
-              totalSpentAmount: 0,
-              isExpanded: expandedSectionIdRef.current === category.id,
-              data: [
-                {
-                  id: workItem.id,
-                  code: workItem.code,
-                  title: workItem.name,
-                  bidAmount: costItem.bidAmount,
-                  spentAmount: costItem.spentAmount,
-                },
-              ],
-            });
-          }
-        }
-      }
-    }
-    // Sort sections by code
-    sections.sort((a, b) => a.code.localeCompare(b.code));
+  const [expandedSectionId, setExpandedSectionId] = useState<string>('');
 
-    // Sort items within each section
+  const sectionData = useMemo(() => {
+    const sections: CostSectionData[] = [];
+    const workItemMap = new Map(allWorkItems.map((w) => [w.id, w]));
+    const categoryMap = new Map(allProjectCategories.map((c) => [c.id, c]));
+
+    for (const costItem of allWorkItemSummaries) {
+      const workItem = workItemMap.get(costItem.workItemId);
+      if (!workItem) continue;
+
+      const category = categoryMap.get(workItem.categoryId);
+      if (!category) continue;
+
+      let section = sections.find((sec) => sec.id === category.id);
+      if (!section) {
+        section = {
+          id: category.id,
+          code: category.code,
+          title: category.name,
+          totalBidAmount: 0,
+          totalSpentAmount: 0,
+          isExpanded: expandedSectionId === category.id,
+          data: [],
+        };
+        sections.push(section);
+      }
+
+      section.data.push({
+        id: workItem.id,
+        code: workItem.code,
+        title: workItem.name,
+        bidAmount: costItem.bidAmount,
+        spentAmount: costItem.spentAmount,
+      });
+    }
+
     sections.forEach((section) => {
       section.data.sort((a, b) => a.code.localeCompare(b.code));
-    });
-
-    // sum up the bid and spent amounts for each section
-    sections.forEach((section) => {
       section.totalBidAmount = section.data.reduce((sum, item) => sum + item.bidAmount, 0);
       section.totalSpentAmount = section.data.reduce((sum, item) => sum + item.spentAmount, 0);
     });
 
-    // Set the section data state
-    setSectionData(sections);
-  }, [allWorkItemSummaries, allProjectCategories, allWorkItems]);
+    sections.sort((a, b) => a.code.localeCompare(b.code));
+    return sections;
+  }, [allWorkItemSummaries, allWorkItems, allProjectCategories, expandedSectionId]);
 
   // Define colors based on the color scheme (dark or light)
   const colors = useMemo(
@@ -229,15 +218,7 @@ const ProjectDetailsPage = () => {
   );
 
   const toggleSection = (id: string) => {
-    expandedSectionIdRef.current = expandedSectionIdRef.current === id ? '' : id;
-
-    setSectionData((prevData) =>
-      prevData.map((section) =>
-        section.id === id
-          ? { ...section, isExpanded: !section.isExpanded }
-          : { ...section, isExpanded: false },
-      ),
-    );
+    setExpandedSectionId((prevId) => (prevId === id ? '' : id));
   };
 
   if (!projectData) {
