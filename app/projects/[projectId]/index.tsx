@@ -12,6 +12,7 @@ import {
 import {
   useAddRowCallback,
   useAllRows,
+  useCostUpdater,
   useIsStoreAvailableCallback,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/utils/formatters';
@@ -54,8 +55,11 @@ const ProjectDetailsPage = () => {
   const allWorkItems = useAllConfigRows('workItems');
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [seedWorkItems, setSeedWorkItems] = useProjectValue(projectId, 'seedWorkItems');
+  const [bidAmount, setBidAmount] = useProjectValue(projectId, 'bidPrice');
+  const [amountSpent, setAmountSpent] = useProjectValue(projectId, 'amountSpent');
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const addWorkItemSummary = useAddRowCallback(projectId, 'workItemSummaries');
+  const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
 
@@ -96,18 +100,21 @@ const ProjectDetailsPage = () => {
   }, [projectId, seedWorkItems, allWorkItemSummaries]);
 
   const [expandedSectionId, setExpandedSectionId] = useState<string>('');
-
+  useCostUpdater(projectId);
   const sectionData = useMemo(() => {
     const sections: CostSectionData[] = [];
     const workItemMap = new Map(allWorkItems.map((w) => [w.id, w]));
     const categoryMap = new Map(allProjectCategories.map((c) => [c.id, c]));
-
     for (const costItem of allWorkItemSummaries) {
       const workItem = workItemMap.get(costItem.workItemId);
       if (!workItem) continue;
 
       const category = categoryMap.get(workItem.categoryId);
       if (!category) continue;
+
+      costItem.spentAmount = allActualCostItems
+        .filter((i) => i.workItemId === workItem.id)
+        .reduce((sum, item) => sum + item.amount, 0);
 
       let section = sections.find((sec) => sec.id === category.id);
       if (!section) {
@@ -141,6 +148,16 @@ const ProjectDetailsPage = () => {
     sections.sort((a, b) => a.code.localeCompare(b.code));
     return sections;
   }, [allWorkItemSummaries, allWorkItems, allProjectCategories, expandedSectionId]);
+  /*
+  useEffect(() => {
+    const projectTotalSpent = sectionData.reduce((sum, item) => sum + item.totalSpentAmount, 0);
+    if (amountSpent != projectTotalSpent) setAmountSpent(projectTotalSpent);
+  }, [sectionData, amountSpent, setAmountSpent]);
+*/
+  useEffect(() => {
+    const projectTotalBid = sectionData.reduce((sum, item) => sum + item.totalBidAmount, 0);
+    if (bidAmount != projectTotalBid) setBidAmount(projectTotalBid);
+  }, [sectionData, bidAmount, setBidAmount]);
 
   const handleMenuItemPress = useCallback(
     (menuItem: string, actionContext: any) => {

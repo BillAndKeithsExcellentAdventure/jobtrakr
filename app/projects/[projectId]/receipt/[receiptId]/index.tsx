@@ -5,6 +5,7 @@ import { useColors } from '@/context/ColorsContext';
 import {
   ReceiptData,
   useAllRows,
+  useCostUpdater,
   WorkItemCostEntry,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/utils/formatters';
@@ -19,6 +20,7 @@ const ReceiptDetailsPage = () => {
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
   const allProjectReceipts = useAllRows(projectId, 'receipts');
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
+  useCostUpdater(projectId);
 
   const [allReceiptLineItems, setAllReceiptLineItems] = useState<WorkItemCostEntry[]>([]);
 

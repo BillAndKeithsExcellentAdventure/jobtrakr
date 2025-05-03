@@ -20,6 +20,7 @@ const {
 import { useCallback, useEffect, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import { CrudResult } from '@/models/types';
+import { useProjectValue } from '../listOfProjects/ListOfProjectsStore';
 
 export interface WorkItemSummaryData {
   id: string;
@@ -225,3 +226,14 @@ export function useIsStoreAvailableCallback(projectId: string) {
     return true;
   }, [store]);
 }
+
+// --- Retrieve all rows of a table ---
+export const useCostUpdater = (projectId: string): void => {
+  const allCostRows = useAllRows(projectId, 'workItemCostEntries');
+  const [, setAmountSpent] = useProjectValue(projectId, 'amountSpent');
+
+  useEffect(() => {
+    const spentAmount = allCostRows.reduce((sum, item) => sum + item.amount, 0);
+    setAmountSpent(spentAmount);
+  }, [allCostRows]);
+};
