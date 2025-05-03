@@ -6,7 +6,11 @@ import { OptionPickerItem } from '@/components/OptionPickerItem';
 import { TextField } from '@/components/TextField';
 import { View } from '@/components/Themed';
 import { useColors } from '@/context/ColorsContext';
-import { useAllRows as useAllRowsConfiguration } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  useAllRows as useAllRowsConfiguration,
+  WorkCategoryCodeCompareAsNumber,
+  WorkItemDataCodeCompareAsNumber,
+} from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   useAddRowCallback,
   useAllRows,
@@ -29,7 +33,7 @@ const AddReceiptLineItemPage = () => {
   const updateLineItem = useUpdateRowCallback(projectId, 'workItemCostEntries');
   const deleteLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
   const allWorkItems = useAllRowsConfiguration('workItems');
-  const allWorkCategories = useAllRowsConfiguration('categories');
+  const allWorkCategories = useAllRowsConfiguration('categories', WorkCategoryCodeCompareAsNumber);
 
   const availableCategoriesOptions: OptionEntry[] = useMemo(() => {
     // get a list of all unique workitemids from allWorkItemCostSummaries available in the project
@@ -111,7 +115,9 @@ const AddReceiptLineItemPage = () => {
     (selectedCategory: OptionEntry) => {
       setPickedCategoryOption(selectedCategory);
       if (selectedCategory) {
-        const workItems = allWorkItems.filter((item) => item.categoryId === selectedCategory.value);
+        const workItems = allWorkItems
+          .filter((item) => item.categoryId === selectedCategory.value)
+          .sort(WorkItemDataCodeCompareAsNumber);
         const subCategories = workItems.map((item) => {
           return allAvailableCostItemOptions.find((o) => o.value === item.id) ?? { label: '', value: '' };
         });

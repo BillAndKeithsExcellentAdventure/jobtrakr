@@ -70,6 +70,29 @@ export const OptionPickerItem: React.FC<OptionPickerItemProps> = ({
   const iconColor = useThemeColor({ light: undefined, dark: undefined }, 'iconColor');
   const textDim = useThemeColor({ light: undefined, dark: undefined }, 'textDim');
 
+  if (!editable) {
+    return (
+      <Pressable onPress={onPickerButtonPress}>
+        <View style={[styles.optionPickerRow, containerStyle]}>
+          <View style={{ flex: 1 }}>
+            <TextField
+              style={inputStyle}
+              label={label}
+              placeholder={placeholder}
+              placeholderTextColor={textDim}
+              onChangeText={onOptionLabelChange}
+              value={optionLabel}
+              editable={editable}
+            />
+          </View>
+          <View style={[styles.pickerButtonContainer, { justifyContent: 'flex-end' }]}>
+            <Ionicons name="ellipsis-horizontal-circle" size={36} color={iconColor} />
+          </View>
+        </View>
+      </Pressable>
+    );
+  }
+
   return (
     <View style={[styles.optionPickerRow, containerStyle]}>
       <View style={{ flex: 1 }}>
@@ -80,11 +103,11 @@ export const OptionPickerItem: React.FC<OptionPickerItemProps> = ({
           placeholderTextColor={textDim}
           onChangeText={onOptionLabelChange}
           value={optionLabel}
-          editable
+          editable={editable}
         />
       </View>
-      <Pressable style={{ justifyContent: 'flex-end' }} onPress={onPickerButtonPress}>
-        <View style={[styles.pickerButtonContainer]}>
+      <Pressable onPress={onPickerButtonPress}>
+        <View style={[styles.pickerButtonContainer, { justifyContent: 'flex-end' }]}>
           <Ionicons name="ellipsis-horizontal-circle" size={36} color={iconColor} />
         </View>
       </Pressable>
