@@ -1,32 +1,11 @@
+import { Text } from '@/components/Themed';
+import { useColors } from '@/context/ColorsContext';
+import { Stack } from 'expo-router';
 import * as React from 'react';
-import { TextInput, Text, View } from '@/components/Themed';
-import { TouchableOpacity } from 'react-native';
-import { useSignUp, useClerk, useAuth } from '@clerk/clerk-expo';
-import { Link, Redirect, Stack, useRouter } from 'expo-router';
-import { Colors } from '@/constants/Colors';
-import { useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useColorScheme } from '@/components/useColorScheme';
 
 export default function InviteUser() {
-  const colorScheme = useColorScheme();
-  const colors = React.useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            listBackground: Colors.dark.listBackground,
-            borderColor: Colors.dark.borderColor,
-            iconColor: Colors.dark.iconColor,
-            textColor: Colors.dark.text,
-          }
-        : {
-            listBackground: Colors.light.listBackground,
-            borderColor: Colors.light.borderColor,
-            iconColor: Colors.light.iconColor,
-            textColor: Colors.light.text,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
@@ -37,7 +16,7 @@ export default function InviteUser() {
           headerTitleAlign: 'center',
         }}
       />
-      <Text style={{ ...styles.input, color: colors.textColor }}>Invite User</Text>
+      <Text style={{ ...styles.input, color: colors.text }}>Invite User</Text>
     </SafeAreaView>
   );
 }

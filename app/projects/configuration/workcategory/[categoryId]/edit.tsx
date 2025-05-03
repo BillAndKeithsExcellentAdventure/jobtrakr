@@ -1,10 +1,9 @@
 import OkayCancelButtons from '@/components/OkayCancelButtons';
 import { Text, TextInput, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
+import { useColors } from '@/context/ColorsContext';
 import { useTableValue, useUpdateRowCallback } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -26,18 +25,7 @@ const EditWorkCategory = () => {
     setNewName(name);
   }, [name]);
 
-  const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            neutral200: Colors.dark.neutral200,
-          }
-        : {
-            neutral200: Colors.light.neutral200,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   const handleSave = () => {
     if (newName && newCode) {

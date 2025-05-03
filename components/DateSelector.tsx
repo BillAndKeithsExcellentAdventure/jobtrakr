@@ -1,11 +1,10 @@
-import { Platform, TouchableOpacity, StyleSheet } from 'react-native';
-import { View, Text } from './Themed';
-import { TextField } from './TextField';
-import { useCallback, useMemo, useState } from 'react';
+import { useColors } from '@/context/ColorsContext';
 import { formatDate } from '@/utils/formatters';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from './useColorScheme';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useCallback, useState } from 'react';
+import { Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import { TextField } from './TextField';
+import { Text, View } from './Themed';
 
 export const DateSelector = ({
   label,
@@ -22,25 +21,7 @@ export const DateSelector = ({
     setShowDatePicker(!showDatePicker);
   }, []);
 
-  const colorScheme = useColorScheme();
-
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            background: Colors.dark.background,
-            borderColor: Colors.dark.inputBorder,
-            modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
-            transparent: Colors.dark.transparent,
-          }
-        : {
-            background: Colors.light.background,
-            borderColor: Colors.light.inputBorder,
-            modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
-            transparent: Colors.light.transparent,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   const handleDateChange = useCallback((event: any, selectedDate: Date | undefined) => {
     if (Platform.OS !== 'ios') setShowDatePicker(false);

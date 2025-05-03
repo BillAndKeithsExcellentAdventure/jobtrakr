@@ -1,18 +1,15 @@
-import { Colors } from '@/constants/Colors';
-import { act, ComponentType, useMemo } from 'react';
+import { useColors } from '@/context/ColorsContext';
+import React, { ComponentType, useMemo } from 'react';
 import {
   Pressable,
   PressableProps,
   PressableStateCallbackType,
   StyleProp,
-  TextStyle,
-  useColorScheme,
-  ViewStyle,
   StyleSheet,
-  TextProps,
   Text,
+  TextStyle,
+  ViewStyle,
 } from 'react-native';
-import React from 'react';
 
 type Presets = 'default' | 'filled' | 'reversed' | 'action';
 
@@ -106,49 +103,7 @@ export function Button(props: ButtonProps) {
     ...rest
   } = props;
 
-  const colorScheme = useColorScheme();
-
-  // Define colors based on the color scheme (dark or light)
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            text: Colors.dark.text,
-            textDim: Colors.dark.textDim,
-            listBackground: Colors.dark.listBackground,
-            itemBackground: Colors.dark.itemBackground,
-            iconColor: Colors.dark.iconColor,
-            shadowColor: Colors.dark.shadowColor,
-            borderColor: Colors.dark.borderColor,
-            neutral100: Colors.dark.neutral100,
-            neutral200: Colors.dark.neutral200,
-            neutral300: Colors.dark.neutral300,
-            neutral400: Colors.dark.neutral400,
-            neutral700: Colors.dark.neutral700,
-            neutral800: Colors.dark.neutral800,
-            actionBg: Colors.dark.actionBg,
-            actionFg: Colors.dark.actionFg,
-          }
-        : {
-            text: Colors.light.text,
-            textDim: Colors.light.textDim,
-            listBackground: Colors.light.listBackground,
-            itemBackground: Colors.light.itemBackground,
-            iconColor: Colors.light.iconColor,
-            shadowColor: Colors.light.shadowColor,
-            borderColor: Colors.light.borderColor,
-            neutral100: Colors.light.neutral100,
-            neutral200: Colors.light.neutral200,
-            neutral300: Colors.light.neutral300,
-            neutral400: Colors.light.neutral400,
-            neutral700: Colors.light.neutral700,
-            neutral800: Colors.light.neutral800,
-            actionBg: Colors.light.actionBg,
-            actionFg: Colors.light.actionFg,
-          },
-    [colorScheme],
-  );
-
+  const colors = useColors();
   const preset: Presets = props.preset ?? 'default';
 
   const viewStyles = useMemo<StyleProp<ViewStyle>>(() => {

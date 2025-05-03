@@ -1,9 +1,8 @@
-import React, { useMemo } from 'react';
-import { FlatList, Image, Platform, Pressable, StyleSheet } from 'react-native';
 import { ActionButtonProps, ButtonBar } from '@/components/ButtonBar';
 import { Text, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
+import { useColors } from '@/context/ColorsContext';
+import React from 'react';
+import { FlatList, Image, Platform, Pressable, StyleSheet } from 'react-native';
 import Base64Image from './Base64Image';
 
 // Define types for the props
@@ -27,34 +26,12 @@ export function TwoColumnList({
   onPress: (item: TwoColumnListEntry) => void;
   buttons: ActionButtonProps[] | null | undefined;
 }) {
-  const colorScheme = useColorScheme();
   let showsVerticalScrollIndicator = false;
   if (Platform.OS === 'web') {
     showsVerticalScrollIndicator = true;
   }
 
-  // Define colors based on the color scheme (dark or light)
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            listBackground: Colors.dark.listBackground,
-            itemBackground: Colors.dark.itemBackground,
-            iconColor: Colors.dark.iconColor,
-            shadowColor: Colors.dark.shadowColor,
-            boxShadow: Colors.dark.boxShadow,
-            borderColor: Colors.dark.borderColor,
-          }
-        : {
-            listBackground: Colors.light.listBackground,
-            itemBackground: Colors.light.itemBackground,
-            iconColor: Colors.light.iconColor,
-            shadowColor: Colors.light.shadowColor,
-            boxShadow: Colors.light.boxShadow,
-            borderColor: Colors.light.borderColor,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   if (Platform.OS === 'web') {
     colors.listBackground = '#efefef';
@@ -113,7 +90,7 @@ export function TwoColumnList({
               styles.textContentContainer,
               {
                 backgroundColor: colors.itemBackground,
-                borderTopColor: colors.borderColor,
+                borderTopColor: colors.border,
                 borderTopWidth: 1,
                 marginTop: 5,
                 paddingTop: 5,

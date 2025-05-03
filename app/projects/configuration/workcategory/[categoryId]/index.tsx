@@ -1,24 +1,17 @@
 import { ActionButton } from '@/components/ActionButton';
 import { Text, TextInput, View } from '@/components/Themed';
-import { Colors } from '@/constants/Colors';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  FlatList,
-  Keyboard,
-  StyleSheet,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  useColorScheme,
-} from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { FlatList, Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableCategoryItem from './SwipeableCategoryItem';
 
+import { useColors } from '@/context/ColorsContext';
 import {
-  useTableValue,
-  useAllRows,
   useAddRowCallback,
+  useAllRows,
+  useTableValue,
   useTypedRow,
   WorkItemData,
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
@@ -35,29 +28,12 @@ const ShowWorkCategory = () => {
     id: '',
     name: '',
     code: '',
+    categoryId: '',
+    status: '',
   });
   const [showAdd, setShowAdd] = useState(false);
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            background: Colors.dark.background,
-            listBackground: Colors.dark.listBackground,
-            borderColor: Colors.dark.borderColor,
-            iconColor: Colors.dark.iconColor,
-            neutral200: Colors.dark.neutral200,
-          }
-        : {
-            background: Colors.light.background,
-            listBackground: Colors.light.listBackground,
-            borderColor: Colors.light.borderColor,
-            iconColor: Colors.light.iconColor,
-            neutral200: Colors.light.neutral200,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   useEffect(() => {
     // Simulate fetching the existing category data by ID
@@ -87,7 +63,7 @@ const ShowWorkCategory = () => {
 
       if (status && status.status === 'Success') {
         // Clear the input fields
-        setItem({ id: '', name: '', code: '' });
+        setItem({ id: '', name: '', code: '', categoryId: '', status: '' });
       } else if (status) {
         console.log('Error adding item:', status.msg);
       }
@@ -124,7 +100,7 @@ const ShowWorkCategory = () => {
           <TouchableOpacity
             onPress={() => handleEditCategory(category.id)} // Edit on item press
           >
-            <View style={[styles.categoryContent, { borderColor: colors.borderColor, borderWidth: 1 }]}>
+            <View style={[styles.categoryContent, { borderColor: colors.border, borderWidth: 1 }]}>
               <View style={styles.categoryInfo}>
                 <Text style={styles.categoryName}>{name}</Text>
                 <Text>{code}</Text>
@@ -178,7 +154,7 @@ const ShowWorkCategory = () => {
           <View style={{ flex: 1, paddingHorizontal: 10 }}>
             {categorySpecificItems.length > 0 ? (
               <FlatList
-                style={{ borderTopWidth: 1, borderColor: colors.borderColor }}
+                style={{ borderTopWidth: 1, borderColor: colors.border }}
                 data={categorySpecificItems}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => <SwipeableCategoryItem item={item} category={category} />}

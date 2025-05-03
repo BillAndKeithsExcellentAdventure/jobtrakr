@@ -1,8 +1,8 @@
 import { ActionButtonProps, ButtonBar } from '@/components/ButtonBar';
 import { View } from '@/components/Themed';
-import { Colors } from '@/constants/Colors';
-import React, { useMemo } from 'react';
-import { Modal, Platform, StyleSheet, TouchableWithoutFeedback, useColorScheme } from 'react-native';
+import { useColors } from '@/context/ColorsContext';
+import React from 'react';
+import { Modal, Platform, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 
 const RightHeaderMenu = ({
   modalVisible,
@@ -15,23 +15,7 @@ const RightHeaderMenu = ({
   buttons: ActionButtonProps[];
   actionContext?: any;
 }) => {
-  const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            screenBackground: Colors.dark.background,
-            separatorColor: Colors.dark.separatorColor,
-            modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
-          }
-        : {
-            screenBackground: Colors.light.background,
-            separatorColor: Colors.light.separatorColor,
-            modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
-          },
-    [colorScheme],
-  );
-
+  const colors = useColors();
   const topMargin = Platform.OS === 'ios' ? 102 : 50;
 
   if (!modalVisible) return null;
@@ -45,9 +29,7 @@ const RightHeaderMenu = ({
     >
       <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
         <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
-          <View
-            style={[styles.modalContent, { backgroundColor: colors.screenBackground, marginTop: topMargin }]}
-          >
+          <View style={[styles.modalContent, { backgroundColor: colors.background, marginTop: topMargin }]}>
             <ButtonBar buttons={buttons} actionContext={actionContext} vertical />
           </View>
         </View>

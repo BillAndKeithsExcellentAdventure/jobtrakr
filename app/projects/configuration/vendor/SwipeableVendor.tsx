@@ -1,11 +1,11 @@
 import { Text, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors, deleteBg } from '@/constants/Colors';
+import { deleteBg } from '@/constants/Colors';
+import { useColors } from '@/context/ColorsContext';
 import { useDeleteRowCallback, VendorData } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
@@ -15,25 +15,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
 
   const processDelete = useDeleteRowCallback('vendors');
 
-  const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            background: Colors.dark.background,
-            listBackground: Colors.dark.listBackground,
-            borderColor: Colors.dark.borderColor,
-            iconColor: Colors.dark.iconColor,
-          }
-        : {
-            background: Colors.light.background,
-            listBackground: Colors.light.listBackground,
-            borderColor: Colors.light.borderColor,
-            iconColor: Colors.light.iconColor,
-          },
-    [colorScheme],
-  );
-
+  const colors = useColors();
   const handleDelete = (itemId: string) => {
     Alert.alert(
       'Delete Vendor',
@@ -83,7 +65,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
             });
           }}
         >
-          <View style={[styles.vendorInfo, { borderColor: colors.borderColor, borderTopWidth: 1 }]}>
+          <View style={[styles.vendorInfo, { borderColor: colors.border, borderTopWidth: 1 }]}>
             <View style={styles.vendorSummary}>
               <Text style={styles.vendorName}>{vendor.name}</Text>
               {(vendor.city || vendor.address) && (

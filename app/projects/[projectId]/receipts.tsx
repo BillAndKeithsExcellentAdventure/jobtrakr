@@ -1,12 +1,12 @@
 import { ActionButton } from '@/components/ActionButton';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
+import { useColors } from '@/context/ColorsContext';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import { FlashList } from '@shopify/flash-list';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Platform, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 
@@ -83,30 +83,7 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ projectId, item, onDelete
   };
 
   const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            deleteColor: Colors.dark.angry500,
-            separatorColor: Colors.dark.separatorColor,
-            listBackground: Colors.dark.listBackground,
-            itemBackground: Colors.dark.itemBackground,
-            shadowColor: Colors.dark.shadowColor,
-            boxShadow: Colors.dark.boxShadow,
-            borderColor: Colors.dark.borderColor,
-          }
-        : {
-            deleteColor: Colors.dark.angry500,
-            iconColor: Colors.light.iconColor,
-            separatorColor: Colors.light.separatorColor,
-            listBackground: Colors.light.listBackground,
-            itemBackground: Colors.light.itemBackground,
-            shadowColor: Colors.light.shadowColor,
-            boxShadow: Colors.light.boxShadow,
-            borderColor: Colors.light.borderColor,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   const boxShadow = Platform.OS === 'web' ? colors.boxShadow : undefined;
 
@@ -183,32 +160,7 @@ const ProjectReceiptsPage = () => {
     [deleteReceipt],
   );
 
-  const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            deleteColor: Colors.dark.angry500,
-            iconColor: Colors.dark.iconColor,
-            separatorColor: Colors.dark.separatorColor,
-            listBackground: Colors.dark.listBackground,
-            shadowColor: Colors.dark.shadowColor,
-            boxShadow: Colors.dark.boxShadow,
-            borderColor: Colors.dark.borderColor,
-            screenBackground: Colors.dark.background,
-          }
-        : {
-            deleteColor: Colors.dark.angry500,
-            iconColor: Colors.light.iconColor,
-            separatorColor: Colors.light.separatorColor,
-            listBackground: Colors.light.listBackground,
-            shadowColor: Colors.light.shadowColor,
-            boxShadow: Colors.light.boxShadow,
-            borderColor: Colors.light.borderColor,
-            screenBackground: Colors.light.background,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   const handleAddPhotoReceipt = useCallback(async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();

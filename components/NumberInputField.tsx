@@ -1,8 +1,7 @@
-import { Colors } from '@/constants/Colors';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useColors } from '@/context/ColorsContext';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, TextInput, ViewStyle } from 'react-native';
 import { Text, View } from './Themed';
-import { useColorScheme } from './useColorScheme';
 
 interface NumberInputFieldProps {
   value: number;
@@ -24,7 +23,6 @@ export const NumberInputField: React.FC<NumberInputFieldProps> = ({
   style = {},
 }) => {
   const [inputValue, setInputValue] = useState(value.toFixed(numDecimalPlaces));
-  const colorScheme = useColorScheme();
   const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
@@ -62,28 +60,7 @@ export const NumberInputField: React.FC<NumberInputFieldProps> = ({
     }
   }, [onChange, inputValue]);
 
-  // Define colors based on the color scheme (dark or light)
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            error: Colors.dark.error,
-            textDim: Colors.dark.textDim,
-            transparent: Colors.dark.transparent,
-            neutral200: Colors.dark.neutral200,
-            neutral400: Colors.dark.neutral400,
-            text: Colors.dark.text,
-          }
-        : {
-            error: Colors.light.error,
-            textDim: Colors.light.textDim,
-            transparent: Colors.light.transparent,
-            neutral200: Colors.light.neutral200,
-            neutral400: Colors.light.neutral400,
-            text: Colors.light.text,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   const handleFocus = useCallback(
     (event: any) => {

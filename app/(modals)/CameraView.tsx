@@ -1,13 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { CameraType, CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, Modal, Platform, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, View } from '@/components/Themed';
-import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import ZoomPicker from '@/components/ZoomPicker';
 import { ActionButton } from '@/components/ActionButton';
+import { useColors } from '@/context/ColorsContext';
 
 interface ProjectCameraViewProps {
   visible: boolean;
@@ -38,29 +38,7 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   const [recordingTime, setRecordingTime] = useState(0);
   const cameraRef = useRef<CameraView>(null);
   const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            background: Colors.dark.background,
-            borderColor: Colors.dark.inputBorder,
-            modalOverlayBackgroundColor: Colors.dark.opaqueModalOverlayBackgroundColor,
-            transparent: Colors.dark.transparent,
-            neutral200: Colors.dark.neutral200,
-            buttonBlue: Colors.dark.buttonBlue,
-            iconColor: Colors.dark.iconColor,
-          }
-        : {
-            background: Colors.light.background,
-            borderColor: Colors.light.inputBorder,
-            modalOverlayBackgroundColor: Colors.light.opaqueModalOverlayBackgroundColor,
-            transparent: Colors.light.transparent,
-            neutral200: Colors.light.neutral200,
-            buttonBlue: Colors.light.buttonBlue,
-            iconColor: Colors.light.iconColor,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   // Move the callback definition here, before any conditional returns
   const onCameraModeChanged = useCallback(

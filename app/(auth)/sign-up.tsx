@@ -1,39 +1,18 @@
+import { Text, TextInput, View } from '@/components/Themed';
 import * as React from 'react';
-import { StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
-import { TextInput, Text, View } from '@/components/Themed';
+import { StyleSheet } from 'react-native';
 
-import { useSignUp, useClerk, useAuth } from '@clerk/clerk-expo';
-import { Link, Stack, useRouter } from 'expo-router';
-import { Colors } from '@/constants/Colors';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
+import { useColors } from '@/context/ColorsContext';
+import { useAuth, useClerk, useSignUp } from '@clerk/clerk-expo';
+import { Link, Stack, useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SignUpScreen() {
-  const colorScheme = useColorScheme();
-  const colors = React.useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            listBackground: Colors.dark.listBackground,
-            borderColor: Colors.dark.borderColor,
-            iconColor: Colors.dark.iconColor,
-            textColor: Colors.dark.text,
-            neutral200: Colors.dark.neutral200,
-          }
-        : {
-            listBackground: Colors.light.listBackground,
-            borderColor: Colors.light.borderColor,
-            iconColor: Colors.light.iconColor,
-            textColor: Colors.light.text,
-            neutral200: Colors.dark.neutral200,
-          },
-    [colorScheme],
-  );
-
+  const colors = useColors();
   const { isLoaded, signUp, setActive } = useSignUp();
   const router = useRouter();
   const clerk = useClerk();
-  const [organization, setOrganization] = React.useState('');
   const [emailAddress, setEmailAddress] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [pendingVerification, setPendingVerification] = React.useState(false);
@@ -180,7 +159,7 @@ export default function SignUpScreen() {
           style={{ ...styles.input, backgroundColor: colors.neutral200 }}
           autoCapitalize="none"
           value={emailAddress}
-          placeholderTextColor={colors.textColor}
+          placeholderTextColor={colors.text}
           keyboardType="email-address"
           placeholder="Email"
           onChangeText={(email) => setEmailAddress(email)}
@@ -188,7 +167,7 @@ export default function SignUpScreen() {
         <TextInput
           style={{ ...styles.input, backgroundColor: colors.neutral200 }}
           value={password}
-          placeholderTextColor={colors.textColor}
+          placeholderTextColor={colors.text}
           placeholder="Password"
           secureTextEntry={true}
           onChangeText={(password) => setPassword(password)}

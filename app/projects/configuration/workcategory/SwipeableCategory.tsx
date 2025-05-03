@@ -1,6 +1,6 @@
 import { Text, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors, deleteBg } from '@/constants/Colors';
+import { deleteBg } from '@/constants/Colors';
+import { useColors } from '@/context/ColorsContext';
 import {
   useDeleteRowCallback,
   useTableValue,
@@ -8,7 +8,7 @@ import {
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
@@ -16,24 +16,7 @@ import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimat
 const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
   const processDelete = useDeleteRowCallback('categories');
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            background: Colors.dark.background,
-            listBackground: Colors.dark.listBackground,
-            borderColor: Colors.dark.borderColor,
-            iconColor: Colors.dark.iconColor,
-          }
-        : {
-            background: Colors.light.background,
-            listBackground: Colors.light.listBackground,
-            borderColor: Colors.light.borderColor,
-            iconColor: Colors.light.iconColor,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   const handleDelete = useCallback(
     (itemId: string) => {
@@ -81,7 +64,7 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
       overshootRight={false}
       enableContextMenu
     >
-      <View style={[styles.itemEntry, { borderColor: colors.borderColor, borderBottomWidth: 1 }]}>
+      <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
         <Pressable
           onPress={() => {
             router.push({

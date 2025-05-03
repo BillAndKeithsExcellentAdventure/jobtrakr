@@ -1,18 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  StyleSheet,
-  FlatList,
-  Platform,
-  Pressable,
-  TextStyle,
-  StyleProp,
-  TouchableOpacity,
-} from 'react-native';
 import { Text, View } from '@/components/Themed';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from './useColorScheme';
+import { useColors } from '@/context/ColorsContext';
+import { useCallback, useEffect, useState } from 'react';
+import { FlatList, Platform, Pressable, StyleProp, StyleSheet, TextStyle } from 'react-native';
 import { ActionButton } from './ActionButton';
-import { FlashList } from '@shopify/flash-list';
 
 // Define types for the props
 export interface OptionEntry {
@@ -43,7 +33,6 @@ export default function OptionList({
 }: Props) {
   const [isOkToSaveSelectedValue, setIsOkToSaveSelectedValue] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
-  const colorScheme = useColorScheme();
 
   const onOkSelected = useCallback(() => {
     if (pickedOption) onSelect(pickedOption);
@@ -71,29 +60,7 @@ export default function OptionList({
     }
   }, [selectedOption, options]);
 
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            background: Colors.dark.background,
-            separatorColor: Colors.dark.separatorColor,
-            modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
-            transparent: Colors.dark.transparent,
-            iconColor: Colors.dark.iconColor,
-            borderColor: Colors.dark.borderColor,
-            bottomSheetBackground: Colors.dark.bottomSheetBackground,
-          }
-        : {
-            background: Colors.light.background,
-            separatorColor: Colors.dark.separatorColor,
-            modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
-            transparent: Colors.light.transparent,
-            iconColor: Colors.light.iconColor,
-            borderColor: Colors.light.borderColor,
-            bottomSheetBackground: Colors.light.bottomSheetBackground,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   return (
     <View style={{ flex: 1 }}>
@@ -110,7 +77,7 @@ export default function OptionList({
                     width: '100%',
                     paddingHorizontal: 10,
                     borderBottomWidth: 1,
-                    borderBottomColor: colors.borderColor,
+                    borderBottomColor: colors.border,
                     justifyContent: 'center',
                     height: 45,
                   },
@@ -136,8 +103,8 @@ export default function OptionList({
         />
       </View>
       {showOkCancel && (
-        <View style={{ borderTopColor: colors.borderColor }}>
-          <View style={[styles.saveButtonRow, { borderTopColor: colors.borderColor }]}>
+        <View style={{ borderTopColor: colors.border }}>
+          <View style={[styles.saveButtonRow, { borderTopColor: colors.border }]}>
             <ActionButton
               style={styles.saveButton}
               onPress={onOkSelected}

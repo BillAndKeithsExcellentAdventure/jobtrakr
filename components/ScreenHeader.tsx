@@ -1,10 +1,9 @@
 // components/ScreenHeader.tsx - For use on Android devices when headerLeft or headRight components are specified.
 
-import React, { useMemo } from 'react';
-import { StyleSheet, ViewStyle, Platform, FlexAlignType } from 'react-native';
 import { Text, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
+import { useColors } from '@/context/ColorsContext';
+import React from 'react';
+import { FlexAlignType, Platform, StyleSheet, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Define the type for the props
@@ -15,7 +14,6 @@ export interface ScreenHeaderProps {
 }
 
 export const ScreenHeader: React.FC<ScreenHeaderProps> = ({ headerLeft, headerRight, title }) => {
-  const colorScheme = useColorScheme();
   const insets = useSafeAreaInsets(); // just in case we use it on IOS
 
   let alignItems: FlexAlignType = 'flex-start';
@@ -24,27 +22,13 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({ headerLeft, headerRi
     alignItems = 'center';
   }
 
-  // Define colors based on the color scheme (dark or light)
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            screenBackground: Colors.dark.background,
-            separatorColor: Colors.dark.separatorColor,
-          }
-        : {
-            screenBackground: Colors.light.background,
-            separatorColor: Colors.light.separatorColor,
-          },
-    [colorScheme],
-  );
-
+  const colors = useColors();
   return (
     <View
       style={[
         styles.headerContainer,
         {
-          backgroundColor: colors.screenBackground,
+          backgroundColor: colors.background,
           marginTop: insets.top,
           borderColor: colors.separatorColor,
         },

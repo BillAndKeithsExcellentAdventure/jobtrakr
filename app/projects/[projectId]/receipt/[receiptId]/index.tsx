@@ -1,19 +1,17 @@
-import { ReceiptSummary } from '@/components/ReceiptSummary';
-import { TextField } from '@/components/TextField';
-import { Text, View } from '@/components/Themed';
-import { Colors } from '@/constants/Colors';
-import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, LayoutChangeEvent, Platform, StyleSheet, useColorScheme } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import AntDesign from '@expo/vector-icons/AntDesign';
 import { ActionButton } from '@/components/ActionButton';
-import { formatCurrency, formatNumber } from '@/utils/formatters';
+import { ReceiptSummary } from '@/components/ReceiptSummary';
+import { Text, View } from '@/components/Themed';
+import { useColors } from '@/context/ColorsContext';
 import {
   ReceiptData,
   useAllRows,
   WorkItemCostEntry,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { formatCurrency } from '@/utils/formatters';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableLineItem from './SwipeableLineItem';
 
 const ReceiptDetailsPage = () => {
@@ -71,23 +69,7 @@ const ReceiptDetailsPage = () => {
     [receipt, receiptId],
   );
 
-  const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            separatorColor: Colors.dark.separatorColor,
-            borderColor: Colors.dark.borderColor,
-            iconColor: Colors.dark.iconColor,
-          }
-        : {
-            separatorColor: Colors.light.separatorColor,
-            borderColor: Colors.light.borderColor,
-            iconColor: Colors.light.iconColor,
-          },
-    [colorScheme],
-  );
-
+  const colors = useColors();
   const addLineItem = useCallback(() => {
     console.log(`addLineItem - route = /projects/${projectId}/receipt/${receiptId}/addLineItem`);
     router.push(`/projects/${projectId}/receipt/${receiptId}/addLineItem`);
@@ -109,7 +91,7 @@ const ReceiptDetailsPage = () => {
       <Stack.Screen options={{ title: 'Receipt Details', headerShown: true }} />
       {containerHeight > 0 && (
         <>
-          <View style={[styles.itemContainer, { borderColor: colors.borderColor }]}>
+          <View style={[styles.itemContainer, { borderColor: colors.border }]}>
             <ReceiptSummary item={receipt} onShowDetails={editDetails} onShowPicture={showPicture} />
           </View>
 

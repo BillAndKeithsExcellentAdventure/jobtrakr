@@ -1,11 +1,9 @@
-import { DimensionValue, Modal, Pressable, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import { PropsWithChildren, useCallback, useMemo } from 'react';
+import { useColors } from '@/context/ColorsContext';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { PropsWithChildren } from 'react';
+import { DimensionValue, Modal, Pressable, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/Colors';
-import { View, Text } from './Themed';
-import { useColorScheme } from './useColorScheme';
-import { ActionButton } from './ActionButton';
+import { Text, View } from './Themed';
 
 type Props = PropsWithChildren<{
   isVisible: boolean;
@@ -22,29 +20,7 @@ export default function BottomSheetContainer({
   modalHeight = '40%',
 }: Props) {
   const { bottom, top } = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            background: Colors.dark.background,
-            modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
-            transparent: Colors.dark.transparent,
-            iconColor: Colors.dark.iconColor,
-            borderColor: Colors.dark.separatorColor,
-            bottomSheetBackground: Colors.dark.bottomSheetBackground,
-          }
-        : {
-            background: Colors.light.background,
-            modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
-            transparent: Colors.light.transparent,
-            iconColor: Colors.light.iconColor,
-            borderColor: Colors.light.separatorColor,
-            bottomSheetBackground: Colors.light.bottomSheetBackground,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   if (!isVisible) return null;
 
@@ -68,7 +44,7 @@ export default function BottomSheetContainer({
                     {
                       backgroundColor: colors.bottomSheetBackground,
                       borderBottomWidth: 2,
-                      borderColor: colors.borderColor,
+                      borderColor: colors.border,
                     },
                   ]}
                 >

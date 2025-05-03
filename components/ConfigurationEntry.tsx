@@ -1,9 +1,8 @@
-import { View, Text, useThemeColor } from '@/components/Themed';
-import { Colors } from '@/constants/Colors';
+import { Text, View } from '@/components/Themed';
+import { useColors } from '@/context/ColorsContext';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useMemo } from 'react';
-import { TouchableWithoutFeedback, Image, StyleSheet } from 'react-native';
-import { useColorScheme } from './useColorScheme';
+import React from 'react';
+import { StyleSheet, TouchableWithoutFeedback } from 'react-native';
 
 interface ConfigurationEntryProps {
   label: string;
@@ -12,24 +11,11 @@ interface ConfigurationEntryProps {
 }
 
 export const ConfigurationEntry: React.FC<ConfigurationEntryProps> = ({ label, description, onPress }) => {
-  const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            borderColor: Colors.dark.borderColor,
-            iconColor: Colors.dark.iconColor,
-          }
-        : {
-            borderColor: Colors.light.borderColor,
-            iconColor: Colors.light.iconColor,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   return (
     <TouchableWithoutFeedback onPress={() => onPress()}>
-      <View style={[styles.itemContainer, { borderColor: colors.borderColor }]}>
+      <View style={[styles.itemContainer, { borderColor: colors.border }]}>
         <View style={styles.cfgContent}>
           <View style={{ flex: 1, alignItems: 'center' }}>
             <Text txtSize="title" text={label} />

@@ -11,6 +11,7 @@ import { useProject } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { useRouter } from 'expo-router';
 import { useAddImageCallback } from '@/utils/images';
 import { createThumbnail } from '@/utils/thumbnailUtils';
+import { useColors } from '@/context/ColorsContext';
 
 export type AssetsItem = {
   _id: string;
@@ -47,6 +48,7 @@ export const DeviceMediaList = ({
     }
   }, []);
 
+  const colors = useColors();
   const [loadingNearest, setLoadingNearest] = useState<boolean>(false);
   const [fetchStatus, setFetchStatus] = useState<string>('');
   const [deviceMediaAssets, setDeviceMediaAssets] = useState<AssetsItem[] | undefined>(undefined);

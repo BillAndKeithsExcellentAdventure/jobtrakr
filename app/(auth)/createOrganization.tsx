@@ -1,36 +1,14 @@
-import * as React from 'react';
-import { TextInput, Text, View } from '@/components/Themed';
-import { TouchableOpacity } from 'react-native';
-import { useSignUp, useClerk, useAuth, useOrganizationList } from '@clerk/clerk-expo';
-import { Link, Redirect, Stack, useRouter } from 'expo-router';
-import { Colors } from '@/constants/Colors';
-import { useEffect } from 'react';
-import { useColorScheme } from '@/components/useColorScheme';
 import { ActionButton } from '@/components/ActionButton';
+import { Text, TextInput, View } from '@/components/Themed';
+import { useColors } from '@/context/ColorsContext';
+import { useAuth, useClerk, useOrganizationList, useSignUp } from '@clerk/clerk-expo';
+import { Redirect, Stack, useRouter } from 'expo-router';
+import * as React from 'react';
+import { useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CreateOrganization() {
-  const colorScheme = useColorScheme();
-  const colors = React.useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            listBackground: Colors.dark.listBackground,
-            borderColor: Colors.dark.borderColor,
-            iconColor: Colors.dark.iconColor,
-            textColor: Colors.dark.text,
-            neutral200: Colors.dark.neutral200,
-          }
-        : {
-            listBackground: Colors.light.listBackground,
-            borderColor: Colors.light.borderColor,
-            iconColor: Colors.light.iconColor,
-            textColor: Colors.light.text,
-            neutral200: Colors.light.neutral200,
-          },
-    [colorScheme],
-  );
-
+  const colors = useColors();
   const { isLoaded, signUp } = useSignUp();
   const router = useRouter();
   const clerk = useClerk();
@@ -147,7 +125,7 @@ export default function CreateOrganization() {
           style={{ ...styles.input, backgroundColor: colors.neutral200 }}
           autoCapitalize="none"
           value={organizationName}
-          placeholderTextColor={colors.textColor}
+          placeholderTextColor={colors.text}
           placeholder="Enter Organization name"
           onChangeText={(orgName) => setOrganizationName(orgName)}
         />

@@ -5,14 +5,13 @@ import OptionList, { OptionEntry } from '@/components/OptionList';
 import { OptionPickerItem } from '@/components/OptionPickerItem';
 import { TextField } from '@/components/TextField';
 import { Text, TextInput, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
+import { useColors } from '@/context/ColorsContext';
 import { useAllRows as useAllConfigurationRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useAddRowCallback, ReceiptData } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { ReceiptData, useAddRowCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/utils/formatters';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Image, Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -48,7 +47,6 @@ const AddReceiptPage = () => {
     markedComplete: false,
   });
 
-  const colorScheme = useColorScheme();
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [canAddReceipt, setCanAddReceipt] = useState(false);
   const allVendors = useAllConfigurationRows('vendors');
@@ -68,25 +66,7 @@ const AddReceiptPage = () => {
     }
   }, [allVendors]);
 
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            background: Colors.dark.background,
-            borderColor: Colors.dark.inputBorder,
-            modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
-            neutral200: Colors.dark.neutral200,
-            transparent: Colors.dark.transparent,
-          }
-        : {
-            background: Colors.light.background,
-            borderColor: Colors.light.inputBorder,
-            modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
-            neutral200: Colors.light.neutral200,
-            transparent: Colors.light.transparent,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   const showDatePicker = () => {
     setDatePickerVisible(true);
@@ -191,7 +171,7 @@ const AddReceiptPage = () => {
             <Text txtSize="sub-title" style={styles.modalTitle} text={projectName} />
             <Text txtSize="title" style={styles.modalTitle} text="Add Receipt" />
 
-            <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.borderColor }}>
+            <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border }}>
               <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
                 <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
                 <TextInput

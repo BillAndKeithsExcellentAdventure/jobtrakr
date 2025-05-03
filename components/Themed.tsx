@@ -5,15 +5,14 @@
 
 import {
   Text as DefaultText,
-  View as DefaultView,
-  StyleProp,
-  TextStyle,
   TextInput as DefaultTextInput,
+  View as DefaultView,
+  TextStyle,
 } from 'react-native';
 
 import { Colors } from '@/constants/Colors';
+import { useColors } from '@/context/ColorsContext';
 import { useColorScheme } from './useColorScheme';
-import { useMemo } from 'react';
 
 type ThemeProps = {
   lightColor?: string;
@@ -129,26 +128,7 @@ export function Text(props: TextProps) {
 
 export function TextInput(props: TextInputProps) {
   const { style, lightColor, darkColor, txtSize, ...otherProps } = props;
-  const colorScheme = useColorScheme();
-
-  // Define colors based on the color scheme (dark or light)
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            neutral200: Colors.dark.neutral200,
-            border: Colors.dark.neutral400,
-            text: Colors.dark.text,
-            placeHolder: Colors.dark.placeHolder,
-          }
-        : {
-            neutral200: Colors.light.neutral200,
-            border: Colors.light.neutral400,
-            text: Colors.light.text,
-            placeHolder: Colors.light.placeHolder,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   // Default text style
   let txtStyle: TextStyle = { fontSize: 16, fontWeight: 'normal', lineHeight: 20, alignItems: 'center' };

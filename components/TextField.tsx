@@ -1,17 +1,16 @@
-import { ComponentType, forwardRef, Ref, useImperativeHandle, useMemo, useRef } from 'react';
+import { useColors } from '@/context/ColorsContext';
+import { ComponentType, forwardRef, Ref, useImperativeHandle, useRef } from 'react';
 import {
   ImageStyle,
   StyleProp,
+  StyleSheet,
+  TextInput,
   TextInputProps,
   TextStyle,
   TouchableOpacity,
   ViewStyle,
-  StyleSheet,
-  TextInput,
 } from 'react-native';
-import { TextProps, Text, View } from './Themed';
-import { useColorScheme } from './useColorScheme';
-import { Colors } from '@/constants/Colors';
+import { Text, TextProps, View } from './Themed';
 
 export interface TextFieldAccessoryProps {
   style: StyleProp<ViewStyle | TextStyle | ImageStyle>;
@@ -103,31 +102,7 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
 
   const $labelStyles = [styles.labelStyle, LabelTextProps?.style];
 
-  const colorScheme = useColorScheme();
-
-  // Define colors based on the color scheme (dark or light)
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            error: Colors.dark.error,
-            textDim: Colors.dark.textDim,
-            transparent: Colors.dark.transparent,
-            neutral200: Colors.dark.neutral200,
-            neutral400: Colors.dark.neutral400,
-            text: Colors.dark.text,
-          }
-        : {
-            error: Colors.light.error,
-            textDim: Colors.light.textDim,
-            transparent: Colors.light.transparent,
-            neutral200: Colors.light.neutral200,
-            neutral400: Colors.light.neutral400,
-            text: Colors.light.text,
-          },
-    [colorScheme],
-  );
-
+  const colors = useColors();
   const $inputWrapperStyles = [
     {
       backgroundColor: colors.neutral200,

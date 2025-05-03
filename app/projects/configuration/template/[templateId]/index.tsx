@@ -1,13 +1,11 @@
 import { Text, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { useColors } from '@/context/ColorsContext';
 import {
   useAllRows,
   useTableValue,
   useTemplateWorkItemData,
   WorkCategoryCodeCompareAsNumber,
-  WorkCategoryData,
-  WorkItemData,
   WorkItemDataCodeCompareAsNumber,
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { createItemsArray } from '@/utils/array';
@@ -36,8 +34,7 @@ const ProjectTemplatesConfigurationScreen: React.FC = () => {
   const { templateId } = useLocalSearchParams<{ templateId: string }>();
   const templateName = useTableValue('templates', templateId, 'name');
   const templateDescription = useTableValue('templates', templateId, 'description');
-  const colorScheme = useColorScheme();
-  const colors = colorScheme === 'dark' ? Colors.dark : Colors.light;
+  const colors = useColors();
   const router = useRouter();
   const allProjectCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllRows('workItems', WorkItemDataCodeCompareAsNumber);
@@ -127,7 +124,7 @@ const ProjectTemplatesConfigurationScreen: React.FC = () => {
             <TouchableOpacity
               onPress={() => handleEditTemplate(templateId)} // Edit on item press
             >
-              <View style={[styles.categoryContent, { borderColor: colors.borderColor, borderWidth: 1 }]}>
+              <View style={[styles.categoryContent, { borderColor: colors.border, borderWidth: 1 }]}>
                 <View style={styles.categoryInfo}>
                   <Text txtSize="title" text={templateName} />
                   <Text>{templateDescription}</Text>
@@ -171,7 +168,7 @@ const renderSectionHeader = (
       style={[
         styles.header,
         {
-          borderColor: colors.borderColor,
+          borderColor: colors.border,
           backgroundColor: colors.listBackground,
           borderBottomWidth: 1,
           alignItems: 'center',
@@ -224,7 +221,7 @@ const renderItem = (
   const isActive = item.isActive;
   return (
     <Pressable
-      style={[styles.item, { borderColor: colors.borderColor }]}
+      style={[styles.item, { borderColor: colors.border }]}
       onPress={() => toggleItemActiveState(sectionId, item.id)}
     >
       <View

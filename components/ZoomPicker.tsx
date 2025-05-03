@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Modal, Button, TouchableOpacity, Platform, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { OptionEntry } from './OptionList';
-import { Colors } from '@/constants/Colors';
+import { useColors } from '@/context/ColorsContext';
 import { useColorScheme } from './useColorScheme';
 import { Text, View } from '@/components/Themed';
 
@@ -27,29 +27,7 @@ const ZoomPicker = ({
   );
 
   const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            background: Colors.dark.background,
-            borderColor: Colors.dark.inputBorder,
-            modalOverlayBackgroundColor: Colors.dark.modalOverlayBackgroundColor,
-            transparent: Colors.dark.transparent,
-            neutral200: Colors.dark.neutral200,
-            buttonBlue: Colors.dark.buttonBlue,
-            iconColor: Colors.dark.iconColor,
-          }
-        : {
-            background: Colors.light.background,
-            borderColor: Colors.light.inputBorder,
-            modalOverlayBackgroundColor: Colors.light.modalOverlayBackgroundColor,
-            transparent: Colors.light.transparent,
-            neutral200: Colors.light.neutral200,
-            buttonBlue: Colors.light.buttonBlue,
-            iconColor: Colors.light.iconColor,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   return (
     <View style={styles.container}>

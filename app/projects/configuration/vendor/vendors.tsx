@@ -1,21 +1,20 @@
 // screens/ListVendors.tsx
 
 import { ActionButton } from '@/components/ActionButton';
-import { TextInput, Text, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
-import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, Keyboard, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import { Pressable } from 'react-native-gesture-handler';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableVendor from './SwipeableVendor';
+import { Text, TextInput, View } from '@/components/Themed';
+import { useColors } from '@/context/ColorsContext';
 import {
   useAddRowCallback,
   useAllRows,
   VendorData,
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import { Ionicons } from '@expo/vector-icons';
+import { Stack, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { FlatList, Keyboard, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import SwipeableVendor from './SwipeableVendor';
 
 const VendorsScreen = () => {
   const router = useRouter();
@@ -34,24 +33,7 @@ const VendorsScreen = () => {
     notes: '',
   });
 
-  const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            borderColor: Colors.dark.borderColor,
-            iconColor: Colors.dark.iconColor,
-            listBackground: Colors.dark.listBackground,
-            neutral200: Colors.dark.neutral200,
-          }
-        : {
-            borderColor: Colors.light.borderColor,
-            iconColor: Colors.light.iconColor,
-            listBackground: Colors.light.listBackground,
-            neutral200: Colors.light.neutral200,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   const handleEditVendor = (id: string) => {
     router.push(`/projects/configuration/vendor/${id}`);
@@ -182,7 +164,7 @@ const VendorsScreen = () => {
         )}
 
         <FlatList
-          style={{ borderTopColor: colors.borderColor }}
+          style={{ borderTopColor: colors.border }}
           data={allVendors}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => <SwipeableVendor vendor={item} />}

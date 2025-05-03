@@ -1,6 +1,7 @@
 import AuthorizedStoresProvider from '@/components/AuthorizedStoresProvider';
 import { useColorScheme } from '@/components/useColorScheme';
 import { ActiveProjectIdsProvider } from '@/context/ActiveProjectIdsContext';
+import { ColorsProvider } from '@/context/ColorsContext';
 import { ClerkLoaded, ClerkProvider } from '@clerk/clerk-expo';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -63,16 +64,18 @@ function RootLayoutNav() {
           <TinyBaseProvider>
             <ActiveProjectIdsProvider>
               <AuthorizedStoresProvider />
-              <SafeAreaProvider>
-                <GestureHandlerRootView>
-                  <Stack screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="index" />
-                    <Stack.Screen name="projects" />
-                    <Stack.Screen name="(auth)" />
-                  </Stack>
-                  <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-                </GestureHandlerRootView>
-              </SafeAreaProvider>
+              <ColorsProvider>
+                <SafeAreaProvider>
+                  <GestureHandlerRootView>
+                    <Stack screenOptions={{ headerShown: false }}>
+                      <Stack.Screen name="index" />
+                      <Stack.Screen name="projects" />
+                      <Stack.Screen name="(auth)" />
+                    </Stack>
+                    <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+                  </GestureHandlerRootView>
+                </SafeAreaProvider>
+              </ColorsProvider>
             </ActiveProjectIdsProvider>
           </TinyBaseProvider>
         </ThemeProvider>

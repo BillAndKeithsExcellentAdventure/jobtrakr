@@ -1,36 +1,22 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { StyleSheet, Alert } from 'react-native';
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
-import { Text, TextInput, View } from '@/components/Themed';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
+import { TextInput, View } from '@/components/Themed';
+import { useColors } from '@/context/ColorsContext';
 import {
-  useUpdateRowCallback,
   useTypedRow,
+  useUpdateRowCallback,
   VendorData,
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditVendor = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const applyVendorUpdates = useUpdateRowCallback('vendors');
 
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            listBackground: Colors.dark.listBackground,
-            neutral200: Colors.dark.neutral200,
-          }
-        : {
-            listBackground: Colors.light.listBackground,
-            neutral200: Colors.light.neutral200,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   const [updatedVendor, setUpdatedVendor] = useState<VendorData>({
     id: '',

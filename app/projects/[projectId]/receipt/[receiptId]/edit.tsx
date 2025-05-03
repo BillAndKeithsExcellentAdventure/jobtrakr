@@ -1,22 +1,21 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text } from '@/components/Themed';
-import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { NumberInputField } from '@/components/NumberInputField';
-import { TextField } from '@/components/TextField';
-import { StyleSheet } from 'react-native';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
 import { ActionButton } from '@/components/ActionButton';
+import BottomSheetContainer from '@/components/BottomSheetContainer';
+import { NumberInputField } from '@/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/components/OptionList';
 import { OptionPickerItem } from '@/components/OptionPickerItem';
-import BottomSheetContainer from '@/components/BottomSheetContainer';
+import { TextField } from '@/components/TextField';
+import { Text, View } from '@/components/Themed';
+import { useColors } from '@/context/ColorsContext';
 import { useAllRows as useAllConfigurationRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   ReceiptData,
   useAllRows,
   useUpdateRowCallback,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditReceiptDetailsPage = () => {
   const defaultDate = new Date();
@@ -79,30 +78,7 @@ const EditReceiptDetailsPage = () => {
     setPickedOption(match);
   }, [receipt, vendors]);
 
-  const colorScheme = useColorScheme();
-
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            background: Colors.dark.background,
-            borderColor: Colors.dark.inputBorder,
-            modalOverlayBackgroundColor: Colors.dark.opaqueModalOverlayBackgroundColor,
-            transparent: Colors.dark.transparent,
-            neutral200: Colors.dark.neutral200,
-            buttonBlue: Colors.dark.buttonBlue,
-          }
-        : {
-            background: Colors.light.background,
-            borderColor: Colors.light.inputBorder,
-            modalOverlayBackgroundColor: Colors.light.opaqueModalOverlayBackgroundColor,
-            transparent: Colors.light.transparent,
-            neutral200: Colors.light.neutral200,
-            buttonBlue: Colors.light.buttonBlue,
-          },
-    [colorScheme],
-  );
-
+  const colors = useColors();
   const handleVendorChange = useCallback((vendor: string) => {
     setReceipt((prevReceipt) => ({
       ...prevReceipt,

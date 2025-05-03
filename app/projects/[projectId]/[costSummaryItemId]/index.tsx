@@ -1,6 +1,5 @@
 import { Text, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
+import { useColors } from '@/context/ColorsContext';
 import {
   useAddRowCallback,
   useAllRows,
@@ -19,36 +18,7 @@ const CostItemDetails = () => {
   }>();
 
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
-  const addWorkItemSummary = useAddRowCallback(projectId, 'workItemSummaries');
-
-  const colorScheme = useColorScheme();
-  // Define colors based on the color scheme (dark or light)
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            screenBackground: Colors.dark.background,
-            listBackground: Colors.dark.listBackground,
-            itemBackground: Colors.dark.itemBackground,
-            iconColor: Colors.dark.iconColor,
-            shadowColor: Colors.dark.shadowColor,
-            borderColor: Colors.dark.borderColor,
-            bottomSheetBackground: Colors.dark.bottomSheetBackground,
-            text: Colors.dark.text,
-          }
-        : {
-            screenBackground: Colors.light.background,
-            listBackground: Colors.light.listBackground,
-            itemBackground: Colors.light.itemBackground,
-            iconColor: Colors.light.iconColor,
-            shadowColor: Colors.light.shadowColor,
-            borderColor: Colors.light.borderColor,
-            bottomSheetBackground: Colors.light.bottomSheetBackground,
-            text: Colors.light.text,
-          },
-    [colorScheme],
-  );
-
+  const colors = useColors();
   const workItemSummary: WorkItemSummaryData | null = useMemo(() => {
     const workItem = allWorkItemSummaries.find((item) => item.workItemId === costSummaryItemId);
     if (workItem) {

@@ -3,14 +3,13 @@ import BottomSheetContainer from '@/components/BottomSheetContainer';
 import OptionList, { OptionEntry } from '@/components/OptionList';
 import { OptionPickerItem } from '@/components/OptionPickerItem';
 import { Text, TextInput, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
+import { useColors } from '@/context/ColorsContext';
 import { ProjectData } from '@/models/types';
 import { useAllRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAddProjectCallback } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { Stack, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -38,29 +37,7 @@ const AddProjectScreen = () => {
   });
 
   const addProject = useAddProjectCallback();
-
-  const colorScheme = useColorScheme();
-
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            background: Colors.dark.background,
-            borderColor: Colors.dark.inputBorder,
-            modalOverlayBackgroundColor: Colors.dark.opaqueModalOverlayBackgroundColor,
-            transparent: Colors.dark.transparent,
-            neutral200: Colors.dark.neutral200,
-          }
-        : {
-            background: Colors.light.background,
-            borderColor: Colors.light.inputBorder,
-            modalOverlayBackgroundColor: Colors.light.opaqueModalOverlayBackgroundColor,
-            transparent: Colors.light.transparent,
-            neutral200: Colors.light.neutral200,
-          },
-    [colorScheme],
-  );
-
+  const colors = useColors();
   const router = useRouter();
   const allProjectTemplates = useAllRows('templates');
   const allTemplateWorkItems = useAllRows('templateWorkItems');

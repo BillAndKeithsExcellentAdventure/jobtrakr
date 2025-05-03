@@ -1,9 +1,8 @@
 import OkayCancelButtons from '@/components/OkayCancelButtons';
 import { TextField } from '@/components/TextField';
 import { Text, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
 import { SeedProjectWorkItems } from '@/constants/seedWorkItems';
+import { useColors } from '@/context/ColorsContext';
 import { useAddRowCallback } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Stack, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
@@ -21,7 +20,6 @@ const SeedWorkItemSelectorPage = () => {
   const addWorkCategory = useAddRowCallback('categories');
   const addWorkItem = useAddRowCallback('workItems');
   const [selectedProjectType, setSelectedProjectType] = useState<string>('None');
-  const colorScheme = useColorScheme();
   const projectTypes = useMemo(() => {
     const types: ProjectTypesPickerEntry[] = [];
     types.push({ projectType: 'None', description: 'No Project Type' });
@@ -31,19 +29,7 @@ const SeedWorkItemSelectorPage = () => {
     return types;
   }, []);
 
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            neutral200: Colors.dark.neutral200,
-            listBackground: Colors.dark.listBackground,
-          }
-        : {
-            neutral200: Colors.light.neutral200,
-            listBackground: Colors.light.listBackground,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   const handleSave = () => {
     if (!selectedProjectType || selectedProjectType === 'None') {

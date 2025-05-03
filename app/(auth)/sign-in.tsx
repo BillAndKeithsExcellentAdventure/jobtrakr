@@ -1,12 +1,11 @@
 import { ActionButton } from '@/components/ActionButton';
-import { TextInput, Text, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
+import { Text, TextInput, View } from '@/components/Themed';
+import { useColors } from '@/context/ColorsContext';
 import { SignedIn, SignedOut, useAuth, useSignIn } from '@clerk/clerk-expo';
 import { Link, Redirect, Stack, useRouter } from 'expo-router';
 import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Page() {
   const auth = useAuth();
@@ -24,30 +23,9 @@ export default function Page() {
 }
 
 function SignInForm() {
-  const colorScheme = useColorScheme();
-  const colors = React.useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            listBackground: Colors.dark.listBackground,
-            borderColor: Colors.dark.borderColor,
-            iconColor: Colors.dark.iconColor,
-            textColor: Colors.dark.text,
-            neutral200: Colors.dark.neutral200,
-          }
-        : {
-            listBackground: Colors.light.listBackground,
-            borderColor: Colors.light.borderColor,
-            iconColor: Colors.light.iconColor,
-            textColor: Colors.light.text,
-            neutral200: Colors.light.neutral200,
-          },
-    [colorScheme],
-  );
-
+  const colors = useColors();
   const { signIn, setActive, isLoaded } = useSignIn();
   const router = useRouter();
-
   const [emailAddress, setEmailAddress] = React.useState('');
   const [password, setPassword] = React.useState('');
 
@@ -102,14 +80,14 @@ function SignInForm() {
           value={emailAddress}
           placeholder="Email"
           keyboardType="email-address"
-          placeholderTextColor={colors.textColor}
+          placeholderTextColor={colors.text}
           onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
         />
         <TextInput
-          style={{ ...styles.input, color: colors.textColor }}
+          style={{ ...styles.input, color: colors.text }}
           value={password}
           placeholder="Password"
-          placeholderTextColor={colors.textColor}
+          placeholderTextColor={colors.text}
           secureTextEntry={true}
           onChangeText={(password) => setPassword(password)}
         />

@@ -1,8 +1,7 @@
 import { ActionButtonProps } from '@/components/ButtonBar';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { Text, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
+import { ColorSchemeColors, useColors } from '@/context/ColorsContext';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import { useAllRows as useAllConfigRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
@@ -47,12 +46,12 @@ interface CostSectionData {
 const ProjectDetailsPage = () => {
   const router = useRouter();
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
+  const colors = useColors();
   const projectData = useProject(projectId);
   const processDeleteProject = useDeleteProjectCallback();
   const { removeActiveProjectId, addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const allProjectCategories = useAllConfigRows('categories');
   const allWorkItems = useAllConfigRows('workItems');
-  const colorScheme = useColorScheme();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [seedWorkItems, setSeedWorkItems] = useProjectValue(projectId, 'seedWorkItems');
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
@@ -142,33 +141,6 @@ const ProjectDetailsPage = () => {
     sections.sort((a, b) => a.code.localeCompare(b.code));
     return sections;
   }, [allWorkItemSummaries, allWorkItems, allProjectCategories, expandedSectionId]);
-
-  // Define colors based on the color scheme (dark or light)
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            screenBackground: Colors.dark.background,
-            listBackground: Colors.dark.listBackground,
-            itemBackground: Colors.dark.itemBackground,
-            iconColor: Colors.dark.iconColor,
-            shadowColor: Colors.dark.shadowColor,
-            borderColor: Colors.dark.borderColor,
-            bottomSheetBackground: Colors.dark.bottomSheetBackground,
-            text: Colors.dark.text,
-          }
-        : {
-            screenBackground: Colors.light.background,
-            listBackground: Colors.light.listBackground,
-            itemBackground: Colors.light.itemBackground,
-            iconColor: Colors.light.iconColor,
-            shadowColor: Colors.light.shadowColor,
-            borderColor: Colors.light.borderColor,
-            bottomSheetBackground: Colors.light.bottomSheetBackground,
-            text: Colors.light.text,
-          },
-    [colorScheme],
-  );
 
   const handleMenuItemPress = useCallback(
     (menuItem: string, actionContext: any) => {
@@ -278,7 +250,7 @@ const ProjectDetailsPage = () => {
                   paddingLeft: 10,
                   paddingRight: 36,
                   flexDirection: 'row',
-                  backgroundColor: colors.borderColor,
+                  backgroundColor: colors.border,
                 }}
               >
                 <Text style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }} text="Description" />
@@ -316,14 +288,14 @@ const ProjectDetailsPage = () => {
 const renderSectionHeader = (
   section: CostSectionData,
   toggleSection: (id: string) => void,
-  colors: Partial<typeof Colors.light | typeof Colors.dark>,
+  colors: ColorSchemeColors,
 ) => {
   return (
     <View
       style={[
         styles.header,
         {
-          borderColor: colors.borderColor,
+          borderColor: colors.border,
           backgroundColor: colors.listBackground,
           borderBottomWidth: 1,
           alignItems: 'center',
@@ -372,7 +344,7 @@ const renderItem = (
   item: CostItemData,
   sectionId: string,
   sectionCode: string,
-  colors: Partial<typeof Colors.light | typeof Colors.dark>,
+  colors: ColorSchemeColors,
   projectId: string,
   router: Router,
 ) => {

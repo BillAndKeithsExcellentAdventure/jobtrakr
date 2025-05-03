@@ -1,10 +1,9 @@
-import { Colors } from '@/constants/Colors';
-import React, { useMemo, useState } from 'react';
+import { useColors } from '@/context/ColorsContext';
+import React, { useState } from 'react';
 import { StyleSheet } from 'react-native';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { Text, View } from './Themed';
-import { useColorScheme } from './useColorScheme';
 
 interface ZoomImageViewerProps {
   imageUri: string;
@@ -13,27 +12,7 @@ interface ZoomImageViewerProps {
 export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = ({ imageUri }) => {
   const [containerWidth, setContainerWidth] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
-  const colorScheme = useColorScheme();
-
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            background: Colors.dark.background,
-            borderColor: Colors.dark.inputBorder,
-            modalOverlayBackgroundColor: Colors.dark.opaqueModalOverlayBackgroundColor,
-            transparent: Colors.dark.transparent,
-            iconColor: Colors.dark.iconColor,
-          }
-        : {
-            background: Colors.light.background,
-            borderColor: Colors.light.inputBorder,
-            modalOverlayBackgroundColor: Colors.light.opaqueModalOverlayBackgroundColor,
-            transparent: Colors.light.transparent,
-            iconColor: Colors.light.iconColor,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   // Shared values for zoom and pan
   const scale = useSharedValue(1);
@@ -79,7 +58,7 @@ export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = ({ imageUri }) =>
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
+    <View style={[styles.container, { backgroundColor: colors.opaqueModalOverlayBackgroundColor }]}>
       <View style={styles.overlay} onLayout={onLayout}>
         {containerWidth > 0 && containerHeight > 0 && (
           <GestureDetector gesture={combinedGesture}>

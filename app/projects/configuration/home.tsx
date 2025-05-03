@@ -1,29 +1,13 @@
 import { ConfigurationEntry } from '@/components/ConfigurationEntry';
 import { Text, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
-import { useRouter, Stack } from 'expo-router';
-import React, { useMemo } from 'react';
+import { useColors } from '@/context/ColorsContext';
+import { Stack, useRouter } from 'expo-router';
+import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const home = () => {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            listBackground: Colors.dark.listBackground,
-            borderColor: Colors.dark.borderColor,
-            iconColor: Colors.dark.iconColor,
-          }
-        : {
-            listBackground: Colors.light.listBackground,
-            borderColor: Colors.light.borderColor,
-            iconColor: Colors.light.iconColor,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

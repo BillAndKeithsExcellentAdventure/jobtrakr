@@ -8,7 +8,7 @@ import { Switch } from '@/components/Switch';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { VideoPlayerModal } from '@/components/VideoPlayerModal';
-import { Colors } from '@/constants/Colors';
+import { useColors } from '@/context/ColorsContext';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import {
   MediaEntryData,
@@ -29,29 +29,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const ImportDevicePhotosPage = () => {
   const router = useRouter();
   const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            screenBackground: Colors.dark.background,
-            listBackground: Colors.dark.listBackground,
-            itemBackground: Colors.dark.itemBackground,
-            iconColor: Colors.dark.iconColor,
-            shadowColor: Colors.dark.shadowColor,
-            bottomSheetBackground: Colors.dark.bottomSheetBackground,
-            text: Colors.dark.text,
-          }
-        : {
-            screenBackground: Colors.light.background,
-            listBackground: Colors.light.listBackground,
-            itemBackground: Colors.light.itemBackground,
-            iconColor: Colors.light.iconColor,
-            shadowColor: Colors.light.shadowColor,
-            bottomSheetBackground: Colors.light.bottomSheetBackground,
-            text: Colors.light.text,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const [useProjectLocation, setUseProjectLocation] = useState(false);

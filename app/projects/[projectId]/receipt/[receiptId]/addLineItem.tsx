@@ -5,7 +5,8 @@ import OptionList, { OptionEntry } from '@/components/OptionList';
 import { OptionPickerItem } from '@/components/OptionPickerItem';
 import { TextField } from '@/components/TextField';
 import { View } from '@/components/Themed';
-import { Colors } from '@/constants/Colors';
+import { useColors } from '@/context/ColorsContext';
+import { useAllRows as useAllRowsConfiguration } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   useAddRowCallback,
   useAllRows,
@@ -13,10 +14,9 @@ import {
   useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { useAllRows as useAllRowsConfiguration } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, StyleSheet, useColorScheme } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AddReceiptLineItemPage = () => {
@@ -64,23 +64,7 @@ const AddReceiptLineItemPage = () => {
     return uniqueCostItems;
   }, [allWorkItemCostSummaries, allWorkItems]);
 
-  const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            separatorColor: Colors.dark.separatorColor,
-            borderColor: Colors.dark.borderColor,
-            iconColor: Colors.dark.iconColor,
-          }
-        : {
-            separatorColor: Colors.light.separatorColor,
-            borderColor: Colors.light.borderColor,
-            iconColor: Colors.light.iconColor,
-          },
-    [colorScheme],
-  );
-
+  const colors = useColors();
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
 
@@ -159,7 +143,7 @@ const AddReceiptLineItemPage = () => {
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1, overflowY: 'hidden' }}>
       <Stack.Screen options={{ title: 'Add Receipt Line Item', headerShown: true }} />
-      <View style={[styles.container, { borderColor: colors.borderColor }]}>
+      <View style={[styles.container, { borderColor: colors.border }]}>
         <NumberInputField
           style={styles.inputContainer}
           label="Amount"

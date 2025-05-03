@@ -1,20 +1,19 @@
 import { ActionButton } from '@/components/ActionButton';
-import { TextInput, Text, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
-import { Ionicons } from '@expo/vector-icons'; // Right caret icon
-import { Stack, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, Keyboard, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import { Pressable } from 'react-native-gesture-handler';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableProjectTemplate from './SwipeableProjectTemplate';
+import { Text, TextInput, View } from '@/components/Themed';
+import { useColors } from '@/context/ColorsContext';
 import {
   ProjectTemplateData,
   useAddRowCallback,
   useAllRows,
   WorkItemData,
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import { Ionicons } from '@expo/vector-icons'; // Right caret icon
+import { Stack, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { FlatList, Keyboard, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import SwipeableProjectTemplate from './SwipeableProjectTemplate';
 
 const ListProjectTemplates = () => {
   const allProjectTemplates = useAllRows('templates');
@@ -28,24 +27,7 @@ const ListProjectTemplates = () => {
   const [selectedWorkItems, setSelectedWorkItems] = useState<WorkItemData[]>([]);
 
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            listBackground: Colors.dark.listBackground,
-            borderColor: Colors.dark.borderColor,
-            iconColor: Colors.dark.iconColor,
-            neutral200: Colors.dark.neutral200,
-          }
-        : {
-            listBackground: Colors.light.listBackground,
-            borderColor: Colors.light.borderColor,
-            iconColor: Colors.light.iconColor,
-            neutral200: Colors.light.neutral200,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   const handleInputChange = (name: keyof ProjectTemplateData, value: string) => {
     if (projectTemplate) {

@@ -1,42 +1,19 @@
 import { ActionButton } from '@/components/ActionButton';
 import { TextField } from '@/components/TextField';
 import { Text, TextInput, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
+import { useColors } from '@/context/ColorsContext';
 import { ProjectData } from '@/models/types';
 import { useProject, useUpdateProjectCallback } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatDate } from '@/utils/formatters';
 import * as Location from 'expo-location';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditProjectScreen = () => {
-  const colorScheme = useColorScheme();
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            background: Colors.dark.background,
-            borderColor: Colors.dark.inputBorder,
-            modalOverlayBackgroundColor: Colors.dark.opaqueModalOverlayBackgroundColor,
-            transparent: Colors.dark.transparent,
-            neutral200: Colors.dark.neutral200,
-            buttonBlue: Colors.dark.buttonBlue,
-          }
-        : {
-            background: Colors.light.background,
-            borderColor: Colors.light.inputBorder,
-            modalOverlayBackgroundColor: Colors.light.opaqueModalOverlayBackgroundColor,
-            transparent: Colors.light.transparent,
-            neutral200: Colors.light.neutral200,
-            buttonBlue: Colors.light.buttonBlue,
-          },
-    [colorScheme],
-  );
-
+  const colors = useColors();
   const router = useRouter();
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
 
@@ -163,7 +140,7 @@ const EditProjectScreen = () => {
         <TouchableWithoutFeedback onPress={dismissKeyboard}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Edit Existing Project</Text>
-            <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.borderColor }}>
+            <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border }}>
               <TextField
                 style={[styles.input, { borderColor: colors.transparent }]}
                 label="Project Name"

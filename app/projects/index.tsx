@@ -2,14 +2,13 @@ import { ActionButtonProps } from '@/components/ButtonBar';
 import { Text, View } from '@/components/Themed';
 import { TwoColumnList, TwoColumnListEntry } from '@/components/TwoColumnList';
 import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/Colors';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import Entypo from '@expo/vector-icons/Entypo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
-import { useRouter, Stack, Redirect } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 
@@ -18,15 +17,12 @@ import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  useAllProjects,
-  useProjectValue,
-  useToggleFavoriteCallback,
-} from '@/tbStores/listOfProjects/ListOfProjectsStore';
+import { useAllProjects, useToggleFavoriteCallback } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
-import { AntDesign } from '@expo/vector-icons';
+import { useColors } from '@/context/ColorsContext';
 import { useAuth, useClerk } from '@clerk/clerk-expo';
+import { AntDesign } from '@expo/vector-icons';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -45,37 +41,9 @@ export default function ProjectHomeScreen() {
   const toggleFavorite = useToggleFavoriteCallback();
   const [projectListEntries, setProjectListEntries] = useState<TwoColumnListEntry[]>([]);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
-  const navigation = useNavigation();
-
-  const colorScheme = useColorScheme();
   const router = useRouter();
   const { signOut } = useClerk();
-  const auth = useAuth();
-
-  // Define colors based on the color scheme (dark or light)
-  const colors = useMemo(
-    () =>
-      colorScheme === 'dark'
-        ? {
-            screenBackground: Colors.dark.background,
-            listBackground: Colors.dark.listBackground,
-            itemBackground: Colors.dark.itemBackground,
-            iconColor: Colors.dark.iconColor,
-            shadowColor: Colors.dark.shadowColor,
-            bottomSheetBackground: Colors.dark.bottomSheetBackground,
-            text: Colors.dark.text,
-          }
-        : {
-            screenBackground: Colors.light.background,
-            listBackground: Colors.light.listBackground,
-            itemBackground: Colors.light.itemBackground,
-            iconColor: Colors.light.iconColor,
-            shadowColor: Colors.light.shadowColor,
-            bottomSheetBackground: Colors.light.bottomSheetBackground,
-            text: Colors.light.text,
-          },
-    [colorScheme],
-  );
+  const colors = useColors();
 
   useEffect(() => {
     // create an array of projectId that have been favorited
@@ -281,7 +249,7 @@ export default function ProjectHomeScreen() {
 
       <View style={{ flex: 1, width: '100%' }}>
         {projectListEntries.length > 0 ? (
-          <View style={[styles.twoColListContainer, { backgroundColor: colors.screenBackground }]}>
+          <View style={[styles.twoColListContainer, { backgroundColor: colors.background }]}>
             <TwoColumnList
               data={projectListEntries}
               onPress={handleSelection}
@@ -289,7 +257,7 @@ export default function ProjectHomeScreen() {
             />
           </View>
         ) : (
-          <View style={[styles.container, { padding: 20, backgroundColor: colors.screenBackground }]}>
+          <View style={[styles.container, { padding: 20, backgroundColor: colors.background }]}>
             <Text text="No Projects Found!" txtSize="xl" />
             <Text text="Use menu in upper right to add one." />
           </View>
