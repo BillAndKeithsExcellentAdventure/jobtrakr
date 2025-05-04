@@ -242,11 +242,11 @@ export const useCostUpdater = (projectId: string): void => {
 /* Watch for changes to table workItemSummaries and recalculate the total amount bid 
    and then update the project summary information */
 export const useBidAmountUpdater = (projectId: string): void => {
-  const allCostRows = useAllRows(projectId, 'workItemSummaries');
+  const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const [, setBidAmount] = useProjectValue(projectId, 'bidPrice');
 
   useEffect(() => {
-    const bidEstimate = allCostRows.reduce((sum, item) => sum + item.bidAmount, 0);
+    const bidEstimate = allWorkItemSummaries.reduce((sum, item) => sum + item.bidAmount, 0);
     setBidAmount(bidEstimate);
-  }, [allCostRows]);
+  }, [allWorkItemSummaries]);
 };
