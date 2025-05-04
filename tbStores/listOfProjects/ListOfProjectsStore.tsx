@@ -215,7 +215,7 @@ export default function ListOfProjectsStore() {
   const storeId = useProjectListStoreId();
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
   useCreateClientPersisterAndStart(storeId, store);
-  //useCreateServerSynchronizerAndStart(storeId, store);
+  useCreateServerSynchronizerAndStart(storeId, store);
   useProvideStore(storeId, store);
 
   // get all active projectIds from the ActiveProjectIdsContext

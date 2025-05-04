@@ -9,6 +9,8 @@ import { useColors } from '@/context/ColorsContext';
 import { useAllRows as useAllConfigurationRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { ReceiptData, useAddRowCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/utils/formatters';
+import { useAddImageCallback } from '@/utils/images';
+import { createThumbnail } from '@/utils/thumbnailUtils';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -42,7 +44,7 @@ const AddReceiptPage = () => {
     receiptDate: defaultDate.getTime(),
     thumbnail: '',
     pictureDate: 0,
-    pictureUri: '',
+    imageId: '',
     notes: '',
     markedComplete: false,
   });
@@ -50,6 +52,7 @@ const AddReceiptPage = () => {
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [canAddReceipt, setCanAddReceipt] = useState(false);
   const allVendors = useAllConfigurationRows('vendors');
+  const addPhotoImage = useAddImageCallback();
 
   useEffect(() => {
     if (allVendors && allVendors.length > 0) {
@@ -116,7 +119,7 @@ const AddReceiptPage = () => {
   useEffect(() => {
     setCanAddReceipt(
       (projectReceipt.amount > 0 && !!projectReceipt.vendor && !!projectReceipt.description) ||
-        !!projectReceipt.pictureUri,
+        !!projectReceipt.imageId,
     );
   }, [projectReceipt]);
 
@@ -148,11 +151,19 @@ const AddReceiptPage = () => {
     if (!response.canceled) {
       const asset = response.assets[0];
       if (!response.assets || response.assets.length === 0 || !asset) return;
-      setProjectReceipt((prevReceipt) => ({
-        ...prevReceipt,
-        pictureUri: asset.uri,
-        assetId: asset.assetId ?? undefined,
-      }));
+
+      const imageAddResult = await addPhotoImage(asset.uri, projectId, 'photo');
+      console.log('Image Add Result:', imageAddResult);
+      if (imageAddResult.status === 'Success' && imageAddResult.uri) {
+        const thumbnail = await createThumbnail(asset.uri);
+
+        setProjectReceipt((prevReceipt) => ({
+          ...prevReceipt,
+          thumbnail: thumbnail ?? '',
+          imageId: imageAddResult.id,
+          assetId: asset.assetId ?? undefined,
+        }));
+      }
     }
   }, []);
 
@@ -251,7 +262,7 @@ const AddReceiptPage = () => {
                   style={styles.saveButton}
                   onPress={handleCaptureImage}
                   type={'action'}
-                  title={projectReceipt.pictureUri ? 'Retake Picture' : 'Take Picture'}
+                  title={projectReceipt.imageId ? 'Retake Picture' : 'Take Picture'}
                 />
               </View>
             </View>
@@ -276,7 +287,7 @@ const AddReceiptPage = () => {
                     receiptDate: defaultDate.getTime(),
                     thumbnail: '',
                     pictureDate: 0,
-                    pictureUri: '',
+                    imageId: '',
                     notes: '',
                     markedComplete: false,
                   });

@@ -23,7 +23,7 @@ export const TABLES_SCHEMA = {
     receiptDate: { type: 'number' }, // Date on the receipt.
     thumbnail: { type: 'string' },
     pictureDate: { type: 'number' }, // Date the picture was taken.
-    pictureUri: { type: 'string' },
+    imageId: { type: 'string' },
     notes: { type: 'string' },
     markedComplete: { type: 'boolean' },
   },
@@ -37,7 +37,7 @@ export const TABLES_SCHEMA = {
     invoiceNumber: { type: 'string' }, // Vendor's invoice number
     thumbnail: { type: 'string' },
     pictureDate: { type: 'number' }, // Date the picture was taken.
-    pictureUri: { type: 'string' },
+    imageId: { type: 'string' },
     notes: { type: 'string' },
   },
 
@@ -54,8 +54,8 @@ export const TABLES_SCHEMA = {
     id: { type: 'string' },
     assetId: { type: 'string' }, // only used when media is on local device
     deviceName: { type: 'string' }, // only used when media is on local device
+    imageId: { type: 'string' }, // the id of the image as stored in the uri.
     mediaType: { type: 'string' }, // 'video' or 'photo'
-    mediaUri: { type: 'string' }, // URI to the video or photo
     thumbnail: { type: 'string' }, // thumbnail image.
     creationDate: { type: 'number' }, // Date the picture was taken.
   },
@@ -80,7 +80,7 @@ export default function ProjectDetailsStore({ projectId }: { projectId: string }
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
 
   useCreateClientPersisterAndStart(storeId, store);
-  //useCreateServerSynchronizerAndStart(storeId, store);
+  useCreateServerSynchronizerAndStart(storeId, store);
   useProvideStore(storeId, store);
   return null;
 }

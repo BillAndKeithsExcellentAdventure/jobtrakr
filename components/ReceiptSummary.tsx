@@ -1,22 +1,34 @@
 import { View, Text } from '@/components/Themed';
 import { ReceiptData } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/utils/formatters';
+import { buildLocalImageUri } from '@/utils/images';
 import React from 'react';
 import { TouchableWithoutFeedback, Image, StyleSheet } from 'react-native';
+import Base64Image from './Base64Image';
 
 interface ReceiptSummaryProps {
+  orgId: string;
+  projectId: string;
   item: ReceiptData;
   onShowPicture: (uri: string) => void;
   onShowDetails: (item: ReceiptData) => void;
 }
 
-export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({ item, onShowPicture, onShowDetails }) => {
+export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({
+  orgId,
+  projectId,
+  item,
+  onShowPicture,
+  onShowDetails,
+}) => {
+  const uri = buildLocalImageUri(orgId, projectId, item.imageId, 'receipt');
+  console.log(`ReceiptSummary: uri: ${uri}`);
   return (
     <View style={{ flex: 1, flexDirection: 'row' }}>
       <View style={styles.imageContentContainer}>
-        {item.pictureUri ? (
-          <TouchableWithoutFeedback onPress={() => onShowPicture(item.pictureUri!)}>
-            <Image source={{ uri: item.pictureUri }} style={{ height: 80, width: 120 }} />
+        {item.imageId ? (
+          <TouchableWithoutFeedback onPress={() => onShowPicture(uri!)}>
+            <Base64Image base64String={item.thumbnail} height={80} width={120} />
           </TouchableWithoutFeedback>
         ) : (
           <Text txtSize="sub-title">No Image</Text>

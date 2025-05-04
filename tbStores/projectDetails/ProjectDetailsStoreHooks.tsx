@@ -38,7 +38,7 @@ export type ReceiptData = {
   receiptDate: number;
   thumbnail: string;
   pictureDate: number;
-  pictureUri: string;
+  imageId: string;
   notes: string;
   markedComplete: boolean;
 };
@@ -52,7 +52,7 @@ export type InvoiceData = {
   invoiceNumber: string;
   thumbnail: string;
   pictureDate: number;
-  pictureUri: string;
+  imageId: string;
   notes: string;
 };
 
@@ -69,8 +69,8 @@ export interface MediaEntryData {
   id: string;
   assetId: string;
   deviceName: string;
+  imageId: string; // id of the image as stored in the uri and the thus the C2 datastore.
   mediaType: 'video' | 'photo';
-  mediaUri: string;
   thumbnail: string;
   creationDate: number;
 }
