@@ -227,7 +227,8 @@ export function useIsStoreAvailableCallback(projectId: string) {
   }, [store]);
 }
 
-// --- Retrieve all rows of a table ---
+/* Watch for changes to table workItemCostEntries and recalculate the total amount spent 
+   and then update the project summary information */
 export const useCostUpdater = (projectId: string): void => {
   const allCostRows = useAllRows(projectId, 'workItemCostEntries');
   const [, setAmountSpent] = useProjectValue(projectId, 'amountSpent');
@@ -235,5 +236,17 @@ export const useCostUpdater = (projectId: string): void => {
   useEffect(() => {
     const spentAmount = allCostRows.reduce((sum, item) => sum + item.amount, 0);
     setAmountSpent(spentAmount);
+  }, [allCostRows]);
+};
+
+/* Watch for changes to table workItemSummaries and recalculate the total amount bid 
+   and then update the project summary information */
+export const useBidAmountUpdater = (projectId: string): void => {
+  const allCostRows = useAllRows(projectId, 'workItemSummaries');
+  const [, setBidAmount] = useProjectValue(projectId, 'bidPrice');
+
+  useEffect(() => {
+    const bidEstimate = allCostRows.reduce((sum, item) => sum + item.bidAmount, 0);
+    setBidAmount(bidEstimate);
   }, [allCostRows]);
 };
