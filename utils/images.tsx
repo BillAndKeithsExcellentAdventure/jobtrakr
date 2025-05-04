@@ -54,34 +54,38 @@ const downloadImage = async (
   localUri: string,
 ): Promise<ImageResult> => {
   try {
-    const requestBody = {
+    const params = new URLSearchParams({
       userId: details.userId,
       projectId: details.projectId,
       organizationId: details.orgId,
       imageId: details.id,
-    };
+    }).toString();
 
-    const endPointUrl = getFetchImageEndPointUrl(resourceType);
+    const endPointUrl = `${getFetchImageEndPointUrl(resourceType)}?${params}`;
+    console.log('Downloading image from:', endPointUrl);
 
     // Make the API call
     const response = await fetch(endPointUrl, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        'Content-Type': 'image/jpeg',
       },
-      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
+    console.log('Image download response:', JSON.stringify(response));
     // Get the image data as arrayBuffer
     const arrayBuffer = await response.arrayBuffer();
+    console.log('Image download arrayBuffer.byteLength:', arrayBuffer.byteLength);
 
-    // Convert arrayBuffer to base64
-    const base64Data = Buffer.from(arrayBuffer).toString('base64');
+    // Convert arrayBuffer to base64 using Expo FileSystem
+    const uint8Array = new Uint8Array(arrayBuffer);
+    const base64Data = arrayBufferToBase64(uint8Array);
+    console.log('Image download base64Data.length:', base64Data.length);
 
     // Ensure directory exists
     const directory = localUri.substring(0, localUri.lastIndexOf('/'));
@@ -109,6 +113,15 @@ const downloadImage = async (
     };
   }
 };
+
+// Add this helper function at the top of your file
+function arrayBufferToBase64(buffer: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < buffer.byteLength; i++) {
+    binary += String.fromCharCode(buffer[i]);
+  }
+  return global.btoa(binary);
+}
 
 const uploadImage = async (
   details: imageDetails,
@@ -178,6 +191,16 @@ const getLocalImageFolder = (orgId: string, projectId: string, resourceType: res
 
 const getLocalImageUri = (folder: string, id: string): string => {
   return `${folder}/${id}.jpeg`;
+};
+
+export const buildLocalImageUri = (
+  orgId: string,
+  projectId: string,
+  imageId: string,
+  resourceType: resourceType,
+): string => {
+  const folder = getLocalImageFolder(orgId, projectId, resourceType);
+  return getLocalImageUri(folder, imageId);
 };
 
 const copyToLocalFolder = async (
@@ -260,7 +283,7 @@ export const useAddImageCallback = () => {
       };
 
       const copyLocalResult = await copyToLocalFolder(imageUri, details, resourceType);
-      if (copyLocalResult.status !== 'Success' || !!copyLocalResult.uri) {
+      if (copyLocalResult.status !== 'Success' || !copyLocalResult.uri) {
         return copyLocalResult;
       }
 

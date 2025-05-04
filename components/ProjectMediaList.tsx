@@ -10,9 +10,11 @@ import { MediaEntryData, useDeleteRowCallback } from '@/tbStores/projectDetails/
 import { createThumbnail } from '@/utils/thumbnailUtils';
 import { useProjectValue } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { useRouter } from 'expo-router';
-import { useAddImageCallback } from '@/utils/images';
+import { buildLocalImageUri, useAddImageCallback, useGetImageCallback } from '@/utils/images';
 import { useColors } from '@/context/ColorsContext';
 import { useColorScheme } from './useColorScheme';
+import * as FileSystem from 'expo-file-system';
+import { useAuth } from '@clerk/clerk-expo';
 
 export interface MediaEntryDisplayData extends MediaEntryData {
   isSelected: boolean;
@@ -39,6 +41,8 @@ export const ProjectMediaList = ({
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = useColors();
+  const getImage = useGetImageCallback();
+  const { orgId } = useAuth();
 
   useEffect(() => {
     // Initialize selectableProjectMedia whenever allProjectMedia changes
@@ -81,16 +85,45 @@ export const ProjectMediaList = ({
     );
   }, []);
 
-  const handleImageLongPress = useCallback((uri: string, type: 'video' | 'photo', photoDate: string) => {
+  const handleImageLongPress = useCallback(async (id: string, type: 'video' | 'photo', photoDate: string) => {
+    if (!orgId) {
+      return;
+    }
+
+    const uri = buildLocalImageUri(orgId, projectId, id, 'photo');
+
     if (type === 'video') {
       playVideo(uri);
     } else if (type === 'photo') {
       const dateString = photoDate ?? 'No Date Info Available';
-      router.push(
-        `/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${encodeURIComponent(
-          projectName,
-        )}&photoDate=${dateString}`,
-      );
+
+      // This uri is to a local storage location. We first need to confirm that this file exists and
+      // if not, we need to call our backend and retrieve it before trying to display it.
+      if (uri.startsWith('file://')) {
+        // This is a local file. We need to check if it exists.
+        const fileUri = uri.replace('file://', '');
+        console.log('*** File URI:', fileUri);
+        // Check if the file exists
+
+        await FileSystem.getInfoAsync(fileUri).then(async (fileInfo) => {
+          if (!fileInfo.exists) {
+            // File does not exist, so we need to call our backend to retrieve it.
+            console.log('*** File does not exist. Need to retrieve from backend.');
+            // Call your backend API to retrieve the file and save it locally
+            // After retrieving the file, you can navigate to the image viewer
+            const result = await getImage(projectId, id, type);
+            if (result.result.status !== 'Success') {
+              console.error('*** Error retrieving image from backend:', result.result.msg);
+            }
+          }
+        });
+
+        router.push(
+          `/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${encodeURIComponent(
+            projectName,
+          )}&photoDate=${dateString}`,
+        );
+      }
     }
   }, []);
 
@@ -121,7 +154,7 @@ export const ProjectMediaList = ({
               item.isSelected && styles.imageSelected,
             ]}
             onPress={() => handleSelection(item.id)}
-            onLongPress={() => handleImageLongPress(item.mediaUri, item.mediaType, photoDate)}
+            onLongPress={() => handleImageLongPress(item.imageId, item.mediaType, photoDate)}
           >
             <View style={styles.mediaContentContainer}>
               <Base64Image base64String={item.thumbnail} height={100} width={100} />

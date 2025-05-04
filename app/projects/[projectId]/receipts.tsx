@@ -22,19 +22,21 @@ import { useAddImageCallback } from '@/utils/images';
 import { useAuth } from '@clerk/clerk-expo';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { createThumbnail } from '@/utils/thumbnailUtils';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
   return actionContext && typeof actionContext.PictureUri === 'string';
 }
 
 interface SwipeableItemProps {
+  orgId: string;
   projectId: string;
   item: ReceiptData;
   onDelete: (id: string) => void;
   onShowPicture: (uri: string) => void;
 }
 
-const SwipeableItem: React.FC<SwipeableItemProps> = ({ projectId, item, onDelete, onShowPicture }) => {
+const SwipeableItem: React.FC<SwipeableItemProps> = ({ orgId, projectId, item, onDelete, onShowPicture }) => {
   const router = useRouter();
   const translateX = useSharedValue(0); // Shared value for horizontal translation
 
@@ -103,7 +105,13 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ projectId, item, onDelete
         <Animated.View
           style={[animatedStyle, { width: '100%' }]} // Apply animated style here
         >
-          <ReceiptSummary item={item} onShowPicture={onShowPicture} onShowDetails={onShowDetails} />
+          <ReceiptSummary
+            orgId={orgId}
+            projectId={projectId}
+            item={item}
+            onShowPicture={onShowPicture}
+            onShowDetails={onShowDetails}
+          />
         </Animated.View>
       </PanGestureHandler>
       {isSwiped && (
@@ -176,31 +184,42 @@ const ProjectReceiptsPage = () => {
       const asset = cameraResponse.assets[0];
       if (!cameraResponse.assets || cameraResponse.assets.length === 0 || !asset) return;
 
+      // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
+      const imageAddResult = await addReceiptImage(asset.uri, projectId, 'receipt');
+      if (imageAddResult.status !== 'Success') {
+        alert(`Unable to add receipt image: ${JSON.stringify(imageAddResult)}`);
+        return;
+      }
+
+      console.log('Finished adding Receipt Image.', imageAddResult.id);
+      const thumbnail = await createThumbnail(asset.uri);
+
       const newReceipt: ReceiptData = {
         id: '',
         vendor: '',
         description: '',
         amount: 0,
         numLineItems: 0,
-        thumbnail: '',
+        thumbnail: thumbnail ?? '',
         receiptDate: new Date().getTime(),
         notes: '',
         markedComplete: false,
-        pictureUri: asset.uri,
+        imageId: imageAddResult.id,
         pictureDate: new Date().getTime(),
       };
 
       console.log('Adding a new Receipt.', newReceipt);
-      // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
-      const imageAddResult = await addReceiptImage(asset.uri, projectId, 'receipt');
-      console.log('Finished adding Receipt Image.', imageAddResult);
 
       const response = addReceipt(newReceipt);
       if (response?.status === 'Success') {
         newReceipt.id = response.id;
         console.log('Project receipt successfully added:', newReceipt);
       } else {
-        alert(`Unable to insert Project receipt: ${JSON.stringify(newReceipt)} - ${response.msg}`);
+        alert(
+          `Unable to insert Project receipt: ${JSON.stringify(newReceipt.imageId)} - ${JSON.stringify(
+            response,
+          )}`,
+        );
       }
     }
   }, [projectId]);
@@ -259,6 +278,7 @@ const ProjectReceiptsPage = () => {
                       keyExtractor={(item, index) => item.id ?? index.toString()}
                       renderItem={({ item }) => (
                         <SwipeableItem
+                          orgId={auth.orgId!!}
                           projectId={projectId}
                           item={item}
                           onDelete={handleRemoveReceipt}
