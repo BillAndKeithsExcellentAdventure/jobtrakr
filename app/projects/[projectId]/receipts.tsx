@@ -42,9 +42,12 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ orgId, projectId, item, o
 
   const [isSwiped, setIsSwiped] = useState(false); // Track if item is swiped for delete
 
-  const onShowDetails = useCallback((item: ReceiptData) => {
-    router.push(`/projects/${projectId}/receipt/${item.id}`);
-  }, []);
+  const onShowDetails = useCallback(
+    (item: ReceiptData) => {
+      router.push(`/projects/${projectId}/receipt/${item.id}`);
+    },
+    [projectId, item.id],
+  );
 
   // Gesture handler for the swipe action
   const onGestureEvent = (event: PanGestureHandlerGestureEvent) => {
@@ -153,9 +156,12 @@ const ProjectReceiptsPage = () => {
   const addReceipt = useAddRowCallback(projectId, 'receipts');
   const deleteReceipt = useDeleteRowCallback(projectId, 'receipts');
 
-  const showPicture = useCallback((uri: string) => {
-    router.push(`/projects/${projectId}/receipt/${receiptId}/showImage/?uri=${uri}`);
-  }, []);
+  const showPicture = useCallback(
+    (uri: string) => {
+      router.push(`/projects/${projectId}/receipt/${receiptId}/showImage/?uri=${uri}`);
+    },
+    [projectId, receiptId],
+  );
 
   const handleRemoveReceipt = useCallback(
     async (id: string | undefined) => {
