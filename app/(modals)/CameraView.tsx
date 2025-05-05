@@ -41,12 +41,9 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   const colors = useColors();
 
   // Move the callback definition here, before any conditional returns
-  const onCameraModeChanged = useCallback(
-    (value: boolean) => {
-      setCameraModeSwitch(value);
-    },
-    [cameraModeSwitch],
-  );
+  const onCameraModeChanged = useCallback((value: boolean) => {
+    setCameraModeSwitch(value);
+  }, []);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -161,6 +158,19 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   };
 
   const handleSavePreview = async () => {
+    if (!previewUri) return;
+
+    try {
+      const asset = await MediaLibrary.createAssetAsync(previewUri);
+      asset.creationTime = Date.now();
+      onMediaCaptured(asset);
+      setPreviewUri(null);
+    } catch (error) {
+      console.error('Error saving picture:', error);
+    }
+  };
+
+  const handlePhotoCaptured = async (asset: MediaLibrary.Asset) => {
     if (!previewUri) return;
 
     try {

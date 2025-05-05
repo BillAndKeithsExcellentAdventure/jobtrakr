@@ -12,11 +12,12 @@ import {
 import {
   useAddRowCallback,
   useAllRows,
+  useBidAmountUpdater,
   useCostUpdater,
   useIsStoreAvailableCallback,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/utils/formatters';
-import { MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -67,7 +68,7 @@ const ProjectDetailsPage = () => {
     if (projectId) {
       addActiveProjectIds([projectId]);
     }
-  }, [projectId]);
+  }, [projectId, addActiveProjectIds]);
 
   useEffect(() => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
@@ -101,6 +102,8 @@ const ProjectDetailsPage = () => {
 
   const [expandedSectionId, setExpandedSectionId] = useState<string>('');
   useCostUpdater(projectId);
+  useBidAmountUpdater(projectId);
+
   const sectionData = useMemo(() => {
     const sections: CostSectionData[] = [];
     const workItemMap = new Map(allWorkItems.map((w) => [w.id, w]));
@@ -148,22 +151,19 @@ const ProjectDetailsPage = () => {
     sections.sort((a, b) => a.code.localeCompare(b.code));
     return sections;
   }, [allWorkItemSummaries, allWorkItems, allProjectCategories, expandedSectionId]);
-  /*
-  useEffect(() => {
-    const projectTotalSpent = sectionData.reduce((sum, item) => sum + item.totalSpentAmount, 0);
-    if (amountSpent != projectTotalSpent) setAmountSpent(projectTotalSpent);
-  }, [sectionData, amountSpent, setAmountSpent]);
-*/
-  useEffect(() => {
-    const projectTotalBid = sectionData.reduce((sum, item) => sum + item.totalBidAmount, 0);
-    if (bidAmount != projectTotalBid) setBidAmount(projectTotalBid);
-  }, [sectionData, bidAmount, setBidAmount]);
 
   const handleMenuItemPress = useCallback(
     (menuItem: string, actionContext: any) => {
       setHeaderMenuModalVisible(false);
       if (menuItem === 'Edit' && projectId) {
+        console.log('Open Edit Project');
         router.push(`/projects/${projectId}/edit/?projectName=${encodeURIComponent(projectData!.name)}`);
+        return;
+      } else if (menuItem === 'SetEstimates' && projectId) {
+        console.log('Open setEstimatedCosts');
+        router.push(
+          `/projects/${projectId}/setEstimatedCosts/?projectName=${encodeURIComponent(projectData!.name)}`,
+        );
         return;
       } else if (menuItem === 'Delete' && projectId) {
         Alert.alert('Delete Project', 'Are you sure you want to delete this project?', [
@@ -179,11 +179,10 @@ const ProjectDetailsPage = () => {
             },
           },
         ]);
-
         return;
       }
     },
-    [projectId, projectData, router, processDeleteProject],
+    [projectId, projectData, router, processDeleteProject, removeActiveProjectId],
   );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
@@ -195,6 +194,17 @@ const ProjectDetailsPage = () => {
           handleMenuItemPress('Edit', actionContext);
         },
       },
+      ...(allWorkItemSummaries.length > 0
+        ? [
+            {
+              icon: <FontAwesome5 name="search-dollar" size={28} color={colors.iconColor} />,
+              label: 'Set Estimate Costs',
+              onPress: (e, actionContext) => {
+                handleMenuItemPress('SetEstimates', actionContext);
+              },
+            } as ActionButtonProps,
+          ]
+        : []),
       {
         icon: <FontAwesome name="trash" size={28} color={colors.iconColor} />,
         label: 'Delete Project',
@@ -203,7 +213,7 @@ const ProjectDetailsPage = () => {
         },
       },
     ],
-    [colors],
+    [colors, allWorkItemSummaries],
   );
 
   const toggleSection = (id: string) => {
