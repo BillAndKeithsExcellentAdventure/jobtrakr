@@ -9,9 +9,10 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
-import { Alert, Pressable, StyleSheet } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import { Pressable } from 'react-native-gesture-handler';
 
 const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
   const processDelete = useDeleteRowCallback('categories');

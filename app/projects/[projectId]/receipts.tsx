@@ -33,14 +33,21 @@ interface SwipeableItemProps {
   projectId: string;
   item: ReceiptData;
   onDelete: (id: string) => void;
-  onShowPicture: (uri: string) => void;
 }
 
-const SwipeableItem: React.FC<SwipeableItemProps> = ({ orgId, projectId, item, onDelete, onShowPicture }) => {
+const SwipeableItem: React.FC<SwipeableItemProps> = ({ orgId, projectId, item, onDelete }) => {
   const router = useRouter();
   const translateX = useSharedValue(0); // Shared value for horizontal translation
 
   const [isSwiped, setIsSwiped] = useState(false); // Track if item is swiped for delete
+
+  const onShowPicture = useCallback(
+    (uri: string) => {
+      // in this component we want any presses to the receipt details page not show the image
+      router.push(`/projects/${projectId}/receipt/${item.id}`);
+    },
+    [projectId, item.id],
+  );
 
   const onShowDetails = useCallback(
     (item: ReceiptData) => {
@@ -155,13 +162,6 @@ const ProjectReceiptsPage = () => {
   const addReceiptImage = useAddImageCallback();
   const addReceipt = useAddRowCallback(projectId, 'receipts');
   const deleteReceipt = useDeleteRowCallback(projectId, 'receipts');
-
-  const showPicture = useCallback(
-    (uri: string) => {
-      router.push(`/projects/${projectId}/receipt/${receiptId}/showImage/?uri=${uri}`);
-    },
-    [projectId, receiptId],
-  );
 
   const handleRemoveReceipt = useCallback(
     async (id: string | undefined) => {
@@ -288,7 +288,6 @@ const ProjectReceiptsPage = () => {
                           projectId={projectId}
                           item={item}
                           onDelete={handleRemoveReceipt}
-                          onShowPicture={showPicture}
                         />
                       )}
                     />

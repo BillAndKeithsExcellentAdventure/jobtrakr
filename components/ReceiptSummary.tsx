@@ -4,6 +4,7 @@ import { formatCurrency } from '@/utils/formatters';
 import { buildLocalImageUri } from '@/utils/images';
 import React from 'react';
 import { TouchableWithoutFeedback, Image, StyleSheet } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import Base64Image from './Base64Image';
 
 interface ReceiptSummaryProps {
@@ -27,15 +28,15 @@ export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({
     <View style={{ flex: 1, flexDirection: 'row' }}>
       <View style={styles.imageContentContainer}>
         {item.imageId ? (
-          <TouchableWithoutFeedback onPress={() => onShowPicture(uri!)}>
+          <Pressable onPress={() => onShowPicture(uri!)}>
             <Base64Image base64String={item.thumbnail} height={80} width={120} />
-          </TouchableWithoutFeedback>
+          </Pressable>
         ) : (
           <Text txtSize="sub-title">No Image</Text>
         )}
       </View>
       <View style={[{ flex: 1, alignItems: 'flex-start' }, !!!item.amount && { alignItems: 'center' }]}>
-        <TouchableWithoutFeedback onPress={() => onShowDetails(item)}>
+        <Pressable onPress={() => onShowDetails(item)}>
           {item.amount ? (
             <View style={{ flex: 1, justifyContent: 'center' }}>
               <Text>Amount: {formatCurrency(item.amount, true, true)}</Text>
@@ -48,7 +49,7 @@ export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({
               <Text txtSize="sub-title">No details</Text>
             </View>
           )}
-        </TouchableWithoutFeedback>
+        </Pressable>
       </View>
     </View>
   );
