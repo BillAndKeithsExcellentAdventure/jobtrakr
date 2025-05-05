@@ -222,11 +222,11 @@ const ProjectReceiptsPage = () => {
         );
       }
     }
-  }, [projectId]);
+  }, [projectId, addReceiptImage, addReceipt]);
 
   const handleAddReceipt = useCallback(() => {
     router.push(`/projects/${projectId}/receipt/add/?projectName=${projectName}`);
-  }, []);
+  }, [projectId, projectName]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
