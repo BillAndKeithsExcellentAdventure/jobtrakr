@@ -335,7 +335,11 @@ const renderSectionHeader = (
             backgroundColor: colors.listBackground,
           }}
         >
-          <Text style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }} text={section.title} />
+          <Text
+            numberOfLines={1}
+            style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
+            text={section.title}
+          />
           <Text
             style={{ width: 100, textAlign: 'right' }}
             text={formatCurrency(section.totalBidAmount, false, true)}
