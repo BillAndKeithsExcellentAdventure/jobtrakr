@@ -15,6 +15,7 @@ import {
   useBidAmountUpdater,
   useCostUpdater,
   useIsStoreAvailableCallback,
+  useSeedWorkItemsIfNecessary,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
@@ -55,11 +56,7 @@ const ProjectDetailsPage = () => {
   const allProjectCategories = useAllConfigRows('categories');
   const allWorkItems = useAllConfigRows('workItems');
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
-  const [seedWorkItems, setSeedWorkItems] = useProjectValue(projectId, 'seedWorkItems');
-  const [bidAmount, setBidAmount] = useProjectValue(projectId, 'bidPrice');
-  const [amountSpent, setAmountSpent] = useProjectValue(projectId, 'amountSpent');
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
-  const addWorkItemSummary = useAddRowCallback(projectId, 'workItemSummaries');
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
@@ -74,33 +71,8 @@ const ProjectDetailsPage = () => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
   }, [projectId, activeProjectIds, isStoreReady]);
 
-  const seedInitialData = useCallback((): void => {
-    if (allWorkItemSummaries.length > 0 || !seedWorkItems) return;
-
-    const workItemIds = seedWorkItems.split(',');
-    //console.log('Initializing project with the following workitems.', workItemIds);
-    setSeedWorkItems(''); // Clear the seedWorkItems after seeding
-    for (const workItemId of workItemIds) {
-      if (!workItemId) continue;
-      addWorkItemSummary({
-        id: '',
-        workItemId,
-        bidAmount: 0,
-        spentAmount: 0,
-      });
-    }
-  }, [seedWorkItems, allWorkItemSummaries]);
-
-  useEffect(() => {
-    if (activeProjectIds.includes(projectId)) {
-      if (projectId && seedWorkItems && allWorkItemSummaries.length === 0) {
-        console.log('Seeding initial data for project', projectId);
-        seedInitialData();
-      }
-    }
-  }, [projectId, seedWorkItems, allWorkItemSummaries]);
-
   const [expandedSectionId, setExpandedSectionId] = useState<string>('');
+  useSeedWorkItemsIfNecessary(projectId);
   useCostUpdater(projectId);
   useBidAmountUpdater(projectId);
 

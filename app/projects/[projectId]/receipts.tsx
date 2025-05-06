@@ -17,6 +17,7 @@ import {
   useAllRows,
   useDeleteRowCallback,
   useIsStoreAvailableCallback,
+  useSeedWorkItemsIfNecessary,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useAddImageCallback } from '@/utils/images';
 import { useAuth } from '@clerk/clerk-expo';
@@ -156,6 +157,7 @@ const ProjectReceiptsPage = () => {
   useEffect(() => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
   }, [projectId, activeProjectIds, isStoreReady]);
+  useSeedWorkItemsIfNecessary(projectId);
 
   const auth = useAuth();
   const allReceipts = useAllRows(projectId, 'receipts');
