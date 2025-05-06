@@ -213,10 +213,10 @@ export const DeviceMediaList = ({
             if (asset.asset.mediaType === 'photo' || asset.asset.mediaType === 'video') {
               const newPhoto: MediaEntryData = {
                 id: '',
-                assetId: imageAddResult.id ?? '',
+                assetId: asset.asset.id,
                 deviceName: 'Device Name', // TODO: Get the device name
                 mediaType: asset.asset.mediaType,
-                mediaUri: imageAddResult.uri ?? '',
+                imageId: imageAddResult.id,
                 thumbnail: tn,
                 creationDate: Date.now(),
               };
