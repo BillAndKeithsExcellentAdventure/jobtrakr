@@ -47,7 +47,7 @@ export default function OptionList({
         onSelect(item);
       }
     },
-    [onSelect],
+    [showOkCancel, onSelect],
   );
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function OptionList({
         else setPickedOption(match);
       }
     }
-  }, [selectedOption, options]);
+  }, [selectedOption, options, showOkCancel, onOptionSelected]);
 
   const colors = useColors();
 

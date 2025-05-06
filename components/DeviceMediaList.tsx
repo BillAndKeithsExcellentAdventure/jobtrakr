@@ -58,10 +58,6 @@ export const DeviceMediaList = ({
   const addPhotoImage = useAddImageCallback();
   const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
 
-  useEffect(() => {
-    onLoadPhotosClicked(useProjectLocation);
-  }, [useProjectLocation]);
-
   const onStatusUpdate = useCallback(
     (status: string) => {
       setFetchStatus(status);
@@ -126,7 +122,7 @@ export const DeviceMediaList = ({
         },
       ],
     );
-  }, [allProjectMedia, currentProject]);
+  }, [allProjectMedia, currentProject, setUseProjectLocation, onStatusUpdate]);
 
   const LoadAllPhotos = useCallback(async () => {
     const foundAssets: MediaLibrary.Asset[] | undefined = await mediaTools.current?.getFirstAssetPage(100);
@@ -151,7 +147,7 @@ export const DeviceMediaList = ({
       const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
       onStatusUpdate(filteredStatus);
     }
-  }, [allProjectMedia, deviceMediaAssets]);
+  }, [allProjectMedia, onStatusUpdate]);
 
   const onLoadPhotosClicked = useCallback(
     async (useNewProjectLocation: boolean) => {
@@ -163,6 +159,10 @@ export const DeviceMediaList = ({
     },
     [loadPhotosNearestToProject, LoadAllPhotos],
   );
+
+  useEffect(() => {
+    onLoadPhotosClicked(useProjectLocation);
+  }, [useProjectLocation, onLoadPhotosClicked]);
 
   const handleLoadDevicePhotos = useCallback(
     async (useNewProjectLocation: boolean) => {
@@ -195,7 +195,13 @@ export const DeviceMediaList = ({
       const filteredStatus = `Added ${filteredAssets.length} assets into assetItems`;
       onStatusUpdate(filteredStatus);
     }
-  }, [allProjectMedia, deviceMediaAssets]);
+  }, [allProjectMedia, onStatusUpdate]);
+
+  const handleDeviceMediaClose = useCallback(() => {
+    gAssetItems.length = 0;
+    setDeviceMediaAssets(gAssetItems);
+    onClose();
+  }, [onClose]);
 
   const importDeviceAssetToProject = useCallback(async () => {
     if (deviceMediaAssets) {
@@ -229,13 +235,14 @@ export const DeviceMediaList = ({
 
       handleDeviceMediaClose();
     }
-  }, [deviceMediaAssets, projectId, hasSelectedDeviceAssets]);
-
-  const handleDeviceMediaClose = useCallback(() => {
-    gAssetItems.length = 0;
-    setDeviceMediaAssets(gAssetItems);
-    onClose();
-  }, []);
+  }, [
+    deviceMediaAssets,
+    projectId,
+    hasSelectedDeviceAssets,
+    addPhotoImage,
+    addPhotoData,
+    handleDeviceMediaClose,
+  ]);
 
   const handleDeviceAssetSelection = useCallback(async (assetId: string) => {
     setDeviceMediaAssets((prevAssets) =>
@@ -265,20 +272,23 @@ export const DeviceMediaList = ({
     } else {
       setDeviceMediaAssets((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: true })));
     }
-  }, [deviceMediaAssets, hasSelectedDeviceAssets]);
+  }, [hasSelectedDeviceAssets]);
 
-  const handleImageLongPress = useCallback((uri: string, type: 'video' | 'photo', photoDate: string) => {
-    if (type === 'video') {
-      playVideo(uri);
-    } else if (type === 'photo') {
-      const dateString = photoDate ?? 'No Date Info Available';
-      router.push(
-        `/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${encodeURIComponent(
-          projectName,
-        )}&photoDate=${dateString}`,
-      );
-    }
-  }, []);
+  const handleImageLongPress = useCallback(
+    (uri: string, type: 'video' | 'photo', photoDate: string) => {
+      if (type === 'video') {
+        playVideo(uri);
+      } else if (type === 'photo') {
+        const dateString = photoDate ?? 'No Date Info Available';
+        router.push(
+          `/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${encodeURIComponent(
+            projectName,
+          )}&photoDate=${dateString}`,
+        );
+      }
+    },
+    [playVideo, router, projectId, projectName],
+  );
 
   const renderItem = useCallback(
     ({ item }: { item: AssetsItem }) => {
