@@ -83,7 +83,7 @@ const ProjectPhotosPage = () => {
         addPhotoData(newPhoto);
       }
     },
-    [projectId, projectName, addPhotoImage, addPhotoData],
+    [projectId, addPhotoImage, addPhotoData],
   );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
@@ -96,7 +96,7 @@ const ProjectPhotosPage = () => {
         },
       },
     ],
-    [colors],
+    [colors, handleMenuItemPress],
   );
   const [showDeviceAssets, setShowDeviceAssets] = useState<boolean>(false);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
@@ -109,14 +109,17 @@ const ProjectPhotosPage = () => {
     setIsVideoPlayerVisible(true);
   };
 
-  const handleMenuItemPress = useCallback((item: string) => {
-    if (item === 'AddPhotos') {
-      setHeaderMenuModalVisible(false);
-      router.push(
-        `/projects/${projectId}/photos/importFromDevice/?projectName=${encodeURIComponent(projectName)}`,
-      );
-    }
-  }, []);
+  const handleMenuItemPress = useCallback(
+    (item: string) => {
+      if (item === 'AddPhotos') {
+        setHeaderMenuModalVisible(false);
+        router.push(
+          `/projects/${projectId}/photos/importFromDevice/?projectName=${encodeURIComponent(projectName)}`,
+        );
+      }
+    },
+    [router, projectId, projectName, setHeaderMenuModalVisible],
+  );
 
   const handleDeviceMediaClose = useCallback(() => {
     setShowDeviceAssets(false);

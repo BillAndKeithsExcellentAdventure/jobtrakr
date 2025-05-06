@@ -122,7 +122,7 @@ const ProjectDetailsPage = () => {
 
     sections.sort((a, b) => a.code.localeCompare(b.code));
     return sections;
-  }, [allWorkItemSummaries, allWorkItems, allProjectCategories, expandedSectionId]);
+  }, [allWorkItemSummaries, allWorkItems, allProjectCategories, expandedSectionId, allActualCostItems]);
 
   const handleMenuItemPress = useCallback(
     (menuItem: string, actionContext: any) => {
@@ -183,7 +183,7 @@ const ProjectDetailsPage = () => {
         },
       },
     ],
-    [colors, allWorkItemSummaries],
+    [colors, allWorkItemSummaries, handleMenuItemPress],
   );
 
   const toggleSection = (id: string) => {
