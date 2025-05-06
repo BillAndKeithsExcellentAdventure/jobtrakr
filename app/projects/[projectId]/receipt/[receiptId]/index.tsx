@@ -14,6 +14,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableLineItem from './SwipeableLineItem';
+import { useAuth } from '@clerk/clerk-expo';
 
 const ReceiptDetailsPage = () => {
   const defaultDate = new Date();
@@ -21,6 +22,8 @@ const ReceiptDetailsPage = () => {
   const allProjectReceipts = useAllRows(projectId, 'receipts');
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   useCostUpdater(projectId);
+  const auth = useAuth();
+  const { orgId } = auth;
 
   const [allReceiptLineItems, setAllReceiptLineItems] = useState<WorkItemCostEntry[]>([]);
 
@@ -38,7 +41,7 @@ const ReceiptDetailsPage = () => {
     thumbnail: '',
     receiptDate: defaultDate.getTime(),
     pictureDate: defaultDate.getTime(),
-    pictureUri: '',
+    imageId: '',
     notes: '',
     markedComplete: false,
   });
@@ -94,7 +97,15 @@ const ReceiptDetailsPage = () => {
       {containerHeight > 0 && (
         <>
           <View style={[styles.itemContainer, { borderColor: colors.border }]}>
-            <ReceiptSummary item={receipt} onShowDetails={editDetails} onShowPicture={showPicture} />
+            {orgId && (
+              <ReceiptSummary
+                orgId={orgId}
+                projectId={projectId}
+                item={receipt}
+                onShowDetails={editDetails}
+                onShowPicture={showPicture}
+              />
+            )}
           </View>
 
           <View style={styles.container}>

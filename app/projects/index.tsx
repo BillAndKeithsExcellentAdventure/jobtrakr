@@ -153,7 +153,7 @@ export default function ProjectHomeScreen() {
         },
       },
     ],
-    [colors, onLikePressed],
+    [colors, onLikePressed, router],
   );
 
   const handleSelection = useCallback(
@@ -219,7 +219,7 @@ export default function ProjectHomeScreen() {
         },
       },
     ],
-    [colors],
+    [colors, handleMenuItemPress],
   );
 
   return (

@@ -25,7 +25,7 @@ const ProjectNotes = () => {
     if (projectId) {
       addActiveProjectIds([projectId]);
     }
-  }, [projectId]);
+  }, [projectId, addActiveProjectIds]);
 
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
@@ -34,7 +34,7 @@ const ProjectNotes = () => {
     if (projectId) {
       addActiveProjectIds([projectId]);
     }
-  }, [projectId]);
+  }, [projectId, addActiveProjectIds]);
 
   useEffect(() => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());

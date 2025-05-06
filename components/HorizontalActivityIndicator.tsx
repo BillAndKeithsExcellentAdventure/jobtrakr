@@ -1,16 +1,6 @@
 // First, add Animated to the React Native imports at the top
 import React from 'react';
-import {
-  StyleSheet,
-  Image,
-  Button,
-  ScrollView,
-  SafeAreaView,
-  TouchableOpacity,
-  ActivityIndicator,
-  Animated,
-  View,
-} from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 
 // Add this new component near the top of the file, before ProjectPhotosPage
 interface HorizontalLoadingIndicatorProps {
@@ -35,7 +25,11 @@ export const HorizontalLoadingIndicator: React.FC<HorizontalLoadingIndicatorProp
     ]);
 
     Animated.loop(animation).start();
-  }, []);
+
+    return () => {
+      animation.stop();
+    }; // Added cleanup function
+  }, [translateX]); // Added translateX dependency
 
   return (
     <View style={styles.progressBarContainer}>

@@ -12,11 +12,13 @@ import {
 import {
   useAddRowCallback,
   useAllRows,
+  useBidAmountUpdater,
   useCostUpdater,
   useIsStoreAvailableCallback,
+  useSeedWorkItemsIfNecessary,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/utils/formatters';
-import { MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -54,11 +56,7 @@ const ProjectDetailsPage = () => {
   const allProjectCategories = useAllConfigRows('categories');
   const allWorkItems = useAllConfigRows('workItems');
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
-  const [seedWorkItems, setSeedWorkItems] = useProjectValue(projectId, 'seedWorkItems');
-  const [bidAmount, setBidAmount] = useProjectValue(projectId, 'bidPrice');
-  const [amountSpent, setAmountSpent] = useProjectValue(projectId, 'amountSpent');
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
-  const addWorkItemSummary = useAddRowCallback(projectId, 'workItemSummaries');
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
@@ -67,40 +65,17 @@ const ProjectDetailsPage = () => {
     if (projectId) {
       addActiveProjectIds([projectId]);
     }
-  }, [projectId]);
+  }, [projectId, addActiveProjectIds]);
 
   useEffect(() => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
   }, [projectId, activeProjectIds, isStoreReady]);
 
-  const seedInitialData = useCallback((): void => {
-    if (allWorkItemSummaries.length > 0 || !seedWorkItems) return;
-
-    const workItemIds = seedWorkItems.split(',');
-    //console.log('Initializing project with the following workitems.', workItemIds);
-    setSeedWorkItems(''); // Clear the seedWorkItems after seeding
-    for (const workItemId of workItemIds) {
-      if (!workItemId) continue;
-      addWorkItemSummary({
-        id: '',
-        workItemId,
-        bidAmount: 0,
-        spentAmount: 0,
-      });
-    }
-  }, [seedWorkItems, allWorkItemSummaries]);
-
-  useEffect(() => {
-    if (activeProjectIds.includes(projectId)) {
-      if (projectId && seedWorkItems && allWorkItemSummaries.length === 0) {
-        console.log('Seeding initial data for project', projectId);
-        seedInitialData();
-      }
-    }
-  }, [projectId, seedWorkItems, allWorkItemSummaries]);
-
   const [expandedSectionId, setExpandedSectionId] = useState<string>('');
+  useSeedWorkItemsIfNecessary(projectId);
   useCostUpdater(projectId);
+  useBidAmountUpdater(projectId);
+
   const sectionData = useMemo(() => {
     const sections: CostSectionData[] = [];
     const workItemMap = new Map(allWorkItems.map((w) => [w.id, w]));
@@ -147,23 +122,18 @@ const ProjectDetailsPage = () => {
 
     sections.sort((a, b) => a.code.localeCompare(b.code));
     return sections;
-  }, [allWorkItemSummaries, allWorkItems, allProjectCategories, expandedSectionId]);
-  /*
-  useEffect(() => {
-    const projectTotalSpent = sectionData.reduce((sum, item) => sum + item.totalSpentAmount, 0);
-    if (amountSpent != projectTotalSpent) setAmountSpent(projectTotalSpent);
-  }, [sectionData, amountSpent, setAmountSpent]);
-*/
-  useEffect(() => {
-    const projectTotalBid = sectionData.reduce((sum, item) => sum + item.totalBidAmount, 0);
-    if (bidAmount != projectTotalBid) setBidAmount(projectTotalBid);
-  }, [sectionData, bidAmount, setBidAmount]);
+  }, [allWorkItemSummaries, allWorkItems, allProjectCategories, expandedSectionId, allActualCostItems]);
 
   const handleMenuItemPress = useCallback(
     (menuItem: string, actionContext: any) => {
       setHeaderMenuModalVisible(false);
       if (menuItem === 'Edit' && projectId) {
         router.push(`/projects/${projectId}/edit/?projectName=${encodeURIComponent(projectData!.name)}`);
+        return;
+      } else if (menuItem === 'SetEstimates' && projectId) {
+        router.push(
+          `/projects/${projectId}/setEstimatedCosts/?projectName=${encodeURIComponent(projectData!.name)}`,
+        );
         return;
       } else if (menuItem === 'Delete' && projectId) {
         Alert.alert('Delete Project', 'Are you sure you want to delete this project?', [
@@ -179,11 +149,10 @@ const ProjectDetailsPage = () => {
             },
           },
         ]);
-
         return;
       }
     },
-    [projectId, projectData, router, processDeleteProject],
+    [projectId, projectData, router, processDeleteProject, removeActiveProjectId],
   );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
@@ -195,6 +164,17 @@ const ProjectDetailsPage = () => {
           handleMenuItemPress('Edit', actionContext);
         },
       },
+      ...(allWorkItemSummaries.length > 0
+        ? [
+            {
+              icon: <FontAwesome5 name="search-dollar" size={28} color={colors.iconColor} />,
+              label: 'Set Estimate Costs',
+              onPress: (e, actionContext) => {
+                handleMenuItemPress('SetEstimates', actionContext);
+              },
+            } as ActionButtonProps,
+          ]
+        : []),
       {
         icon: <FontAwesome name="trash" size={28} color={colors.iconColor} />,
         label: 'Delete Project',
@@ -203,7 +183,7 @@ const ProjectDetailsPage = () => {
         },
       },
     ],
-    [colors],
+    [colors, allWorkItemSummaries, handleMenuItemPress],
   );
 
   const toggleSection = (id: string) => {
@@ -327,7 +307,11 @@ const renderSectionHeader = (
             backgroundColor: colors.listBackground,
           }}
         >
-          <Text style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }} text={section.title} />
+          <Text
+            numberOfLines={1}
+            style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
+            text={section.title}
+          />
           <Text
             style={{ width: 100, textAlign: 'right' }}
             text={formatCurrency(section.totalBidAmount, false, true)}
@@ -383,6 +367,7 @@ const renderItem = (
         <Text
           style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
           text={`${sectionCode}.${item.code} - ${item.title}`}
+          numberOfLines={1}
         />
         <Text
           style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}

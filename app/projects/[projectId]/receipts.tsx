@@ -17,6 +17,7 @@ import {
   useAllRows,
   useDeleteRowCallback,
   useIsStoreAvailableCallback,
+  useSeedWorkItemsIfNecessary,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useAddImageCallback } from '@/utils/images';
 import { useAuth } from '@clerk/clerk-expo';
@@ -33,18 +34,28 @@ interface SwipeableItemProps {
   projectId: string;
   item: ReceiptData;
   onDelete: (id: string) => void;
-  onShowPicture: (uri: string) => void;
 }
 
-const SwipeableItem: React.FC<SwipeableItemProps> = ({ orgId, projectId, item, onDelete, onShowPicture }) => {
+const SwipeableItem: React.FC<SwipeableItemProps> = ({ orgId, projectId, item, onDelete }) => {
   const router = useRouter();
   const translateX = useSharedValue(0); // Shared value for horizontal translation
 
   const [isSwiped, setIsSwiped] = useState(false); // Track if item is swiped for delete
 
-  const onShowDetails = useCallback((item: ReceiptData) => {
-    router.push(`/projects/${projectId}/receipt/${item.id}`);
-  }, []);
+  const onShowPicture = useCallback(
+    (uri: string) => {
+      // in this component we want any presses to the receipt details page not show the image
+      router.push(`/projects/${projectId}/receipt/${item.id}`);
+    },
+    [projectId, item.id, router],
+  );
+
+  const onShowDetails = useCallback(
+    (item: ReceiptData) => {
+      router.push(`/projects/${projectId}/receipt/${item.id}`);
+    },
+    [projectId, item.id, router],
+  );
 
   // Gesture handler for the swipe action
   const onGestureEvent = (event: PanGestureHandlerGestureEvent) => {
@@ -141,21 +152,18 @@ const ProjectReceiptsPage = () => {
     if (projectId) {
       addActiveProjectIds([projectId]);
     }
-  }, [projectId]);
+  }, [projectId, addActiveProjectIds]);
 
   useEffect(() => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
   }, [projectId, activeProjectIds, isStoreReady]);
+  useSeedWorkItemsIfNecessary(projectId);
 
   const auth = useAuth();
   const allReceipts = useAllRows(projectId, 'receipts');
   const addReceiptImage = useAddImageCallback();
   const addReceipt = useAddRowCallback(projectId, 'receipts');
   const deleteReceipt = useDeleteRowCallback(projectId, 'receipts');
-
-  const showPicture = useCallback((uri: string) => {
-    router.push(`/projects/${projectId}/receipt/${receiptId}/showImage/?uri=${uri}`);
-  }, []);
 
   const handleRemoveReceipt = useCallback(
     async (id: string | undefined) => {
@@ -222,11 +230,11 @@ const ProjectReceiptsPage = () => {
         );
       }
     }
-  }, [projectId]);
+  }, [projectId, addReceiptImage, addReceipt, projectName]);
 
   const handleAddReceipt = useCallback(() => {
     router.push(`/projects/${projectId}/receipt/add/?projectName=${projectName}`);
-  }, []);
+  }, [projectId, projectName, router]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
@@ -282,7 +290,6 @@ const ProjectReceiptsPage = () => {
                           projectId={projectId}
                           item={item}
                           onDelete={handleRemoveReceipt}
-                          onShowPicture={showPicture}
                         />
                       )}
                     />

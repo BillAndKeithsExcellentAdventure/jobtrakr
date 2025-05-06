@@ -1,6 +1,7 @@
 import { NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { getStoreId, TABLES_SCHEMA } from './ProjectDetailsStore';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
+import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 
 const {
   useCell,
@@ -132,7 +133,7 @@ export const useAllRows = <K extends keyof TableDataMap>(
           id: id,
         })) as TableDataMap[K][])
       : [];
-  }, [store, tableName]);
+  }, [store, tableName, projectId]);
 
   useEffect(() => {
     setRows(fetchRows());
@@ -227,7 +228,8 @@ export function useIsStoreAvailableCallback(projectId: string) {
   }, [store]);
 }
 
-// --- Retrieve all rows of a table ---
+/* Watch for changes to table workItemCostEntries and recalculate the total amount spent 
+   and then update the project summary information */
 export const useCostUpdater = (projectId: string): void => {
   const allCostRows = useAllRows(projectId, 'workItemCostEntries');
   const [, setAmountSpent] = useProjectValue(projectId, 'amountSpent');
@@ -235,5 +237,51 @@ export const useCostUpdater = (projectId: string): void => {
   useEffect(() => {
     const spentAmount = allCostRows.reduce((sum, item) => sum + item.amount, 0);
     setAmountSpent(spentAmount);
-  }, [allCostRows]);
+  }, [allCostRows, setAmountSpent]);
+};
+
+/* Watch for changes to table workItemSummaries and recalculate the total amount bid 
+   and then update the project summary information */
+export const useBidAmountUpdater = (projectId: string): void => {
+  const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
+  const [, setBidAmount] = useProjectValue(projectId, 'bidPrice');
+
+  useEffect(() => {
+    const bidEstimate = allWorkItemSummaries.reduce((sum, item) => sum + item.bidAmount, 0);
+    setBidAmount(bidEstimate);
+  }, [allWorkItemSummaries, setBidAmount]);
+};
+
+/* Watch for changes to table workItemSummaries and recalculate the total amount bid 
+   and then update the project summary information */
+export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
+  const [seedWorkItems, setSeedWorkItems] = useProjectValue(projectId, 'seedWorkItems');
+  const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
+  const addWorkItemSummary = useAddRowCallback(projectId, 'workItemSummaries');
+  const { activeProjectIds } = useActiveProjectIds();
+
+  const seedInitialData = useCallback((): void => {
+    if (allWorkItemSummaries.length > 0 || !seedWorkItems) return;
+
+    const workItemIds = seedWorkItems.split(',');
+    setSeedWorkItems(''); // Clear the seedWorkItems after seeding
+    for (const workItemId of workItemIds) {
+      if (!workItemId) continue;
+      addWorkItemSummary({
+        id: '',
+        workItemId,
+        bidAmount: 0,
+        spentAmount: 0,
+      });
+    }
+  }, [seedWorkItems, allWorkItemSummaries, addWorkItemSummary, setSeedWorkItems]);
+
+  useEffect(() => {
+    if (activeProjectIds.includes(projectId)) {
+      if (projectId && seedWorkItems && allWorkItemSummaries.length === 0) {
+        console.log('Seeding initial data for project', projectId);
+        seedInitialData();
+      }
+    }
+  }, [projectId, seedWorkItems, allWorkItemSummaries, activeProjectIds, seedInitialData]);
 };

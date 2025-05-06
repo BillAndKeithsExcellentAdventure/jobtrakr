@@ -3,7 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { Text, View } from '@/components/Themed';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useIsStoreAvailableCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import {
+  useIsStoreAvailableCallback,
+  useSeedWorkItemsIfNecessary,
+} from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 
 const ProjectInvoicesPage = () => {
@@ -21,6 +24,8 @@ const ProjectInvoicesPage = () => {
   useEffect(() => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
   }, [projectId, activeProjectIds, isStoreReady]);
+
+  useSeedWorkItemsIfNecessary(projectId);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>

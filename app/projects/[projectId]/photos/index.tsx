@@ -83,7 +83,30 @@ const ProjectPhotosPage = () => {
         addPhotoData(newPhoto);
       }
     },
-    [projectId, projectName, addPhotoImage, addPhotoData],
+    [projectId, addPhotoImage, addPhotoData],
+  );
+
+  const [showDeviceAssets, setShowDeviceAssets] = useState<boolean>(false);
+  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
+  const [isCameraVisible, setIsCameraVisible] = useState(false);
+  const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+
+  const playVideo = (videoUri: string) => {
+    setSelectedVideo(videoUri);
+    setIsVideoPlayerVisible(true);
+  };
+
+  const handleMenuItemPress = useCallback(
+    (item: string) => {
+      if (item === 'AddPhotos') {
+        setHeaderMenuModalVisible(false);
+        router.push(
+          `/projects/${projectId}/photos/importFromDevice/?projectName=${encodeURIComponent(projectName)}`,
+        );
+      }
+    },
+    [router, projectId, projectName, setHeaderMenuModalVisible],
   );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
@@ -96,27 +119,8 @@ const ProjectPhotosPage = () => {
         },
       },
     ],
-    [colors],
+    [colors, handleMenuItemPress],
   );
-  const [showDeviceAssets, setShowDeviceAssets] = useState<boolean>(false);
-  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
-  const [isCameraVisible, setIsCameraVisible] = useState(false);
-  const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
-  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
-
-  const playVideo = (videoUri: string) => {
-    setSelectedVideo(videoUri);
-    setIsVideoPlayerVisible(true);
-  };
-
-  const handleMenuItemPress = useCallback((item: string) => {
-    if (item === 'AddPhotos') {
-      setHeaderMenuModalVisible(false);
-      router.push(
-        `/projects/${projectId}/photos/importFromDevice/?projectName=${encodeURIComponent(projectName)}`,
-      );
-    }
-  }, []);
 
   const handleDeviceMediaClose = useCallback(() => {
     setShowDeviceAssets(false);
