@@ -12,7 +12,7 @@ import {
 import * as Location from 'expo-location';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Keyboard, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import { Keyboard, StyleSheet, TouchableWithoutFeedback, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   useAllRows as useAllRowsConfiguration,
@@ -80,12 +80,19 @@ const SetEstimatedCostsPage = () => {
     flatListRef.current?.scrollToIndex({
       index,
       animated: true,
-      viewPosition: 0.1,
+      viewPosition: 1.0,
     });
   }, []);
 
   useEffect(() => {
     scrollToIndex(currentItemIndex);
+  }, [currentItemIndex, scrollToIndex]);
+
+  useEffect(() => {
+    const keyboardListener = Keyboard.addListener('keyboardDidShow', () => {
+      scrollToIndex(currentItemIndex);
+    });
+    return () => keyboardListener.remove();
   }, [currentItemIndex, scrollToIndex]);
 
   const handleItemSelected = useCallback((index: number) => {
@@ -143,15 +150,21 @@ const SetEstimatedCostsPage = () => {
         ]}
       >
         <TouchableWithoutFeedback onPress={dismissKeyboard}>
-          <View style={styles.modalContainer}>
+          <KeyboardAvoidingView
+            style={styles.modalContainer}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0} // adjust as needed
+          >
             <View style={{ flex: 1 }}>
               <View style={{ paddingHorizontal: 10 }}>
-                <Text style={styles.modalTitle}>Set Price Estimates</Text>
+                <Text txtSize="sub-title" style={styles.modalTitle}>
+                  Set Price Estimates
+                </Text>
                 <OptionPickerItem
                   containerStyle={styles.inputContainer}
                   optionLabel={pickedCategoryOption?.label}
                   label="Category"
-                  placeholder="Category"
+                  placeholder="Select a Category"
                   editable={false}
                   onPickerButtonPress={() => setIsCategoryPickerVisible(true)}
                 />
@@ -228,7 +241,7 @@ const SetEstimatedCostsPage = () => {
                 </>
               )}
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </TouchableWithoutFeedback>
       </View>
       {isCategoryPickerVisible && (
@@ -308,10 +321,9 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
+    marginTop: 5,
     textAlign: 'center',
+    fontWeight: 'bold',
   },
   inputContainer: {
     marginTop: 6,

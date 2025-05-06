@@ -86,18 +86,6 @@ const ProjectPhotosPage = () => {
     [projectId, addPhotoImage, addPhotoData],
   );
 
-  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
-    () => [
-      {
-        icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
-        label: 'Import Photos',
-        onPress: () => {
-          handleMenuItemPress('AddPhotos');
-        },
-      },
-    ],
-    [colors, handleMenuItemPress],
-  );
   const [showDeviceAssets, setShowDeviceAssets] = useState<boolean>(false);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [isCameraVisible, setIsCameraVisible] = useState(false);
@@ -119,6 +107,19 @@ const ProjectPhotosPage = () => {
       }
     },
     [router, projectId, projectName, setHeaderMenuModalVisible],
+  );
+
+  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
+    () => [
+      {
+        icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
+        label: 'Import Photos',
+        onPress: () => {
+          handleMenuItemPress('AddPhotos');
+        },
+      },
+    ],
+    [colors, handleMenuItemPress],
   );
 
   const handleDeviceMediaClose = useCallback(() => {
