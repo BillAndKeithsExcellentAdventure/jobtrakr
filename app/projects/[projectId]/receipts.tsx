@@ -47,14 +47,14 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ orgId, projectId, item, o
       // in this component we want any presses to the receipt details page not show the image
       router.push(`/projects/${projectId}/receipt/${item.id}`);
     },
-    [projectId, item.id],
+    [projectId, item.id, router],
   );
 
   const onShowDetails = useCallback(
     (item: ReceiptData) => {
       router.push(`/projects/${projectId}/receipt/${item.id}`);
     },
-    [projectId, item.id],
+    [projectId, item.id, router],
   );
 
   // Gesture handler for the swipe action
@@ -152,7 +152,7 @@ const ProjectReceiptsPage = () => {
     if (projectId) {
       addActiveProjectIds([projectId]);
     }
-  }, [projectId]);
+  }, [projectId, addActiveProjectIds]);
 
   useEffect(() => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
@@ -230,11 +230,11 @@ const ProjectReceiptsPage = () => {
         );
       }
     }
-  }, [projectId, addReceiptImage, addReceipt]);
+  }, [projectId, addReceiptImage, addReceipt, projectName]);
 
   const handleAddReceipt = useCallback(() => {
     router.push(`/projects/${projectId}/receipt/add/?projectName=${projectName}`);
-  }, [projectId, projectName]);
+  }, [projectId, projectName, router]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
