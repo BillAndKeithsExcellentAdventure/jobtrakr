@@ -74,6 +74,20 @@ const SetEstimatedCostsPage = () => {
   const [currentCategory, setCurrentCategory] = useState<WorkCategoryData | null>();
   const [itemEstimate, setItemEstimate] = useState(0);
 
+  const flatListRef = React.useRef<FlatList>(null);
+
+  const scrollToIndex = useCallback((index: number) => {
+    flatListRef.current?.scrollToIndex({
+      index,
+      animated: true,
+      viewPosition: 0.1,
+    });
+  }, []);
+
+  useEffect(() => {
+    scrollToIndex(currentItemIndex);
+  }, [currentItemIndex, scrollToIndex]);
+
   const handleItemSelected = useCallback((index: number) => {
     setCurrentItemIndex(index);
   }, []);
@@ -190,9 +204,15 @@ const SetEstimatedCostsPage = () => {
                     </View>
                   </View>
                   <FlatList
+                    ref={flatListRef}
                     style={{ borderTopWidth: 1, borderColor: colors.border }}
                     data={allAvailableCostItems}
                     keyExtractor={(item) => item.id}
+                    getItemLayout={(data, index) => ({
+                      length: 40,
+                      offset: 40 * index,
+                      index,
+                    })}
                     renderItem={({ item, index }) =>
                       renderItem(
                         item,
