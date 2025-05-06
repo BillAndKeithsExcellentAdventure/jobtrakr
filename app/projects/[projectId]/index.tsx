@@ -156,11 +156,9 @@ const ProjectDetailsPage = () => {
     (menuItem: string, actionContext: any) => {
       setHeaderMenuModalVisible(false);
       if (menuItem === 'Edit' && projectId) {
-        console.log('Open Edit Project');
         router.push(`/projects/${projectId}/edit/?projectName=${encodeURIComponent(projectData!.name)}`);
         return;
       } else if (menuItem === 'SetEstimates' && projectId) {
-        console.log('Open setEstimatedCosts');
         router.push(
           `/projects/${projectId}/setEstimatedCosts/?projectName=${encodeURIComponent(projectData!.name)}`,
         );
@@ -393,6 +391,7 @@ const renderItem = (
         <Text
           style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
           text={`${sectionCode}.${item.code} - ${item.title}`}
+          numberOfLines={1}
         />
         <Text
           style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}

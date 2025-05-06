@@ -262,7 +262,7 @@ const renderItem = (
       <View
         style={{
           flexDirection: 'row',
-          minHeight: 40,
+          height: 40,
           paddingLeft: 5,
           alignItems: 'center',
           borderBottomWidth: StyleSheet.hairlineWidth,
