@@ -1,24 +1,33 @@
+import { NumberInputField } from '@/components/NumberInputField';
+import { TextField } from '@/components/TextField';
 import { Text, View } from '@/components/Themed';
 import { useColors } from '@/context/ColorsContext';
 import {
   useAddRowCallback,
   useAllRows,
+  useUpdateRowCallback,
   WorkItemSummaryData,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/utils/formatters';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CostItemDetails = () => {
-  const { projectId, costSummaryItemId } = useLocalSearchParams<{
+  const { projectId, costSummaryItemId, sectionCode, itemCode, itemTitle, itemSpent } = useLocalSearchParams<{
     projectId: string;
     costSummaryItemId: string;
+    sectionCode: string;
+    itemCode: string;
+    itemTitle: string;
+    itemSpent: string;
   }>();
+  const [itemEstimate, setItemEstimate] = useState(0);
 
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const colors = useColors();
+  const updateBidEstimate = useUpdateRowCallback(projectId, 'workItemSummaries');
   const workItemSummary: WorkItemSummaryData | null = useMemo(() => {
     const workItem = allWorkItemSummaries.find((item) => item.workItemId === costSummaryItemId);
     if (workItem) {
@@ -28,6 +37,19 @@ const CostItemDetails = () => {
     }
     return null;
   }, [allWorkItemSummaries, costSummaryItemId]);
+
+  useEffect(() => {
+    setItemEstimate(workItemSummary ? workItemSummary.bidAmount : 0);
+  }, [workItemSummary]);
+
+  const amountSpent = useMemo(() => {
+    return Number.parseFloat(itemSpent);
+  }, [itemSpent]);
+
+  const handleEstimateChanged = useCallback((value: number) => {
+    if (workItemSummary) updateBidEstimate(workItemSummary.id, { bidAmount: value });
+    setItemEstimate(value);
+  }, []);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -41,7 +63,53 @@ const CostItemDetails = () => {
         {!workItemSummary ? (
           <Text>No Cost Item Found</Text>
         ) : (
-          <Text text={formatCurrency(workItemSummary.bidAmount, false, true)} />
+          <View>
+            <View style={{ flexDirection: 'row' }}>
+              <Text txtSize="title" text={`${sectionCode}.${itemCode}`} />
+              <Text txtSize="title" text={`${itemTitle}`} style={{ flex: 1, marginLeft: 5 }} />
+            </View>
+            <View
+              style={{
+                marginTop: 10,
+                flexDirection: 'row',
+                alignItems: 'center',
+              }}
+            >
+              <Text
+                text="Estimate"
+                txtSize="standard"
+                style={{ textAlign: 'right', width: 90, marginRight: 5 }}
+              />
+              <View style={{ flex: 1 }}>
+                <NumberInputField
+                  value={itemEstimate}
+                  onChange={handleEstimateChanged}
+                  placeholder="Estimated Amount"
+                />
+              </View>
+            </View>
+            <View
+              style={{
+                marginTop: 10,
+                flexDirection: 'row',
+                alignItems: 'center',
+              }}
+            >
+              <Text
+                text="Spent"
+                txtSize="standard"
+                style={{ textAlign: 'right', width: 90, marginRight: 5 }}
+              />
+              <View style={{ flex: 1 }}>
+                <NumberInputField
+                  value={amountSpent}
+                  placeholder="Amount Spent"
+                  onChange={() => {}}
+                  readOnly
+                />
+              </View>
+            </View>
+          </View>
         )}
       </View>
     </SafeAreaView>

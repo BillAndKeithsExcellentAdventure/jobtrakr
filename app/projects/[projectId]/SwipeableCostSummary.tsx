@@ -71,7 +71,14 @@ const SwipeableCostSummary = ({
           onPress={() => {
             router.push({
               pathname: '/projects/[projectId]/[costSummaryItemId]',
-              params: { projectId, costSummaryItemId: item.id },
+              params: {
+                projectId,
+                costSummaryItemId: item.id,
+                sectionCode,
+                itemCode: item.code,
+                itemTitle: item.title,
+                itemSpent: item.spentAmount,
+              },
             });
           }}
         >
