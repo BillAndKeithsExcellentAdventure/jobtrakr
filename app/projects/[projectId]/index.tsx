@@ -27,8 +27,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { StyleSheet, Alert, SectionList } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import SwipeableCostSummary from './SwipeableCostSummary';
 
-interface CostItemData {
+export interface CostItemData {
   id: string;
   code: string;
   title: string;
@@ -36,7 +37,7 @@ interface CostItemData {
   spentAmount: number;
 }
 
-interface CostSectionData {
+export interface CostSectionData {
   id: string;
   code: string;
   title: string;
@@ -259,9 +260,14 @@ const ProjectDetailsPage = () => {
                 stickySectionHeadersEnabled={false}
                 sections={sectionData}
                 renderItem={({ item, section }) =>
-                  section.isExpanded
-                    ? renderItem(item, section.id, section.code, colors, projectId, router)
-                    : null
+                  section.isExpanded ? (
+                    <SwipeableCostSummary
+                      item={item}
+                      sectionId={section.id}
+                      sectionCode={section.code}
+                      projectId={projectId}
+                    />
+                  ) : null
                 }
                 renderSectionHeader={({ section }) => renderSectionHeader(section, toggleSection, colors)}
                 keyExtractor={(item) => item.id}
@@ -338,50 +344,6 @@ const renderSectionHeader = (
         </View>
       </Pressable>
     </View>
-  );
-};
-
-const renderItem = (
-  item: CostItemData,
-  sectionId: string,
-  sectionCode: string,
-  colors: ColorSchemeColors,
-  projectId: string,
-  router: Router,
-) => {
-  return (
-    <Pressable
-      onPress={() => {
-        router.push(`/projects/${projectId}/${item.id}`);
-      }}
-    >
-      <View
-        style={{
-          flexDirection: 'row',
-          height: 40,
-          paddingLeft: 5,
-          alignItems: 'center',
-          borderBottomWidth: StyleSheet.hairlineWidth,
-        }}
-      >
-        <Text
-          style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
-          text={`${sectionCode}.${item.code} - ${item.title}`}
-          numberOfLines={1}
-        />
-        <Text
-          style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
-          text={formatCurrency(item.bidAmount, false, true)}
-        />
-        <Text
-          style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
-          text={formatCurrency(item.spentAmount, false, true)}
-        />
-        <View style={{ width: 41, paddingLeft: 5, alignItems: 'center' }}>
-          <MaterialIcons name="chevron-right" size={28} color={colors.iconColor} />
-        </View>
-      </View>
-    </Pressable>
   );
 };
 
