@@ -24,10 +24,13 @@ export const NumberInputField: React.FC<NumberInputFieldProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState(value.toFixed(numDecimalPlaces));
   const inputRef = useRef<TextInput>(null);
+  const isEditingRef = useRef(false);
 
   useEffect(() => {
-    setInputValue(value.toString());
+    if (isEditingRef.current) setInputValue(value.toString());
+    else setInputValue(value.toFixed(numDecimalPlaces));
   }, [value]);
+
   const handleInputChange = (text: string) => {
     if (readOnly) return; // Prevent changes if readOnly is true
 
@@ -49,6 +52,7 @@ export const NumberInputField: React.FC<NumberInputFieldProps> = ({
   };
 
   const handleBlur = useCallback(() => {
+    isEditingRef.current = false;
     const numericValue = parseFloat(inputValue.replace(/[^0-9.]/g, ''));
     if (!isNaN(numericValue)) {
       setInputValue(numericValue.toFixed(numDecimalPlaces));
@@ -65,6 +69,7 @@ export const NumberInputField: React.FC<NumberInputFieldProps> = ({
   const handleFocus = useCallback(
     (event: any) => {
       if (inputRef.current) {
+        isEditingRef.current = true;
         const textLength = inputValue.length;
         inputRef.current.setSelection(0, textLength);
       }

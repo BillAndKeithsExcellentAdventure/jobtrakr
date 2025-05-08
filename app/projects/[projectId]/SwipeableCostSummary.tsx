@@ -85,7 +85,7 @@ const SwipeableCostSummary = ({
           <View style={styles.itemInfo}>
             <Text
               style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
-              text={`${sectionCode}.${item.code} - ${item.title}`}
+              text={`${sectionCode}.${item.code} ${item.title}`}
               numberOfLines={1}
             />
             <Text
@@ -96,8 +96,8 @@ const SwipeableCostSummary = ({
               style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
               text={formatCurrency(item.spentAmount, false, true)}
             />
-            <View style={{ width: 41, paddingLeft: 5, alignItems: 'center' }}>
-              <MaterialIcons name="chevron-right" size={28} color={colors.iconColor} />
+            <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
+              <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
             </View>
           </View>
         </Pressable>
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   },
   itemEntry: {
     width: '100%',
-    paddingHorizontal: 10,
+    paddingLeft: 10,
   },
   rightAction: {
     width: 100,
