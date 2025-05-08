@@ -29,15 +29,13 @@ interface DeviceMediaListProps {
   setUseProjectLocation: (useLocation: boolean) => void;
 }
 
-let gAssetItems: AssetsItem[] = [];
-
 export const DeviceMediaList = ({
   onClose,
   projectId,
   projectName,
-  useProjectLocation,
   allProjectMedia,
   playVideo,
+  useProjectLocation,
   setUseProjectLocation,
 }: DeviceMediaListProps) => {
   const mediaTools = useRef<MediaAssetsHelper | null>(null);
@@ -51,19 +49,18 @@ export const DeviceMediaList = ({
   const colors = useColors();
   const [loadingNearest, setLoadingNearest] = useState<boolean>(false);
   const [fetchStatus, setFetchStatus] = useState<string>('');
-  const [deviceMediaAssets, setDeviceMediaAssets] = useState<AssetsItem[] | undefined>(undefined);
+  const [deviceMediaAssets, setDeviceMediaAssets] = useState<AssetsItem[]>([]);
   const [hasSelectedDeviceAssets, setHasSelectedDeviceAssets] = useState<boolean>(false);
+  const [pagingCursor, setPagingCursor] = useState<string | undefined>(undefined);
+  const [hasNextPage, setHasNextPage] = useState<boolean>(true);
   const currentProject = useProject(projectId);
   const router = useRouter();
   const addPhotoImage = useAddImageCallback();
   const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
 
-  const onStatusUpdate = useCallback(
-    (status: string) => {
-      setFetchStatus(status);
-    },
-    [setFetchStatus],
-  );
+  const onStatusUpdate = useCallback((status: string) => {
+    setFetchStatus(status);
+  }, []);
 
   const loadPhotosNearestToProject = useCallback(async () => {
     Alert.alert(
@@ -106,9 +103,9 @@ export const DeviceMediaList = ({
                     asset: asset,
                   }));
 
-                  gAssetItems.length = 0;
-                  gAssetItems = gAssetItems.concat(selectionList);
-                  setDeviceMediaAssets(gAssetItems);
+                  setDeviceMediaAssets(selectionList);
+                  setPagingCursor(undefined);
+                  setHasNextPage(false);
 
                   const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
                   onStatusUpdate(filteredStatus);
@@ -117,6 +114,7 @@ export const DeviceMediaList = ({
               setLoadingNearest(false);
             } catch (err) {
               alert('An error while finding pictures.');
+              setLoadingNearest(false);
             }
           },
         },
@@ -125,28 +123,23 @@ export const DeviceMediaList = ({
   }, [allProjectMedia, currentProject, setUseProjectLocation, onStatusUpdate]);
 
   const LoadAllPhotos = useCallback(async () => {
-    const foundAssets: MediaLibrary.Asset[] | undefined = await mediaTools.current?.getFirstAssetPage(100);
-    console.log(`Found ${foundAssets?.length} assets`);
+    if (!mediaTools.current) return;
+    const page = await mediaTools.current.getAssetPageWithInfo({ pageSize: 100 });
+    // Filter out assets that are already in projectAssets
+    const filteredAssets = page.assets.filter(
+      (foundAsset) => !allProjectMedia?.some((projectAsset) => projectAsset.assetId === foundAsset.id),
+    );
+    const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
+      _id: asset.id ?? '',
+      selected: false,
+      asset: asset,
+    }));
+    setDeviceMediaAssets(selectionList);
+    setPagingCursor(page.endCursor);
+    setHasNextPage(page.hasNextPage);
 
-    if (foundAssets) {
-      // Filter out assets that are already in projectAssets
-      const filteredAssets = foundAssets.filter(
-        (foundAsset) => !allProjectMedia?.some((projectAsset) => projectAsset.assetId === foundAsset.id),
-      );
-
-      const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
-        _id: asset.id ?? '',
-        selected: false,
-        asset: asset,
-      }));
-
-      gAssetItems.length = 0;
-      gAssetItems = gAssetItems.concat(selectionList);
-      setDeviceMediaAssets(gAssetItems);
-
-      const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
-      onStatusUpdate(filteredStatus);
-    }
+    const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
+    onStatusUpdate(filteredStatus);
   }, [allProjectMedia, onStatusUpdate]);
 
   const onLoadPhotosClicked = useCallback(
@@ -162,44 +155,36 @@ export const DeviceMediaList = ({
 
   useEffect(() => {
     onLoadPhotosClicked(useProjectLocation);
-  }, [useProjectLocation, onLoadPhotosClicked]);
-
-  const handleLoadDevicePhotos = useCallback(
-    async (useNewProjectLocation: boolean) => {
-      if (useNewProjectLocation) {
-        await loadPhotosNearestToProject();
-      } else {
-        await LoadAllPhotos();
-      }
-    },
-    [loadPhotosNearestToProject, LoadAllPhotos],
-  );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [useProjectLocation]);
 
   const handleLoadMore = useCallback(async () => {
-    const foundAssets: MediaLibrary.Asset[] | undefined = await mediaTools.current?.getNextAssetPage();
+    if (!mediaTools.current || !hasNextPage) return;
+    const page = await mediaTools.current.getAssetPageWithInfo({
+      pageSize: 100,
+      after: pagingCursor,
+    });
+    // Filter out assets that are already in projectAssets
+    const filteredAssets = page.assets.filter(
+      (foundAsset) => !allProjectMedia?.some((projectAsset) => projectAsset.assetId === foundAsset.id),
+    );
+    const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
+      _id: asset.id ?? '',
+      selected: false,
+      asset: asset,
+    }));
+    setDeviceMediaAssets((prev) => [...prev, ...selectionList]);
+    setPagingCursor(page.endCursor);
+    setHasNextPage(page.hasNextPage);
 
-    if (foundAssets) {
-      // Filter out assets that are already in projectAssets
-      const filteredAssets = foundAssets.filter(
-        (foundAsset) => !allProjectMedia?.some((projectAsset) => projectAsset.assetId === foundAsset.id),
-      );
-
-      const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
-        _id: asset.id ?? '',
-        selected: false,
-        asset: asset,
-      }));
-
-      gAssetItems = gAssetItems.concat(selectionList);
-      setDeviceMediaAssets(gAssetItems);
-      const filteredStatus = `Added ${filteredAssets.length} assets into assetItems`;
-      onStatusUpdate(filteredStatus);
-    }
-  }, [allProjectMedia, onStatusUpdate]);
+    const filteredStatus = `Added ${filteredAssets.length} assets into assetItems`;
+    onStatusUpdate(filteredStatus);
+  }, [allProjectMedia, onStatusUpdate, pagingCursor, hasNextPage]);
 
   const handleDeviceMediaClose = useCallback(() => {
-    gAssetItems.length = 0;
-    setDeviceMediaAssets(gAssetItems);
+    setDeviceMediaAssets([]);
+    setPagingCursor(undefined);
+    setHasNextPage(true);
     onClose();
   }, [onClose]);
 
@@ -207,14 +192,12 @@ export const DeviceMediaList = ({
     if (deviceMediaAssets) {
       for (const asset of deviceMediaAssets) {
         if (!hasSelectedDeviceAssets || asset.selected) {
-          console.log('Adding a new Photo.', asset.asset.uri);
           // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
           const imageAddResult = await addPhotoImage(asset.asset.uri, projectId, 'photo');
-          console.log('Finished adding Photo.', imageAddResult);
           if (imageAddResult.status === 'Success') {
-            let tn = '';
+            let tn;
             if (imageAddResult.uri) {
-              let tn = await createThumbnail(imageAddResult?.uri);
+              tn = await createThumbnail(imageAddResult?.uri);
             }
             if (asset.asset.mediaType === 'photo' || asset.asset.mediaType === 'video') {
               const newPhoto: MediaEntryData = {
@@ -223,16 +206,15 @@ export const DeviceMediaList = ({
                 deviceName: 'Device Name', // TODO: Get the device name
                 mediaType: asset.asset.mediaType,
                 imageId: imageAddResult.id,
-                thumbnail: tn,
+                thumbnail: tn ?? '',
                 creationDate: Date.now(),
               };
 
-              const status = addPhotoData(newPhoto);
+              addPhotoData(newPhoto);
             }
           }
         }
       }
-
       handleDeviceMediaClose();
     }
   }, [
@@ -321,10 +303,12 @@ export const DeviceMediaList = ({
   const renderFooter = useCallback(
     () => (
       <View style={styles.footer}>
-        {!useProjectLocation && <ActionButton title="Load More" onPress={handleLoadMore} type="action" />}
+        {!useProjectLocation && hasNextPage && (
+          <ActionButton title="Load More" onPress={handleLoadMore} type="action" />
+        )}
       </View>
     ),
-    [useProjectLocation, handleLoadMore],
+    [useProjectLocation, handleLoadMore, hasNextPage],
   );
 
   return (

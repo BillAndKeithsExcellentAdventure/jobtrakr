@@ -2,6 +2,12 @@ import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
 import { Stack } from './stack';
 
+export type MediaAssetPage = {
+  assets: MediaLibrary.Asset[];
+  endCursor?: string;
+  hasNextPage: boolean;
+};
+
 export class MediaAssetsHelper {
   private _hasNextPage = true;
   private _after: string | undefined = undefined;
@@ -101,6 +107,37 @@ export class MediaAssetsHelper {
     } catch (error) {
       console.error(`Error fetching asset page: ${error}`);
       throw error;
+    }
+  }
+
+  public async getAssetPageWithInfo(options: {
+    pageSize?: number;
+    after?: string;
+    mediaTypes?: MediaLibrary.MediaTypeValue[];
+    sortBy?: MediaLibrary.SortByKey;
+  }): Promise<MediaAssetPage> {
+    const {
+      pageSize = 20,
+      after,
+      mediaTypes = [MediaLibrary.MediaType.photo, MediaLibrary.MediaType.video],
+      sortBy = MediaLibrary.SortBy.creationTime,
+    } = options;
+
+    try {
+      const result = await MediaLibrary.getAssetsAsync({
+        first: pageSize,
+        after,
+        mediaType: mediaTypes,
+        sortBy,
+      });
+      return {
+        assets: result.assets,
+        endCursor: result.endCursor,
+        hasNextPage: result.hasNextPage,
+      };
+    } catch (error) {
+      console.error('Error in getAssetPageWithInfo:', error);
+      return { assets: [], endCursor: undefined, hasNextPage: false };
     }
   }
 

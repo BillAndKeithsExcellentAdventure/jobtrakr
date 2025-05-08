@@ -96,10 +96,10 @@ const ImportDevicePhotosPage = () => {
               <DeviceMediaList
                 projectId={projectId}
                 projectName={projectName}
-                useProjectLocation={useProjectLocation}
                 allProjectMedia={allProjectMedia}
                 onClose={() => router.back}
                 playVideo={playVideo}
+                useProjectLocation={useProjectLocation}
                 setUseProjectLocation={setUseProjectLocation}
               />
             </>
