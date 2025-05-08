@@ -153,7 +153,7 @@ const SetEstimatedCostsPage = () => {
           <KeyboardAvoidingView
             style={styles.modalContainer}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0} // adjust as needed
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 105}
           >
             <View style={{ flex: 1 }}>
               <View style={{ paddingHorizontal: 10 }}>
@@ -217,6 +217,7 @@ const SetEstimatedCostsPage = () => {
                     </View>
                   </View>
                   <FlatList
+                    keyboardShouldPersistTaps="handled"
                     ref={flatListRef}
                     style={{ borderTopWidth: 1, borderColor: colors.border }}
                     data={allAvailableCostItems}
