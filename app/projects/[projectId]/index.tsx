@@ -116,12 +116,10 @@ const ProjectDetailsPage = () => {
     }
 
     sections.forEach((section) => {
-      section.data.sort((a, b) => a.code.localeCompare(b.code));
       section.totalBidAmount = section.data.reduce((sum, item) => sum + item.bidAmount, 0);
       section.totalSpentAmount = section.data.reduce((sum, item) => sum + item.spentAmount, 0);
     });
 
-    sections.sort((a, b) => a.code.localeCompare(b.code));
     return sections;
   }, [allWorkItemSummaries, allWorkItems, allProjectCategories, expandedSectionId, allActualCostItems]);
 
@@ -247,8 +245,9 @@ const ProjectDetailsPage = () => {
                   width: '100%',
                   paddingLeft: 10,
                   paddingRight: 36,
+                  paddingVertical: 5,
                   flexDirection: 'row',
-                  backgroundColor: colors.border,
+                  backgroundColor: colors.sectionHeaderBG,
                 }}
               >
                 <Text style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }} text="Description" />
@@ -315,15 +314,15 @@ const renderSectionHeader = (
         >
           <Text
             numberOfLines={1}
-            style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
+            style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden', color: colors.sectionFG }}
             text={section.title}
           />
           <Text
-            style={{ width: 100, textAlign: 'right' }}
+            style={{ width: 100, textAlign: 'right', color: colors.sectionFG }}
             text={formatCurrency(section.totalBidAmount, false, true)}
           />
           <Text
-            style={{ width: 100, textAlign: 'right' }}
+            style={{ width: 100, textAlign: 'right', color: colors.sectionFG }}
             text={formatCurrency(section.totalSpentAmount, false, true)}
           />
           <View
@@ -338,7 +337,7 @@ const renderSectionHeader = (
             <Ionicons
               name={section.isExpanded ? 'chevron-up-sharp' : 'chevron-down-sharp'}
               size={20}
-              color={colors.iconColor}
+              color={colors.sectionFG}
             />
           </View>
         </View>

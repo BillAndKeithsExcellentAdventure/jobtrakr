@@ -58,6 +58,8 @@ export type ColorSchemeColors = {
   actionBg: string;
   actionFg: string;
   buttonBlue: string;
+  sectionHeaderBG: string;
+  sectionFG: string;
 };
 
 const ColorsContext = createContext<ColorSchemeColors | null>(null);

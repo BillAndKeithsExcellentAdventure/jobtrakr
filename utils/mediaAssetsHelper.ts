@@ -9,7 +9,7 @@ export type MediaAssetPage = {
 export class MediaAssetsHelper {
   public async getAssetPageWithInfo(options: {
     pageSize?: number;
-    after?: string;
+    after?: string; // cursor position returned from a previous call to paginate results
     mediaTypes?: MediaLibrary.MediaTypeValue[];
     sortBy?: MediaLibrary.SortByKey;
   }): Promise<MediaAssetPage> {

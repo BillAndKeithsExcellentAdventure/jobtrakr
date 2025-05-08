@@ -68,6 +68,8 @@ export const Colors = {
     actionBg: '#C76542',
     actionFg: '#ff0000',
     buttonBlue: '#007bff',
+    sectionHeaderBG: '#d0c9c1',
+    sectionFG: '#00008c',
   },
   dark: {
     neutral900: '#FFFFFF',
@@ -131,5 +133,7 @@ export const Colors = {
     actionBg: '#C03403',
     actionFg: '#00ff00',
     buttonBlue: '#007bff',
+    sectionFG: '#74bbfb',
+    sectionHeaderBG: '#424041',
   },
 };
