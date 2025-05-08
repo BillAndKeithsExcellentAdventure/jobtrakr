@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity, Image, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import { TouchableOpacity, Image, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { Ionicons } from '@expo/vector-icons';
-import { Text } from '@/components/Themed';
+import { View, Text } from '@/components/Themed';
 import { ActionButton } from '@/components/ActionButton';
 import * as MediaLibrary from 'expo-media-library';
 import { MediaAssetsHelper } from '@/utils/mediaAssetsHelper';
@@ -286,7 +286,7 @@ export const DeviceMediaList = ({
               handleImageLongPress(item.asset.uri, item.asset.mediaType as 'photo' | 'video', photoDate)
             }
           >
-            <View>
+            <View style={{ borderRadius: 8 }}>
               <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
               <Text style={styles.dateOverlay}>{photoDate}</Text>
               {item.asset.mediaType === 'video' && (
@@ -397,6 +397,8 @@ const styles = StyleSheet.create({
   },
   imageSelected: {
     borderColor: '#007AFF',
+    borderRadius: 8,
+    borderWidth: 3,
   },
   listColumn: {
     flex: 1,
@@ -419,6 +421,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: 10,
     borderWidth: 3,
+    borderRadius: 8,
     borderColor: 'transparent',
   },
   dateOverlay: {
@@ -437,7 +440,7 @@ const styles = StyleSheet.create({
     left: '50%',
     transform: [{ translateX: -20 }, { translateY: -20 }],
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    borderRadius: 25,
+    borderRadius: 8,
     padding: 10,
   },
 });
