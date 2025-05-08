@@ -1,7 +1,7 @@
+import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
+import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { getStoreId, TABLES_SCHEMA } from './ProjectDetailsStore';
-import * as UiReact from 'tinybase/ui-react/with-schemas';
-import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 
 const {
   useCell,
@@ -18,9 +18,9 @@ const {
   useValue,
 } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
-import { useCallback, useEffect, useState } from 'react';
-import { randomUUID } from 'expo-crypto';
 import { CrudResult } from '@/models/types';
+import { randomUUID } from 'expo-crypto';
+import { useCallback, useEffect, useState } from 'react';
 import { useProjectValue } from '../listOfProjects/ListOfProjectsStore';
 
 export interface WorkItemSummaryData {

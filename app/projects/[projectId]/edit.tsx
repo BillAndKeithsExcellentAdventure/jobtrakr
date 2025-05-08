@@ -6,7 +6,7 @@ import { ProjectData } from '@/models/types';
 import { useProject, useUpdateProjectCallback } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatDate } from '@/utils/formatters';
 import * as Location from 'expo-location';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
@@ -130,6 +130,7 @@ const EditProjectScreen = () => {
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+      <Stack.Screen options={{ title: 'Edit Project', headerShown: true }} />
       <View
         style={[
           styles.container,
@@ -139,7 +140,6 @@ const EditProjectScreen = () => {
       >
         <TouchableWithoutFeedback onPress={dismissKeyboard}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Edit Existing Project</Text>
             <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border }}>
               <TextField
                 style={[styles.input, { borderColor: colors.transparent }]}
@@ -164,15 +164,7 @@ const EditProjectScreen = () => {
                 value={project.ownerName}
                 onChangeText={(text) => setProject({ ...project, ownerName: text })}
               />
-              <TextField
-                style={[styles.input, { borderColor: colors.transparent }]}
-                containerStyle={styles.inputContainer}
-                placeholder="Estimated Price"
-                label="Estimated Price"
-                value={project.bidPrice ? project.bidPrice.toString() : undefined}
-                onChangeText={(text) => setProject({ ...project, bidPrice: parseFloat(text) })}
-                keyboardType="numeric"
-              />
+
               <View style={styles.dateContainer}>
                 <TouchableOpacity activeOpacity={1} onPress={showStartDatePicker}>
                   <Text txtSize="formLabel" text="Start Date" style={styles.inputLabel} />
