@@ -6,8 +6,8 @@ import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { VideoPlayerModal } from '@/components/VideoPlayerModal';
-import { useColors } from '@/context/ColorsContext';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
+import { useColors } from '@/context/ColorsContext';
 import {
   MediaEntryData,
   useAddRowCallback,
@@ -26,7 +26,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ProjectPhotosPage = () => {
   const router = useRouter();
-  const colorScheme = useColorScheme();
   const colors = useColors();
 
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();

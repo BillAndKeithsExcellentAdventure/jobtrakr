@@ -1,29 +1,16 @@
-import ProjectCameraView from '@/app/(modals)/CameraView';
-import { ActionButton } from '@/components/ActionButton';
-import { ActionButtonProps } from '@/components/ButtonBar';
 import { DeviceMediaList } from '@/components/DeviceMediaList';
-import { ProjectMediaList } from '@/components/ProjectMediaList';
-import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { Switch } from '@/components/Switch';
 import { Text, View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { VideoPlayerModal } from '@/components/VideoPlayerModal';
-import { useColors } from '@/context/ColorsContext';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
-import {
-  MediaEntryData,
-  useAddRowCallback,
-  useAllRows,
-  useIsStoreAvailableCallback,
-} from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useColors } from '@/context/ColorsContext';
+import { useAllRows, useIsStoreAvailableCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useAddImageCallback } from '@/utils/images';
-import { createThumbnail } from '@/utils/thumbnailUtils';
-import { Entypo, Ionicons } from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
-import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ImportDevicePhotosPage = () => {
@@ -62,34 +49,6 @@ const ImportDevicePhotosPage = () => {
   }, [checkPermissions]);
 
   const allProjectMedia = useAllRows(projectId, 'mediaEntries');
-  const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
-
-  // Memoize handlePhotoCaptured to prevent unnecessary recreations
-  const handlePhotoCaptured = useCallback(
-    async (asset: MediaLibrary.Asset) => {
-      if (!asset) return;
-
-      const imageAddResult = await addPhotoImage(asset.uri, projectId, 'photo');
-
-      if (imageAddResult.status === 'Success' && imageAddResult.uri) {
-        const thumbnail = await createThumbnail(asset.uri);
-
-        const newPhoto: MediaEntryData = {
-          id: '',
-          assetId: asset.id,
-          deviceName: 'Device Name',
-          mediaType: 'photo',
-          mediaUri: imageAddResult.uri,
-          thumbnail: thumbnail ?? '',
-          creationDate: Date.now(),
-        };
-
-        addPhotoData(newPhoto);
-      }
-    },
-    [projectId, projectName, addPhotoImage, addPhotoData],
-  );
-
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
 
