@@ -82,17 +82,19 @@ export const DeviceMediaList = ({
               const lat = currentProject?.latitude;
               const long = currentProject?.longitude;
               if (lat != 0 && long != 0) {
-                const foundAssets: MediaLibrary.Asset[] | undefined =
-                  await mediaTools.current?.getAllAssetsNearLocation(
-                    long!,
-                    lat!,
-                    100, // Need to make this configurable
-                    onStatusUpdate,
-                  );
+                const page = await mediaTools.current?.getAssetsNearLocationWithInfo(
+                  long!,
+                  lat!,
+                  100, // Need to make this configurable
+                  {
+                    pageSize: 100,
+                    statusFunction: onStatusUpdate,
+                  },
+                );
 
-                if (foundAssets) {
+                if (page) {
                   // Filter out assets that are already in projectAssets
-                  const filteredAssets = foundAssets.filter(
+                  const filteredAssets = page.assets.filter(
                     (foundAsset) =>
                       !allProjectMedia?.some((projectAsset) => projectAsset.assetId === foundAsset.id),
                   );
@@ -104,8 +106,8 @@ export const DeviceMediaList = ({
                   }));
 
                   setDeviceMediaAssets(selectionList);
-                  setPagingCursor(undefined);
-                  setHasNextPage(false);
+                  setPagingCursor(page.endCursor);
+                  setHasNextPage(page.hasNextPage);
 
                   const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
                   onStatusUpdate(filteredStatus);

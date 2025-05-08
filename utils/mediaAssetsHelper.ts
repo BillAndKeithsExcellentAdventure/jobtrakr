@@ -179,59 +179,57 @@ export class MediaAssetsHelper {
     return distance;
   }
 
-  public async getAllAssetsNearLocation(
+  public async getAssetsNearLocationWithInfo(
     longitude: number,
     latitude: number,
     distance: number,
-    statusFunction?: (status: string) => void,
-  ): Promise<MediaLibrary.Asset[]> {
-    let assets: MediaLibrary.Asset[] = [];
-    let hasNextPage = true;
-    let after: string | undefined = undefined;
-    let counter: number = 0;
+    options?: {
+      pageSize?: number;
+      after?: string;
+      statusFunction?: (status: string) => void;
+    },
+  ): Promise<MediaAssetPage> {
+    const pageSize = options?.pageSize ?? 100;
+    const after = options?.after;
+    const statusFunction = options?.statusFunction;
 
-    while (hasNextPage) {
+    try {
       const result = await MediaLibrary.getAssetsAsync({
-        first: 100, // Adjust the number as needed
-        after: after,
+        first: pageSize,
+        after,
       });
 
-      console.log(`Page ${counter++} with ${result.assets.length} assets`);
       if (statusFunction) {
-        statusFunction(`Page ${counter} \nwith ${result.assets.length} assets`);
+        statusFunction(`Fetched ${result.assets.length} assets`);
       }
 
-      for (let asset of result.assets) {
+      const filteredAssets: MediaLibrary.Asset[] = [];
+      for (const asset of result.assets) {
         const location: { latitude: number; longitude: number } | null = await this.getAssetLocation(
           asset.id,
         );
         if (location) {
-          const distanceInMeters = this.getDistanceBetweenPoints(
-            { longitude: longitude, latitude: latitude },
-            location,
-          );
-
+          const distanceInMeters = this.getDistanceBetweenPoints({ longitude, latitude }, location);
           if (distanceInMeters <= distance) {
-            console.log(`Asset ${asset.id} is within distance of ${distance} `);
-            assets.push(asset);
+            filteredAssets.push(asset);
             if (statusFunction) {
               statusFunction(
-                `Added asset within\ndistance of ${distance}.\n\nTotal assets found: ${assets.length}`,
+                `Added asset within distance of ${distance}.\nTotal assets found: ${filteredAssets.length}`,
               );
             }
           }
         }
       }
 
-      hasNextPage = result.hasNextPage;
-      after = result.endCursor;
+      return {
+        assets: filteredAssets,
+        endCursor: result.endCursor,
+        hasNextPage: result.hasNextPage,
+      };
+    } catch (error) {
+      console.error('Error in getAssetsNearLocationWithInfo:', error);
+      return { assets: [], endCursor: undefined, hasNextPage: false };
     }
-
-    if (statusFunction) {
-      statusFunction(`Found ${assets.length}`);
-    }
-
-    return assets;
   }
 
   public async getAssetLocation(assetId: string): Promise<{ latitude: number; longitude: number } | null> {
