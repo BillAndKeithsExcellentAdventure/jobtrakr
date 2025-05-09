@@ -8,10 +8,9 @@ import { formatDate } from '@/utils/formatters';
 import * as Location from 'expo-location';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditProjectScreen = () => {
   const colors = useColors();
@@ -124,10 +123,6 @@ const EditProjectScreen = () => {
     }
     router.back();
   }, [project, projectId, updatedProject, router]);
-
-  const dismissKeyboard = useCallback(() => {
-    Keyboard.dismiss();
-  }, []);
 
   return (
     <>

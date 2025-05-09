@@ -1,69 +1,33 @@
 import { ActionButton } from '@/components/ActionButton';
 import BottomSheetContainer from '@/components/BottomSheetContainer';
+import { NumberInputField } from '@/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/components/OptionList';
-import { Text, TextInput, View } from '@/components/Themed';
+import { OptionPickerItem } from '@/components/OptionPickerItem';
+import { Text, View } from '@/components/Themed';
 import { ColorSchemeColors, useColors } from '@/context/ColorsContext';
+import {
+  useAllRows as useAllRowsConfiguration,
+  WorkCategoryCodeCompareAsNumber,
+  WorkCategoryData,
+  WorkItemData,
+} from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useProject, useUpdateProjectCallback } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   useAllRows,
   useUpdateRowCallback,
   WorkItemSummaryData,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import * as Location from 'expo-location';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Keyboard,
-  StyleSheet,
-  TouchableWithoutFeedback,
-  KeyboardAvoidingView,
-  Platform,
-  LayoutChangeEvent,
-  InteractionManager,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  useAllRows as useAllRowsConfiguration,
-  WorkCategoryCodeCompareAsNumber,
-  WorkCategoryData,
-  WorkItemData,
-  WorkItemDataCodeCompareAsNumber,
-} from '@/tbStores/configurationStore/ConfigurationStoreHooks';
-import { OptionPickerItem } from '@/components/OptionPickerItem';
-import { NumberInputField } from '@/components/NumberInputField';
-import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { formatCurrency } from '@/utils/formatters';
 import { FontAwesome6 } from '@expo/vector-icons';
-import { useResultRowCountListener } from 'tinybase/ui-react';
-import {
-  KeyboardAwareScrollView,
-  KeyboardToolbar,
-  useKeyboardHandler,
-} from 'react-native-keyboard-controller';
-import Animated, { scrollTo, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { InteractionManager, Keyboard, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
+import { FlatList, Pressable } from 'react-native-gesture-handler';
+import { KeyboardToolbar } from 'react-native-keyboard-controller';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { PADDING_BOTTOM, useKeyboardGradualAnimation } from '@/components/useKeyboardGradualAnimation';
 
-const PADDING_BOTTOM = 20;
-const TOOLBAR_OFFSET = 42;
 const LISTITEM_HEIGHT = 40;
-
-const useGradualAnimation = () => {
-  const height = useSharedValue(PADDING_BOTTOM);
-
-  useKeyboardHandler(
-    {
-      onMove: (e) => {
-        'worklet';
-        height.value = Math.max(e.height + TOOLBAR_OFFSET, PADDING_BOTTOM);
-      },
-      onEnd: (e) => {
-        'worklet';
-        height.value = e.height + TOOLBAR_OFFSET;
-      },
-    },
-    [],
-  );
-  return { height };
-};
 
 const SetEstimatedCostsPage = () => {
   const colors = useColors();
@@ -130,7 +94,7 @@ const SetEstimatedCostsPage = () => {
     }
   }, [currentItemIndex, allAvailableCostItems.length]);
 
-  const { height } = useGradualAnimation();
+  const { height } = useKeyboardGradualAnimation();
 
   useEffect(() => {
     scrollToCurrentIndex();
