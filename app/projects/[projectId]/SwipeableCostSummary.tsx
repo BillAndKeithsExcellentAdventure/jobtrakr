@@ -12,6 +12,8 @@ import { CostItemData } from './index';
 import { useDeleteRowCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/utils/formatters';
 
+const ITEM_HEIGHT = 45;
+
 const SwipeableCostSummary = ({
   item,
   sectionId,
@@ -61,7 +63,7 @@ const SwipeableCostSummary = ({
       key={item.id}
       friction={2}
       enableTrackpadTwoFingerGesture
-      rightThreshold={40}
+      rightThreshold={ITEM_HEIGHT}
       renderRightActions={RightAction}
       overshootRight={false}
       enableContextMenu
@@ -115,7 +117,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
-    height: 40,
+    height: ITEM_HEIGHT,
     paddingVertical: 5,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
@@ -128,7 +130,7 @@ const styles = StyleSheet.create({
   },
   rightAction: {
     width: 100,
-    height: 40,
+    height: ITEM_HEIGHT,
     backgroundColor: deleteBg,
     alignItems: 'center',
     justifyContent: 'center',

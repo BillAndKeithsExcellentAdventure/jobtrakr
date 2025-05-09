@@ -47,6 +47,8 @@ export interface CostSectionData {
   isExpanded: boolean;
 }
 
+const ITEM_HEIGHT = 45;
+
 const ProjectDetailsPage = () => {
   const router = useRouter();
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
@@ -301,7 +303,7 @@ const renderSectionHeader = (
           backgroundColor: colors.listBackground,
           borderBottomWidth: 1,
           alignItems: 'center',
-          height: 40,
+          height: ITEM_HEIGHT,
         },
       ]}
     >
@@ -383,7 +385,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   item: {
-    height: 45,
+    height: ITEM_HEIGHT,
     flexDirection: 'row',
     padding: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,

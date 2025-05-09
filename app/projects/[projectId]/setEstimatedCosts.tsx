@@ -268,11 +268,6 @@ const SetEstimatedCostsPage = () => {
                 style={{ borderTopWidth: 1, borderColor: colors.border }}
                 data={allAvailableCostItems}
                 keyExtractor={(item) => item.id}
-                getItemLayout={(data, index) => ({
-                  length: LISTITEM_HEIGHT,
-                  offset: LISTITEM_HEIGHT * index,
-                  index,
-                })}
                 renderItem={({ item, index }) =>
                   renderItem(
                     item,
@@ -284,21 +279,9 @@ const SetEstimatedCostsPage = () => {
                     allWorkItems.find((wi) => wi.id === item.workItemId),
                   )
                 }
-                onScrollToIndexFailed={({ index, highestMeasuredFrameIndex, averageItemLength }) => {
-                  if (flatListRef.current) {
-                    if (index > highestMeasuredFrameIndex) {
-                      flatListRef.current.scrollToEnd({ animated: true });
-                    } else {
-                      flatListRef.current.scrollToOffset({
-                        offset: averageItemLength * index,
-                        animated: true,
-                      });
-                    }
-                  }
-                }}
               />
               <Animated.View style={fakeView} />
-              <KeyboardToolbar />
+              {Platform.OS === 'ios' && <KeyboardToolbar />}
             </>
           )}
         </View>
