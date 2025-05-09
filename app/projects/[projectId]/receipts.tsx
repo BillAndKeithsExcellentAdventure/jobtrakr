@@ -233,7 +233,7 @@ const ProjectReceiptsPage = () => {
   }, [projectId, addReceiptImage, addReceipt, projectName]);
 
   const handleAddReceipt = useCallback(() => {
-    router.push(`/projects/${projectId}/receipt/add/?projectName=${projectName}`);
+    router.push(`/projects/${projectId}/receipt/add/?projectName=${encodeURIComponent(projectName)}`);
   }, [projectId, projectName, router]);
 
   return (

@@ -3,7 +3,7 @@ import { Text, TextInput, View } from '@/components/Themed';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import { FlatList, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableCategoryItem from './SwipeableCategoryItem';
 
@@ -15,6 +15,7 @@ import {
   useTypedRow,
   WorkItemData,
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import { KeyboardToolbar } from 'react-native-keyboard-controller';
 
 const ShowWorkCategory = () => {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
@@ -74,10 +75,6 @@ const ShowWorkCategory = () => {
     router.push(`/projects/configuration/workcategory/${id}/edit`);
   };
 
-  const dismissKeyboard = useCallback(() => {
-    Keyboard.dismiss();
-  }, []);
-
   if (!category) {
     return (
       <View style={styles.container}>
@@ -87,39 +84,39 @@ const ShowWorkCategory = () => {
   }
 
   return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: 'Work Category',
-        }}
-      />
+    <>
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            title: 'Work Category',
+          }}
+        />
 
-      <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
-        <View style={{ backgroundColor: colors.listBackground, padding: 10 }}>
-          <TouchableOpacity
-            onPress={() => handleEditCategory(category.id)} // Edit on item press
-          >
-            <View style={[styles.categoryContent, { borderColor: colors.border, borderWidth: 1 }]}>
-              <View style={styles.categoryInfo}>
-                <Text style={styles.categoryName}>{name}</Text>
-                <Text>{code}</Text>
+        <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
+          <View style={{ backgroundColor: colors.listBackground, padding: 10 }}>
+            <TouchableOpacity
+              onPress={() => handleEditCategory(category.id)} // Edit on item press
+            >
+              <View style={[styles.categoryContent, { borderColor: colors.border, borderWidth: 1 }]}>
+                <View style={styles.categoryInfo}>
+                  <Text style={styles.categoryName}>{name}</Text>
+                  <Text>{code}</Text>
+                </View>
+                <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
               </View>
-              <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
-            </View>
-          </TouchableOpacity>
-        </View>
-        <View style={[styles.categoryItems, { backgroundColor: colors.listBackground }]}>
-          <View style={styles.categoryListHeader}>
-            <View style={{ alignItems: 'center', marginHorizontal: 5, flex: 1 }}>
-              <Text text="Work Items" txtSize="title" />
-            </View>
-            <TouchableOpacity style={{ padding: 4, paddingRight: 20 }} onPress={() => setShowAdd(!showAdd)}>
-              <Ionicons name={showAdd ? 'chevron-up-sharp' : 'add'} size={24} color={colors.iconColor} />
             </TouchableOpacity>
           </View>
-          {showAdd && (
-            <TouchableWithoutFeedback onPress={dismissKeyboard}>
+          <View style={[styles.categoryItems, { backgroundColor: colors.listBackground }]}>
+            <View style={styles.categoryListHeader}>
+              <View style={{ alignItems: 'center', marginHorizontal: 5, flex: 1 }}>
+                <Text text="Work Items" txtSize="title" />
+              </View>
+              <TouchableOpacity style={{ padding: 4, paddingRight: 20 }} onPress={() => setShowAdd(!showAdd)}>
+                <Ionicons name={showAdd ? 'chevron-up-sharp' : 'add'} size={24} color={colors.iconColor} />
+              </TouchableOpacity>
+            </View>
+            {showAdd && (
               <View style={{ backgroundColor: colors.listBackground }}>
                 <View style={{ borderRadius: 10, margin: 10, marginHorizontal: 15, padding: 10 }}>
                   <View style={{ flexDirection: 'row' }}>
@@ -149,34 +146,35 @@ const ShowWorkCategory = () => {
                   />
                 </View>
               </View>
-            </TouchableWithoutFeedback>
-          )}
-          <View style={{ flex: 1, paddingHorizontal: 10 }}>
-            {categorySpecificItems.length > 0 ? (
-              <FlatList
-                style={{ borderTopWidth: 1, borderColor: colors.border }}
-                data={categorySpecificItems}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => <SwipeableCategoryItem item={item} category={category} />}
-              />
-            ) : (
-              <View style={{ alignItems: 'center', margin: 20 }}>
-                {!showAdd && (
-                  <>
-                    <Text
-                      txtSize="title"
-                      text="No items found for this category."
-                      style={{ textAlign: 'center', marginBottom: 10 }}
-                    />
-                    <Text text="To add an item, press '+' icon and then Add Work Item." />
-                  </>
-                )}
-              </View>
             )}
+            <View style={{ flex: 1, paddingHorizontal: 10 }}>
+              {categorySpecificItems.length > 0 ? (
+                <FlatList
+                  style={{ borderTopWidth: 1, borderColor: colors.border }}
+                  data={categorySpecificItems}
+                  keyExtractor={(item) => item.id}
+                  renderItem={({ item }) => <SwipeableCategoryItem item={item} category={category} />}
+                />
+              ) : (
+                <View style={{ alignItems: 'center', margin: 20 }}>
+                  {!showAdd && (
+                    <>
+                      <Text
+                        txtSize="title"
+                        text="No items found for this category."
+                        style={{ textAlign: 'center', marginBottom: 10 }}
+                      />
+                      <Text text="To add an item, press '+' icon and then Add Work Item." />
+                    </>
+                  )}
+                </View>
+              )}
+            </View>
           </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+      {Platform.OS === 'ios' && <KeyboardToolbar />}
+    </>
   );
 };
 

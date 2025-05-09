@@ -8,7 +8,7 @@ import { formatDate } from '@/utils/formatters';
 import * as Location from 'expo-location';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
@@ -238,7 +238,7 @@ const EditProjectScreen = () => {
           />
         </View>
       </KeyboardAwareScrollView>
-      <KeyboardToolbar />
+      {Platform.OS === 'ios' && <KeyboardToolbar />}
     </>
   );
 };

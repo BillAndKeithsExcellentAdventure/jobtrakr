@@ -11,8 +11,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { FlatList, Keyboard, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import { FlatList, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
+import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableVendor from './SwipeableVendor';
 
@@ -79,22 +80,18 @@ const VendorsScreen = () => {
     </Pressable>
   );
 
-  const dismissKeyboard = useCallback(() => {
-    Keyboard.dismiss();
-  }, []);
-
   return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: 'Vendors',
-          headerRight: renderHeaderRight,
-        }}
-      />
-      <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
-        {showAdd && (
-          <TouchableWithoutFeedback onPress={dismissKeyboard}>
+    <>
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            title: 'Vendors',
+            headerRight: renderHeaderRight,
+          }}
+        />
+        <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
+          {showAdd && (
             <View style={{ backgroundColor: colors.listBackground }}>
               <View style={{ padding: 10, borderRadius: 10, marginVertical: 10, marginHorizontal: 15 }}>
                 <TextInput
@@ -160,28 +157,29 @@ const VendorsScreen = () => {
                 />
               </View>
             </View>
-          </TouchableWithoutFeedback>
-        )}
-
-        <FlatList
-          style={{ borderTopColor: colors.border }}
-          data={allVendors}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <SwipeableVendor vendor={item} />}
-          ListEmptyComponent={() => (
-            <View
-              style={{
-                padding: 20,
-                alignItems: 'center',
-              }}
-            >
-              <Text txtSize="title" text="No vendors found." />
-              <Text text="Use the '+' in the upper right to add one." />
-            </View>
           )}
-        />
-      </View>
-    </SafeAreaView>
+
+          <FlatList
+            style={{ borderTopColor: colors.border }}
+            data={allVendors}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <SwipeableVendor vendor={item} />}
+            ListEmptyComponent={() => (
+              <View
+                style={{
+                  padding: 20,
+                  alignItems: 'center',
+                }}
+              >
+                <Text txtSize="title" text="No vendors found." />
+                <Text text="Use the '+' in the upper right to add one." />
+              </View>
+            )}
+          />
+        </View>
+      </SafeAreaView>
+      {Platform.OS === 'ios' && <KeyboardToolbar />}
+    </>
   );
 };
 

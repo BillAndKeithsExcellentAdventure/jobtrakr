@@ -1,5 +1,3 @@
-// screens/ListWorkCategories.tsx
-
 import { ActionButton } from '@/components/ActionButton';
 import { Text, TextInput, View } from '@/components/Themed';
 import { useColors } from '@/context/ColorsContext';
@@ -11,8 +9,9 @@ import {
 import { Ionicons } from '@expo/vector-icons'; // Right caret icon
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { FlatList, Keyboard, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import { FlatList, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
+import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableCategory from './SwipeableCategory';
 
@@ -70,24 +69,19 @@ const ListWorkCategories = () => {
     }
   }, [category]);
 
-  const dismissKeyboard = useCallback(() => {
-    console.log('Dismiss Keyboard');
-    Keyboard.dismiss();
-  }, []);
-
   return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: 'Work Categories',
-          headerRight: renderHeaderRight,
-        }}
-      />
+    <>
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            title: 'Work Categories',
+            headerRight: renderHeaderRight,
+          }}
+        />
 
-      <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
-        {showAdd && (
-          <TouchableWithoutFeedback onPress={dismissKeyboard}>
+        <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
+          {showAdd && (
             <View style={{ backgroundColor: colors.listBackground }}>
               <View style={{ padding: 10, borderRadius: 10, marginVertical: 15, marginHorizontal: 15 }}>
                 <View style={{ flexDirection: 'row' }}>
@@ -117,34 +111,37 @@ const ListWorkCategories = () => {
                 />
               </View>
             </View>
-          </TouchableWithoutFeedback>
-        )}
-        <View>
-          <FlatList
-            data={allCategories}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => <SwipeableCategory category={item} />}
-            ListEmptyComponent={() => (
-              <View
-                style={{
-                  padding: 20,
-                  alignItems: 'center',
-                }}
-              >
-                <Text txtSize="title" text="No work categories found." />
-                <Text text="Use the '+' in the upper right to add one." />
-                <ActionButton
-                  style={{ zIndex: 1, marginTop: 10 }}
-                  onPress={() => router.push(`/projects/configuration/workcategory/seedCategoriesSelection/`)}
-                  type="action"
-                  title="Or, use one of our sets of Work Categories..."
-                />
-              </View>
-            )}
-          />
+          )}
+          <View>
+            <FlatList
+              data={allCategories}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => <SwipeableCategory category={item} />}
+              ListEmptyComponent={() => (
+                <View
+                  style={{
+                    padding: 20,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text txtSize="title" text="No work categories found." />
+                  <Text text="Use the '+' in the upper right to add one." />
+                  <ActionButton
+                    style={{ zIndex: 1, marginTop: 10 }}
+                    onPress={() =>
+                      router.push(`/projects/configuration/workcategory/seedCategoriesSelection/`)
+                    }
+                    type="action"
+                    title="Or, use one of our sets of Work Categories..."
+                  />
+                </View>
+              )}
+            />
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+      {Platform.OS === 'ios' && <KeyboardToolbar />}
+    </>
   );
 };
 

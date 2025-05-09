@@ -14,7 +14,8 @@ import { createThumbnail } from '@/utils/thumbnailUtils';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Image, Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import { Alert, Image, Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -134,10 +135,6 @@ const AddReceiptPage = () => {
     router.back();
   }, [projectReceipt, canAddReceipt]);
 
-  const dismissKeyboard = useCallback(() => {
-    Keyboard.dismiss();
-  }, []);
-
   const handleCaptureImage = useCallback(async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
@@ -168,18 +165,18 @@ const AddReceiptPage = () => {
   }, []);
 
   return (
-    <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: 'Add Receipt', headerShown: false }} />
-      <View
-        style={[
-          styles.container,
-          styles.modalBackground,
-          { backgroundColor: colors.modalOverlayBackgroundColor },
-        ]}
-      >
-        <TouchableWithoutFeedback onPress={dismissKeyboard}>
-          <View style={[styles.modalContainer, { marginTop: 30 }]}>
-            <Text txtSize="sub-title" style={styles.modalTitle} text={projectName} />
+    <>
+      <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={{ flex: 1 }}>
+        <Stack.Screen options={{ title: 'Add Receipt', headerShown: false }} />
+        <View
+          style={[
+            styles.container,
+            styles.modalBackground,
+            { backgroundColor: colors.modalOverlayBackgroundColor, paddingHorizontal: 10 },
+          ]}
+        >
+          <View style={[styles.modalContainer, { marginTop: 10 }]}>
+            <Text txtSize="standard" style={[styles.modalTitle, { fontWeight: '600' }]} text={projectName} />
             <Text txtSize="title" style={styles.modalTitle} text="Add Receipt" />
 
             <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border }}>
@@ -298,21 +295,22 @@ const AddReceiptPage = () => {
               />
             </View>
           </View>
-        </TouchableWithoutFeedback>
-        {vendors && isVendorListPickerVisible && (
-          <BottomSheetContainer
-            isVisible={isVendorListPickerVisible}
-            onClose={() => setIsVendorListPickerVisible(false)}
-          >
-            <OptionList
-              options={vendors}
-              onSelect={(option) => handleVendorOptionChange(option)}
-              selectedOption={pickedOption}
-            />
-          </BottomSheetContainer>
-        )}
-      </View>
-    </SafeAreaView>
+          {vendors && isVendorListPickerVisible && (
+            <BottomSheetContainer
+              isVisible={isVendorListPickerVisible}
+              onClose={() => setIsVendorListPickerVisible(false)}
+            >
+              <OptionList
+                options={vendors}
+                onSelect={(option) => handleVendorOptionChange(option)}
+                selectedOption={pickedOption}
+              />
+            </BottomSheetContainer>
+          )}
+        </View>
+      </SafeAreaView>
+      {Platform.OS === 'ios' && <KeyboardToolbar />}
+    </>
   );
 };
 
@@ -328,7 +326,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     maxWidth: 550,
-    width: '90%',
+    width: '100%',
     padding: 10,
     borderRadius: 20,
   },

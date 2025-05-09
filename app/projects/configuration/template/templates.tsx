@@ -5,13 +5,13 @@ import {
   ProjectTemplateData,
   useAddRowCallback,
   useAllRows,
-  WorkItemData,
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Ionicons } from '@expo/vector-icons'; // Right caret icon
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { FlatList, Keyboard, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import { FlatList, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
+import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableProjectTemplate from './SwipeableProjectTemplate';
 
@@ -24,7 +24,6 @@ const ListProjectTemplates = () => {
     name: '',
     description: '',
   });
-  const [selectedWorkItems, setSelectedWorkItems] = useState<WorkItemData[]>([]);
 
   const router = useRouter();
   const colors = useColors();
@@ -62,23 +61,19 @@ const ListProjectTemplates = () => {
     }
   }, [allProjectTemplates, projectTemplate]);
 
-  const dismissKeyboard = useCallback(() => {
-    Keyboard.dismiss();
-  }, []);
-
   return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: 'Project Templates',
-          headerRight: renderHeaderRight,
-        }}
-      />
+    <>
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            title: 'Project Templates',
+            headerRight: renderHeaderRight,
+          }}
+        />
 
-      <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
-        {showAdd && (
-          <TouchableWithoutFeedback onPress={dismissKeyboard}>
+        <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
+          {showAdd && (
             <View style={{ backgroundColor: colors.listBackground }}>
               <View style={{ padding: 10, borderRadius: 10, marginVertical: 15, marginHorizontal: 15 }}>
                 <View>
@@ -104,28 +99,29 @@ const ListProjectTemplates = () => {
                 />
               </View>
             </View>
-          </TouchableWithoutFeedback>
-        )}
-        <View>
-          <FlatList
-            data={allProjectTemplates}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => <SwipeableProjectTemplate projectTemplate={item} />}
-            ListEmptyComponent={() => (
-              <View
-                style={{
-                  padding: 20,
-                  alignItems: 'center',
-                }}
-              >
-                <Text txtSize="title" text="No project templates found." />
-                <Text text="Use the '+' in the upper right to add one." />
-              </View>
-            )}
-          />
+          )}
+          <View>
+            <FlatList
+              data={allProjectTemplates}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => <SwipeableProjectTemplate projectTemplate={item} />}
+              ListEmptyComponent={() => (
+                <View
+                  style={{
+                    padding: 20,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text txtSize="title" text="No project templates found." />
+                  <Text text="Use the '+' in the upper right to add one." />
+                </View>
+              )}
+            />
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+      {Platform.OS === 'ios' && <KeyboardToolbar />}
+    </>
   );
 };
 
