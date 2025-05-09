@@ -130,129 +130,121 @@ const EditProjectScreen = () => {
   }, []);
 
   return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+    <>
       <Stack.Screen options={{ title: 'Edit Project', headerShown: true }} />
-      <View
-        style={[
-          styles.container,
-          styles.modalBackground,
-          { backgroundColor: colors.modalOverlayBackgroundColor },
-        ]}
+      <KeyboardAwareScrollView
+        bottomOffset={62}
+        contentContainerStyle={styles.modalContainer}
+        style={[{ backgroundColor: colors.modalOverlayBackgroundColor }, { flex: 1, marginBottom: 62 }]}
       >
-        <KeyboardAwareScrollView
-          bottomOffset={62}
-          contentContainerStyle={styles.modalContainer}
-          style={{ flex: 1, marginBottom: 62 }}
-        >
-          <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border }}>
-            <TextField
-              style={[styles.input, { borderColor: colors.transparent }]}
-              label="Project Name"
-              placeholder="Project Name"
-              value={project.name}
-              onChangeText={(text) => setProject({ ...project, name: text })}
-            />
-            <TextField
-              containerStyle={styles.inputContainer}
-              style={[styles.input, { borderColor: colors.transparent }]}
-              placeholder="Location"
-              label="Location"
-              value={project.location}
-              onChangeText={(text) => setProject({ ...project, location: text })}
-            />
-            <TextField
-              containerStyle={styles.inputContainer}
-              style={[styles.input, { borderColor: colors.transparent }]}
-              placeholder="Owner"
-              label="Owner"
-              value={project.ownerName}
-              onChangeText={(text) => setProject({ ...project, ownerName: text })}
+        <View style={{ padding: 10, gap: 6 }}>
+          <TextField
+            style={[styles.input, { borderColor: colors.transparent }]}
+            label="Project Name"
+            placeholder="Project Name"
+            value={project.name}
+            onChangeText={(text) => setProject({ ...project, name: text })}
+          />
+          <TextField
+            containerStyle={styles.inputContainer}
+            style={[styles.input, { borderColor: colors.transparent }]}
+            placeholder="Location"
+            label="Location"
+            value={project.location}
+            onChangeText={(text) => setProject({ ...project, location: text })}
+          />
+          <TextField
+            containerStyle={styles.inputContainer}
+            style={[styles.input, { borderColor: colors.transparent }]}
+            placeholder="Owner"
+            label="Owner"
+            value={project.ownerName}
+            onChangeText={(text) => setProject({ ...project, ownerName: text })}
+          />
+
+          <View style={styles.dateContainer}>
+            <TouchableOpacity activeOpacity={1} onPress={showStartDatePicker}>
+              <Text txtSize="formLabel" text="Start Date" style={styles.inputLabel} />
+              <TextInput
+                readOnly={true}
+                style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                placeholder="Start Date"
+                onPressIn={showStartDatePicker}
+                value={project.startDate ? formatDate(project.startDate) : 'No date selected'}
+              />
+            </TouchableOpacity>
+            <DateTimePickerModal
+              style={{ alignSelf: 'stretch' }}
+              date={new Date(project.startDate)}
+              isVisible={startDatePickerVisible}
+              mode="date"
+              onConfirm={handleStartDateConfirm}
+              onCancel={hideStartDatePicker}
             />
 
-            <View style={styles.dateContainer}>
-              <TouchableOpacity activeOpacity={1} onPress={showStartDatePicker}>
-                <Text txtSize="formLabel" text="Start Date" style={styles.inputLabel} />
-                <TextInput
-                  readOnly={true}
-                  style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
-                  placeholder="Start Date"
-                  onPressIn={showStartDatePicker}
-                  value={project.startDate ? formatDate(project.startDate) : 'No date selected'}
-                />
-              </TouchableOpacity>
-              <DateTimePickerModal
-                style={{ alignSelf: 'stretch' }}
-                date={new Date(project.startDate)}
-                isVisible={startDatePickerVisible}
-                mode="date"
-                onConfirm={handleStartDateConfirm}
-                onCancel={hideStartDatePicker}
+            <TouchableOpacity activeOpacity={1} onPress={showFinishDatePicker}>
+              <Text txtSize="formLabel" text="Finish Date" style={styles.inputLabel} />
+              <TextInput
+                readOnly={true}
+                style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                placeholder="Finish Date"
+                onPressIn={showFinishDatePicker}
+                value={project.plannedFinish ? formatDate(project.plannedFinish) : 'No date selected'}
               />
-
-              <TouchableOpacity activeOpacity={1} onPress={showFinishDatePicker}>
-                <Text txtSize="formLabel" text="Finish Date" style={styles.inputLabel} />
-                <TextInput
-                  readOnly={true}
-                  style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
-                  placeholder="Finish Date"
-                  onPressIn={showFinishDatePicker}
-                  value={project.plannedFinish ? formatDate(project.plannedFinish) : 'No date selected'}
-                />
-              </TouchableOpacity>
-              <DateTimePickerModal
-                style={{ alignSelf: 'stretch', height: 200 }}
-                date={new Date(project.plannedFinish)}
-                isVisible={finishDatePickerVisible}
-                mode="date"
-                onConfirm={handleFinishDateConfirm}
-                onCancel={hideFinishDatePicker}
-              />
-            </View>
-            {project.latitude && project.longitude ? (
-              <Text style={styles.inputLabel}>{`GPS Coordinates  (${project.latitude.toFixed(
-                4,
-              )}/${project.longitude.toFixed(4)})`}</Text>
-            ) : (
-              <Text style={styles.inputLabel}>GPS Coordinates</Text>
-            )}
-            <View style={styles.gpsButtonContainer}>
-              {hasLocationPermission && (
-                <TouchableOpacity
-                  style={[styles.gpsButton, styles.gpsButtonLeft, { borderColor: colors.buttonBlue }]}
-                  onPress={handleSetCurrentGpsLocation}
-                >
-                  <Text style={[styles.gpsButtonText, { color: colors.buttonBlue }]}>Use Current</Text>
-                </TouchableOpacity>
-              )}
+            </TouchableOpacity>
+            <DateTimePickerModal
+              style={{ alignSelf: 'stretch', height: 200 }}
+              date={new Date(project.plannedFinish)}
+              isVisible={finishDatePickerVisible}
+              mode="date"
+              onConfirm={handleFinishDateConfirm}
+              onCancel={hideFinishDatePicker}
+            />
+          </View>
+          {project.latitude && project.longitude ? (
+            <Text style={styles.inputLabel}>{`GPS Coordinates  (${project.latitude.toFixed(
+              4,
+            )}/${project.longitude.toFixed(4)})`}</Text>
+          ) : (
+            <Text style={styles.inputLabel}>GPS Coordinates</Text>
+          )}
+          <View style={styles.gpsButtonContainer}>
+            {hasLocationPermission && (
               <TouchableOpacity
-                style={[styles.gpsButton, styles.gpsButtonRight, { borderColor: colors.buttonBlue }]}
-                onPress={handlePickGpsLocation}
+                style={[styles.gpsButton, styles.gpsButtonLeft, { borderColor: colors.buttonBlue }]}
+                onPress={handleSetCurrentGpsLocation}
               >
-                <Text style={[styles.gpsButtonText, { color: colors.buttonBlue }]}>Select on Map</Text>
+                <Text style={[styles.gpsButtonText, { color: colors.buttonBlue }]}>Use Current</Text>
               </TouchableOpacity>
-            </View>
+            )}
+            <TouchableOpacity
+              style={[styles.gpsButton, styles.gpsButtonRight, { borderColor: colors.buttonBlue }]}
+              onPress={handlePickGpsLocation}
+            >
+              <Text style={[styles.gpsButtonText, { color: colors.buttonBlue }]}>Select on Map</Text>
+            </TouchableOpacity>
           </View>
-          <View style={styles.saveButtonRow}>
-            <ActionButton
-              style={styles.saveButton}
-              onPress={handleSubmit}
-              type={canAddProject ? 'ok' : 'disabled'}
-              title="Save"
-            />
+        </View>
+        <View style={styles.saveButtonRow}>
+          <ActionButton
+            style={styles.saveButton}
+            onPress={handleSubmit}
+            type={canAddProject ? 'ok' : 'disabled'}
+            title="Save"
+          />
 
-            <ActionButton
-              style={styles.cancelButton}
-              onPress={() => {
-                router.back();
-              }}
-              type={'cancel'}
-              title="Cancel"
-            />
-          </View>
-        </KeyboardAwareScrollView>
-      </View>
+          <ActionButton
+            style={styles.cancelButton}
+            onPress={() => {
+              router.back();
+            }}
+            type={'cancel'}
+            title="Cancel"
+          />
+        </View>
+      </KeyboardAwareScrollView>
       <KeyboardToolbar />
-    </SafeAreaView>
+    </>
   );
 };
 
@@ -275,8 +267,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     maxWidth: 460,
     width: '100%',
-    padding: 10,
-    borderRadius: 20,
+    flex: 1,
   },
   modalTitle: {
     fontSize: 18,
@@ -285,10 +276,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   inputContainer: {
-    marginTop: 6,
+    marginTop: 0, // use gap instead
   },
   inputLabel: {
-    marginTop: 6,
+    marginTop: 0, // use gap instead
     marginBottom: 4,
   },
   input: {
@@ -330,17 +321,16 @@ const styles = StyleSheet.create({
     fontWeight: 'semibold',
   },
   saveButtonRow: {
-    marginTop: 10,
+    padding: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 10,
   },
   saveButton: {
     flex: 1,
-    marginRight: 5,
   },
   cancelButton: {
     flex: 1,
-    marginLeft: 5,
   },
 });
 
