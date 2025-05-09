@@ -12,7 +12,15 @@ import {
 import * as Location from 'expo-location';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Keyboard, StyleSheet, TouchableWithoutFeedback, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  Keyboard,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
+  LayoutChangeEvent,
+  InteractionManager,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   useAllRows as useAllRowsConfiguration,
@@ -27,6 +35,35 @@ import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { formatCurrency } from '@/utils/formatters';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useResultRowCountListener } from 'tinybase/ui-react';
+import {
+  KeyboardAwareScrollView,
+  KeyboardToolbar,
+  useKeyboardHandler,
+} from 'react-native-keyboard-controller';
+import Animated, { scrollTo, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+
+const PADDING_BOTTOM = 20;
+const TOOLBAR_OFFSET = 42;
+const LISTITEM_HEIGHT = 40;
+
+const useGradualAnimation = () => {
+  const height = useSharedValue(PADDING_BOTTOM);
+
+  useKeyboardHandler(
+    {
+      onMove: (e) => {
+        'worklet';
+        height.value = Math.max(e.height + TOOLBAR_OFFSET, PADDING_BOTTOM);
+      },
+      onEnd: (e) => {
+        'worklet';
+        height.value = e.height + TOOLBAR_OFFSET;
+      },
+    },
+    [],
+  );
+  return { height };
+};
 
 const SetEstimatedCostsPage = () => {
   const colors = useColors();
@@ -76,24 +113,35 @@ const SetEstimatedCostsPage = () => {
 
   const flatListRef = React.useRef<FlatList>(null);
 
-  const scrollToIndex = useCallback((index: number) => {
-    flatListRef.current?.scrollToIndex({
-      index,
-      animated: true,
-      viewPosition: 1.0,
-    });
-  }, []);
+  const scrollToCurrentIndex = useCallback(() => {
+    if (
+      flatListRef.current &&
+      allAvailableCostItems.length > 0 &&
+      currentItemIndex >= 0 &&
+      currentItemIndex < allAvailableCostItems.length
+    ) {
+      InteractionManager.runAfterInteractions(() => {
+        // console.log(`scrollToIndex ${currentItemIndex}`);
+        flatListRef.current?.scrollToOffset({
+          offset: currentItemIndex * LISTITEM_HEIGHT,
+          animated: true,
+        });
+      });
+    }
+  }, [currentItemIndex, allAvailableCostItems.length]);
+
+  const { height } = useGradualAnimation();
 
   useEffect(() => {
-    scrollToIndex(currentItemIndex);
-  }, [currentItemIndex, scrollToIndex]);
+    scrollToCurrentIndex();
+  }, [scrollToCurrentIndex]);
 
   useEffect(() => {
     const keyboardListener = Keyboard.addListener('keyboardDidShow', () => {
-      scrollToIndex(currentItemIndex);
+      scrollToCurrentIndex();
     });
     return () => keyboardListener.remove();
-  }, [currentItemIndex, scrollToIndex]);
+  }, [scrollToCurrentIndex]);
 
   const handleItemSelected = useCallback((index: number) => {
     setCurrentItemIndex(index);
@@ -134,116 +182,126 @@ const SetEstimatedCostsPage = () => {
     if (currentItemIndex < allAvailableCostItems.length - 1) setCurrentItemIndex(currentItemIndex + 1);
   }, [currentCostSummary, currentItemIndex, allAvailableCostItems]);
 
-  const dismissKeyboard = useCallback(() => {
-    Keyboard.dismiss();
+  const fakeView = useAnimatedStyle(() => {
+    return {
+      height: Math.abs(height.value),
+      marginBottom: height.value > 0 ? 0 : PADDING_BOTTOM,
+    };
   }, []);
 
-  return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: `${projectName}`, headerShown: true }} />
+  const layoutChanged = useCallback(
+    (event: LayoutChangeEvent): void => {
+      scrollToCurrentIndex();
+    },
+    [scrollToCurrentIndex],
+  );
 
-      <View
-        style={[
-          styles.container,
-          styles.modalBackground,
-          { backgroundColor: colors.modalOverlayBackgroundColor },
-        ]}
-      >
-        <TouchableWithoutFeedback onPress={dismissKeyboard}>
-          <KeyboardAvoidingView
-            style={styles.modalContainer}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 105}
-          >
-            <View style={{ flex: 1 }}>
-              <View style={{ paddingHorizontal: 10 }}>
-                <Text txtSize="sub-title" style={styles.modalTitle}>
-                  Set Price Estimates
-                </Text>
-                <OptionPickerItem
-                  containerStyle={styles.inputContainer}
-                  optionLabel={pickedCategoryOption?.label}
-                  label="Category"
-                  placeholder="Select a Category"
-                  editable={false}
-                  onPickerButtonPress={() => setIsCategoryPickerVisible(true)}
-                />
-              </View>
-              {allAvailableCostItems.length > 0 && (
-                <>
+  return (
+    <>
+      <Stack.Screen options={{ title: `${projectName}`, headerShown: true }} />
+      <View style={styles.modalContainer}>
+        <View style={{ flex: 1 }}>
+          <View style={{ paddingHorizontal: 10 }}>
+            <Text txtSize="sub-title" style={styles.modalTitle}>
+              Set Price Estimates
+            </Text>
+            <OptionPickerItem
+              containerStyle={styles.inputContainer}
+              optionLabel={pickedCategoryOption?.label}
+              label="Category"
+              placeholder="Select a Category"
+              editable={false}
+              onPickerButtonPress={() => setIsCategoryPickerVisible(true)}
+            />
+          </View>
+          {allAvailableCostItems.length > 0 && (
+            <>
+              <View
+                style={{
+                  width: '100%',
+                  backgroundColor: colors.listBackground,
+                  padding: 10,
+                  marginVertical: 10,
+                }}
+              >
+                <View
+                  style={{
+                    borderRadius: 5,
+                    padding: 10,
+                  }}
+                >
                   <View
                     style={{
-                      width: '100%',
-                      backgroundColor: colors.listBackground,
-                      padding: 10,
-                      marginVertical: 10,
+                      flexDirection: 'row',
+                      alignItems: 'center',
                     }}
                   >
-                    <View
-                      style={{
-                        borderRadius: 5,
-                        padding: 10,
-                      }}
-                    >
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <Text text="Estimate" txtSize="standard" style={{ marginRight: 10 }} />
-                        <View style={{ flex: 1 }}>
-                          <NumberInputField
-                            value={itemEstimate}
-                            onChange={setItemEstimate}
-                            placeholder="Estimated Amount"
-                          />
-                        </View>
-                      </View>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
-                        <ActionButton
-                          style={styles.saveButton}
-                          onPress={updateBidEstimate}
-                          type={'ok'}
-                          title="Save"
-                        />
-                        <ActionButton
-                          style={styles.cancelButton}
-                          onPress={skipToNext}
-                          type={'cancel'}
-                          title="Skip"
-                        />
-                      </View>
+                    <Text text="Estimate" txtSize="standard" style={{ marginRight: 10 }} />
+                    <View style={{ flex: 1 }}>
+                      <NumberInputField
+                        value={itemEstimate}
+                        onChange={setItemEstimate}
+                        placeholder="Estimated Amount"
+                      />
                     </View>
                   </View>
-                  <FlatList
-                    keyboardShouldPersistTaps="handled"
-                    ref={flatListRef}
-                    style={{ borderTopWidth: 1, borderColor: colors.border }}
-                    data={allAvailableCostItems}
-                    keyExtractor={(item) => item.id}
-                    getItemLayout={(data, index) => ({
-                      length: 40,
-                      offset: 40 * index,
-                      index,
-                    })}
-                    renderItem={({ item, index }) =>
-                      renderItem(
-                        item,
-                        index,
-                        currentItemIndex,
-                        currentCategory,
-                        colors,
-                        handleItemSelected,
-                        allWorkItems.find((wi) => wi.id === item.workItemId),
-                      )
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+                    <ActionButton
+                      style={styles.saveButton}
+                      onPress={updateBidEstimate}
+                      type={'ok'}
+                      title="Save"
+                    />
+                    <ActionButton
+                      style={styles.cancelButton}
+                      onPress={skipToNext}
+                      type={'cancel'}
+                      title="Skip"
+                    />
+                  </View>
+                </View>
+              </View>
+              <FlatList
+                keyboardShouldPersistTaps="handled"
+                onLayout={layoutChanged}
+                ref={flatListRef}
+                style={{ borderTopWidth: 1, borderColor: colors.border }}
+                data={allAvailableCostItems}
+                keyExtractor={(item) => item.id}
+                getItemLayout={(data, index) => ({
+                  length: LISTITEM_HEIGHT,
+                  offset: LISTITEM_HEIGHT * index,
+                  index,
+                })}
+                renderItem={({ item, index }) =>
+                  renderItem(
+                    item,
+                    index,
+                    currentItemIndex,
+                    currentCategory,
+                    colors,
+                    handleItemSelected,
+                    allWorkItems.find((wi) => wi.id === item.workItemId),
+                  )
+                }
+                onScrollToIndexFailed={({ index, highestMeasuredFrameIndex, averageItemLength }) => {
+                  if (flatListRef.current) {
+                    if (index > highestMeasuredFrameIndex) {
+                      flatListRef.current.scrollToEnd({ animated: true });
+                    } else {
+                      flatListRef.current.scrollToOffset({
+                        offset: averageItemLength * index,
+                        animated: true,
+                      });
                     }
-                  />
-                </>
-              )}
-            </View>
-          </KeyboardAvoidingView>
-        </TouchableWithoutFeedback>
+                  }
+                }}
+              />
+              <Animated.View style={fakeView} />
+              <KeyboardToolbar />
+            </>
+          )}
+        </View>
       </View>
       {isCategoryPickerVisible && (
         <BottomSheetContainer
@@ -257,7 +315,7 @@ const SetEstimatedCostsPage = () => {
           />
         </BottomSheetContainer>
       )}
-    </SafeAreaView>
+    </>
   );
 };
 
@@ -276,7 +334,7 @@ const renderItem = (
       <View
         style={{
           flexDirection: 'row',
-          height: 40,
+          height: LISTITEM_HEIGHT,
           paddingLeft: 5,
           alignItems: 'center',
           borderBottomWidth: StyleSheet.hairlineWidth,
@@ -345,31 +403,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 5,
     paddingHorizontal: 8,
-    height: 40,
+    height: LISTITEM_HEIGHT,
     paddingVertical: 0,
-  },
-  gpsButtonContainer: {
-    flexDirection: 'row',
-    width: '100%',
-    justifyContent: 'space-between',
-  },
-  gpsButton: {
-    flex: 1,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 10, // Rounded edges
-  },
-  gpsButtonLeft: {
-    marginRight: 10, // Add margin between the two buttons
-  },
-  gpsButtonRight: {
-    marginLeft: 10, // Add margin between the two buttons
-  },
-  gpsButtonText: {
-    fontSize: 16,
-    fontWeight: 'semibold',
   },
   saveButtonRow: {
     marginTop: 10,
