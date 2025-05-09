@@ -12,6 +12,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as TinyBaseProvider } from 'tinybase/ui-react';
@@ -62,21 +63,23 @@ function RootLayoutNav() {
       <ClerkLoaded>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <TinyBaseProvider>
-            <ActiveProjectIdsProvider>
-              <AuthorizedStoresProvider />
-              <ColorsProvider>
-                <SafeAreaProvider>
-                  <GestureHandlerRootView>
-                    <Stack screenOptions={{ headerShown: false }}>
-                      <Stack.Screen name="index" />
-                      <Stack.Screen name="projects" />
-                      <Stack.Screen name="(auth)" />
-                    </Stack>
-                    <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-                  </GestureHandlerRootView>
-                </SafeAreaProvider>
-              </ColorsProvider>
-            </ActiveProjectIdsProvider>
+            <KeyboardProvider>
+              <ActiveProjectIdsProvider>
+                <AuthorizedStoresProvider />
+                <ColorsProvider>
+                  <SafeAreaProvider>
+                    <GestureHandlerRootView>
+                      <Stack screenOptions={{ headerShown: false }}>
+                        <Stack.Screen name="index" />
+                        <Stack.Screen name="projects" />
+                        <Stack.Screen name="(auth)" />
+                      </Stack>
+                      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+                    </GestureHandlerRootView>
+                  </SafeAreaProvider>
+                </ColorsProvider>
+              </ActiveProjectIdsProvider>
+            </KeyboardProvider>
           </TinyBaseProvider>
         </ThemeProvider>
       </ClerkLoaded>
