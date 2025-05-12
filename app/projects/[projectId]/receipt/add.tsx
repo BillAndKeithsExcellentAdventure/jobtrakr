@@ -143,7 +143,11 @@ const AddReceiptPage = () => {
       return;
     }
 
-    const response = await ImagePicker.launchCameraAsync();
+    const response = await ImagePicker.launchCameraAsync({
+      quality: 1,
+      aspect: [2, 3],
+      allowsEditing: true,
+    });
 
     if (!response.canceled) {
       const asset = response.assets[0];
@@ -152,7 +156,7 @@ const AddReceiptPage = () => {
       const imageAddResult = await addPhotoImage(asset.uri, projectId, 'photo');
       console.log('Image Add Result:', imageAddResult);
       if (imageAddResult.status === 'Success' && imageAddResult.uri) {
-        const thumbnail = await createThumbnail(asset.uri);
+        const thumbnail = await createThumbnail(asset.uri, 80, 120);
 
         setProjectReceipt((prevReceipt) => ({
           ...prevReceipt,
@@ -243,12 +247,12 @@ const AddReceiptPage = () => {
                 onChangeText={handleNotesChange}
               />
 
-              {projectReceipt.pictureUri && (
+              {projectReceipt.thumbnail && (
                 <>
                   <View style={{ alignItems: 'center', justifyContent: 'center' }}>
                     <Image
-                      source={{ uri: projectReceipt.pictureUri }}
-                      style={{ width: 275, height: 180, marginVertical: 10 }}
+                      style={{ width: 80, height: 120, marginVertical: 10 }}
+                      source={{ uri: `data:image/png;base64,${projectReceipt.thumbnail}` }}
                     />
                   </View>
                 </>
