@@ -57,10 +57,7 @@ export const ProjectMediaList = ({
     if (selectedIds.length === 1) {
       const asset = mediaItems.find((asset) => asset.id === selectedIds[0]);
       if (asset) {
-        const tn = await createThumbnail(asset.mediaUri);
-        if (tn) {
-          setThumbnail(tn);
-        }
+        setThumbnail(asset.thumbnail);
       }
     }
   }, [mediaItems]);

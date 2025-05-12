@@ -61,7 +61,7 @@ const EditReceiptDetailsPage = () => {
     receiptDate: defaultDate.getTime(),
     thumbnail: '',
     pictureDate: 0,
-    pictureUri: '',
+    imageId: '',
     notes: '',
     markedComplete: false,
   });
