@@ -8,26 +8,21 @@ import {
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
-const SwipeableCategoryItem = ({ item, category }: { item: WorkItemData; category: WorkCategoryData }) => {
-  const router = useRouter();
-  const processDelete = useDeleteRowCallback('workItems');
-  const colors = useColors();
-
-  const handleDelete = (itemId: string) => {
-    Alert.alert(
-      'Delete Work Item',
-      'Are you sure you want to delete this item?',
-      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete(itemId) }],
-      { cancelable: true },
-    );
-  };
-
-  const RightAction = (prog: SharedValue<number>, drag: SharedValue<number>) => {
+const RightAction = React.memo(
+  ({
+    onDelete,
+    prog,
+    drag,
+  }: {
+    onDelete: () => void;
+    prog: SharedValue<number>;
+    drag: SharedValue<number>;
+  }) => {
     const styleAnimation = useAnimatedStyle(() => {
       return {
         transform: [{ translateX: drag.value + 100 }],
@@ -35,18 +30,38 @@ const SwipeableCategoryItem = ({ item, category }: { item: WorkItemData; categor
     });
 
     return (
-      <Pressable
-        onPress={() => {
-          prog.value = 0;
-          handleDelete(item.id);
-        }}
-      >
+      <Pressable onPress={onDelete}>
         <Reanimated.View style={[styleAnimation, styles.rightAction]}>
           <MaterialIcons name="delete" size={24} color="white" />
         </Reanimated.View>
       </Pressable>
     );
-  };
+  },
+);
+
+const SwipeableCategoryItem = ({ item, category }: { item: WorkItemData; category: WorkCategoryData }) => {
+  const router = useRouter();
+  const processDelete = useDeleteRowCallback('workItems');
+  const colors = useColors();
+
+  const handleDelete = useCallback(
+    (itemId: string) => {
+      Alert.alert(
+        'Delete Work Item',
+        'Are you sure you want to delete this item?',
+        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete(itemId) }],
+        { cancelable: true },
+      );
+    },
+    [processDelete],
+  );
+
+  const renderRightActions = useCallback(
+    (prog: SharedValue<number>, drag: SharedValue<number>) => {
+      return <RightAction onDelete={() => handleDelete(item.id)} prog={prog} drag={drag} />;
+    },
+    [handleDelete, item.id],
+  );
 
   return (
     <ReanimatedSwipeable
@@ -54,7 +69,7 @@ const SwipeableCategoryItem = ({ item, category }: { item: WorkItemData; categor
       friction={2}
       enableTrackpadTwoFingerGesture
       rightThreshold={40}
-      renderRightActions={RightAction}
+      renderRightActions={renderRightActions}
       overshootRight={false}
       enableContextMenu
     >

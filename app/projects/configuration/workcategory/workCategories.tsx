@@ -4,6 +4,7 @@ import { useColors } from '@/context/ColorsContext';
 import {
   useAddRowCallback,
   useAllRows,
+  WorkCategoryCodeCompareAsNumber,
   WorkCategoryData,
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Ionicons } from '@expo/vector-icons'; // Right caret icon
@@ -17,7 +18,7 @@ import SwipeableCategory from './SwipeableCategory';
 
 const ListWorkCategories = () => {
   const addWorkCategory = useAddRowCallback('categories');
-  const allCategories = useAllRows('categories');
+  const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
   const [showAdd, setShowAdd] = useState(false);
   const [category, setCategory] = useState<WorkCategoryData>({
     id: '',

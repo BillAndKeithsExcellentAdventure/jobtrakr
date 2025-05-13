@@ -4,7 +4,7 @@ import { ColorSchemeColors, useColors } from '@/context/ColorsContext';
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
@@ -13,6 +13,32 @@ import { useDeleteRowCallback } from '@/tbStores/projectDetails/ProjectDetailsSt
 import { formatCurrency } from '@/utils/formatters';
 
 const ITEM_HEIGHT = 45;
+
+const RightAction = React.memo(
+  ({
+    onDelete,
+    prog,
+    drag,
+  }: {
+    onDelete: () => void;
+    prog: SharedValue<number>;
+    drag: SharedValue<number>;
+  }) => {
+    const styleAnimation = useAnimatedStyle(() => {
+      return {
+        transform: [{ translateX: drag.value + 100 }],
+      };
+    });
+
+    return (
+      <Pressable onPress={onDelete}>
+        <Reanimated.View style={[styleAnimation, styles.rightAction]}>
+          <MaterialIcons name="delete" size={24} color="white" />
+        </Reanimated.View>
+      </Pressable>
+    );
+  },
+);
 
 const SwipeableCostSummary = ({
   item,
@@ -29,34 +55,24 @@ const SwipeableCostSummary = ({
   const removeCostItemSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
   const colors = useColors();
 
-  const handleDelete = (itemId: string) => {
-    Alert.alert(
-      'Delete Cost Summary',
-      'Are you sure you want to delete this cost item summary?',
-      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeCostItemSummary(itemId) }],
-      { cancelable: true },
-    );
-  };
+  const handleDelete = useCallback(
+    (itemId: string) => {
+      Alert.alert(
+        'Delete Cost Summary',
+        'Are you sure you want to delete this cost item summary?',
+        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeCostItemSummary(itemId) }],
+        { cancelable: true },
+      );
+    },
+    [removeCostItemSummary],
+  );
 
-  const RightAction = (prog: SharedValue<number>, drag: SharedValue<number>) => {
-    const styleAnimation = useAnimatedStyle(() => {
-      return {
-        transform: [{ translateX: drag.value + 100 }],
-      };
-    });
-
-    return (
-      <Pressable
-        onPress={() => {
-          handleDelete(item.id);
-        }}
-      >
-        <Reanimated.View style={[styleAnimation, styles.rightAction]}>
-          <MaterialIcons name="delete" size={24} color="white" />
-        </Reanimated.View>
-      </Pressable>
-    );
-  };
+  const renderRightActions = useCallback(
+    (prog: SharedValue<number>, drag: SharedValue<number>) => {
+      return <RightAction onDelete={() => handleDelete(item.id)} prog={prog} drag={drag} />;
+    },
+    [handleDelete, item.id],
+  );
 
   return (
     <ReanimatedSwipeable
@@ -64,7 +80,7 @@ const SwipeableCostSummary = ({
       friction={2}
       enableTrackpadTwoFingerGesture
       rightThreshold={ITEM_HEIGHT}
-      renderRightActions={RightAction}
+      renderRightActions={renderRightActions}
       overshootRight={false}
       enableContextMenu
     >

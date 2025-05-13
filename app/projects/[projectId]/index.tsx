@@ -3,7 +3,11 @@ import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { Text, View } from '@/components/Themed';
 import { ColorSchemeColors, useColors } from '@/context/ColorsContext';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
-import { useAllRows as useAllConfigRows } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  useAllRows as useAllConfigRows,
+  WorkCategoryCodeCompareAsNumber,
+  WorkItemDataCodeCompareAsNumber,
+} from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   useProject,
   useDeleteProjectCallback,
@@ -28,6 +32,19 @@ import { StyleSheet, Alert, SectionList } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableCostSummary from './SwipeableCostSummary';
+import { FlashList } from '@shopify/flash-list';
+
+export function CostItemDataCodeCompareAsNumber(a: CostItemData, b: CostItemData) {
+  const aValue = Number(a.code);
+  const bValue = Number(b.code);
+  return (aValue as number) - (bValue as number);
+}
+
+export function CostSectionDataCodeCompareAsNumber(a: CostSectionData, b: CostSectionData) {
+  const aValue = Number(a.code);
+  const bValue = Number(b.code);
+  return (aValue as number) - (bValue as number);
+}
 
 export interface CostItemData {
   id: string;
@@ -38,13 +55,12 @@ export interface CostItemData {
 }
 
 export interface CostSectionData {
-  id: string;
+  categoryId: string;
   code: string;
   title: string;
   totalBidAmount: number;
   totalSpentAmount: number;
   data: CostItemData[];
-  isExpanded: boolean;
 }
 
 const ITEM_HEIGHT = 45;
@@ -56,8 +72,8 @@ const ProjectDetailsPage = () => {
   const projectData = useProject(projectId);
   const processDeleteProject = useDeleteProjectCallback();
   const { removeActiveProjectId, addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
-  const allProjectCategories = useAllConfigRows('categories');
-  const allWorkItems = useAllConfigRows('workItems');
+  const allProjectCategories = useAllConfigRows('categories', WorkCategoryCodeCompareAsNumber);
+  const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
@@ -74,7 +90,6 @@ const ProjectDetailsPage = () => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
   }, [projectId, activeProjectIds, isStoreReady]);
 
-  const [expandedSectionId, setExpandedSectionId] = useState<string>('');
   useSeedWorkItemsIfNecessary(projectId);
   useCostUpdater(projectId);
   useBidAmountUpdater(projectId);
@@ -94,15 +109,14 @@ const ProjectDetailsPage = () => {
         .filter((i) => i.workItemId === workItem.id)
         .reduce((sum, item) => sum + item.amount, 0);
 
-      let section = sections.find((sec) => sec.id === category.id);
+      let section = sections.find((sec) => sec.categoryId === category.id);
       if (!section) {
         section = {
-          id: category.id,
+          categoryId: category.id,
           code: category.code,
           title: category.name,
           totalBidAmount: 0,
           totalSpentAmount: 0,
-          isExpanded: expandedSectionId === category.id,
           data: [],
         };
         sections.push(section);
@@ -122,8 +136,8 @@ const ProjectDetailsPage = () => {
       section.totalSpentAmount = section.data.reduce((sum, item) => sum + item.spentAmount, 0);
     });
 
-    return sections;
-  }, [allWorkItemSummaries, allWorkItems, allProjectCategories, expandedSectionId, allActualCostItems]);
+    return sections.sort(CostSectionDataCodeCompareAsNumber);
+  }, [allWorkItemSummaries, allWorkItems, allProjectCategories, allActualCostItems]);
 
   const handleMenuItemPress = useCallback(
     (menuItem: string, actionContext: any) => {
@@ -187,8 +201,68 @@ const ProjectDetailsPage = () => {
     [colors, allWorkItemSummaries, handleMenuItemPress],
   );
 
-  const toggleSection = (id: string) => {
-    setExpandedSectionId((prevId) => (prevId === id ? '' : id));
+  const renderItem = (item: CostSectionData, projectId: string) => {
+    const showSection = (): void => {
+      // use router to push to the cost items page
+      router.push({
+        pathname: '/projects/[projectId]/costItems/[categoryId]',
+        params: {
+          projectId,
+          categoryId: item.categoryId,
+          bidAmount: formatCurrency(item.totalBidAmount, true, true),
+          spentAmount: formatCurrency(item.totalSpentAmount, true, true),
+        },
+      });
+    };
+
+    return (
+      <View
+        style={[
+          styles.header,
+          {
+            borderColor: colors.border,
+            backgroundColor: colors.listBackground,
+            borderBottomWidth: 1,
+            alignItems: 'center',
+            height: ITEM_HEIGHT,
+          },
+        ]}
+      >
+        <Pressable style={{ flex: 1 }} onPress={showSection} hitSlop={10}>
+          <View
+            style={{
+              flexDirection: 'row',
+              backgroundColor: colors.listBackground,
+            }}
+          >
+            <Text
+              numberOfLines={1}
+              style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden', color: colors.sectionFG }}
+              text={item.title}
+            />
+            <Text
+              style={{ width: 100, textAlign: 'right', color: colors.sectionFG }}
+              text={formatCurrency(item.totalBidAmount, false, true)}
+            />
+            <Text
+              style={{ width: 100, textAlign: 'right', color: colors.sectionFG }}
+              text={formatCurrency(item.totalSpentAmount, false, true)}
+            />
+            <View
+              style={{
+                width: 36,
+                paddingLeft: 5,
+                alignItems: 'center',
+                backgroundColor: colors.listBackground,
+                justifyContent: 'center',
+              }}
+            >
+              <MaterialIcons name={'chevron-right'} size={24} color={colors.sectionFG} />
+            </View>
+          </View>
+        </Pressable>
+      </View>
+    );
   };
 
   if (!projectData) {
@@ -256,23 +330,13 @@ const ProjectDetailsPage = () => {
                 <Text style={{ width: 100, textAlign: 'right' }} text="Estimate $" />
                 <Text style={{ width: 100, textAlign: 'right' }} text="Spent $" />
               </View>
-              <SectionList
+              <FlashList
                 showsVerticalScrollIndicator={false}
-                stickySectionHeadersEnabled={false}
-                sections={sectionData}
-                renderItem={({ item, section }) =>
-                  section.isExpanded ? (
-                    <SwipeableCostSummary
-                      item={item}
-                      sectionId={section.id}
-                      sectionCode={section.code}
-                      projectId={projectId}
-                    />
-                  ) : null
-                }
-                renderSectionHeader={({ section }) => renderSectionHeader(section, toggleSection, colors)}
-                keyExtractor={(item) => item.id}
+                data={sectionData}
+                renderItem={({ item }) => renderItem(item, projectId)}
+                keyExtractor={(item) => item.categoryId}
                 ListEmptyComponent={<Text>No data available</Text>}
+                estimatedItemSize={ITEM_HEIGHT}
               />
             </View>
           </>
@@ -286,65 +350,6 @@ const ProjectDetailsPage = () => {
         />
       )}
     </SafeAreaView>
-  );
-};
-
-const renderSectionHeader = (
-  section: CostSectionData,
-  toggleSection: (id: string) => void,
-  colors: ColorSchemeColors,
-) => {
-  return (
-    <View
-      style={[
-        styles.header,
-        {
-          borderColor: colors.border,
-          backgroundColor: colors.listBackground,
-          borderBottomWidth: 1,
-          alignItems: 'center',
-          height: ITEM_HEIGHT,
-        },
-      ]}
-    >
-      <Pressable style={{ flex: 1 }} onPress={() => toggleSection(section.id)} hitSlop={10}>
-        <View
-          style={{
-            flexDirection: 'row',
-            backgroundColor: colors.listBackground,
-          }}
-        >
-          <Text
-            numberOfLines={1}
-            style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden', color: colors.sectionFG }}
-            text={section.title}
-          />
-          <Text
-            style={{ width: 100, textAlign: 'right', color: colors.sectionFG }}
-            text={formatCurrency(section.totalBidAmount, false, true)}
-          />
-          <Text
-            style={{ width: 100, textAlign: 'right', color: colors.sectionFG }}
-            text={formatCurrency(section.totalSpentAmount, false, true)}
-          />
-          <View
-            style={{
-              width: 36,
-              paddingLeft: 5,
-              alignItems: 'center',
-              backgroundColor: colors.listBackground,
-              justifyContent: 'center',
-            }}
-          >
-            <Ionicons
-              name={section.isExpanded ? 'chevron-up-sharp' : 'chevron-down-sharp'}
-              size={20}
-              color={colors.sectionFG}
-            />
-          </View>
-        </View>
-      </Pressable>
-    </View>
   );
 };
 
