@@ -14,6 +14,32 @@ import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeabl
 import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import { Pressable } from 'react-native-gesture-handler';
 
+const RightAction = React.memo(
+  ({
+    onDelete,
+    prog,
+    drag,
+  }: {
+    onDelete: () => void;
+    prog: SharedValue<number>;
+    drag: SharedValue<number>;
+  }) => {
+    const styleAnimation = useAnimatedStyle(() => {
+      return {
+        transform: [{ translateX: drag.value + 100 }],
+      };
+    });
+
+    return (
+      <Pressable onPress={onDelete}>
+        <Reanimated.View style={[styleAnimation, styles.rightAction]}>
+          <MaterialIcons name="delete" size={24} color="white" />
+        </Reanimated.View>
+      </Pressable>
+    );
+  },
+);
+
 const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
   const processDelete = useDeleteRowCallback('categories');
   const router = useRouter();
@@ -31,26 +57,21 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
     [processDelete],
   );
 
-  const RightAction = (prog: SharedValue<number>, drag: SharedValue<number>) => {
-    const styleAnimation = useAnimatedStyle(() => {
-      return {
-        transform: [{ translateX: drag.value + 100 }],
-      };
-    });
-
-    return (
-      <Pressable
-        onPress={() => {
-          prog.value = 0;
-          handleDelete(category.id);
-        }}
-      >
-        <Reanimated.View style={[styleAnimation, styles.rightAction]}>
-          <MaterialIcons name="delete" size={24} color="white" />
-        </Reanimated.View>
-      </Pressable>
-    );
-  };
+  const renderRightActions = useCallback(
+    (prog: SharedValue<number>, drag: SharedValue<number>) => {
+      return (
+        <RightAction
+          onDelete={() => {
+            prog.value = 0;
+            handleDelete(category.id);
+          }}
+          prog={prog}
+          drag={drag}
+        />
+      );
+    },
+    [handleDelete, category.id],
+  );
 
   const name = useTableValue('categories', category.id, 'name');
   const code = useTableValue('categories', category.id, 'code');
@@ -61,7 +82,7 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
       friction={2}
       enableTrackpadTwoFingerGesture
       rightThreshold={40}
-      renderRightActions={RightAction}
+      renderRightActions={renderRightActions}
       overshootRight={false}
       enableContextMenu
     >

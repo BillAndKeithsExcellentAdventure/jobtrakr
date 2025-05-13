@@ -7,26 +7,21 @@ import {
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
-const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: ProjectTemplateData }) => {
-  const router = useRouter();
-  const removeProjectTemplate = useDeleteRowCallback('templates');
-  const colors = useColors();
-
-  const handleDelete = (itemId: string) => {
-    Alert.alert(
-      'Delete Project Template',
-      'Are you sure you want to delete this project template?',
-      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeProjectTemplate(itemId) }],
-      { cancelable: true },
-    );
-  };
-
-  const RightAction = (prog: SharedValue<number>, drag: SharedValue<number>) => {
+const RightAction = React.memo(
+  ({
+    onDelete,
+    prog,
+    drag,
+  }: {
+    onDelete: () => void;
+    prog: SharedValue<number>;
+    drag: SharedValue<number>;
+  }) => {
     const styleAnimation = useAnimatedStyle(() => {
       return {
         transform: [{ translateX: drag.value + 100 }],
@@ -34,17 +29,38 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
     });
 
     return (
-      <Pressable
-        onPress={() => {
-          handleDelete(projectTemplate.id);
-        }}
-      >
+      <Pressable onPress={onDelete}>
         <Reanimated.View style={[styleAnimation, styles.rightAction]}>
           <MaterialIcons name="delete" size={24} color="white" />
         </Reanimated.View>
       </Pressable>
     );
-  };
+  },
+);
+
+const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: ProjectTemplateData }) => {
+  const router = useRouter();
+  const removeProjectTemplate = useDeleteRowCallback('templates');
+  const colors = useColors();
+
+  const handleDelete = useCallback(
+    (itemId: string) => {
+      Alert.alert(
+        'Delete Project Template',
+        'Are you sure you want to delete this project template?',
+        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeProjectTemplate(itemId) }],
+        { cancelable: true },
+      );
+    },
+    [removeProjectTemplate],
+  );
+
+  const renderRightActions = useCallback(
+    (prog: SharedValue<number>, drag: SharedValue<number>) => {
+      return <RightAction onDelete={() => handleDelete(projectTemplate.id)} prog={prog} drag={drag} />;
+    },
+    [handleDelete, projectTemplate.id],
+  );
 
   return (
     <ReanimatedSwipeable
@@ -52,7 +68,7 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
       friction={2}
       enableTrackpadTwoFingerGesture
       rightThreshold={40}
-      renderRightActions={RightAction}
+      renderRightActions={renderRightActions}
       overshootRight={false}
       enableContextMenu
     >
