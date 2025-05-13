@@ -32,7 +32,12 @@ const LISTITEM_HEIGHT = 40;
 const SetEstimatedCostsPage = () => {
   const colors = useColors();
   const router = useRouter();
-  const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
+  const { projectId, projectName, categoryId } = useLocalSearchParams<{
+    projectId: string;
+    projectName: string;
+    categoryId?: string;
+  }>();
+
   const currentProject = useProject(projectId);
   const updatedProject = useUpdateProjectCallback();
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
@@ -61,6 +66,15 @@ const SetEstimatedCostsPage = () => {
       }));
     return uniqueCategories;
   }, [allWorkItemCostSummaries, allWorkItems, allWorkCategories]);
+
+  useEffect(() => {
+    if (categoryId && availableCategoriesOptions.length > 0) {
+      const matchingOption = availableCategoriesOptions.find((o) => o.value === categoryId);
+      if (matchingOption) {
+        setPickedCategoryOption(matchingOption);
+      }
+    }
+  }, [categoryId, availableCategoriesOptions]);
 
   const allAvailableCostItems: WorkItemSummaryData[] = useMemo(() => {
     const currentCategoryId = pickedCategoryOption ? pickedCategoryOption.value : '';
@@ -122,11 +136,16 @@ const SetEstimatedCostsPage = () => {
   const handleCategoryChange = useCallback(
     (selectedCategory: OptionEntry) => {
       setPickedCategoryOption(selectedCategory);
-      setCurrentCategory(allWorkCategories.find((c) => c.id === selectedCategory.value));
       setCurrentItemIndex(0);
     },
     [allWorkCategories],
   );
+
+  useEffect(() => {
+    if (pickedCategoryOption) {
+      setCurrentCategory(allWorkCategories.find((c) => c.id === pickedCategoryOption.value));
+    }
+  }, [pickedCategoryOption]);
 
   const handleCategoryOptionChange = (option: OptionEntry) => {
     if (option) {
