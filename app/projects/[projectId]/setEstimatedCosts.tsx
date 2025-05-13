@@ -20,7 +20,7 @@ import {
 import { formatCurrency } from '@/utils/formatters';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { InteractionManager, Keyboard, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
@@ -172,9 +172,15 @@ const SetEstimatedCostsPage = () => {
     };
   }, []);
 
+  const prevLayoutHeightRef = useRef(0);
+
   const layoutChanged = useCallback(
     (event: LayoutChangeEvent): void => {
-      scrollToCurrentIndex();
+      const newLayout = event.nativeEvent.layout;
+      if (Math.abs(newLayout.height - prevLayoutHeightRef.current) > 50) {
+        prevLayoutHeightRef.current = newLayout.height;
+        scrollToCurrentIndex();
+      }
     },
     [scrollToCurrentIndex],
   );
