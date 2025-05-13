@@ -1,21 +1,21 @@
-import { Pressable, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useEffect, useMemo, useState } from 'react';
-import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useColors } from '@/context/ColorsContext';
+import { ActionButtonProps } from '@/components/ButtonBar';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
-import { formatDate, formatCurrency } from '@/utils/formatters';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { FlashList } from '@shopify/flash-list';
 import { Text, View } from '@/components/Themed';
-import { useAllRows, useIsStoreAvailableCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
-import { useProject } from '@/tbStores/listOfProjects/ListOfProjectsStore';
+import { useColors } from '@/context/ColorsContext';
 import {
   useAllRows as useAllConfigRows,
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useProject } from '@/tbStores/listOfProjects/ListOfProjectsStore';
+import { useAllRows, useIsStoreAvailableCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
+import { FlashList } from '@shopify/flash-list';
+import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Pressable, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { CostItemData, CostItemDataCodeCompareAsNumber } from '../../index';
 import SwipeableCostSummary from '../../SwipeableCostSummary';
 
@@ -38,6 +38,7 @@ const CategorySpecificCostItemsPage = () => {
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
   const allProjectCategories = useAllConfigRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
+  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
 
   useEffect(() => {
     if (projectId) {
@@ -84,6 +85,38 @@ const CategorySpecificCostItemsPage = () => {
     return costItems.sort(CostItemDataCodeCompareAsNumber);
   }, [allWorkItemSummaries, allWorkItems, allActualCostItems, categoryId]);
 
+  const handleMenuItemPress = useCallback(
+    (menuItem: string, actionContext: any) => {
+      setHeaderMenuModalVisible(false);
+      if (menuItem === 'SetEstimates' && projectId) {
+        router.push(
+          `/projects/${projectId}/setEstimatedCosts/?projectName=${encodeURIComponent(
+            projectData!.name,
+          )}&categoryId=${categoryId}`,
+        );
+        return;
+      }
+    },
+    [projectId, projectData, router],
+  );
+
+  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
+    () => [
+      ...(allWorkItemSummaries.length > 0
+        ? [
+            {
+              icon: <FontAwesome5 name="search-dollar" size={28} color={colors.iconColor} />,
+              label: 'Set Estimate Costs',
+              onPress: (e, actionContext) => {
+                handleMenuItemPress('SetEstimates', actionContext);
+              },
+            } as ActionButtonProps,
+          ]
+        : []),
+    ],
+    [colors, allWorkItemSummaries, handleMenuItemPress],
+  );
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <>
@@ -91,6 +124,23 @@ const CategorySpecificCostItemsPage = () => {
           options={{
             headerShown: true,
             title: 'Cost Breakdown',
+            headerRight: () => (
+              <Pressable
+                style={{ marginRight: 0 }}
+                onPress={() => {
+                  setHeaderMenuModalVisible(!headerMenuModalVisible);
+                }}
+              >
+                {({ pressed }) => (
+                  <MaterialCommunityIcons
+                    name="menu"
+                    size={28}
+                    color={colors.iconColor}
+                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                  />
+                )}
+              </Pressable>
+            ),
           }}
         />
 
@@ -154,6 +204,13 @@ const CategorySpecificCostItemsPage = () => {
             </>
           )}
         </View>
+        {costItemSummaries.length > 0 && headerMenuModalVisible && (
+          <RightHeaderMenu
+            modalVisible={headerMenuModalVisible}
+            setModalVisible={setHeaderMenuModalVisible}
+            buttons={rightHeaderMenuButtons}
+          />
+        )}
       </>
     </SafeAreaView>
   );
