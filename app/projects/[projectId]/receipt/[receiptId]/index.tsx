@@ -80,7 +80,13 @@ const ReceiptDetailsPage = () => {
     router.push(`/projects/${projectId}/receipt/${receiptId}/addLineItem`);
   }, [receipt, receiptId]);
 
-  const requestAIProcessing = useCallback(() => {}, []);
+  const requestAIProcessing = useCallback(() => {
+    console.log(
+      `requestAIProcessing - route = /projects/${projectId}/receipt/${receiptId}/requestAIProcessing`,
+    );
+    router.push(`/projects/${projectId}/receipt/${receiptId}/requestAIProcessing?imageId=${receipt.imageId}`);
+  }, []);
+
   const [containerHeight, setContainerHeight] = useState(0);
 
   const onLayout = (event: LayoutChangeEvent) => {
