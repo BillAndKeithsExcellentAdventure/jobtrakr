@@ -14,10 +14,11 @@ import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CostItemData, CostItemDataCodeCompareAsNumber } from '../../index';
 import SwipeableCostSummary from '../../SwipeableCostSummary';
+import { Pressable } from 'react-native-gesture-handler';
 
 const ITEM_HEIGHT = 45;
 
@@ -102,116 +103,107 @@ const CategorySpecificCostItemsPage = () => {
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
-      ...(allWorkItemSummaries.length > 0
-        ? [
-            {
-              icon: <FontAwesome5 name="search-dollar" size={28} color={colors.iconColor} />,
-              label: 'Set Estimate Costs',
-              onPress: (e, actionContext) => {
-                handleMenuItemPress('SetEstimates', actionContext);
-              },
-            } as ActionButtonProps,
-          ]
-        : []),
+      {
+        icon: <FontAwesome5 name="search-dollar" size={28} color={colors.iconColor} />,
+        label: 'Set Estimate Costs',
+        onPress: (e, actionContext) => {
+          handleMenuItemPress('SetEstimates', actionContext);
+        },
+      } as ActionButtonProps,
     ],
     [colors, allWorkItemSummaries, handleMenuItemPress],
   );
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <>
-        <Stack.Screen
-          options={{
-            headerShown: true,
-            title: 'Cost Breakdown',
-            headerRight: () => (
-              <Pressable
-                style={{ marginRight: 0 }}
-                onPress={() => {
-                  setHeaderMenuModalVisible(!headerMenuModalVisible);
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Cost Breakdown',
+          headerRight: () => (
+            <Pressable
+              style={{ marginRight: 0 }}
+              onPress={() => {
+                setHeaderMenuModalVisible(!headerMenuModalVisible);
+              }}
+            >
+              {({ pressed }) => (
+                <MaterialCommunityIcons
+                  name="menu"
+                  size={28}
+                  color={colors.iconColor}
+                  style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                />
+              )}
+            </Pressable>
+          ),
+        }}
+      />
+
+      <View style={styles.container}>
+        {!projectIsReady ? (
+          <Text>Loading...</Text>
+        ) : (
+          <>
+            <View style={[styles.headerContainer, { borderColor: colors.border }]}>
+              <Text txtSize="title" text={projectData.name} />
+              <Text txtSize="sub-title" text={costItemsCategory?.name} />
+              <View
+                style={{
+                  marginTop: 5,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  width: '100%',
                 }}
               >
-                {({ pressed }) => (
-                  <MaterialCommunityIcons
-                    name="menu"
-                    size={28}
-                    color={colors.iconColor}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                <Text text={`estimate: ${bidAmount}`} />
+                <Text text={`spent: ${spentAmount}`} />
+              </View>
+            </View>
+            <View style={{ flex: 1, paddingBottom: 5 }}>
+              <View style={{ marginVertical: 5, alignItems: 'center' }}>
+                <Text txtSize="title" text="Individual Cost Items" />
+              </View>
+              <View
+                style={{
+                  width: '100%',
+                  paddingLeft: 10,
+                  paddingRight: 36,
+                  paddingVertical: 5,
+                  flexDirection: 'row',
+                  backgroundColor: colors.sectionHeaderBG,
+                }}
+              >
+                <Text style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }} text="Description" />
+                <Text style={{ width: 100, textAlign: 'right' }} text="Estimate $" />
+                <Text style={{ width: 100, textAlign: 'right' }} text="Spent $" />
+              </View>
+              <FlashList
+                showsVerticalScrollIndicator={false}
+                data={costItemSummaries}
+                renderItem={({ item }) => (
+                  <SwipeableCostSummary
+                    item={item}
+                    sectionId={costItemsCategory?.id ?? ''}
+                    sectionCode={costItemsCategory?.code ?? ''}
+                    projectId={projectId}
                   />
                 )}
-              </Pressable>
-            ),
-          }}
-        />
-
-        <View style={styles.container}>
-          {!projectIsReady ? (
-            <Text>Loading...</Text>
-          ) : (
-            <>
-              <View style={[styles.headerContainer, { borderColor: colors.border }]}>
-                <Text txtSize="title" text={projectData.name} />
-                <Text txtSize="sub-title" text={costItemsCategory?.name} />
-                <View
-                  style={{
-                    marginTop: 5,
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    width: '100%',
-                  }}
-                >
-                  <Text text={`estimate: ${bidAmount}`} />
-                  <Text text={`spent: ${spentAmount}`} />
-                </View>
-              </View>
-              <View style={{ flex: 1, paddingBottom: 5 }}>
-                <View style={{ marginVertical: 5, alignItems: 'center' }}>
-                  <Text txtSize="title" text="Individual Cost Items" />
-                </View>
-                <View
-                  style={{
-                    width: '100%',
-                    paddingLeft: 10,
-                    paddingRight: 36,
-                    paddingVertical: 5,
-                    flexDirection: 'row',
-                    backgroundColor: colors.sectionHeaderBG,
-                  }}
-                >
-                  <Text
-                    style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
-                    text="Description"
-                  />
-                  <Text style={{ width: 100, textAlign: 'right' }} text="Estimate $" />
-                  <Text style={{ width: 100, textAlign: 'right' }} text="Spent $" />
-                </View>
-                <FlashList
-                  showsVerticalScrollIndicator={false}
-                  data={costItemSummaries}
-                  renderItem={({ item }) => (
-                    <SwipeableCostSummary
-                      item={item}
-                      sectionId={costItemsCategory?.id ?? ''}
-                      sectionCode={costItemsCategory?.code ?? ''}
-                      projectId={projectId}
-                    />
-                  )}
-                  keyExtractor={(item) => item.id}
-                  ListEmptyComponent={<Text>No data available</Text>}
-                  estimatedItemSize={ITEM_HEIGHT}
-                />
-              </View>
-            </>
-          )}
-        </View>
-        {costItemSummaries.length > 0 && headerMenuModalVisible && (
-          <RightHeaderMenu
-            modalVisible={headerMenuModalVisible}
-            setModalVisible={setHeaderMenuModalVisible}
-            buttons={rightHeaderMenuButtons}
-          />
+                keyExtractor={(item) => item.id}
+                ListEmptyComponent={<Text>No data available</Text>}
+                estimatedItemSize={ITEM_HEIGHT}
+              />
+            </View>
+          </>
         )}
-      </>
+      </View>
+      {headerMenuModalVisible && (
+        <RightHeaderMenu
+          modalVisible={headerMenuModalVisible}
+          setModalVisible={setHeaderMenuModalVisible}
+          buttons={rightHeaderMenuButtons}
+        />
+      )}
     </SafeAreaView>
   );
 };

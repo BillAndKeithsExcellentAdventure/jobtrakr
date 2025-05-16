@@ -10,7 +10,6 @@ import React, { useCallback } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import { SharedValue } from 'react-native-reanimated';
 import { CostItemData } from './index';
 
 const ITEM_HEIGHT = 45;
