@@ -55,7 +55,7 @@ export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({
   );
 };
 
-export const styles = StyleSheet.create({
+const styles = StyleSheet.create({
   imageContentContainer: {
     marginRight: 10,
     width: 120,

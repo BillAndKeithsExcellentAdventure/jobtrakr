@@ -1,140 +1,29 @@
 import { ActionButton } from '@/components/ActionButton';
 import { Text, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useColors } from '@/context/ColorsContext';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
+import { useColors } from '@/context/ColorsContext';
 import { FlashList } from '@shopify/flash-list';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Platform, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import { StyleSheet } from 'react-native';
 
-import { ReceiptSummary } from '@/components/ReceiptSummary';
 import {
   ReceiptData,
   useAddRowCallback,
   useAllRows,
-  useDeleteRowCallback,
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useAddImageCallback } from '@/utils/images';
-import { useAuth } from '@clerk/clerk-expo';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { createThumbnail } from '@/utils/thumbnailUtils';
+import { useAuth } from '@clerk/clerk-expo';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import SwipeableReceiptItem, { ITEM_HEIGHT } from './SwipeableReceiptItem';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
   return actionContext && typeof actionContext.PictureUri === 'string';
 }
-
-interface SwipeableItemProps {
-  orgId: string;
-  projectId: string;
-  item: ReceiptData;
-  onDelete: (id: string) => void;
-}
-
-const SwipeableItem: React.FC<SwipeableItemProps> = ({ orgId, projectId, item, onDelete }) => {
-  const router = useRouter();
-  const translateX = useSharedValue(0); // Shared value for horizontal translation
-
-  const [isSwiped, setIsSwiped] = useState(false); // Track if item is swiped for delete
-
-  const onShowPicture = useCallback(
-    (uri: string) => {
-      // in this component we want any presses to the receipt details page not show the image
-      router.push(`/projects/${projectId}/receipt/${item.id}`);
-    },
-    [projectId, item.id, router],
-  );
-
-  const onShowDetails = useCallback(
-    (item: ReceiptData) => {
-      router.push(`/projects/${projectId}/receipt/${item.id}`);
-    },
-    [projectId, item.id, router],
-  );
-
-  // Gesture handler for the swipe action
-  const onGestureEvent = (event: PanGestureHandlerGestureEvent) => {
-    translateX.value = event.nativeEvent.translationX; // Update translation during gesture
-  };
-
-  // Handler for gesture state change (when the swipe ends)
-  const onHandlerStateChange = (event: PanGestureHandlerGestureEvent) => {
-    if (event.nativeEvent.state === 5) {
-      // Gesture end
-      if (event.nativeEvent.translationX < -150) {
-        // Trigger delete when swiped beyond threshold
-        setIsSwiped(true);
-        translateX.value = withSpring(-100); // Animate to the delete position
-      } else {
-        // Reset position if swipe isn't enough
-        translateX.value = withSpring(0);
-        setIsSwiped(false);
-      }
-    }
-  };
-
-  // Use animated style to apply the translateX value to the component's transform
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: translateX.value }],
-    };
-  });
-
-  // Handle delete confirmation
-  const handleDelete = () => {
-    Alert.alert(
-      'Delete Receipt',
-      'Are you sure you want to delete this receipt?',
-      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => onDelete(item.id!) }],
-      { cancelable: true },
-    );
-  };
-
-  const colorScheme = useColorScheme();
-  const colors = useColors();
-
-  const boxShadow = Platform.OS === 'web' ? colors.boxShadow : undefined;
-
-  return (
-    <View
-      style={[
-        styles.itemContainer,
-        { backgroundColor: colors.itemBackground },
-        { backgroundColor: colors.itemBackground, shadowColor: colors.shadowColor, boxShadow },
-      ]}
-    >
-      <PanGestureHandler
-        onGestureEvent={onGestureEvent}
-        onHandlerStateChange={onHandlerStateChange}
-        activeOffsetX={[-10, 10]} // Used to allow vertical scrolling to not be blocked when checking for horizontal swiping
-      >
-        <Animated.View
-          style={[animatedStyle, { width: '100%' }]} // Apply animated style here
-        >
-          <ReceiptSummary
-            orgId={orgId}
-            projectId={projectId}
-            item={item}
-            onShowPicture={onShowPicture}
-            onShowDetails={onShowDetails}
-          />
-        </Animated.View>
-      </PanGestureHandler>
-      {isSwiped && (
-        <TouchableWithoutFeedback onPress={handleDelete}>
-          <View style={styles.deleteButton}>
-            <Text style={styles.deleteText}>Delete</Text>
-          </View>
-        </TouchableWithoutFeedback>
-      )}
-    </View>
-  );
-};
 
 const ProjectReceiptsPage = () => {
   const router = useRouter();
@@ -163,18 +52,6 @@ const ProjectReceiptsPage = () => {
   const allReceipts = useAllRows(projectId, 'receipts');
   const addReceiptImage = useAddImageCallback();
   const addReceipt = useAddRowCallback(projectId, 'receipts');
-  const deleteReceipt = useDeleteRowCallback(projectId, 'receipts');
-
-  const handleRemoveReceipt = useCallback(
-    async (id: string | undefined) => {
-      if (id !== undefined) {
-        const strId = id;
-        const response = await deleteReceipt(strId);
-        //  if (response.status === 'Success') removeReceiptData(strId);
-      }
-    },
-    [deleteReceipt],
-  );
 
   const colors = useColors();
 
@@ -249,7 +126,9 @@ const ProjectReceiptsPage = () => {
                 style={{
                   marginHorizontal: 10,
                   marginTop: 10,
-                  marginBottom: 10,
+                  marginBottom: 0,
+                  paddingBottom: 10,
+                  borderBottomWidth: 1,
                 }}
               >
                 <View
@@ -281,16 +160,11 @@ const ProjectReceiptsPage = () => {
                 <View style={{ flex: 1 }}>
                   <View style={{ flex: 1, width: '100%', backgroundColor: colors.listBackground }}>
                     <FlashList
-                      estimatedItemSize={150}
+                      estimatedItemSize={ITEM_HEIGHT}
                       data={allReceipts}
                       keyExtractor={(item, index) => item.id ?? index.toString()}
                       renderItem={({ item }) => (
-                        <SwipeableItem
-                          orgId={auth.orgId!!}
-                          projectId={projectId}
-                          item={item}
-                          onDelete={handleRemoveReceipt}
-                        />
+                        <SwipeableReceiptItem orgId={auth.orgId!!} projectId={projectId} item={item} />
                       )}
                     />
                   </View>
