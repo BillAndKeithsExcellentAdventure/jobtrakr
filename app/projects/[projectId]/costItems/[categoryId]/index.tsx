@@ -1,5 +1,4 @@
 import { ActionButtonProps } from '@/components/ButtonBar';
-import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { Text, View } from '@/components/Themed';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import { useColors } from '@/context/ColorsContext';
@@ -10,15 +9,15 @@ import {
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useProject } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { useAllRows, useIsStoreAvailableCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
+import { FontAwesome5 } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CostItemData, CostItemDataCodeCompareAsNumber } from '../../index';
 import SwipeableCostSummary from '../../SwipeableCostSummary';
-import { Pressable } from 'react-native-gesture-handler';
 
 const ITEM_HEIGHT = 45;
 
@@ -86,34 +85,6 @@ const CategorySpecificCostItemsPage = () => {
     return costItems.sort(CostItemDataCodeCompareAsNumber);
   }, [allWorkItemSummaries, allWorkItems, allActualCostItems, categoryId]);
 
-  const handleMenuItemPress = useCallback(
-    (menuItem: string, actionContext: any) => {
-      setHeaderMenuModalVisible(false);
-      if (menuItem === 'SetEstimates' && projectId) {
-        router.push(
-          `/projects/${projectId}/setEstimatedCosts/?projectName=${encodeURIComponent(
-            projectData!.name,
-          )}&categoryId=${categoryId}`,
-        );
-        return;
-      }
-    },
-    [projectId, projectData, router],
-  );
-
-  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
-    () => [
-      {
-        icon: <FontAwesome5 name="search-dollar" size={28} color={colors.iconColor} />,
-        label: 'Set Estimate Costs',
-        onPress: (e, actionContext) => {
-          handleMenuItemPress('SetEstimates', actionContext);
-        },
-      } as ActionButtonProps,
-    ],
-    [colors, allWorkItemSummaries, handleMenuItemPress],
-  );
-
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
@@ -124,17 +95,14 @@ const CategorySpecificCostItemsPage = () => {
             <Pressable
               style={{ marginRight: 0 }}
               onPress={() => {
-                setHeaderMenuModalVisible(!headerMenuModalVisible);
+                router.push(
+                  `/projects/${projectId}/setEstimatedCosts/?projectName=${encodeURIComponent(
+                    projectData!.name,
+                  )}&categoryId=${categoryId}`,
+                );
               }}
             >
-              {({ pressed }) => (
-                <MaterialCommunityIcons
-                  name="menu"
-                  size={28}
-                  color={colors.iconColor}
-                  style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                />
-              )}
+              <FontAwesome5 name="search-dollar" size={24} color={colors.iconColor} />
             </Pressable>
           ),
         }}
@@ -197,13 +165,6 @@ const CategorySpecificCostItemsPage = () => {
           </>
         )}
       </View>
-      {headerMenuModalVisible && (
-        <RightHeaderMenu
-          modalVisible={headerMenuModalVisible}
-          setModalVisible={setHeaderMenuModalVisible}
-          buttons={rightHeaderMenuButtons}
-        />
-      )}
     </SafeAreaView>
   );
 };
