@@ -10,9 +10,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Alert, StyleSheet } from 'react-native';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import { Pressable } from 'react-native-gesture-handler';
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 
 const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
   const processDelete = useDeleteRowCallback('categories');
@@ -31,23 +30,16 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
     [processDelete],
   );
 
-  const RightAction = (prog: SharedValue<number>, drag: SharedValue<number>) => {
-    const styleAnimation = useAnimatedStyle(() => {
-      return {
-        transform: [{ translateX: drag.value + 100 }],
-      };
-    });
-
+  const RightAction = () => {
     return (
       <Pressable
+        style={styles.rightAction}
         onPress={() => {
-          prog.value = 0;
           handleDelete(category.id);
         }}
       >
-        <Reanimated.View style={[styleAnimation, styles.rightAction]}>
-          <MaterialIcons name="delete" size={24} color="white" />
-        </Reanimated.View>
+        {' '}
+        <MaterialIcons name="delete" size={24} color="white" />
       </Pressable>
     );
   };

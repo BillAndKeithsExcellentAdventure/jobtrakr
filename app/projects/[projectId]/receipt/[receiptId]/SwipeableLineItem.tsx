@@ -12,7 +12,6 @@ import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
 const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntry; projectId: string }) => {
   const processDelete = useDeleteRowCallback(projectId, 'workItemCostEntries');
@@ -30,23 +29,15 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
     [processDelete],
   );
 
-  const RightAction = (prog: SharedValue<number>, drag: SharedValue<number>) => {
-    const styleAnimation = useAnimatedStyle(() => {
-      return {
-        transform: [{ translateX: drag.value + 100 }],
-      };
-    });
-
+  const RightAction = () => {
     return (
       <Pressable
+        style={styles.rightAction}
         onPress={() => {
-          prog.value = 0;
           handleDelete(lineItem.id);
         }}
       >
-        <Reanimated.View style={[styleAnimation, styles.rightAction]}>
-          <MaterialIcons name="delete" size={24} color="white" />
-        </Reanimated.View>
+        <MaterialIcons name="delete" size={24} color="white" />
       </Pressable>
     );
   };

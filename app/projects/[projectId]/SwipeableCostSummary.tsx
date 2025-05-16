@@ -1,44 +1,27 @@
 import { Text, View } from '@/components/Themed';
 import { deleteBg } from '@/constants/Colors';
-import { ColorSchemeColors, useColors } from '@/context/ColorsContext';
+import { useColors } from '@/context/ColorsContext';
 
+import { useDeleteRowCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { formatCurrency } from '@/utils/formatters';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
-import { Alert, Pressable, StyleSheet } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import { SharedValue } from 'react-native-reanimated';
 import { CostItemData } from './index';
-import { useDeleteRowCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { formatCurrency } from '@/utils/formatters';
 
 const ITEM_HEIGHT = 45;
 
-const RightAction = React.memo(
-  ({
-    onDelete,
-    prog,
-    drag,
-  }: {
-    onDelete: () => void;
-    prog: SharedValue<number>;
-    drag: SharedValue<number>;
-  }) => {
-    const styleAnimation = useAnimatedStyle(() => {
-      return {
-        transform: [{ translateX: drag.value + 100 }],
-      };
-    });
-
-    return (
-      <Pressable onPress={onDelete}>
-        <Reanimated.View style={[styleAnimation, styles.rightAction]}>
-          <MaterialIcons name="delete" size={24} color="white" />
-        </Reanimated.View>
-      </Pressable>
-    );
-  },
-);
+const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => {
+  return (
+    <Pressable onPress={onDelete} style={styles.rightAction}>
+      <MaterialIcons name="delete" size={24} color="white" />
+    </Pressable>
+  );
+});
 
 const SwipeableCostSummary = ({
   item,
@@ -67,12 +50,9 @@ const SwipeableCostSummary = ({
     [removeCostItemSummary],
   );
 
-  const renderRightActions = useCallback(
-    (prog: SharedValue<number>, drag: SharedValue<number>) => {
-      return <RightAction onDelete={() => handleDelete(item.id)} prog={prog} drag={drag} />;
-    },
-    [handleDelete, item.id],
-  );
+  const renderRightActions = useCallback(() => {
+    return <RightAction onDelete={() => handleDelete(item.id)} />;
+  }, [handleDelete, item.id]);
 
   return (
     <ReanimatedSwipeable
