@@ -27,11 +27,13 @@ const SwipeableCostSummary = ({
   sectionId,
   sectionCode,
   projectId,
+  allowSwipeDelete = true,
 }: {
   item: CostItemData;
   sectionId: string;
   sectionCode: string;
   projectId: string;
+  allowSwipeDelete?: boolean;
 }) => {
   const router = useRouter();
   const removeCostItemSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
@@ -53,53 +55,93 @@ const SwipeableCostSummary = ({
     return <RightAction onDelete={() => handleDelete(item.id)} />;
   }, [handleDelete, item.id]);
 
-  return (
-    <ReanimatedSwipeable
-      key={item.id}
-      friction={2}
-      enableTrackpadTwoFingerGesture
-      rightThreshold={ITEM_HEIGHT}
-      renderRightActions={renderRightActions}
-      overshootRight={false}
-      enableContextMenu
-    >
-      <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
-        <Pressable
-          onPress={() => {
-            router.push({
-              pathname: '/projects/[projectId]/[costSummaryItemId]',
-              params: {
-                projectId,
-                costSummaryItemId: item.id,
-                sectionCode,
-                itemCode: item.code,
-                itemTitle: item.title,
-                itemSpent: item.spentAmount,
-              },
-            });
-          }}
-        >
-          <View style={styles.itemInfo}>
-            <Text
-              style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
-              text={`${sectionCode}.${item.code} ${item.title}`}
-              numberOfLines={1}
-            />
-            <Text
-              style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
-              text={formatCurrency(item.bidAmount, false, true)}
-            />
-            <Text
-              style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
-              text={formatCurrency(item.spentAmount, false, true)}
-            />
-            <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
-              <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
+  if (allowSwipeDelete)
+    return (
+      <ReanimatedSwipeable
+        key={item.id}
+        friction={2}
+        enableTrackpadTwoFingerGesture
+        rightThreshold={ITEM_HEIGHT}
+        renderRightActions={renderRightActions}
+        overshootRight={false}
+        enableContextMenu
+      >
+        <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
+          <Pressable
+            onPress={() => {
+              router.push({
+                pathname: '/projects/[projectId]/[costSummaryItemId]',
+                params: {
+                  projectId,
+                  costSummaryItemId: item.id,
+                  sectionCode,
+                  itemCode: item.code,
+                  itemTitle: item.title,
+                  itemSpent: item.spentAmount,
+                },
+              });
+            }}
+          >
+            <View style={styles.itemInfo}>
+              <Text
+                style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
+                text={`${sectionCode}.${item.code} ${item.title}`}
+                numberOfLines={1}
+              />
+              <Text
+                style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
+                text={formatCurrency(item.bidAmount, false, true)}
+              />
+              <Text
+                style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
+                text={formatCurrency(item.spentAmount, false, true)}
+              />
+              <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
+                <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
+              </View>
             </View>
+          </Pressable>
+        </View>
+      </ReanimatedSwipeable>
+    );
+
+  return (
+    <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
+      <Pressable
+        onPress={() => {
+          router.push({
+            pathname: '/projects/[projectId]/[costSummaryItemId]',
+            params: {
+              projectId,
+              costSummaryItemId: item.id,
+              sectionCode,
+              itemCode: item.code,
+              itemTitle: item.title,
+              itemSpent: item.spentAmount,
+            },
+          });
+        }}
+      >
+        <View style={styles.itemInfo}>
+          <Text
+            style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
+            text={`${sectionCode}.${item.code} ${item.title}`}
+            numberOfLines={1}
+          />
+          <Text
+            style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
+            text={formatCurrency(item.bidAmount, false, true)}
+          />
+          <Text
+            style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
+            text={formatCurrency(item.spentAmount, false, true)}
+          />
+          <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
+            <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
           </View>
-        </Pressable>
-      </View>
-    </ReanimatedSwipeable>
+        </View>
+      </Pressable>
+    </View>
   );
 };
 

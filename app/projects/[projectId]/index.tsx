@@ -1,20 +1,15 @@
 import { ActionButtonProps } from '@/components/ButtonBar';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { Text, View } from '@/components/Themed';
-import { ColorSchemeColors, useColors } from '@/context/ColorsContext';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
+import { useColors } from '@/context/ColorsContext';
 import {
   useAllRows as useAllConfigRows,
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useDeleteProjectCallback, useProject } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import {
-  useProject,
-  useDeleteProjectCallback,
-  useProjectValue,
-} from '@/tbStores/listOfProjects/ListOfProjectsStore';
-import {
-  useAddRowCallback,
   useAllRows,
   useBidAmountUpdater,
   useCostUpdater,
@@ -24,15 +19,13 @@ import {
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useRouter, Stack, useLocalSearchParams, Redirect, Router } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Alert, SectionList } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableCostSummary from './SwipeableCostSummary';
-import { FlashList } from '@shopify/flash-list';
 
 export function CostItemDataCodeCompareAsNumber(a: CostItemData, b: CostItemData) {
   const aValue = Number(a.code);

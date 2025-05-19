@@ -1,3 +1,4 @@
+import { ActionButton } from '@/components/ActionButton';
 import { NumberInputField } from '@/components/NumberInputField';
 import { TextField } from '@/components/TextField';
 import { Text, View } from '@/components/Themed';
@@ -5,13 +6,14 @@ import { useColors } from '@/context/ColorsContext';
 import {
   useAddRowCallback,
   useAllRows,
+  useDeleteRowCallback,
   useUpdateRowCallback,
   WorkItemSummaryData,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/utils/formatters';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CostItemDetails = () => {
@@ -24,10 +26,11 @@ const CostItemDetails = () => {
     itemSpent: string;
   }>();
   const [itemEstimate, setItemEstimate] = useState(0);
-
+  const router = useRouter();
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const colors = useColors();
   const updateBidEstimate = useUpdateRowCallback(projectId, 'workItemSummaries');
+  const deleteCostSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
   const workItemSummary: WorkItemSummaryData | null = useMemo(() => {
     const workItem = allWorkItemSummaries.find((item) => item.workItemId === costSummaryItemId);
     if (workItem) {
@@ -51,6 +54,25 @@ const CostItemDetails = () => {
     setItemEstimate(value);
   }, []);
 
+  const handleRemove = useCallback(() => {
+    if (!workItemSummary) return;
+
+    Alert.alert('Delete Cost Summary Item', 'Are you sure you want to delete this cost item?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        onPress: () => {
+          const result = deleteCostSummary(workItemSummary.id);
+          if (result.status === 'Success') {
+            router.back();
+          } else {
+            Alert.alert('Unable to Delete Item', 'Unable to delete the cost item');
+          }
+        },
+      },
+    ]);
+  }, [workItemSummary]);
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
@@ -63,53 +85,58 @@ const CostItemDetails = () => {
         {!workItemSummary ? (
           <Text>No Cost Item Found</Text>
         ) : (
-          <View>
-            <View style={{ flexDirection: 'row' }}>
-              <Text txtSize="title" text={`${sectionCode}.${itemCode}`} />
-              <Text txtSize="title" text={`${itemTitle}`} style={{ flex: 1, marginLeft: 5 }} />
-            </View>
-            <View
-              style={{
-                marginTop: 10,
-                flexDirection: 'row',
-                alignItems: 'center',
-              }}
-            >
-              <Text
-                text="Estimate"
-                txtSize="standard"
-                style={{ textAlign: 'right', width: 90, marginRight: 5 }}
-              />
-              <View style={{ flex: 1 }}>
-                <NumberInputField
-                  value={itemEstimate}
-                  onChange={handleEstimateChanged}
-                  placeholder="Estimated Amount"
+          <>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row' }}>
+                <Text txtSize="title" text={`${sectionCode}.${itemCode}`} />
+                <Text txtSize="title" text={`${itemTitle}`} style={{ flex: 1, marginLeft: 5 }} />
+              </View>
+              <View
+                style={{
+                  marginTop: 10,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                }}
+              >
+                <Text
+                  text="Estimate"
+                  txtSize="standard"
+                  style={{ textAlign: 'right', width: 90, marginRight: 5 }}
                 />
+                <View style={{ flex: 1 }}>
+                  <NumberInputField
+                    value={itemEstimate}
+                    onChange={handleEstimateChanged}
+                    placeholder="Estimated Amount"
+                  />
+                </View>
+              </View>
+              <View
+                style={{
+                  marginTop: 10,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                }}
+              >
+                <Text
+                  text="Spent"
+                  txtSize="standard"
+                  style={{ textAlign: 'right', width: 90, marginRight: 5 }}
+                />
+                <View style={{ flex: 1 }}>
+                  <NumberInputField
+                    value={amountSpent}
+                    placeholder="Amount Spent"
+                    onChange={() => {}}
+                    readOnly
+                  />
+                </View>
               </View>
             </View>
-            <View
-              style={{
-                marginTop: 10,
-                flexDirection: 'row',
-                alignItems: 'center',
-              }}
-            >
-              <Text
-                text="Spent"
-                txtSize="standard"
-                style={{ textAlign: 'right', width: 90, marginRight: 5 }}
-              />
-              <View style={{ flex: 1 }}>
-                <NumberInputField
-                  value={amountSpent}
-                  placeholder="Amount Spent"
-                  onChange={() => {}}
-                  readOnly
-                />
-              </View>
-            </View>
-          </View>
+            {0 === workItemSummary.bidAmount && 0 === workItemSummary.spentAmount && (
+              <ActionButton title="Remove this cost item" onPress={handleRemove} type={'cancel'} />
+            )}
+          </>
         )}
       </View>
     </SafeAreaView>

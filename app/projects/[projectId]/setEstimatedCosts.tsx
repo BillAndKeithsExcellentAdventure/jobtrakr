@@ -157,7 +157,9 @@ const SetEstimatedCostsPage = () => {
   const updateBidEstimate = useCallback(() => {
     if (!currentCostSummary) return;
     updateWorkItemCostSummary(currentCostSummary.id, { ...currentCostSummary, bidAmount: itemEstimate });
-    if (currentItemIndex < allAvailableCostItems.length - 1) setCurrentItemIndex(currentItemIndex + 1);
+    InteractionManager.runAfterInteractions(() => {
+      if (currentItemIndex < allAvailableCostItems.length - 1) setCurrentItemIndex(currentItemIndex + 1);
+    });
   }, [currentCostSummary, updateWorkItemCostSummary, itemEstimate, currentItemIndex, allAvailableCostItems]);
 
   const skipToNext = useCallback(() => {
