@@ -101,12 +101,12 @@ const ProjectDetailsPage = () => {
       const category = categoryMap.get(workItem.categoryId);
       if (!category) continue;
 
-      costItem.spentAmount = allActualCostItems
+      const spentAmount = allActualCostItems
         .filter((i) => i.workItemId === workItem.id)
         .reduce((sum, item) => sum + item.amount, 0);
 
       // update the spent amount per workItem
-      updateWorkItemSpentSummary(costItem.workItemId, { spentAmount: costItem.spentAmount });
+      updateWorkItemSpentSummary(costItem.workItemId, { spentAmount: spentAmount });
 
       let section = sections.find((sec) => sec.categoryId === category.id);
       if (!section) {
@@ -126,7 +126,7 @@ const ProjectDetailsPage = () => {
         code: workItem.code,
         title: workItem.name,
         bidAmount: costItem.bidAmount,
-        spentAmount: costItem.spentAmount,
+        spentAmount: spentAmount,
       });
     }
 

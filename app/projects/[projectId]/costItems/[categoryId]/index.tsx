@@ -68,7 +68,7 @@ const CategorySpecificCostItemsPage = () => {
       const workItem = workItemMap.get(costItem.workItemId);
       if (!workItem || workItem.categoryId !== categoryId) continue;
 
-      costItem.spentAmount = allActualCostItems
+      const spentAmount = allActualCostItems
         .filter((i) => i.workItemId === workItem.id)
         .reduce((sum, item) => sum + item.amount, 0);
 
@@ -77,7 +77,7 @@ const CategorySpecificCostItemsPage = () => {
         code: workItem.code,
         title: workItem.name,
         bidAmount: costItem.bidAmount,
-        spentAmount: costItem.spentAmount,
+        spentAmount: spentAmount,
       });
     }
 

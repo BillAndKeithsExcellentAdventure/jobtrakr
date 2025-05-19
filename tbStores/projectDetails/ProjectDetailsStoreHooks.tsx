@@ -27,7 +27,6 @@ export interface WorkItemSummaryData {
   id: string;
   workItemId: string;
   bidAmount: number;
-  spentAmount: number; // TODO - Remove
 }
 
 export interface WorkItemSpentSummary {
@@ -277,7 +276,6 @@ export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
         id: '',
         workItemId,
         bidAmount: 0,
-        spentAmount: 0,
       });
     }
   }, [seedWorkItems, allWorkItemSummaries, addWorkItemSummary, setSeedWorkItems]);
