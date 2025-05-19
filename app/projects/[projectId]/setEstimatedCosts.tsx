@@ -1,9 +1,11 @@
 import { ActionButton } from '@/components/ActionButton';
 import BottomSheetContainer from '@/components/BottomSheetContainer';
+import { KeyboardSpacer } from '@/components/KeyboardSpacer';
 import { NumberInputField } from '@/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/components/OptionList';
 import { OptionPickerItem } from '@/components/OptionPickerItem';
 import { Text, View } from '@/components/Themed';
+import { useKeyboardGradualAnimation } from '@/components/useKeyboardGradualAnimation';
 import { ColorSchemeColors, useColors } from '@/context/ColorsContext';
 import {
   useAllRows as useAllRowsConfiguration,
@@ -20,12 +22,10 @@ import {
 import { formatCurrency } from '@/utils/formatters';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { InteractionManager, Keyboard, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
-import { PADDING_BOTTOM, useKeyboardGradualAnimation } from '@/components/useKeyboardGradualAnimation';
 
 const LISTITEM_HEIGHT = 40;
 
@@ -165,13 +165,6 @@ const SetEstimatedCostsPage = () => {
     if (currentItemIndex < allAvailableCostItems.length - 1) setCurrentItemIndex(currentItemIndex + 1);
   }, [currentCostSummary, currentItemIndex, allAvailableCostItems]);
 
-  const fakeView = useAnimatedStyle(() => {
-    return {
-      height: Math.abs(height.value),
-      marginBottom: height.value > 0 ? 0 : PADDING_BOTTOM,
-    };
-  }, []);
-
   const prevLayoutHeightRef = useRef(0);
 
   const layoutChanged = useCallback(
@@ -269,7 +262,7 @@ const SetEstimatedCostsPage = () => {
                   )
                 }
               />
-              <Animated.View style={fakeView} />
+              <KeyboardSpacer height={height} />
               {Platform.OS === 'ios' && <KeyboardToolbar />}
             </>
           )}
