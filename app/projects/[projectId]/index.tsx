@@ -15,6 +15,8 @@ import {
   useCostUpdater,
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
+  useSetWorkItemSpentSummaryCallback,
+  useUpdateRowCallback,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
@@ -69,6 +71,7 @@ const ProjectDetailsPage = () => {
   const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
+  const updateWorkItemSpentSummary = useSetWorkItemSpentSummaryCallback(projectId);
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
@@ -101,6 +104,9 @@ const ProjectDetailsPage = () => {
       costItem.spentAmount = allActualCostItems
         .filter((i) => i.workItemId === workItem.id)
         .reduce((sum, item) => sum + item.amount, 0);
+
+      // update the spent amount per workItem
+      updateWorkItemSpentSummary(costItem.workItemId, { spentAmount: costItem.spentAmount });
 
       let section = sections.find((sec) => sec.categoryId === category.id);
       if (!section) {

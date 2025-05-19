@@ -38,7 +38,6 @@ const CategorySpecificCostItemsPage = () => {
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
   const allProjectCategories = useAllConfigRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
-  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
 
   useEffect(() => {
     if (projectId) {

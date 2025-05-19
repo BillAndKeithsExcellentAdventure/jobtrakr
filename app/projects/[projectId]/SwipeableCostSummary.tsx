@@ -117,7 +117,7 @@ const SwipeableCostSummary = ({
               sectionCode,
               itemCode: item.code,
               itemTitle: item.title,
-              itemSpent: item.spentAmount,
+              itemSpent: 0, // TODO item.spentAmount,
             },
           });
         }}

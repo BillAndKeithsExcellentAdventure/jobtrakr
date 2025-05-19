@@ -11,6 +11,11 @@ export const TABLES_SCHEMA = {
     id: { type: 'string' },
     workItemId: { type: 'string' },
     bidAmount: { type: 'number' },
+    spentAmount: { type: 'number' }, // TODO - Remove
+  },
+
+  workItemSpentSummaries: {
+    workItemId: { type: 'string' },
     spentAmount: { type: 'number' },
   },
 

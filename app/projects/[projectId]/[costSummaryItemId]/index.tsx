@@ -1,16 +1,14 @@
 import { ActionButton } from '@/components/ActionButton';
 import { NumberInputField } from '@/components/NumberInputField';
-import { TextField } from '@/components/TextField';
 import { Text, View } from '@/components/Themed';
 import { useColors } from '@/context/ColorsContext';
 import {
-  useAddRowCallback,
   useAllRows,
   useDeleteRowCallback,
   useUpdateRowCallback,
+  useWorkItemSpentValue,
   WorkItemSummaryData,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { formatCurrency } from '@/utils/formatters';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
@@ -41,13 +39,11 @@ const CostItemDetails = () => {
     return null;
   }, [allWorkItemSummaries, costSummaryItemId]);
 
+  const amountSpent = useWorkItemSpentValue(projectId, costSummaryItemId);
+
   useEffect(() => {
     setItemEstimate(workItemSummary ? workItemSummary.bidAmount : 0);
   }, [workItemSummary]);
-
-  const amountSpent = useMemo(() => {
-    return Number.parseFloat(itemSpent);
-  }, [itemSpent]);
 
   const handleEstimateChanged = useCallback((value: number) => {
     if (workItemSummary) updateBidEstimate(workItemSummary.id, { bidAmount: value });
@@ -133,7 +129,7 @@ const CostItemDetails = () => {
                 </View>
               </View>
             </View>
-            {0 === workItemSummary.bidAmount && 0 === workItemSummary.spentAmount && (
+            {0 === workItemSummary.bidAmount && amountSpent && (
               <ActionButton title="Remove this cost item" onPress={handleRemove} type={'cancel'} />
             )}
           </>
