@@ -15,6 +15,7 @@ import {
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { useRouter } from 'expo-router';
+import { SwipeableComponent } from '@/components/SwipeableComponent';
 
 export const ITEM_HEIGHT = 100;
 
@@ -67,15 +68,7 @@ const SwipeableReceiptItem = React.memo(
     const renderRightActions = useCallback(() => <RightAction onDelete={handleDelete} />, [handleDelete]);
 
     return (
-      <ReanimatedSwipeable
-        key={item.id}
-        friction={2}
-        enableTrackpadTwoFingerGesture
-        rightThreshold={ITEM_HEIGHT}
-        renderRightActions={renderRightActions}
-        overshootRight={false}
-        enableContextMenu
-      >
+      <SwipeableComponent key={item.id} threshold={ITEM_HEIGHT} renderRightActions={renderRightActions}>
         <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
           <Pressable onPress={() => router.push(`/projects/${projectId}/receipt/${item.id}`)}>
             <View style={styles.itemInfo}>
@@ -104,7 +97,7 @@ const SwipeableReceiptItem = React.memo(
             </View>
           </Pressable>
         </View>
-      </ReanimatedSwipeable>
+      </SwipeableComponent>
     );
   },
 );
