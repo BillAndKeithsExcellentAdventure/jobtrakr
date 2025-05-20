@@ -1,5 +1,4 @@
 import { ActionButtonProps } from '@/components/ButtonBar';
-import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { Text, View } from '@/components/Themed';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import { useColors } from '@/context/ColorsContext';
@@ -10,11 +9,12 @@ import {
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useProject } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { useAllRows, useIsStoreAvailableCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
+import { FontAwesome5 } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CostItemData, CostItemDataCodeCompareAsNumber } from '../../index';
 import SwipeableCostSummary from '../../SwipeableCostSummary';
@@ -38,7 +38,6 @@ const CategorySpecificCostItemsPage = () => {
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
   const allProjectCategories = useAllConfigRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
-  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
 
   useEffect(() => {
     if (projectId) {
@@ -69,7 +68,7 @@ const CategorySpecificCostItemsPage = () => {
       const workItem = workItemMap.get(costItem.workItemId);
       if (!workItem || workItem.categoryId !== categoryId) continue;
 
-      costItem.spentAmount = allActualCostItems
+      const spentAmount = allActualCostItems
         .filter((i) => i.workItemId === workItem.id)
         .reduce((sum, item) => sum + item.amount, 0);
 
@@ -78,140 +77,94 @@ const CategorySpecificCostItemsPage = () => {
         code: workItem.code,
         title: workItem.name,
         bidAmount: costItem.bidAmount,
-        spentAmount: costItem.spentAmount,
+        spentAmount: spentAmount,
       });
     }
 
     return costItems.sort(CostItemDataCodeCompareAsNumber);
   }, [allWorkItemSummaries, allWorkItems, allActualCostItems, categoryId]);
 
-  const handleMenuItemPress = useCallback(
-    (menuItem: string, actionContext: any) => {
-      setHeaderMenuModalVisible(false);
-      if (menuItem === 'SetEstimates' && projectId) {
-        router.push(
-          `/projects/${projectId}/setEstimatedCosts/?projectName=${encodeURIComponent(
-            projectData!.name,
-          )}&categoryId=${categoryId}`,
-        );
-        return;
-      }
-    },
-    [projectId, projectData, router],
-  );
-
-  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
-    () => [
-      ...(allWorkItemSummaries.length > 0
-        ? [
-            {
-              icon: <FontAwesome5 name="search-dollar" size={28} color={colors.iconColor} />,
-              label: 'Set Estimate Costs',
-              onPress: (e, actionContext) => {
-                handleMenuItemPress('SetEstimates', actionContext);
-              },
-            } as ActionButtonProps,
-          ]
-        : []),
-    ],
-    [colors, allWorkItemSummaries, handleMenuItemPress],
-  );
-
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <>
-        <Stack.Screen
-          options={{
-            headerShown: true,
-            title: 'Cost Breakdown',
-            headerRight: () => (
-              <Pressable
-                style={{ marginRight: 0 }}
-                onPress={() => {
-                  setHeaderMenuModalVisible(!headerMenuModalVisible);
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Cost Breakdown',
+          headerRight: () => (
+            <Pressable
+              style={{ marginRight: 0 }}
+              onPress={() => {
+                router.push(
+                  `/projects/${projectId}/setEstimatedCosts/?projectName=${encodeURIComponent(
+                    projectData!.name,
+                  )}&categoryId=${categoryId}`,
+                );
+              }}
+            >
+              <FontAwesome5 name="search-dollar" size={24} color={colors.iconColor} />
+            </Pressable>
+          ),
+        }}
+      />
+
+      <View style={styles.container}>
+        {!projectIsReady ? (
+          <Text>Loading...</Text>
+        ) : (
+          <>
+            <View style={[styles.headerContainer, { borderColor: colors.border }]}>
+              <Text txtSize="title" text={projectData.name} />
+              <Text txtSize="sub-title" text={costItemsCategory?.name} />
+              <View
+                style={{
+                  marginTop: 5,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  width: '100%',
                 }}
               >
-                {({ pressed }) => (
-                  <MaterialCommunityIcons
-                    name="menu"
-                    size={28}
-                    color={colors.iconColor}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                <Text text={`estimate: ${bidAmount}`} />
+                <Text text={`spent: ${spentAmount}`} />
+              </View>
+            </View>
+            <View style={{ flex: 1, paddingBottom: 5 }}>
+              <View style={{ marginVertical: 5, alignItems: 'center' }}>
+                <Text txtSize="title" text="Individual Cost Items" />
+              </View>
+              <View
+                style={{
+                  width: '100%',
+                  paddingLeft: 10,
+                  paddingRight: 36,
+                  paddingVertical: 5,
+                  flexDirection: 'row',
+                  backgroundColor: colors.sectionHeaderBG,
+                }}
+              >
+                <Text style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }} text="Description" />
+                <Text style={{ width: 100, textAlign: 'right' }} text="Estimate $" />
+                <Text style={{ width: 100, textAlign: 'right' }} text="Spent $" />
+              </View>
+              <FlashList
+                showsVerticalScrollIndicator={false}
+                data={costItemSummaries}
+                renderItem={({ item }) => (
+                  <SwipeableCostSummary
+                    item={item}
+                    sectionId={costItemsCategory?.id ?? ''}
+                    sectionCode={costItemsCategory?.code ?? ''}
+                    projectId={projectId}
+                    allowSwipeDelete={Platform.OS === 'ios'}
                   />
                 )}
-              </Pressable>
-            ),
-          }}
-        />
-
-        <View style={styles.container}>
-          {!projectIsReady ? (
-            <Text>Loading...</Text>
-          ) : (
-            <>
-              <View style={[styles.headerContainer, { borderColor: colors.border }]}>
-                <Text txtSize="title" text={projectData.name} />
-                <Text txtSize="sub-title" text={costItemsCategory?.name} />
-                <View
-                  style={{
-                    marginTop: 5,
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    width: '100%',
-                  }}
-                >
-                  <Text text={`estimate: ${bidAmount}`} />
-                  <Text text={`spent: ${spentAmount}`} />
-                </View>
-              </View>
-              <View style={{ flex: 1, paddingBottom: 5 }}>
-                <View style={{ marginVertical: 5, alignItems: 'center' }}>
-                  <Text txtSize="title" text="Individual Cost Items" />
-                </View>
-                <View
-                  style={{
-                    width: '100%',
-                    paddingLeft: 10,
-                    paddingRight: 36,
-                    paddingVertical: 5,
-                    flexDirection: 'row',
-                    backgroundColor: colors.sectionHeaderBG,
-                  }}
-                >
-                  <Text
-                    style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
-                    text="Description"
-                  />
-                  <Text style={{ width: 100, textAlign: 'right' }} text="Estimate $" />
-                  <Text style={{ width: 100, textAlign: 'right' }} text="Spent $" />
-                </View>
-                <FlashList
-                  showsVerticalScrollIndicator={false}
-                  data={costItemSummaries}
-                  renderItem={({ item }) => (
-                    <SwipeableCostSummary
-                      item={item}
-                      sectionId={costItemsCategory?.id ?? ''}
-                      sectionCode={costItemsCategory?.code ?? ''}
-                      projectId={projectId}
-                    />
-                  )}
-                  keyExtractor={(item) => item.id}
-                  ListEmptyComponent={<Text>No data available</Text>}
-                  estimatedItemSize={ITEM_HEIGHT}
-                />
-              </View>
-            </>
-          )}
-        </View>
-        {costItemSummaries.length > 0 && headerMenuModalVisible && (
-          <RightHeaderMenu
-            modalVisible={headerMenuModalVisible}
-            setModalVisible={setHeaderMenuModalVisible}
-            buttons={rightHeaderMenuButtons}
-          />
+                keyExtractor={(item) => item.id}
+                ListEmptyComponent={<Text>No data available</Text>}
+                estimatedItemSize={ITEM_HEIGHT}
+              />
+            </View>
+          </>
         )}
-      </>
+      </View>
     </SafeAreaView>
   );
 };

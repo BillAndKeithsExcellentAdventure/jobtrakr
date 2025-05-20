@@ -11,6 +11,10 @@ export const TABLES_SCHEMA = {
     id: { type: 'string' },
     workItemId: { type: 'string' },
     bidAmount: { type: 'number' },
+  },
+
+  workItemSpentSummaries: {
+    workItemId: { type: 'string' },
     spentAmount: { type: 'number' },
   },
 

@@ -13,7 +13,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { colors } from 'react-native-keyboard-controller/lib/typescript/components/KeyboardToolbar/colors';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as TinyBaseProvider } from 'tinybase/ui-react';

@@ -27,6 +27,10 @@ export interface WorkItemSummaryData {
   id: string;
   workItemId: string;
   bidAmount: number;
+}
+
+export interface WorkItemSpentSummary {
+  workItemId: string;
   spentAmount: number;
 }
 
@@ -83,6 +87,7 @@ export interface NoteData {
 }
 
 export type WorkItemSummarySchema = typeof TABLES_SCHEMA.workItemSummaries;
+export type WorkItemSpentSummarySchema = typeof TABLES_SCHEMA.workItemSpentSummaries;
 export type ReceiptsSchema = typeof TABLES_SCHEMA.receipts;
 export type InvoicesSchema = typeof TABLES_SCHEMA.invoices;
 export type WorkItemCostEntriesSchema = typeof TABLES_SCHEMA.workItemCostEntries;
@@ -271,7 +276,6 @@ export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
         id: '',
         workItemId,
         bidAmount: 0,
-        spentAmount: 0,
       });
     }
   }, [seedWorkItems, allWorkItemSummaries, addWorkItemSummary, setSeedWorkItems]);
@@ -285,3 +289,28 @@ export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
     }
   }, [projectId, seedWorkItems, allWorkItemSummaries, activeProjectIds, seedInitialData]);
 };
+
+export function useSetWorkItemSpentSummaryCallback(projectId: string) {
+  const store = useStore(getStoreId(projectId));
+  return useCallback(
+    (workItemId: string, updates: Partial<WorkItemSpentSummary>): CrudResult => {
+      if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
+      const existing = store.getRow('workItemSpentSummaries', workItemId);
+      if (!existing) {
+        const insertSuccess = store.setRow('workItemSpentSummaries', workItemId, { workItemId, ...updates });
+        return insertSuccess
+          ? { status: 'Success', id: workItemId, msg: '' }
+          : { status: 'Error', id: '0', msg: 'Failed to insert work item spent summary' };
+      }
+
+      const success = store.setRow('workItemSpentSummaries', workItemId, { ...existing, ...updates });
+      return success
+        ? { status: 'Success', id: workItemId, msg: '' }
+        : { status: 'Error', id: '0', msg: 'Failed to update' };
+    },
+    [store],
+  );
+}
+
+export const useWorkItemSpentValue = (projectId: string, workItemId: string): number =>
+  useCell('workItemSpentSummaries', workItemId, 'spentAmount', getStoreId(projectId)) as number;

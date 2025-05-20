@@ -8,7 +8,7 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import Reanimated from 'react-native-reanimated';
 
 const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
   const router = useRouter();
@@ -25,21 +25,15 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
     );
   };
 
-  const RightAction = (prog: SharedValue<number>, drag: SharedValue<number>) => {
-    const styleAnimation = useAnimatedStyle(() => {
-      return {
-        transform: [{ translateX: drag.value + 100 }],
-      };
-    });
-
+  const RightAction = () => {
     return (
       <Pressable
+        style={styles.rightAction}
         onPress={() => {
-          prog.value = 0;
           handleDelete(vendor.id);
         }}
       >
-        <Reanimated.View style={[styleAnimation, styles.rightAction]}>
+        <Reanimated.View>
           <MaterialIcons name="delete" size={32} color="white" />
         </Reanimated.View>
       </Pressable>

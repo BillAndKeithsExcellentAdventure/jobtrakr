@@ -1,38 +1,33 @@
 import { ActionButtonProps } from '@/components/ButtonBar';
 import RightHeaderMenu from '@/components/RightHeaderMenu';
 import { Text, View } from '@/components/Themed';
-import { ColorSchemeColors, useColors } from '@/context/ColorsContext';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
+import { useColors } from '@/context/ColorsContext';
 import {
   useAllRows as useAllConfigRows,
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useDeleteProjectCallback, useProject } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import {
-  useProject,
-  useDeleteProjectCallback,
-  useProjectValue,
-} from '@/tbStores/listOfProjects/ListOfProjectsStore';
-import {
-  useAddRowCallback,
   useAllRows,
   useBidAmountUpdater,
   useCostUpdater,
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
+  useSetWorkItemSpentSummaryCallback,
+  useUpdateRowCallback,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useRouter, Stack, useLocalSearchParams, Redirect, Router } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Alert, SectionList } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableCostSummary from './SwipeableCostSummary';
-import { FlashList } from '@shopify/flash-list';
 
 export function CostItemDataCodeCompareAsNumber(a: CostItemData, b: CostItemData) {
   const aValue = Number(a.code);
@@ -76,6 +71,7 @@ const ProjectDetailsPage = () => {
   const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
+  const updateWorkItemSpentSummary = useSetWorkItemSpentSummaryCallback(projectId);
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
@@ -105,9 +101,12 @@ const ProjectDetailsPage = () => {
       const category = categoryMap.get(workItem.categoryId);
       if (!category) continue;
 
-      costItem.spentAmount = allActualCostItems
+      const spentAmount = allActualCostItems
         .filter((i) => i.workItemId === workItem.id)
         .reduce((sum, item) => sum + item.amount, 0);
+
+      // update the spent amount per workItem
+      updateWorkItemSpentSummary(costItem.workItemId, { spentAmount: spentAmount });
 
       let section = sections.find((sec) => sec.categoryId === category.id);
       if (!section) {
@@ -127,7 +126,7 @@ const ProjectDetailsPage = () => {
         code: workItem.code,
         title: workItem.name,
         bidAmount: costItem.bidAmount,
-        spentAmount: costItem.spentAmount,
+        spentAmount: spentAmount,
       });
     }
 

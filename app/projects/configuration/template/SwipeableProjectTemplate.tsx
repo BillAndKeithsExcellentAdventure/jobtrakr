@@ -10,33 +10,14 @@ import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
-const RightAction = React.memo(
-  ({
-    onDelete,
-    prog,
-    drag,
-  }: {
-    onDelete: () => void;
-    prog: SharedValue<number>;
-    drag: SharedValue<number>;
-  }) => {
-    const styleAnimation = useAnimatedStyle(() => {
-      return {
-        transform: [{ translateX: drag.value + 100 }],
-      };
-    });
-
-    return (
-      <Pressable onPress={onDelete}>
-        <Reanimated.View style={[styleAnimation, styles.rightAction]}>
-          <MaterialIcons name="delete" size={24} color="white" />
-        </Reanimated.View>
-      </Pressable>
-    );
-  },
-);
+const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => {
+  return (
+    <Pressable onPress={onDelete} style={styles.rightAction}>
+      <MaterialIcons name="delete" size={24} color="white" />
+    </Pressable>
+  );
+});
 
 const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: ProjectTemplateData }) => {
   const router = useRouter();
@@ -55,12 +36,9 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
     [removeProjectTemplate],
   );
 
-  const renderRightActions = useCallback(
-    (prog: SharedValue<number>, drag: SharedValue<number>) => {
-      return <RightAction onDelete={() => handleDelete(projectTemplate.id)} prog={prog} drag={drag} />;
-    },
-    [handleDelete, projectTemplate.id],
-  );
+  const renderRightActions = useCallback(() => {
+    return <RightAction onDelete={() => handleDelete(projectTemplate.id)} />;
+  }, [handleDelete, projectTemplate.id]);
 
   return (
     <ReanimatedSwipeable
