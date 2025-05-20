@@ -129,7 +129,7 @@ const CostItemDetails = () => {
                 </View>
               </View>
             </View>
-            {0 === workItemSummary.bidAmount && amountSpent && (
+            {0 === workItemSummary.bidAmount && 0 === amountSpent && (
               <ActionButton title="Remove this cost item" onPress={handleRemove} type={'cancel'} />
             )}
           </>

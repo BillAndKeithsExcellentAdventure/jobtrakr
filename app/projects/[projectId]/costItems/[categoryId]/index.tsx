@@ -151,7 +151,6 @@ const CategorySpecificCostItemsPage = () => {
                 renderItem={({ item }) => (
                   <SwipeableCostSummary
                     item={item}
-                    sectionId={costItemsCategory?.id ?? ''}
                     sectionCode={costItemsCategory?.code ?? ''}
                     projectId={projectId}
                     allowSwipeDelete={Platform.OS === 'ios'}
