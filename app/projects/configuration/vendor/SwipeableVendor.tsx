@@ -1,3 +1,4 @@
+import { SwipeableComponent } from '@/components/SwipeableComponent';
 import { Text, View } from '@/components/Themed';
 import { deleteBg } from '@/constants/Colors';
 import { useColors } from '@/context/ColorsContext';
@@ -7,8 +8,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated from 'react-native-reanimated';
+
+const RIGHT_ACTION_WIDTH = 100;
+const SWIPE_THRESHOLD_WIDTH = 50;
 
 const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
   const router = useRouter();
@@ -41,14 +44,11 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
   };
 
   return (
-    <ReanimatedSwipeable
+    <SwipeableComponent
       key={vendor.id}
-      friction={2}
-      enableTrackpadTwoFingerGesture
-      rightThreshold={40}
+      threshold={SWIPE_THRESHOLD_WIDTH}
+      actionWidth={RIGHT_ACTION_WIDTH}
       renderRightActions={RightAction}
-      overshootRight={false}
-      enableContextMenu
     >
       <View style={styles.itemEntry}>
         <Pressable
@@ -77,7 +77,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
           </View>
         </Pressable>
       </View>
-    </ReanimatedSwipeable>
+    </SwipeableComponent>
   );
 };
 
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rightAction: {
-    width: 100,
+    width: RIGHT_ACTION_WIDTH,
     height: 90,
     backgroundColor: deleteBg,
     alignItems: 'center',

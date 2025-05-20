@@ -1,13 +1,13 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-import { MaterialIcons } from '@expo/vector-icons';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 
+import Base64Image from '@/components/Base64Image';
+import { SwipeableComponent } from '@/components/SwipeableComponent';
 import { Text, View } from '@/components/Themed';
 import { deleteBg } from '@/constants/Colors';
 import { useColors } from '@/context/ColorsContext';
-import Base64Image from '@/components/Base64Image';
 import {
   ReceiptData,
   useAllRows,
@@ -15,9 +15,10 @@ import {
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { useRouter } from 'expo-router';
-import { SwipeableComponent } from '@/components/SwipeableComponent';
 
 export const ITEM_HEIGHT = 100;
+const RIGHT_ACTION_WIDTH = 100;
+const SWIPE_THRESHOLD_WIDTH = 50;
 
 const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => (
   <Pressable onPress={onDelete} style={styles.rightAction}>
@@ -68,7 +69,12 @@ const SwipeableReceiptItem = React.memo(
     const renderRightActions = useCallback(() => <RightAction onDelete={handleDelete} />, [handleDelete]);
 
     return (
-      <SwipeableComponent key={item.id} threshold={ITEM_HEIGHT} renderRightActions={renderRightActions}>
+      <SwipeableComponent
+        key={item.id}
+        threshold={SWIPE_THRESHOLD_WIDTH}
+        actionWidth={RIGHT_ACTION_WIDTH}
+        renderRightActions={renderRightActions}
+      >
         <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
           <Pressable onPress={() => router.push(`/projects/${projectId}/receipt/${item.id}`)}>
             <View style={styles.itemInfo}>
@@ -117,7 +123,7 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
   },
   rightAction: {
-    width: 100,
+    width: RIGHT_ACTION_WIDTH,
     height: ITEM_HEIGHT,
     backgroundColor: deleteBg,
     alignItems: 'center',

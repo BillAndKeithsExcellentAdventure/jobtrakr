@@ -11,8 +11,8 @@ import Animated, {
 
 interface SwipeableProps {
   children: ReactNode;
-  threshold?: number;
-  maxSwipeDistance?: number;
+  threshold: number;
+  actionWidth: number;
   renderLeftActions?: () => ReactNode;
   renderRightActions?: () => ReactNode;
   containerStyle?: StyleProp<ViewStyle>;
@@ -20,8 +20,8 @@ interface SwipeableProps {
 
 export const SwipeableComponent: React.FC<SwipeableProps> = ({
   children,
-  threshold = 100,
-  maxSwipeDistance = 100, // max visible translation
+  threshold,
+  actionWidth, // max visible translation
   renderLeftActions,
   renderRightActions,
   containerStyle,
@@ -56,20 +56,20 @@ export const SwipeableComponent: React.FC<SwipeableProps> = ({
       }
 
       gestureOffset.value = dx;
-      translateX.value = clamp(dx, -maxSwipeDistance, maxSwipeDistance);
+      translateX.value = clamp(dx, -actionWidth, actionWidth);
     })
     .onEnd(() => {
       if (gestureOffset.value > threshold) {
         // Swiped right
         if (renderLeftActions) {
-          translateX.value = withSpring(maxSwipeDistance);
+          translateX.value = withSpring(actionWidth);
           isOpen.value = true;
           openDirection.value = 'right';
         }
       } else if (gestureOffset.value < -threshold) {
         // Swiped left
         if (renderRightActions) {
-          translateX.value = withSpring(-maxSwipeDistance);
+          translateX.value = withSpring(-actionWidth);
           isOpen.value = true;
           openDirection.value = 'left';
         }
@@ -98,8 +98,13 @@ export const SwipeableComponent: React.FC<SwipeableProps> = ({
     <View style={[styles.root, containerStyle]}>
       {/* Background Actions */}
       <View style={styles.backgroundContainer}>
-        <Animated.View style={[styles.leftAction, leftActionStyle]}>{renderLeftActions?.()}</Animated.View>
-        <Animated.View style={[styles.rightAction, rightActionStyle]}>{renderRightActions?.()}</Animated.View>
+        <Animated.View style={[styles.leftAction, leftActionStyle, { width: actionWidth }]}>
+          {renderLeftActions?.()}
+        </Animated.View>
+        <View style={{ flex: 1 }}></View>
+        <Animated.View style={[styles.rightAction, rightActionStyle, { width: actionWidth }]}>
+          {renderRightActions?.()}
+        </Animated.View>
       </View>
 
       {/* Foreground Swipeable Content */}
@@ -122,14 +127,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   leftAction: {
-    flex: 1,
     justifyContent: 'center',
     paddingLeft: 0,
+    alignItems: 'center',
   },
   rightAction: {
-    flex: 1,
     justifyContent: 'center',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     paddingRight: 0,
   },
   foreground: {

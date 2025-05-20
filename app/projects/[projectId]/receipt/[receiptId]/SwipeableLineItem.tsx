@@ -1,3 +1,4 @@
+import { SwipeableComponent } from '@/components/SwipeableComponent';
 import { Text, View } from '@/components/Themed';
 import { deleteBg } from '@/constants/Colors';
 import { useColors } from '@/context/ColorsContext';
@@ -11,7 +12,9 @@ import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+
+const RIGHT_ACTION_WIDTH = 80;
+const SWIPE_THRESHOLD_WIDTH = 50;
 
 const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntry; projectId: string }) => {
   const processDelete = useDeleteRowCallback(projectId, 'workItemCostEntries');
@@ -46,14 +49,11 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
   const amount = useTableValue(projectId, 'workItemCostEntries', lineItem.id, 'amount');
 
   return (
-    <ReanimatedSwipeable
+    <SwipeableComponent
       key={lineItem.id}
-      friction={2}
-      enableTrackpadTwoFingerGesture
-      rightThreshold={40}
+      threshold={SWIPE_THRESHOLD_WIDTH}
+      actionWidth={RIGHT_ACTION_WIDTH}
       renderRightActions={RightAction}
-      overshootRight={false}
-      enableContextMenu
     >
       <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
         <Pressable
@@ -84,7 +84,7 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
           </View>
         </Pressable>
       </View>
-    </ReanimatedSwipeable>
+    </SwipeableComponent>
   );
 };
 

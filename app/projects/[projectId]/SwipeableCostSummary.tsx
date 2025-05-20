@@ -13,6 +13,8 @@ import { CostItemData } from './index';
 import { SwipeableComponent } from '@/components/SwipeableComponent';
 
 const ITEM_HEIGHT = 45;
+const RIGHT_ACTION_WIDTH = 80;
+const SWIPE_THRESHOLD_WIDTH = 50;
 
 const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => {
   return (
@@ -64,7 +66,12 @@ const SwipeableCostSummary = React.memo(({ item, sectionCode, projectId }: Props
   }, [handleDelete, item.id, item.bidAmount, item.spentAmount]);
 
   return (
-    <SwipeableComponent key={item.id} threshold={ITEM_HEIGHT} renderRightActions={renderRightActions}>
+    <SwipeableComponent
+      key={item.id}
+      renderRightActions={renderRightActions}
+      threshold={SWIPE_THRESHOLD_WIDTH}
+      actionWidth={RIGHT_ACTION_WIDTH}
+    >
       <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
         <Pressable
           onPress={() => {
@@ -126,7 +133,7 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
   },
   rightAction: {
-    width: 100,
+    width: RIGHT_ACTION_WIDTH,
     height: ITEM_HEIGHT,
     backgroundColor: deleteBg,
     alignItems: 'center',
