@@ -1,4 +1,3 @@
-import { ActionButtonProps } from '@/components/ButtonBar';
 import { Text, View } from '@/components/Themed';
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import { useColors } from '@/context/ColorsContext';
@@ -12,8 +11,8 @@ import { useAllRows, useIsStoreAvailableCallback } from '@/tbStores/projectDetai
 import { FontAwesome5 } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CostItemData, CostItemDataCodeCompareAsNumber } from '../../index';
@@ -153,7 +152,6 @@ const CategorySpecificCostItemsPage = () => {
                     item={item}
                     sectionCode={costItemsCategory?.code ?? ''}
                     projectId={projectId}
-                    allowSwipeDelete={Platform.OS === 'ios'}
                   />
                 )}
                 keyExtractor={(item) => item.id}

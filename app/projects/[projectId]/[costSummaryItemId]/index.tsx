@@ -11,7 +11,7 @@ import {
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { Alert, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CostItemDetails = () => {
@@ -129,8 +129,11 @@ const CostItemDetails = () => {
                 </View>
               </View>
             </View>
+
             {0 === workItemSummary.bidAmount && 0 === amountSpent && (
-              <ActionButton title="Remove this cost item" onPress={handleRemove} type={'cancel'} />
+              <View style={{ paddingBottom: Platform.OS === 'android' ? 30 : 0 }}>
+                <ActionButton title="Remove this cost item" onPress={handleRemove} type={'cancel'} />
+              </View>
             )}
           </>
         )}

@@ -6,11 +6,11 @@ import { useDeleteRowCallback } from '@/tbStores/projectDetails/ProjectDetailsSt
 import { formatCurrency } from '@/utils/formatters';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { CostItemData } from './index';
+import { SwipeableComponent } from '@/components/SwipeableComponent';
 
 const ITEM_HEIGHT = 45;
 
@@ -25,7 +25,6 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => {
 interface Props {
   sectionCode: string;
   projectId: string;
-  allowSwipeDelete?: boolean;
   item: CostItemData;
 }
 
@@ -33,7 +32,6 @@ const areEqual = (prevProps: Props, nextProps: Props) => {
   return (
     prevProps.sectionCode === nextProps.sectionCode &&
     prevProps.projectId === nextProps.projectId &&
-    prevProps.allowSwipeDelete === nextProps.allowSwipeDelete &&
     prevProps.item.id === nextProps.item.id &&
     prevProps.item.code === nextProps.item.code &&
     prevProps.item.title === nextProps.item.title &&
@@ -42,80 +40,31 @@ const areEqual = (prevProps: Props, nextProps: Props) => {
   );
 };
 
-const SwipeableCostSummary = React.memo(
-  ({ item, sectionCode, projectId, allowSwipeDelete = true }: Props) => {
-    const router = useRouter();
-    const removeCostItemSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
-    const colors = useColors();
+const SwipeableCostSummary = React.memo(({ item, sectionCode, projectId }: Props) => {
+  const router = useRouter();
+  const removeCostItemSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
+  const colors = useColors();
 
-    const handleDelete = useCallback(
-      (itemId: string) => {
-        Alert.alert(
-          'Delete Cost Summary',
-          'Are you sure you want to delete this cost item summary?',
-          [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeCostItemSummary(itemId) }],
-          { cancelable: true },
-        );
-      },
-      [removeCostItemSummary],
-    );
-
-    const renderRightActions = useCallback(() => {
-      if (item.bidAmount > 0 || item.spentAmount > 0) return null;
-      return <RightAction onDelete={() => handleDelete(item.id)} />;
-    }, [handleDelete, item.id, item.bidAmount, item.spentAmount]);
-
-    if (allowSwipeDelete)
-      return (
-        <ReanimatedSwipeable
-          key={item.id}
-          friction={2}
-          enableTrackpadTwoFingerGesture
-          rightThreshold={ITEM_HEIGHT}
-          renderRightActions={renderRightActions}
-          overshootRight={false}
-          enableContextMenu
-        >
-          <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
-            <Pressable
-              onPress={() => {
-                router.push({
-                  pathname: '/projects/[projectId]/[costSummaryItemId]',
-                  params: {
-                    projectId,
-                    costSummaryItemId: item.id,
-                    sectionCode,
-                    itemCode: item.code,
-                    itemTitle: item.title,
-                    itemSpent: item.spentAmount,
-                  },
-                });
-              }}
-            >
-              <View style={styles.itemInfo}>
-                <Text
-                  style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
-                  text={`${sectionCode}.${item.code} ${item.title}`}
-                  numberOfLines={1}
-                />
-                <Text
-                  style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
-                  text={formatCurrency(item.bidAmount, false, true)}
-                />
-                <Text
-                  style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
-                  text={formatCurrency(item.spentAmount, false, true)}
-                />
-                <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
-                  <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
-                </View>
-              </View>
-            </Pressable>
-          </View>
-        </ReanimatedSwipeable>
+  const handleDelete = useCallback(
+    (itemId: string) => {
+      Alert.alert(
+        'Delete Cost Summary',
+        'Are you sure you want to delete this cost item summary?',
+        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeCostItemSummary(itemId) }],
+        { cancelable: true },
       );
+    },
+    [removeCostItemSummary],
+  );
 
-    return (
+  // use useMemo instead of useCallback to avoid swipeable showing a blank area
+  const renderRightActions = useMemo(() => {
+    if (item.bidAmount > 0 || item.spentAmount > 0) return undefined;
+    return () => <RightAction onDelete={() => handleDelete(item.id)} />;
+  }, [handleDelete, item.id, item.bidAmount, item.spentAmount]);
+
+  return (
+    <SwipeableComponent key={item.id} threshold={ITEM_HEIGHT} renderRightActions={renderRightActions}>
       <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
         <Pressable
           onPress={() => {
@@ -127,7 +76,7 @@ const SwipeableCostSummary = React.memo(
                 sectionCode,
                 itemCode: item.code,
                 itemTitle: item.title,
-                itemSpent: 0, // TODO item.spentAmount,
+                itemSpent: item.spentAmount,
               },
             });
           }}
@@ -152,10 +101,9 @@ const SwipeableCostSummary = React.memo(
           </View>
         </Pressable>
       </View>
-    );
-  },
-  areEqual,
-);
+    </SwipeableComponent>
+  );
+}, areEqual);
 
 const styles = StyleSheet.create({
   container: {

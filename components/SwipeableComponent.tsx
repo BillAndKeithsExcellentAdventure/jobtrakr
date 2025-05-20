@@ -30,10 +30,17 @@ export const SwipeableComponent: React.FC<SwipeableProps> = ({
   const gestureOffset = useSharedValue(0); // tracks full gesture
   const isOpen = useSharedValue(false);
   const openDirection = useSharedValue<'left' | 'right' | null>(null);
+  const isHorizontal = useSharedValue(false);
 
   const pan = Gesture.Pan()
+    .activeOffsetX([-10, 10]) // Only activate after 10px horizontal movement
+    .failOffsetY([-10, 10]) // Fail gesture if vertical movement exceeds 10px
+    .onTouchesDown(() => {
+      isHorizontal.value = false;
+    })
     .onUpdate((event) => {
       if (isOpen.value) return; // prevent dragging open cell
+
       const dx = event.translationX;
 
       // If swiping right and no left actions → block
@@ -54,14 +61,18 @@ export const SwipeableComponent: React.FC<SwipeableProps> = ({
     .onEnd(() => {
       if (gestureOffset.value > threshold) {
         // Swiped right
-        translateX.value = withSpring(maxSwipeDistance);
-        isOpen.value = true;
-        openDirection.value = 'right';
+        if (renderLeftActions) {
+          translateX.value = withSpring(maxSwipeDistance);
+          isOpen.value = true;
+          openDirection.value = 'right';
+        }
       } else if (gestureOffset.value < -threshold) {
         // Swiped left
-        translateX.value = withSpring(-maxSwipeDistance);
-        isOpen.value = true;
-        openDirection.value = 'left';
+        if (renderRightActions) {
+          translateX.value = withSpring(-maxSwipeDistance);
+          isOpen.value = true;
+          openDirection.value = 'left';
+        }
       } else {
         // Not far enough — reset
         translateX.value = withSpring(0);
