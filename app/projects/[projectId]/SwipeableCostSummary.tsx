@@ -61,8 +61,9 @@ const SwipeableCostSummary = React.memo(
     );
 
     const renderRightActions = useCallback(() => {
+      if (item.bidAmount > 0 || item.spentAmount > 0) return null;
       return <RightAction onDelete={() => handleDelete(item.id)} />;
-    }, [handleDelete, item.id]);
+    }, [handleDelete, item.id, item.bidAmount, item.spentAmount]);
 
     if (allowSwipeDelete)
       return (
