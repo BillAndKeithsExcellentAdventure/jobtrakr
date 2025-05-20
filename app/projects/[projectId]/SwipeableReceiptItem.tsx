@@ -94,7 +94,12 @@ const SwipeableReceiptItem = ({
         <Pressable onPress={() => router.push(`/projects/${projectId}/receipt/${item.id}`)}>
           <View style={styles.itemInfo}>
             {item.amount === 0 && totalOfAllReceiptItems === 0 && item.imageId ? (
-              <Base64Image base64String={item.thumbnail} height={ITEM_HEIGHT} width={120} />
+              <>
+                <Base64Image base64String={item.thumbnail} height={ITEM_HEIGHT} width={120} />
+                <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
+                  <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
+                </View>
+              </>
             ) : (
               <>
                 <View style={{ flex: 1, justifyContent: 'center' }}>
