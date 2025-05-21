@@ -129,6 +129,7 @@ const ProjectReceiptsPage = () => {
                   marginBottom: 0,
                   paddingBottom: 10,
                   borderBottomWidth: 1,
+                  borderColor: colors.border,
                 }}
               >
                 <View
@@ -158,7 +159,13 @@ const ProjectReceiptsPage = () => {
                 </View>
               ) : (
                 <View style={{ flex: 1 }}>
-                  <View style={{ flex: 1, width: '100%', backgroundColor: colors.listBackground }}>
+                  <View
+                    style={{
+                      flex: 1,
+                      width: '100%',
+                      backgroundColor: colors.listBackground,
+                    }}
+                  >
                     <FlashList
                       estimatedItemSize={ITEM_HEIGHT}
                       data={allReceipts}

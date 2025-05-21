@@ -246,7 +246,6 @@ const SetEstimatedCostsPage = () => {
                 </View>
               </View>
               <FlatList
-                keyboardShouldPersistTaps="handled"
                 onLayout={layoutChanged}
                 ref={flatListRef}
                 style={{ borderTopWidth: 1, borderColor: colors.border }}

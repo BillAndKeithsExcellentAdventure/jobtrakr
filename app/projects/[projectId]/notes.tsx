@@ -14,6 +14,8 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import SwipeableNote from './SwipeableNote';
+import { useColors } from '@/context/ColorsContext';
 
 const ProjectNotes = () => {
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
@@ -42,8 +44,8 @@ const ProjectNotes = () => {
 
   const notes = useAllRows(projectId, 'notes');
   const addNewNote = useAddRowCallback(projectId, 'notes');
-  const removeNote = useDeleteRowCallback(projectId, 'notes');
   const updateNote = useUpdateRowCallback(projectId, 'notes');
+  const colors = useColors();
 
   const addNote = useCallback(async () => {
     if (!newNoteTitle.trim()) {
@@ -55,34 +57,6 @@ const ProjectNotes = () => {
     addNewNote(newNote);
     setNewNoteTitle('');
   }, [addNewNote, newNoteTitle]);
-
-  const deleteNote = useCallback(
-    (id: string) => {
-      Alert.alert('Delete Note', 'Are you sure you want to delete this note?', [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          onPress: async () => {
-            removeNote(id);
-          },
-        },
-      ]);
-    },
-    [removeNote],
-  );
-
-  const toggleCompleted = useCallback(
-    (id: string, completed: boolean) => {
-      const matchingNote = notes.find((note) => note.id === id);
-      if (!matchingNote) return;
-
-      console.log('Toggling completed', id, completed);
-      const noteToUpdate = { ...matchingNote };
-      noteToUpdate.completed = !completed;
-      updateNote(id, noteToUpdate);
-    },
-    [updateNote, notes],
-  );
 
   const saveEdit = useCallback(async () => {
     if (!editingNote || !editingNote.task || !editingNote.task.trim()) {
@@ -98,6 +72,16 @@ const ProjectNotes = () => {
     setEditingNote(null); // Cancel editing
   }, []);
 
+  const handleSetNoteToEdit = useCallback(
+    (id: string) => {
+      const matchingNote = notes.find((note) => note.id === id);
+      if (!matchingNote) return;
+
+      setEditingNote({ ...matchingNote });
+    },
+    [notes],
+  );
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen options={{ title: `${projectName}`, headerShown: true }} />
@@ -107,88 +91,79 @@ const ProjectNotes = () => {
         ) : (
           <>
             <View style={styles.centeredView}>
-              {/* Show Add Note Section only if no note is being edited */}
-              {!editingNote && (
-                <View>
-                  <TextInput
-                    value={newNoteTitle}
-                    onChangeText={setNewNoteTitle}
-                    placeholder="Enter note"
-                    style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
-                  />
-                  <ActionButton
-                    onPress={addNote}
-                    type={newNoteTitle ? 'action' : 'disabled'}
-                    title="Add Note"
-                  />
-                </View>
-              )}
-
-              {/* Editing Note Section */}
-              {editingNote && (
-                <View>
-                  <TextInput
-                    value={editingNote.task ?? ''}
-                    onChangeText={(title) => setEditingNote({ ...editingNote, task: title })}
-                    placeholder="Edit note title"
-                    style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
-                  />
-
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <ActionButton style={styles.saveButton} onPress={saveEdit} type={'ok'} title="Save" />
+              <View style={[styles.inputAreaView, { backgroundColor: colors.listBackground }]}>
+                {/* Show Add Note Section only if no note is being edited */}
+                {!editingNote && (
+                  <View style={{ backgroundColor: colors.listBackground }}>
+                    <TextInput
+                      value={newNoteTitle}
+                      onChangeText={setNewNoteTitle}
+                      placeholder="Enter note"
+                      multiline
+                      numberOfLines={3}
+                      style={{
+                        borderWidth: 1,
+                        padding: 8,
+                        marginBottom: 10,
+                        minHeight: 40,
+                        maxHeight: 100,
+                        textAlignVertical: 'top',
+                        backgroundColor: colors.background,
+                      }}
+                    />
                     <ActionButton
-                      style={styles.cancelButton}
-                      onPress={cancelEdit}
-                      type={'cancel'}
-                      title="Cancel"
+                      onPress={addNote}
+                      type={newNoteTitle ? 'action' : 'disabled'}
+                      title="Add Note"
                     />
                   </View>
-                </View>
-              )}
+                )}
 
+                {/* Editing Note Section */}
+                {editingNote && (
+                  <View style={{ backgroundColor: colors.listBackground }}>
+                    <TextInput
+                      value={editingNote.task ?? ''}
+                      onChangeText={(title) => setEditingNote({ ...editingNote, task: title })}
+                      placeholder="Edit note title"
+                      multiline
+                      numberOfLines={3}
+                      style={{
+                        borderWidth: 1,
+                        padding: 8,
+                        marginBottom: 10,
+                        minHeight: 40,
+                        maxHeight: 100,
+                        textAlignVertical: 'top',
+                        backgroundColor: colors.background,
+                      }}
+                    />
+
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        backgroundColor: colors.listBackground,
+                      }}
+                    >
+                      <ActionButton style={styles.saveButton} onPress={saveEdit} type={'ok'} title="Save" />
+                      <ActionButton
+                        style={styles.cancelButton}
+                        onPress={cancelEdit}
+                        type={'cancel'}
+                        title="Cancel"
+                      />
+                    </View>
+                  </View>
+                )}
+              </View>
               <FlatList
-                style={{ marginTop: 20 }}
+                style={{ marginTop: 10, borderColor: colors.border, borderTopWidth: 1 }}
                 data={notes}
                 keyExtractor={(item) => item.id ?? ''}
                 renderItem={({ item }) => (
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      marginVertical: 5,
-                      borderBottomWidth: 1,
-                      borderBottomColor: 'gray',
-                      paddingBottom: 5,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        flex: 1,
-                        textOverflow: 'ellipsis',
-                        alignSelf: 'center',
-                        justifyContent: 'center',
-                        marginBottom: 5,
-                        textDecorationLine: item.completed ? 'line-through' : 'none',
-                      }}
-                    >
-                      {item.task}
-                    </Text>
-                    <View style={{ flexDirection: 'row', marginLeft: 10, alignSelf: 'center' }}>
-                      <TouchableOpacity onPress={() => toggleCompleted(item.id!, item.completed!)}>
-                        <FontAwesomeIcon
-                          name={item.completed ? 'undo' : 'check-circle'}
-                          size={28}
-                          color={item.completed ? 'gray' : 'green'}
-                        />
-                      </TouchableOpacity>
-
-                      <TouchableOpacity onPress={() => deleteNote(item.id!)}>
-                        <FontAwesomeIcon name="trash" size={28} color="red" style={{ marginLeft: 10 }} />
-                      </TouchableOpacity>
-
-                      <TouchableOpacity onPress={() => setEditingNote({ ...item })}>
-                        <FontAwesomeIcon name="edit" size={28} color="blue" style={{ marginLeft: 10 }} />
-                      </TouchableOpacity>
-                    </View>
+                  <View style={{ borderColor: colors.border, borderBottomWidth: 1 }}>
+                    <SwipeableNote projectId={projectId} note={item} setNoteToEdit={handleSetNoteToEdit} />
                   </View>
                 )}
               />
@@ -207,12 +182,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start', // Align items at the top vertically
     alignItems: 'center', // Center horizontally
-    padding: 10,
     width: '100%',
   },
+
+  inputAreaView: {
+    padding: 10,
+    borderRadius: 8,
+  },
+
   centeredView: {
     width: '100%',
-    paddingHorizontal: 10,
   },
   input: {
     borderWidth: 1,

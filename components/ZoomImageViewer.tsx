@@ -1,5 +1,5 @@
 import { useColors } from '@/context/ColorsContext';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
@@ -9,7 +9,7 @@ interface ZoomImageViewerProps {
   imageUri: string;
 }
 
-export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = ({ imageUri }) => {
+export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = React.memo(({ imageUri }) => {
   const [containerWidth, setContainerWidth] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
   const colors = useColors();
@@ -19,36 +19,32 @@ export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = ({ imageUri }) =>
   const offsetX = useSharedValue(0);
   const offsetY = useSharedValue(0);
 
-  // Define the pinch gesture for scaling
-  const pinchGesture = Gesture.Pinch().onChange((event) => {
-    scale.value = event.scale >= 1 ? event.scale : 1; // Update scale as the pinch gesture changes
-  });
+  // Memoized gestures to prevent re-creation
+  const combinedGesture = useMemo(() => {
+    const pinchGesture = Gesture.Pinch().onChange((event) => {
+      scale.value = event.scale >= 1 ? event.scale : 1;
+    });
 
-  const panGesture = Gesture.Pan().onChange((event) => {
-    offsetX.value += event.changeX;
-    offsetY.value += event.changeY;
-  });
+    const panGesture = Gesture.Pan().onChange((event) => {
+      offsetX.value += event.changeX;
+      offsetY.value += event.changeY;
+    });
 
-  // Combine the pinch and pan gestures
-  const combinedGesture = Gesture.Simultaneous(pinchGesture, panGesture);
+    return Gesture.Simultaneous(pinchGesture, panGesture);
+  }, []);
 
-  // Animated style for the image
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { scale: scale.value }, // Apply scaling
-        { translateX: offsetX.value }, // Apply horizontal translation
-        { translateY: offsetY.value }, // Apply vertical translation
-      ],
-    };
-  });
+  // Memoized animated style
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }, { translateX: offsetX.value }, { translateY: offsetY.value }],
+  }));
 
-  if (!imageUri)
+  if (!imageUri) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <Text txtSize="title" text="No Image Specified" />
       </View>
     );
+  }
 
   // onLayout function to get the container dimensions
   const onLayout = (event: any) => {
@@ -65,13 +61,16 @@ export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = ({ imageUri }) =>
             <Animated.View
               style={[
                 styles.imageContainer,
-                { width: containerWidth * 0.95, height: containerHeight * 0.95 },
+                {
+                  width: containerWidth * 0.95,
+                  height: containerHeight * 0.95,
+                },
               ]}
             >
               <Animated.Image
                 source={{ uri: imageUri }}
                 style={[styles.image, animatedStyle]}
-                resizeMode={'contain'}
+                resizeMode="contain"
               />
             </Animated.View>
           </GestureDetector>
@@ -79,7 +78,7 @@ export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = ({ imageUri }) =>
       </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

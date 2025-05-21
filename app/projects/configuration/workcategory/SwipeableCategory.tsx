@@ -1,3 +1,4 @@
+import { SwipeableComponent } from '@/components/SwipeableComponent';
 import { Text, View } from '@/components/Themed';
 import { deleteBg } from '@/constants/Colors';
 import { useColors } from '@/context/ColorsContext';
@@ -11,8 +12,8 @@ import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-
+const RIGHT_ACTION_WIDTH = 80;
+const SWIPE_THRESHOLD_WIDTH = 50;
 const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
   const processDelete = useDeleteRowCallback('categories');
   const router = useRouter();
@@ -33,12 +34,11 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
   const RightAction = () => {
     return (
       <Pressable
-        style={styles.rightAction}
+        style={[styles.rightAction, { width: RIGHT_ACTION_WIDTH }]}
         onPress={() => {
           handleDelete(category.id);
         }}
       >
-        {' '}
         <MaterialIcons name="delete" size={24} color="white" />
       </Pressable>
     );
@@ -48,14 +48,11 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
   const code = useTableValue('categories', category.id, 'code');
 
   return (
-    <ReanimatedSwipeable
+    <SwipeableComponent
       key={category.id}
-      friction={2}
-      enableTrackpadTwoFingerGesture
-      rightThreshold={40}
+      threshold={SWIPE_THRESHOLD_WIDTH}
+      actionWidth={RIGHT_ACTION_WIDTH}
       renderRightActions={RightAction}
-      overshootRight={false}
-      enableContextMenu
     >
       <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
         <Pressable
@@ -73,7 +70,7 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
           </View>
         </Pressable>
       </View>
-    </ReanimatedSwipeable>
+    </SwipeableComponent>
   );
 };
 
@@ -107,7 +104,6 @@ const styles = StyleSheet.create({
   },
 
   rightAction: {
-    width: 100,
     height: 40,
     backgroundColor: deleteBg,
     alignItems: 'center',

@@ -1,7 +1,8 @@
 import { TextField } from '@/components/TextField';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, ViewStyle } from 'react-native';
 import { useThemeColor, View } from './Themed';
+import { Pressable } from 'react-native-gesture-handler';
 
 /* -------------------------------------------
  Standard Supporting React State 
@@ -106,8 +107,8 @@ export const OptionPickerItem: React.FC<OptionPickerItemProps> = ({
           editable={editable}
         />
       </View>
-      <Pressable onPress={onPickerButtonPress}>
-        <View style={[styles.pickerButtonContainer, { justifyContent: 'flex-end' }]}>
+      <Pressable onPress={onPickerButtonPress} style={{ justifyContent: 'flex-end' }}>
+        <View style={styles.pickerButtonContainer}>
           <Ionicons name="ellipsis-horizontal-circle" size={36} color={iconColor} />
         </View>
       </Pressable>

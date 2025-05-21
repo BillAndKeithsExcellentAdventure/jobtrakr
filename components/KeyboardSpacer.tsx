@@ -1,9 +1,9 @@
 import React from 'react';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import { PADDING_BOTTOM } from './useKeyboardGradualAnimation';
 
 interface KeyboardSpacerProps {
-  height: Animated.SharedValue<number>;
+  height: SharedValue<number>;
 }
 
 export const KeyboardSpacer = React.memo(({ height }: KeyboardSpacerProps) => {

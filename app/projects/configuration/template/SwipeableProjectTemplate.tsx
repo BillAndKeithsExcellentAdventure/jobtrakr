@@ -1,3 +1,4 @@
+import { SwipeableComponent } from '@/components/SwipeableComponent';
 import { Text, View } from '@/components/Themed';
 import { deleteBg } from '@/constants/Colors';
 import { useColors } from '@/context/ColorsContext';
@@ -9,7 +10,9 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+
+const RIGHT_ACTION_WIDTH = 100;
+const SWIPE_THRESHOLD_WIDTH = 50;
 
 const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => {
   return (
@@ -41,14 +44,11 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
   }, [handleDelete, projectTemplate.id]);
 
   return (
-    <ReanimatedSwipeable
+    <SwipeableComponent
       key={projectTemplate.id}
-      friction={2}
-      enableTrackpadTwoFingerGesture
-      rightThreshold={40}
+      threshold={SWIPE_THRESHOLD_WIDTH}
+      actionWidth={RIGHT_ACTION_WIDTH}
       renderRightActions={renderRightActions}
-      overshootRight={false}
-      enableContextMenu
     >
       <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
         <Pressable
@@ -68,7 +68,7 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
           </View>
         </Pressable>
       </View>
-    </ReanimatedSwipeable>
+    </SwipeableComponent>
   );
 };
 
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   rightAction: {
-    width: 100,
+    width: RIGHT_ACTION_WIDTH,
     height: 70,
     backgroundColor: deleteBg,
     alignItems: 'center',

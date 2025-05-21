@@ -82,7 +82,7 @@ const EditReceiptDetailsPage = () => {
   const handleVendorChange = useCallback((vendor: string) => {
     setReceipt((prevReceipt) => ({
       ...prevReceipt,
-      Vendor: vendor,
+      vendor,
     }));
   }, []);
 
@@ -109,7 +109,7 @@ const EditReceiptDetailsPage = () => {
             onChange={(value: number): void => {
               setReceipt((prevReceipt) => ({
                 ...prevReceipt,
-                Amount: value,
+                amount: value,
               }));
             }}
           />
@@ -117,8 +117,8 @@ const EditReceiptDetailsPage = () => {
             <OptionPickerItem
               containerStyle={styles.inputContainer}
               optionLabel={receipt.vendor}
-              label="Vendor"
               placeholder="Vendor"
+              label="Vendor"
               onOptionLabelChange={handleVendorChange}
               onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
             />
@@ -140,7 +140,7 @@ const EditReceiptDetailsPage = () => {
             onChangeText={(text): void => {
               setReceipt((prevReceipt) => ({
                 ...prevReceipt,
-                Description: text,
+                description: text,
               }));
             }}
           />
@@ -152,7 +152,7 @@ const EditReceiptDetailsPage = () => {
             onChangeText={(text): void => {
               setReceipt((prevReceipt) => ({
                 ...prevReceipt,
-                Notes: text,
+                notes: text,
               }));
             }}
           />

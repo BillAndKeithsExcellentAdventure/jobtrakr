@@ -1,3 +1,4 @@
+import { SwipeableComponent } from '@/components/SwipeableComponent';
 import { Text, View } from '@/components/Themed';
 import { deleteBg } from '@/constants/Colors';
 import { useColors } from '@/context/ColorsContext';
@@ -10,11 +11,12 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+const RIGHT_ACTION_WIDTH = 80;
+const SWIPE_THRESHOLD_WIDTH = 50;
 
 const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => {
   return (
-    <Pressable onPress={onDelete} style={styles.rightAction}>
+    <Pressable onPress={onDelete} style={[styles.rightAction, { width: RIGHT_ACTION_WIDTH }]}>
       <MaterialIcons name="delete" size={24} color="white" />
     </Pressable>
   );
@@ -42,14 +44,11 @@ const SwipeableCategoryItem = ({ item, category }: { item: WorkItemData; categor
   }, [handleDelete, item.id]);
 
   return (
-    <ReanimatedSwipeable
+    <SwipeableComponent
       key={item.id}
-      friction={2}
-      enableTrackpadTwoFingerGesture
-      rightThreshold={40}
+      threshold={SWIPE_THRESHOLD_WIDTH}
+      actionWidth={RIGHT_ACTION_WIDTH}
       renderRightActions={renderRightActions}
-      overshootRight={false}
-      enableContextMenu
     >
       <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
         <Pressable
@@ -69,7 +68,7 @@ const SwipeableCategoryItem = ({ item, category }: { item: WorkItemData; categor
           </View>
         </Pressable>
       </View>
-    </ReanimatedSwipeable>
+    </SwipeableComponent>
   );
 };
 
@@ -95,7 +94,6 @@ const styles = StyleSheet.create({
     width: 100,
   },
   rightAction: {
-    width: 100,
     height: 40,
     backgroundColor: deleteBg,
     alignItems: 'center',
