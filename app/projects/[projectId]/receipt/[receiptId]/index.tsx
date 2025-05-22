@@ -49,6 +49,7 @@ const ReceiptDetailsPage = () => {
   useEffect(() => {
     const match = allProjectReceipts.find((r) => r.id === receiptId);
     if (match) {
+      console.log('ReceiptDetailsPage - match:', match);
       setReceipt({ ...match });
     }
   }, [receiptId, allProjectReceipts]);
@@ -80,7 +81,13 @@ const ReceiptDetailsPage = () => {
     router.push(`/projects/${projectId}/receipt/${receiptId}/addLineItem`);
   }, [receipt, receiptId]);
 
-  const requestAIProcessing = useCallback(() => {}, []);
+  const requestAIProcessing = useCallback(() => {
+    console.log(
+      `requestAIProcessing - route = /projects/${projectId}/receipt/${receiptId}/requestAIProcessing?imageId=${receipt.imageId}`,
+    );
+    router.push(`/projects/${projectId}/receipt/${receiptId}/requestAIProcessing?imageId=${receipt.imageId}`);
+  }, [projectId, receiptId, receipt.imageId]);
+
   const [containerHeight, setContainerHeight] = useState(0);
 
   const onLayout = (event: LayoutChangeEvent) => {
