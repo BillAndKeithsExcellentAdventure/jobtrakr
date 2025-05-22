@@ -73,6 +73,7 @@ const CategorySpecificCostItemsPage = () => {
 
       costItems.push({
         id: costItem.id,
+        workItemId: workItem.id,
         code: workItem.code,
         title: workItem.name,
         bidAmount: costItem.bidAmount,

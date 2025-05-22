@@ -15,13 +15,12 @@ import { Alert, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CostItemDetails = () => {
-  const { projectId, costSummaryItemId, sectionCode, itemCode, itemTitle, itemSpent } = useLocalSearchParams<{
+  const { projectId, costSummaryItemId, sectionCode, itemCode, itemTitle } = useLocalSearchParams<{
     projectId: string;
     costSummaryItemId: string;
     sectionCode: string;
     itemCode: string;
     itemTitle: string;
-    itemSpent: string;
   }>();
   const [itemEstimate, setItemEstimate] = useState(0);
   const router = useRouter();
@@ -30,7 +29,7 @@ const CostItemDetails = () => {
   const updateBidEstimate = useUpdateRowCallback(projectId, 'workItemSummaries');
   const deleteCostSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
   const workItemSummary: WorkItemSummaryData | null = useMemo(() => {
-    const workItem = allWorkItemSummaries.find((item) => item.workItemId === costSummaryItemId);
+    const workItem = allWorkItemSummaries.find((item) => item.id === costSummaryItemId);
     if (workItem) {
       return {
         ...workItem,
@@ -39,7 +38,7 @@ const CostItemDetails = () => {
     return null;
   }, [allWorkItemSummaries, costSummaryItemId]);
 
-  const amountSpent = useWorkItemSpentValue(projectId, costSummaryItemId);
+  const amountSpent = useWorkItemSpentValue(projectId, workItemSummary ? workItemSummary.workItemId : '');
 
   useEffect(() => {
     setItemEstimate(workItemSummary ? workItemSummary.bidAmount : 0);

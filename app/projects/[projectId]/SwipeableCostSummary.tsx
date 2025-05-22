@@ -91,7 +91,6 @@ const SwipeableCostSummary = React.memo(({ item, sectionCode, projectId }: Props
                 sectionCode,
                 itemCode: item.code,
                 itemTitle: item.title,
-                itemSpent: item.spentAmount,
               },
             });
           }}

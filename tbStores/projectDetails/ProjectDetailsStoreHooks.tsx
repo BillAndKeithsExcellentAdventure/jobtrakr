@@ -30,8 +30,8 @@ export interface WorkItemSummaryData {
 }
 
 export interface WorkItemSpentSummary {
-  workItemId: string;
-  spentAmount: number;
+  workItemId: string; // IMPORTANT - this is the workItemId NOT the id of the WorkItemSummaryData.
+  spentAmount: number; //     This is because the receipts are linked to the workItem and category.
 }
 
 export type ReceiptData = {

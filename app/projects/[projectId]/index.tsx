@@ -43,6 +43,7 @@ export function CostSectionDataCodeCompareAsNumber(a: CostSectionData, b: CostSe
 
 export interface CostItemData {
   id: string;
+  workItemId: string;
   code: string;
   title: string;
   bidAmount: number;
@@ -123,7 +124,8 @@ const ProjectDetailsPage = () => {
       }
 
       section.data.push({
-        id: workItem.id,
+        id: costItem.id,
+        workItemId: workItem.id,
         code: workItem.code,
         title: workItem.name,
         bidAmount: costItem.bidAmount,
@@ -253,7 +255,6 @@ const ProjectDetailsPage = () => {
           projectId,
           categoryId: item.categoryId,
           bidAmount: formatCurrency(item.totalBidAmount, true, true),
-          spentAmount: formatCurrency(item.totalSpentAmount, true, true),
         },
       });
     };
