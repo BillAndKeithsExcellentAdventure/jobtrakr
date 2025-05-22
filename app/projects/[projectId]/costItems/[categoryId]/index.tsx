@@ -8,7 +8,7 @@ import {
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useProject } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { useAllRows, useIsStoreAvailableCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome5, FontAwesome6 } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -84,6 +84,22 @@ const CategorySpecificCostItemsPage = () => {
     return costItems.sort(CostItemDataCodeCompareAsNumber);
   }, [allWorkItemSummaries, allWorkItems, allActualCostItems, categoryId]);
 
+  // get a list of unused work items not represented in allWorkItemSummaries and in the current category
+  const unusedWorkItemsIdsInCategory = useMemo(
+    () =>
+      allWorkItems
+        .filter(
+          (w) => !allWorkItemSummaries.some((s) => s.workItemId === w.id) && w.categoryId === categoryId,
+        )
+        .map((wi) => wi.id),
+    [allWorkItemSummaries, allWorkItems, categoryId],
+  );
+
+  const unusedWorkItemsInCategoryString = useMemo(
+    () => unusedWorkItemsIdsInCategory.join(','),
+    [unusedWorkItemsIdsInCategory],
+  );
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
@@ -91,18 +107,46 @@ const CategorySpecificCostItemsPage = () => {
           headerShown: true,
           title: 'Cost Breakdown',
           headerRight: () => (
-            <Pressable
-              style={{ marginRight: 0 }}
-              onPress={() => {
-                router.push(
-                  `/projects/${projectId}/setEstimatedCosts/?projectName=${encodeURIComponent(
-                    projectData!.name,
-                  )}&categoryId=${categoryId}`,
-                );
+            <View
+              style={{
+                flexDirection: 'row',
+                gap: 10,
+                alignContent: 'flex-end',
+                backgroundColor: 'transparent',
               }}
             >
-              <FontAwesome5 name="search-dollar" size={24} color={colors.iconColor} />
-            </Pressable>
+              {unusedWorkItemsIdsInCategory.length > 0 && (
+                <Pressable
+                  style={{ marginRight: 0 }}
+                  onPress={() => {
+                    router.push({
+                      pathname: '/projects/[projectId]/costItems/[categoryId]/addCostItems',
+                      params: {
+                        projectId,
+                        categoryId,
+                        categoryName: costItemsCategory?.name,
+                        categoryCode: costItemsCategory?.code,
+                        availableWorkItemIds: unusedWorkItemsInCategoryString,
+                      },
+                    });
+                  }}
+                >
+                  <FontAwesome6 name="circle-dollar-to-slot" size={24} color={colors.iconColor} />
+                </Pressable>
+              )}
+              <Pressable
+                style={{ marginRight: 0 }}
+                onPress={() => {
+                  router.push(
+                    `/projects/${projectId}/setEstimatedCosts/?projectName=${encodeURIComponent(
+                      projectData!.name,
+                    )}&categoryId=${categoryId}`,
+                  );
+                }}
+              >
+                <FontAwesome5 name="search-dollar" size={24} color={colors.iconColor} />
+              </Pressable>
+            </View>
           ),
         }}
       />
