@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useMemo, useRef } from 'react';
 import { Alert, StyleSheet } from 'react-native';
-import { Pressable, TouchableOpacity } from 'react-native-gesture-handler';
+import { Pressable } from 'react-native-gesture-handler';
 import FontAwesomeIcon from '@expo/vector-icons/FontAwesome';
 
 import Base64Image from '@/components/Base64Image';
@@ -44,21 +44,21 @@ const RightAction = React.memo(
         justifyContent: 'center',
       }}
     >
-      <TouchableOpacity onPress={onToggleComplete} style={{ width: 50 }}>
+      <Pressable onPress={onToggleComplete} style={{ width: 50 }}>
         <FontAwesomeIcon
           name={isCompleted ? 'undo' : 'check-circle'}
           size={28}
           color={isCompleted ? 'gray' : 'green'}
         />
-      </TouchableOpacity>
+      </Pressable>
 
-      <TouchableOpacity onPress={onDelete} style={{ width: 50 }}>
+      <Pressable onPress={onDelete} style={{ width: 50 }}>
         <FontAwesomeIcon name="trash" size={28} color="red" />
-      </TouchableOpacity>
+      </Pressable>
 
-      <TouchableOpacity onPress={onEdit} style={{ width: 50 }}>
+      <Pressable onPress={onEdit} style={{ width: 50 }}>
         <FontAwesomeIcon name="edit" size={28} color="blue" />
-      </TouchableOpacity>
+      </Pressable>
     </View>
   ),
 );

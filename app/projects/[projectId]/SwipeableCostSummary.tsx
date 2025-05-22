@@ -47,22 +47,30 @@ const SwipeableCostSummary = React.memo(({ item, sectionCode, projectId }: Props
   const removeCostItemSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
   const colors = useColors();
 
-  const handleDelete = useCallback(
-    (itemId: string) => {
-      Alert.alert(
-        'Delete Cost Summary',
-        'Are you sure you want to delete this cost item summary?',
-        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeCostItemSummary(itemId) }],
-        { cancelable: true },
-      );
-    },
-    [removeCostItemSummary],
-  );
+  const handleDelete = useCallback(() => {
+    Alert.alert(
+      'Delete Cost Summary',
+      'Are you sure you want to delete this cost item summary?',
+      [
+        { text: 'Cancel' },
+        {
+          text: 'Delete',
+          onPress: () => {
+            const result = removeCostItemSummary(item.id);
+            if (result.status !== 'Success') {
+              alert(`Unable to remove item with id=${item.id}. ${result.msg}`);
+            }
+          },
+        },
+      ],
+      { cancelable: true },
+    );
+  }, [removeCostItemSummary, item.id]);
 
   // use useMemo instead of useCallback to avoid swipeable showing a blank area
   const renderRightActions = useMemo(() => {
     if (item.bidAmount > 0 || item.spentAmount > 0) return undefined;
-    return () => <RightAction onDelete={() => handleDelete(item.id)} />;
+    return () => <RightAction onDelete={handleDelete} />;
   }, [handleDelete, item.id, item.bidAmount, item.spentAmount]);
 
   return (

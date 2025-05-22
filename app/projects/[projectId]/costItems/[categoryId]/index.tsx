@@ -72,7 +72,7 @@ const CategorySpecificCostItemsPage = () => {
         .reduce((sum, item) => sum + item.amount, 0);
 
       costItems.push({
-        id: workItem.id,
+        id: costItem.id,
         code: workItem.code,
         title: workItem.name,
         bidAmount: costItem.bidAmount,

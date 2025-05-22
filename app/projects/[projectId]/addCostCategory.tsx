@@ -1,25 +1,26 @@
+import { ActionButton } from '@/components/ActionButton';
+import OkayCancelButtons from '@/components/OkayCancelButtons';
 import { Text, View } from '@/components/Themed';
 import { Colors } from '@/constants/Colors';
 import { useColors } from '@/context/ColorsContext';
 import {
   useAllRows,
-  useTableValue,
-  useTemplateWorkItemData,
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
-import { createItemsArray } from '@/utils/array';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, SectionList, StyleSheet, TouchableOpacity } from 'react-native';
+import { useAddRowCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { Ionicons } from '@expo/vector-icons';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Platform, SectionList, StyleSheet } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface ItemData {
   id: string;
   code: string;
   title: string;
-  isActive: boolean;
+  isSelected: boolean;
 }
 
 interface SectionData {
@@ -30,24 +31,32 @@ interface SectionData {
   isExpanded: boolean;
 }
 
-const ProjectTemplatesConfigurationScreen: React.FC = () => {
-  const { templateId } = useLocalSearchParams<{ templateId: string }>();
-  const templateName = useTableValue('templates', templateId, 'name');
-  const templateDescription = useTableValue('templates', templateId, 'description');
+const AddCostCategoryWorkItemsScreen: React.FC = () => {
+  const { projectId, projectName, availableCategories } = useLocalSearchParams<{
+    projectId: string;
+    projectName: string;
+    availableCategories: string;
+  }>();
   const colors = useColors();
-  const router = useRouter();
   const allProjectCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllRows('workItems', WorkItemDataCodeCompareAsNumber);
-  const { setActiveWorkItemIds, templateWorkItemIds, toggleWorkItemId } = useTemplateWorkItemData(templateId);
+  const [selectedWorkItemIds, setSelectedWorkItemIds] = useState<string[]>([]);
   const [sectionData, setSectionData] = useState<SectionData[]>([]);
-
-  const expandedSectionIdRef = useRef<string>(''); // Ref to keep track of the expanded section ID
+  const addWorkItemSummary = useAddRowCallback(projectId, 'workItemSummaries');
+  const expandedSectionIdRef = useRef<string>('');
+  const availableCategoryIds = useMemo(
+    () => (availableCategories ? availableCategories.split(',') : []),
+    [availableCategories],
+  );
 
   useEffect(() => {
     const fetchAllSectionsData = () => {
-      const sections: SectionData[] = allProjectCategories.map((category) => {
+      const filteredCategories = allProjectCategories.filter((category) =>
+        availableCategoryIds.includes(category.id),
+      );
+
+      const sections: SectionData[] = filteredCategories.map((category) => {
         const items = allWorkItems.filter((item) => item.categoryId === category.id);
-        const activeWorkItemIds = templateWorkItemIds ?? [];
 
         return {
           id: category.id,
@@ -58,7 +67,7 @@ const ProjectTemplatesConfigurationScreen: React.FC = () => {
             id: item.id,
             code: item.code,
             title: item.name,
-            isActive: !!activeWorkItemIds.find((id) => id === item.id), // Check if the item is in the activeWorkItemIds
+            isSelected: selectedWorkItemIds.includes(item.id),
           })),
         };
       });
@@ -66,7 +75,7 @@ const ProjectTemplatesConfigurationScreen: React.FC = () => {
       setSectionData(sections);
     };
     fetchAllSectionsData();
-  }, [allProjectCategories, allWorkItems, templateWorkItemIds]);
+  }, [allProjectCategories, allWorkItems, selectedWorkItemIds, availableCategoryIds]);
 
   const toggleSection = (id: string) => {
     expandedSectionIdRef.current = expandedSectionIdRef.current === id ? '' : id;
@@ -80,76 +89,81 @@ const ProjectTemplatesConfigurationScreen: React.FC = () => {
     );
   };
 
-  const toggleAllItemsActiveState = useCallback(
+  const toggleAllItemsSelectedState = useCallback(
     (sectionId: string) => {
       const section = sectionData.find((section) => section.id === sectionId);
       if (!section) return;
-      const allActive = section.data.every((item) => item.isActive);
-      const allSectionWorkItemIds = section.data.map((item) => item.id);
 
-      const activeWorkItems = createItemsArray<string>(
-        templateWorkItemIds,
-        allSectionWorkItemIds,
-        allActive ? 'exclude' : 'include',
-      );
-      setActiveWorkItemIds(activeWorkItems);
+      const allSelected = section.data.every((item) => item.isSelected);
+      const sectionItemIds = section.data.map((item) => item.id);
+
+      setSelectedWorkItemIds((prevIds) => {
+        if (allSelected) {
+          return prevIds.filter((id) => !sectionItemIds.includes(id));
+        } else {
+          return [...new Set([...prevIds, ...sectionItemIds])];
+        }
+      });
     },
-    [templateWorkItemIds, sectionData, setActiveWorkItemIds],
+    [sectionData],
   );
 
-  const toggleItemActiveState = useCallback(
-    (_: string, itemId: string) => {
-      toggleWorkItemId(itemId);
-    },
-    [toggleWorkItemId],
-  );
+  const toggleItemSelectedState = useCallback((_: string, itemId: string) => {
+    setSelectedWorkItemIds((prevIds) => {
+      if (prevIds.includes(itemId)) {
+        return prevIds.filter((id) => id !== itemId);
+      } else {
+        return [...prevIds, itemId];
+      }
+    });
+  }, []);
+
+  const addSelectedWorkItems = useCallback(() => {
+    if (selectedWorkItemIds.length < 1) return;
+
+    for (const workItemId of selectedWorkItemIds) {
+      if (!workItemId) continue;
+      addWorkItemSummary({
+        id: '',
+        workItemId,
+        bidAmount: 0,
+      });
+    }
+    router.back();
+  }, [router, selectedWorkItemIds, addWorkItemSummary]);
 
   const marginBottom = Platform.OS === 'android' ? 20 : 0;
-
-  const handleEditTemplate = (id: string) => {
-    router.push(`/projects/configuration/template/${id}/edit`);
-  };
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Define Template Work Items',
+          title: 'Add Work Items',
         }}
       />
       <View style={[styles.container, { marginBottom }]}>
-        <View style={{ alignItems: 'center' }}>
-          <View style={{ backgroundColor: colors.listBackground, padding: 10, width: '100%' }}>
-            <TouchableOpacity
-              onPress={() => handleEditTemplate(templateId)} // Edit on item press
-            >
-              <View style={[styles.categoryContent, { borderColor: colors.border, borderWidth: 1 }]}>
-                <View style={styles.categoryInfo}>
-                  <Text txtSize="title" text={templateName} />
-                  <Text>{templateDescription}</Text>
-                </View>
-                <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
         <SectionList
           showsVerticalScrollIndicator={false}
           stickySectionHeadersEnabled={false}
           sections={sectionData}
           renderItem={({ item, section }) =>
             section.isExpanded
-              ? renderItem(item, section.id, section.code, toggleItemActiveState, colors)
+              ? renderItem(item, section.id, section.code, toggleItemSelectedState, colors)
               : null
           }
           renderSectionHeader={({ section }) =>
-            renderSectionHeader(section, toggleSection, colors, toggleAllItemsActiveState)
+            renderSectionHeader(section, toggleSection, colors, toggleAllItemsSelectedState)
           }
           keyExtractor={(item) => item.id}
-          ListEmptyComponent={<Text>No data available</Text>}
+          ListEmptyComponent={<Text>No categories available</Text>}
         />
       </View>
+      <OkayCancelButtons
+        okTitle="Add Selected"
+        isOkEnabled={selectedWorkItemIds.length > 0}
+        onOkPress={addSelectedWorkItems}
+      />
     </SafeAreaView>
   );
 };
@@ -160,7 +174,7 @@ const renderSectionHeader = (
   colors: typeof Colors.light | typeof Colors.dark,
   toggleAllItemsActiveState: (sectionId: string) => void,
 ) => {
-  const activeCount = section.data.filter((item) => item.isActive).length;
+  const selectedCount = section.data.filter((item) => item.isSelected).length;
   const totalCount = section.data.length;
 
   return (
@@ -199,7 +213,7 @@ const renderSectionHeader = (
             backgroundColor: colors.listBackground,
           }}
         >
-          <Text txtSize="section-header" text={`${section.title} (${activeCount}/${totalCount})`} />
+          <Text txtSize="section-header" text={`${section.title} (${selectedCount}/${totalCount})`} />
           <Ionicons
             name={section.isExpanded ? 'chevron-up-sharp' : 'chevron-down-sharp'}
             size={24}
@@ -215,14 +229,14 @@ const renderItem = (
   item: ItemData,
   sectionId: string,
   sectionCode: string,
-  toggleItemActiveState: (sectionId: string, itemId: string) => void,
+  toggleItemSelectedState: (sectionId: string, itemId: string) => void,
   colors: typeof Colors.light | typeof Colors.dark,
 ) => {
-  const isActive = item.isActive;
+  const isSelected = item.isSelected;
   return (
     <Pressable
       style={[styles.item, { borderColor: colors.border }]}
-      onPress={() => toggleItemActiveState(sectionId, item.id)}
+      onPress={() => toggleItemSelectedState(sectionId, item.id)}
     >
       <View
         style={[
@@ -230,7 +244,7 @@ const renderItem = (
           {
             borderColor: colors.iconColor,
             borderWidth: 1,
-            backgroundColor: isActive ? colors.iconColor : 'transparent',
+            backgroundColor: isSelected ? colors.iconColor : 'transparent',
           },
         ]}
       />
@@ -283,4 +297,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProjectTemplatesConfigurationScreen;
+export default AddCostCategoryWorkItemsScreen;
