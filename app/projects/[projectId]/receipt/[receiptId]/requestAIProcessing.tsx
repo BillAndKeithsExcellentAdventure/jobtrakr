@@ -20,6 +20,7 @@ const processAIProcessing = async (
       organizationId: organizationId,
     };
     console.log(' token:', token);
+    console.log(' receiptImageData:', receiptImageData);
     const response = await fetch(
       'https://projecthoundbackend.keith-m-bertram.workers.dev/getReceiptIntelligence',
       {
@@ -39,6 +40,8 @@ const processAIProcessing = async (
     }
 
     const data = await response.json();
+    console.log(' response.ok?:', response.ok);
+    console.log(' response:', JSON.stringify(data));
 
     return data;
   } catch (error) {
@@ -49,12 +52,13 @@ const processAIProcessing = async (
 
 const requestAIProcessingPage = () => {
   const { projectId, imageId } = useLocalSearchParams<{ projectId: string; imageId: string }>();
-  const { userId, orgId } = useAuth();
+  const auth = useAuth();
+  const { userId, orgId } = auth;
   const [resultJson, setResultJson] = useState<any>(null);
 
   useEffect(() => {
     async function fetchAIResult() {
-      const token = await useAuth().getToken();
+      const token = await auth.getToken();
       if (!token) {
         console.error('No token available');
         return;
@@ -69,9 +73,10 @@ const requestAIProcessingPage = () => {
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <View style={styles.container}></View>
-      <Text>Request AI Processing</Text>
-      <Text>{JSON.stringify(resultJson)}</Text>
+      <View style={styles.container}>
+        <Text>Request AI Processing</Text>
+        <Text>{JSON.stringify(resultJson)}</Text>
+      </View>
     </SafeAreaView>
   );
 };
