@@ -89,7 +89,7 @@ const AddCostWorkItemsScreen: React.FC = () => {
           title: 'Add Work Items',
         }}
       />
-      <View style={[styles.container, { marginBottom }]}>
+      <View style={[styles.container, { marginBottom, paddingHorizontal: 10 }]}>
         <FlatList
           showsVerticalScrollIndicator={false}
           data={availableItems}
