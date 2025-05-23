@@ -22,7 +22,7 @@ const RightHeaderMenu = ({
 
   return (
     <Modal
-      animationType="fade"
+      animationType={Platform.OS === 'ios' ? 'fade' : 'none'}
       transparent={true}
       visible={modalVisible}
       onRequestClose={() => setModalVisible(false)} // Close on back press
@@ -51,11 +51,28 @@ export const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'flex-end',
     justifyContent: 'flex-start',
+    ...Platform.select({
+      android: {
+        backgroundColor: 'rgba(0,0,0,0.5)',
+      },
+    }),
   },
   modalContent: {
     marginRight: 10,
     borderRadius: 10,
     paddingHorizontal: 5,
-    elevation: 5, // To give the modal a slight shadow
+    elevation: 5,
+    zIndex: 1000, // Add this
+    ...Platform.select({
+      android: {
+        elevation: 5,
+      },
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+    }),
   },
 });
