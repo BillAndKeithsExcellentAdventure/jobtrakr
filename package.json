@@ -60,7 +60,8 @@
     "react": "19.0.0",
     "reconnecting-websocket": "^4.4.0",
     "tinybase": "^6.1.1",
-    "undefined": "react-native-community/datetimepicker"
+    "undefined": "react-native-community/datetimepicker",
+    "expo-sqlite": "~15.2.10"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
