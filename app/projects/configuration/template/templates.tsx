@@ -38,7 +38,7 @@ const ListProjectTemplates = () => {
   };
 
   const handleEditProjectTemplate = (id: string) => {
-    router.push(`/projects/configuration/template/${id}`);
+    router.push({ pathname: '/projects/configuration/template/[templateId]', params: { templateId: id } });
   };
 
   const renderHeaderRight = () => (

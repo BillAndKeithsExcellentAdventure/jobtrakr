@@ -107,7 +107,10 @@ const ProjectTemplatesConfigurationScreen: React.FC = () => {
   const marginBottom = Platform.OS === 'android' ? 20 : 0;
 
   const handleEditTemplate = (id: string) => {
-    router.push(`/projects/configuration/template/${id}/edit`);
+    router.push({
+      pathname: '/projects/configuration/template/[templateId]/edit',
+      params: { templateId: id },
+    });
   };
 
   return (

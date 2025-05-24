@@ -322,21 +322,23 @@ const ProjectDetailsPage = () => {
           headerShown: true,
           title: 'Project Overview',
           headerRight: () => (
-            <Pressable
-              style={{ marginRight: 0 }}
-              onPress={() => {
-                setHeaderMenuModalVisible(!headerMenuModalVisible);
-              }}
-            >
-              {({ pressed }) => (
-                <MaterialCommunityIcons
-                  name="menu"
-                  size={28}
-                  color={colors.iconColor}
-                  style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                />
-              )}
-            </Pressable>
+            <View style={{ marginRight: 0 }}>
+              <Pressable
+                style={{ marginRight: 0 }}
+                onPress={() => {
+                  setHeaderMenuModalVisible(!headerMenuModalVisible);
+                }}
+              >
+                {({ pressed }) => (
+                  <MaterialCommunityIcons
+                    name="menu"
+                    size={28}
+                    color={colors.iconColor}
+                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                  />
+                )}
+              </Pressable>
+            </View>
           ),
         }}
       />

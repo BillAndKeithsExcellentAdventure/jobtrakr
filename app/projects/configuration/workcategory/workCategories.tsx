@@ -49,7 +49,10 @@ const ListWorkCategories = () => {
   };
 
   const handleEditCategory = (id: string) => {
-    router.push(`/projects/configuration/workcategory/${id}`);
+    router.push({
+      pathname: '/projects/configuration/workcategory/[categoryId]',
+      params: { categoryId: category.id },
+    });
   };
 
   const handleCleanup = useCallback(() => {

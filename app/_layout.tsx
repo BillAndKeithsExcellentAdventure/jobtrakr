@@ -69,11 +69,7 @@ function RootLayoutNav() {
                 <ColorsProvider>
                   <SafeAreaProvider>
                     <GestureHandlerRootView>
-                      <Stack screenOptions={{ headerShown: false }}>
-                        <Stack.Screen name="index" />
-                        <Stack.Screen name="projects" />
-                        <Stack.Screen name="(auth)" />
-                      </Stack>
+                      <Stack screenOptions={{ headerShown: false }} />
                       <StatusBar
                         style={colorScheme === 'dark' ? 'light' : 'dark'}
                         backgroundColor="transparent"

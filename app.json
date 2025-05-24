@@ -32,12 +32,7 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app needs access to your location to set your project location.",
         "ITSAppUsesNonExemptEncryption": false,
-        "LSApplicationQueriesSchemes": [
-          "fb",
-          "instagram",
-          "twitter",
-          "tiktoksharesdk"
-        ]
+        "LSApplicationQueriesSchemes": ["fb", "instagram", "twitter", "tiktoksharesdk"]
       }
     },
     "android": {
@@ -72,7 +67,7 @@
         {
           "android": {
             "parentTheme": "Default",
-            "enforceNavigationBarContrast": false
+            "enforceNavigationBarContrast": true
           }
         }
       ],
@@ -87,12 +82,7 @@
       [
         "react-native-share",
         {
-          "ios": [
-            "fb",
-            "instagram",
-            "twitter",
-            "tiktoksharesdk"
-          ],
+          "ios": ["fb", "instagram", "twitter", "tiktoksharesdk"],
           "android": [
             "com.facebook.katana",
             "com.instagram.android",

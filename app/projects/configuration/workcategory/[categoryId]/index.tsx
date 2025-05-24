@@ -72,7 +72,10 @@ const ShowWorkCategory = () => {
   }, [categoryId, item, addWorkItem]);
 
   const handleEditCategory = (id: string) => {
-    router.push(`/projects/configuration/workcategory/${id}/edit`);
+    router.push({
+      pathname: '/projects/configuration/workcategory/[categoryId]/edit',
+      params: { categoryId: id },
+    });
   };
 
   if (!category) {

@@ -63,29 +63,54 @@ const ReceiptDetailsPage = () => {
 
   const showPicture = useCallback(
     (uri: string) => {
-      router.push(`/projects/${projectId}/receipt/${receiptId}/showImage/?uri=${uri}`);
+      router.push({
+        pathname: '/projects/[projectId]/receipt/[receiptId]/showImage',
+        params: {
+          projectId,
+          receiptId,
+          uri,
+        },
+      });
     },
-    [receipt, receiptId],
+    [projectId, receiptId],
   );
 
   const editDetails = useCallback(
     (item: ReceiptData) => {
-      router.push(`/projects/${projectId}/receipt/${receiptId}/edit`);
+      router.push({
+        pathname: '/projects/[projectId]/receipt/[receiptId]/edit',
+        params: {
+          projectId,
+          receiptId,
+        },
+      });
     },
-    [receipt, receiptId],
+    [projectId, receiptId],
   );
 
   const colors = useColors();
   const addLineItem = useCallback(() => {
-    console.log(`addLineItem - route = /projects/${projectId}/receipt/${receiptId}/addLineItem`);
-    router.push(`/projects/${projectId}/receipt/${receiptId}/addLineItem`);
-  }, [receipt, receiptId]);
+    router.push({
+      pathname: '/projects/[projectId]/receipt/[receiptId]/addLineItem',
+      params: {
+        projectId,
+        receiptId,
+      },
+    });
+  }, [projectId, receiptId]);
 
   const requestAIProcessing = useCallback(() => {
     console.log(
       `requestAIProcessing - route = /projects/${projectId}/receipt/${receiptId}/requestAIProcessing?imageId=${receipt.imageId}`,
     );
-    router.push(`/projects/${projectId}/receipt/${receiptId}/requestAIProcessing?imageId=${receipt.imageId}`);
+    router.push({
+      pathname: '/projects/[projectId]/receipt/[receiptId]/requestAIProcessing',
+      params: {
+        projectId,
+        receiptId,
+        imageId: receipt.imageId,
+      },
+    });
   }, [projectId, receiptId, receipt.imageId]);
 
   const [containerHeight, setContainerHeight] = useState(0);
