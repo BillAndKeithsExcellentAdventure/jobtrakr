@@ -153,68 +153,23 @@ const CategorySpecificCostItemsPage = () => {
         options={{
           headerShown: true,
           title: 'Cost Breakdown',
-          headerRight: () => {
-            if (Platform.OS === 'ios')
-              return (
-                <Pressable
-                  style={{ marginRight: 0 }}
-                  onPress={() => {
-                    setHeaderMenuModalVisible(!headerMenuModalVisible);
-                  }}
-                >
-                  {({ pressed }) => (
-                    <MaterialCommunityIcons
-                      name="menu"
-                      size={28}
-                      color={colors.iconColor}
-                      style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                    />
-                  )}
-                </Pressable>
-              );
-            return (
-              <View
-                style={{
-                  flexDirection: 'row',
-                  gap: 10,
-                  alignContent: 'flex-end',
-                  backgroundColor: 'transparent',
-                }}
-              >
-                {unusedWorkItemsIdsInCategory.length > 0 && (
-                  <Pressable
-                    style={{ marginRight: 0 }}
-                    onPress={() => {
-                      router.push({
-                        pathname: '/projects/[projectId]/costItems/[categoryId]/addCostItems',
-                        params: {
-                          projectId,
-                          categoryId,
-                          categoryName: costItemsCategory?.name,
-                          categoryCode: costItemsCategory?.code,
-                          availableWorkItemIds: unusedWorkItemsInCategoryString,
-                        },
-                      });
-                    }}
-                  >
-                    <FontAwesome6 name="circle-dollar-to-slot" size={24} color={colors.iconColor} />
-                  </Pressable>
-                )}
-                <Pressable
-                  style={{ marginRight: 0 }}
-                  onPress={() => {
-                    router.push(
-                      `/projects/${projectId}/setEstimatedCosts/?projectName=${encodeURIComponent(
-                        projectData!.name,
-                      )}&categoryId=${categoryId}`,
-                    );
-                  }}
-                >
-                  <FontAwesome5 name="search-dollar" size={24} color={colors.iconColor} />
-                </Pressable>
-              </View>
-            );
-          },
+          headerRight: () => (
+            <Pressable
+              style={{ marginRight: 0 }}
+              onPress={() => {
+                setHeaderMenuModalVisible(!headerMenuModalVisible);
+              }}
+            >
+              {({ pressed }) => (
+                <MaterialCommunityIcons
+                  name="menu"
+                  size={28}
+                  color={colors.iconColor}
+                  style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                />
+              )}
+            </Pressable>
+          ),
         }}
       />
 

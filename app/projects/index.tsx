@@ -229,20 +229,22 @@ export default function ProjectHomeScreen() {
           headerShown: true,
           title: 'Projects',
           headerRight: () => (
-            <Pressable
-              onPress={() => {
-                setHeaderMenuModalVisible(!headerMenuModalVisible);
-              }}
-            >
-              {({ pressed }) => (
-                <MaterialCommunityIcons
-                  name="menu"
-                  size={28}
-                  color={colors.iconColor}
-                  style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                />
-              )}
-            </Pressable>
+            <View>
+              <Pressable
+                onPress={() => {
+                  setHeaderMenuModalVisible(!headerMenuModalVisible);
+                }}
+              >
+                {({ pressed }) => (
+                  <MaterialCommunityIcons
+                    name="menu"
+                    size={28}
+                    color={colors.iconColor}
+                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                  />
+                )}
+              </Pressable>
+            </View>
           ),
         }}
       />

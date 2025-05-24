@@ -32,10 +32,16 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app needs access to your location to set your project location.",
         "ITSAppUsesNonExemptEncryption": false,
-        "LSApplicationQueriesSchemes": ["fb", "instagram", "twitter", "tiktoksharesdk"]
+        "LSApplicationQueriesSchemes": [
+          "fb",
+          "instagram",
+          "twitter",
+          "tiktoksharesdk"
+        ]
       }
     },
     "android": {
+      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "monochromeImage": "./assets/images/adaptive-icon.png",
@@ -62,6 +68,15 @@
     },
     "plugins": [
       [
+        "react-native-edge-to-edge",
+        {
+          "android": {
+            "parentTheme": "Default",
+            "enforceNavigationBarContrast": false
+          }
+        }
+      ],
+      [
         "expo-media-library",
         {
           "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
@@ -72,7 +87,12 @@
       [
         "react-native-share",
         {
-          "ios": ["fb", "instagram", "twitter", "tiktoksharesdk"],
+          "ios": [
+            "fb",
+            "instagram",
+            "twitter",
+            "tiktoksharesdk"
+          ],
           "android": [
             "com.facebook.katana",
             "com.instagram.android",
@@ -83,7 +103,8 @@
       ],
       "expo-router",
       "expo-secure-store",
-      "expo-video"
+      "expo-video",
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true
