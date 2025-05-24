@@ -234,6 +234,7 @@ export default function ProjectHomeScreen() {
         <View
           style={{
             minWidth: 30,
+            minHeight: 30,
             flexDirection: 'row',
             backgroundColor: 'transparent',
             marginRight: Platform.OS === 'android' ? 16 : 0,
