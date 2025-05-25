@@ -1,10 +1,8 @@
-import ProjectCameraView from '@/src/app/(protected)/(modals)/CameraView';
 import { ActionButton } from '@/src/components/ActionButton';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import { ProjectMediaList } from '@/src/components/ProjectMediaList';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { Text, View } from '@/src/components/Themed';
-import { useColorScheme } from '@/src/components/useColorScheme';
 import { VideoPlayerModal } from '@/src/components/VideoPlayerModal';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
@@ -23,6 +21,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ProjectCameraView from '../../../(modals)/CameraView';
 
 const ProjectPhotosPage = () => {
   const router = useRouter();

@@ -1,20 +1,18 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import { SignedIn, SignedOut, useAuth, useSignIn } from '@clerk/clerk-expo';
+import { isClerkAPIResponseError, SignedIn, SignedOut, useAuth, useSignIn } from '@clerk/clerk-expo';
 import { Link, Redirect, Stack, useRouter } from 'expo-router';
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Page() {
-  const auth = useAuth();
+  const { orgId } = useAuth();
 
   return (
     <>
-      <SignedIn>
-        {auth && auth.orgId ? <Redirect href="/projects" /> : <Redirect href="/(auth)/createOrganization" />}
-      </SignedIn>
+      <SignedIn>{orgId ? <Redirect href="/" /> : <Redirect href="/createOrganization" />}</SignedIn>
       <SignedOut>
         <SignInForm />
       </SignedOut>
@@ -28,14 +26,83 @@ function SignInForm() {
   const router = useRouter();
   const [emailAddress, setEmailAddress] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [resetCode, setResetCode] = React.useState('');
+  const [showResetCode, setShowResetCode] = React.useState(false);
+
+  const onResetPress = async () => {
+    if (!isLoaded) return;
+
+    try {
+      const signInAttempt = await signIn.attemptFirstFactor({
+        strategy: 'reset_password_email_code',
+        code: resetCode,
+        password, // New password
+      });
+
+      // If sign-in process is complete, set the created session as active
+      // and redirect the user
+
+      if (signInAttempt.status === 'complete') {
+        await setActive({ session: signInAttempt.createdSessionId });
+        router.replace('/');
+      } else {
+        // If the status isn't complete, check why. User might need to
+        // complete further steps.
+        console.error(JSON.stringify(signInAttempt, null, 2));
+      }
+    } catch (err: any) {
+      if (isClerkAPIResponseError(err)) {
+        Alert.alert('Log-in Error', err.errors[0].longMessage, [
+          {
+            text: 'Retry',
+            onPress: () => {},
+          },
+          {
+            text: 'Reset Password',
+            onPress: async () => {
+              try {
+                // First create the reset password attempt - use the correct strategy
+                const resetAttempt = await signIn.create({
+                  strategy: 'reset_password_email_code',
+                  identifier: emailAddress,
+                });
+
+                if (resetAttempt.status === 'needs_first_factor') {
+                  Alert.alert(
+                    'Reset Password Email Sent',
+                    'Please check your email for the reset code. Enter the code and your new password below.',
+                    [
+                      {
+                        text: 'OK',
+                        onPress: () => {
+                          setPassword(''); // Clear the password field
+                          setShowResetCode(true); // Show the reset code input
+                        },
+                      },
+                    ],
+                  );
+                }
+              } catch (error) {
+                console.error('Error initiating password reset:', error);
+                Alert.alert('Error', 'Failed to send reset password email. Please try again.');
+              }
+            },
+          },
+        ]);
+      } else {
+        // Handle non-Clerk API errors
+        Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      }
+    }
+  };
 
   // Handle the submission of the sign-in form
   const onSignInPress = async () => {
     if (!isLoaded) return;
 
-    // Start the sign-in process using the email and password provided
     try {
       const signInAttempt = await signIn.create({
+        strategy: 'password',
         identifier: emailAddress,
         password,
       });
@@ -45,17 +112,55 @@ function SignInForm() {
 
       if (signInAttempt.status === 'complete') {
         await setActive({ session: signInAttempt.createdSessionId });
-
         router.replace('/');
       } else {
         // If the status isn't complete, check why. User might need to
         // complete further steps.
         console.error(JSON.stringify(signInAttempt, null, 2));
       }
-    } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2));
+    } catch (err: any) {
+      if (isClerkAPIResponseError(err)) {
+        Alert.alert('Log-in Error', err.errors[0].longMessage, [
+          {
+            text: 'Retry',
+            onPress: () => {},
+          },
+          {
+            text: 'Reset Password',
+            onPress: async () => {
+              try {
+                // First create the reset password attempt - use the correct strategy
+                const resetAttempt = await signIn.create({
+                  strategy: 'reset_password_email_code',
+                  identifier: emailAddress,
+                });
+
+                if (resetAttempt.status === 'needs_first_factor') {
+                  Alert.alert(
+                    'Reset Password Email Sent',
+                    'Please check your email for the reset code. Enter the code and your new password below.',
+                    [
+                      {
+                        text: 'OK',
+                        onPress: () => {
+                          setPassword(''); // Clear the password field
+                          setShowResetCode(true); // Show the reset code input
+                        },
+                      },
+                    ],
+                  );
+                }
+              } catch (error) {
+                console.error('Error initiating password reset:', error);
+                Alert.alert('Error', 'Failed to send reset password email. Please try again.');
+              }
+            },
+          },
+        ]);
+      } else {
+        // Handle non-Clerk API errors
+        Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      }
     }
   };
 
@@ -86,15 +191,24 @@ function SignInForm() {
         <TextInput
           style={{ ...styles.input, color: colors.text }}
           value={password}
-          placeholder="Password"
+          placeholder={showResetCode ? 'New Password' : 'Password'}
           placeholderTextColor={colors.text}
           secureTextEntry={true}
           onChangeText={(password) => setPassword(password)}
         />
+        {showResetCode && (
+          <TextInput
+            style={{ ...styles.input, color: colors.text }}
+            value={resetCode}
+            placeholder="Reset Code"
+            placeholderTextColor={colors.text}
+            onChangeText={(code) => setResetCode(code)}
+          />
+        )}
         <ActionButton
-          onPress={onSignInPress}
+          onPress={showResetCode ? onResetPress : onSignInPress}
           type={emailAddress && password ? 'action' : 'disabled'}
-          title="Sign In"
+          title="Sign-in"
         />
         <View style={styles.footer}>
           <Text text="Don't have an account?" style={{ backgroundColor: 'transparent', marginRight: 20 }} />

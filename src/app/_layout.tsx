@@ -7,7 +7,7 @@ import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Slot } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -69,11 +69,8 @@ function RootLayoutNav() {
                 <ColorsProvider>
                   <SafeAreaProvider>
                     <GestureHandlerRootView>
-                      <Stack screenOptions={{ headerShown: false }} />
-                      <StatusBar
-                        style={colorScheme === 'dark' ? 'light' : 'dark'}
-                        backgroundColor="transparent"
-                      />
+                      <Slot />
+                      <StatusBar style="auto" backgroundColor="transparent" />
                     </GestureHandlerRootView>
                   </SafeAreaProvider>
                 </ColorsProvider>
