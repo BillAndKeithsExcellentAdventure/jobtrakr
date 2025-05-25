@@ -1,13 +1,11 @@
-import AuthorizedStoresProvider from '@/src/components/AuthorizedStoresProvider';
 import { useColorScheme } from '@/src/components/useColorScheme';
-import { ActiveProjectIdsProvider } from '@/src/context/ActiveProjectIdsContext';
 import { ColorsProvider } from '@/src/context/ColorsContext';
 import { ClerkLoaded, ClerkProvider } from '@clerk/clerk-expo';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Slot } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -15,7 +13,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Provider as TinyBaseProvider } from 'tinybase/ui-react';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -62,21 +59,30 @@ function RootLayoutNav() {
     <ClerkProvider tokenCache={tokenCache} publishableKey={PUBLISHABLE_KEY}>
       <ClerkLoaded>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <TinyBaseProvider>
-            <KeyboardProvider>
-              <ActiveProjectIdsProvider>
-                <AuthorizedStoresProvider />
-                <ColorsProvider>
-                  <SafeAreaProvider>
-                    <GestureHandlerRootView>
-                      <Slot />
-                      <StatusBar style="auto" backgroundColor="transparent" />
-                    </GestureHandlerRootView>
-                  </SafeAreaProvider>
-                </ColorsProvider>
-              </ActiveProjectIdsProvider>
-            </KeyboardProvider>
-          </TinyBaseProvider>
+          <KeyboardProvider>
+            <ColorsProvider>
+              <SafeAreaProvider>
+                <GestureHandlerRootView>
+                  <StatusBar style="auto" />
+                  <Stack>
+                    <Stack.Screen
+                      name="(protected)"
+                      options={{
+                        headerShown: false,
+                        animation: 'none',
+                      }}
+                    />
+                    <Stack.Screen
+                      name="(auth)"
+                      options={{
+                        animation: 'none',
+                      }}
+                    />
+                  </Stack>
+                </GestureHandlerRootView>
+              </SafeAreaProvider>
+            </ColorsProvider>
+          </KeyboardProvider>
         </ThemeProvider>
       </ClerkLoaded>
     </ClerkProvider>

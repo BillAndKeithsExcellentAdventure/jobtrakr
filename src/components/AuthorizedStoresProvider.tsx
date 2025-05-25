@@ -6,7 +6,12 @@ import { useAuth } from '@clerk/clerk-expo';
 
 const AuthorizedStoresProvider = () => {
   const { orgId } = useAuth();
+
+  console.log(`AuthorizedStoresProvider orgId=${orgId}`);
+
   if (!orgId) return null;
+
+  console.log('Rendering ConfigurationStore and ListOfProjectsStore');
 
   return (
     <>

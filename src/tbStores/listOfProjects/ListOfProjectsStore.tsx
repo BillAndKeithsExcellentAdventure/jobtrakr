@@ -48,6 +48,7 @@ const {
 const useProjectListStoreId = () => {
   const { orgId } = useAuth();
   const storeId = useMemo(() => `${STORE_ID_PREFIX}_${orgId}`, [orgId]);
+  console.log(`useProjectListStoreId storeId=${storeId}`);
   return storeId;
 };
 
@@ -60,6 +61,7 @@ export const useAllProjects = () => {
 
   const fetchAllProjects = useCallback((): ProjectData[] => {
     if (!store) {
+      console.log('fetchAllProjects store is not defined');
       return []; // Return an empty array if the store is not available
     }
 
@@ -72,6 +74,7 @@ export const useAllProjects = () => {
             id: id,
           } as ProjectData),
       );
+      console.log(`   fetched ${projects.length} projects`);
 
       return projects.sort((a, b) => (b.favorite ?? 0) - (a.favorite ?? 0));
     }
@@ -242,7 +245,7 @@ export default function ListOfProjectsStore() {
 
   // In turn 'render' (i.e. create) all of the active projectDetailStores for active projects.
   return allProjectDetailsStoreToBuild.map((id) => {
-    console.log('Rendering ProjectDetailsStore for projectId:', id);
+    console.log('Rendering ProjectDetailsStore for projectId: ', id);
     return <ProjectDetailsStore projectId={id} key={id} />;
   });
 }
