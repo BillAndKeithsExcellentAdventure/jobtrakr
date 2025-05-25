@@ -101,7 +101,7 @@ export default function ProjectHomeScreen() {
           if (isEntry(actionContext)) {
             if (actionContext && actionContext.entryId)
               router.push({
-                pathname: '/projects/[projectId]/notes',
+                pathname: '/[projectId]/notes',
                 params: {
                   projectId: actionContext.entryId,
                   projectName: actionContext.primaryTitle,
@@ -117,7 +117,7 @@ export default function ProjectHomeScreen() {
           if (isEntry(actionContext)) {
             if (actionContext && actionContext.entryId)
               router.push({
-                pathname: '/projects/[projectId]/photos',
+                pathname: '/[projectId]/photos',
                 params: {
                   projectId: actionContext.entryId,
                   projectName: actionContext.primaryTitle,
@@ -133,7 +133,7 @@ export default function ProjectHomeScreen() {
           if (isEntry(actionContext)) {
             if (actionContext && actionContext.entryId)
               router.push({
-                pathname: '/projects/[projectId]/receipts',
+                pathname: '/[projectId]/receipts',
                 params: {
                   projectId: actionContext.entryId,
                   projectName: actionContext.primaryTitle,
@@ -149,7 +149,7 @@ export default function ProjectHomeScreen() {
         onPress: (e, actionContext) => {
           if (actionContext && actionContext.entryId)
             router.push({
-              pathname: '/projects/[projectId]/invoices',
+              pathname: '/[projectId]/invoices',
               params: {
                 projectId: actionContext.entryId,
                 projectName: actionContext.primaryTitle,
@@ -165,7 +165,7 @@ export default function ProjectHomeScreen() {
     (entry: TwoColumnListEntry) => {
       const project = allProjects.find((j) => (j.id ?? '') === entry.entryId);
       if (project && project.id) {
-        router.push({ pathname: '/projects/[projectId]', params: { projectId: project.id } });
+        router.push({ pathname: '/[projectId]', params: { projectId: project.id } });
       } else Alert.alert(`Project not found: ${entry.primaryTitle} (${entry.entryId})`);
     },
     [allProjects],
@@ -175,7 +175,7 @@ export default function ProjectHomeScreen() {
     async (item: string, actionContext: any) => {
       setHeaderMenuModalVisible(false);
       if (item === 'AddProject') {
-        router.push('/projects/add-project');
+        router.push('/add-project');
       } else if (item === 'Configuration') {
         router.push('/configuration/home');
       } else if (item === 'Invite') {

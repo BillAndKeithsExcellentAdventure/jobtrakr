@@ -164,19 +164,19 @@ const ProjectDetailsPage = () => {
       setHeaderMenuModalVisible(false);
       if (menuItem === 'Edit' && projectId) {
         router.push({
-          pathname: '/projects/[projectId]/edit',
+          pathname: '/[projectId]/edit',
           params: { projectId, projectName: projectData!.name },
         });
         return;
       } else if (menuItem === 'SetEstimates' && projectId) {
         router.push({
-          pathname: '/projects/[projectId]/setEstimatedCosts',
+          pathname: '/[projectId]/setEstimatedCosts',
           params: { projectId, projectName: projectData!.name },
         });
         return;
       } else if (menuItem === 'AddCostCategory' && projectId) {
         router.push({
-          pathname: '/projects/[projectId]/addCostCategory',
+          pathname: '/[projectId]/addCostCategory',
           params: {
             projectId,
             projectName: projectData!.name,
@@ -194,7 +194,7 @@ const ProjectDetailsPage = () => {
               if (result.status === 'Success') {
                 removeActiveProjectId(projectId);
               }
-              router.replace('/projects');
+              router.replace('');
             },
           },
         ]);
@@ -250,7 +250,7 @@ const ProjectDetailsPage = () => {
     const showSection = (): void => {
       // use router to push to the cost items page
       router.push({
-        pathname: '/projects/[projectId]/costItems/[categoryId]',
+        pathname: '/[projectId]/costItems/[categoryId]',
         params: {
           projectId,
           categoryId: item.categoryId,
@@ -312,7 +312,7 @@ const ProjectDetailsPage = () => {
 
   if (!projectData) {
     // Redirect to the projects list if no project data is found
-    return <Redirect href="/projects" />;
+    return <Redirect href="/" />;
   }
 
   return (

@@ -76,7 +76,14 @@ const SwipeableReceiptItem = React.memo(
         renderRightActions={renderRightActions}
       >
         <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
-          <Pressable onPress={() => router.push(`/projects/${projectId}/receipt/${item.id}`)}>
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: '/[projectId]/receipt/[receiptId]',
+                params: { projectId, receiptId: item.id },
+              })
+            }
+          >
             <View style={styles.itemInfo}>
               {item.amount === 0 && totalOfAllReceiptItems === 0 && item.imageId ? (
                 <>

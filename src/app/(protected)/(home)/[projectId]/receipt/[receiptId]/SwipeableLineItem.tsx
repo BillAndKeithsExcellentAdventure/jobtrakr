@@ -59,7 +59,7 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
         <Pressable
           onPress={() => {
             router.push({
-              pathname: '/projects/[projectId]/receipt/[receiptId]/[lineItemId]',
+              pathname: '/[projectId]/receipt/[receiptId]/[lineItemId]',
               params: { projectId, receiptId: lineItem.parentId, lineItemId: lineItem.id },
             });
           }}

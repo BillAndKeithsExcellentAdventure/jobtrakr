@@ -265,7 +265,7 @@ export const DeviceMediaList = ({
       } else if (type === 'photo') {
         const dateString = photoDate ?? 'No Date Info Available';
         router.push(
-          `/projects/${projectId}/photos/showImage/?uri=${uri}&projectName=${encodeURIComponent(
+          `/${projectId}/photos/showImage/?uri=${uri}&projectName=${encodeURIComponent(
             projectName,
           )}&photoDate=${dateString}`,
         );

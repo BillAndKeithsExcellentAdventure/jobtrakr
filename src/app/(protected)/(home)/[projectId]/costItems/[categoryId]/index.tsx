@@ -57,7 +57,7 @@ const CategorySpecificCostItemsPage = () => {
 
   if (!projectData) {
     // Redirect to the projects list if no project data is found
-    return <Redirect href="/projects" />;
+    return <Redirect href="/" />;
   }
 
   const costItemsCategory = useMemo(
@@ -117,7 +117,7 @@ const CategorySpecificCostItemsPage = () => {
               onPress: (e, actionContext) => {
                 setHeaderMenuModalVisible(false);
                 router.push({
-                  pathname: '/projects/[projectId]/costItems/[categoryId]/addCostItems',
+                  pathname: '/[projectId]/costItems/[categoryId]/addCostItems',
                   params: {
                     projectId,
                     categoryId,
@@ -137,11 +137,10 @@ const CategorySpecificCostItemsPage = () => {
               label: 'Set Estimate Costs',
               onPress: (e, actionContext) => {
                 setHeaderMenuModalVisible(false);
-                router.push(
-                  `/projects/${projectId}/setEstimatedCosts/?projectName=${encodeURIComponent(
-                    projectData!.name,
-                  )}&categoryId=${categoryId}`,
-                );
+                router.push({
+                  pathname: '/[projectId]/photos/showImage',
+                  params: { projectId, projectName: projectData!.name, categoryId },
+                });
               },
             } as ActionButtonProps,
           ]

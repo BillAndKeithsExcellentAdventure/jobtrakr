@@ -106,7 +106,7 @@ export default function CreateOrganization() {
   };
 
   if (organizationExists) {
-    return <Redirect href="/projects" />;
+    return <Redirect href="/" />;
   }
 
   return (

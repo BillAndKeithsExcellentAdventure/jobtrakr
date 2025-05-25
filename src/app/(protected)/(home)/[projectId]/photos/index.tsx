@@ -21,7 +21,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import ProjectCameraView from '../../../(modals)/CameraView';
+import ProjectCameraView from '../../(modals)/CameraView';
 
 const ProjectPhotosPage = () => {
   const router = useRouter();
@@ -99,9 +99,7 @@ const ProjectPhotosPage = () => {
     (item: string) => {
       if (item === 'AddPhotos') {
         setHeaderMenuModalVisible(false);
-        router.push(
-          `/projects/${projectId}/photos/importFromDevice/?projectName=${encodeURIComponent(projectName)}`,
-        );
+        router.push({ pathname: '/[projectId]/photos/importFromDevice', params: { projectId, projectName } });
       }
     },
     [router, projectId, projectName, setHeaderMenuModalVisible],

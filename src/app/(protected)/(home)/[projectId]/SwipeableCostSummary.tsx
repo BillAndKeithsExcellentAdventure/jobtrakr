@@ -84,7 +84,7 @@ const SwipeableCostSummary = React.memo(({ item, sectionCode, projectId }: Props
         <Pressable
           onPress={() => {
             router.push({
-              pathname: '/projects/[projectId]/[costSummaryItemId]',
+              pathname: '/[projectId]/[costSummaryItemId]',
               params: {
                 projectId,
                 costSummaryItemId: item.id,
