@@ -218,31 +218,23 @@ export default function ListOfProjectsStore() {
   useCreateServerSynchronizerAndStart(storeId, store);
   useProvideStore(storeId, store);
 
-  // get all active projectIds from the ActiveProjectIdsContext
   const { activeProjectIds } = useActiveProjectIds();
   const allAvailableProjectIds = useRowIds('projects', storeId);
 
-  const allProjectDetailsStoreToBuild = useMemo(() => {
-    if (
-      !activeProjectIds ||
-      !allAvailableProjectIds ||
-      allAvailableProjectIds.length === 0 ||
-      activeProjectIds.length === 0
-    ) {
+  // Use useMemo to compute the filtered project IDs
+  const projectDetailsStoresToBuild = useMemo(() => {
+    if (!allAvailableProjectIds.length || !activeProjectIds.length) {
       return [];
     }
 
-    const filterProjectIds = allAvailableProjectIds.filter((id) => activeProjectIds.includes(id));
-    return filterProjectIds;
+    // Filter for projects that are both available and active
+    return allAvailableProjectIds.filter((id) => activeProjectIds.includes(id));
   }, [activeProjectIds, allAvailableProjectIds]);
 
-  if (allProjectDetailsStoreToBuild.length === 0) {
+  if (projectDetailsStoresToBuild.length === 0) {
     return null;
   }
 
-  // In turn 'render' (i.e. create) all of the active projectDetailStores for active projects.
-  return allProjectDetailsStoreToBuild.map((id) => {
-    console.log('Rendering ProjectDetailsStore for projectId:', id);
-    return <ProjectDetailsStore projectId={id} key={id} />;
-  });
+  // Render ProjectDetailsStore components for each project
+  return projectDetailsStoresToBuild.map((id) => <ProjectDetailsStore projectId={id} key={id} />);
 }
