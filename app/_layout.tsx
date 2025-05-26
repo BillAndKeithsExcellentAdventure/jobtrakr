@@ -69,9 +69,14 @@ function RootLayoutNav() {
                 <SafeAreaProvider>
                   <GestureHandlerRootView>
                     <ActiveProjectIdsProvider>
-                      <AuthorizedStoresProvider>
-                        <Stack screenOptions={{ headerShown: false }} />
-                      </AuthorizedStoresProvider>
+                      <Stack screenOptions={{ headerShown: false }}>
+                        <Stack.Screen
+                          name="(auth)/sign-in"
+                          options={{
+                            animation: 'none',
+                          }}
+                        />
+                      </Stack>
                     </ActiveProjectIdsProvider>
                   </GestureHandlerRootView>
                 </SafeAreaProvider>

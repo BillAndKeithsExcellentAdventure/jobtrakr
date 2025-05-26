@@ -97,7 +97,7 @@ export const useAllProjects = () => {
     return () => {
       store.delListener(listenerId);
     };
-  }, []);
+  }, [store]);
 
   return allProjects;
 };
@@ -213,6 +213,7 @@ export const useToggleFavoriteCallback = () => {
 // Create, persist, and sync a store containing the IDs of the projects
 export default function ListOfProjectsStore() {
   const storeId = useProjectListStoreId();
+  console.log(`ListOfProjectsStore storeId=${storeId}`);
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
   useCreateClientPersisterAndStart(storeId, store);
   useCreateServerSynchronizerAndStart(storeId, store);
@@ -223,7 +224,7 @@ export default function ListOfProjectsStore() {
 
   // Use useMemo to compute the filtered project IDs
   const projectDetailsStoresToBuild = useMemo(() => {
-    if (!allAvailableProjectIds.length || !activeProjectIds.length) {
+    if (!allAvailableProjectIds.length) {
       return [];
     }
 

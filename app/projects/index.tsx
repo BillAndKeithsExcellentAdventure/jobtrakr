@@ -21,6 +21,7 @@ import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import { useColors } from '@/context/ColorsContext';
 import { useClerk } from '@clerk/clerk-expo';
 import { AntDesign } from '@expo/vector-icons';
+import AuthorizedStoresProvider from '@/components/AuthorizedStoresProvider';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -254,39 +255,41 @@ export default function ProjectHomeScreen() {
   }, [colors.iconColor, headerMenuModalVisible, setHeaderMenuModalVisible]);
 
   return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: 'Projects',
-          ...headerRightComponent,
-        }}
-      />
-
-      <View style={{ flex: 1, width: '100%' }}>
-        {projectListEntries.length > 0 ? (
-          <View style={[styles.twoColListContainer, { backgroundColor: colors.background }]}>
-            <TwoColumnList
-              data={projectListEntries}
-              onPress={handleSelection}
-              buttons={projectActionButtons}
-            />
-          </View>
-        ) : (
-          <View style={[styles.container, { padding: 20, backgroundColor: colors.background }]}>
-            <Text text="No Projects Found!" txtSize="xl" />
-            <Text text="Use menu in upper right to add one." />
-          </View>
-        )}
-      </View>
-      {headerMenuModalVisible && (
-        <RightHeaderMenu
-          modalVisible={headerMenuModalVisible}
-          setModalVisible={setHeaderMenuModalVisible}
-          buttons={rightHeaderMenuButtons}
+    <AuthorizedStoresProvider>
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            title: 'Projects',
+            ...headerRightComponent,
+          }}
         />
-      )}
-    </SafeAreaView>
+
+        <View style={{ flex: 1, width: '100%' }}>
+          {projectListEntries.length > 0 ? (
+            <View style={[styles.twoColListContainer, { backgroundColor: colors.background }]}>
+              <TwoColumnList
+                data={projectListEntries}
+                onPress={handleSelection}
+                buttons={projectActionButtons}
+              />
+            </View>
+          ) : (
+            <View style={[styles.container, { padding: 20, backgroundColor: colors.background }]}>
+              <Text text="No Projects Found!" txtSize="xl" />
+              <Text text="Use menu in upper right to add one." />
+            </View>
+          )}
+        </View>
+        {headerMenuModalVisible && (
+          <RightHeaderMenu
+            modalVisible={headerMenuModalVisible}
+            setModalVisible={setHeaderMenuModalVisible}
+            buttons={rightHeaderMenuButtons}
+          />
+        )}
+      </SafeAreaView>
+    </AuthorizedStoresProvider>
   );
 }
 
