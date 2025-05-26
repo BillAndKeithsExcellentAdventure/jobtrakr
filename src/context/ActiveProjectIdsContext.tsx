@@ -41,6 +41,8 @@ export const ActiveProjectIdsProvider: React.FC<ActiveProjectIdsProviderProps> =
     });
   }, []);
 
+  console.log('rendering ActiveProjectIdsContext');
+
   return (
     <ActiveProjectIdsContext.Provider
       value={{ activeProjectIds, addActiveProjectIds, removeActiveProjectId }}

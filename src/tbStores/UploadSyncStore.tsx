@@ -98,7 +98,7 @@ export const useAllFailedToUpload = () => {
     return () => {
       store.delListener(listenerId);
     };
-  }, []);
+  }, [store]);
 
   return allItems;
 };

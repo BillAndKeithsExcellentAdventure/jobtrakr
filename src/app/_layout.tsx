@@ -57,32 +57,29 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
   return (
     <ClerkProvider tokenCache={tokenCache} publishableKey={PUBLISHABLE_KEY}>
+      <StatusBar style="auto" />
       <ClerkLoaded>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <KeyboardProvider>
-            <ColorsProvider>
-              <SafeAreaProvider>
-                <GestureHandlerRootView>
-                  <StatusBar style="auto" />
-                  <Stack>
-                    <Stack.Screen
-                      name="(protected)"
-                      options={{
-                        headerShown: false,
-                        animation: 'none',
-                      }}
-                    />
-                    <Stack.Screen
-                      name="(auth)"
-                      options={{
-                        animation: 'none',
-                      }}
-                    />
-                  </Stack>
-                </GestureHandlerRootView>
-              </SafeAreaProvider>
-            </ColorsProvider>
-          </KeyboardProvider>
+          <TinyBaseProvider>
+            <KeyboardProvider>
+              <ColorsProvider>
+                <SafeAreaProvider>
+                  <GestureHandlerRootView>
+                    <ActiveProjectIdsProvider>
+                      <Stack screenOptions={{ headerShown: false }}>
+                        <Stack.Screen
+                          name="(auth)/sign-in"
+                          options={{
+                            animation: 'none',
+                          }}
+                        />
+                      </Stack>
+                    </ActiveProjectIdsProvider>
+                  </GestureHandlerRootView>
+                </SafeAreaProvider>
+              </ColorsProvider>
+            </KeyboardProvider>
+          </TinyBaseProvider>
         </ThemeProvider>
       </ClerkLoaded>
     </ClerkProvider>
