@@ -3,7 +3,7 @@ import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { isClerkAPIResponseError, SignedIn, SignedOut, useAuth, useSignIn } from '@clerk/clerk-expo';
 import { Link, Redirect, Stack, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -29,7 +29,7 @@ function SignInForm() {
   const [resetCode, setResetCode] = React.useState('');
   const [showResetCode, setShowResetCode] = React.useState(false);
 
-  const onResetPress = async () => {
+  const onResetPress = useCallback(async () => {
     if (!isLoaded) return;
 
     try {
@@ -94,10 +94,10 @@ function SignInForm() {
         Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       }
     }
-  };
+  }, [isLoaded, signIn, resetCode, password, setActive, router]);
 
   // Handle the submission of the sign-in form
-  const onSignInPress = async () => {
+  const onSignInPress = useCallback(async () => {
     if (!isLoaded) return;
 
     try {
@@ -162,7 +162,7 @@ function SignInForm() {
         Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       }
     }
-  };
+  }, [isLoaded, signIn, emailAddress, password, setActive, router]);
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>

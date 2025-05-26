@@ -48,7 +48,6 @@ const {
 const useProjectListStoreId = () => {
   const { orgId } = useAuth();
   const storeId = useMemo(() => `${STORE_ID_PREFIX}_${orgId}`, [orgId]);
-  console.log(`useProjectListStoreId storeId=${storeId}`);
   return storeId;
 };
 
@@ -74,7 +73,6 @@ export const useAllProjects = () => {
             id: id,
           } as ProjectData),
       );
-      console.log(`   fetched ${projects.length} projects`);
 
       return projects.sort((a, b) => (b.favorite ?? 0) - (a.favorite ?? 0));
     }
@@ -216,7 +214,6 @@ export const useToggleFavoriteCallback = () => {
 // Create, persist, and sync a store containing the IDs of the projects
 export default function ListOfProjectsStore() {
   const storeId = useProjectListStoreId();
-  console.log(`ListOfProjectsStore storeId=${storeId}`);
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
   useCreateClientPersisterAndStart(storeId, store);
   useCreateServerSynchronizerAndStart(storeId, store);

@@ -60,26 +60,22 @@ function RootLayoutNav() {
       <StatusBar style="auto" />
       <ClerkLoaded>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <TinyBaseProvider>
-            <KeyboardProvider>
-              <ColorsProvider>
-                <SafeAreaProvider>
-                  <GestureHandlerRootView>
-                    <ActiveProjectIdsProvider>
-                      <Stack screenOptions={{ headerShown: false }}>
-                        <Stack.Screen
-                          name="(auth)/sign-in"
-                          options={{
-                            animation: 'none',
-                          }}
-                        />
-                      </Stack>
-                    </ActiveProjectIdsProvider>
-                  </GestureHandlerRootView>
-                </SafeAreaProvider>
-              </ColorsProvider>
-            </KeyboardProvider>
-          </TinyBaseProvider>
+          <KeyboardProvider>
+            <ColorsProvider>
+              <SafeAreaProvider>
+                <GestureHandlerRootView>
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen
+                      name="(auth)/sign-in"
+                      options={{
+                        animation: 'none',
+                      }}
+                    />
+                  </Stack>
+                </GestureHandlerRootView>
+              </SafeAreaProvider>
+            </ColorsProvider>
+          </KeyboardProvider>
         </ThemeProvider>
       </ClerkLoaded>
     </ClerkProvider>

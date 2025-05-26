@@ -1,17 +1,12 @@
-import { View, Text } from 'react-native';
-import React, { PropsWithChildren } from 'react';
+import React, { PropsWithChildren, memo, useEffect } from 'react';
 import ConfigurationStore from '@/src/tbStores/configurationStore/ConfigurationStore';
 import ListOfProjectsStore from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { useAuth } from '@clerk/clerk-expo';
 
-export function AuthorizedStoresProvider({ children }: PropsWithChildren) {
+export const AuthorizedStoresProvider = ({ children }: PropsWithChildren) => {
   const { orgId } = useAuth();
 
-  console.log(`AuthorizedStoresProvider orgId=${orgId}`);
-
   if (!orgId) return null;
-
-  console.log(`AuthorizedStoresProvider orgId=${orgId}`);
 
   return (
     <>
@@ -20,6 +15,6 @@ export function AuthorizedStoresProvider({ children }: PropsWithChildren) {
       {children}
     </>
   );
-}
+};
 
 export default AuthorizedStoresProvider;

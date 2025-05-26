@@ -194,7 +194,7 @@ const ProjectDetailsPage = () => {
               if (result.status === 'Success') {
                 removeActiveProjectId(projectId);
               }
-              router.replace('');
+              router.replace('/');
             },
           },
         ]);
@@ -243,7 +243,7 @@ const ProjectDetailsPage = () => {
         },
       },
     ],
-    [colors, allWorkItemSummaries, handleMenuItemPress],
+    [colors, allWorkItemSummaries, handleMenuItemPress, router, addActiveProjectIds],
   );
 
   const renderItem = (item: CostSectionData, projectId: string) => {

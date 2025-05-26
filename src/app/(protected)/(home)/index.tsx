@@ -21,7 +21,7 @@ import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { useClerk } from '@clerk/clerk-expo';
 import { AntDesign } from '@expo/vector-icons';
-import AuthorizedStoresProvider from '@/components/AuthorizedStoresProvider';
+import AuthorizedStoresProvider from '@/src/components/AuthorizedStoresProvider';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];

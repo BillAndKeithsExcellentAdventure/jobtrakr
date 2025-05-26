@@ -82,47 +82,49 @@ export const ProjectMediaList = ({
     );
   }, []);
 
-  const handleImageLongPress = useCallback(async (id: string, type: 'video' | 'photo', photoDate: string) => {
-    if (!orgId) {
-      return;
-    }
-
-    const uri = buildLocalImageUri(orgId, projectId, id, 'photo');
-
-    if (type === 'video') {
-      playVideo(uri);
-    } else if (type === 'photo') {
-      const dateString = photoDate ?? 'No Date Info Available';
-
-      // This uri is to a local storage location. We first need to confirm that this file exists and
-      // if not, we need to call our backend and retrieve it before trying to display it.
-      if (uri.startsWith('file://')) {
-        // This is a local file. We need to check if it exists.
-        const fileUri = uri.replace('file://', '');
-        console.log('*** File URI:', fileUri);
-        // Check if the file exists
-
-        await FileSystem.getInfoAsync(fileUri).then(async (fileInfo) => {
-          if (!fileInfo.exists) {
-            // File does not exist, so we need to call our backend to retrieve it.
-            console.log('*** File does not exist. Need to retrieve from backend.');
-            // Call your backend API to retrieve the file and save it locally
-            // After retrieving the file, you can navigate to the image viewer
-            const result = await getImage(projectId, id, type);
-            if (result.result.status !== 'Success') {
-              console.error('*** Error retrieving image from backend:', result.result.msg);
-            }
-          }
-        });
-
-        router.push(
-          {}`/${projectId}/photos/showImage/?uri=${uri}&projectName=${encodeURIComponent(
-            projectName,
-          )}&photoDate=${dateString}`,
-        );
+  const handleImageLongPress = useCallback(
+    async (id: string, type: 'video' | 'photo', photoDate: string) => {
+      if (!orgId) {
+        return;
       }
-    }
-  }, []);
+
+      const uri = buildLocalImageUri(orgId, projectId, id, 'photo');
+
+      if (type === 'video') {
+        playVideo(uri);
+      } else if (type === 'photo') {
+        const dateString = photoDate ?? 'No Date Info Available';
+
+        // This uri is to a local storage location. We first need to confirm that this file exists and
+        // if not, we need to call our backend and retrieve it before trying to display it.
+        if (uri.startsWith('file://')) {
+          // This is a local file. We need to check if it exists.
+          const fileUri = uri.replace('file://', '');
+          console.log('*** File URI:', fileUri);
+          // Check if the file exists
+
+          await FileSystem.getInfoAsync(fileUri).then(async (fileInfo) => {
+            if (!fileInfo.exists) {
+              // File does not exist, so we need to call our backend to retrieve it.
+              console.log('*** File does not exist. Need to retrieve from backend.');
+              // Call your backend API to retrieve the file and save it locally
+              // After retrieving the file, you can navigate to the image viewer
+              const result = await getImage(projectId, id, type);
+              if (result.result.status !== 'Success') {
+                console.error('*** Error retrieving image from backend:', result.result.msg);
+              }
+            }
+          });
+
+          router.push({
+            pathname: '/[projectId]/photos/showImage',
+            params: { projectId, uri, projectName, photoDate: dateString },
+          });
+        }
+      }
+    },
+    [orgId, projectId, playVideo, router, getImage, projectName],
+  );
 
   const onRemove = useCallback(async () => {
     const selectedIds = mediaItems.filter((media) => media.isSelected).map((media) => media.id);

@@ -264,11 +264,15 @@ export const DeviceMediaList = ({
         playVideo(uri);
       } else if (type === 'photo') {
         const dateString = photoDate ?? 'No Date Info Available';
-        router.push(
-          `/${projectId}/photos/showImage/?uri=${uri}&projectName=${encodeURIComponent(
+        router.push({
+          pathname: '/[projectId]/photos/showImage',
+          params: {
+            uri,
+            projectId,
             projectName,
-          )}&photoDate=${dateString}`,
-        );
+            photoDate: dateString,
+          },
+        });
       }
     },
     [playVideo, router, projectId, projectName],
