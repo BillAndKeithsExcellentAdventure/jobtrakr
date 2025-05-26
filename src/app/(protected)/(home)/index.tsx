@@ -40,6 +40,7 @@ export default function ProjectHomeScreen() {
   const toggleFavorite = useToggleFavoriteCallback();
   const [projectListEntries, setProjectListEntries] = useState<TwoColumnListEntry[]>([]);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
+  const [isReady, setIsReady] = useState(false);
   const router = useRouter();
   const { signOut } = useClerk();
   const colors = useColors();
@@ -253,6 +254,24 @@ export default function ProjectHomeScreen() {
       ),
     };
   }, [colors.iconColor, headerMenuModalVisible, setHeaderMenuModalVisible]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsReady(true);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!isReady) {
+    return (
+      <AuthorizedStoresProvider>
+        <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
+          <Text txtSize="title">Loading...</Text>
+        </SafeAreaView>
+      </AuthorizedStoresProvider>
+    );
+  }
 
   return (
     <AuthorizedStoresProvider>
