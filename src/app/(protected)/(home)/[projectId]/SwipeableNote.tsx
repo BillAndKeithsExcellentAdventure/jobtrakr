@@ -1,24 +1,18 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useMemo, useRef } from 'react';
+import FontAwesomeIcon from '@expo/vector-icons/FontAwesome';
+import React, { useCallback, useRef } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-import FontAwesomeIcon from '@expo/vector-icons/FontAwesome';
 
-import Base64Image from '@/src/components/Base64Image';
 import { SwipeableComponent, SwipeableHandles } from '@/src/components/SwipeableComponent';
 import { Text, View } from '@/src/components/Themed';
 import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
 import {
   NoteData,
-  ReceiptData,
-  useAllRows,
   useDeleteRowCallback,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { formatCurrency, formatDate } from '@/src/utils/formatters';
-import { useRouter } from 'expo-router';
-import { VideoCodec } from 'expo-camera';
 
 export const ITEM_HEIGHT = 100;
 const RIGHT_ACTION_WIDTH = 160;
