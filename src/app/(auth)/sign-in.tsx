@@ -171,6 +171,7 @@ function SignInForm() {
           headerShown: true,
           title: 'Sign In',
           headerTitleAlign: 'center',
+          animation: 'none',
         }}
       />
       <View style={[styles.container, { backgroundColor: colors.listBackground }]}>

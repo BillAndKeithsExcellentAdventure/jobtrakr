@@ -73,6 +73,12 @@ function RootLayoutNav() {
                           animation: 'none',
                         }}
                       />
+                      <Stack.Screen
+                        name="(protected)"
+                        options={{
+                          animation: 'none',
+                        }}
+                      />
                     </Stack>
                   </GestureHandlerRootView>
                 </SafeAreaProvider>

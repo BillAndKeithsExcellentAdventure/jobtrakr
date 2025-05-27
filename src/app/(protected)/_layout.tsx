@@ -29,6 +29,7 @@ export default function ProtectedLayout() {
               name="(home)"
               options={{
                 headerShown: false,
+                animation: 'none',
               }}
             />
           </Stack>

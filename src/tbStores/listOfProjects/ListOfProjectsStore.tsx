@@ -58,7 +58,6 @@ export const useAllProjects = () => {
 
   const fetchAllProjects = useCallback((): ProjectData[] => {
     if (!store) {
-      console.log('fetchAllProjects store is not defined');
       return []; // Return an empty array if the store is not available
     }
 
