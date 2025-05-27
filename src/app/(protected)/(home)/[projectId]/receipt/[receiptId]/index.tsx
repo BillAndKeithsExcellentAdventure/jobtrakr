@@ -13,8 +13,10 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as FileSystem from 'expo-file-system';
 import SwipeableLineItem from './SwipeableLineItem';
 import { useAuth } from '@clerk/clerk-expo';
+import { buildLocalImageUri, useGetImageCallback } from '@/src/utils/images';
 
 const ReceiptDetailsPage = () => {
   const defaultDate = new Date();
@@ -24,6 +26,7 @@ const ReceiptDetailsPage = () => {
   useCostUpdater(projectId);
   const auth = useAuth();
   const { orgId } = auth;
+  const getImage = useGetImageCallback();
 
   const [allReceiptLineItems, setAllReceiptLineItems] = useState<WorkItemCostEntry[]>([]);
 
@@ -60,6 +63,50 @@ const ReceiptDetailsPage = () => {
   useEffect(() => {
     setItemsTotalCost(allReceiptLineItems.reduce((acc, item) => acc + item.amount, 0));
   }, [allReceiptLineItems]);
+
+  const showReceipt = useCallback(
+    async (imageId: string) => {
+      const uri = buildLocalImageUri(orgId!, projectId, imageId, 'receipt');
+
+      if (uri.startsWith('file://')) {
+        // This is a local file. We need to check if it exists.
+        const fileUri = uri.replace('file://', '');
+        console.log('*** File URI:', fileUri);
+        // Check if the file exists
+
+        let imageFileExist = false;
+
+        await FileSystem.getInfoAsync(fileUri).then(async (fileInfo) => {
+          if (fileInfo.exists) {
+            imageFileExist = true;
+          } else {
+            // File does not exist, so we need to call our backend to retrieve it.
+            console.log('*** File does not exist. Need to retrieve from backend.');
+            // Call your backend API to retrieve the file and save it locally
+            // After retrieving the file, you can navigate to the image viewer
+            const result = await getImage(projectId, imageId, 'receipt');
+            if (result.result.status === 'Success') {
+              imageFileExist = true;
+            } else {
+              alert(
+                `Error retrieving receipt image: ${result.result.msg}. This may be due to no internet connectivity. Please try again later.`,
+              );
+            }
+          }
+        });
+      }
+
+      router.push({
+        pathname: '/[projectId]/receipt/[receiptId]/showImage',
+        params: {
+          projectId,
+          receiptId,
+          uri,
+        },
+      });
+    },
+    [projectId, receiptId],
+  );
 
   const showPicture = useCallback(
     (uri: string) => {
@@ -130,13 +177,7 @@ const ReceiptDetailsPage = () => {
         <>
           <View style={[styles.itemContainer, { borderColor: colors.border }]}>
             {orgId && (
-              <ReceiptSummary
-                orgId={orgId}
-                projectId={projectId}
-                item={receipt}
-                onShowDetails={editDetails}
-                onShowPicture={showPicture}
-              />
+              <ReceiptSummary item={receipt} onShowDetails={editDetails} onShowReceipt={showReceipt} />
             )}
           </View>
 
