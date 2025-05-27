@@ -2,7 +2,6 @@
   "expo": {
     "name": "Project Hound",
     "slug": "jobplus",
-    "version": "1.0.1",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "jobtrakr",
@@ -20,7 +19,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.jobtrakr.app",
-      "buildNumber": "1.0.1",
       "config": {
         "googleMapsApiKey": "AIzaSyBac7r0lXImLW3HkBExNDmEzVJpxXDMLUg"
       },
