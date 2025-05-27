@@ -25,7 +25,6 @@ const CostItemDetails = () => {
   const [itemEstimate, setItemEstimate] = useState(0);
   const router = useRouter();
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
-  const colors = useColors();
   const updateBidEstimate = useUpdateRowCallback(projectId, 'workItemSummaries');
   const deleteCostSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
   const workItemSummary: WorkItemSummaryData | null = useMemo(() => {
@@ -44,10 +43,13 @@ const CostItemDetails = () => {
     setItemEstimate(workItemSummary ? workItemSummary.bidAmount : 0);
   }, [workItemSummary]);
 
-  const handleEstimateChanged = useCallback((value: number) => {
-    if (workItemSummary) updateBidEstimate(workItemSummary.id, { bidAmount: value });
-    setItemEstimate(value);
-  }, []);
+  const handleEstimateChanged = useCallback(
+    (value: number) => {
+      if (workItemSummary) updateBidEstimate(workItemSummary.id, { bidAmount: value });
+      setItemEstimate(value);
+    },
+    [workItemSummary, updateBidEstimate],
+  );
 
   const handleRemove = useCallback(() => {
     if (!workItemSummary) return;
@@ -66,7 +68,7 @@ const CostItemDetails = () => {
         },
       },
     ]);
-  }, [workItemSummary]);
+  }, [workItemSummary, deleteCostSummary, router]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
