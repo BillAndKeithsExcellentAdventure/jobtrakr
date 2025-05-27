@@ -1,11 +1,12 @@
 import { View, Text } from '@/components/Themed';
 import { ReceiptData } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/utils/formatters';
-import { buildLocalImageUri } from '@/utils/images';
-import React from 'react';
+import { buildLocalImageUri, useGetImageCallback } from '@/utils/images';
+import React, { useEffect, useState } from 'react';
 import { TouchableWithoutFeedback, Image, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import Base64Image from './Base64Image';
+import * as FileSystem from 'expo-file-system';
 
 interface ReceiptSummaryProps {
   orgId: string;
@@ -22,7 +23,38 @@ export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({
   onShowPicture,
   onShowDetails,
 }) => {
-  const uri = buildLocalImageUri(orgId, projectId, item.imageId, 'receipt');
+  const [uri, setUri] = useState<string>();
+  const getImage = useGetImageCallback();
+
+  useEffect(() => {
+    const fetchImage = async () => {
+      const uri = buildLocalImageUri(orgId, projectId, item.imageId, 'receipt');
+
+      if (uri.startsWith('file://')) {
+        // This is a local file. We need to check if it exists.
+        const fileUri = uri.replace('file://', '');
+        console.log('*** File URI:', fileUri);
+        // Check if the file exists
+
+        await FileSystem.getInfoAsync(fileUri).then(async (fileInfo) => {
+          if (!fileInfo.exists) {
+            // File does not exist, so we need to call our backend to retrieve it.
+            console.log('*** File does not exist. Need to retrieve from backend.');
+            // Call your backend API to retrieve the file and save it locally
+            // After retrieving the file, you can navigate to the image viewer
+            const result = await getImage(projectId, item.imageId, 'receipt');
+            if (result.result.status !== 'Success') {
+              console.error('*** Error retrieving receipt image from backend:', result.result.msg);
+            }
+          }
+        });
+
+        setUri(fileUri);
+      }
+    };
+    fetchImage();
+  }, [orgId, projectId, item.imageId]);
+
   console.log(`ReceiptSummary: uri: ${uri}`);
   return (
     <View style={{ flex: 1, flexDirection: 'row' }}>
