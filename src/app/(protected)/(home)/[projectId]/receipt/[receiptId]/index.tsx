@@ -109,33 +109,6 @@ const ReceiptDetailsPage = () => {
     [projectId, receiptId],
   );
 
-  const showPicture = useCallback(
-    (uri: string) => {
-      router.push({
-        pathname: '/[projectId]/receipt/[receiptId]/showImage',
-        params: {
-          projectId,
-          receiptId,
-          uri,
-        },
-      });
-    },
-    [projectId, receiptId],
-  );
-
-  const editDetails = useCallback(
-    (item: ReceiptData) => {
-      router.push({
-        pathname: '/[projectId]/receipt/[receiptId]/edit',
-        params: {
-          projectId,
-          receiptId,
-        },
-      });
-    },
-    [projectId, receiptId],
-  );
-
   const colors = useColors();
   const addLineItem = useCallback(() => {
     router.push({
