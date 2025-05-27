@@ -1,16 +1,14 @@
 import { ActionButtonProps } from '@/components/ButtonBar';
 import { Text, View } from '@/components/Themed';
 import { TwoColumnList, TwoColumnListEntry } from '@/components/TwoColumnList';
-import { useColorScheme } from '@/components/useColorScheme';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import Entypo from '@expo/vector-icons/Entypo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { Alert, Platform, StyleSheet } from 'react-native';
 
 import RightHeaderMenu from '@/components/RightHeaderMenu';
 
@@ -21,8 +19,9 @@ import { useAllProjects, useToggleFavoriteCallback } from '@/tbStores/listOfProj
 
 import { useActiveProjectIds } from '@/context/ActiveProjectIdsContext';
 import { useColors } from '@/context/ColorsContext';
-import { useAuth, useClerk } from '@clerk/clerk-expo';
+import { useClerk } from '@clerk/clerk-expo';
 import { AntDesign } from '@expo/vector-icons';
+import AuthorizedStoresProvider from '@/components/AuthorizedStoresProvider';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -102,11 +101,13 @@ export default function ProjectHomeScreen() {
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
             if (actionContext && actionContext.entryId)
-              router.push(
-                `/projects/${actionContext.entryId}/notes/?projectName=${encodeURIComponent(
-                  actionContext.primaryTitle,
-                )}`,
-              );
+              router.push({
+                pathname: '/projects/[projectId]/notes',
+                params: {
+                  projectId: actionContext.entryId,
+                  projectName: actionContext.primaryTitle,
+                },
+              });
           }
         },
       },
@@ -115,13 +116,14 @@ export default function ProjectHomeScreen() {
         label: 'Photos',
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
-            if (actionContext && actionContext.entryId) {
-              router.push(
-                `/projects/${actionContext.entryId}/photos/?projectName=${encodeURIComponent(
-                  actionContext.primaryTitle,
-                )}`,
-              );
-            }
+            if (actionContext && actionContext.entryId)
+              router.push({
+                pathname: '/projects/[projectId]/photos',
+                params: {
+                  projectId: actionContext.entryId,
+                  projectName: actionContext.primaryTitle,
+                },
+              });
           }
         },
       },
@@ -131,11 +133,13 @@ export default function ProjectHomeScreen() {
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
             if (actionContext && actionContext.entryId)
-              router.push(
-                `/projects/${actionContext.entryId}/receipts/?projectName=${encodeURIComponent(
-                  actionContext.primaryTitle,
-                )}`,
-              );
+              router.push({
+                pathname: '/projects/[projectId]/receipts',
+                params: {
+                  projectId: actionContext.entryId,
+                  projectName: actionContext.primaryTitle,
+                },
+              });
           }
         },
       },
@@ -145,11 +149,13 @@ export default function ProjectHomeScreen() {
         label: 'Invoices',
         onPress: (e, actionContext) => {
           if (actionContext && actionContext.entryId)
-            router.push(
-              `/projects/${actionContext.entryId}/invoices/?projectName=${encodeURIComponent(
-                actionContext.primaryTitle,
-              )}`,
-            );
+            router.push({
+              pathname: '/projects/[projectId]/invoices',
+              params: {
+                projectId: actionContext.entryId,
+                projectName: actionContext.primaryTitle,
+              },
+            });
         },
       },
     ],
@@ -159,8 +165,9 @@ export default function ProjectHomeScreen() {
   const handleSelection = useCallback(
     (entry: TwoColumnListEntry) => {
       const project = allProjects.find((j) => (j.id ?? '') === entry.entryId);
-      if (project && project.id) router.push(`/projects/${project.id}`);
-      else Alert.alert(`Project not found: ${entry.primaryTitle} (${entry.entryId})`);
+      if (project && project.id) {
+        router.push({ pathname: '/projects/[projectId]', params: { projectId: project.id } });
+      } else Alert.alert(`Project not found: ${entry.primaryTitle} (${entry.entryId})`);
     },
     [allProjects],
   );
@@ -169,14 +176,14 @@ export default function ProjectHomeScreen() {
     async (item: string, actionContext: any) => {
       setHeaderMenuModalVisible(false);
       if (item === 'AddProject') {
-        router.push(`/projects/add-project`);
+        router.push('/projects/add-project');
       } else if (item === 'Configuration') {
         router.push('/projects/configuration/home');
       } else if (item === 'Invite') {
-        router.push('/(auth)/invite');
+        router.push('/invite');
       } else if (item === 'Logout') {
         signOut();
-        router.replace('/(auth)/sign-in');
+        router.replace('/sign-in');
       }
     },
     [router, signOut],
@@ -184,7 +191,7 @@ export default function ProjectHomeScreen() {
 
   const handleSignOut = useCallback(async () => {
     await signOut(() => {
-      router.replace('/(auth)/sign-in');
+      router.replace('/sign-in');
     });
   }, [signOut]);
 
@@ -222,55 +229,67 @@ export default function ProjectHomeScreen() {
     [colors, handleMenuItemPress],
   );
 
-  return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: 'Projects',
-          headerRight: () => (
-            <Pressable
-              onPress={() => {
-                setHeaderMenuModalVisible(!headerMenuModalVisible);
-              }}
-            >
-              {({ pressed }) => (
-                <MaterialCommunityIcons
-                  name="menu"
-                  size={28}
-                  color={colors.iconColor}
-                  style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                />
-              )}
-            </Pressable>
-          ),
-        }}
-      />
+  const headerRightComponent = useMemo(() => {
+    return {
+      headerRight: () => (
+        <View
+          style={{
+            minWidth: 30,
+            minHeight: 30,
+            flexDirection: 'row',
+            backgroundColor: 'transparent',
+            marginRight: Platform.OS === 'android' ? 16 : 0,
+          }}
+        >
+          <Pressable
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            onPress={() => {
+              setHeaderMenuModalVisible(!headerMenuModalVisible);
+            }}
+          >
+            <MaterialCommunityIcons name="menu" size={28} color={colors.iconColor} />
+          </Pressable>
+        </View>
+      ),
+    };
+  }, [colors.iconColor, headerMenuModalVisible, setHeaderMenuModalVisible]);
 
-      <View style={{ flex: 1, width: '100%' }}>
-        {projectListEntries.length > 0 ? (
-          <View style={[styles.twoColListContainer, { backgroundColor: colors.background }]}>
-            <TwoColumnList
-              data={projectListEntries}
-              onPress={handleSelection}
-              buttons={projectActionButtons}
-            />
-          </View>
-        ) : (
-          <View style={[styles.container, { padding: 20, backgroundColor: colors.background }]}>
-            <Text text="No Projects Found!" txtSize="xl" />
-            <Text text="Use menu in upper right to add one." />
-          </View>
-        )}
-      </View>
-      {headerMenuModalVisible && (
-        <RightHeaderMenu
-          modalVisible={headerMenuModalVisible}
-          setModalVisible={setHeaderMenuModalVisible}
-          buttons={rightHeaderMenuButtons}
+  return (
+    <AuthorizedStoresProvider>
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            title: 'Projects',
+            ...headerRightComponent,
+          }}
         />
-      )}
-    </SafeAreaView>
+
+        <View style={{ flex: 1, width: '100%' }}>
+          {projectListEntries.length > 0 ? (
+            <View style={[styles.twoColListContainer, { backgroundColor: colors.background }]}>
+              <TwoColumnList
+                data={projectListEntries}
+                onPress={handleSelection}
+                buttons={projectActionButtons}
+              />
+            </View>
+          ) : (
+            <View style={[styles.container, { padding: 20, backgroundColor: colors.background }]}>
+              <Text text="No Projects Found!" txtSize="xl" />
+              <Text text="Use menu in upper right to add one." />
+            </View>
+          )}
+        </View>
+        {headerMenuModalVisible && (
+          <RightHeaderMenu
+            modalVisible={headerMenuModalVisible}
+            setModalVisible={setHeaderMenuModalVisible}
+            buttons={rightHeaderMenuButtons}
+          />
+        )}
+      </SafeAreaView>
+    </AuthorizedStoresProvider>
   );
 }
 

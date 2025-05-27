@@ -4,13 +4,14 @@ import { useColors } from '@/context/ColorsContext';
 import {
   useAddRowCallback,
   useAllRows,
+  useDeleteRowCallback,
   WorkCategoryCodeCompareAsNumber,
   WorkCategoryData,
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
-import { Ionicons } from '@expo/vector-icons'; // Right caret icon
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'; // Right caret icon
 import { Stack, useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
-import { FlatList, Platform, StyleSheet } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Alert, FlatList, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,6 +20,14 @@ import SwipeableCategory from './SwipeableCategory';
 const ListWorkCategories = () => {
   const addWorkCategory = useAddRowCallback('categories');
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
+  const allWorkItems = useAllRows('workItems');
+  const removeWorkItemCallback = useDeleteRowCallback('workItems');
+
+  const orphanedWorkItemIds = useMemo(
+    () => allWorkItems.filter((w) => undefined === w.categoryId || null === w.categoryId).map((i) => i.id),
+    [allWorkItems],
+  );
+
   const [showAdd, setShowAdd] = useState(false);
   const [category, setCategory] = useState<WorkCategoryData>({
     id: '',
@@ -40,19 +49,51 @@ const ListWorkCategories = () => {
   };
 
   const handleEditCategory = (id: string) => {
-    router.push(`/projects/configuration/workcategory/${id}`);
+    router.push({
+      pathname: '/projects/configuration/workcategory/[categoryId]',
+      params: { categoryId: category.id },
+    });
   };
 
-  const renderHeaderRight = () => (
-    <Pressable
-      // work around for https://github.com/software-mansion/react-native-screens/issues/2219
-      // use Pressable from react-native-gesture-handler
-      onPress={() => setShowAdd(!showAdd)}
-      hitSlop={10}
-      style={styles.headerButton}
-    >
-      <Ionicons name={showAdd ? 'chevron-up-sharp' : 'add'} size={24} color={colors.iconColor} />
-    </Pressable>
+  const handleCleanup = useCallback(() => {
+    Alert.alert(
+      'Configuration Clean-up',
+      'Proceed with processing to find and clean up orphaned work items that are not associated with a work category?',
+      [
+        { text: 'Cancel' },
+        {
+          text: 'Proceed',
+          onPress: () => {
+            console.log(`removing ${orphanedWorkItemIds.length} orphaned ids`);
+            for (const id of orphanedWorkItemIds) {
+              const result = removeWorkItemCallback(id);
+              if (result.status !== 'Success')
+                console.log(`error removing workItem with id= ${id} - ${result.msg} `);
+            }
+          },
+        },
+      ],
+      { cancelable: true },
+    );
+  }, [orphanedWorkItemIds, removeWorkItemCallback]);
+
+  const renderHeaderRight = useMemo(
+    () => () =>
+      (
+        <View
+          style={{ flexDirection: 'row', gap: 10, alignContent: 'flex-end', backgroundColor: 'transparent' }}
+        >
+          {orphanedWorkItemIds.length > 0 && (
+            <Pressable onPress={handleCleanup} hitSlop={10} style={styles.headerButton}>
+              <MaterialCommunityIcons name="broom" size={24} color={colors.iconColor} />
+            </Pressable>
+          )}
+          <Pressable onPress={() => setShowAdd(!showAdd)} hitSlop={10} style={styles.headerButton}>
+            <Ionicons name={showAdd ? 'chevron-up-sharp' : 'add'} size={24} color={colors.iconColor} />
+          </Pressable>
+        </View>
+      ),
+    [orphanedWorkItemIds.length, showAdd, colors.iconColor, handleCleanup],
   );
 
   const handleAddCategory = useCallback(() => {
@@ -154,6 +195,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
+    backgroundColor: 'transparent',
   },
   input: {
     height: 40,

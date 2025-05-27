@@ -19,7 +19,7 @@ import {
   useUpdateRowCallback,
 } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/utils/formatters';
-import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome5, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { FlashList } from '@shopify/flash-list';
@@ -43,6 +43,7 @@ export function CostSectionDataCodeCompareAsNumber(a: CostSectionData, b: CostSe
 
 export interface CostItemData {
   id: string;
+  workItemId: string;
   code: string;
   title: string;
   bidAmount: number;
@@ -94,6 +95,7 @@ const ProjectDetailsPage = () => {
     const sections: CostSectionData[] = [];
     const workItemMap = new Map(allWorkItems.map((w) => [w.id, w]));
     const categoryMap = new Map(allProjectCategories.map((c) => [c.id, c]));
+
     for (const costItem of allWorkItemSummaries) {
       const workItem = workItemMap.get(costItem.workItemId);
       if (!workItem) continue;
@@ -122,7 +124,8 @@ const ProjectDetailsPage = () => {
       }
 
       section.data.push({
-        id: workItem.id,
+        id: costItem.id,
+        workItemId: workItem.id,
         code: workItem.code,
         title: workItem.name,
         bidAmount: costItem.bidAmount,
@@ -138,16 +141,48 @@ const ProjectDetailsPage = () => {
     return sections.sort(CostSectionDataCodeCompareAsNumber);
   }, [allWorkItemSummaries, allWorkItems, allProjectCategories, allActualCostItems]);
 
+  // get a list of unused work items not represented in allWorkItemSummaries
+  const unusedWorkItems = useMemo(
+    () =>
+      allWorkItems.filter(
+        (w) => !allWorkItemSummaries.some((i) => i.workItemId === w.id),
+        [allWorkItemSummaries, allWorkItems],
+      ),
+    [allWorkItemSummaries, allWorkItems],
+  );
+
+  // get a list of all unique categories from unusedWorkItems
+  const unusedCategories = useMemo(
+    () => Array.from(new Set(unusedWorkItems.map((w) => w.categoryId))),
+    [unusedWorkItems],
+  );
+
+  const unusedCategoriesString = useMemo(() => unusedCategories.join(','), [unusedCategories]);
+
   const handleMenuItemPress = useCallback(
     (menuItem: string, actionContext: any) => {
       setHeaderMenuModalVisible(false);
       if (menuItem === 'Edit' && projectId) {
-        router.push(`/projects/${projectId}/edit/?projectName=${encodeURIComponent(projectData!.name)}`);
+        router.push({
+          pathname: '/projects/[projectId]/edit',
+          params: { projectId, projectName: projectData!.name },
+        });
         return;
       } else if (menuItem === 'SetEstimates' && projectId) {
-        router.push(
-          `/projects/${projectId}/setEstimatedCosts/?projectName=${encodeURIComponent(projectData!.name)}`,
-        );
+        router.push({
+          pathname: '/projects/[projectId]/setEstimatedCosts',
+          params: { projectId, projectName: projectData!.name },
+        });
+        return;
+      } else if (menuItem === 'AddCostCategory' && projectId) {
+        router.push({
+          pathname: '/projects/[projectId]/addCostCategory',
+          params: {
+            projectId,
+            projectName: projectData!.name,
+            availableCategories: unusedCategoriesString,
+          },
+        });
         return;
       } else if (menuItem === 'Delete' && projectId) {
         Alert.alert('Delete Project', 'Are you sure you want to delete this project?', [
@@ -178,6 +213,17 @@ const ProjectDetailsPage = () => {
           handleMenuItemPress('Edit', actionContext);
         },
       },
+      ...(unusedCategories.length > 0
+        ? [
+            {
+              icon: <FontAwesome6 name="circle-dollar-to-slot" size={28} color={colors.iconColor} />,
+              label: 'Add Cost Category',
+              onPress: (e, actionContext) => {
+                handleMenuItemPress('AddCostCategory', actionContext);
+              },
+            } as ActionButtonProps,
+          ]
+        : []),
       ...(allWorkItemSummaries.length > 0
         ? [
             {
@@ -209,7 +255,7 @@ const ProjectDetailsPage = () => {
           projectId,
           categoryId: item.categoryId,
           bidAmount: formatCurrency(item.totalBidAmount, true, true),
-          spentAmount: formatCurrency(item.totalSpentAmount, true, true),
+          amountSpent: formatCurrency(item.totalSpentAmount, true, true),
         },
       });
     };
@@ -276,21 +322,23 @@ const ProjectDetailsPage = () => {
           headerShown: true,
           title: 'Project Overview',
           headerRight: () => (
-            <Pressable
-              style={{ marginRight: 0 }}
-              onPress={() => {
-                setHeaderMenuModalVisible(!headerMenuModalVisible);
-              }}
-            >
-              {({ pressed }) => (
-                <MaterialCommunityIcons
-                  name="menu"
-                  size={28}
-                  color={colors.iconColor}
-                  style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                />
-              )}
-            </Pressable>
+            <View style={{ marginRight: 0 }}>
+              <Pressable
+                style={{ marginRight: 0 }}
+                onPress={() => {
+                  setHeaderMenuModalVisible(!headerMenuModalVisible);
+                }}
+              >
+                {({ pressed }) => (
+                  <MaterialCommunityIcons
+                    name="menu"
+                    size={28}
+                    color={colors.iconColor}
+                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                  />
+                )}
+              </Pressable>
+            </View>
           ),
         }}
       />

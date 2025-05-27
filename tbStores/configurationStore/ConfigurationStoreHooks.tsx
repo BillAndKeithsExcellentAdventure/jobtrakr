@@ -250,7 +250,7 @@ export const useTemplateWorkItemData = (templateId: string) => {
     return () => {
       store.delListener(listenerId);
     };
-  }, []);
+  }, [store]);
 
   useEffect(() => {
     if (templateWorkItemData) {

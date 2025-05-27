@@ -8,26 +8,28 @@ import {
 } from '@/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useProject } from '@/tbStores/listOfProjects/ListOfProjectsStore';
 import { useAllRows, useIsStoreAvailableCallback } from '@/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome5, FontAwesome6, MaterialCommunityIcons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CostItemData, CostItemDataCodeCompareAsNumber } from '../../index';
 import SwipeableCostSummary from '../../SwipeableCostSummary';
+import { ActionButtonProps } from '@/components/ButtonBar';
+import RightHeaderMenu from '@/components/RightHeaderMenu';
 
 const ITEM_HEIGHT = 45;
 
 const CategorySpecificCostItemsPage = () => {
   const router = useRouter();
 
-  const { projectId, categoryId, bidAmount, spentAmount } = useLocalSearchParams<{
+  const { projectId, categoryId, bidAmount, amountSpent } = useLocalSearchParams<{
     projectId: string;
     categoryId: string;
     bidAmount: string;
-    spentAmount: string;
+    amountSpent: string;
   }>();
   const colors = useColors();
   const [projectIsReady, setProjectIsReady] = useState(false);
@@ -72,7 +74,8 @@ const CategorySpecificCostItemsPage = () => {
         .reduce((sum, item) => sum + item.amount, 0);
 
       costItems.push({
-        id: workItem.id,
+        id: costItem.id,
+        workItemId: workItem.id,
         code: workItem.code,
         title: workItem.name,
         bidAmount: costItem.bidAmount,
@@ -82,6 +85,67 @@ const CategorySpecificCostItemsPage = () => {
 
     return costItems.sort(CostItemDataCodeCompareAsNumber);
   }, [allWorkItemSummaries, allWorkItems, allActualCostItems, categoryId]);
+
+  // get a list of unused work items not represented in allWorkItemSummaries and in the current category
+  const unusedWorkItemsIdsInCategory = useMemo(
+    () =>
+      allWorkItems
+        .filter(
+          (w) => !allWorkItemSummaries.some((s) => s.workItemId === w.id) && w.categoryId === categoryId,
+        )
+        .map((wi) => wi.id),
+    [allWorkItemSummaries, allWorkItems, categoryId],
+  );
+
+  const unusedWorkItemsInCategoryString = useMemo(
+    () => unusedWorkItemsIdsInCategory.join(','),
+    [unusedWorkItemsIdsInCategory],
+  );
+
+  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
+
+  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
+    () => [
+      ...(unusedWorkItemsIdsInCategory.length > 0
+        ? [
+            {
+              icon: <FontAwesome6 name="circle-dollar-to-slot" size={28} color={colors.iconColor} />,
+              label: 'Add Cost Items',
+              onPress: (e, actionContext) => {
+                setHeaderMenuModalVisible(false);
+                router.push({
+                  pathname: '/projects/[projectId]/costItems/[categoryId]/addCostItems',
+                  params: {
+                    projectId,
+                    categoryId,
+                    categoryName: costItemsCategory?.name,
+                    categoryCode: costItemsCategory?.code,
+                    availableWorkItemIds: unusedWorkItemsInCategoryString,
+                  },
+                });
+              },
+            } as ActionButtonProps,
+          ]
+        : []),
+      ...(allWorkItemSummaries.length > 0
+        ? [
+            {
+              icon: <FontAwesome5 name="search-dollar" size={28} color={colors.iconColor} />,
+              label: 'Set Estimate Costs',
+              onPress: (e, actionContext) => {
+                setHeaderMenuModalVisible(false);
+                router.push(
+                  `/projects/${projectId}/setEstimatedCosts/?projectName=${encodeURIComponent(
+                    projectData!.name,
+                  )}&categoryId=${categoryId}`,
+                );
+              },
+            } as ActionButtonProps,
+          ]
+        : []),
+    ],
+    [colors, allWorkItemSummaries],
+  );
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -93,14 +157,17 @@ const CategorySpecificCostItemsPage = () => {
             <Pressable
               style={{ marginRight: 0 }}
               onPress={() => {
-                router.push(
-                  `/projects/${projectId}/setEstimatedCosts/?projectName=${encodeURIComponent(
-                    projectData!.name,
-                  )}&categoryId=${categoryId}`,
-                );
+                setHeaderMenuModalVisible(!headerMenuModalVisible);
               }}
             >
-              <FontAwesome5 name="search-dollar" size={24} color={colors.iconColor} />
+              {({ pressed }) => (
+                <MaterialCommunityIcons
+                  name="menu"
+                  size={28}
+                  color={colors.iconColor}
+                  style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                />
+              )}
             </Pressable>
           ),
         }}
@@ -123,7 +190,7 @@ const CategorySpecificCostItemsPage = () => {
                 }}
               >
                 <Text text={`estimate: ${bidAmount}`} />
-                <Text text={`spent: ${spentAmount}`} />
+                <Text text={`spent: ${amountSpent}`} />
               </View>
             </View>
             <View style={{ flex: 1, paddingBottom: 5 }}>
@@ -159,6 +226,13 @@ const CategorySpecificCostItemsPage = () => {
                 estimatedItemSize={ITEM_HEIGHT}
               />
             </View>
+            {headerMenuModalVisible && (
+              <RightHeaderMenu
+                modalVisible={headerMenuModalVisible}
+                setModalVisible={setHeaderMenuModalVisible}
+                buttons={rightHeaderMenuButtons}
+              />
+            )}
           </>
         )}
       </View>

@@ -22,11 +22,13 @@ export const NumberInputField: React.FC<NumberInputFieldProps> = ({
   readOnly = false,
   style = {},
 }) => {
-  const [inputValue, setInputValue] = useState(value.toFixed(numDecimalPlaces));
+  const [inputValue, setInputValue] = useState(value ? value.toFixed(numDecimalPlaces) : '0.00');
   const inputRef = useRef<TextInput>(null);
   const isEditingRef = useRef(false);
 
   useEffect(() => {
+    if (undefined === value || null === value) return;
+
     if (isEditingRef.current) setInputValue(value.toString());
     else setInputValue(value.toFixed(numDecimalPlaces));
   }, [value]);
