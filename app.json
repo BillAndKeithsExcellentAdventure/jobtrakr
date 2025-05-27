@@ -31,6 +31,8 @@
       },
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app needs access to your location to set your project location.",
+        "NSCameraUsageDescription": "This app needs access to your camera to take photos and record videos.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to import photos into your project.",
         "ITSAppUsesNonExemptEncryption": false,
         "LSApplicationQueriesSchemes": ["fb", "instagram", "twitter", "tiktoksharesdk"]
       }
@@ -69,6 +71,13 @@
             "parentTheme": "Default",
             "enforceNavigationBarContrast": true
           }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you add them to your project.",
+          "cameraPermission": "The app accesses your camera to let you add photos to your project."
         }
       ],
       [
