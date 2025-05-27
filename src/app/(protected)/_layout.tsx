@@ -1,8 +1,8 @@
 import { Redirect, Stack } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
-import { Provider as TinyBaseProvider } from 'tinybase/ui-react';
 import { ActiveProjectIdsProvider } from '@/src/context/ActiveProjectIdsContext';
 import AuthorizedStoresProvider from '@/src/components/AuthorizedStoresProvider';
+import ActiveProjectDetailsStoreProvider from '@/src/components/ActiveProjectDetailsStoreProvider';
 
 export const unstable_settings = {
   initialRouteName: '(home)', // anchor
@@ -10,10 +10,6 @@ export const unstable_settings = {
 
 export default function ProtectedLayout() {
   const { isSignedIn, orgId, isLoaded } = useAuth();
-
-  console.log(`ProtectedLayout Clerk isLoaded=${isLoaded}`);
-  console.log(`ProtectedLayout Clerk isSignedIn=${isSignedIn}`);
-  console.log(`ProtectedLayout Clerk orgId=${orgId}`);
 
   if (!isLoaded) {
     return null;
@@ -24,18 +20,20 @@ export default function ProtectedLayout() {
   }
 
   return (
-    <TinyBaseProvider>
+    <>
+      <AuthorizedStoresProvider />
       <ActiveProjectIdsProvider>
-        <AuthorizedStoresProvider />
-        <Stack>
-          <Stack.Screen
-            name="(home)"
-            options={{
-              headerShown: false,
-            }}
-          />
-        </Stack>
+        <ActiveProjectDetailsStoreProvider>
+          <Stack>
+            <Stack.Screen
+              name="(home)"
+              options={{
+                headerShown: false,
+              }}
+            />
+          </Stack>
+        </ActiveProjectDetailsStoreProvider>
       </ActiveProjectIdsProvider>
-    </TinyBaseProvider>
+    </>
   );
 }

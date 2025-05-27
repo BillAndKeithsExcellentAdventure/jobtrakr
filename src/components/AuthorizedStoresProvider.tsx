@@ -3,7 +3,7 @@ import ConfigurationStore from '@/src/tbStores/configurationStore/ConfigurationS
 import ListOfProjectsStore from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { useAuth } from '@clerk/clerk-expo';
 
-export const AuthorizedStoresProvider = ({ children }: PropsWithChildren) => {
+export const AuthorizedStoresProvider = () => {
   const { orgId } = useAuth();
 
   if (!orgId) return null;
@@ -12,7 +12,6 @@ export const AuthorizedStoresProvider = ({ children }: PropsWithChildren) => {
     <>
       <ConfigurationStore />
       <ListOfProjectsStore />
-      {children}
     </>
   );
 };

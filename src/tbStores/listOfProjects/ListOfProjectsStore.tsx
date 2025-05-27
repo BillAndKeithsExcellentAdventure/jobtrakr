@@ -1,13 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { CrudResult, ProjectData, TBStatus } from '@/src/models/types';
+import { useAuth } from '@clerk/clerk-expo';
 import { randomUUID } from 'expo-crypto';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
-import { createMergeableStore, createStore, NoValuesSchema, Value } from 'tinybase/with-schemas';
+import { createMergeableStore, NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { useCreateClientPersisterAndStart } from '../persistence/useCreateClientPersisterAndStart';
 import { useCreateServerSynchronizerAndStart } from '../synchronization/useCreateServerSynchronizerAndStart';
-import { CrudResult, ProjectData, TBStatus } from '@/src/models/types';
-import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
-import ProjectDetailsStore from '../projectDetails/ProjectDetailsStore';
-import { useAuth } from '@clerk/clerk-expo';
 
 const STORE_ID_PREFIX = 'PHV1_projectListStore';
 const TABLES_SCHEMA = {
@@ -45,7 +43,7 @@ const {
   useTable,
 } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
-const useProjectListStoreId = () => {
+export const useProjectListStoreId = () => {
   const { orgId } = useAuth();
   const storeId = useMemo(() => `${STORE_ID_PREFIX}_${orgId}`, [orgId]);
   return storeId;
@@ -218,24 +216,5 @@ export default function ListOfProjectsStore() {
   useCreateClientPersisterAndStart(storeId, store);
   useCreateServerSynchronizerAndStart(storeId, store);
   useProvideStore(storeId, store);
-
-  const { activeProjectIds } = useActiveProjectIds();
-  const allAvailableProjectIds = useRowIds('projects', storeId);
-
-  // Use useMemo to compute the filtered project IDs
-  const projectDetailsStoresToBuild = useMemo(() => {
-    if (!allAvailableProjectIds.length) {
-      return [];
-    }
-
-    // Filter for projects that are both available and active
-    return allAvailableProjectIds.filter((id) => activeProjectIds.includes(id));
-  }, [activeProjectIds, allAvailableProjectIds]);
-
-  if (projectDetailsStoresToBuild.length === 0) {
-    return null;
-  }
-
-  // Render ProjectDetailsStore components for each project
-  return projectDetailsStoresToBuild.map((id) => <ProjectDetailsStore projectId={id} key={id} />);
+  return null;
 }

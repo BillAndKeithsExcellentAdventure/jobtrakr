@@ -258,57 +258,53 @@ export default function ProjectHomeScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsReady(true);
-    }, 500);
+    }, 50);
 
     return () => clearTimeout(timer);
   }, []);
 
   if (!isReady) {
     return (
-      <AuthorizedStoresProvider>
-        <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
-          <Text txtSize="title">Loading...</Text>
-        </SafeAreaView>
-      </AuthorizedStoresProvider>
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
+        <Text txtSize="title">Loading...</Text>
+      </SafeAreaView>
     );
   }
 
   return (
-    <AuthorizedStoresProvider>
-      <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
-        <Stack.Screen
-          options={{
-            headerShown: true,
-            title: 'Projects',
-            ...headerRightComponent,
-          }}
-        />
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Projects',
+          ...headerRightComponent,
+        }}
+      />
 
-        <View style={{ flex: 1, width: '100%' }}>
-          {projectListEntries.length > 0 ? (
-            <View style={[styles.twoColListContainer, { backgroundColor: colors.background }]}>
-              <TwoColumnList
-                data={projectListEntries}
-                onPress={handleSelection}
-                buttons={projectActionButtons}
-              />
-            </View>
-          ) : (
-            <View style={[styles.container, { padding: 20, backgroundColor: colors.background }]}>
-              <Text text="No Projects Found!" txtSize="xl" />
-              <Text text="Use menu in upper right to add one." />
-            </View>
-          )}
-        </View>
-        {headerMenuModalVisible && (
-          <RightHeaderMenu
-            modalVisible={headerMenuModalVisible}
-            setModalVisible={setHeaderMenuModalVisible}
-            buttons={rightHeaderMenuButtons}
-          />
+      <View style={{ flex: 1, width: '100%' }}>
+        {projectListEntries.length > 0 ? (
+          <View style={[styles.twoColListContainer, { backgroundColor: colors.background }]}>
+            <TwoColumnList
+              data={projectListEntries}
+              onPress={handleSelection}
+              buttons={projectActionButtons}
+            />
+          </View>
+        ) : (
+          <View style={[styles.container, { padding: 20, backgroundColor: colors.background }]}>
+            <Text text="No Projects Found!" txtSize="xl" />
+            <Text text="Use menu in upper right to add one." />
+          </View>
         )}
-      </SafeAreaView>
-    </AuthorizedStoresProvider>
+      </View>
+      {headerMenuModalVisible && (
+        <RightHeaderMenu
+          modalVisible={headerMenuModalVisible}
+          setModalVisible={setHeaderMenuModalVisible}
+          buttons={rightHeaderMenuButtons}
+        />
+      )}
+    </SafeAreaView>
   );
 }
 

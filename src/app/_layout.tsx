@@ -13,6 +13,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Provider as TinyBaseProvider } from 'tinybase/ui-react';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -58,26 +59,28 @@ function RootLayoutNav() {
   return (
     <ClerkProvider tokenCache={tokenCache} publishableKey={PUBLISHABLE_KEY}>
       <StatusBar style="auto" />
-      <ClerkLoaded>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <KeyboardProvider>
-            <ColorsProvider>
-              <SafeAreaProvider>
-                <GestureHandlerRootView>
-                  <Stack screenOptions={{ headerShown: false }}>
-                    <Stack.Screen
-                      name="(auth)/sign-in"
-                      options={{
-                        animation: 'none',
-                      }}
-                    />
-                  </Stack>
-                </GestureHandlerRootView>
-              </SafeAreaProvider>
-            </ColorsProvider>
-          </KeyboardProvider>
-        </ThemeProvider>
-      </ClerkLoaded>
+      <TinyBaseProvider>
+        <ClerkLoaded>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <KeyboardProvider>
+              <ColorsProvider>
+                <SafeAreaProvider>
+                  <GestureHandlerRootView>
+                    <Stack screenOptions={{ headerShown: false }}>
+                      <Stack.Screen
+                        name="(auth)"
+                        options={{
+                          animation: 'none',
+                        }}
+                      />
+                    </Stack>
+                  </GestureHandlerRootView>
+                </SafeAreaProvider>
+              </ColorsProvider>
+            </KeyboardProvider>
+          </ThemeProvider>
+        </ClerkLoaded>
+      </TinyBaseProvider>
     </ClerkProvider>
   );
 }
