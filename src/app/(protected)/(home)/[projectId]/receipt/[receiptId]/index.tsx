@@ -67,14 +67,13 @@ const ReceiptDetailsPage = () => {
   const showReceipt = useCallback(
     async (imageId: string) => {
       const uri = buildLocalImageUri(orgId!, projectId, imageId, 'receipt');
+      let imageFileExist = false;
 
       if (uri.startsWith('file://')) {
         // This is a local file. We need to check if it exists.
         const fileUri = uri.replace('file://', '');
         console.log('*** File URI:', fileUri);
         // Check if the file exists
-
-        let imageFileExist = false;
 
         await FileSystem.getInfoAsync(fileUri).then(async (fileInfo) => {
           if (fileInfo.exists) {
@@ -95,6 +94,8 @@ const ReceiptDetailsPage = () => {
           }
         });
       }
+
+      if (!imageFileExist) return;
 
       router.push({
         pathname: '/[projectId]/receipt/[receiptId]/showImage',
