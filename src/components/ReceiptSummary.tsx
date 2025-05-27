@@ -1,34 +1,25 @@
 import { View, Text } from '@/src/components/Themed';
 import { ReceiptData } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
-import { buildLocalImageUri } from '@/src/utils/images';
-import React from 'react';
+import { buildLocalImageUri, useGetImageCallback } from '@/src/utils/images';
+import React, { useEffect, useState } from 'react';
 import { TouchableWithoutFeedback, Image, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import Base64Image from './Base64Image';
+import * as FileSystem from 'expo-file-system';
 
 interface ReceiptSummaryProps {
-  orgId: string;
-  projectId: string;
   item: ReceiptData;
-  onShowPicture: (uri: string) => void;
+  onShowReceipt: (uri: string) => void;
   onShowDetails: (item: ReceiptData) => void;
 }
 
-export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({
-  orgId,
-  projectId,
-  item,
-  onShowPicture,
-  onShowDetails,
-}) => {
-  const uri = buildLocalImageUri(orgId, projectId, item.imageId, 'receipt');
-  console.log(`ReceiptSummary: uri: ${uri}`);
+export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({ item, onShowReceipt, onShowDetails }) => {
   return (
     <View style={{ flex: 1, flexDirection: 'row' }}>
       <View style={styles.imageContentContainer}>
         {item.imageId ? (
-          <Pressable onPress={() => onShowPicture(uri!)}>
+          <Pressable onPress={() => onShowReceipt(item.imageId)}>
             <Base64Image base64String={item.thumbnail} height={80} width={120} />
           </Pressable>
         ) : (
