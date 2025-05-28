@@ -58,7 +58,6 @@ const ShowWorkCategory = () => {
         ...item,
         categoryId: categoryId,
       } as WorkItemData;
-      console.log('Saving item:', newItem);
 
       const status = addWorkItem(newItem);
 

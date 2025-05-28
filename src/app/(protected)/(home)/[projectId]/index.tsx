@@ -91,10 +91,16 @@ const ProjectDetailsPage = () => {
   useCostUpdater(projectId);
   useBidAmountUpdater(projectId);
 
+  const workItemMap = useMemo(() => {
+    return new Map(allWorkItems.map((w) => [w.id, w]));
+  }, [allWorkItems]);
+
+  const categoryMap = useMemo(() => {
+    return new Map(allProjectCategories.map((c) => [c.id, c]));
+  }, [allProjectCategories]);
+
   const sectionData = useMemo(() => {
     const sections: CostSectionData[] = [];
-    const workItemMap = new Map(allWorkItems.map((w) => [w.id, w]));
-    const categoryMap = new Map(allProjectCategories.map((c) => [c.id, c]));
 
     for (const costItem of allWorkItemSummaries) {
       const workItem = workItemMap.get(costItem.workItemId);
@@ -139,23 +145,37 @@ const ProjectDetailsPage = () => {
     });
 
     return sections.sort(CostSectionDataCodeCompareAsNumber);
-  }, [allWorkItemSummaries, allWorkItems, allProjectCategories, allActualCostItems]);
+  }, [
+    allWorkItemSummaries,
+    allWorkItems,
+    allProjectCategories,
+    allActualCostItems,
+    workItemMap,
+    categoryMap,
+    updateWorkItemSpentSummary,
+  ]);
 
   // get a list of unused work items not represented in allWorkItemSummaries
   const unusedWorkItems = useMemo(
-    () =>
-      allWorkItems.filter(
-        (w) => !allWorkItemSummaries.some((i) => i.workItemId === w.id),
-        [allWorkItemSummaries, allWorkItems],
-      ),
-    [allWorkItemSummaries, allWorkItems],
+    () => allWorkItems.filter((w) => !allWorkItemSummaries.some((i) => i.workItemId === w.id)),
+    [allWorkItems, allWorkItemSummaries],
   );
 
   // get a list of all unique categories from unusedWorkItems
-  const unusedCategories = useMemo(
-    () => Array.from(new Set(unusedWorkItems.map((w) => w.categoryId))),
-    [unusedWorkItems],
-  );
+  const unusedCategories = useMemo(() => {
+    const usedCategories = new Set(
+      allWorkItemSummaries.map((ws) => {
+        const wrkItem = workItemMap.get(ws.workItemId);
+        return wrkItem ? categoryMap.get(wrkItem.categoryId) : null;
+      }),
+    );
+
+    return Array.from(
+      new Set(
+        unusedWorkItems.map((w) => w.categoryId).filter((id) => !usedCategories.has(categoryMap.get(id))),
+      ),
+    );
+  }, [unusedWorkItems, allWorkItemSummaries, workItemMap, categoryMap]);
 
   const unusedCategoriesString = useMemo(() => unusedCategories.join(','), [unusedCategories]);
 

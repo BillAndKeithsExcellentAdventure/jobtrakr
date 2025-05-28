@@ -98,11 +98,8 @@ const ListWorkCategories = () => {
 
   const handleAddCategory = useCallback(() => {
     if (category.name && category.code) {
-      console.log('Saving item:', category);
-
       const status = addWorkCategory(category);
       if (status && status.status === 'Success') {
-        console.log('Category added:', status.id);
         // Clear the input fields
         setCategory({ name: '', code: '', id: '', status: '' });
       } else {
