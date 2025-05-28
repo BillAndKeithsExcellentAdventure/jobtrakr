@@ -64,6 +64,13 @@ const ReceiptDetailsPage = () => {
     setItemsTotalCost(allReceiptLineItems.reduce((acc, item) => acc + item.amount, 0));
   }, [allReceiptLineItems]);
 
+  const editDetails = useCallback(
+    (item: ReceiptData) => {
+      router.push({ pathname: '/[projectId]/receipt/[receiptId]/edit', params: { projectId, receiptId } });
+    },
+    [receipt, receiptId],
+  );
+
   const showReceipt = useCallback(
     async (imageId: string) => {
       const uri = buildLocalImageUri(orgId!, projectId, imageId, 'receipt');
