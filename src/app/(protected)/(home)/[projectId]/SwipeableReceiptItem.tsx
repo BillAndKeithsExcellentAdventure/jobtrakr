@@ -31,6 +31,7 @@ const SwipeableReceiptItem = React.memo(
     const router = useRouter();
     const colors = useColors();
     const deleteReceipt = useDeleteRowCallback(projectId, 'receipts');
+    const deleteReceiptLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
     const allReceiptLineItems = useAllRows(projectId, 'workItemCostEntries');
 
     const allReceiptItems = useMemo(
@@ -51,6 +52,12 @@ const SwipeableReceiptItem = React.memo(
     const removeReceipt = useCallback(
       (id: string | undefined) => {
         if (id !== undefined) {
+          // before deleting receipt, we should delete all line items associated with it
+          allReceiptItems.forEach((lineItem) => {
+            deleteReceiptLineItem(lineItem.id);
+          });
+          // now delete the receipt itself
+          console.log('Deleting receipt with id:', id);
           deleteReceipt(id);
         }
       },
@@ -60,7 +67,7 @@ const SwipeableReceiptItem = React.memo(
     const handleDelete = useCallback(() => {
       Alert.alert(
         'Delete Receipt',
-        'Are you sure you want to delete this receipt?',
+        'Are you sure you want to delete this receipt and any of its association line items?',
         [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeReceipt(item.id) }],
         { cancelable: true },
       );

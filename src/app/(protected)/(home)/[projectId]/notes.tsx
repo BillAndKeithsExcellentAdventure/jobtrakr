@@ -1,22 +1,20 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
+import { useColors } from '@/src/context/ColorsContext';
 import {
   NoteCompletedCompare,
   NoteData,
   useAddRowCallback,
   useAllRows,
-  useDeleteRowCallback,
   useIsStoreAvailableCallback,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import FontAwesomeIcon from '@expo/vector-icons/FontAwesome';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, FlatList, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableNote from './SwipeableNote';
-import { useColors } from '@/src/context/ColorsContext';
 
 const ProjectNotes = () => {
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();

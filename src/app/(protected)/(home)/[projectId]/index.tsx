@@ -13,6 +13,7 @@ import {
   useAllRows,
   useBidAmountUpdater,
   useCostUpdater,
+  useDeleteRowCallback,
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
   useSetWorkItemSpentSummaryCallback,
@@ -74,6 +75,8 @@ const ProjectDetailsPage = () => {
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const updateWorkItemSpentSummary = useSetWorkItemSpentSummaryCallback(projectId);
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
+  const allReceiptItems = useAllRows(projectId, 'receipts');
+  const removeCostItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
 
@@ -219,6 +222,33 @@ const ProjectDetailsPage = () => {
           },
         ]);
         return;
+      } else if (menuItem === 'CleanCostItems' && projectId) {
+        Alert.alert(
+          'Clean Cost Items',
+          'Are you sure you want to clean cost items that do not have a match receipt?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Clean-up',
+              onPress: () => {
+                // remove all cost items that do not have a matching receipt
+                const costItemsToRemove = allActualCostItems.filter(
+                  (costItem) =>
+                    !allReceiptItems.some(
+                      (r) => r.id === costItem.parentId && costItem.documentationType === 'receipt',
+                    ),
+                );
+                costItemsToRemove.forEach((item) => {
+                  const result = removeCostItem(item.id);
+                  if (result.status !== 'Success') {
+                    console.error(`Error cleaning cost item ${item.id}: ${result.msg}`);
+                  }
+                });
+              },
+            },
+          ],
+        );
+        return;
       }
     },
     [projectId, projectData, router, processDeleteProject, removeActiveProjectId],
@@ -260,6 +290,13 @@ const ProjectDetailsPage = () => {
         label: 'Delete Project',
         onPress: (e, actionContext) => {
           handleMenuItemPress('Delete', actionContext);
+        },
+      },
+      {
+        icon: <FontAwesome5 name="broom" size={28} color={colors.iconColor} />,
+        label: 'Cost Item Cleanup',
+        onPress: (e, actionContext) => {
+          handleMenuItemPress('CleanCostItems', actionContext);
         },
       },
     ],
