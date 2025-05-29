@@ -2,6 +2,7 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import {
+  NoteCompletedCompare,
   NoteData,
   useAddRowCallback,
   useAllRows,
@@ -42,7 +43,7 @@ const ProjectNotes = () => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
   }, [projectId, activeProjectIds, isStoreReady]);
 
-  const notes = useAllRows(projectId, 'notes');
+  const notes = useAllRows(projectId, 'notes', NoteCompletedCompare);
   const addNewNote = useAddRowCallback(projectId, 'notes');
   const updateNote = useUpdateRowCallback(projectId, 'notes');
   const colors = useColors();

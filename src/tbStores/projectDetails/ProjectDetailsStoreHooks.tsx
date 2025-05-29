@@ -55,6 +55,13 @@ export function RecentMediaEntryDateCompare(a: MediaEntryData, b: MediaEntryData
   return bValue - aValue;
 }
 
+// show the note that are not completed first
+export function NoteCompletedCompare(a: NoteData, b: NoteData) {
+  if (a.completed === b.completed) return 0;
+  return a.completed ? 1 : -1; // completed notes go to the end
+  // uncompleted notes go to the front
+}
+
 export type ReceiptData = {
   id: string;
   vendor: string;
