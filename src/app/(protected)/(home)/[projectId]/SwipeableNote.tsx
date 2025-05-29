@@ -15,7 +15,7 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 
 export const ITEM_HEIGHT = 100;
-const RIGHT_ACTION_WIDTH = 160;
+const RIGHT_ACTION_WIDTH = 100;
 const SWIPE_THRESHOLD_WIDTH = 50;
 
 const RightAction = React.memo(
@@ -38,20 +38,12 @@ const RightAction = React.memo(
         justifyContent: 'center',
       }}
     >
-      <Pressable onPress={onToggleComplete} style={{ width: 50 }}>
-        <FontAwesomeIcon
-          name={isCompleted ? 'undo' : 'check-circle'}
-          size={28}
-          color={isCompleted ? 'gray' : 'green'}
-        />
+      <Pressable onPress={onToggleComplete} style={{ width: 50, alignItems: 'center' }}>
+        <FontAwesomeIcon name={'check-circle'} size={28} color={isCompleted ? 'red' : 'green'} />
       </Pressable>
 
-      <Pressable onPress={onDelete} style={{ width: 50 }}>
+      <Pressable onPress={onDelete} style={{ width: 50, alignItems: 'center' }}>
         <FontAwesomeIcon name="trash" size={28} color="red" />
-      </Pressable>
-
-      <Pressable onPress={onEdit} style={{ width: 50 }}>
-        <FontAwesomeIcon name="edit" size={28} color="blue" />
       </Pressable>
     </View>
   ),
@@ -119,23 +111,26 @@ const SwipeableNote = React.memo(
         renderRightActions={renderRightActions}
       >
         <View style={[styles.itemEntry]}>
-          <View style={styles.itemInfo}>
-            <Text
-              style={{
-                flex: 1,
-                textOverflow: 'ellipsis',
-                alignSelf: 'center',
-                justifyContent: 'center',
-                marginBottom: 5,
-                textDecorationLine: note.completed ? 'line-through' : 'none',
-              }}
-            >
-              {note.task}
-            </Text>
-            <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
-              <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
+          <Pressable onPress={onEdit}>
+            <View style={styles.itemInfo}>
+              <Text
+                style={{
+                  flex: 1,
+                  textOverflow: 'ellipsis',
+                  alignSelf: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 5,
+                  textDecorationLine: note.completed ? 'line-through' : 'none',
+                  color: note.completed ? colors.error : colors.text,
+                }}
+              >
+                {note.task}
+              </Text>
+              <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
+                <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
+              </View>
             </View>
-          </View>
+          </Pressable>
         </View>
       </SwipeableComponent>
     );
