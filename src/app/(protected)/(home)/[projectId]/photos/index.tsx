@@ -8,6 +8,7 @@ import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
 import {
   MediaEntryData,
+  RecentMediaEntryDateCompare,
   useAddRowCallback,
   useAllRows,
   useIsStoreAvailableCallback,
@@ -56,7 +57,7 @@ const ProjectPhotosPage = () => {
     checkPermissions();
   }, [checkPermissions]);
 
-  const allProjectMedia = useAllRows(projectId, 'mediaEntries');
+  const allProjectMedia = useAllRows(projectId, 'mediaEntries', RecentMediaEntryDateCompare);
   const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
 
   const handlePhotoCaptured = useCallback(
@@ -153,7 +154,7 @@ const ProjectPhotosPage = () => {
         <>
           <View style={styles.headerInfo}>
             <ActionButton
-              style={{ alignSelf: 'stretch', marginTop: 5 }}
+              style={{ alignSelf: 'stretch' }}
               type={'action'}
               title={'Take Picture / Video'}
               onPress={() => setIsCameraVisible(true)}
@@ -202,8 +203,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerInfo: {
-    marginHorizontal: 10,
-    paddingHorizontal: 10,
+    margin: 10,
+    padding: 5,
+    borderRadius: 5,
     alignItems: 'center',
   },
   listsContainer: {

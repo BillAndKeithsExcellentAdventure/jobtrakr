@@ -157,6 +157,11 @@ const ProjectNotes = () => {
                   </View>
                 )}
               </View>
+              <View style={{ alignItems: 'center' }}>
+                <Text txtSize="title" style={{ marginTop: 10 }}>
+                  Project Notes
+                </Text>
+              </View>
               <FlatList
                 style={{ marginTop: 10, borderColor: colors.border, borderTopWidth: 1 }}
                 data={notes}

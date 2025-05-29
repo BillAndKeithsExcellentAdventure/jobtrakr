@@ -34,6 +34,27 @@ export interface WorkItemSpentSummary {
   spentAmount: number; //     This is because the receipts are linked to the workItem and category.
 }
 
+// show the most recent date first
+export function RecentReceiptDateCompare(a: ReceiptData, b: ReceiptData) {
+  const aValue = Number(a.receiptDate);
+  const bValue = Number(b.receiptDate);
+  return bValue - aValue;
+}
+
+// show the most recent date first
+export function RecentInvoiceDateCompare(a: InvoiceData, b: InvoiceData) {
+  const aValue = Number(a.invoiceDate);
+  const bValue = Number(b.invoiceDate);
+  return bValue - aValue;
+}
+
+// show the most recent date first
+export function RecentMediaEntryDateCompare(a: MediaEntryData, b: MediaEntryData) {
+  const aValue = Number(a.creationDate);
+  const bValue = Number(b.creationDate);
+  return bValue - aValue;
+}
+
 export type ReceiptData = {
   id: string;
   vendor: string;
@@ -125,6 +146,7 @@ export type CellIdMap = {
 export const useAllRows = <K extends keyof TableDataMap>(
   projectId: string,
   tableName: K,
+  compareFn?: (a: TableDataMap[K], b: TableDataMap[K]) => number,
 ): TableDataMap[K][] => {
   const store = useStore(getStoreId(projectId));
   const [rows, setRows] = useState<TableDataMap[K][]>([]);
@@ -152,7 +174,8 @@ export const useAllRows = <K extends keyof TableDataMap>(
     };
   }, [store, tableName]);
 
-  return rows;
+  if (!compareFn) return rows;
+  return rows.sort(compareFn);
 };
 
 // --- ADD ROW ---

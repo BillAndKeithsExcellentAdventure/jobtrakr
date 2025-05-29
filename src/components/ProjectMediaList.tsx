@@ -173,7 +173,7 @@ export const ProjectMediaList = ({
 
   return (
     <View style={styles.listColumn}>
-      <View style={{ alignItems: 'center' }}>
+      <View style={{ alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth }}>
         <Text txtSize="title" style={styles.listTitle}>
           Project Photos/Videos
         </Text>
@@ -232,6 +232,7 @@ export const ProjectMediaList = ({
 const styles = StyleSheet.create({
   listTitle: {
     textAlign: 'center',
+    paddingVertical: 5,
   },
   buttonContainer: {
     marginTop: 10,
@@ -278,7 +279,6 @@ const styles = StyleSheet.create({
   },
   listColumn: {
     flex: 1,
-    padding: 10,
   },
   playButtonOverlay: {
     position: 'absolute',

@@ -10,6 +10,7 @@ import { Platform, StyleSheet } from 'react-native';
 
 import {
   ReceiptData,
+  RecentReceiptDateCompare,
   useAddRowCallback,
   useAllRows,
   useIsStoreAvailableCallback,
@@ -49,7 +50,7 @@ const ProjectReceiptsPage = () => {
   useSeedWorkItemsIfNecessary(projectId);
 
   const auth = useAuth();
-  const allReceipts = useAllRows(projectId, 'receipts');
+  const allReceipts = useAllRows(projectId, 'receipts', RecentReceiptDateCompare);
   const addReceiptImage = useAddImageCallback();
   const addReceipt = useAddRowCallback(projectId, 'receipts');
 
@@ -130,18 +131,16 @@ const ProjectReceiptsPage = () => {
             <View style={styles.viewContentContainer}>
               <View
                 style={{
-                  marginHorizontal: 10,
-                  marginTop: 10,
-                  marginBottom: 0,
-                  paddingBottom: 10,
-                  borderBottomWidth: 1,
-                  borderColor: colors.border,
+                  backgroundColor: colors.listBackground,
+                  padding: 10,
                 }}
               >
                 <View
                   style={{
                     flexDirection: 'row',
                     width: '100%',
+                    padding: 5,
+                    borderRadius: 5,
                     gap: 10,
                   }}
                 >
@@ -159,6 +158,12 @@ const ProjectReceiptsPage = () => {
                   />
                 </View>
               </View>
+              <View style={{ alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth }}>
+                <Text txtSize="title" style={{ marginVertical: 5 }}>
+                  Project Receipts
+                </Text>
+              </View>
+
               {allReceipts.length === 0 ? (
                 <View style={{ alignItems: 'center', margin: 40 }}>
                   <Text txtSize="xl" text="No receipts found." />

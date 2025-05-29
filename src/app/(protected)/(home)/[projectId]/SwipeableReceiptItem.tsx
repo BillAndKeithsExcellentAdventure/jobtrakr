@@ -75,7 +75,7 @@ const SwipeableReceiptItem = React.memo(
         actionWidth={RIGHT_ACTION_WIDTH}
         renderRightActions={renderRightActions}
       >
-        <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
+        <View style={[styles.itemEntry, { borderColor: colors.border }]}>
           <Pressable
             onPress={() =>
               router.push({
@@ -94,7 +94,7 @@ const SwipeableReceiptItem = React.memo(
                 </>
               ) : (
                 <>
-                  <View style={{ flex: 1, justifyContent: 'center' }}>
+                  <View style={{ flex: 1, justifyContent: 'center', paddingLeft: 10 }}>
                     <Text>Amount: {formatCurrency(item.amount, true, true)}</Text>
                     <Text>Vendor: {item.vendor}</Text>
                     <Text>
@@ -116,18 +116,18 @@ const SwipeableReceiptItem = React.memo(
 );
 
 const styles = StyleSheet.create({
+  itemEntry: {
+    width: '100%',
+    height: ITEM_HEIGHT,
+    borderBottomWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   itemInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
-    height: ITEM_HEIGHT,
-    paddingVertical: 5,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  itemEntry: {
-    width: '100%',
-    paddingLeft: 10,
   },
   rightAction: {
     width: RIGHT_ACTION_WIDTH,
