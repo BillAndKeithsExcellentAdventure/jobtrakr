@@ -6,6 +6,7 @@ import {
   ReceiptData,
   useAllRows,
   useCostUpdater,
+  useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
@@ -16,12 +17,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system';
 import SwipeableLineItem from './SwipeableLineItem';
 import { useAuth } from '@clerk/clerk-expo';
-import { buildLocalImageUri, useGetImageCallback } from '@/src/utils/images';
+import { buildLocalImageUri, useAddImageCallback, useGetImageCallback } from '@/src/utils/images';
+import { createThumbnail } from '@/src/utils/thumbnailUtils';
+import * as ImagePicker from 'expo-image-picker';
 
 const ReceiptDetailsPage = () => {
   const defaultDate = new Date();
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
   const allProjectReceipts = useAllRows(projectId, 'receipts');
+  const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
+  const addReceiptImage = useAddImageCallback();
+
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   useCostUpdater(projectId);
   const auth = useAuth();
@@ -68,16 +74,51 @@ const ReceiptDetailsPage = () => {
     (item: ReceiptData) => {
       router.push({ pathname: '/[projectId]/receipt/[receiptId]/edit', params: { projectId, receiptId } });
     },
-    [receipt, receiptId],
+    [projectId, router, receiptId],
   );
+
+  const handleAddReceiptPhoto = useCallback(async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      alert("You've refused to allow this app to access your camera!");
+      return;
+    }
+
+    const cameraResponse = await ImagePicker.launchCameraAsync({ quality: 0.25 });
+
+    if (!cameraResponse.canceled) {
+      const asset = cameraResponse.assets[0];
+      if (!cameraResponse.assets || cameraResponse.assets.length === 0 || !asset) return;
+
+      // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
+      const imageAddResult = await addReceiptImage(asset.uri, projectId, 'receipt');
+      if (imageAddResult.status !== 'Success') {
+        alert(`Unable to add receipt image: ${JSON.stringify(imageAddResult)}`);
+        return;
+      }
+
+      console.log('Finished adding Receipt Image.', imageAddResult.id);
+      const thumbnail = await createThumbnail(asset.uri);
+
+      const updatedReceipt = {
+        ...receipt,
+        thumbnail: thumbnail ?? '',
+        imageId: imageAddResult.id,
+        pictureDate: new Date().getTime(),
+      };
+
+      const response = updateReceipt(updatedReceipt.id, updatedReceipt);
+      if (response?.status !== 'Success') {
+        alert(`Unable to add receipt image - ${JSON.stringify(response)}`);
+      }
+    }
+  }, [projectId, addReceiptImage, updateReceipt, receipt]);
 
   const showReceipt = useCallback(
     async (imageId: string) => {
       if (!!!imageId) {
-        router.push({
-          pathname: '/[projectId]/receipt/[receiptId]/addImage',
-          params: { projectId, receiptId },
-        });
+        handleAddReceiptPhoto();
         return;
       }
       const uri = buildLocalImageUri(orgId!, projectId, imageId, 'receipt');
@@ -120,19 +161,16 @@ const ReceiptDetailsPage = () => {
         },
       });
     },
-    [projectId, receiptId],
+    [projectId, receiptId, orgId, router, handleAddReceiptPhoto, getImage],
   );
 
   const colors = useColors();
   const addLineItem = useCallback(() => {
     router.push({
       pathname: '/[projectId]/receipt/[receiptId]/addLineItem',
-      params: {
-        projectId,
-        receiptId,
-      },
+      params: { projectId, receiptId },
     });
-  }, [projectId, receiptId]);
+  }, [projectId, receiptId, router]);
 
   const requestAIProcessing = useCallback(() => {
     console.log(
@@ -280,3 +318,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+function addReceiptImage(uri: any, projectId: string, arg2: string) {
+  throw new Error('Function not implemented.');
+}
