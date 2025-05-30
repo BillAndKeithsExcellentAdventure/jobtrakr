@@ -13,6 +13,7 @@ import {
   RecentReceiptDateCompare,
   useAddRowCallback,
   useAllRows,
+  useCostUpdater,
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
@@ -53,6 +54,7 @@ const ProjectReceiptsPage = () => {
   const allReceipts = useAllRows(projectId, 'receipts', RecentReceiptDateCompare);
   const addReceiptImage = useAddImageCallback();
   const addReceipt = useAddRowCallback(projectId, 'receipts');
+  useCostUpdater(projectId);
 
   const colors = useColors();
 

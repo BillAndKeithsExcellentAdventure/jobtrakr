@@ -3,17 +3,28 @@ import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import { NumberInputField } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
+import { Switch } from '@/src/components/Switch';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { ReceiptData, useAddRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import {
+  useAllRows as useAllConfigurationRows,
+  WorkCategoryCodeCompareAsNumber,
+  WorkItemDataCodeCompareAsNumber,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  ReceiptData,
+  useAddRowCallback,
+  useAllRows,
+  useUpdateRowCallback,
+  WorkItemCostEntry,
+} from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Image, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
@@ -117,21 +128,34 @@ const AddReceiptPage = () => {
     }));
   }, []);
 
-  useEffect(() => {
-    setCanAddReceipt(
-      (projectReceipt.amount > 0 && !!projectReceipt.vendor && !!projectReceipt.description) ||
-        !!projectReceipt.imageId,
-    );
-  }, [projectReceipt]);
-
   const handleAddReceipt = useCallback(async () => {
     if (!canAddReceipt) return;
 
-    const result = addReceipt(projectReceipt);
-
+    const receiptToAdd = {
+      ...projectReceipt,
+      markedComplete: applyToSingleCostCode && !!pickedSubCategoryOption,
+    };
+    const result = addReceipt(receiptToAdd);
     if (result.status !== 'Success') {
-      console.log('Add Project receipt failed:', projectReceipt);
+      console.log('Add Project receipt failed:', receiptToAdd);
+    } else {
+      if (applyToSingleCostCode && !!pickedSubCategoryOption) {
+        const newLineItem: WorkItemCostEntry = {
+          id: '',
+          label: projectReceipt.description,
+          workItemId: pickedSubCategoryOption.value,
+          amount: projectReceipt.amount,
+          parentId: result.id,
+          documentationType: 'receipt',
+        };
+        const addLineItemResult = addLineItem(newLineItem);
+        if (addLineItemResult.status !== 'Success') {
+          Alert.alert('Error', 'Unable to add line item for receipt.');
+          console.log('Error adding line item for receipt:', addLineItemResult);
+        }
+      }
     }
+    console.log('Project receipt successfully added:', projectReceipt);
     router.back();
   }, [projectReceipt, canAddReceipt]);
 
@@ -167,6 +191,104 @@ const AddReceiptPage = () => {
       }
     }
   }, []);
+
+  const [applyToSingleCostCode, setApplyToSingleCostCode] = useState(false);
+  const allWorkItemCostSummaries = useAllRows(projectId, 'workItemSummaries');
+  const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
+  const allWorkItems = useAllConfigurationRows('workItems');
+  const allWorkCategories = useAllConfigurationRows('categories', WorkCategoryCodeCompareAsNumber);
+
+  const availableCategoriesOptions: OptionEntry[] = useMemo(() => {
+    // get a list of all unique workitemids from allWorkItemCostSummaries available in the project
+    const uniqueWorkItemIds = allWorkItemCostSummaries.map((item) => item.workItemId);
+
+    // now get list of all unique categoryIds from allWorkItems given list of uniqueWorkItemIds
+    const uniqueCategoryIds = allWorkItems
+      .filter((item) => uniqueWorkItemIds.includes(item.id))
+      .map((item) => item.categoryId);
+
+    // now get an array of OptionEntry for each entry in uniqueCategoryIds using allWorkCategories
+    const uniqueCategories = allWorkCategories
+      .filter((item) => uniqueCategoryIds.includes(item.id))
+      .map((item) => ({
+        label: item.name,
+        value: item.id,
+      }));
+    return uniqueCategories;
+  }, [allWorkItemCostSummaries, allWorkItems, allWorkCategories]);
+
+  const allAvailableCostItemOptions: OptionEntry[] = useMemo(() => {
+    const uniqueWorkItemIds = allWorkItemCostSummaries.map((item) => item.workItemId);
+    const uniqueWorkItems = allWorkItems.filter((item) => uniqueWorkItemIds.includes(item.id));
+    const uniqueCostItems = uniqueWorkItems.map((item) => {
+      const category = allWorkCategories.find((o) => o.id === item.categoryId);
+      const categoryCode = category ? `${category.code}.` : '';
+      return {
+        label: `${categoryCode}${item.code} - ${item.name}`,
+        value: item.id,
+      };
+    });
+    return uniqueCostItems;
+  }, [allWorkItemCostSummaries, allWorkItems]);
+
+  const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
+  const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
+
+  const [isSubCategoryPickerVisible, setIsSubCategoryPickerVisible] = useState<boolean>(false);
+  const [pickedSubCategoryOption, setPickedSubCategoryOption] = useState<OptionEntry | undefined>(undefined);
+  const [subCategories, setSubCategories] = useState<OptionEntry[]>([]);
+  const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
+    setPickedSubCategoryOption(selectedSubCategory);
+  }, []);
+
+  const handleCategoryChange = useCallback(
+    (selectedCategory: OptionEntry) => {
+      setPickedCategoryOption(selectedCategory);
+      if (selectedCategory) {
+        const workItems = allWorkItems
+          .filter((item) => item.categoryId === selectedCategory.value)
+          .sort(WorkItemDataCodeCompareAsNumber);
+        const subCategories = workItems.map((item) => {
+          return allAvailableCostItemOptions.find((o) => o.value === item.id) ?? { label: '', value: '' };
+        });
+
+        setSubCategories(subCategories);
+        setPickedSubCategoryOption(undefined);
+      }
+    },
+    [availableCategoriesOptions, allWorkItems],
+  );
+
+  useEffect(() => {
+    if (applyToSingleCostCode && !pickedSubCategoryOption) {
+      setCanAddReceipt(false);
+    } else {
+      setCanAddReceipt(
+        (projectReceipt.amount > 0 && !!projectReceipt.vendor && !!projectReceipt.description) ||
+          !!projectReceipt.imageId,
+      );
+    }
+  }, [projectReceipt, applyToSingleCostCode, pickedSubCategoryOption]);
+
+  useEffect(() => {
+    if (pickedCategoryOption === undefined || pickedCategoryOption.value === '') {
+      setSubCategories(allAvailableCostItemOptions);
+    }
+  }, [pickedCategoryOption, allAvailableCostItemOptions]);
+
+  const handleSubCategoryOptionChange = (option: OptionEntry) => {
+    if (option) {
+      handleSubCategoryChange(option);
+    }
+    setIsSubCategoryPickerVisible(false);
+  };
+
+  const handleCategoryOptionChange = (option: OptionEntry) => {
+    if (option) {
+      handleCategoryChange(option);
+    }
+    setIsCategoryPickerVisible(false);
+  };
 
   return (
     <>
@@ -238,6 +360,7 @@ const AddReceiptPage = () => {
                 value={projectReceipt.description}
                 onChangeText={handleDescriptionChange}
               />
+              {/*----------- Hide until we find a need to specify a note
               <TextField
                 containerStyle={styles.inputContainer}
                 style={[styles.input, { borderColor: colors.transparent }]}
@@ -246,7 +369,7 @@ const AddReceiptPage = () => {
                 value={projectReceipt.notes}
                 onChangeText={handleNotesChange}
               />
-
+              -------- */}
               {projectReceipt.thumbnail && (
                 <>
                   <View style={{ alignItems: 'center', justifyContent: 'center' }}>
@@ -266,6 +389,32 @@ const AddReceiptPage = () => {
                   title={projectReceipt.imageId ? 'Retake Picture' : 'Take Picture'}
                 />
               </View>
+
+              <View style={styles.applyToSingleCostCodeRow}>
+                <Switch value={applyToSingleCostCode} onValueChange={setApplyToSingleCostCode} size="large" />
+                <Text text="Apply to Single Cost Code" txtSize="standard" style={{ marginLeft: 10 }} />
+              </View>
+
+              {applyToSingleCostCode && (
+                <>
+                  <OptionPickerItem
+                    containerStyle={styles.inputContainer}
+                    optionLabel={pickedCategoryOption?.label}
+                    label="Category"
+                    placeholder="Category"
+                    editable={false}
+                    onPickerButtonPress={() => setIsCategoryPickerVisible(true)}
+                  />
+                  <OptionPickerItem
+                    containerStyle={styles.inputContainer}
+                    optionLabel={pickedSubCategoryOption?.label}
+                    label="Cost Item Type"
+                    placeholder="Cost Item Type"
+                    editable={false}
+                    onPickerButtonPress={() => setIsSubCategoryPickerVisible(true)}
+                  />
+                </>
+              )}
             </View>
 
             <View style={styles.saveButtonRow}>
@@ -279,6 +428,7 @@ const AddReceiptPage = () => {
               <ActionButton
                 style={styles.cancelButton}
                 onPress={() => {
+                  // clear state of receipt dat;
                   setProjectReceipt({
                     id: '',
                     vendor: '',
@@ -312,6 +462,32 @@ const AddReceiptPage = () => {
             </BottomSheetContainer>
           )}
         </View>
+        {isCategoryPickerVisible && (
+          <BottomSheetContainer
+            isVisible={isCategoryPickerVisible}
+            onClose={() => setIsCategoryPickerVisible(false)}
+          >
+            <OptionList
+              options={availableCategoriesOptions}
+              onSelect={(option) => handleCategoryOptionChange(option)}
+              selectedOption={pickedCategoryOption}
+            />
+          </BottomSheetContainer>
+        )}
+        {isSubCategoryPickerVisible && (
+          <BottomSheetContainer
+            isVisible={isSubCategoryPickerVisible}
+            onClose={() => setIsSubCategoryPickerVisible(false)}
+          >
+            <OptionList
+              centerOptions={false}
+              boldSelectedOption={false}
+              options={subCategories}
+              onSelect={(option) => handleSubCategoryOptionChange(option)}
+              selectedOption={pickedSubCategoryOption}
+            />
+          </BottomSheetContainer>
+        )}
       </SafeAreaView>
       {Platform.OS === 'ios' && <KeyboardToolbar />}
     </>
@@ -363,6 +539,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 10,
   },
+  applyToSingleCostCodeRow: {
+    flexDirection: 'row',
+    marginTop: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
   saveButtonRow: {
     marginTop: 10,
     flexDirection: 'row',

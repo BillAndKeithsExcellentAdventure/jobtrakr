@@ -4,6 +4,7 @@ import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import {
   useAllRows,
+  useBidAmountUpdater,
   useDeleteRowCallback,
   useUpdateRowCallback,
   useWorkItemSpentValue,
@@ -27,6 +28,9 @@ const CostItemDetails = () => {
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const updateBidEstimate = useUpdateRowCallback(projectId, 'workItemSummaries');
   const deleteCostSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
+
+  useBidAmountUpdater(projectId);
+
   const workItemSummary: WorkItemSummaryData | null = useMemo(() => {
     const workItem = allWorkItemSummaries.find((item) => item.id === costSummaryItemId);
     if (workItem) {

@@ -1,51 +1,31 @@
 import { ActionButtonProps, ButtonBar } from '@/src/components/ButtonBar';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useBidAmountUpdater, useCostUpdater } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import React from 'react';
-import { FlatList, Image, Platform, Pressable, StyleSheet } from 'react-native';
+import { Image, Platform, StyleSheet } from 'react-native';
 import Base64Image from './Base64Image';
+import { ProjectListEntryProps } from './ProjectList';
+import { Pressable } from 'react-native-gesture-handler';
 
-// Define types for the props
-export interface TwoColumnListEntry {
-  entryId: string;
-  primaryTitle: string;
-  imageUri?: string;
-  secondaryTitle?: string;
-  tertiaryTitle?: string;
-  subtitleLines?: { left: string; right: string }[];
-  lines?: { left: string; right: string }[];
-  isFavorite?: boolean;
+interface ProjectListEntryComponentProps {
+  item: ProjectListEntryProps;
+  onPress: (item: ProjectListEntryProps) => void;
+  buttons?: ActionButtonProps[] | null;
 }
 
-export function TwoColumnList({
-  data,
-  onPress,
-  buttons,
-}: {
-  data: TwoColumnListEntry[];
-  onPress: (item: TwoColumnListEntry) => void;
-  buttons: ActionButtonProps[] | null | undefined;
-}) {
-  let showsVerticalScrollIndicator = false;
-  if (Platform.OS === 'web') {
-    showsVerticalScrollIndicator = true;
-  }
-
+export function ProjectListEntry({ item, onPress, buttons }: ProjectListEntryComponentProps) {
   const colors = useColors();
-
-  if (Platform.OS === 'web') {
-    colors.listBackground = '#efefef';
-  }
-
   const boxShadow = Platform.OS === 'web' ? colors.boxShadow : undefined;
-  const renderItem = ({ item }: { item: TwoColumnListEntry }) => (
+
+  return (
     <View
       style={[
         styles.itemContainer,
         { backgroundColor: colors.itemBackground, shadowColor: colors.shadowColor, boxShadow },
       ]}
     >
-      <Pressable onPress={(e) => onPress(item)} style={{ width: '100%' }}>
+      <Pressable onPress={() => onPress(item)} style={{ width: '100%' }}>
         <View style={styles.itemContentContainer}>
           <View style={styles.headerContentContainer}>
             {item.imageUri && (
@@ -62,7 +42,6 @@ export function TwoColumnList({
               </View>
             )}
             <View style={[styles.textContentContainer, { backgroundColor: colors.itemBackground }]}>
-              {/* Row for Title */}
               <View style={styles.titleRow}>
                 <Text numberOfLines={1} ellipsizeMode="tail" txtSize="title">
                   {item.primaryTitle}
@@ -97,55 +76,39 @@ export function TwoColumnList({
               },
             ]}
           >
-            {/* Row for Subtitles */}
-            {item.subtitleLines &&
-              item.subtitleLines.map((line, index) => (
-                <View style={styles.subtitleRow} key={index}>
-                  <View style={styles.subtitleColumn}>
-                    <Text style={[styles.subtitleTextLeft]} numberOfLines={1} ellipsizeMode="tail">
-                      {line.left}
-                    </Text>
-                  </View>
-                  <View style={styles.subtitleColumn}>
-                    <Text style={[styles.subtitleTextRight]} numberOfLines={1} ellipsizeMode="tail">
-                      {line.right}
-                    </Text>
-                  </View>
+            {item.subtitleLines?.map((line, index) => (
+              <View style={styles.subtitleRow} key={index}>
+                <View style={styles.subtitleColumn}>
+                  <Text style={[styles.subtitleTextLeft]} numberOfLines={1} ellipsizeMode="tail">
+                    {line.left}
+                  </Text>
                 </View>
-              ))}
+                <View style={styles.subtitleColumn}>
+                  <Text style={[styles.subtitleTextRight]} numberOfLines={1} ellipsizeMode="tail">
+                    {line.right}
+                  </Text>
+                </View>
+              </View>
+            ))}
 
-            {/* Row for Details */}
-            {item.lines &&
-              item.lines.map((line, index) => (
-                <View style={styles.subtitleRow} key={index}>
-                  <View style={styles.subtitleColumn}>
-                    <Text style={[styles.subtitleTextLeft]} numberOfLines={1} ellipsizeMode="tail">
-                      {line.left}
-                    </Text>
-                  </View>
-                  <View style={styles.subtitleColumn}>
-                    <Text style={[styles.subtitleTextRight]} numberOfLines={1} ellipsizeMode="tail">
-                      {line.right}
-                    </Text>
-                  </View>
+            {item.lines?.map((line, index) => (
+              <View style={styles.subtitleRow} key={index}>
+                <View style={styles.subtitleColumn}>
+                  <Text style={[styles.subtitleTextLeft]} numberOfLines={1} ellipsizeMode="tail">
+                    {line.left}
+                  </Text>
                 </View>
-              ))}
+                <View style={styles.subtitleColumn}>
+                  <Text style={[styles.subtitleTextRight]} numberOfLines={1} ellipsizeMode="tail">
+                    {line.right}
+                  </Text>
+                </View>
+              </View>
+            ))}
           </View>
         </View>
       </Pressable>
       {buttons && <ButtonBar buttons={buttons} actionContext={item} isFavorite={item.isFavorite} />}
-    </View>
-  );
-
-  return (
-    <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
-      <FlatList
-        style={[styles.flatList, { backgroundColor: colors.listBackground }]}
-        data={data}
-        showsVerticalScrollIndicator={showsVerticalScrollIndicator}
-        keyExtractor={(item) => item.entryId}
-        renderItem={renderItem}
-      />
     </View>
   );
 }

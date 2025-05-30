@@ -54,6 +54,7 @@ const SwipeableReceiptItem = React.memo(
         if (id !== undefined) {
           // before deleting receipt, we should delete all line items associated with it
           allReceiptItems.forEach((lineItem) => {
+            console.log('Deleting receipt line item with id:', lineItem.id);
             deleteReceiptLineItem(lineItem.id);
           });
           // now delete the receipt itself
@@ -61,7 +62,7 @@ const SwipeableReceiptItem = React.memo(
           deleteReceipt(id);
         }
       },
-      [deleteReceipt],
+      [deleteReceipt, deleteReceiptLineItem, allReceiptItems],
     );
 
     const handleDelete = useCallback(() => {

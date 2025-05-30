@@ -6,6 +6,7 @@ export interface SwitchProps {
   onValueChange: (value: boolean) => void;
   isOffOnToggle?: boolean;
   size?: 'small' | 'medium' | 'large';
+  switchContainerOffBackgroundColor?: string;
 }
 
 export const Switch: FC<SwitchProps> = ({
@@ -13,6 +14,7 @@ export const Switch: FC<SwitchProps> = ({
   onValueChange,
   isOffOnToggle: isOnOffToggle = false,
   size = 'small',
+  switchContainerOffBackgroundColor,
 }) => {
   const [animValue] = useState(new Animated.Value(value ? 1 : 0));
   const [containerWidth, setContainerWidth] = useState(0);
@@ -45,14 +47,19 @@ export const Switch: FC<SwitchProps> = ({
     outputRange: [2, containerWidth - thumbWidth - 3], // Dynamic calculation
   });
 
+  const switchBackgroundColor = value
+    ? styles.switchContainerOn
+    : switchContainerOffBackgroundColor
+    ? { backgroundColor: switchContainerOffBackgroundColor }
+    : styles.switchContainerOff;
+
   return (
     <TouchableOpacity
       style={[
         styles.switchContainer,
         size === 'medium' && styles.switchContainerMedium,
         size === 'large' && styles.switchContainerLarge,
-        value && styles.switchContainerOn,
-        !value && isOnOffToggle && styles.switchContainerOff,
+        switchBackgroundColor,
       ]}
       onPress={toggleSwitch}
       onLayout={onLayout}

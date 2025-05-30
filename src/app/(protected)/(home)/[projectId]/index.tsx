@@ -300,7 +300,7 @@ const ProjectDetailsPage = () => {
         },
       },
     ],
-    [colors, allWorkItemSummaries, handleMenuItemPress, router, addActiveProjectIds],
+    [colors, allWorkItemSummaries, handleMenuItemPress, router, addActiveProjectIds, unusedCategories],
   );
 
   const renderItem = (item: CostSectionData, projectId: string) => {

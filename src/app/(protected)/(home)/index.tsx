@@ -1,6 +1,6 @@
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import { Text, View } from '@/src/components/Themed';
-import { TwoColumnList, TwoColumnListEntry } from '@/src/components/TwoColumnList';
+import { ProjectList, ProjectListEntryProps } from '@/src/components/ProjectList';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import Entypo from '@expo/vector-icons/Entypo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -30,7 +30,7 @@ function MaterialDesignTabBarIcon(props: {
   return <MaterialCommunityIcons size={28} style={{ marginBottom: -3 }} {...props} />;
 }
 
-function isEntry(obj: any): obj is TwoColumnListEntry {
+function isEntry(obj: any): obj is ProjectListEntryProps {
   return typeof obj.primaryTitle === 'string' && typeof obj.secondaryTitle === 'string';
 }
 
@@ -38,7 +38,7 @@ export default function ProjectHomeScreen() {
   const allProjects = useAllProjects();
   const { addActiveProjectIds } = useActiveProjectIds();
   const toggleFavorite = useToggleFavoriteCallback();
-  const [projectListEntries, setProjectListEntries] = useState<TwoColumnListEntry[]>([]);
+  const [projectListEntries, setProjectListEntries] = useState<ProjectListEntryProps[]>([]);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [isReady, setIsReady] = useState(false);
   const router = useRouter();
@@ -55,11 +55,11 @@ export default function ProjectHomeScreen() {
 
   useEffect(() => {
     if (allProjects) {
-      const listData: TwoColumnListEntry[] = allProjects.map((project) => {
+      const listData: ProjectListEntryProps[] = allProjects.map((project) => {
         return {
           primaryTitle: project.name ? project.name : 'unknown',
           isFavorite: undefined !== project.favorite ? project.favorite > 0 : false,
-          entryId: project.id ?? 'unknown',
+          projectId: project.id ?? 'unknown',
           imageUri: project.thumbnail ?? 'x',
           secondaryTitle: project.location,
           tertiaryTitle: project.ownerName ?? 'Owner',
@@ -92,7 +92,7 @@ export default function ProjectHomeScreen() {
         label: 'Like',
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
-            if (actionContext && actionContext.entryId) onLikePressed(actionContext.entryId);
+            if (actionContext && actionContext.projectId) onLikePressed(actionContext.projectId);
           }
         },
       },
@@ -101,11 +101,11 @@ export default function ProjectHomeScreen() {
         label: 'Notes',
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
-            if (actionContext && actionContext.entryId)
+            if (actionContext && actionContext.projectId)
               router.push({
                 pathname: '/[projectId]/notes',
                 params: {
-                  projectId: actionContext.entryId,
+                  projectId: actionContext.projectId,
                   projectName: actionContext.primaryTitle,
                 },
               });
@@ -117,11 +117,11 @@ export default function ProjectHomeScreen() {
         label: 'Photos',
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
-            if (actionContext && actionContext.entryId)
+            if (actionContext && actionContext.projectId)
               router.push({
                 pathname: '/[projectId]/photos',
                 params: {
-                  projectId: actionContext.entryId,
+                  projectId: actionContext.projectId,
                   projectName: actionContext.primaryTitle,
                 },
               });
@@ -133,11 +133,11 @@ export default function ProjectHomeScreen() {
         label: 'Receipts',
         onPress: (e, actionContext) => {
           if (isEntry(actionContext)) {
-            if (actionContext && actionContext.entryId)
+            if (actionContext && actionContext.projectId)
               router.push({
                 pathname: '/[projectId]/receipts',
                 params: {
-                  projectId: actionContext.entryId,
+                  projectId: actionContext.projectId,
                   projectName: actionContext.primaryTitle,
                 },
               });
@@ -164,11 +164,11 @@ export default function ProjectHomeScreen() {
   );
 
   const handleSelection = useCallback(
-    (entry: TwoColumnListEntry) => {
-      const project = allProjects.find((j) => (j.id ?? '') === entry.entryId);
+    (entry: ProjectListEntryProps) => {
+      const project = allProjects.find((j) => (j.id ?? '') === entry.projectId);
       if (project && project.id) {
         router.push({ pathname: '/[projectId]', params: { projectId: project.id } });
-      } else Alert.alert(`Project not found: ${entry.primaryTitle} (${entry.entryId})`);
+      } else Alert.alert(`Project not found: ${entry.primaryTitle} (${entry.projectId})`);
     },
     [allProjects],
   );
@@ -284,11 +284,7 @@ export default function ProjectHomeScreen() {
       <View style={{ flex: 1, width: '100%' }}>
         {projectListEntries.length > 0 ? (
           <View style={[styles.twoColListContainer, { backgroundColor: colors.background }]}>
-            <TwoColumnList
-              data={projectListEntries}
-              onPress={handleSelection}
-              buttons={projectActionButtons}
-            />
+            <ProjectList data={projectListEntries} onPress={handleSelection} buttons={projectActionButtons} />
           </View>
         ) : (
           <View style={[styles.container, { padding: 20, backgroundColor: colors.background }]}>

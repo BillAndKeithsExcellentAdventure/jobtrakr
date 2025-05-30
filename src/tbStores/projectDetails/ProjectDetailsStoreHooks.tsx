@@ -179,7 +179,7 @@ export const useAllRows = <K extends keyof TableDataMap>(
     return () => {
       store.delListener(listenerId);
     };
-  }, [store, tableName]);
+  }, [store, tableName, fetchRows]);
 
   if (!compareFn) return rows;
   return rows.sort(compareFn);
@@ -215,7 +215,7 @@ export function useUpdateRowCallback<K extends PROJECTDETAILS_TABLES>(projectId:
         ? { status: 'Success', id, msg: '' }
         : { status: 'Error', id: '0', msg: 'Failed to update' };
     },
-    [store, tableId],
+    [store, tableId, projectId],
   );
 }
 
@@ -230,7 +230,7 @@ export function useDeleteRowCallback<K extends PROJECTDETAILS_TABLES>(projectId:
         ? { status: 'Success', id, msg: '' }
         : { status: 'Error', id: '0', msg: 'Failed to delete' };
     },
-    [store, tableId],
+    [store, tableId, projectId],
   );
 }
 
@@ -338,7 +338,7 @@ export function useSetWorkItemSpentSummaryCallback(projectId: string) {
         ? { status: 'Success', id: workItemId, msg: '' }
         : { status: 'Error', id: '0', msg: 'Failed to update' };
     },
-    [store],
+    [store, projectId],
   );
 }
 
