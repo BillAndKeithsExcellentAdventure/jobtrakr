@@ -9,8 +9,8 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-import { CostItemData } from './index';
 import { SwipeableComponent } from '@/src/components/SwipeableComponent';
+import { CostItemData } from '../models/types';
 
 const ITEM_HEIGHT = 45;
 const RIGHT_ACTION_WIDTH = 80;
@@ -80,7 +80,7 @@ const SwipeableCostSummary = React.memo(({ item, sectionCode, projectId }: Props
       threshold={SWIPE_THRESHOLD_WIDTH}
       actionWidth={RIGHT_ACTION_WIDTH}
     >
-      <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
+      <View style={styles.itemEntry}>
         <Pressable
           onPress={() => {
             router.push({
@@ -123,21 +123,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  itemEntry: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: ITEM_HEIGHT,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+
   itemInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
-    height: ITEM_HEIGHT,
-    paddingVertical: 5,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingLeft: 10,
   },
   itemName: {
     marginRight: 10,
-  },
-  itemEntry: {
-    width: '100%',
-    paddingLeft: 10,
   },
   rightAction: {
     width: RIGHT_ACTION_WIDTH,

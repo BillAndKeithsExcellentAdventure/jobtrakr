@@ -15,7 +15,7 @@ import { FlatList, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableVendor from './SwipeableVendor';
+import SwipeableVendor from '../../../../../components/SwipeableVendor';
 
 const VendorsScreen = () => {
   const router = useRouter();

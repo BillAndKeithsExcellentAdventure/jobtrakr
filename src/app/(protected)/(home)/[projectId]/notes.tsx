@@ -14,7 +14,7 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableNote from './SwipeableNote';
+import SwipeableNote from '@/src/components/SwipeableNote';
 
 const ProjectNotes = () => {
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();

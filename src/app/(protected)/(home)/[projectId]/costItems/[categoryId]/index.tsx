@@ -18,8 +18,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CostItemData, CostItemDataCodeCompareAsNumber } from '../../index';
-import SwipeableCostSummary from '../../SwipeableCostSummary';
+import { CostItemData, CostItemDataCodeCompareAsNumber } from '@/src/models/types';
+import SwipeableCostSummary from '@/src/components/SwipeableCostSummary';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 

@@ -21,7 +21,7 @@ import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableReceiptItem, { ITEM_HEIGHT } from './SwipeableReceiptItem';
+import SwipeableReceiptItem, { ITEM_HEIGHT } from '@/src/components/SwipeableReceiptItem';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
   return actionContext && typeof actionContext.PictureUri === 'string';

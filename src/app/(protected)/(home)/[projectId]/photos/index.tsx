@@ -1,5 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
+import ProjectCameraView from '@/src/components/CameraView';
 import { ProjectMediaList } from '@/src/components/ProjectMediaList';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { Text, View } from '@/src/components/Themed';
@@ -22,7 +23,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import ProjectCameraView from '../../(modals)/CameraView';
 
 const ProjectPhotosPage = () => {
   const router = useRouter();

@@ -15,7 +15,7 @@ import { Alert, FlatList, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableCategory from './SwipeableCategory';
+import SwipeableCategory from '../../../../../components/SwipeableCategory';
 
 const ListWorkCategories = () => {
   const addWorkCategory = useAddRowCallback('categories');

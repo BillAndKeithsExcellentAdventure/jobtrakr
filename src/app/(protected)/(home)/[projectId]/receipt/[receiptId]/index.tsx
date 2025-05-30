@@ -15,7 +15,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system';
-import SwipeableLineItem from './SwipeableLineItem';
+import SwipeableLineItem from '@/src/components/SwipeableLineItem';
 import { useAuth } from '@clerk/clerk-expo';
 import { buildLocalImageUri, useAddImageCallback, useGetImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';

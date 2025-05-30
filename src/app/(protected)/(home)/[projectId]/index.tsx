@@ -3,6 +3,7 @@ import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
+import { CostSectionData, CostSectionDataCodeCompareAsNumber } from '@/src/models/types';
 import {
   useAllRows as useAllConfigRows,
   WorkCategoryCodeCompareAsNumber,
@@ -17,7 +18,6 @@ import {
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
   useSetWorkItemSpentSummaryCallback,
-  useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { FontAwesome5, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
@@ -29,36 +29,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-export function CostItemDataCodeCompareAsNumber(a: CostItemData, b: CostItemData) {
-  const aValue = Number(a.code);
-  const bValue = Number(b.code);
-  return (aValue as number) - (bValue as number);
-}
-
-export function CostSectionDataCodeCompareAsNumber(a: CostSectionData, b: CostSectionData) {
-  const aValue = Number(a.code);
-  const bValue = Number(b.code);
-  return (aValue as number) - (bValue as number);
-}
-
-export interface CostItemData {
-  id: string;
-  workItemId: string;
-  code: string;
-  title: string;
-  bidAmount: number;
-  spentAmount: number;
-}
-
-export interface CostSectionData {
-  categoryId: string;
-  code: string;
-  title: string;
-  totalBidAmount: number;
-  totalSpentAmount: number;
-  data: CostItemData[];
-}
 
 const ITEM_HEIGHT = 45;
 
@@ -335,6 +305,8 @@ const ProjectDetailsPage = () => {
             style={{
               flexDirection: 'row',
               backgroundColor: colors.listBackground,
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             <Text
