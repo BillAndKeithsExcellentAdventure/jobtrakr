@@ -22,7 +22,11 @@ export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({ item, onShowRece
             <Base64Image base64String={item.thumbnail} height={80} width={120} />
           </Pressable>
         ) : (
-          <Text txtSize="sub-title">No Image</Text>
+          <Pressable onPress={() => onShowReceipt(item.imageId)}>
+            <View style={{ borderWidth: 1, borderRadius: 5, paddingHorizontal: 5, paddingVertical: 10 }}>
+              <Text txtSize="sub-title">Add Image</Text>
+            </View>
+          </Pressable>
         )}
       </View>
       <View style={[{ flex: 1, alignItems: 'flex-start' }, !!!item.amount && { alignItems: 'center' }]}>

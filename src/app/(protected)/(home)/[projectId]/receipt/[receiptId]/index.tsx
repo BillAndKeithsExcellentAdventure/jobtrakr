@@ -73,6 +73,13 @@ const ReceiptDetailsPage = () => {
 
   const showReceipt = useCallback(
     async (imageId: string) => {
+      if (!!!imageId) {
+        router.push({
+          pathname: '/[projectId]/receipt/[receiptId]/addImage',
+          params: { projectId, receiptId },
+        });
+        return;
+      }
       const uri = buildLocalImageUri(orgId!, projectId, imageId, 'receipt');
       let imageFileExist = false;
 
@@ -172,7 +179,7 @@ const ReceiptDetailsPage = () => {
                 type={'action'}
                 title="Add Line Item"
               />
-              {allReceiptLineItems.length === 0 && (
+              {allReceiptLineItems.length === 0 && !!receipt.imageId && (
                 <ActionButton
                   style={styles.rightButton}
                   onPress={requestAIProcessing}
