@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   itemEntry: {
     width: '100%',
     height: ITEM_HEIGHT,
-    borderBottomWidth: 1,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
   },

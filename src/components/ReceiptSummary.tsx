@@ -6,6 +6,7 @@ import { TouchableWithoutFeedback, Image, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import Base64Image from './Base64Image';
 import * as FileSystem from 'expo-file-system';
+import { useColors } from '../context/ColorsContext';
 
 interface ReceiptSummaryProps {
   item: ReceiptData;
@@ -14,6 +15,7 @@ interface ReceiptSummaryProps {
 }
 
 export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({ item, onShowReceipt, onShowDetails }) => {
+  const colors = useColors();
   return (
     <View style={{ flex: 1, flexDirection: 'row' }}>
       <View style={styles.imageContentContainer}>
@@ -23,7 +25,15 @@ export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({ item, onShowRece
           </Pressable>
         ) : (
           <Pressable onPress={() => onShowReceipt(item.imageId)}>
-            <View style={{ borderWidth: 1, borderRadius: 5, paddingHorizontal: 5, paddingVertical: 10 }}>
+            <View
+              style={{
+                borderWidth: 1,
+                borderRadius: 5,
+                paddingHorizontal: 5,
+                paddingVertical: 10,
+                borderColor: colors.border,
+              }}
+            >
               <Text txtSize="sub-title">Add Image</Text>
             </View>
           </Pressable>

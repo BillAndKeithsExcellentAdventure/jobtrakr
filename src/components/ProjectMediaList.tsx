@@ -173,7 +173,13 @@ export const ProjectMediaList = ({
 
   return (
     <View style={styles.listColumn}>
-      <View style={{ alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth }}>
+      <View
+        style={{
+          alignItems: 'center',
+          borderBottomWidth: 1,
+          borderColor: colors.border,
+        }}
+      >
         <Text txtSize="title" style={styles.listTitle}>
           Project Photos/Videos
         </Text>

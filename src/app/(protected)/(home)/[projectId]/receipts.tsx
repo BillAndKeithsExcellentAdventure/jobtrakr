@@ -160,7 +160,13 @@ const ProjectReceiptsPage = () => {
                   />
                 </View>
               </View>
-              <View style={{ alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth }}>
+              <View
+                style={{
+                  alignItems: 'center',
+                  borderBottomWidth: 1,
+                  borderColor: colors.border,
+                }}
+              >
                 <Text txtSize="title" style={{ marginVertical: 5 }}>
                   Project Receipts
                 </Text>
