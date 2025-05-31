@@ -149,11 +149,11 @@ export default function ProjectHomeScreen() {
         icon: <Entypo name="text-document" size={24} color={colors.iconColor} />,
         label: 'Invoices',
         onPress: (e, actionContext) => {
-          if (actionContext && actionContext.entryId)
+          if (actionContext && actionContext.projectId)
             router.push({
               pathname: '/[projectId]/invoices',
               params: {
-                projectId: actionContext.entryId,
+                projectId: actionContext.projectId,
                 projectName: actionContext.primaryTitle,
               },
             });

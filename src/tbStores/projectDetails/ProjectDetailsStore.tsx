@@ -28,7 +28,7 @@ export const TABLES_SCHEMA = {
     thumbnail: { type: 'string' },
     pictureDate: { type: 'number' }, // Date the picture was taken.
     imageId: { type: 'string' },
-    notes: { type: 'string' },
+    notes: { type: 'string' }, // not currently in ui
     markedComplete: { type: 'boolean' },
   },
 
@@ -37,12 +37,14 @@ export const TABLES_SCHEMA = {
     vendor: { type: 'string' },
     description: { type: 'string' },
     amount: { type: 'number' }, // Total Amount
+    numLineItems: { type: 'number' }, // Number of line items in the invoice
     invoiceDate: { type: 'number' }, // Date on the invoice.
     invoiceNumber: { type: 'string' }, // Vendor's invoice number
     thumbnail: { type: 'string' },
     pictureDate: { type: 'number' }, // Date the picture was taken.
     imageId: { type: 'string' },
-    notes: { type: 'string' },
+    notes: { type: 'string' }, // not currently in ui
+    markedComplete: { type: 'boolean' },
   },
 
   workItemCostEntries: {

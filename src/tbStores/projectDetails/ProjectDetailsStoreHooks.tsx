@@ -81,12 +81,14 @@ export type InvoiceData = {
   vendor: string;
   description: string;
   amount: number;
+  numLineItems: number;
   invoiceDate: number;
   invoiceNumber: string;
   thumbnail: string;
   pictureDate: number;
   imageId: string;
   notes: string;
+  markedComplete: boolean;
 };
 
 export type WorkItemCostEntry = {
