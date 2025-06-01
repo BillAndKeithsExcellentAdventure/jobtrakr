@@ -43,6 +43,7 @@ const InvoiceDetailsPage = () => {
 
   const [invoice, setInvoice] = useState<InvoiceData>({
     id: '',
+    invoiceNumber: '',
     vendor: '',
     description: '',
     amount: 0,
@@ -172,20 +173,6 @@ const InvoiceDetailsPage = () => {
     });
   }, [projectId, invoiceId, router]);
 
-  const requestAIProcessing = useCallback(() => {
-    console.log(
-      `requestAIProcessing - route = /${projectId}/invoice/${invoiceId}/requestAIProcessing?imageId=${invoice.imageId}`,
-    );
-    router.push({
-      pathname: '/[projectId]/invoice/[invoiceId]/requestAIProcessing',
-      params: {
-        projectId,
-        invoiceId,
-        imageId: invoice.imageId,
-      },
-    });
-  }, [projectId, invoiceId, invoice.imageId]);
-
   const [containerHeight, setContainerHeight] = useState(0);
 
   const onLayout = (event: LayoutChangeEvent) => {
@@ -217,14 +204,6 @@ const InvoiceDetailsPage = () => {
                 type={'action'}
                 title="Add Line Item"
               />
-              {allInvoiceLineItems.length === 0 && !!invoice.imageId && (
-                <ActionButton
-                  style={styles.rightButton}
-                  onPress={requestAIProcessing}
-                  type={'action'}
-                  title="Load from Photo"
-                />
-              )}
             </View>
 
             <View

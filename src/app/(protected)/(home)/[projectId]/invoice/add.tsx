@@ -101,34 +101,6 @@ const AddInvoicePage = () => {
     hideDatePicker();
   }, []);
 
-  const handleAmountChange = useCallback((amount: number) => {
-    setProjectInvoice((prevInvoice) => ({
-      ...prevInvoice,
-      amount,
-    }));
-  }, []);
-
-  const handleVendorChange = useCallback((vendor: string) => {
-    setProjectInvoice((prevInvoice) => ({
-      ...prevInvoice,
-      vendor,
-    }));
-  }, []);
-
-  const handleDescriptionChange = useCallback((description: string) => {
-    setProjectInvoice((prevInvoice) => ({
-      ...prevInvoice,
-      description,
-    }));
-  }, []);
-
-  const handleNotesChange = useCallback((notes: string) => {
-    setProjectInvoice((prevInvoice) => ({
-      ...prevInvoice,
-      notes,
-    }));
-  }, []);
-
   const handleAddInvoice = useCallback(async () => {
     if (!canAddInvoice) return;
 
@@ -307,6 +279,20 @@ const AddInvoicePage = () => {
             <Text txtSize="title" style={styles.modalTitle} text="Add Invoice" />
 
             <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border }}>
+              <TextField
+                containerStyle={styles.inputContainer}
+                style={[styles.input, { borderColor: colors.transparent }]}
+                placeholder="Invoice Number"
+                label="Invoice Number"
+                value={projectInvoice.invoiceNumber}
+                onChangeText={(invoiceNumber) =>
+                  setProjectInvoice((prevInvoice) => ({
+                    ...prevInvoice,
+                    invoiceNumber,
+                  }))
+                }
+              />
+
               <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
                 <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
                 <TextInput
@@ -332,7 +318,12 @@ const AddInvoicePage = () => {
                   optionLabel={projectInvoice.vendor}
                   label="Vendor"
                   placeholder="Vendor"
-                  onOptionLabelChange={handleVendorChange}
+                  onOptionLabelChange={(vendor: string) =>
+                    setProjectInvoice((prevInvoice) => ({
+                      ...prevInvoice,
+                      vendor,
+                    }))
+                  }
                   onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
                 />
               ) : (
@@ -342,7 +333,12 @@ const AddInvoicePage = () => {
                   placeholder="Vendor"
                   label="Vendor"
                   value={projectInvoice.vendor}
-                  onChangeText={handleVendorChange}
+                  onChangeText={(vendor: string) =>
+                    setProjectInvoice((prevInvoice) => ({
+                      ...prevInvoice,
+                      vendor,
+                    }))
+                  }
                 />
               )}
 
@@ -351,7 +347,12 @@ const AddInvoicePage = () => {
                 placeholder="Amount"
                 label="Amount"
                 value={projectInvoice.amount}
-                onChange={handleAmountChange}
+                onChange={(amount: number) =>
+                  setProjectInvoice((prevInvoice) => ({
+                    ...prevInvoice,
+                    amount,
+                  }))
+                }
               />
               <TextField
                 containerStyle={styles.inputContainer}
@@ -359,18 +360,13 @@ const AddInvoicePage = () => {
                 placeholder="Description"
                 label="Description"
                 value={projectInvoice.description}
-                onChangeText={handleDescriptionChange}
+                onChangeText={(description) =>
+                  setProjectInvoice((prevInvoice) => ({
+                    ...prevInvoice,
+                    description,
+                  }))
+                }
               />
-              {/*----------- Hide until we find a need to specify a note
-              <TextField
-                containerStyle={styles.inputContainer}
-                style={[styles.input, { borderColor: colors.transparent }]}
-                placeholder="Notes"
-                label="Notes"
-                value={projectInvoice.notes}
-                onChangeText={handleNotesChange}
-              />
-              -------- */}
               {projectInvoice.thumbnail && (
                 <>
                   <View style={{ alignItems: 'center', justifyContent: 'center' }}>

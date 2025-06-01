@@ -4,7 +4,7 @@ import { NumberInputField } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
-import { Text, View } from '@/src/components/Themed';
+import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
@@ -12,10 +12,12 @@ import {
   useAllRows,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { formatDate } from '@/src/utils/formatters';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 const EditReceiptDetailsPage = () => {
   const defaultDate = new Date();
@@ -26,6 +28,23 @@ const EditReceiptDetailsPage = () => {
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const allProjectReceipts = useAllRows(projectId, 'receipts');
   const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const showDatePicker = () => {
+    setDatePickerVisible(true);
+  };
+
+  const hideDatePicker = () => {
+    setDatePickerVisible(false);
+  };
+
+  const handleDateConfirm = useCallback((date: Date) => {
+    setReceipt((prevInvoice) => ({
+      ...prevInvoice,
+      date,
+    }));
+
+    hideDatePicker();
+  }, []);
 
   const handleVendorOptionChange = (option: OptionEntry) => {
     if (option) {
@@ -102,6 +121,27 @@ const EditReceiptDetailsPage = () => {
           <View style={{ alignItems: 'center' }}>
             <Text txtSize="title" text="Edit Receipt Summary" />
           </View>
+          <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border }}>
+            <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
+              <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
+              <TextInput
+                readOnly={true}
+                style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                placeholder="Date"
+                onPressIn={showDatePicker}
+                value={formatDate(receipt.receiptDate)}
+              />
+            </TouchableOpacity>
+            <DateTimePickerModal
+              style={{ alignSelf: 'stretch' }}
+              date={receipt.receiptDate ? new Date(receipt.receiptDate) : defaultDate}
+              isVisible={datePickerVisible}
+              mode="date"
+              onConfirm={handleDateConfirm}
+              onCancel={hideDatePicker}
+            />
+          </View>
+
           <NumberInputField
             style={styles.inputContainer}
             label="Amount"
@@ -141,18 +181,6 @@ const EditReceiptDetailsPage = () => {
               setReceipt((prevReceipt) => ({
                 ...prevReceipt,
                 description: text,
-              }));
-            }}
-          />
-          <TextField
-            containerStyle={styles.inputContainer}
-            placeholder="Notes"
-            label="Notes"
-            value={receipt.notes}
-            onChangeText={(text): void => {
-              setReceipt((prevReceipt) => ({
-                ...prevReceipt,
-                notes: text,
               }));
             }}
           />
@@ -211,5 +239,18 @@ const styles = StyleSheet.create({
   cancelButton: {
     flex: 1,
     marginLeft: 5,
+  },
+  inputLabel: {
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  dateInput: {
+    borderWidth: 1,
+    alignContent: 'stretch',
+    justifyContent: 'center',
+    borderRadius: 5,
+    paddingHorizontal: 8,
+    height: 40,
+    paddingVertical: 0,
   },
 });

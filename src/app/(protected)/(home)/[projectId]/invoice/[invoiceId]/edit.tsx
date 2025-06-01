@@ -4,7 +4,7 @@ import { NumberInputField } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
-import { Text, View } from '@/src/components/Themed';
+import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
@@ -12,10 +12,12 @@ import {
   useAllRows,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { formatDate } from '@/src/utils/formatters';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 const EditInvoiceDetailsPage = () => {
   const defaultDate = new Date();
@@ -26,6 +28,7 @@ const EditInvoiceDetailsPage = () => {
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const allProjectInvoices = useAllRows(projectId, 'invoices');
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
 
   const handleVendorOptionChange = (option: OptionEntry) => {
     if (option) {
@@ -52,8 +55,26 @@ const EditInvoiceDetailsPage = () => {
     }
   }, [allVendors]);
 
+  const showDatePicker = () => {
+    setDatePickerVisible(true);
+  };
+
+  const hideDatePicker = () => {
+    setDatePickerVisible(false);
+  };
+
+  const handleDateConfirm = useCallback((date: Date) => {
+    setInvoice((prevInvoice) => ({
+      ...prevInvoice,
+      date,
+    }));
+
+    hideDatePicker();
+  }, []);
+
   const [invoice, setInvoice] = useState<InvoiceData>({
     id: '',
+    invoiceNumber: '',
     vendor: '',
     description: '',
     amount: 0,
@@ -102,6 +123,39 @@ const EditInvoiceDetailsPage = () => {
           <View style={{ alignItems: 'center' }}>
             <Text txtSize="title" text="Edit Invoice Summary" />
           </View>
+          <TextField
+            containerStyle={styles.inputContainer}
+            placeholder="Invoice Number"
+            label="Invoice Number"
+            value={invoice.invoiceNumber}
+            onChangeText={(invoiceNumber): void => {
+              setInvoice((prevInvoice) => ({
+                ...prevInvoice,
+                invoiceNumber,
+              }));
+            }}
+          />
+          <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border }}>
+            <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
+              <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
+              <TextInput
+                readOnly={true}
+                style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                placeholder="Date"
+                onPressIn={showDatePicker}
+                value={formatDate(invoice.invoiceDate)}
+              />
+            </TouchableOpacity>
+            <DateTimePickerModal
+              style={{ alignSelf: 'stretch' }}
+              date={invoice.invoiceDate ? new Date(invoice.invoiceDate) : defaultDate}
+              isVisible={datePickerVisible}
+              mode="date"
+              onConfirm={handleDateConfirm}
+              onCancel={hideDatePicker}
+            />
+          </View>
+
           <NumberInputField
             style={styles.inputContainer}
             label="Amount"
@@ -141,18 +195,6 @@ const EditInvoiceDetailsPage = () => {
               setInvoice((prevInvoice) => ({
                 ...prevInvoice,
                 description: text,
-              }));
-            }}
-          />
-          <TextField
-            containerStyle={styles.inputContainer}
-            placeholder="Notes"
-            label="Notes"
-            value={invoice.notes}
-            onChangeText={(text): void => {
-              setInvoice((prevInvoice) => ({
-                ...prevInvoice,
-                notes: text,
               }));
             }}
           />
@@ -211,5 +253,18 @@ const styles = StyleSheet.create({
   cancelButton: {
     flex: 1,
     marginLeft: 5,
+  },
+  inputLabel: {
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  dateInput: {
+    borderWidth: 1,
+    alignContent: 'stretch',
+    justifyContent: 'center',
+    borderRadius: 5,
+    paddingHorizontal: 8,
+    height: 40,
+    paddingVertical: 0,
   },
 });
