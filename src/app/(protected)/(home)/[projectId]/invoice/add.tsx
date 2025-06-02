@@ -37,15 +37,6 @@ const AddInvoicePage = () => {
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
-
-  const handleVendorOptionChange = (option: OptionEntry) => {
-    setPickedOption(option);
-    if (option) {
-      handleVendorChange(option.label);
-    }
-    setIsVendorListPickerVisible(false);
-  };
-
   const router = useRouter();
   const [projectInvoice, setProjectInvoice] = useState<InvoiceData>({
     id: '',
@@ -61,6 +52,21 @@ const AddInvoicePage = () => {
     markedComplete: false,
     invoiceNumber: '',
   });
+
+  const handleVendorChange = useCallback((vendor: string) => {
+    setProjectInvoice((prevReceipt) => ({
+      ...prevReceipt,
+      vendor,
+    }));
+  }, []);
+
+  const handleVendorOptionChange = (option: OptionEntry) => {
+    setPickedOption(option);
+    if (option) {
+      handleVendorChange(option.label);
+    }
+    setIsVendorListPickerVisible(false);
+  };
 
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [canAddInvoice, setCanAddInvoice] = useState(false);
