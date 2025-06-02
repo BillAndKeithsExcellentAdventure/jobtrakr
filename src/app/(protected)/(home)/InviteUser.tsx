@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { View, TextInput, Alert, StyleSheet } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
 import { useOrganization } from '@clerk/clerk-expo';
-import { inviteUserToOrganization } from '../../../utils/organization';
-import { ActionButton } from '../../../components/ActionButton';
+import { inviteUserToOrganization } from '@/src/utils/organization';
+import { ActionButton } from '@/src/components/ActionButton';
 import { useColors } from '@/src/context/ColorsContext';
+import { Stack } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { TextInput, View } from '@/src/components/Themed';
 
 export const InviteUser = () => {
   const colors = useColors();
@@ -27,17 +30,25 @@ export const InviteUser = () => {
   };
 
   return (
-    <View style={{ gap: 10 }}>
-      <TextInput
-        style={{ ...styles.input, color: 'white', backgroundColor: colors.neutral200 }}
-        value={email}
-        onChangeText={setEmail}
-        placeholder="Enter email address"
-        keyboardType="email-address"
-        autoCapitalize="none"
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Invite User',
+        }}
       />
-      <ActionButton onPress={handleInvite} title="Send Invitation" type="action" />
-    </View>
+
+      <View style={{ marginBottom: 10 }}>
+        <TextInput
+          value={email}
+          onChangeText={setEmail}
+          placeholder="Email address of user to invite"
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+      </View>
+      <ActionButton onPress={handleInvite} title="Send Invitation" type={email ? 'action' : 'disabled'} />
+    </SafeAreaView>
   );
 };
 

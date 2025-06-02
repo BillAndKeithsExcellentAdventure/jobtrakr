@@ -297,6 +297,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-function addInvoiceImage(uri: any, projectId: string, arg2: string) {
-  throw new Error('Function not implemented.');
-}
