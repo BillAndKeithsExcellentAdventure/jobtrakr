@@ -181,7 +181,7 @@ export default function ProjectHomeScreen() {
       } else if (item === 'Configuration') {
         router.push('/configuration/home');
       } else if (item === 'Invite') {
-        router.push('/invite');
+        router.push({ pathname: '/(protected)/(home)/InviteUser' });
       } else if (item === 'Logout') {
         signOut();
         router.replace('/sign-in');

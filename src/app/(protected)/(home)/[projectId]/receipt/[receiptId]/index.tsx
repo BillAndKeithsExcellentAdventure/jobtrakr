@@ -85,7 +85,7 @@ const ReceiptDetailsPage = () => {
       return;
     }
 
-    const cameraResponse = await ImagePicker.launchCameraAsync({ quality: 0.25 });
+    const cameraResponse = await ImagePicker.launchCameraAsync({ quality: 1.0 });
 
     if (!cameraResponse.canceled) {
       const asset = cameraResponse.assets[0];
