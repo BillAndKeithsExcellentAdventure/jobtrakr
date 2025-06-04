@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Alert, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { useOrganization } from '@clerk/clerk-expo';
+import { useOrganization, useUser } from '@clerk/clerk-expo';
 import { inviteUserToOrganization } from '@/src/utils/organization';
 import { ActionButton } from '@/src/components/ActionButton';
 import { useColors } from '@/src/context/ColorsContext';
@@ -11,9 +11,20 @@ import { TextInput, View, Text } from '@/src/components/Themed';
 export const InviteUser = () => {
   const colors = useColors();
   const { organization } = useOrganization();
+  const { user } = useUser();
   const [email, setEmail] = useState('');
   const [members, setMembers] = useState<OrganizationMembership[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [numAdmins, setNumAdmins] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+
+  // Add this useEffect to set the current user's ID
+  useEffect(() => {
+    if (user) {
+      setCurrentUserId(user.id);
+      console.log('Current user ID:', user.id);
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -23,7 +34,13 @@ export const InviteUser = () => {
       try {
         const response = await organization.getMemberships();
         setMembers(response.data);
+
+        // Count admin members
+        const adminCount = response.data.filter((member) => member.role === 'org:admin').length;
+        setNumAdmins(adminCount);
+
         console.log('Fetched members:', response.data.length);
+        console.log('Number of admins:', adminCount);
       } catch (error) {
         console.error('Error fetching members:', error);
         Alert.alert('Error', 'Failed to fetch organization members');
@@ -46,7 +63,7 @@ export const InviteUser = () => {
       return;
     }
 
-    const result = await inviteUserToOrganization(organization.organization, email);
+    const result = await inviteUserToOrganization(organization, email);
 
     if (result.status === 'success') {
       Alert.alert('Success', result.message);
@@ -63,9 +80,9 @@ export const InviteUser = () => {
     try {
       console.log('Making member admin:', memberId);
       await organization.updateMember({ userId: memberId, role: 'org:admin' });
-      // Refresh members list
       const response = await organization.getMemberships();
       setMembers(response.data);
+      setNumAdmins((prev) => prev + 1);
       Alert.alert('Success', 'Member role updated to admin');
     } catch (error) {
       console.error('Error updating member role:', error);
@@ -82,9 +99,9 @@ export const InviteUser = () => {
     try {
       console.log('Removing admin role:', memberId);
       await organization.updateMember({ userId: memberId, role: 'org:member' });
-      // Refresh members list
       const response = await organization.getMemberships();
       setMembers(response.data);
+      setNumAdmins((prev) => prev - 1);
       Alert.alert('Success', 'Member role updated to member');
     } catch (error) {
       console.error('Error updating member role:', error);
@@ -157,12 +174,16 @@ export const InviteUser = () => {
                 <View key={member.id} style={styles.memberRow}>
                   <View style={styles.adminButtonContainer}>
                     {member.role === 'org:admin' ? (
-                      <TouchableOpacity
-                        style={styles.removeAdminButton}
-                        onPress={() => handleRemoveAdmin(member.publicUserData.userId)}
-                      >
-                        <Text style={styles.adminButtonText}>Remove Admin</Text>
-                      </TouchableOpacity>
+                      numAdmins > 1 && member.publicUserData.userId !== currentUserId ? (
+                        <TouchableOpacity
+                          style={styles.removeAdminButton}
+                          onPress={() => handleRemoveAdmin(member.publicUserData.userId)}
+                        >
+                          <Text style={styles.adminButtonText}>Remove Admin</Text>
+                        </TouchableOpacity>
+                      ) : (
+                        <View style={styles.adminButtonPlaceholder} />
+                      )
                     ) : (
                       <TouchableOpacity
                         style={styles.adminButton}
@@ -177,7 +198,9 @@ export const InviteUser = () => {
                   {member.role !== 'org:admin' && (
                     <TouchableOpacity
                       style={styles.removeButton}
-                      onPress={() => handleRemoveMember(member.id, member.publicUserData.userId)}
+                      onPress={() =>
+                        handleRemoveMember(member.publicUserData.userId, member.publicUserData.identifier)
+                      }
                     >
                       <Text style={styles.removeButtonText}>Remove</Text>
                     </TouchableOpacity>
