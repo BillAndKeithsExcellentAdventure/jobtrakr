@@ -13,7 +13,7 @@ export const InviteUser = () => {
   const { organization } = useOrganization();
   const { user } = useUser();
   const [email, setEmail] = useState('');
-  const [members, setMembers] = useState<OrganizationMembership[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [numAdmins, setNumAdmins] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string>('');
@@ -146,7 +146,7 @@ export const InviteUser = () => {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Invite User',
+          title: 'Manage Team Members',
         }}
       />
 
@@ -156,7 +156,9 @@ export const InviteUser = () => {
         </View>
       ) : (
         <>
-          <View style={{ marginBottom: 10 }}>
+          <View
+            style={{ marginBottom: 10, borderColor: colors.border, borderWidth: 1, paddingHorizontal: 5 }}
+          >
             <TextInput
               value={email}
               onChangeText={setEmail}
@@ -169,43 +171,47 @@ export const InviteUser = () => {
 
           {members.length > 0 && (
             <View style={styles.membersContainer}>
-              <Text style={styles.memberTitle}>Current Members:</Text>
+              <Text style={[styles.memberTitle, { borderBottomColor: colors.border }]}>Current Members:</Text>
               {members.map((member) => (
-                <View key={member.id} style={styles.memberRow}>
-                  <View style={styles.adminButtonContainer}>
-                    {member.role === 'org:admin' ? (
-                      numAdmins > 1 && member.publicUserData.userId !== currentUserId ? (
-                        <TouchableOpacity
-                          style={styles.removeAdminButton}
-                          onPress={() => handleRemoveAdmin(member.publicUserData.userId)}
-                        >
-                          <Text style={styles.adminButtonText}>Remove Admin</Text>
-                        </TouchableOpacity>
-                      ) : (
-                        <View style={styles.adminButtonPlaceholder} />
-                      )
-                    ) : (
-                      <TouchableOpacity
-                        style={styles.adminButton}
-                        onPress={() => handleMakeAdmin(member.publicUserData.userId)}
-                      >
-                        <Text style={styles.adminButtonText}>Make Admin</Text>
-                      </TouchableOpacity>
-                    )}
+                <View key={member.id} style={[styles.memberItem, { borderColor: colors.border }]}>
+                  <View style={styles.memberRow}>
+                    <Text style={styles.memberRole}>{member.role.replace('org:', '')}</Text>
+                    <Text style={styles.memberEmail}>{member.publicUserData.identifier}</Text>
                   </View>
-                  <Text style={styles.memberRole}>{member.role.replace('org:', '')}</Text>
-                  <Text style={styles.memberEmail}>{member.publicUserData.identifier}</Text>
-                  {member.role !== 'org:admin' && (
-                    <TouchableOpacity
-                      style={styles.removeButton}
-                      onPress={() =>
-                        handleRemoveMember(member.publicUserData.userId, member.publicUserData.identifier)
-                      }
-                    >
-                      <Text style={styles.removeButtonText}>Remove</Text>
-                    </TouchableOpacity>
+                  {member.publicUserData.userId !== currentUserId && (
+                    <View style={styles.memberButtonRow}>
+                      {member.role === 'org:admin' ? (
+                        numAdmins > 0 && member.publicUserData.userId !== currentUserId ? (
+                          <TouchableOpacity
+                            style={styles.removeAdminButton}
+                            onPress={() => handleRemoveAdmin(member.publicUserData.userId)}
+                          >
+                            <Text style={styles.adminButtonText}>Remove Admin Role</Text>
+                          </TouchableOpacity>
+                        ) : (
+                          <View />
+                        )
+                      ) : (
+                        <TouchableOpacity
+                          style={styles.adminButton}
+                          onPress={() => handleMakeAdmin(member.publicUserData.userId)}
+                        >
+                          <Text style={styles.adminButtonText}>Make Admin</Text>
+                        </TouchableOpacity>
+                      )}
+
+                      {member.role !== 'org:admin' && (
+                        <TouchableOpacity
+                          style={styles.removeButton}
+                          onPress={() =>
+                            handleRemoveMember(member.publicUserData.userId, member.publicUserData.identifier)
+                          }
+                        >
+                          <Text style={styles.removeButtonText}>Remove</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   )}
-                  {member.role === 'org:admin' && <View style={styles.removeButtonPlaceholder} />}
                 </View>
               ))}
             </View>
@@ -233,24 +239,24 @@ const styles = StyleSheet.create({
   memberTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 10,
+    paddingBottom: 5,
+    borderBottomWidth: 1,
   },
   memberItem: {
-    padding: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   memberRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
-  adminButtonContainer: {
-    width: 100, // Fixed width for button container
-    marginRight: 10,
+  memberButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+    paddingBottom: 10,
   },
+
   adminButton: {
     backgroundColor: '#007AFF',
     paddingHorizontal: 12,
@@ -266,13 +272,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   adminButtonText: {
-    color: '#fff',
     fontSize: 12,
     fontWeight: '600',
-  },
-  adminButtonPlaceholder: {
-    width: '100%',
-    height: 32, // Match height of admin button
   },
   memberRole: {
     width: 80, // Fixed width for role
@@ -286,16 +287,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 4,
-    marginLeft: 10,
   },
   removeButtonText: {
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
-  },
-  removeButtonPlaceholder: {
-    width: 80, // Fixed width for placeholder
-    height: 32, // Match height of remove button
   },
 });
 

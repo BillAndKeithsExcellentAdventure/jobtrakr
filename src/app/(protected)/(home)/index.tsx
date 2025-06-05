@@ -1,6 +1,6 @@
 import { ActionButtonProps } from '@/src/components/ButtonBar';
-import { Text, View } from '@/src/components/Themed';
 import { ProjectList, ProjectListEntryProps } from '@/src/components/ProjectList';
+import { Text, View } from '@/src/components/Themed';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import Entypo from '@expo/vector-icons/Entypo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -19,9 +19,8 @@ import { useAllProjects, useToggleFavoriteCallback } from '@/src/tbStores/listOf
 
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
-import { useClerk } from '@clerk/clerk-expo';
+import { useAuth, useClerk } from '@clerk/clerk-expo';
 import { AntDesign } from '@expo/vector-icons';
-import AuthorizedStoresProvider from '@/src/components/AuthorizedStoresProvider';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -44,6 +43,8 @@ export default function ProjectHomeScreen() {
   const router = useRouter();
   const { signOut } = useClerk();
   const colors = useColors();
+  const auth = useAuth();
+  const { orgRole, orgId } = auth;
 
   useEffect(() => {
     // create an array of projectId that have been favorited
@@ -196,8 +197,10 @@ export default function ProjectHomeScreen() {
     });
   }, [signOut]);
 
-  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
-    () => [
+  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(() => {
+    const showInvite = orgId && orgRole.includes('admin');
+
+    const menuButtons: ActionButtonProps[] = [
       {
         icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
         label: 'Add Project',
@@ -212,13 +215,17 @@ export default function ProjectHomeScreen() {
           handleMenuItemPress('Configuration', actionContext);
         },
       },
-      {
-        icon: <AntDesign name="adduser" size={28} color={colors.iconColor} />,
-        label: 'Invite Team Members',
-        onPress: (e, actionContext) => {
-          handleMenuItemPress('Invite', actionContext);
-        },
-      },
+      ...(showInvite
+        ? [
+            {
+              icon: <AntDesign name="adduser" size={28} color={colors.iconColor} />,
+              label: 'Manage Team',
+              onPress: (e, actionContext) => {
+                handleMenuItemPress('Invite', actionContext);
+              },
+            } as ActionButtonProps,
+          ]
+        : []),
       {
         icon: <Entypo name="log-out" size={28} color={colors.iconColor} />,
         label: 'Logout',
@@ -226,9 +233,9 @@ export default function ProjectHomeScreen() {
           handleSignOut();
         },
       },
-    ],
-    [colors, handleMenuItemPress],
-  );
+    ];
+    return menuButtons;
+  }, [colors, handleMenuItemPress]);
 
   const headerRightComponent = useMemo(() => {
     return {
