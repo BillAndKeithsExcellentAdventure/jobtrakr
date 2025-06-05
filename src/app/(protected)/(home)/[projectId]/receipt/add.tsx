@@ -180,7 +180,7 @@ const AddReceiptPage = () => {
       const imageAddResult = await addPhotoImage(asset.uri, projectId, 'photo');
       console.log('Image Add Result:', imageAddResult);
       if (imageAddResult.status === 'Success' && imageAddResult.uri) {
-        const thumbnail = await createThumbnail(asset.uri, 80, 120);
+        const thumbnail = await createThumbnail(asset.uri);
 
         setProjectReceipt((prevReceipt) => ({
           ...prevReceipt,

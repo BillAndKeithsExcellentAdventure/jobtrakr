@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Image, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
 
 const Base64Image = ({
   base64String,
@@ -14,7 +15,12 @@ const Base64Image = ({
 }) => {
   return (
     <View style={[styles.container, style]}>
-      <Image style={{ width, height }} source={{ uri: `data:image/png;base64,${base64String}` }} />
+      <Image
+        style={{ width, height }}
+        contentFit="cover"
+        contentPosition="top left"
+        source={{ uri: `data:image/png;base64,${base64String}` }}
+      />
     </View>
   );
 };
