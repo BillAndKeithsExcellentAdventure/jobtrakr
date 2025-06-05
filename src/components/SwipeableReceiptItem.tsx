@@ -95,9 +95,11 @@ const SwipeableReceiptItem = React.memo(
             <View style={styles.itemInfo}>
               {item.amount === 0 && totalOfAllReceiptItems === 0 && item.imageId ? (
                 <>
-                  <View style={{ flex: 1 }}>
-                    <Base64Image base64String={item.thumbnail} height={ITEM_HEIGHT - 20} width={120} />
-                    <Text style={styles.dateOverlay}>{photoDate}</Text>
+                  <View style={{ flex: 1, alignItems: 'center' }}>
+                    <Base64Image base64String={item.thumbnail} height={ITEM_HEIGHT - 20} width={150} />
+                    <View style={{ width: 150 }}>
+                      <Text style={styles.dateOverlay}>{photoDate}</Text>
+                    </View>
                   </View>
                   <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
                     <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />

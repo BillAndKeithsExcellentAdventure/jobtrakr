@@ -1,12 +1,11 @@
-import { View, Text } from '@/src/components/Themed';
+import { Text, View } from '@/src/components/Themed';
 import { ReceiptData } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
-import React, { useEffect, useState } from 'react';
-import { TouchableWithoutFeedback, Image, StyleSheet } from 'react-native';
+import React from 'react';
+import { StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-import Base64Image from './Base64Image';
-import * as FileSystem from 'expo-file-system';
 import { useColors } from '../context/ColorsContext';
+import Base64Image from './Base64Image';
 
 interface ReceiptSummaryProps {
   item: ReceiptData;

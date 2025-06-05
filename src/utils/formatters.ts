@@ -44,3 +44,7 @@ export function formatNumber(amount?: number, numDecimalPlaces = 2): string {
 
   return `${amount.toFixed(numDecimalPlaces)}`;
 }
+
+export function replaceNonPrintable(str: string): string {
+  return str.replace(/[^\x20-\x7E]/g, ' ');
+}
