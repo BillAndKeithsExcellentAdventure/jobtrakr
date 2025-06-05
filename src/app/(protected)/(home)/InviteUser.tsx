@@ -273,6 +273,7 @@ const styles = StyleSheet.create({
   },
   adminButtonText: {
     fontSize: 12,
+    color: '#fff',
     fontWeight: '600',
   },
   memberRole: {
