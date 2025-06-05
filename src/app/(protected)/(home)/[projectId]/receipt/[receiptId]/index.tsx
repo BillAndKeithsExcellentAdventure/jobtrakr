@@ -58,7 +58,7 @@ const ReceiptDetailsPage = () => {
   useEffect(() => {
     const match = allProjectReceipts.find((r) => r.id === receiptId);
     if (match) {
-      console.log('ReceiptDetailsPage - match:', match);
+      // console.log('ReceiptDetailsPage - match:', match);
       setReceipt({ ...match });
     }
   }, [receiptId, allProjectReceipts]);

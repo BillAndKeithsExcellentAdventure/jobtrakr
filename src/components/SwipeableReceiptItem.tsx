@@ -75,7 +75,7 @@ const SwipeableReceiptItem = React.memo(
     }, [item.id, removeReceipt]);
 
     const renderRightActions = useCallback(() => <RightAction onDelete={handleDelete} />, [handleDelete]);
-
+    const photoDate = formatDate(item.pictureDate, undefined, true);
     return (
       <SwipeableComponent
         key={item.id}
@@ -95,7 +95,10 @@ const SwipeableReceiptItem = React.memo(
             <View style={styles.itemInfo}>
               {item.amount === 0 && totalOfAllReceiptItems === 0 && item.imageId ? (
                 <>
-                  <Base64Image base64String={item.thumbnail} height={ITEM_HEIGHT - 20} width={120} />
+                  <View style={{ flex: 1 }}>
+                    <Base64Image base64String={item.thumbnail} height={ITEM_HEIGHT - 20} width={120} />
+                    <Text style={styles.dateOverlay}>{photoDate}</Text>
+                  </View>
                   <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
                     <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
                   </View>
@@ -143,6 +146,18 @@ const styles = StyleSheet.create({
     backgroundColor: deleteBg,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  dateOverlay: {
+    position: 'absolute',
+    bottom: -25, // Adjust as needed
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    color: 'white',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingVertical: 2,
+    borderRadius: 4,
+    fontSize: 12,
   },
 });
 
