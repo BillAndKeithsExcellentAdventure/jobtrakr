@@ -29,14 +29,22 @@ export const AiLineItem: React.FC<AiLineItemProps> = ({
       onPress={() => onSelectItem?.(index)}
       style={[
         styles.container,
-        { borderColor: item.isSelected ? 'blue' : 'transparent', borderWidth: 1, margin: 2 }, // Add subtle highlight
+        { borderColor: item.isSelected ? '#007AFF' : 'transparent', borderWidth: 1, margin: 2 }, // Add subtle highlight
       ]}
     >
       <Text style={styles.description}>{item.description}</Text>
 
       <View style={styles.amountRow}>
         <Text style={styles.amountText}>Amt: {formatCurrency(item.amount, false, true)}</Text>
-        {showTaxToggle && <Switch value={item.taxable} onValueChange={() => onTaxableChange(index)} />}
+        {showTaxToggle && (
+          <Switch
+            style={{ zIndex: 10 }}
+            value={item.taxable}
+            onValueChange={() => {
+              onTaxableChange(index);
+            }}
+          />
+        )}
         <Text style={styles.taxText}>Tax: {formatCurrency(item.proratedTax, false, true)}</Text>
         <Text style={styles.totalText}>
           Total: {formatCurrency(item.amount + item.proratedTax, false, true)}
@@ -56,7 +64,8 @@ export const AiLineItem: React.FC<AiLineItemProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 5,
     width: '100%',
     borderRadius: 8, // Add this for better visual feedback
   },
