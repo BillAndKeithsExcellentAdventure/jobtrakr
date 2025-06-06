@@ -1,29 +1,15 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Switch } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Switch, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, View } from '@/src/components/Themed';
+import { Text, TextInput, View } from '@/src/components/Themed';
 import { useAuth } from '@clerk/clerk-expo';
 import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/formatters';
-
-interface ReceiptItemFromAI {
-  description: string;
-  amount: number;
-}
-
-interface ReceiptItem {
-  description: string;
-  amount: number;
-  taxable: boolean;
-  proratedTax: number;
-}
-
-interface ReceiptSummary {
-  vendor: string;
-  receiptDate: number;
-  totalAmount: number;
-  totalTax: number;
-}
+import { ActionButton } from '@/src/components/ActionButton';
+import { useColors } from '@/src/context/ColorsContext';
+import { AiLineItem } from '@/src/components/AiLineItem';
+import { ReceiptItem, ReceiptItemFromAI, ReceiptSummary } from '@/src/models/types';
+import { Ionicons } from '@expo/vector-icons';
 
 const processAIProcessing = async (
   token: string,
@@ -78,46 +64,105 @@ const requestAIProcessingPage = () => {
   const [receiptSummary, setReceiptSummary] = useState<ReceiptSummary>();
   const [aiItems, setAiItems] = useState<ReceiptItemFromAI[]>([]);
   const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>([]);
+  const colors = useColors();
 
-  useEffect(() => {
-    async function fetchAIResult() {
-      const token = await auth.getToken();
-      if (!token) {
-        console.error('No token available');
-        return;
-      }
+  // Simulated AI result for testing
+  async function fetchSimulatedAIResult(returnSingleItem = false) {
+    // Simulate network delay
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-      const result = await processAIProcessing(token, imageId, projectId, userId!, orgId!);
-      if (result.status === 'Success') {
-        const summary = {
-          vendor: replaceNonPrintable(result.response.MerchantName.value),
-          receiptDate: Date.parse(result.response.TransactionDate.value),
-          totalAmount: Number.parseFloat(result.response.Total.value),
-          totalTax: Number.parseFloat(result.response.TotalTax.value),
-        };
+    const mockResult = {
+      status: 'Success',
+      response: {
+        MerchantName: { value: 'Home Depot' },
+        TransactionDate: { value: '2025-06-06T10:30:00Z' },
+        Total: { value: '156.47' },
+        TotalTax: { value: '12.47' },
+        Items: [
+          {
+            Description: { value: '2x4x8 Premium Lumber' },
+            TotalPrice: { value: '45.98' },
+          },
+          {
+            Description: { value: 'Paint Brush Set' },
+            TotalPrice: { value: '24.99' },
+          },
+          {
+            Description: { value: 'Drywall Screws 5lb Box' },
+            TotalPrice: { value: '18.47' },
+          },
+          {
+            Description: { value: 'LED Light Fixture' },
+            TotalPrice: { value: '34.99' },
+          },
+          {
+            Description: { value: 'Plumbing Tape' },
+            TotalPrice: { value: '19.57' },
+          },
+        ],
+      },
+    };
 
-        if (result.response.Items.length > 0) {
-          const receiptItems = result.response.Items.map((i: any) => ({
-            description: i.Description.value,
-            amount: i.TotalPrice.value,
-          }));
-          setAiItems(receiptItems);
-        } else {
-          setAiItems([
-            {
-              description: 'Not Specified',
-              amount: summary.totalAmount - summary.totalTax,
-            },
-          ]);
-        }
+    const summary = {
+      vendor: replaceNonPrintable(mockResult.response.MerchantName.value),
+      receiptDate: Date.parse(mockResult.response.TransactionDate.value),
+      totalAmount: Number.parseFloat(mockResult.response.Total.value),
+      totalTax: Number.parseFloat(mockResult.response.TotalTax.value),
+    };
 
-        setReceiptSummary(summary);
-      }
-
-      setFetchingData(false);
+    if (mockResult.response.Items.length > 0) {
+      const receiptItems = mockResult.response.Items.map((i: any) => ({
+        description: i.Description.value,
+        amount: Number.parseFloat(i.TotalPrice.value),
+      }));
+      if (returnSingleItem) setAiItems([receiptItems[0]]);
+      else setAiItems(receiptItems);
     }
 
-    fetchAIResult();
+    setReceiptSummary(summary);
+    setFetchingData(false);
+  }
+
+  async function fetchAIResult() {
+    const token = await auth.getToken();
+    if (!token) {
+      console.error('No token available');
+      return;
+    }
+
+    const result = await processAIProcessing(token, imageId, projectId, userId!, orgId!);
+    if (result.status === 'Success') {
+      const summary = {
+        vendor: replaceNonPrintable(result.response.MerchantName.value),
+        receiptDate: Date.parse(result.response.TransactionDate.value),
+        totalAmount: Number.parseFloat(result.response.Total.value),
+        totalTax: Number.parseFloat(result.response.TotalTax.value),
+      };
+
+      if (result.response.Items.length > 0) {
+        const receiptItems = result.response.Items.map((i: any) => ({
+          description: i.Description.value,
+          amount: i.TotalPrice.value,
+        }));
+        setAiItems(receiptItems);
+      } else {
+        setAiItems([
+          {
+            description: 'Not Specified',
+            amount: summary.totalAmount - summary.totalTax,
+          },
+        ]);
+      }
+
+      setReceiptSummary(summary);
+    }
+
+    setFetchingData(false);
+  }
+
+  useEffect(() => {
+    fetchSimulatedAIResult();
+    //fetchAIResult();
   }, []);
 
   // Initial setup with all items taxable
@@ -156,17 +201,50 @@ const requestAIProcessingPage = () => {
     }
   };
 
+  const toggleSelection = (index: number) => {
+    const updatedItems = receiptItems.map((item, i) => ({
+      ...item,
+      isSelected: i === index ? !item.isSelected : item.isSelected,
+    }));
+    setReceiptItems(updatedItems);
+  };
+
+  const onSelectAll = useCallback(() => {
+    const hasSelectedItems = receiptItems.every((item) => item.isSelected);
+    setReceiptItems((prev) =>
+      prev.map((item) => ({
+        ...item,
+        isSelected: !hasSelectedItems,
+      })),
+    );
+  }, [receiptItems]);
+
+  const numSelected = useMemo(
+    () => receiptItems.reduce((sum, item) => sum + (item.isSelected ? 1 : 0), 0),
+    [receiptItems],
+  );
+
+  const allSelected = useMemo(
+    () => numSelected === receiptItems.length && receiptItems.length > 0,
+    [receiptItems, numSelected],
+  );
+
+  const allCostItemsSpecified = useMemo(
+    () => receiptItems.every((item) => item.costWorkItem),
+    [receiptItems],
+  );
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen options={{ title: 'AI Receipt Processing', headerShown: true }} />
-      <View style={styles.container}>
+      <View style={[styles.container, { marginBottom: 40 }]}>
         {fetchingData ? (
           <View style={{ width: '100%', gap: 20 }}>
             <ActivityIndicator size="large" />
             <Text txtSize="title">Waiting for AI to extract data from receipt image.</Text>
           </View>
         ) : (
-          <View style={{ width: '100%', gap: 5 }}>
+          <View style={{ width: '100%', gap: 5, flex: 1 }}>
             {receiptSummary ? (
               <>
                 <Text>Vendor:{receiptSummary.vendor}</Text>
@@ -174,39 +252,52 @@ const requestAIProcessingPage = () => {
                 <Text>Tax:{formatCurrency(receiptSummary.totalTax, false, true)}</Text>
                 <Text>Date:{formatDate(receiptSummary.receiptDate)}</Text>
                 {receiptItems && (
-                  <FlatList
-                    data={receiptItems}
-                    keyExtractor={(_, index) => `${index}`}
-                    renderItem={({ item, index }) => (
-                      <View
-                        style={{
-                          padding: 16,
-                          width: '100%',
-                        }}
-                      >
-                        <Text style={{ flex: 1 }}>{item.description}</Text>
-
-                        <View
-                          style={{
-                            flexDirection: 'row',
-                            width: '100%',
-                            alignItems: 'center',
-                          }}
-                        >
-                          <Text style={{ width: 100, alignItems: 'flex-end' }}>
-                            Amount: {formatCurrency(item.amount, false, true)}
-                          </Text>
-                          <Switch value={item.taxable} onValueChange={() => toggleTaxable(index)} />
-
-                          <Text style={{ width: 100 }}>
-                            Tax: {formatCurrency(item.proratedTax, false, true)}
-                          </Text>
-                          <Text style={{ width: 100, alignItems: 'flex-end' }}>
-                            Total: {formatCurrency(item.amount + item.proratedTax, false, true)}
-                          </Text>
-                        </View>
-                      </View>
-                    )}
+                  <>
+                    <View style={styles.selectRow}>
+                      <TouchableOpacity onPress={onSelectAll} style={styles.selectAllButton}>
+                        <Ionicons
+                          name={allSelected ? 'ellipse-sharp' : 'ellipse-outline'}
+                          size={24}
+                          color="#007AFF"
+                        />
+                        <Text style={{ marginLeft: 10 }}>
+                          {allSelected ? 'Clear Selection' : 'Select All'}
+                        </Text>
+                      </TouchableOpacity>
+                      <Text>{`${numSelected} selected`}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <FlatList
+                        style={{ flex: 1, paddingHorizontal: 5 }}
+                        data={receiptItems}
+                        keyExtractor={(_, index) => `${index}`}
+                        renderItem={({ item, index }) => (
+                          <AiLineItem
+                            item={item}
+                            index={index}
+                            showTaxToggle={receiptItems.length > 1}
+                            onTaxableChange={toggleTaxable}
+                            onSelectItem={toggleSelection}
+                          />
+                        )}
+                      />
+                    </View>
+                  </>
+                )}
+                <ActionButton
+                  title="Set Cost Item"
+                  type={numSelected > 0 ? 'ok' : 'disabled'}
+                  onPress={() => {}}
+                />
+                {allCostItemsSpecified ? (
+                  <ActionButton title={'Save'} type={'ok'} onPress={() => {}} />
+                ) : (
+                  <ActionButton
+                    title={'Cost Items must be specified'}
+                    type={'disabled'}
+                    textStyle={styles.unspecifiedFg}
+                    style={styles.unspecifiedBg}
+                    onPress={() => {}}
                   />
                 )}
               </>
@@ -229,5 +320,21 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     width: '100%',
+  },
+  selectAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  selectRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  unspecifiedBg: {
+    backgroundColor: '#F44336',
+  },
+  unspecifiedFg: {
+    color: '#FFF',
   },
 });

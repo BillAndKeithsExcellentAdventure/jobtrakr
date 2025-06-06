@@ -49,3 +49,28 @@ export interface CostSectionData {
   totalSpentAmount: number;
   data: CostItemData[];
 }
+
+export interface ReceiptItemFromAI {
+  description: string;
+  amount: number;
+}
+export interface ReceiptCostWorkItem {
+  label: string;
+  workItemId: string;
+}
+
+export interface ReceiptItem {
+  description: string;
+  amount: number;
+  taxable: boolean;
+  proratedTax: number;
+  isSelected?: boolean;
+  costWorkItem?: ReceiptCostWorkItem;
+}
+
+export interface ReceiptSummary {
+  vendor: string;
+  receiptDate: number;
+  totalAmount: number;
+  totalTax: number;
+}

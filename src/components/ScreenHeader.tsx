@@ -2,7 +2,7 @@
 
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import React from 'react';
+import React, { JSX } from 'react';
 import { FlexAlignType, Platform, StyleSheet, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
