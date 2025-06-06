@@ -25,46 +25,6 @@ interface ReceiptSummary {
   totalTax: number;
 }
 
-function prorateTotalTax(
-  totalTax: number,
-  nonTaxableItemIndices: number[],
-  items: ReceiptItem[],
-): ReceiptItem[] {
-  // Get total amount of taxable items
-  const taxableItems = items.filter((item, index) => !nonTaxableItemIndices.includes(index));
-  const totalTaxableAmount = taxableItems.reduce((sum, item) => sum + item.amount, 0);
-
-  if (totalTaxableAmount === 0 || taxableItems.length === 0) {
-    return items;
-  }
-
-  // Create new array to avoid mutating input
-  const updatedItems = [...items];
-  let remainingTax = totalTax;
-  let processedItems = 0;
-
-  updatedItems.forEach((item, index) => {
-    if (nonTaxableItemIndices.includes(index)) {
-      item.proratedTax = 0;
-      return;
-    }
-
-    processedItems++;
-    if (processedItems === taxableItems.length) {
-      // Last taxable item - assign remaining tax to avoid rounding errors
-      item.proratedTax = Number(remainingTax.toFixed(2));
-    } else {
-      // Calculate proportional tax for this item
-      const proportion = item.amount / totalTaxableAmount;
-      const itemTax = Number((totalTax * proportion).toFixed(2));
-      item.proratedTax = itemTax;
-      remainingTax -= itemTax;
-    }
-  });
-
-  return updatedItems;
-}
-
 const processAIProcessing = async (
   token: string,
   imageId: string,
@@ -137,15 +97,10 @@ const requestAIProcessingPage = () => {
         };
 
         if (result.response.Items.length > 0) {
-          const receiptItems = prorateTotalTax(
-            summary.totalTax,
-            [],
-            result.response.Items.map((i: any) => ({
-              description: i.Description.value,
-              amount: i.TotalPrice.value,
-            })),
-          );
-
+          const receiptItems = result.response.Items.map((i: any) => ({
+            description: i.Description.value,
+            amount: i.TotalPrice.value,
+          }));
           setAiItems(receiptItems);
         } else {
           setAiItems([
@@ -257,7 +212,7 @@ const requestAIProcessingPage = () => {
               </>
             ) : (
               <>
-                <Text>SORRY, AI could not process the receipt!</Text>
+                <Text>SORRY, AI could not process the receipt! You can always manually add line items.</Text>
               </>
             )}
           </View>
