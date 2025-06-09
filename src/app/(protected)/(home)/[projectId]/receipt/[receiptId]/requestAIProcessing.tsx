@@ -1,6 +1,6 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Switch, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useAuth } from '@clerk/clerk-expo';
@@ -9,7 +9,7 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { useColors } from '@/src/context/ColorsContext';
 import { AiLineItem } from '@/src/components/AiLineItem';
 import { ReceiptItem, ReceiptItemFromAI, ReceiptSummary } from '@/src/models/types';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import CostItemPickerModal from '@/src/components/CostItemPickerModal';
 import { OptionEntry } from '@/src/components/OptionList';
 
@@ -248,23 +248,51 @@ const requestAIProcessingPage = () => {
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen options={{ title: 'AI Receipt Processing', headerShown: true }} />
-      <View style={[styles.container, { marginBottom: 40 }]}>
+      <View style={[styles.container, { marginBottom: 20, backgroundColor: colors.listBackground }]}>
         {fetchingData ? (
           <View style={{ width: '100%', gap: 20 }}>
             <ActivityIndicator size="large" />
             <Text txtSize="title">Waiting for AI to extract data from receipt image.</Text>
           </View>
         ) : (
-          <View style={{ width: '100%', gap: 5, flex: 1 }}>
+          <View style={{ width: '100%', gap: 10, flex: 1, backgroundColor: colors.listBackground }}>
             {receiptSummary ? (
               <>
-                <Text>Vendor:{receiptSummary.vendor}</Text>
-                <Text>Amount:{formatCurrency(receiptSummary.totalAmount, false, true)}</Text>
-                <Text>Tax:{formatCurrency(receiptSummary.totalTax, false, true)}</Text>
-                <Text>Date:{formatDate(receiptSummary.receiptDate)}</Text>
+                <Pressable
+                  onPress={() => {
+                    console.log('pressed');
+                  }}
+                >
+                  <View
+                    style={{ flexDirection: 'row', borderWidth: 1, borderColor: colors.border, padding: 5 }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row' }}>
+                        <Text style={styles.label}>Vendor:</Text>
+                        <Text>{receiptSummary.vendor}</Text>
+                      </View>
+                      <View style={{ flexDirection: 'row' }}>
+                        <Text style={styles.label}>Amount:</Text>
+                        <Text>{receiptSummary.totalAmount}</Text>
+                      </View>
+                      <View style={{ flexDirection: 'row' }}>
+                        <Text style={styles.label}>Tax:</Text>
+                        <Text>{formatCurrency(receiptSummary.totalTax, false, true)}</Text>
+                      </View>
+                      <View style={{ flexDirection: 'row' }}>
+                        <Text style={styles.label}>Date:</Text>
+                        <Text>{formatDate(receiptSummary.receiptDate)}</Text>
+                      </View>
+                    </View>
+                    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                      <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
+                    </View>
+                  </View>
+                </Pressable>
+
                 {receiptItems && (
                   <>
-                    <View style={styles.selectRow}>
+                    <View style={[styles.selectRow, { backgroundColor: colors.listBackground }]}>
                       <TouchableOpacity onPress={onSelectAll} style={styles.selectAllButton}>
                         <Ionicons
                           name={allSelected ? 'ellipse-sharp' : 'ellipse-outline'}
@@ -277,7 +305,7 @@ const requestAIProcessingPage = () => {
                       </TouchableOpacity>
                       <Text>{`${numSelected} selected`}</Text>
                     </View>
-                    <View style={{ flex: 1 }}>
+                    <View style={{ flex: 1, backgroundColor: colors.listBackground }}>
                       <FlatList
                         style={{ flex: 1, paddingHorizontal: 5 }}
                         data={receiptItems}
@@ -355,5 +383,10 @@ const styles = StyleSheet.create({
   },
   unspecifiedFg: {
     color: '#FFF',
+  },
+  label: {
+    textAlign: 'right',
+    width: 70,
+    marginRight: 5,
   },
 });

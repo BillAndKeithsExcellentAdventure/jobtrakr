@@ -72,6 +72,8 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
     paddingVertical: 5,
+    marginBottom: 5,
+    gap: 5,
     width: '100%',
     borderRadius: 8, // Add this for better visual feedback
   },
