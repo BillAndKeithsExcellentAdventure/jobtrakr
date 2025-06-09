@@ -243,9 +243,28 @@ const requestAIProcessingPage = () => {
     setShowCostItemPicker(true);
   }, []);
 
-  const onCostItemOptionSelected = useCallback((costItemEntry: OptionEntry | undefined) => {
-    setShowCostItemPicker(false);
-  }, []);
+  const onCostItemOptionSelected = useCallback(
+    (costItemEntry: OptionEntry | undefined) => {
+      if (costItemEntry) {
+        const label = costItemEntry.label;
+        const workItemId = costItemEntry.value ?? '';
+
+        const updatedItems = receiptItems.map((item) => {
+          if (item.isSelected) {
+            return {
+              ...item,
+              costWorkItem: { label, workItemId },
+              isSelected: false, // Deselect after assigning cost item
+            };
+          }
+          return item;
+        });
+        setReceiptItems(updatedItems);
+      }
+      setShowCostItemPicker(false);
+    },
+    [receiptItems],
+  );
 
   // Handler for saving edited summary
   const handleSaveReceiptSummary = (updatedSummary: {
