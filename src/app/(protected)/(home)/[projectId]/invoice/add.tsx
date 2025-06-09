@@ -35,7 +35,7 @@ const AddInvoicePage = () => {
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const addInvoice = useAddRowCallback(projectId, 'invoices');
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
-  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
+  const [pickedVendorOption, setPickedVendorOption] = useState<OptionEntry | undefined>(undefined);
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
   const router = useRouter();
   const [projectInvoice, setProjectInvoice] = useState<InvoiceData>({
@@ -61,7 +61,7 @@ const AddInvoicePage = () => {
   }, []);
 
   const handleVendorOptionChange = (option: OptionEntry) => {
-    setPickedOption(option);
+    setPickedVendorOption(option);
     if (option) {
       handleVendorChange(option.label);
     }
@@ -70,8 +70,8 @@ const AddInvoicePage = () => {
 
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [canAddInvoice, setCanAddInvoice] = useState(false);
-  const allVendors = useAllConfigurationRows('vendors');
   const addPhotoImage = useAddImageCallback();
+  const allVendors = useAllConfigurationRows('vendors');
 
   useEffect(() => {
     if (allVendors && allVendors.length > 0) {
@@ -461,7 +461,7 @@ const AddInvoicePage = () => {
               <OptionList
                 options={vendors}
                 onSelect={(option) => handleVendorOptionChange(option)}
-                selectedOption={pickedOption}
+                selectedOption={pickedVendorOption}
               />
             </BottomSheetContainer>
           )}

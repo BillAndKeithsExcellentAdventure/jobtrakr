@@ -12,6 +12,7 @@ import { ReceiptItem, ReceiptItemFromAI, ReceiptSummary } from '@/src/models/typ
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import CostItemPickerModal from '@/src/components/CostItemPickerModal';
 import { OptionEntry } from '@/src/components/OptionList';
+import { ReceiptSummaryEditModal } from '@/src/components/ReceiptSummaryEditModal';
 
 const processAIProcessing = async (
   token: string,
@@ -67,6 +68,7 @@ const requestAIProcessingPage = () => {
   const [receiptSummary, setReceiptSummary] = useState<ReceiptSummary>();
   const [aiItems, setAiItems] = useState<ReceiptItemFromAI[]>([]);
   const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>([]);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const colors = useColors();
 
   // Simulated AI result for testing
@@ -80,7 +82,7 @@ const requestAIProcessingPage = () => {
         MerchantName: { value: 'Home Depot' },
         TransactionDate: { value: '2025-06-06T10:30:00Z' },
         Total: { value: '156.47' },
-        TotalTax: { value: '12.47' },
+        TotalTax: { value: '8.86' },
         Items: [
           {
             Description: { value: '2x4x8 Premium Lumber' },
@@ -245,6 +247,16 @@ const requestAIProcessingPage = () => {
     setShowCostItemPicker(false);
   }, []);
 
+  // Handler for saving edited summary
+  const handleSaveReceiptSummary = (updatedSummary: {
+    vendor: string;
+    totalAmount: number;
+    totalTax: number;
+    receiptDate: number;
+  }) => {
+    setReceiptSummary(updatedSummary);
+  };
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen options={{ title: 'AI Receipt Processing', headerShown: true }} />
@@ -258,11 +270,7 @@ const requestAIProcessingPage = () => {
           <View style={{ width: '100%', gap: 10, flex: 1, backgroundColor: colors.listBackground }}>
             {receiptSummary ? (
               <>
-                <Pressable
-                  onPress={() => {
-                    console.log('pressed');
-                  }}
-                >
+                <Pressable onPress={() => setIsEditModalVisible(true)}>
                   <View
                     style={{ flexDirection: 'row', borderWidth: 1, borderColor: colors.border, padding: 5 }}
                   >
@@ -354,6 +362,14 @@ const requestAIProcessingPage = () => {
           onClose={() => setShowCostItemPicker(false)}
           projectId={projectId}
           handleCostItemOptionSelected={onCostItemOptionSelected}
+        />
+      )}
+      {receiptSummary && (
+        <ReceiptSummaryEditModal
+          isVisible={isEditModalVisible}
+          onClose={() => setIsEditModalVisible(false)}
+          receiptSummary={receiptSummary}
+          onSave={handleSaveReceiptSummary}
         />
       )}
     </SafeAreaView>
