@@ -32,7 +32,6 @@ export default function BottomSheetContainer({
             style={{
               flex: 1,
               marginTop: top,
-              marginBottom: bottom,
               backgroundColor: colors.modalOverlayBackgroundColor,
             }}
           >

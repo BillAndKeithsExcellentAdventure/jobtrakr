@@ -6,8 +6,9 @@ import { FlashList } from '@shopify/flash-list';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import SwipeableReceiptItem, { ITEM_HEIGHT } from '@/src/components/SwipeableReceiptItem';
 import {
   ReceiptData,
   RecentReceiptDateCompare,
@@ -21,7 +22,6 @@ import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableReceiptItem, { ITEM_HEIGHT } from '@/src/components/SwipeableReceiptItem';
 
 function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
   return actionContext && typeof actionContext.PictureUri === 'string';

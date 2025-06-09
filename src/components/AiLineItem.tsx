@@ -1,11 +1,11 @@
-import React from 'react';
-import { View, Switch, StyleSheet } from 'react-native';
-import { Text, TextInput } from './Themed';
-import { ActionButton } from './ActionButton';
-import { formatCurrency } from '@/src/utils/formatters';
 import { useColors } from '@/src/context/ColorsContext';
-import { Pressable } from 'react-native-gesture-handler';
 import { ReceiptItem } from '@/src/models/types';
+import { formatCurrency } from '@/src/utils/formatters';
+import React from 'react';
+import { StyleSheet } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
+import { Text, View } from './Themed';
+import { Switch } from './Switch';
 
 interface AiLineItemProps {
   item: ReceiptItem;
@@ -40,7 +40,6 @@ export const AiLineItem: React.FC<AiLineItemProps> = ({
         </Pressable>
         {showTaxToggle && (
           <Switch
-            style={{ zIndex: 10 }}
             value={item.taxable}
             onValueChange={() => {
               onTaxableChange(index);
@@ -89,6 +88,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   taxText: {
+    marginLeft: 4,
     width: 100,
   },
   totalText: {

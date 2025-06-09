@@ -10,6 +10,8 @@ import { useColors } from '@/src/context/ColorsContext';
 import { AiLineItem } from '@/src/components/AiLineItem';
 import { ReceiptItem, ReceiptItemFromAI, ReceiptSummary } from '@/src/models/types';
 import { Ionicons } from '@expo/vector-icons';
+import CostItemPickerModal from '@/src/components/CostItemPickerModal';
+import { OptionEntry } from '@/src/components/OptionList';
 
 const processAIProcessing = async (
   token: string,
@@ -61,6 +63,7 @@ const requestAIProcessingPage = () => {
   const auth = useAuth();
   const { userId, orgId } = auth;
   const [fetchingData, setFetchingData] = useState(true);
+  const [showCostItemPicker, setShowCostItemPicker] = useState(false);
   const [receiptSummary, setReceiptSummary] = useState<ReceiptSummary>();
   const [aiItems, setAiItems] = useState<ReceiptItemFromAI[]>([]);
   const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>([]);
@@ -234,6 +237,14 @@ const requestAIProcessingPage = () => {
     [receiptItems],
   );
 
+  const handleSelectCostItem = useCallback(() => {
+    setShowCostItemPicker(true);
+  }, []);
+
+  const onCostItemOptionSelected = useCallback((costItemEntry: OptionEntry | undefined) => {
+    setShowCostItemPicker(false);
+  }, []);
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen options={{ title: 'AI Receipt Processing', headerShown: true }} />
@@ -285,9 +296,9 @@ const requestAIProcessingPage = () => {
                   </>
                 )}
                 <ActionButton
-                  title="Set Cost Item"
+                  title="Set Cost Item for Selection"
                   type={numSelected > 0 ? 'ok' : 'disabled'}
-                  onPress={() => {}}
+                  onPress={handleSelectCostItem}
                 />
                 {allCostItemsSpecified ? (
                   <ActionButton title={'Save'} type={'ok'} onPress={() => {}} />
@@ -309,6 +320,14 @@ const requestAIProcessingPage = () => {
           </View>
         )}
       </View>
+      {showCostItemPicker && (
+        <CostItemPickerModal
+          isVisible={showCostItemPicker}
+          onClose={() => setShowCostItemPicker(false)}
+          projectId={projectId}
+          handleCostItemOptionSelected={onCostItemOptionSelected}
+        />
+      )}
     </SafeAreaView>
   );
 };

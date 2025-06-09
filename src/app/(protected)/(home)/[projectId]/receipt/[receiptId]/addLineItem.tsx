@@ -61,11 +61,17 @@ const AddReceiptLineItemPage = () => {
       const category = allWorkCategories.find((o) => o.id === item.categoryId);
       const categoryCode = category ? `${category.code}.` : '';
       return {
+        sortValue1: Number.parseFloat(item.code),
+        sortValue2: Number.parseFloat(category ? category.code : '0'),
         label: `${categoryCode}${item.code} - ${item.name}`,
         value: item.id,
       };
     });
-    return uniqueCostItems;
+
+    return uniqueCostItems
+      .sort((a, b) => a.sortValue1 - b.sortValue1)
+      .sort((a, b) => a.sortValue2 - b.sortValue2)
+      .map((i) => ({ label: i.label, value: i.value }));
   }, [allWorkItemCostSummaries, allWorkItems]);
 
   const colors = useColors();
@@ -150,46 +156,47 @@ const AddReceiptLineItemPage = () => {
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1, overflowY: 'hidden' }}>
       <Stack.Screen options={{ title: 'Add Receipt Line Item', headerShown: true }} />
       <View style={[styles.container, { borderColor: colors.border }]}>
-        <NumberInputField
-          style={styles.inputContainer}
-          label="Amount"
-          value={itemizedEntry.amount}
-          onChange={(value: number): void => {
-            setItemizedEntry((prevItem) => ({
-              ...prevItem,
-              amount: value,
-            }));
-          }}
-        />
-        <TextField
-          containerStyle={styles.inputContainer}
-          placeholder="Description"
-          label="Description"
-          value={itemizedEntry.label}
-          onChangeText={(text): void => {
-            setItemizedEntry((prevItem) => ({
-              ...prevItem,
-              label: text,
-            }));
-          }}
-        />
-        <OptionPickerItem
-          containerStyle={styles.inputContainer}
-          optionLabel={pickedCategoryOption?.label}
-          label="Category"
-          placeholder="Category"
-          editable={false}
-          onPickerButtonPress={() => setIsCategoryPickerVisible(true)}
-        />
-        <OptionPickerItem
-          containerStyle={styles.inputContainer}
-          optionLabel={pickedSubCategoryOption?.label}
-          label="Cost Item Type"
-          placeholder="Cost Item Type"
-          editable={false}
-          onPickerButtonPress={() => setIsSubCategoryPickerVisible(true)}
-        />
-
+        <View style={{ flex: 1 }}>
+          <NumberInputField
+            style={styles.inputContainer}
+            label="Amount"
+            value={itemizedEntry.amount}
+            onChange={(value: number): void => {
+              setItemizedEntry((prevItem) => ({
+                ...prevItem,
+                amount: value,
+              }));
+            }}
+          />
+          <TextField
+            containerStyle={styles.inputContainer}
+            placeholder="Description"
+            label="Description"
+            value={itemizedEntry.label}
+            onChangeText={(text): void => {
+              setItemizedEntry((prevItem) => ({
+                ...prevItem,
+                label: text,
+              }));
+            }}
+          />
+          <OptionPickerItem
+            containerStyle={styles.inputContainer}
+            optionLabel={pickedCategoryOption?.label}
+            label="Category"
+            placeholder="Category"
+            editable={false}
+            onPickerButtonPress={() => setIsCategoryPickerVisible(true)}
+          />
+          <OptionPickerItem
+            containerStyle={styles.inputContainer}
+            optionLabel={pickedSubCategoryOption?.label}
+            label="Cost Item Type"
+            placeholder="Cost Item Type"
+            editable={false}
+            onPickerButtonPress={() => setIsSubCategoryPickerVisible(true)}
+          />
+        </View>
         <View style={styles.saveButtonRow}>
           <ActionButton
             style={styles.saveButton}
@@ -211,6 +218,7 @@ const AddReceiptLineItemPage = () => {
         </View>
         {isCategoryPickerVisible && (
           <BottomSheetContainer
+            modalHeight={'55%'}
             isVisible={isCategoryPickerVisible}
             onClose={() => setIsCategoryPickerVisible(false)}
           >
@@ -223,6 +231,7 @@ const AddReceiptLineItemPage = () => {
         )}
         {isSubCategoryPickerVisible && (
           <BottomSheetContainer
+            modalHeight={'55%'}
             isVisible={isSubCategoryPickerVisible}
             onClose={() => setIsSubCategoryPickerVisible(false)}
           >
@@ -246,6 +255,8 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 10,
     width: '100%',
+    minHeight: 350,
+    height: '55%',
   },
   inputContainer: {
     marginTop: 6,

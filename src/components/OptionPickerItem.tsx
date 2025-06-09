@@ -1,8 +1,7 @@
 import { TextField } from '@/src/components/TextField';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { StyleProp, StyleSheet, ViewStyle } from 'react-native';
+import { Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 import { useThemeColor, View } from './Themed';
-import { Pressable } from 'react-native-gesture-handler';
 
 /* -------------------------------------------
  Standard Supporting React State 
