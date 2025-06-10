@@ -190,8 +190,8 @@ const requestAIProcessingPage = () => {
   }
 
   useEffect(() => {
-    fetchSimulatedAIResult();
-    //fetchAIResult();
+    // fetchSimulatedAIResult();  // Uncomment for testing with simulated data
+    fetchAIResult();
   }, []);
 
   // Initial setup with all items taxable
