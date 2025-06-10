@@ -32,12 +32,12 @@ export const AiLineItem: React.FC<AiLineItemProps> = ({
       ]}
     >
       <Pressable onPress={() => onSelectItem?.(index)}>
-        <Text style={styles.description}>{item.description}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.description}>{item.description}</Text>
+          <Text style={styles.amountText}>Amt: {formatCurrency(item.amount, false, true)}</Text>
+        </View>
       </Pressable>
       <View style={styles.amountRow}>
-        <Pressable onPress={() => onSelectItem?.(index)}>
-          <Text style={styles.amountText}>Amt: {formatCurrency(item.amount, false, true)}</Text>
-        </Pressable>
         {showTaxToggle && (
           <Switch
             value={item.taxable}
@@ -46,13 +46,13 @@ export const AiLineItem: React.FC<AiLineItemProps> = ({
             }}
           />
         )}
-        <Pressable onPress={() => onSelectItem?.(index)}>
-          <Text style={styles.taxText}>Tax: {formatCurrency(item.proratedTax, false, true)}</Text>
-        </Pressable>
-        <Pressable onPress={() => onSelectItem?.(index)}>
-          <Text style={styles.totalText}>
-            Total: {formatCurrency(item.amount + item.proratedTax, false, true)}
-          </Text>
+        <Pressable style={{ flex: 1 }} onPress={() => onSelectItem?.(index)}>
+          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={styles.taxText}>Tax: {formatCurrency(item.proratedTax, false, true)}</Text>
+            <Text style={styles.totalText}>
+              Total: {formatCurrency(item.amount + item.proratedTax, false, true)}
+            </Text>
+          </View>
         </Pressable>
       </View>
       <Pressable onPress={() => onSelectItem?.(index)}>
@@ -79,6 +79,8 @@ const styles = StyleSheet.create({
   },
   description: {
     flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
   amountRow: {
     flexDirection: 'row',
@@ -86,15 +88,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   amountText: {
-    width: 100,
+    textAlign: 'right',
     alignItems: 'flex-end',
   },
   taxText: {
-    marginLeft: 4,
-    width: 100,
+    marginLeft: 5,
+    flex: 1,
+    textAlign: 'left',
   },
   totalText: {
-    width: 100,
+    textAlign: 'right',
     alignItems: 'flex-end',
   },
   costItemRow: {

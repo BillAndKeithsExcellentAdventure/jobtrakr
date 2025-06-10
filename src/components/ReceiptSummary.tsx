@@ -44,7 +44,7 @@ export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({ item, onShowRece
             <View style={{ flex: 1, justifyContent: 'center' }}>
               <Text>Amount: {formatCurrency(item.amount, true, true)}</Text>
               <Text>Vendor: {item.vendor}</Text>
-              <Text>Description: {item.description}</Text>
+              {item.description && <Text>Description: {item.description}</Text>}
               {item.notes && <Text>Notes: {item.notes}</Text>}
             </View>
           ) : (

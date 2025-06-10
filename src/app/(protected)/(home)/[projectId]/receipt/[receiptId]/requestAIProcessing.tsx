@@ -1,6 +1,14 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Switch,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useAuth } from '@clerk/clerk-expo';
@@ -13,6 +21,15 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import CostItemPickerModal from '@/src/components/CostItemPickerModal';
 import { OptionEntry } from '@/src/components/OptionList';
 import { ReceiptSummaryEditModal } from '@/src/components/ReceiptSummaryEditModal';
+import {
+  useAddRowCallback,
+  useAllRows,
+  useDeleteRowCallback,
+  useTypedRow,
+  useUpdateRowCallback,
+  WorkItemCostEntry,
+} from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { forEach } from 'jszip';
 
 const processAIProcessing = async (
   token: string,
@@ -60,7 +77,11 @@ const processAIProcessing = async (
 };
 
 const requestAIProcessingPage = () => {
-  const { projectId, imageId } = useLocalSearchParams<{ projectId: string; imageId: string }>();
+  const { projectId, imageId, receiptId } = useLocalSearchParams<{
+    projectId: string;
+    imageId: string;
+    receiptId: string;
+  }>();
   const auth = useAuth();
   const { userId, orgId } = auth;
   const [fetchingData, setFetchingData] = useState(true);
@@ -70,6 +91,9 @@ const requestAIProcessingPage = () => {
   const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>([]);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const colors = useColors();
+  const receipt = useTypedRow(projectId, 'receipts', receiptId);
+  const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
+  const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
 
   // Simulated AI result for testing
   async function fetchSimulatedAIResult(returnSingleItem = false) {
@@ -81,8 +105,8 @@ const requestAIProcessingPage = () => {
       response: {
         MerchantName: { value: 'Home Depot' },
         TransactionDate: { value: '2025-06-06T10:30:00Z' },
-        Total: { value: '156.47' },
-        TotalTax: { value: '8.86' },
+        Total: { value: '165.86' },
+        TotalTax: { value: '9.39' },
         Items: [
           {
             Description: { value: '2x4x8 Premium Lumber' },
@@ -94,7 +118,7 @@ const requestAIProcessingPage = () => {
           },
           {
             Description: { value: 'Drywall Screws 5lb Box' },
-            TotalPrice: { value: '18.47' },
+            TotalPrice: { value: '30.94' },
           },
           {
             Description: { value: 'LED Light Fixture' },
@@ -172,7 +196,7 @@ const requestAIProcessingPage = () => {
 
   // Initial setup with all items taxable
   useEffect(() => {
-    const initialized = aiItems.map((item) => ({ ...item, taxable: true, proratedTax: 0 }));
+    const initialized = aiItems.map((item) => ({ ...item, taxable: true, proratedTax: 0, isSelected: true }));
     if (receiptSummary) {
       const withTax = recalculateProratedTax(initialized, receiptSummary.totalTax);
       setReceiptItems(withTax);
@@ -239,6 +263,11 @@ const requestAIProcessingPage = () => {
     [receiptItems],
   );
 
+  const someCostItemsSpecified = useMemo(
+    () => receiptItems.some((item) => item.costWorkItem),
+    [receiptItems],
+  );
+
   const handleSelectCostItem = useCallback(() => {
     setShowCostItemPicker(true);
   }, []);
@@ -275,6 +304,74 @@ const requestAIProcessingPage = () => {
   }) => {
     setReceiptSummary(updatedSummary);
   };
+
+  const handleSaveReceiptCostItems = useCallback(() => {
+    let save = false;
+    if (!someCostItemsSpecified) {
+      Alert.alert(
+        'Cost Item Required',
+        "At least one line item must have a Cost Item specified. Use the 'Set Cost Item for Selection' button to specify a cost item.",
+      );
+      return;
+    }
+    if (!allCostItemsSpecified) {
+      Alert.alert(
+        'Save Cost Items',
+        'Line items that have Cost Item set to NOT SPECIFIED will not be saved for this receipt. Is this want you really want to do?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Yes, Save specified Cost Items',
+            onPress: () => {
+              save = true;
+            },
+          },
+        ],
+      );
+    } else {
+      save = true;
+    }
+
+    if (!save || !receiptSummary) return;
+
+    const updatedReceipt = {
+      ...receipt,
+      amount: receiptSummary.totalAmount,
+      receiptDate: receiptSummary.receiptDate,
+      vendor: receiptSummary.vendor,
+    };
+    // Proceed with saving cost items
+    const receiptResult = updateReceipt(receiptId, updatedReceipt);
+    if (receiptResult.status !== 'Success') {
+      alert('Error updating Receipt with summary info.');
+      return;
+    }
+
+    receiptItems.forEach((item) => {
+      if (item.costWorkItem) {
+        const newItemizedEntry: WorkItemCostEntry = {
+          id: '',
+          label: item.description,
+          amount: item.amount + item.proratedTax,
+          parentId: receiptId,
+          documentationType: 'receipt',
+          workItemId: item.costWorkItem?.workItemId,
+        };
+        addLineItem(newItemizedEntry);
+      }
+    });
+
+    router.back();
+  }, [
+    someCostItemsSpecified,
+    allCostItemsSpecified,
+    receiptSummary,
+    receiptItems,
+    receipt,
+    receiptId,
+    updateReceipt,
+    addLineItem,
+  ]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -355,17 +452,7 @@ const requestAIProcessingPage = () => {
                   type={numSelected > 0 ? 'ok' : 'disabled'}
                   onPress={handleSelectCostItem}
                 />
-                {allCostItemsSpecified ? (
-                  <ActionButton title={'Save'} type={'ok'} onPress={() => {}} />
-                ) : (
-                  <ActionButton
-                    title={'Cost Items must be specified'}
-                    type={'disabled'}
-                    textStyle={styles.unspecifiedFg}
-                    style={styles.unspecifiedBg}
-                    onPress={() => {}}
-                  />
-                )}
+                <ActionButton title={'Save'} type={'ok'} onPress={handleSaveReceiptCostItems} />
               </>
             ) : (
               <>
