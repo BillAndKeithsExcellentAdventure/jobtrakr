@@ -1,10 +1,10 @@
 {
   "expo": {
     "name": "Project Hound",
-    "slug": "jobplus",
+    "slug": "projecthound",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
-    "scheme": "jobtrakr",
+    "scheme": "projecthound",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -18,7 +18,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jobtrakr.app",
+      "bundleIdentifier": "com.projecthound.app",
       "config": {
         "googleMapsApiKey": "AIzaSyBac7r0lXImLW3HkBExNDmEzVJpxXDMLUg"
       },
@@ -54,7 +54,7 @@
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.jobtrakr.app"
+      "package": "com.projecthound.app"
     },
     "web": {
       "bundler": "metro",
