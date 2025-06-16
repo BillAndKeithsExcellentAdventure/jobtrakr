@@ -1,3 +1,3 @@
-# jobtrakr
+# projecthound
 
 Project Tracker - React Native

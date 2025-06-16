@@ -14,7 +14,6 @@ export default function CreateOrganization() {
   const clerk = useClerk();
   const [organizationName, setOrganizationName] = React.useState('');
   const [organizationExists, setOrganizationExists] = React.useState(false);
-  const [code, setCode] = React.useState('');
   const auth = useAuth();
   const { setActive } = useOrganizationList();
 
