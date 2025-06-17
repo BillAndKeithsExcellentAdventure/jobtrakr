@@ -8,12 +8,14 @@ import { ProjectListEntry } from './ProjectListEntry';
 // Define types for the props
 export interface ProjectListEntryProps {
   projectId: string;
-  primaryTitle: string;
+  projectName: string;
   imageUri?: string;
-  secondaryTitle?: string;
-  tertiaryTitle?: string;
-  subtitleLines?: { left: string; right: string }[];
-  lines?: { left: string; right: string }[];
+  location?: string;
+  ownerName?: string;
+  startDate: string;
+  finishDate: string;
+  bidPrice: number;
+  amountSpent: number;
   isFavorite?: boolean;
 }
 

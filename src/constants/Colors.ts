@@ -56,6 +56,8 @@ export const Colors = {
     shadowColor: '#000',
     separatorColor: '#DDDDDD',
     inputBorder: '#777',
+    percentBarBackground: '#dddddd',
+    percentCompleteBackground: '#73bf73',
     boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.8)', // ...(Platform.OS === 'web'
     placeHolder: 'rgba(0, 0, 0, 0.4)',
     modalOverlayBackgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -121,6 +123,8 @@ export const Colors = {
     shadowColor: '#fff',
     separatorColor: '#666',
     inputBorder: '#777',
+    percentBarBackground: '#777',
+    percentCompleteBackground: '#3C633C',
     boxShadow: '0px 2px 5px rgba(255, 255, 255, 0.8)', // ...(Platform.OS === 'web'
     placeHolder: 'rgba(255, 255, 255, 0.4)',
     modalOverlayBackgroundColor: 'rgba(255, 255, 255, 0.2)',

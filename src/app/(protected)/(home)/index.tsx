@@ -58,22 +58,16 @@ export default function ProjectHomeScreen() {
     if (allProjects) {
       const listData: ProjectListEntryProps[] = allProjects.map((project) => {
         return {
-          primaryTitle: project.name ? project.name : 'unknown',
+          projectName: project.name ? project.name : 'unknown',
           isFavorite: undefined !== project.favorite ? project.favorite > 0 : false,
           projectId: project.id ?? 'unknown',
           imageUri: project.thumbnail ?? 'x',
-          secondaryTitle: project.location,
-          tertiaryTitle: project.ownerName ?? 'Owner',
-          lines: [
-            {
-              left: `start: ${formatDate(new Date(project.startDate ?? 0))}`,
-              right: `estimate: ${formatCurrency(project.bidPrice, true)}`,
-            },
-            {
-              left: `due: ${formatDate(new Date(project.plannedFinish ?? 0))}`,
-              right: `spent: ${formatCurrency(project.amountSpent, true)}`,
-            },
-          ],
+          location: project.location,
+          ownerName: project.ownerName ?? 'Owner',
+          startDate: `${formatDate(new Date(project.startDate ?? 0))}`,
+          finishDate: `${formatDate(new Date(project.plannedFinish ?? 0))}`,
+          bidPrice: project.bidPrice,
+          amountSpent: project.amountSpent,
         };
       });
 
@@ -107,7 +101,7 @@ export default function ProjectHomeScreen() {
                 pathname: '/[projectId]/notes',
                 params: {
                   projectId: actionContext.projectId,
-                  projectName: actionContext.primaryTitle,
+                  projectName: actionContext.projectName,
                 },
               });
           }
@@ -123,7 +117,7 @@ export default function ProjectHomeScreen() {
                 pathname: '/[projectId]/photos',
                 params: {
                   projectId: actionContext.projectId,
-                  projectName: actionContext.primaryTitle,
+                  projectName: actionContext.projectName,
                 },
               });
           }
@@ -139,7 +133,7 @@ export default function ProjectHomeScreen() {
                 pathname: '/[projectId]/receipts',
                 params: {
                   projectId: actionContext.projectId,
-                  projectName: actionContext.primaryTitle,
+                  projectName: actionContext.projectName,
                 },
               });
           }
@@ -155,7 +149,7 @@ export default function ProjectHomeScreen() {
               pathname: '/[projectId]/invoices',
               params: {
                 projectId: actionContext.projectId,
-                projectName: actionContext.primaryTitle,
+                projectName: actionContext.projectName,
               },
             });
         },
@@ -169,7 +163,7 @@ export default function ProjectHomeScreen() {
       const project = allProjects.find((j) => (j.id ?? '') === entry.projectId);
       if (project && project.id) {
         router.push({ pathname: '/[projectId]', params: { projectId: project.id } });
-      } else Alert.alert(`Project not found: ${entry.primaryTitle} (${entry.projectId})`);
+      } else Alert.alert(`Project not found: ${entry.projectName} (${entry.projectId})`);
     },
     [allProjects],
   );

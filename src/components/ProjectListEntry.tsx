@@ -6,6 +6,7 @@ import { Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import Base64Image from './Base64Image';
 import { ProjectListEntryProps } from './ProjectList';
+import PercentCompleteBar from './PercentCompleteBar';
 
 interface ProjectListEntryComponentProps {
   item: ProjectListEntryProps;
@@ -16,7 +17,7 @@ interface ProjectListEntryComponentProps {
 export function ProjectListEntry({ item, onPress, buttons }: ProjectListEntryComponentProps) {
   const colors = useColors();
   const boxShadow = Platform.OS === 'web' ? colors.boxShadow : undefined;
-
+  const percent = item.bidPrice > 0 ? Math.round((item.amountSpent * 100) / item.bidPrice) : 0;
   return (
     <View
       style={[
@@ -35,20 +36,20 @@ export function ProjectListEntry({ item, onPress, buttons }: ProjectListEntryCom
             <View style={[styles.textContentContainer, { backgroundColor: colors.itemBackground }]}>
               <View style={styles.titleRow}>
                 <Text numberOfLines={1} ellipsizeMode="tail" txtSize="title">
-                  {item.primaryTitle}
+                  {item.projectName}
                 </Text>
               </View>
-              {item.secondaryTitle && (
+              {item.location && (
                 <View style={styles.secondaryTitleRow}>
                   <Text numberOfLines={1} ellipsizeMode="tail" txtSize="standard">
-                    {item.secondaryTitle}
+                    {item.location}
                   </Text>
                 </View>
               )}
-              {item.tertiaryTitle && (
+              {item.ownerName && (
                 <View style={styles.secondaryTitleRow}>
                   <Text numberOfLines={1} ellipsizeMode="tail" txtSize="standard">
-                    {item.tertiaryTitle}
+                    {item.ownerName}
                   </Text>
                 </View>
               )}
@@ -67,35 +68,37 @@ export function ProjectListEntry({ item, onPress, buttons }: ProjectListEntryCom
               },
             ]}
           >
-            {item.subtitleLines?.map((line, index) => (
-              <View style={styles.subtitleRow} key={index}>
-                <View style={styles.subtitleColumn}>
-                  <Text style={[styles.subtitleTextLeft]} numberOfLines={1} ellipsizeMode="tail">
-                    {line.left}
-                  </Text>
-                </View>
-                <View style={styles.subtitleColumn}>
-                  <Text style={[styles.subtitleTextRight]} numberOfLines={1} ellipsizeMode="tail">
-                    {line.right}
-                  </Text>
-                </View>
+            <View style={styles.subtitleRow}>
+              <PercentCompleteBar
+                percent={percent}
+                spent={item.amountSpent}
+                total={item.bidPrice}
+                labelPosition="right" // try 'left', 'inside', etc.
+                height={24}
+                backgroundColor={colors.percentBarBackground}
+                labelColor={colors.text}
+                textColor={colors.text}
+                fillColor={colors.percentCompleteBackground}
+              />
+            </View>
+            <View style={styles.subtitleRow}>
+              <View style={styles.subtitleColumn}>
+                <Text
+                  style={[styles.subtitleTextLeft]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  text={`Start: ${item.startDate}`}
+                />
               </View>
-            ))}
-
-            {item.lines?.map((line, index) => (
-              <View style={styles.subtitleRow} key={index}>
-                <View style={styles.subtitleColumn}>
-                  <Text style={[styles.subtitleTextLeft]} numberOfLines={1} ellipsizeMode="tail">
-                    {line.left}
-                  </Text>
-                </View>
-                <View style={styles.subtitleColumn}>
-                  <Text style={[styles.subtitleTextRight]} numberOfLines={1} ellipsizeMode="tail">
-                    {line.right}
-                  </Text>
-                </View>
+              <View style={styles.subtitleColumn}>
+                <Text
+                  style={[styles.subtitleTextRight]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  text={`Finish: ${item.finishDate}`}
+                />
               </View>
-            ))}
+            </View>
           </View>
         </View>
       </Pressable>

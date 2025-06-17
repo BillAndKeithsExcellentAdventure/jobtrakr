@@ -60,6 +60,8 @@ export type ColorSchemeColors = {
   buttonBlue: string;
   sectionHeaderBG: string;
   sectionFG: string;
+  percentBarBackground: string;
+  percentCompleteBackground: string;
 };
 
 const ColorsContext = createContext<ColorSchemeColors | null>(null);
