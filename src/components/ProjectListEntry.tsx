@@ -1,12 +1,11 @@
 import { ActionButtonProps, ButtonBar } from '@/src/components/ButtonBar';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import { useBidAmountUpdater, useCostUpdater } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import React from 'react';
-import { Image, Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import Base64Image from './Base64Image';
 import { ProjectListEntryProps } from './ProjectList';
-import { Pressable } from 'react-native-gesture-handler';
 
 interface ProjectListEntryComponentProps {
   item: ProjectListEntryProps;
@@ -30,15 +29,7 @@ export function ProjectListEntry({ item, onPress, buttons }: ProjectListEntryCom
           <View style={styles.headerContentContainer}>
             {item.imageUri && (
               <View style={styles.imageContentContainer}>
-                {item.imageUri.length === 1 ? (
-                  <Image
-                    source={require('@/assets/images/hardHat.png')}
-                    tintColor={colors.iconColor}
-                    style={{ height: 60, width: 60 }}
-                  />
-                ) : (
-                  <Base64Image base64String={item.imageUri} height={80} width={120} />
-                )}
+                <Base64Image base64String={item.imageUri} height={80} width={120} />
               </View>
             )}
             <View style={[styles.textContentContainer, { backgroundColor: colors.itemBackground }]}>
