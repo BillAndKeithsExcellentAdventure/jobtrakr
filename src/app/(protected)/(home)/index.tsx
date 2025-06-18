@@ -30,7 +30,7 @@ function MaterialDesignTabBarIcon(props: {
 }
 
 function isEntry(obj: any): obj is ProjectListEntryProps {
-  return typeof obj.primaryTitle === 'string' && typeof obj.secondaryTitle === 'string';
+  return typeof obj.projectName === 'string' && typeof obj.projectId === 'string';
 }
 
 export default function ProjectHomeScreen() {
