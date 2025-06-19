@@ -100,7 +100,7 @@ const requestAIProcessingPage = () => {
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    const mockResult = {
+    const mockResult_original = {
       status: 'Success',
       response: {
         MerchantName: { value: 'Home Depot' },
@@ -127,6 +127,38 @@ const requestAIProcessingPage = () => {
           {
             Description: { value: 'Plumbing Tape' },
             TotalPrice: { value: '19.57' },
+          },
+        ],
+      },
+    };
+
+    const mockResult = {
+      status: 'Success',
+      response: {
+        MerchantName: { value: 'Home Depot' },
+        TransactionDate: { value: '2025-06-06T10:30:00Z' },
+        Total: { value: '137.17' },
+        TotalTax: { value: '9.26' },
+        Items: [
+          {
+            Description: { value: '2x4x8 Premium Lumber' },
+            TotalPrice: { value: '57.90' },
+          },
+          {
+            Description: { value: 'Paint Brush Set' },
+            TotalPrice: { value: '25.98' },
+          },
+          {
+            Description: { value: 'Drywall Screws 1lb Box' },
+            TotalPrice: { value: '6.59' },
+          },
+          {
+            Description: { value: 'LED Light Fixture' },
+            TotalPrice: { value: '32.95' },
+          },
+          {
+            Description: { value: 'Plumbing Tape' },
+            TotalPrice: { value: '4.49' },
           },
         ],
       },
@@ -190,7 +222,7 @@ const requestAIProcessingPage = () => {
   }
 
   useEffect(() => {
-    // fetchSimulatedAIResult();  // Uncomment for testing with simulated data
+    //fetchSimulatedAIResult(); // Uncomment for testing with simulated data
     fetchAIResult();
   }, []);
 
@@ -205,20 +237,39 @@ const requestAIProcessingPage = () => {
 
   // Recalculate proratedTax values
   const recalculateProratedTax = (items: ReceiptItem[], totalTax: number): ReceiptItem[] => {
-    const taxableItems = items.filter((i) => i.taxable);
-    const totalAmount = taxableItems.reduce((sum, i) => sum + i.amount, 0);
+    // Create map of indices for taxable items to preserve original positions
+    const taxableItemIndices = items
+      .map((item, index) => ({ index, item }))
+      .filter(({ item }) => item.taxable);
 
-    // If nothing is taxable, all proratedTax is zero
-    if (totalAmount === 0) {
+    // If nothing is taxable or no tax, all proratedTax is zero
+    if (taxableItemIndices.length === 0 || totalTax === 0) {
       return items.map((i) => ({ ...i, proratedTax: 0 }));
     }
 
-    return items.map((i) => {
-      if (!i.taxable) return { ...i, proratedTax: 0 };
-      const proportion = i.amount / totalAmount;
+    // Sort taxable items by amount descending
+    const sortedTaxableIndices = [...taxableItemIndices].sort((a, b) => b.item.amount - a.item.amount);
+
+    const totalAmount = sortedTaxableIndices.reduce((sum, { item }) => sum + item.amount, 0);
+
+    // Initialize result array with all items having zero tax
+    const result = items.map((item) => ({ ...item, proratedTax: 0 }));
+
+    let remainingTax = totalTax;
+
+    // Calculate prorated tax for all but the smallest amount
+    sortedTaxableIndices.slice(0, -1).forEach(({ index, item }) => {
+      const proportion = item.amount / totalAmount;
       const proratedTax = parseFloat((proportion * totalTax).toFixed(2));
-      return { ...i, proratedTax };
+      result[index].proratedTax = proratedTax;
+      remainingTax -= proratedTax;
     });
+
+    // Assign remaining tax to smallest amount
+    const smallestItemIndex = sortedTaxableIndices[sortedTaxableIndices.length - 1].index;
+    result[smallestItemIndex].proratedTax = parseFloat(remainingTax.toFixed(2));
+
+    return result;
   };
 
   const toggleTaxable = (index: number) => {
