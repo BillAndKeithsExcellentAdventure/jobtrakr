@@ -75,7 +75,7 @@ export function ProjectListEntry({ item, onPress, buttons }: ProjectListEntryCom
                 total={item.bidPrice}
                 labelPosition="inside" // try 'left', 'inside', etc.
                 showPercentageText={false}
-                height={24}
+                height={34}
                 backgroundColor={colors.percentBarBackground}
                 labelColor={colors.text}
                 textColor={colors.text}

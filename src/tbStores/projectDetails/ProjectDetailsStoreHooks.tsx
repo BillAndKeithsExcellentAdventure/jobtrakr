@@ -309,6 +309,7 @@ export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
         id: '',
         workItemId,
         bidAmount: 0,
+        complete: false,
       });
     }
   }, [seedWorkItems, allWorkItemSummaries, addWorkItemSummary, setSeedWorkItems]);
