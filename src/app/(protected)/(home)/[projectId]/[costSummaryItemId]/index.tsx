@@ -1,5 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { NumberInputField } from '@/src/components/NumberInputField';
+import { Switch } from '@/src/components/Switch';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import {
@@ -24,6 +25,7 @@ const CostItemDetails = () => {
     itemTitle: string;
   }>();
   const [itemEstimate, setItemEstimate] = useState(0);
+  const [itemComplete, setItemComplete] = useState(false);
   const router = useRouter();
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const updateBidEstimate = useUpdateRowCallback(projectId, 'workItemSummaries');
@@ -45,12 +47,21 @@ const CostItemDetails = () => {
 
   useEffect(() => {
     setItemEstimate(workItemSummary ? workItemSummary.bidAmount : 0);
+    setItemComplete(workItemSummary ? workItemSummary.complete : false);
   }, [workItemSummary]);
 
   const handleEstimateChanged = useCallback(
     (value: number) => {
       if (workItemSummary) updateBidEstimate(workItemSummary.id, { bidAmount: value });
       setItemEstimate(value);
+    },
+    [workItemSummary, updateBidEstimate],
+  );
+
+  const handleCompleteChanged = useCallback(
+    (value: boolean) => {
+      if (workItemSummary) updateBidEstimate(workItemSummary.id, { complete: value });
+      setItemComplete(value);
     },
     [workItemSummary, updateBidEstimate],
   );
@@ -102,7 +113,7 @@ const CostItemDetails = () => {
                 <Text
                   text="Estimate"
                   txtSize="standard"
-                  style={{ textAlign: 'right', width: 90, marginRight: 5 }}
+                  style={{ textAlign: 'right', width: 90, marginRight: 10 }}
                 />
                 <View style={{ flex: 1 }}>
                   <NumberInputField
@@ -122,7 +133,7 @@ const CostItemDetails = () => {
                 <Text
                   text="Spent"
                   txtSize="standard"
-                  style={{ textAlign: 'right', width: 90, marginRight: 5 }}
+                  style={{ textAlign: 'right', width: 90, marginRight: 10 }}
                 />
                 <View style={{ flex: 1 }}>
                   <NumberInputField
@@ -130,6 +141,25 @@ const CostItemDetails = () => {
                     placeholder="Amount Spent"
                     onChange={() => {}}
                     readOnly
+                  />
+                </View>
+              </View>
+              <View
+                style={{
+                  marginTop: 10,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                }}
+              >
+                <View style={{ alignItems: 'flex-end', width: 90, marginEnd: 10 }}>
+                  <Switch value={itemComplete} onValueChange={handleCompleteChanged} size="large" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    text="All spending entries for this code have been entered"
+                    txtSize="standard"
+                    numberOfLines={2}
+                    style={{ flexShrink: 1, flexWrap: 'wrap' }}
                   />
                 </View>
               </View>

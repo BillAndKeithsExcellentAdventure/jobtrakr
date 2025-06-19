@@ -27,6 +27,7 @@ export interface WorkItemSummaryData {
   id: string;
   workItemId: string;
   bidAmount: number;
+  complete: boolean; // true if all cost items are accounted for
 }
 
 export interface WorkItemSpentSummary {

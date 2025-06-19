@@ -11,6 +11,7 @@ export const TABLES_SCHEMA = {
     id: { type: 'string' },
     workItemId: { type: 'string' },
     bidAmount: { type: 'number' },
+    complete: { type: 'boolean' },
   },
 
   workItemSpentSummaries: {
