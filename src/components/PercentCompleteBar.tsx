@@ -55,13 +55,15 @@ const PercentCompleteBar: React.FC<PercentCompleteProps> = ({
     outputRange: ['0%', '100%'],
   });
 
-  const renderLabel = () =>
-    showLabel && spent != null && total != null ? (
+  const renderLabel = () => {
+    const textStyle = labelPosition === 'inside' ? styles.insideText : styles.label;
+    return showLabel && spent != null && total != null ? (
       <Text
-        style={[styles.label, { color: labelColor }, labelStyle]}
+        style={[textStyle, { color: labelColor }, labelStyle]}
         text={`Spent: ${formatCurrency(spent, true, false)} of ${formatCurrency(total, true, false)}`}
       />
     ) : null;
+  };
 
   const renderBar = () => (
     <View style={[styles.container, { height, backgroundColor }]}>
@@ -76,7 +78,7 @@ const PercentCompleteBar: React.FC<PercentCompleteProps> = ({
       ></Animated.View>
       {labelPosition === 'inside' && renderLabel()}
       {showPercentageText && labelPosition !== 'inside' && (
-        <Text style={[styles.percentText, { color: textColor }, textStyle]}>{`${Math.round(percent)}%`}</Text>
+        <Text style={[styles.insideText, { color: textColor }, textStyle]}>{`${Math.round(percent)}%`}</Text>
       )}
     </View>
   );
@@ -120,7 +122,7 @@ const styles = StyleSheet.create({
   text: {
     fontWeight: 'bold',
   },
-  percentText: {
+  insideText: {
     position: 'absolute',
     left: 0,
     right: 0,
