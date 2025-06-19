@@ -339,6 +339,15 @@ const requestAIProcessingPage = () => {
           }
           return item;
         });
+
+        // sort receipt items so all items with a null or undefined costWorkItem are at the top
+        updatedItems.sort((a, b) => {
+          if (a.costWorkItem && b.costWorkItem) return 0;
+          if (a.costWorkItem) return 1;
+          if (b.costWorkItem) return -1;
+          return 0;
+        });
+
         setReceiptItems(updatedItems);
       }
       setShowCostItemPicker(false);
