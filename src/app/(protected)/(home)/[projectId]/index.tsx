@@ -29,6 +29,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 const ITEM_HEIGHT = 45;
 
@@ -219,10 +221,105 @@ const ProjectDetailsPage = () => {
           ],
         );
         return;
+      } else if (menuItem === 'ExportCostItems' && projectId) {
+        ExportCostItems();
+
+        return;
       }
     },
     [projectId, projectData, router, processDeleteProject, removeActiveProjectId],
   );
+
+  const ExportCostItems = async () => {
+    if (!projectId || !projectData) return;
+
+    try {
+      // Create CSV header
+      const header = 'Category,Work Item,Estimate,Actual Cost,Description,Date\n';
+
+      // Create CSV content starting with all work items
+      const csvContent = allWorkItems
+        .map((workItem) => {
+          const category = categoryMap.get(workItem.categoryId);
+          const workItemSummary = allWorkItemSummaries.find((summary) => summary.workItemId === workItem.id);
+          const costs = allActualCostItems.filter((cost) => cost.workItemId === workItem.id);
+
+          // If there are costs, create a row for each cost
+          if (costs.length > 0) {
+            return costs.map((cost) => ({
+              category: (category?.name || '').replace(/,/g, ' '),
+              workItem: workItem.name.replace(/,/g, ' '),
+              estimate: (workItemSummary?.bidAmount || 0).toString(),
+              cost: cost.amount.toString(),
+              description: (cost.description || '').replace(/,/g, ' '),
+              date: new Date(cost.dateAdded).toLocaleDateString(),
+            }));
+          }
+
+          // If no costs, create a single row with just the work item and estimate
+          return [
+            {
+              category: (category?.name || '').replace(/,/g, ' '),
+              workItem: workItem.name.replace(/,/g, ' '),
+              estimate: (workItemSummary?.bidAmount || 0).toString(),
+              cost: '0',
+              description: '',
+              date: '',
+            },
+          ];
+        })
+        .flat()
+        .sort((a, b) => a.category.localeCompare(b.category))
+        .map(
+          (row) =>
+            `${row.category},${row.workItem},${row.estimate},${row.cost},${row.description},${row.date}`,
+        )
+        .join('\n');
+
+      // Combine header and content
+      const fullContent = header + csvContent;
+
+      // Create file path in cache directory
+      const fileName = `${projectData.name.replace(/[^a-zA-Z0-9]/g, '_')}_costs_${
+        new Date().toISOString().split('T')[0]
+      }.csv`;
+      const filePath = `${FileSystem.cacheDirectory}${fileName}`;
+
+      // Write the file
+      await FileSystem.writeAsStringAsync(filePath, fullContent);
+
+      // Check if sharing is available
+      const isSharingAvailable = await Sharing.isAvailableAsync();
+
+      if (isSharingAvailable) {
+        Alert.alert('Export Complete', 'Would you like to share this file?', [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Share',
+            onPress: async () => {
+              try {
+                await Sharing.shareAsync(filePath, {
+                  mimeType: 'text/csv',
+                  dialogTitle: 'Share Cost Items Export',
+                });
+              } catch (error) {
+                console.error('Error sharing file:', error);
+                Alert.alert('Error', 'Failed to share the export file');
+              }
+            },
+          },
+        ]);
+      } else {
+        Alert.alert('Error', 'Sharing is not available on this device');
+      }
+    } catch (error) {
+      console.error('Error exporting cost items:', error);
+      Alert.alert('Error', 'Failed to export cost items');
+    }
+  };
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
@@ -267,6 +364,13 @@ const ProjectDetailsPage = () => {
         label: 'Cost Item Cleanup',
         onPress: (e, actionContext) => {
           handleMenuItemPress('CleanCostItems', actionContext);
+        },
+      },
+      {
+        icon: <FontAwesome5 name="broom" size={28} color={colors.iconColor} />,
+        label: 'Export Cost Items',
+        onPress: (e, actionContext) => {
+          handleMenuItemPress('ExportCostItems', actionContext);
         },
       },
     ],
