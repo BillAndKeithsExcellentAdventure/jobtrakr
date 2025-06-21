@@ -235,7 +235,7 @@ const ProjectDetailsPage = () => {
 
     try {
       // Create CSV header
-      const header = 'Category,Work Item,Estimate,Actual Cost,Description,Date\n';
+      const header = 'Code,Category,Work Item,Estimate,Cost\n';
 
       // Create CSV content starting with all work items
       const csvContent = allWorkItems
@@ -247,33 +247,42 @@ const ProjectDetailsPage = () => {
           // If there are costs, create a row for each cost
           if (costs.length > 0) {
             return costs.map((cost) => ({
+              catCode: category?.code || '',
+              workItemCode: workItem.code || '',
+              code: category?.code + '.' + workItem.code,
               category: (category?.name || '').replace(/,/g, ' '),
               workItem: workItem.name.replace(/,/g, ' '),
               estimate: (workItemSummary?.bidAmount || 0).toString(),
               cost: cost.amount.toString(),
-              description: (cost.description || '').replace(/,/g, ' '),
-              date: new Date(cost.dateAdded).toLocaleDateString(),
             }));
           }
 
           // If no costs, create a single row with just the work item and estimate
           return [
             {
+              catCode: category?.code || '',
+              workItemCode: workItem.code || '',
+              code: category?.code + '.' + workItem.code,
               category: (category?.name || '').replace(/,/g, ' '),
               workItem: workItem.name.replace(/,/g, ' '),
               estimate: (workItemSummary?.bidAmount || 0).toString(),
               cost: '0',
-              description: '',
-              date: '',
             },
           ];
         })
         .flat()
-        .sort((a, b) => a.category.localeCompare(b.category))
-        .map(
-          (row) =>
-            `${row.category},${row.workItem},${row.estimate},${row.cost},${row.description},${row.date}`,
-        )
+        .sort((a, b) => {
+          // Compare categories first
+          const catCompare = parseInt(a.catCode) - parseInt(b.catCode);
+          if (catCompare === 0) {
+            return parseInt(a.workItemCode) - parseInt(b.workItemCode);
+          }
+
+          return catCompare;
+        })
+        // The single quote in front of ${row.code} is to ensure the CSV is properly formatted with
+        // the code being a text string and not a number. 10.10 remains 10.10 and not a number converted to 10.1
+        .map((row) => `'${row.code},${row.category},${row.workItem},${row.estimate},${row.cost}`)
         .join('\n');
 
       // Combine header and content
