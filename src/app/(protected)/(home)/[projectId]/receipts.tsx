@@ -73,7 +73,7 @@ const ProjectReceiptsPage = () => {
       if (!cameraResponse.assets || cameraResponse.assets.length === 0 || !asset) return;
 
       // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
-      const imageAddResult = await addReceiptImage(asset.uri, projectId, 'receipt');
+      const imageAddResult = await addReceiptImage(asset.uri, projectId, 'photo', 'receipt');
       if (imageAddResult.status !== 'Success') {
         alert(`Unable to add receipt image: ${JSON.stringify(imageAddResult)}`);
         return;
