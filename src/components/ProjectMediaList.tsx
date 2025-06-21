@@ -10,11 +10,12 @@ import { MediaEntryData, useDeleteRowCallback } from '@/src/tbStores/projectDeta
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useProjectValue } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { useRouter } from 'expo-router';
-import { buildLocalImageUri, useAddImageCallback, useGetImageCallback } from '@/src/utils/images';
+import { buildLocalMediaUri, useAddImageCallback, useGetImageCallback } from '@/src/utils/images';
 import { useColors } from '@/src/context/ColorsContext';
 import { useColorScheme } from './useColorScheme';
 import * as FileSystem from 'expo-file-system';
 import { useAuth } from '@clerk/clerk-expo';
+import { mediaType } from '@/src/utils/images';
 
 export interface MediaEntryDisplayData extends MediaEntryData {
   isSelected: boolean;
@@ -83,12 +84,12 @@ export const ProjectMediaList = ({
   }, []);
 
   const handleImageLongPress = useCallback(
-    async (id: string, type: 'video' | 'photo', photoDate: string) => {
+    async (id: string, type: mediaType, photoDate: string) => {
       if (!orgId) {
         return;
       }
 
-      const uri = buildLocalImageUri(orgId, projectId, id, 'photo');
+      const uri = buildLocalMediaUri(orgId, projectId, id, type, 'photo');
 
       if (type === 'video') {
         playVideo(uri);

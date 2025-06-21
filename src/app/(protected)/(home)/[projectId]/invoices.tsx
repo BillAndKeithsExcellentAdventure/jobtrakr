@@ -73,7 +73,7 @@ const ProjectInvoicesPage = () => {
       if (!cameraResponse.assets || cameraResponse.assets.length === 0 || !asset) return;
 
       // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
-      const imageAddResult = await addInvoiceImage(asset.uri, projectId, 'invoice');
+      const imageAddResult = await addInvoiceImage(asset.uri, projectId, 'photo', 'invoice');
       if (imageAddResult.status !== 'Success') {
         alert(`Unable to add invoice image: ${JSON.stringify(imageAddResult)}`);
         return;

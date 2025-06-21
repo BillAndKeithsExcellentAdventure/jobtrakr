@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system';
 import SwipeableLineItem from '@/src/components/SwipeableLineItem';
 import { useAuth } from '@clerk/clerk-expo';
-import { buildLocalImageUri, useAddImageCallback, useGetImageCallback } from '@/src/utils/images';
+import { buildLocalMediaUri, useAddImageCallback, useGetImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -93,7 +93,7 @@ const InvoiceDetailsPage = () => {
       if (!cameraResponse.assets || cameraResponse.assets.length === 0 || !asset) return;
 
       // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
-      const imageAddResult = await addInvoiceImage(asset.uri, projectId, 'invoice');
+      const imageAddResult = await addInvoiceImage(asset.uri, projectId, 'photo', 'invoice');
       if (imageAddResult.status !== 'Success') {
         alert(`Unable to add invoice image: ${JSON.stringify(imageAddResult)}`);
         return;
@@ -122,7 +122,7 @@ const InvoiceDetailsPage = () => {
         handleAddInvoicePhoto();
         return;
       }
-      const uri = buildLocalImageUri(orgId!, projectId, imageId, 'invoice');
+      const uri = buildLocalMediaUri(orgId!, projectId, imageId, 'photo', 'invoice');
       let imageFileExist = false;
 
       if (uri.startsWith('file://')) {

@@ -24,6 +24,7 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
 
   useEffect(() => {
     console.log(`VideoPlayerModal useEffect isVisible: ${isVisible}`);
+    console.log(`VideoPlayerModal uri: ${videoUri}`);
     player.seekBy(0);
     player.play();
     setIsPlaying(true);

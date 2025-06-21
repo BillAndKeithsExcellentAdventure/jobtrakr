@@ -195,7 +195,7 @@ export const DeviceMediaList = ({
       for (const asset of deviceMediaAssets) {
         if (!hasSelectedDeviceAssets || asset.selected) {
           // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
-          const imageAddResult = await addPhotoImage(asset.asset.uri, projectId, 'photo');
+          const imageAddResult = await addPhotoImage(asset.asset.uri, projectId, 'photo', 'photo');
           if (imageAddResult.status === 'Success') {
             let tn;
             if (imageAddResult.uri) {

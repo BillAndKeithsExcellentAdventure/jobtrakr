@@ -64,7 +64,12 @@ const ProjectPhotosPage = () => {
     async (asset: MediaLibrary.Asset) => {
       if (!asset) return;
 
-      const imageAddResult = await addPhotoImage(asset.uri, projectId, 'photo');
+      const imageAddResult = await addPhotoImage(
+        asset.uri,
+        projectId,
+        asset.mediaType === MediaLibrary.MediaType.photo ? 'photo' : 'video',
+        'photo',
+      );
       console.log('Image Add Result:', imageAddResult);
       if (imageAddResult.status === 'Success' && imageAddResult.uri) {
         const thumbnail = await createThumbnail(asset.uri);
@@ -74,7 +79,7 @@ const ProjectPhotosPage = () => {
           assetId: asset.id,
           deviceName: 'Device Name',
           imageId: imageAddResult.id,
-          mediaType: 'photo',
+          mediaType: asset.mediaType === MediaLibrary.MediaType.photo ? 'photo' : 'video',
           thumbnail: thumbnail ?? '',
           creationDate: Date.now(),
         };

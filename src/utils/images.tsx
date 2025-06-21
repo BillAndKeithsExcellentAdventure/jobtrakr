@@ -19,16 +19,22 @@ interface imageDetails {
 
 const BACKEND_BASE_URL = 'https://projecthoundbackend.keith-m-bertram.workers.dev';
 
+export type mediaType = 'photo' | 'video';
 export type resourceType = 'receipt' | 'invoice' | 'photo';
 
-const getAddImageEndPointUrl = (resourceType: resourceType) => {
+const getAddImageEndPointUrl = (resourceType: resourceType, mediaType: mediaType) => {
   switch (resourceType) {
     case 'receipt':
       return `${BACKEND_BASE_URL}/addReceipt`;
     case 'invoice':
       return `${BACKEND_BASE_URL}/addInvoice`;
-    case 'photo':
+    case 'photo': {
+      if (mediaType === 'video') {
+        return `${BACKEND_BASE_URL}/addVideo`;
+      }
+
       return `${BACKEND_BASE_URL}/addPhoto`;
+    }
     default:
       throw new Error('Invalid resource type');
   }
@@ -126,6 +132,7 @@ function arrayBufferToBase64(buffer: Uint8Array): string {
 const uploadImage = async (
   details: imageDetails,
   token: string,
+  mediaType: mediaType,
   resourceType: resourceType,
   localImageUrl: string,
 ): Promise<ImageResult> => {
@@ -145,10 +152,17 @@ const uploadImage = async (
     // Add the image file
     const uri = Platform.OS === 'ios' ? localImageUrl.replace('file://', '') : localImageUrl;
     const filename = localImageUrl.split('/').pop() || 'image.jpg';
-    const match = /\.(\w+)$/.exec(filename);
-    let type = match ? `image/${match[1]}` : 'image/jpeg';
-    if (type === 'image/jpg') {
-      type = 'image/jpeg'; // Normalize jpg to jpeg
+    //    const match = /\.(\w+)$/.exec(filename);
+    //    let type = match ? `image/${match[1]}` : 'image/jpeg';
+    //    if (type === 'image/jpg') {
+    //      type = 'image/jpeg'; // Normalize jpg to jpeg
+    //    }
+
+    let type = '';
+    if (mediaType === 'video') {
+      type = 'video/mp4'; // Ensure video type is set correctly
+    } else if (mediaType === 'photo') {
+      type = 'image/jpeg'; // Ensure photo type is set correctly
     }
 
     console.log('Uploading image type:', type);
@@ -158,7 +172,7 @@ const uploadImage = async (
       type,
     } as any);
 
-    const endPointUrl = getAddImageEndPointUrl(resourceType);
+    const endPointUrl = getAddImageEndPointUrl(resourceType, mediaType);
     console.log('Uploading image to:', endPointUrl);
 
     const response = await fetch(endPointUrl, {
@@ -185,7 +199,7 @@ const uploadImage = async (
   }
 };
 
-const getLocalImageFolder = (orgId: string, projectId: string, resourceType: resourceType): string => {
+const getLocalMediaFolder = (orgId: string, projectId: string, resourceType: resourceType): string => {
   return `${FileSystem.documentDirectory}/images/${orgId}/${projectId}/${resourceType}`;
 };
 
@@ -193,24 +207,39 @@ const getLocalImageUri = (folder: string, id: string): string => {
   return `${folder}/${id}.jpeg`;
 };
 
-export const buildLocalImageUri = (
+const getLocalVideoUri = (folder: string, id: string): string => {
+  return `${folder}/${id}.mp4`;
+};
+
+export const buildLocalMediaUri = (
   orgId: string,
   projectId: string,
   imageId: string,
+  type: mediaType,
   resourceType: resourceType,
 ): string => {
-  const folder = getLocalImageFolder(orgId, projectId, resourceType);
+  const folder = getLocalMediaFolder(orgId, projectId, resourceType);
+  if (type === 'video') {
+    return getLocalVideoUri(folder, imageId);
+  }
+
   return getLocalImageUri(folder, imageId);
 };
 
 const copyToLocalFolder = async (
   imageUri: string,
   details: imageDetails,
+  mediaType: mediaType,
   resourceType: resourceType,
 ): Promise<ImageResult> => {
   // Copy to documents folder first.
-  const destinationPath = getLocalImageFolder(details.orgId, details.projectId, resourceType);
-  const destinationUri = getLocalImageUri(destinationPath, details.id);
+  const destinationPath = getLocalMediaFolder(details.orgId, details.projectId, resourceType);
+  let destinationUri: string;
+  if (mediaType === 'video') {
+    destinationUri = getLocalVideoUri(destinationPath, details.id);
+  } else {
+    destinationUri = getLocalImageUri(destinationPath, details.id);
+  }
 
   try {
     // Ensure directory exists
@@ -250,6 +279,7 @@ export const useAddImageCallback = () => {
     async (
       imageUri: string,
       projectId: string,
+      mediaType: mediaType,
       resourceType: resourceType,
       deviceTypes: string = '',
     ): Promise<ImageResult> => {
@@ -282,13 +312,13 @@ export const useAddImageCallback = () => {
         deviceTypes: deviceTypes,
       };
 
-      const copyLocalResult = await copyToLocalFolder(imageUri, details, resourceType);
+      const copyLocalResult = await copyToLocalFolder(imageUri, details, mediaType, resourceType);
       if (copyLocalResult.status !== 'Success' || !copyLocalResult.uri) {
         return copyLocalResult;
       }
 
       // Upload to backend
-      const uploadResult = await uploadImage(details, token, resourceType, copyLocalResult.uri!);
+      const uploadResult = await uploadImage(details, token, mediaType, resourceType, copyLocalResult.uri!);
       if (uploadResult.status !== 'Success') {
         const data: FailedToUploadData = {
           id: id,
@@ -343,7 +373,7 @@ export const useGetImageCallback = () => {
       }
 
       // First see if this image is found locally. If found return the local version.
-      const path = getLocalImageFolder(orgId, projectId, resourceType);
+      const path = getLocalMediaFolder(orgId, projectId, resourceType);
       const imageUri = getLocalImageUri(path, itemId);
       try {
         const fileInfo = await FileSystem.getInfoAsync(imageUri);

@@ -156,7 +156,7 @@ const AddInvoicePage = () => {
       const asset = response.assets[0];
       if (!response.assets || response.assets.length === 0 || !asset) return;
 
-      const imageAddResult = await addPhotoImage(asset.uri, projectId, 'photo');
+      const imageAddResult = await addPhotoImage(asset.uri, projectId, 'photo', 'photo');
       console.log('Image Add Result:', imageAddResult);
       if (imageAddResult.status === 'Success' && imageAddResult.uri) {
         const thumbnail = await createThumbnail(asset.uri);
