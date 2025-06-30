@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Service Proposal Letter</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+        color: #333;
+      }
+      header {
+        margin-bottom: 30px;
+      }
+      .company-info,
+      .client-info {
+        margin-bottom: 20px;
+      }
+      h1 {
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        margin-bottom: 20px;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid #999;
+      }
+      th,
+      td {
+        padding: 10px;
+        text-align: left;
+      }
+      .total {
+        font-weight: bold;
+      }
+      footer {
+        margin-top: 40px;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="company-info">
+        <strong>{{company.name}}</strong><br />
+        {{company.formattedAddress}}<br />
+        Phone: {{company.phone}}<br />
+        Email: {{company.email}}
+      </div>
+
+      <div class="client-info">
+        <strong>Client:</strong><br />
+        {{client.name}}<br />
+        {{client.formattedAddress}}
+      </div>
+
+      <h1>Change Order Proposal</h1>
+      <p>Project: {{project}}</br>
+      Date: {{date}}</p>
+    </header>
+
+    <main>
+      <p>Dear {{client.name}},</p>
+      <p>
+        The information below describes the requested change and provides a list of associated cost items.
+      </p>
+
+      <h2>Change Order Summary</h2>
+      <p>{{changeSummary}}</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cost Items</th>
+            <th>Price</th>
+          </tr>
+        </thead>
+        <tbody>
+            {{#services}}
+            <tr>
+              <td>{{description}}</td>
+              <td>{{cost}}</td>
+            </tr>
+            {{/services}} 
+            <tr class="total">
+                <td>Total Cost</td>
+                <td>{{formattedTotal}}</td>
+            </tr>
+        </tbody>
+      </table>
+
+      <p>
+        Please review the listed services and let us know if you have any questions or would like to proceed.
+        Once approved, we can schedule the work.
+      </p>
+      <p>We appreciate the opportunity to work with you.</p>
+    </main>
+
+    <footer>
+      Sincerely,<br /><br />
+      {{company.contact}}<br />
+      {{company.name}}
+    </footer>
+  </body>
+</html>

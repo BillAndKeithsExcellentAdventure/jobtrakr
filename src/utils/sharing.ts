@@ -1,7 +1,7 @@
 import * as Sharing from 'expo-sharing';
 import Share from 'react-native-share';
 
-export const ShareFile = async (filePath: string): Promise<void> => {
+export const shareFile = async (filePath: string): Promise<void> => {
   try {
     if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(filePath);
@@ -13,7 +13,7 @@ export const ShareFile = async (filePath: string): Promise<void> => {
   }
 };
 
-export const ShareFiles = async (filePaths: string[]): Promise<void> => {
+export const shareFiles = async (filePaths: string[]): Promise<void> => {
   try {
     if (await Sharing.isAvailableAsync()) {
       const shareOptions = {
@@ -27,6 +27,26 @@ export const ShareFiles = async (filePaths: string[]): Promise<void> => {
     }
   } catch (error) {
     console.error('Error sharing file:', error);
+    throw error;
+  }
+};
+
+/**
+ * Shares an HTML file using expo-sharing with a custom dialog title.
+ * @param filePath - The path to the HTML file.
+ * @param dialogTitle - The title for the sharing dialog.
+ */
+export const shareHtmlFile = async (filePath: string, dialogTitle: string): Promise<void> => {
+  try {
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(filePath, {
+        mimeType: 'text/html',
+        dialogTitle,
+      });
+      console.log('HTML file shared:', filePath);
+    }
+  } catch (error) {
+    console.error('Error sharing HTML file:', error);
     throw error;
   }
 };
