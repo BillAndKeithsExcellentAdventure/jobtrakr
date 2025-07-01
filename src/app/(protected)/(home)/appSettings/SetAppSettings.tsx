@@ -7,7 +7,7 @@ import {
   useAppSettings,
   SettingsData,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
-import { Alert, Button, Platform, StyleSheet, Image } from 'react-native';
+import { Alert, Button, Platform, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import * as ImagePicker from 'expo-image-picker';
@@ -178,7 +178,25 @@ const SetAppSettingScreen = () => {
               autoCorrect={false}
             />
           </View>
-
+          <View style={{ flexDirection: 'row', marginBottom: 4, backgroundColor: colors.listBackground }}>
+            <TouchableOpacity
+              style={[
+                styles.button,
+                { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background },
+              ]}
+              onPress={pickImage}
+            >
+              <Text>Select</Text>
+              <Text>Company</Text>
+              <Text>Logo</Text>
+            </TouchableOpacity>
+            {settings.companyLogo && (
+              <Image
+                source={{ uri: settings.companyLogo }}
+                style={{ width: 80, height: 80, resizeMode: 'contain' }}
+              />
+            )}
+          </View>
           <View style={styles.saveButtonRow}>
             <ActionButton style={styles.saveButton} onPress={handleSave} type="ok" title="Save" />
             <ActionButton
@@ -189,15 +207,6 @@ const SetAppSettingScreen = () => {
               type={'cancel'}
               title="Cancel"
             />
-          </View>
-          <View style={{ marginBottom: 4, backgroundColor: colors.listBackground }}>
-            <Button title="Select Company Logo" onPress={pickImage} />
-            {settings.companyLogo && (
-              <Image
-                source={{ uri: settings.companyLogo }}
-                style={{ width: 100, height: 100, resizeMode: 'contain' }}
-              />
-            )}
           </View>
         </View>
       </KeyboardAwareScrollView>
@@ -210,6 +219,12 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     gap: 8,
+  },
+  button: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    marginRight: 16,
   },
   modalContainer: {
     maxWidth: 460,
