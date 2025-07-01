@@ -7,9 +7,27 @@ import {
   useAppSettings,
   SettingsData,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
-import { Platform, StyleSheet } from 'react-native';
+import { Alert, Button, Platform, StyleSheet, Image } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
+import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
+
+async function createBase64LogoImage(uri: string, width = 200, height = 200): Promise<string | undefined> {
+  let thumbnailUrlInBase64: string | undefined = undefined;
+
+  try {
+    const manipulationContext = await ImageManipulator.ImageManipulator.manipulate(uri);
+    await manipulationContext.resize({ width, height });
+    const imageResult = await (await manipulationContext.renderAsync()).saveAsync({ base64: true });
+    //console.log(`Creating thumbnail ...Base64 Length: ${imageResult.base64?.length}`);
+    thumbnailUrlInBase64 = imageResult.base64;
+  } catch (error) {
+    console.error(`Error creating thumbnail: ${error}`);
+    thumbnailUrlInBase64 = undefined;
+  }
+  return thumbnailUrlInBase64;
+}
 
 const SetAppSettingScreen = () => {
   const colors = useColors();
@@ -31,8 +49,35 @@ const SetAppSettingScreen = () => {
     }));
   };
 
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Permission to access media library is required!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: 'images',
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      const base64Image = await createBase64LogoImage(asset.uri, 200, 200);
+
+      const dataUrl = base64Image ? `data:image/png;base64,${base64Image}` : '';
+      handleChange('companyLogo', dataUrl);
+    }
+  };
+
   const handleSave = () => {
-    setAppSettings(settings);
+    const result = setAppSettings(settings);
+    if (result.status !== 'Success') {
+      Alert.alert('Error saving Company Data', `Please verify input and try again. ${result.msg}`);
+      return;
+    }
+
+    router.back();
   };
 
   return (
@@ -144,6 +189,15 @@ const SetAppSettingScreen = () => {
               type={'cancel'}
               title="Cancel"
             />
+          </View>
+          <View style={{ marginBottom: 4, backgroundColor: colors.listBackground }}>
+            <Button title="Select Company Logo" onPress={pickImage} />
+            {settings.companyLogo && (
+              <Image
+                source={{ uri: settings.companyLogo }}
+                style={{ width: 100, height: 100, resizeMode: 'contain' }}
+              />
+            )}
           </View>
         </View>
       </KeyboardAwareScrollView>
