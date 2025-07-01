@@ -22,7 +22,7 @@ interface ClientInfo {
   formattedAddress: string; // street/po box number<br>City, State ZIP<br>
 }
 
-export interface ProposalData {
+export interface ChangeOrderData {
   company: CompanyInfo;
   client: ClientInfo;
   changeItems: ChangeItem[];
@@ -38,11 +38,15 @@ export interface ProposalData {
  * @param data - The dynamic data to inject into the template.
  * @returns The final HTML string with injected data.
  */
-export function renderChangeOrderTemplate(template: string, data: ProposalData): string {
+export function renderChangeOrderTemplate(template: string, data: ChangeOrderData): string {
   const total = data.changeItems.reduce((sum, s) => sum + s.cost, 0);
 
   // Inject computed + formatted properties
-  const view: ProposalData = {
+  const view: ChangeOrderData = {
+    ...data,
+    changeSummary: data.changeSummary || 'No change summary provided.',
+    project: data.project || 'No project specified',
+    // Format addresses by joining non-empty lines with <br>
     company: {
       ...data.company,
       formattedAddress: data.company.address.filter((line) => line.trim() !== '').join('<br>'),
