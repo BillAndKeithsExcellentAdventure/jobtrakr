@@ -72,6 +72,23 @@ export const TABLES_SCHEMA = {
     task: { type: 'string' },
     completed: { type: 'boolean' },
   },
+
+  changeOrders: {
+    id: { type: 'string' },
+    title: { type: 'string' },
+    description: { type: 'number' },
+    bidAmount: { type: 'number' },
+    status: { type: 'string' }, // 'draft', 'approved', 'cancelled'
+    dateCreated: { type: 'number' }, // Date the change order was created.
+  },
+
+  changeOrderItems: {
+    id: { type: 'string' },
+    changeOrderId: { type: 'string' },
+    label: { type: 'string' },
+    amount: { type: 'number' },
+    workItemId: { type: 'string' },
+  },
 } as const;
 
 const { useCreateMergeableStore, useProvideStore } = UiReact as UiReact.WithSchemas<

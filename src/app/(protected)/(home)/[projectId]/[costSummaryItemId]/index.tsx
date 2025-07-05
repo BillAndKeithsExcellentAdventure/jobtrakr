@@ -2,7 +2,6 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { NumberInputField } from '@/src/components/NumberInputField';
 import { Switch } from '@/src/components/Switch';
 import { Text, View } from '@/src/components/Themed';
-import { useColors } from '@/src/context/ColorsContext';
 import {
   useAllRows,
   useBidAmountUpdater,

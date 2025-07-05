@@ -154,6 +154,20 @@ export default function ProjectHomeScreen() {
             });
         },
       },
+      {
+        icon: <MaterialCommunityIcons name="lightbulb-on-outline" size={24} color={colors.iconColor} />,
+        label: 'Changes',
+        onPress: (e, actionContext) => {
+          if (actionContext && actionContext.projectId)
+            router.push({
+              pathname: '/[projectId]/changes',
+              params: {
+                projectId: actionContext.projectId,
+                projectName: actionContext.projectName,
+              },
+            });
+        },
+      },
     ],
     [colors, onLikePressed, router],
   );

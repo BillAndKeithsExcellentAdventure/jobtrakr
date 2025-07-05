@@ -117,6 +117,23 @@ export interface NoteData {
   completed: boolean;
 }
 
+export interface ChangeOrder {
+  id: string;
+  title: string;
+  description: string;
+  bidAmount: number;
+  status: 'draft' | 'approved' | 'cancelled';
+  dateCreated: number; // Date the change order was created.
+}
+
+export interface ChangeOrderItem {
+  id: string;
+  changeOrderId: string;
+  label: string;
+  amount: number;
+  workItemId: string;
+}
+
 export type WorkItemSummarySchema = typeof TABLES_SCHEMA.workItemSummaries;
 export type WorkItemSpentSummarySchema = typeof TABLES_SCHEMA.workItemSpentSummaries;
 export type ReceiptsSchema = typeof TABLES_SCHEMA.receipts;
@@ -124,6 +141,8 @@ export type InvoicesSchema = typeof TABLES_SCHEMA.invoices;
 export type WorkItemCostEntriesSchema = typeof TABLES_SCHEMA.workItemCostEntries;
 export type MediaEntriesSchema = typeof TABLES_SCHEMA.mediaEntries;
 export type NotesSchema = typeof TABLES_SCHEMA.notes;
+export type ChangeOrderSchema = typeof TABLES_SCHEMA.notes;
+export type ChangeOrderItemSchema = typeof TABLES_SCHEMA.notes;
 
 export type SchemaMap = {
   workItemSummaries: WorkItemSummarySchema;
@@ -132,6 +151,8 @@ export type SchemaMap = {
   invoices: InvoicesSchema;
   mediaEntries: MediaEntriesSchema;
   notes: NotesSchema;
+  changeOrders: ChangeOrderSchema;
+  changeOrderItems: ChangeOrderItemSchema;
 };
 
 // Type mapping between table names and data types
@@ -142,6 +163,8 @@ export type TableDataMap = {
   invoices: InvoiceData;
   mediaEntries: MediaEntryData;
   notes: NoteData;
+  changeOrders: ChangeOrder;
+  changeOrderItems: ChangeOrderItem;
 };
 
 export type PROJECTDETAILS_TABLES = keyof TableDataMap;
@@ -256,7 +279,8 @@ export const useTableValue = <T extends keyof SchemaMap, C extends Extract<keyof
   tableId: T,
   rowId: string,
   cellId: C,
-): Value<SchemaMap[T], C> => useCell(tableId, rowId, cellId, getStoreId(projectId)) as Value<SchemaMap[T], C>;
+): Value<SchemaMap[T], C> =>
+  useCell(tableId, rowId, cellId as any, getStoreId(projectId)) as Value<SchemaMap[T], C>;
 
 export function useIsStoreAvailableCallback(projectId: string) {
   const store = useStore(getStoreId(projectId));

@@ -57,7 +57,6 @@ const styles = StyleSheet.create({
   },
   buttonBarContainerHorizontal: {
     flexDirection: 'row',
-    paddingHorizontal: 10,
     paddingTop: 5,
     borderTopWidth: 1,
     marginTop: 5,
