@@ -73,11 +73,18 @@ const ChangeOrdersScreen = () => {
               />
             </View>
             <FlatList
-              style={{ marginTop: 10, borderColor: colors.border, borderTopWidth: 1 }}
+              style={{ marginTop: 10, width: '100%', borderColor: colors.border, borderTopWidth: 1 }}
               data={allChangeOrders}
               ListEmptyComponent={() => (
-                <View style={{ padding: 20, alignItems: 'center' }}>
-                  <Text txtSize="xl" style={{ color: colors.text }}>
+                <View
+                  style={{
+                    padding: 20,
+                    width: '100%',
+                    alignItems: 'center',
+                    backgroundColor: colors.background,
+                  }}
+                >
+                  <Text txtSize="sub-title" style={{ color: colors.text }}>
                     No change orders found.
                   </Text>
                 </View>
