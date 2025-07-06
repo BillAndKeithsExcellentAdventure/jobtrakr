@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Text, TextInput, View } from '@/src/components/Themed';
+import { SpeechToText } from '@/src/components/SpeechToText';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
 import {
@@ -53,6 +54,11 @@ export default function AddChangeOrder() {
     router.back();
   };
 
+  const handleTranscript = (text: string) => {
+    console.log('Transcribed text:', text);
+    // Do something with the transcribed text
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Add Change Order</Text>
@@ -63,6 +69,7 @@ export default function AddChangeOrder() {
         onChangeText={(text) => handleChange('title', text)}
         placeholder="Title"
       />
+
       <Text style={styles.label}>Description</Text>
       <TextInput
         style={[styles.input, { height: 80 }]}
@@ -72,6 +79,7 @@ export default function AddChangeOrder() {
         numberOfLines={4}
         multiline
       />
+      <SpeechToText onTranscriptComplete={handleTranscript} placeholder="Tap to start speaking..." />
       <Text style={styles.label}>Amount</Text>
       <TextInput
         style={styles.input}

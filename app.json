@@ -32,12 +32,7 @@
         "NSCameraUsageDescription": "This app needs access to your camera to take photos and record videos.",
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to import photos into your project.",
         "ITSAppUsesNonExemptEncryption": false,
-        "LSApplicationQueriesSchemes": [
-          "fb",
-          "instagram",
-          "twitter",
-          "tiktoksharesdk"
-        ]
+        "LSApplicationQueriesSchemes": ["fb", "instagram", "twitter", "tiktoksharesdk"]
       }
     },
     "android": {
@@ -94,18 +89,20 @@
       [
         "react-native-share",
         {
-          "ios": [
-            "fb",
-            "instagram",
-            "twitter",
-            "tiktoksharesdk"
-          ],
+          "ios": ["fb", "instagram", "twitter", "tiktoksharesdk"],
           "android": [
             "com.facebook.katana",
             "com.instagram.android",
             "com.twitter.android",
             "com.zhiliaoapp.musically"
           ]
+        }
+      ],
+      [
+        "@react-native-voice/voice",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to use the microphone.",
+          "speechRecognitionPermission": "Allow $(PRODUCT_NAME) to use speech recognition."
         }
       ],
       "expo-router",
