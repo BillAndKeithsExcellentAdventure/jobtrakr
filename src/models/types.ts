@@ -1,3 +1,5 @@
+import { OptionEntry } from '../components/OptionList';
+
 export type TBStatus = 'Success' | 'Error' | 'NoChanges';
 
 export type CrudResult = { status: 'Success' | 'Error'; id: string; msg: string };
@@ -73,4 +75,10 @@ export interface ReceiptSummary {
   receiptDate: number;
   totalAmount: number;
   totalTax: number;
+}
+
+export interface ProposedChangeOrderItem {
+  label: string;
+  amount: number;
+  workItemEntry: OptionEntry;
 }
