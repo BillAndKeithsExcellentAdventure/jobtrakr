@@ -182,7 +182,11 @@ export default function AddChangeOrder() {
                 }}
               />
             )}
-            ListEmptyComponent={<Text>No items defined</Text>}
+            ListEmptyComponent={
+              <View style={{ width: '100%', alignItems: 'center' }}>
+                <Text>No items defined</Text>
+              </View>
+            }
             ListHeaderComponent={() => (
               <View
                 style={{
