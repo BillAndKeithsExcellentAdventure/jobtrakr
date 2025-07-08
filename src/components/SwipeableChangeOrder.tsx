@@ -9,7 +9,7 @@ import {
   useAllRows,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
-import { MaterialIcons } from '@expo/vector-icons';
+import { AntDesign, Feather, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet } from 'react-native';
@@ -98,6 +98,27 @@ const SwipeableChangeOrder = React.memo(({ item, projectId }: Props) => {
           }}
         >
           <View style={styles.itemInfo}>
+            {item.status === 'draft' && (
+              <View style={{ width: 30, paddingRight: 5, alignItems: 'center' }}>
+                <MaterialCommunityIcons name="lightbulb-on-outline" size={24} color={colors.iconColor} />
+              </View>
+            )}
+            {item.status === 'approval-pending' && (
+              <View style={{ width: 30, paddingRight: 5, alignItems: 'center' }}>
+                <MaterialCommunityIcons name="glasses" size={24} color={colors.iconColor} />
+              </View>
+            )}
+            {item.status === 'approved' && (
+              <View style={{ width: 30, paddingRight: 5, alignItems: 'center' }}>
+                <AntDesign name="check" size={24} color={colors.iconColor} />
+              </View>
+            )}
+            {item.status === 'cancelled' && (
+              <View style={{ width: 30, paddingRight: 5, alignItems: 'center' }}>
+                <Feather name="x" size={24} color={colors.iconColor} />
+              </View>
+            )}
+
             <Text
               style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
               text={item.title}
@@ -107,6 +128,7 @@ const SwipeableChangeOrder = React.memo(({ item, projectId }: Props) => {
               style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
               text={formatCurrency(item.bidAmount, false, true)}
             />
+
             <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
               <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
             </View>
