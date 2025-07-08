@@ -26,7 +26,7 @@ const DefineChangeOrderScreen = () => {
     <Stack.Screen
       options={{
         headerShown: true,
-        title: 'Add Change Order',
+        title: 'Change Order Details',
       }}
     />
   );

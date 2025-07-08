@@ -41,7 +41,7 @@ export default function AddChangeOrder() {
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [items, setItems] = useState<ProposedChangeOrderItem[]>([]);
   const [canAdd, setCanAdd] = useState(false);
-  const [newChangeOrder, setChangeOrder] = useState<ChangeOrder>({
+  const [newChangeOrder, setNewChangeOrder] = useState<ChangeOrder>({
     id: '',
     title: '',
     description: '',
@@ -59,13 +59,26 @@ export default function AddChangeOrder() {
   });
 
   useEffect(() => {
+    // set total cost by summing the amount of each item in items array
+    if (items && items.length === 0) handleAmountChange(0);
+    else handleAmountChange(items.reduce((total, item) => total + item.amount, 0));
+  }, [items]);
+
+  useEffect(() => {
     setCanAdd(newChangeOrder.bidAmount > 0 && !!newChangeOrder.title && !!newChangeOrder.description);
   }, [newChangeOrder]);
 
   const handleChange = (name: keyof ChangeOrder, value: string) => {
-    setChangeOrder((prev) => ({
+    setNewChangeOrder((prev) => ({
       ...prev,
       [name]: name === 'bidAmount' ? Number(value) : value,
+    }));
+  };
+
+  const handleAmountChange = (value: number) => {
+    setNewChangeOrder((prev) => ({
+      ...prev,
+      bidAmount: value,
     }));
   };
 
@@ -76,6 +89,22 @@ export default function AddChangeOrder() {
     }
 
     const result = addChangeOrder(newChangeOrder);
+    if (result.status === 'Success') {
+      const coId = result.id;
+      items.forEach((entry) => {
+        const newItem: ChangeOrderItem = {
+          id: '',
+          label: entry.label,
+          workItemId: entry.workItemEntry.value,
+          amount: entry.amount,
+          changeOrderId: coId,
+        };
+        const addItemResult = addChangeOrderItem(newItem);
+        if (addItemResult.status === 'Error') {
+          console.log(`Error inserting change order items - ${addItemResult.msg}`);
+        }
+      });
+    }
 
     router.back();
   };
@@ -114,6 +143,11 @@ export default function AddChangeOrder() {
 
   const [showCostItemPicker, setShowCostItemPicker] = useState(false);
 
+  const handleShowCostItemPicker = () => {
+    Keyboard.dismiss();
+    setShowCostItemPicker(true);
+  };
+
   const onCostItemOptionSelected = useCallback((costItemEntry: OptionEntry | undefined) => {
     if (costItemEntry) {
       const label = costItemEntry.label;
@@ -125,14 +159,6 @@ export default function AddChangeOrder() {
     }
     setShowCostItemPicker(false);
   }, []);
-
-  const [totalCost, setTotalCost] = useState(0);
-
-  useEffect(() => {
-    // set total cost by summing the amount of each item in items array
-    if (items && items.length === 0) setTotalCost(0);
-    else setTotalCost(items.reduce((total, item) => total + item.amount, 0));
-  }, [items]);
 
   return (
     <>
@@ -164,6 +190,7 @@ export default function AddChangeOrder() {
             <ActionButton
               style={styles.addButton}
               onPress={() => {
+                Keyboard.dismiss();
                 setShowAddItemModal(true);
               }}
               type={'action'}
@@ -222,7 +249,7 @@ export default function AddChangeOrder() {
                 <View style={{ width: 120, backgroundColor: colors.listBackground }}>
                   <Text
                     style={{ textAlign: 'right', fontWeight: '600' }}
-                    text={formatCurrency(totalCost, true)}
+                    text={formatCurrency(newChangeOrder.bidAmount, true)}
                   />
                 </View>
               </View>
@@ -233,7 +260,7 @@ export default function AddChangeOrder() {
               style={styles.saveButton}
               onPress={handleSubmit}
               type={canAdd ? 'ok' : 'disabled'}
-              title="Save"
+              title="Add"
             />
 
             <ActionButton
@@ -279,19 +306,24 @@ export default function AddChangeOrder() {
                 keyboardType="numeric"
               />
               <Text style={styles.label}>Cost Item</Text>
-              <TouchableOpacity activeOpacity={1} onPress={() => setShowCostItemPicker(true)}>
+              <TouchableOpacity activeOpacity={1} onPress={handleShowCostItemPicker}>
                 <View style={{ marginBottom: 10 }}>
                   <TextInput
                     style={styles.input}
                     value={itemWorkItemEntry.label ?? null}
                     readOnly={true}
                     placeholder="Select Cost Item"
-                    onPressIn={() => setShowCostItemPicker(true)}
+                    onPressIn={handleShowCostItemPicker}
                   />
                 </View>
               </TouchableOpacity>
               <View style={styles.saveButtonRow}>
-                <ActionButton style={styles.saveButton} onPress={handleAddItemOk} type="ok" title="OK" />
+                <ActionButton
+                  style={styles.saveButton}
+                  onPress={handleAddItemOk}
+                  type="ok"
+                  title="Add Item"
+                />
                 <ActionButton
                   style={styles.cancelButton}
                   onPress={handleAddItemCancel}
