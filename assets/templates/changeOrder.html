@@ -61,8 +61,10 @@
       </div>
 
       <h1>Change Order Proposal</h1>
-      <p>Project: {{project}}</br>
-      Date: {{date}}</p>
+      <p>
+        Project: {{project}}<br />
+        Date: {{date}}
+      </p>
     </header>
 
     <main>
@@ -81,16 +83,16 @@
           </tr>
         </thead>
         <tbody>
-            {{#services}}
-            <tr>
-              <td>{{description}}</td>
-              <td>{{cost}}</td>
-            </tr>
-            {{/services}} 
-            <tr class="total">
-                <td>Total Cost</td>
-                <td>{{formattedTotal}}</td>
-            </tr>
+          {{#changeItems}}
+          <tr>
+            <td>{{description}}</td>
+            <td>{{formattedCost}}</td>
+          </tr>
+          {{/changeItems}}
+          <tr class="total">
+            <td>Total Cost</td>
+            <td>{{formattedTotal}}</td>
+          </tr>
         </tbody>
       </table>
 

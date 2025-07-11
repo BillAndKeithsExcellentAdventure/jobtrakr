@@ -12,16 +12,15 @@ type GetTokenString = (token: string) => string;
  */
 export async function createHtmlFile(
   outputFileName: string,
-  templateHtmlFile: string,
+  templateHtml: string,
   getTokenString: GetTokenString,
 ): Promise<string> {
-  // Read the template HTML file
-  const templateContent = await FileSystem.readAsStringAsync(templateHtmlFile);
-
   // Replace tokens in the format {{TOKEN_NAME}}
-  const replacedContent = templateContent.replace(/{{(.*?)}}/g, (_, token) => {
+  const replacedContent = templateHtml.replace(/{{(.*?)}}/g, (_, token) => {
     return getTokenString(token.trim());
   });
+
+  console.log(replacedContent);
 
   // Write the replaced content to the output file
   const outputPath = FileSystem.documentDirectory + outputFileName;
@@ -32,9 +31,12 @@ export async function createHtmlFile(
   return outputPath;
 }
 
-export async function loadTemplateHtmlAssetFileToString(fileName: string): Promise<string> {
-  const asset = Asset.fromModule(require(`./assets/templates/${fileName}`));
+export async function loadTemplateHtmlAssetFileToString(): Promise<string> {
+  const asset = Asset.fromModule(require('../../assets/templates/changeOrder.html'));
   await asset.downloadAsync();
-  const content = await FileSystem.readAsStringAsync(asset.localUri!);
+  if (!asset.localUri) {
+    throw new Error('Asset localUri is undefined. Check if the asset exists and is bundled correctly.');
+  }
+  const content = await FileSystem.readAsStringAsync(asset.localUri);
   return content;
 }

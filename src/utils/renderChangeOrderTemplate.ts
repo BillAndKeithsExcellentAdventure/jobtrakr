@@ -1,25 +1,25 @@
 import Mustache from 'mustache';
 import { formatCurrency, formatDate } from './formatters';
 
-interface ChangeItem {
+export interface ChangeItem {
   description: string;
   cost: number;
-  formattedCost: string;
+  formattedCost: string; // auto generated - leave blank
 }
 
-interface CompanyInfo {
+export interface CompanyInfo {
   name: string;
   address: string[];
-  formattedAddress: string; // street/po box number<br>City, State ZIP<br>
+  formattedAddress: string; // street/po box number<br>City, State ZIP<br> (automatically populated- leave empty)
   phone: string;
   email: string;
   contact: string;
 }
 
-interface ClientInfo {
+export interface ClientInfo {
   name: string;
   address: string[];
-  formattedAddress: string; // street/po box number<br>City, State ZIP<br>
+  formattedAddress: string; // street/po box number<br>City, State ZIP<br>(automatically populated - leave empty)
 }
 
 export interface ChangeOrderData {
@@ -49,18 +49,23 @@ export function renderChangeOrderTemplate(template: string, data: ChangeOrderDat
     // Format addresses by joining non-empty lines with <br>
     company: {
       ...data.company,
-      formattedAddress: data.company.address.filter((line) => line.trim() !== '').join('<br>'),
+      formattedAddress: data.company.address
+        ? data.company.address.filter((line) => line.trim() !== '').join('<br />')
+        : '',
     },
     client: {
       ...data.client,
-      formattedAddress: data.client.address.filter((line) => line.trim() !== '').join('<br>'),
+      formattedAddress: data.client.address
+        ? data.client.address.filter((line) => line.trim() !== '').join('<br />')
+        : '',
     },
-    date: formatDate(data.date),
+    date: data.date,
     changeItems: data.changeItems.map((s) => ({
       ...s,
       formattedCost: formatCurrency(s.cost, true, false),
     })),
     formattedTotal: formatCurrency(total, true, false),
   };
+  console.log('data ready to apply to template');
   return Mustache.render(template, view);
 }
