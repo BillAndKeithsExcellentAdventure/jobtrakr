@@ -376,7 +376,7 @@ const ProjectDetailsPage = () => {
         },
       },
       {
-        icon: <FontAwesome5 name="broom" size={28} color={colors.iconColor} />,
+        icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
         label: 'Export Cost Items',
         onPress: (e, actionContext) => {
           handleMenuItemPress('ExportCostItems', actionContext);
@@ -503,7 +503,7 @@ const ProjectDetailsPage = () => {
             </View>
             <View style={{ flex: 1, paddingBottom: 5 }}>
               <View style={{ marginBottom: 5, alignItems: 'center' }}>
-                <Text txtSize="title" text="Cost Items" />
+                <Text txtSize="title" text="Cost Item Summary" />
               </View>
               <View
                 style={{

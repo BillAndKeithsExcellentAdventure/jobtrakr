@@ -122,7 +122,7 @@ export interface ChangeOrder {
   title: string;
   description: string;
   bidAmount: number;
-  status: 'draft' | 'approved' | 'cancelled';
+  status: 'draft' | 'approval-pending' | 'approved' | 'cancelled';
   dateCreated: number; // Date the change order was created.
 }
 

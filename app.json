@@ -110,7 +110,8 @@
       "expo-video",
       "expo-sqlite",
       "expo-web-browser",
-      "expo-asset"
+      "expo-asset",
+      "expo-build-properties"
     ],
     "experiments": {
       "typedRoutes": true

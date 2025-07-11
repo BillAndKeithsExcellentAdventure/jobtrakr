@@ -11,7 +11,7 @@ import {
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAllRows } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, StyleSheet } from 'react-native';
+import { Modal, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CostItemPickerModal = ({
@@ -119,7 +119,7 @@ const CostItemPickerModal = ({
 
   return (
     <Modal visible={isVisible} transparent={true} animationType="fade">
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView edges={['top']} style={[{ flex: 1 }, Platform.OS === 'ios' && { marginTop: 60 }]}>
         <View style={[styles.container, styles.modalBackground, { backgroundColor: colors.listBackground }]}>
           <View style={[styles.modalContainer]}>
             <Text txtSize="title" style={styles.modalTitle} text="Select Cost Item" />

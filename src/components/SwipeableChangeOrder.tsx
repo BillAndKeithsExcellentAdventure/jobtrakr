@@ -2,9 +2,14 @@ import { Text, View } from '@/src/components/Themed';
 import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
 
-import { ChangeOrder, useDeleteRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import {
+  ChangeOrder,
+  ChangeOrderItem,
+  useDeleteRowCallback,
+  useAllRows,
+} from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
-import { MaterialIcons } from '@expo/vector-icons';
+import { AntDesign, Feather, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet } from 'react-native';
@@ -30,8 +35,15 @@ interface Props {
 
 const SwipeableChangeOrder = React.memo(({ item, projectId }: Props) => {
   const router = useRouter();
-  const removeCostItemSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
+  const removeChangeOrder = useDeleteRowCallback(projectId, 'changeOrders');
+  const deleteLineItem = useDeleteRowCallback(projectId, 'changeOrderItems');
+  const allChangeOrderItems = useAllRows(projectId, 'changeOrderItems');
   const colors = useColors();
+
+  const changeOrderItems = useMemo(
+    () => allChangeOrderItems.filter((lineItem) => lineItem.changeOrderId === item.id),
+    [allChangeOrderItems, item.id],
+  );
 
   const handleDelete = useCallback(() => {
     Alert.alert(
@@ -42,7 +54,14 @@ const SwipeableChangeOrder = React.memo(({ item, projectId }: Props) => {
         {
           text: 'Delete',
           onPress: () => {
-            const result = removeCostItemSummary(item.id);
+            if (changeOrderItems && changeOrderItems.length > 0) {
+              changeOrderItems.forEach((lineItem) => {
+                console.log('Deleting receipt line item with id:', lineItem.id);
+                deleteLineItem(lineItem.id);
+              });
+            }
+
+            const result = removeChangeOrder(item.id);
             if (result.status !== 'Success') {
               alert(`Unable to remove item with id=${item.id}. ${result.msg}`);
             }
@@ -51,7 +70,7 @@ const SwipeableChangeOrder = React.memo(({ item, projectId }: Props) => {
       ],
       { cancelable: true },
     );
-  }, [removeCostItemSummary, item.id]);
+  }, [removeChangeOrder, item.id]);
 
   // use useMemo instead of useCallback to avoid swipeable showing a blank area
   const renderRightActions = useMemo(() => {
@@ -70,7 +89,7 @@ const SwipeableChangeOrder = React.memo(({ item, projectId }: Props) => {
         <Pressable
           onPress={() => {
             router.push({
-              pathname: '/[projectId]/[changeOrderId]',
+              pathname: '/[projectId]/changeOrder/[changeOrderId]',
               params: {
                 projectId,
                 changeOrderId: item.id,
@@ -79,6 +98,27 @@ const SwipeableChangeOrder = React.memo(({ item, projectId }: Props) => {
           }}
         >
           <View style={styles.itemInfo}>
+            {item.status === 'draft' && (
+              <View style={{ width: 30, paddingRight: 5, alignItems: 'center' }}>
+                <MaterialCommunityIcons name="lightbulb-on-outline" size={24} color={colors.iconColor} />
+              </View>
+            )}
+            {item.status === 'approval-pending' && (
+              <View style={{ width: 30, paddingRight: 5, alignItems: 'center' }}>
+                <MaterialCommunityIcons name="glasses" size={24} color={colors.iconColor} />
+              </View>
+            )}
+            {item.status === 'approved' && (
+              <View style={{ width: 30, paddingRight: 5, alignItems: 'center' }}>
+                <AntDesign name="check" size={24} color={colors.iconColor} />
+              </View>
+            )}
+            {item.status === 'cancelled' && (
+              <View style={{ width: 30, paddingRight: 5, alignItems: 'center' }}>
+                <Feather name="x" size={24} color={colors.iconColor} />
+              </View>
+            )}
+
             <Text
               style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
               text={item.title}
@@ -88,6 +128,7 @@ const SwipeableChangeOrder = React.memo(({ item, projectId }: Props) => {
               style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
               text={formatCurrency(item.bidAmount, false, true)}
             />
+
             <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
               <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
             </View>
