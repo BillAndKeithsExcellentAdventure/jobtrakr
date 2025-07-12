@@ -69,7 +69,7 @@ export default function AddChangeOrder() {
     setCanAdd(newChangeOrder.bidAmount > 0 && !!newChangeOrder.title && !!newChangeOrder.description);
   }, [newChangeOrder]);
 
-  const handleChange = (name: keyof ChangeOrder, value: string) => {
+  const handleChangeOrderPropertyChange = (name: keyof ChangeOrder, value: string) => {
     setNewChangeOrder((prev) => ({
       ...prev,
       [name]: name === 'bidAmount' ? Number(value) : value,
@@ -171,13 +171,13 @@ export default function AddChangeOrder() {
             <TextInput
               style={[styles.input, { backgroundColor: colors.background }]}
               value={newChangeOrder.title}
-              onChangeText={(text) => handleChange('title', text)}
+              onChangeText={(text) => handleChangeOrderPropertyChange('title', text)}
               placeholder="Title"
             />
             <TextInput
               style={[styles.input, { backgroundColor: colors.background, maxHeight: 80 }]}
               value={newChangeOrder.description}
-              onChangeText={(text) => handleChange('description', text)}
+              onChangeText={(text) => handleChangeOrderPropertyChange('description', text)}
               placeholder="Detailed Description"
               numberOfLines={4}
               multiline

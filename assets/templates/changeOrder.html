@@ -49,20 +49,23 @@
     <header>
       <div class="company-info">
         <strong>{{company.name}}</strong><br />
-        {{company.formattedAddress}}<br />
-        Phone: {{company.phone}}<br />
+        {{#company.address}} {{.}}<br />
+        {{/company.address}} Phone: {{company.phone}}<br />
         Email: {{company.email}}
       </div>
 
       <div class="client-info">
         <strong>Client:</strong><br />
         {{client.name}}<br />
-        {{client.formattedAddress}}
+        {{#client.address}} {{.}}<br />
+        {{/client.address}}
       </div>
 
       <h1>Change Order Proposal</h1>
-      <p>Project: {{project}}</br>
-      Date: {{date}}</p>
+      <p>
+        Project: {{project}}<br />
+        Date: {{date}}
+      </p>
     </header>
 
     <main>
@@ -81,16 +84,16 @@
           </tr>
         </thead>
         <tbody>
-            {{#services}}
-            <tr>
-              <td>{{description}}</td>
-              <td>{{cost}}</td>
-            </tr>
-            {{/services}} 
-            <tr class="total">
-                <td>Total Cost</td>
-                <td>{{formattedTotal}}</td>
-            </tr>
+          {{#changeItems}}
+          <tr>
+            <td>{{description}}</td>
+            <td>{{formattedCost}}</td>
+          </tr>
+          {{/changeItems}}
+          <tr class="total">
+            <td>Total Cost</td>
+            <td>{{formattedTotal}}</td>
+          </tr>
         </tbody>
       </table>
 

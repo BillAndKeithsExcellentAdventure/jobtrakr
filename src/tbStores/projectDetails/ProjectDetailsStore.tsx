@@ -76,7 +76,7 @@ export const TABLES_SCHEMA = {
   changeOrders: {
     id: { type: 'string' },
     title: { type: 'string' },
-    description: { type: 'number' },
+    description: { type: 'string' },
     bidAmount: { type: 'number' },
     status: { type: 'string' }, // 'draft', 'approved', 'cancelled'
     dateCreated: { type: 'number' }, // Date the change order was created.

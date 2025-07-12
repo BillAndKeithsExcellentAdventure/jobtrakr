@@ -33,6 +33,13 @@ const EditProjectScreen = () => {
     seedWorkItems: '',
     startDate: 0,
     plannedFinish: 0,
+    ownerAddress: '',
+    ownerAddress2: '',
+    ownerCity: '',
+    ownerState: '',
+    ownerZip: '',
+    ownerPhone: '',
+    ownerEmail: 'string',
   });
 
   const currentProject = useProject(projectId);
