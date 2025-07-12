@@ -81,6 +81,8 @@ const DefineChangeOrderScreen = () => {
             projectData?.ownerState ?? ''
           } ${projectData?.ownerZip ?? ''}`,
         ],
+        phone: projectData?.ownerPhone ?? '',
+        email: projectData?.ownerEmail ?? '',
       },
       project: projectData?.name ?? 'unknown',
       date: formatDate(new Date()),
