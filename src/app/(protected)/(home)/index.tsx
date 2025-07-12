@@ -68,6 +68,13 @@ export default function ProjectHomeScreen() {
           finishDate: `${formatDate(new Date(project.plannedFinish ?? 0))}`,
           bidPrice: project.bidPrice,
           amountSpent: project.amountSpent,
+          ownerAddress: project.ownerAddress,
+          ownerAddress2: project.ownerAddress2 ?? '',
+          ownerCity: project.ownerCity ?? '',
+          ownerState: project.ownerState ?? '',
+          ownerZip: project.ownerZip ?? '',
+          ownerPhone: project.ownerPhone ?? '',
+          ownerEmail: project.ownerEmail ?? '',
         };
       });
 

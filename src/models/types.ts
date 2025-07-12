@@ -20,6 +20,13 @@ export interface ProjectData {
   thumbnail: string;
   status: string; // 'active', 'on-hold'  or 'completed'
   seedWorkItems: string; // comma separated list of workItemIds
+  ownerAddress: string;
+  ownerAddress2: string;
+  ownerCity: string;
+  ownerState: string;
+  ownerZip: string;
+  ownerPhone: string;
+  ownerEmail: string;
 }
 
 export function CostItemDataCodeCompareAsNumber(a: CostItemData, b: CostItemData) {

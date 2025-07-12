@@ -10,7 +10,6 @@ export interface ChangeItem {
 export interface CompanyInfo {
   name: string;
   address: string[];
-  formattedAddress: string; // street/po box number<br>City, State ZIP<br> (automatically populated- leave empty)
   phone: string;
   email: string;
   contact: string;
@@ -19,7 +18,6 @@ export interface CompanyInfo {
 export interface ClientInfo {
   name: string;
   address: string[];
-  formattedAddress: string; // street/po box number<br>City, State ZIP<br>(automatically populated - leave empty)
 }
 
 export interface ChangeOrderData {
@@ -49,15 +47,11 @@ export function renderChangeOrderTemplate(template: string, data: ChangeOrderDat
     // Format addresses by joining non-empty lines with <br>
     company: {
       ...data.company,
-      formattedAddress: data.company.address
-        ? data.company.address.filter((line) => line.trim() !== '').join('<br />')
-        : '',
+      address: data.company.address ? data.company.address.filter((line) => line.trim() !== '') : [],
     },
     client: {
       ...data.client,
-      formattedAddress: data.client.address
-        ? data.client.address.filter((line) => line.trim() !== '').join('<br />')
-        : '',
+      address: data.client.address ? data.client.address.filter((line) => line.trim() !== '') : [],
     },
     date: data.date,
     changeItems: data.changeItems.map((s) => ({

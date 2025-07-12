@@ -49,15 +49,16 @@
     <header>
       <div class="company-info">
         <strong>{{company.name}}</strong><br />
-        {{company.formattedAddress}}<br />
-        Phone: {{company.phone}}<br />
+        {{#company.address}} {{.}}<br />
+        {{/company.address}} Phone: {{company.phone}}<br />
         Email: {{company.email}}
       </div>
 
       <div class="client-info">
         <strong>Client:</strong><br />
         {{client.name}}<br />
-        {{client.formattedAddress}}
+        {{#client.address}} {{.}}<br />
+        {{/client.address}}
       </div>
 
       <h1>Change Order Proposal</h1>

@@ -68,14 +68,19 @@ const DefineChangeOrderScreen = () => {
           appSettings.address2,
           `${appSettings.city}, ${appSettings.state} ${appSettings.zip}`,
         ],
-        formattedAddress: '',
         phone: appSettings.phone,
         email: appSettings.email,
         contact: appSettings.ownerName,
       },
       client: {
-        name: projectData?.ownerName,
-        formattedAddress: '',
+        name: projectData?.ownerName ?? '',
+        address: [
+          projectData?.ownerAddress ?? '',
+          projectData?.ownerAddress2 ?? '',
+          `${projectData?.ownerCity ?? ''}${projectData?.ownerCity ? ',' : ''} ${
+            projectData?.ownerState ?? ''
+          } ${projectData?.ownerZip ?? ''}`,
+        ],
       },
       project: projectData?.name ?? 'unknown',
       date: formatDate(new Date()),

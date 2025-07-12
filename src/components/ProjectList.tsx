@@ -17,6 +17,13 @@ export interface ProjectListEntryProps {
   bidPrice: number;
   amountSpent: number;
   isFavorite?: boolean;
+  ownerAddress: string;
+  ownerAddress2: string;
+  ownerCity: string;
+  ownerState: string;
+  ownerZip: string;
+  ownerPhone: string;
+  ownerEmail: string;
 }
 
 export function ProjectList({
