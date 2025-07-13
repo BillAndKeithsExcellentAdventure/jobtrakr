@@ -17,6 +17,8 @@ export interface CompanyInfo {
 
 export interface ClientInfo {
   name: string;
+  email: string;
+  phone: string;
   address: string[];
 }
 

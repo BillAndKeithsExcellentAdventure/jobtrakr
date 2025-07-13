@@ -18,6 +18,69 @@ import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStore
 import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { ChangeOrderData, renderChangeOrderTemplate } from '@/src/utils/renderChangeOrderTemplate';
 import { loadTemplateHtmlAssetFileToString } from '@/src/utils/htmlFileGenerator';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+
+const generateAndSavePdf = async (htmlContent: string, changeOrderId: string): Promise<string | null> => {
+  try {
+    // RESTful API call to generate PDF
+    const response = await fetch('https://projecthoundbackend.keith-m-bertram.workers.dev/generatePdf', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: '882cdbe3-8a34-43f7-b207-731eff42f20a',
+        html: htmlContent,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Handle PDF response as blob
+    const pdfBlob = await response.blob();
+
+    // Convert blob to base64 for React Native
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onloadend = async () => {
+        try {
+          const base64data = reader.result as string;
+
+          // Save PDF to cache directory
+          const fileName = `change_order_${changeOrderId}_${Date.now()}.pdf`;
+          const filePath = `${FileSystem.cacheDirectory}${fileName}`;
+
+          // Remove the data:application/pdf;base64, prefix if present
+          const base64Content = base64data.split(',')[1] || base64data;
+
+          await FileSystem.writeAsStringAsync(filePath, base64Content, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+
+          console.log('PDF saved to cache:', filePath);
+          resolve(filePath);
+        } catch (fileError) {
+          console.error('Error saving PDF file:', fileError);
+          reject(new Error('Failed to save PDF file'));
+        }
+      };
+
+      reader.onerror = () => {
+        console.error('Error reading PDF blob');
+        reject(new Error('Failed to process PDF response'));
+      };
+
+      reader.readAsDataURL(pdfBlob);
+    });
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    throw new Error('Failed to generate PDF. Please try again.');
+  }
+};
 
 const DefineChangeOrderScreen = () => {
   const { projectId, changeOrderId } = useLocalSearchParams<{ projectId: string; changeOrderId: string }>();
@@ -95,7 +158,6 @@ const DefineChangeOrderScreen = () => {
   const handleSendForApproval = useCallback(async () => {
     if (!changeOrderData) return;
 
-    // Define your HTML template string here or import it from another file
     // Load the HTML template from the file system
     let templateHTMLString: string;
     try {
@@ -109,24 +171,39 @@ const DefineChangeOrderScreen = () => {
     const htmlOutput = renderChangeOrderTemplate(templateHTMLString, changeOrderData);
     if (htmlOutput) {
       console.log(htmlOutput);
-      //shareHtmlFile = async (filePath: string, dialogTitle: string): Promise<void> => {
-    }
-    /* TODO
-    try {
-      // Update the change order status to 'approval-pending'
-      const updatedChangeOrder: ChangeOrder = { ...changeOrder, status: 'approval-pending' };
-      updateChangeOrder(updatedChangeOrder.id, updatedChangeOrder);
-      setChangeOrder(updatedChangeOrder);
 
-      // Optionally, navigate to a different screen or show a success message
-      Alert.alert('Success', 'Change order sent for approval.');
-      router.back();
-    } catch (error) {
-      console.error('Error sending change order for approval:', error);
-      Alert.alert('Error', 'Failed to send change order for approval.');
+      try {
+        // Generate and save PDF using the new function
+        const pdfFilePath = await generateAndSavePdf(htmlOutput, changeOrder?.id || 'unknown');
+
+        if (pdfFilePath) {
+          // Show success alert with sharing option
+          Alert.alert('PDF Generated Successfully', 'Would you like to share the PDF?', [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+            {
+              text: 'Share',
+              onPress: async () => {
+                try {
+                  await Sharing.shareAsync(pdfFilePath, {
+                    mimeType: 'application/pdf',
+                    dialogTitle: 'Share Change Order PDF',
+                  });
+                } catch (shareError) {
+                  console.error('Error sharing PDF:', shareError);
+                  Alert.alert('Error', 'Failed to share PDF');
+                }
+              },
+            },
+          ]);
+        }
+      } catch (error) {
+        Alert.alert('Error', error.message || 'Failed to generate PDF');
+      }
     }
-      */
-  }, [changeOrderData]); //, updateChangeOrder, router
+  }, [changeOrderData, changeOrder?.id]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
