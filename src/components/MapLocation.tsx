@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Alert, Dimensions, Modal, TouchableOpacity } from 'react-native';
-import MapView, { Marker, Region } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Text } from './Themed';
 import { ActionButton } from './ActionButton';
@@ -20,6 +20,13 @@ interface LocationPickerProps {
 interface LocationCoordinates {
   latitude: number;
   longitude: number;
+}
+
+interface Region {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
 }
 
 const { width, height } = Dimensions.get('window');
@@ -99,13 +106,10 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     }
   };
 
-  const handleMapPress = useCallback((event: any) => {
+  // Fix the event handler typing for expo-maps
+  const handleMapPress = useCallback((event: { nativeEvent: { coordinate: LocationCoordinates } }) => {
     const { coordinate } = event.nativeEvent;
     setSelectedLocation(coordinate);
-  }, []);
-
-  const handleRegionChange = useCallback((newRegion: Region) => {
-    setRegion(newRegion);
   }, []);
 
   const handleSaveLocation = useCallback(() => {
@@ -116,12 +120,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
         `Coordinates saved for ${projectName || 'project'}:\nLatitude: ${selectedLocation.latitude.toFixed(
           6,
         )}\nLongitude: ${selectedLocation.longitude.toFixed(6)}`,
-        [
-          {
-            text: 'OK',
-            onPress: onClose,
-          },
-        ],
+        [{ text: 'OK', onPress: onClose }],
       );
     } else {
       Alert.alert('No Location Selected', 'Please tap on the map to select a location');
@@ -181,12 +180,11 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
 
         <MapView
           style={styles.map}
-          region={region}
+          initialRegion={region}
           onPress={handleMapPress}
-          onRegionChangeComplete={handleRegionChange}
           showsUserLocation={!!currentLocation}
           showsMyLocationButton={false}
-          mapType="hybrid"
+          mapType="standard"
         >
           {selectedLocation && (
             <Marker
@@ -195,7 +193,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
               description={`${selectedLocation.latitude.toFixed(6)}, ${selectedLocation.longitude.toFixed(
                 6,
               )}`}
-              pinColor="red"
             />
           )}
         </MapView>
@@ -248,7 +245,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
         edges={['top', 'right', 'bottom', 'left']}
         style={[styles.modalContainer, { backgroundColor: colors.background }]}
       >
-        {/* Modal Header with Close Button */}
         <View
           style={[
             styles.modalHeader,
@@ -262,7 +258,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
           </TouchableOpacity>
         </View>
 
-        {/* Modal Content */}
         <View style={[styles.container, { backgroundColor: colors.background }]}>{renderContent()}</View>
       </SafeAreaView>
     </Modal>
@@ -282,7 +277,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerLeft: {
-    width: 24, // Match close button width for centering
+    width: 24,
   },
   closeButton: {
     padding: 4,

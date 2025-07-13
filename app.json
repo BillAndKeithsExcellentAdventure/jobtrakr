@@ -86,9 +86,8 @@
           "isAccessMediaLocationEnabled": true
         }
       ],
-      // Add this plugin for react-native-maps
       [
-        "react-native-maps",
+        "expo-maps",
         {
           "googleMapsApiKey": "AIzaSyBac7r0lXImLW3HkBExNDmEzVJpxXDMLUg"
         }
