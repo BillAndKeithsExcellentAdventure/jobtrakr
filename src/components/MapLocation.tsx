@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Alert, Dimensions, Modal, TouchableOpacity } from 'react-native';
-import MapView, { Marker, Region } from 'react-native-maps';
+import { ExpoMap as MapView, Marker } from 'expo-maps';
 import * as Location from 'expo-location';
 import { Text } from './Themed';
 import { ActionButton } from './ActionButton';
@@ -20,6 +20,13 @@ interface LocationPickerProps {
 interface LocationCoordinates {
   latitude: number;
   longitude: number;
+}
+
+interface Region {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
 }
 
 const { width, height } = Dimensions.get('window');
@@ -181,7 +188,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
 
         <MapView
           style={styles.map}
-          region={region}
+          initialRegion={region}
           onPress={handleMapPress}
           onRegionChangeComplete={handleRegionChange}
           showsUserLocation={!!currentLocation}
@@ -195,7 +202,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
               description={`${selectedLocation.latitude.toFixed(6)}, ${selectedLocation.longitude.toFixed(
                 6,
               )}`}
-              pinColor="red"
             />
           )}
         </MapView>
