@@ -63,7 +63,8 @@
     "react-native-webview": "13.13.5",
     "reconnecting-websocket": "^4.4.0",
     "tinybase": "^6.1.1",
-    "undefined": "react-native-community/datetimepicker"
+    "undefined": "react-native-community/datetimepicker",
+    "react-native-maps": "1.20.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

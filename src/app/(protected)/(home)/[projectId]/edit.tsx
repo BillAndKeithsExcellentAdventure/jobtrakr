@@ -11,6 +11,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { LocationPicker } from '@/src/components/MapLocation';
 
 const EditProjectScreen = () => {
   const colors = useColors();
@@ -57,6 +58,7 @@ const EditProjectScreen = () => {
   const [finishDatePickerVisible, setFinishDatePickerVisible] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
   const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
 
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -98,7 +100,9 @@ const EditProjectScreen = () => {
     setFinishDatePickerVisible(false);
   };
 
-  const handlePickGpsLocation = () => {};
+  const handlePickGpsLocation = () => {
+    setShowLocationPicker(true);
+  };
 
   const handleSetCurrentGpsLocation = useCallback(async () => {
     if (currentLocation) {
@@ -117,6 +121,15 @@ const EditProjectScreen = () => {
       plannedFinish: date.getTime(),
     }));
     hideFinishDatePicker();
+  }, []);
+
+  const handleLocationSelected = useCallback((latitude: number, longitude: number) => {
+    setProject((prevProject) => ({
+      ...prevProject,
+      latitude,
+      longitude,
+    }));
+    setShowLocationPicker(false);
   }, []);
 
   const canAddProject = useMemo(() => project.name?.length > 4, [project.name]);
@@ -245,6 +258,16 @@ const EditProjectScreen = () => {
           />
         </View>
       </KeyboardAwareScrollView>
+
+      <LocationPicker
+        visible={showLocationPicker}
+        onLocationSelected={handleLocationSelected}
+        onClose={() => setShowLocationPicker(false)}
+        projectName={project.name}
+        initialLatitude={project.latitude || undefined}
+        initialLongitude={project.longitude || undefined}
+      />
+
       {Platform.OS === 'ios' && <KeyboardToolbar />}
     </>
   );
