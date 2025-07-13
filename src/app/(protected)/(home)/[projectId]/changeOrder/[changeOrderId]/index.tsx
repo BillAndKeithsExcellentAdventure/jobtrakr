@@ -20,17 +20,24 @@ import { ChangeOrderData, renderChangeOrderTemplate } from '@/src/utils/renderCh
 import { loadTemplateHtmlAssetFileToString } from '@/src/utils/htmlFileGenerator';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import { useAuth } from '@clerk/clerk-expo';
 
-const generateAndSavePdf = async (htmlContent: string, changeOrderId: string): Promise<string | null> => {
+const generateAndSavePdf = async (
+  htmlContent: string,
+  changeOrderId: string,
+  userId: string,
+  token: string,
+): Promise<string | null> => {
   try {
     // RESTful API call to generate PDF
     const response = await fetch('https://projecthoundbackend.keith-m-bertram.workers.dev/generatePdf', {
       method: 'POST',
       headers: {
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        userId: '882cdbe3-8a34-43f7-b207-731eff42f20a',
+        userId: userId,
         html: htmlContent,
       }),
     });
@@ -95,6 +102,7 @@ const DefineChangeOrderScreen = () => {
   const [changeOrderItems, setChangeOrderItems] = useState<ChangeOrderItem[]>([]);
   const appSettings = useAppSettings();
   const projectData = useProject(projectId);
+  const auth = useAuth();
 
   useEffect(() => {
     if (allChangeOrders) {
@@ -173,8 +181,15 @@ const DefineChangeOrderScreen = () => {
       console.log(htmlOutput);
 
       try {
+        const userId = auth.userId;
+        if (!userId) {
+          Alert.alert('Error', 'User ID not found.');
+          return;
+        }
+
+        const token = (await auth.getToken()) ?? '';
         // Generate and save PDF using the new function
-        const pdfFilePath = await generateAndSavePdf(htmlOutput, changeOrder?.id || 'unknown');
+        const pdfFilePath = await generateAndSavePdf(htmlOutput, changeOrder?.id || 'unknown', userId, token);
 
         if (pdfFilePath) {
           // Show success alert with sharing option

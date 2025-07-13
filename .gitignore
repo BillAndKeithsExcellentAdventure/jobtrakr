@@ -39,3 +39,6 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# Remove from the project until we need it.
+src/components/SpeechToText.tsx

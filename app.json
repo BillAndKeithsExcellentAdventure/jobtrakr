@@ -86,6 +86,13 @@
           "isAccessMediaLocationEnabled": true
         }
       ],
+      // Add this plugin for react-native-maps
+      [
+        "react-native-maps",
+        {
+          "googleMapsApiKey": "AIzaSyBac7r0lXImLW3HkBExNDmEzVJpxXDMLUg"
+        }
+      ],
       [
         "react-native-share",
         {
@@ -96,13 +103,6 @@
             "com.twitter.android",
             "com.zhiliaoapp.musically"
           ]
-        }
-      ],
-      [
-        "@react-native-voice/voice",
-        {
-          "microphonePermission": "Allow $(PRODUCT_NAME) to use the microphone.",
-          "speechRecognitionPermission": "Allow $(PRODUCT_NAME) to use speech recognition."
         }
       ],
       "expo-router",
