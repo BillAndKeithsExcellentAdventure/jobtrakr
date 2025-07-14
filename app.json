@@ -20,7 +20,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.projecthound.app",
       "config": {
-        "googleMapsApiKey": "AIzaSyBac7r0lXImLW3HkBExNDmEzVJpxXDMLUg"
+        "googleMapsApiKey": "process.env.GOOGLE_MAPS_API_KEY"
       },
       "icon": {
         "dark": "./assets/images/icon.png",
@@ -54,7 +54,12 @@
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.projecthound.app"
+      "package": "com.projecthound.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "process.env.GOOGLE_MAPS_API_KEY"
+        }
+      }
     },
     "web": {
       "bundler": "metro",
@@ -84,12 +89,6 @@
           "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
           "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos.",
           "isAccessMediaLocationEnabled": true
-        }
-      ],
-      [
-        "expo-maps",
-        {
-          "googleMapsApiKey": "AIzaSyBac7r0lXImLW3HkBExNDmEzVJpxXDMLUg"
         }
       ],
       [
