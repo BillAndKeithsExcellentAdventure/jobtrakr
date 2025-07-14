@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Alert, Dimensions, Modal, TouchableOpacity } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Text } from './Themed';
 import { ActionButton } from './ActionButton';
@@ -185,6 +185,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
           showsUserLocation={!!currentLocation}
           showsMyLocationButton={false}
           mapType="standard"
+          provider={PROVIDER_GOOGLE}
         >
           {selectedLocation && (
             <Marker
