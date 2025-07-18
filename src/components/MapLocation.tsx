@@ -91,11 +91,20 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       const latDelta = feetToLatDelta(500);
       const lngDelta = feetToLngDelta(500, coords.latitude);
 
+      console.info('Current location:', coords);
+
       setRegion({
         latitude: coords.latitude,
         longitude: coords.longitude,
         latitudeDelta: latDelta,
         longitudeDelta: lngDelta,
+      });
+
+      console.info('Initial region set:', {
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        latDelta,
+        lngDelta,
       });
 
       setIsLoading(false);
