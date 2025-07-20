@@ -1,9 +1,8 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-.env
-
 # dependencies
 node_modules/
+
+.env
 
 # Expo
 credentials.json
@@ -41,6 +40,5 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
-
 # Remove from the project until we need it.
 src/components/SpeechToText.tsx
