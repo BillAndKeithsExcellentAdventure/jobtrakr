@@ -10,7 +10,8 @@ import { useAllRows } from '@/src/tbStores/configurationStore/ConfigurationStore
 import { useAddProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { Alert, Platform, StyleSheet } from 'react-native';
+import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AddProjectScreen = () => {
@@ -34,6 +35,13 @@ const AddProjectScreen = () => {
     seedWorkItems: '', // comma separated list of workItemIds
     startDate: defaultStart.getTime(),
     plannedFinish: defaultFinish.getTime(),
+    ownerAddress: '',
+    ownerAddress2: '',
+    ownerCity: '',
+    ownerEmail: '',
+    ownerPhone: '',
+    ownerZip: '',
+    ownerState: '',
   });
 
   const addProject = useAddProjectCallback();
@@ -94,70 +102,146 @@ const AddProjectScreen = () => {
   }, [project, canAddProject, pickedTemplate, allProjectTemplates, allTemplateWorkItems, addProject, router]);
 
   return (
-    <SafeAreaView
-      edges={['right', 'bottom', 'left']}
-      style={[styles.modalBackground, { backgroundColor: colors.modalOverlayBackgroundColor }]}
-    >
-      <Stack.Screen options={{ title: 'Add Project' }} />
+    <>
+      <SafeAreaView
+        edges={['right', 'bottom', 'left']}
+        style={[styles.modalBackground, { backgroundColor: colors.modalOverlayBackgroundColor }]}
+      >
+        <Stack.Screen options={{ title: 'Add Project' }} />
+        <KeyboardAwareScrollView
+          bottomOffset={62}
+          style={[{ backgroundColor: colors.modalOverlayBackgroundColor, flex: 1, marginBottom: 62 }]}
+          contentContainerStyle={styles.modalContainer}
+        >
+          <View style={styles.container}>
+            <Text style={styles.modalTitle}>Create New Project</Text>
 
-      <View style={styles.modalContainer}>
-        <Text style={styles.modalTitle}>Create New Project</Text>
-
-        <TextInput
-          style={[styles.input, { backgroundColor: colors.neutral200 }]}
-          placeholder="Project Name"
-          value={project.name}
-          onChangeText={(text) => setProject({ ...project, name: text })}
-        />
-        <TextInput
-          style={[styles.input, { backgroundColor: colors.neutral200 }]}
-          placeholder="Location"
-          value={project.location}
-          onChangeText={(text) => setProject({ ...project, location: text })}
-        />
-        <TextInput
-          style={[styles.input, { backgroundColor: colors.neutral200 }]}
-          placeholder="Owner"
-          value={project.ownerName}
-          onChangeText={(text) => setProject({ ...project, ownerName: text })}
-        />
-        <OptionPickerItem
-          containerStyle={{ backgroundColor: colors.neutral200, height: 36 }}
-          optionLabel={pickedTemplate?.label}
-          placeholder="Work Template"
-          onPickerButtonPress={() => setIsTemplateListPickerVisible(true)}
-        />
-
-        <View style={styles.saveButtonRow}>
-          <ActionButton
-            style={styles.saveButton}
-            onPress={handleSubmit}
-            type={canAddProject ? 'ok' : 'disabled'}
-            title="Save"
-          />
-          <ActionButton
-            style={styles.cancelButton}
-            onPress={() => {
-              router.back();
-            }}
-            type={'cancel'}
-            title="Cancel"
-          />
-        </View>
-        {templateOptions && isTemplateListPickerVisible && (
-          <BottomSheetContainer
-            isVisible={isTemplateListPickerVisible}
-            onClose={() => setIsTemplateListPickerVisible(false)}
-          >
-            <OptionList
-              options={templateOptions}
-              onSelect={(option) => handleTemplateOptionChange(option)}
-              selectedOption={pickedTemplate}
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.neutral200 }]}
+              placeholder="Project Name"
+              value={project.name}
+              onChangeText={(text) => setProject({ ...project, name: text })}
             />
-          </BottomSheetContainer>
-        )}
-      </View>
-    </SafeAreaView>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.neutral200 }]}
+              placeholder="Location"
+              value={project.location}
+              onChangeText={(text) => setProject({ ...project, location: text })}
+            />
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.neutral200 }]}
+              placeholder="Owner Name"
+              value={project.ownerName}
+              onChangeText={(text) => setProject({ ...project, ownerName: text })}
+            />
+            <View style={{ marginBottom: 10, backgroundColor: colors.listBackground }}>
+              <TextInput
+                placeholder="Owner Address"
+                value={String(project.ownerAddress ?? '')}
+                onChangeText={(text) => setProject({ ...project, ownerAddress: text })}
+                style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
+                multiline={true}
+                numberOfLines={2}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+            <View style={{ marginBottom: 10, backgroundColor: colors.listBackground }}>
+              <TextInput
+                placeholder="Owner City"
+                value={String(project.ownerCity ?? '')}
+                onChangeText={(text) => setProject({ ...project, ownerCity: text })}
+                style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={{ marginBottom: 10, flex: 1 }}>
+                <TextInput
+                  placeholder="Owner State"
+                  value={String(project.ownerState ?? '')}
+                  onChangeText={(text) => setProject({ ...project, ownerState: text })}
+                  style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+              <View style={{ marginBottom: 10, width: 120 }}>
+                <TextInput
+                  value={String(project.ownerZip ?? '')}
+                  placeholder="Owner Zip"
+                  onChangeText={(text) => setProject({ ...project, ownerZip: text })}
+                  style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+            </View>
+
+            <View style={{ marginBottom: 10 }}>
+              <TextInput
+                value={String(project.ownerPhone ?? '')}
+                placeholder="Owner Phone"
+                keyboardType="numbers-and-punctuation"
+                onChangeText={(text) => setProject({ ...project, ownerPhone: text })}
+                style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+            <View style={{ marginBottom: 10 }}>
+              <TextInput
+                value={String(project.ownerEmail ?? '')}
+                placeholder="Owner Email"
+                keyboardType="email-address"
+                onChangeText={(text) => setProject({ ...project, ownerEmail: text })}
+                style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
+            <OptionPickerItem
+              containerStyle={{ backgroundColor: colors.neutral200, height: 36 }}
+              optionLabel={pickedTemplate?.label}
+              placeholder="Work Template"
+              onPickerButtonPress={() => setIsTemplateListPickerVisible(true)}
+            />
+
+            <View style={styles.saveButtonRow}>
+              <ActionButton
+                style={styles.saveButton}
+                onPress={handleSubmit}
+                type={canAddProject ? 'ok' : 'disabled'}
+                title="Save"
+              />
+              <ActionButton
+                style={styles.cancelButton}
+                onPress={() => {
+                  router.back();
+                }}
+                type={'cancel'}
+                title="Cancel"
+              />
+            </View>
+            {templateOptions && isTemplateListPickerVisible && (
+              <BottomSheetContainer
+                isVisible={isTemplateListPickerVisible}
+                onClose={() => setIsTemplateListPickerVisible(false)}
+              >
+                <OptionList
+                  options={templateOptions}
+                  onSelect={(option) => handleTemplateOptionChange(option)}
+                  selectedOption={pickedTemplate}
+                />
+              </BottomSheetContainer>
+            )}
+          </View>
+        </KeyboardAwareScrollView>
+      </SafeAreaView>
+      {Platform.OS === 'ios' && <KeyboardToolbar />}
+    </>
   );
 };
 
@@ -167,9 +251,14 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
   },
-  modalContainer: {
+  container: {
     width: '100%',
     padding: 20,
+
+    flex: 1,
+  },
+  modalContainer: {
+    width: '100%',
     borderRadius: 20,
   },
   modalTitle: {
@@ -181,7 +270,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     marginBottom: 10,
-    paddingLeft: 8,
+    padding: 4,
     borderRadius: 5,
     alignItems: 'center',
   },
