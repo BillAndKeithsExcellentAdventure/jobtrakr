@@ -215,7 +215,11 @@ const DefineChangeOrderScreen = () => {
           ]);
         }
       } catch (error) {
-        Alert.alert('Error', error.message || 'Failed to generate PDF');
+        const errorMessage =
+          typeof error === 'object' && error !== null && 'message' in error
+            ? (error as { message?: string }).message
+            : 'Failed to generate PDF';
+        Alert.alert('Error', errorMessage);
       }
     }
   }, [changeOrderData, changeOrder?.id]);
