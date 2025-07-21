@@ -149,8 +149,8 @@ const EditProjectScreen = () => {
       <Stack.Screen options={{ title: 'Edit Project', headerShown: true }} />
       <KeyboardAwareScrollView
         bottomOffset={62}
-        contentContainerStyle={styles.modalContainer}
-        style={[{ backgroundColor: colors.modalOverlayBackgroundColor }, { flex: 1, marginBottom: 62 }]}
+        style={[{ backgroundColor: colors.modalOverlayBackgroundColor }]}
+        contentContainerStyle={[styles.modalContainer, { paddingBottom: Platform.OS === 'ios' ? 90 : 20 }]}
       >
         <View style={{ padding: 10, gap: 6 }}>
           <TextField
@@ -171,10 +171,80 @@ const EditProjectScreen = () => {
           <TextField
             containerStyle={styles.inputContainer}
             style={[styles.input, { borderColor: colors.transparent }]}
-            placeholder="Owner"
-            label="Owner"
+            placeholder="Owner Name"
+            label="Owner Name"
             value={project.ownerName}
             onChangeText={(text) => setProject({ ...project, ownerName: text })}
+          />
+          <TextField
+            containerStyle={styles.inputContainer}
+            label="Owner Address"
+            placeholder="Owner Address"
+            value={String(project.ownerAddress ?? '')}
+            onChangeText={(text) => setProject({ ...project, ownerAddress: text })}
+            style={[styles.input, { maxHeight: 80, borderColor: colors.transparent }]}
+            numberOfLines={2}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <TextField
+            containerStyle={styles.inputContainer}
+            placeholder="Owner City"
+            label="Owner City"
+            value={String(project.ownerCity ?? '')}
+            onChangeText={(text) => setProject({ ...project, ownerCity: text })}
+            style={[styles.input, { borderColor: colors.transparent }]}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <View style={{ marginBottom: 0, flex: 1 }}>
+              <TextField
+                containerStyle={styles.inputContainer}
+                placeholder="Owner State"
+                label="Owner State"
+                value={String(project.ownerState ?? '')}
+                onChangeText={(text) => setProject({ ...project, ownerState: text })}
+                style={[styles.input, { borderColor: colors.transparent }]}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+            <View style={{ marginBottom: 0, width: 120 }}>
+              <TextField
+                value={String(project.ownerZip ?? '')}
+                containerStyle={styles.inputContainer}
+                placeholder="Owner Zip"
+                label="Zip"
+                onChangeText={(text) => setProject({ ...project, ownerZip: text })}
+                style={[styles.input, { borderColor: colors.transparent }]}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+          </View>
+
+          <TextField
+            containerStyle={styles.inputContainer}
+            value={String(project.ownerPhone ?? '')}
+            placeholder="Owner Phone"
+            label="Owner Phone"
+            keyboardType="numbers-and-punctuation"
+            onChangeText={(text) => setProject({ ...project, ownerPhone: text })}
+            style={[styles.input, { borderColor: colors.transparent }]}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <TextField
+            containerStyle={styles.inputContainer}
+            value={String(project.ownerEmail ?? '')}
+            placeholder="Owner Email"
+            label="Owner Email"
+            keyboardType="email-address"
+            onChangeText={(text) => setProject({ ...project, ownerEmail: text })}
+            style={[styles.input, { borderColor: colors.transparent }]}
+            autoCapitalize="none"
+            autoCorrect={false}
           />
 
           <View style={styles.dateContainer}>
@@ -292,7 +362,6 @@ const styles = StyleSheet.create({
   modalContainer: {
     maxWidth: 460,
     width: '100%',
-    flex: 1,
   },
   modalTitle: {
     fontSize: 18,
