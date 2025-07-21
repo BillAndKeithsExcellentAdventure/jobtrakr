@@ -142,6 +142,7 @@ const DefineChangeOrderScreen = () => {
         phone: appSettings.phone,
         email: appSettings.email,
         contact: appSettings.ownerName,
+        logo: appSettings.companyLogo ?? '',
       },
       client: {
         name: projectData?.ownerName ?? '',

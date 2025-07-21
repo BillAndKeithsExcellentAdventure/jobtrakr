@@ -12,10 +12,20 @@
       header {
         margin-bottom: 30px;
       }
-      .company-info,
+      .company-info {
+        margin-bottom: 20px;
+        display: flex;
+        max-width: 600px;
+      }
       .client-info {
         margin-bottom: 20px;
       }
+      .logo {
+        width: auto;
+        height: 100px;
+        margin-left: 20px;
+      }
+
       h1 {
         font-size: 24px;
         margin-bottom: 10px;
@@ -48,10 +58,15 @@
   <body>
     <header>
       <div class="company-info">
-        <strong>{{company.name}}</strong><br />
-        {{#company.address}} {{.}}<br />
-        {{/company.address}} Phone: {{company.phone}}<br />
-        Email: {{company.email}}
+        <div>
+          <strong>{{company.name}}</strong><br />
+          {{#company.address}} {{.}}<br />
+          {{/company.address}} Phone: {{company.phone}}<br />
+          Email: {{company.email}}
+        </div>
+        {{#company.logo}}
+        <img class="logo" src="{{company.logo}}" alt="Company Logo" />
+        {{/company.logo}}
       </div>
 
       <div class="client-info">
