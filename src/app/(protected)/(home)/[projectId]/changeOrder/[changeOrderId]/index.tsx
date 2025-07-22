@@ -13,7 +13,7 @@ import { Alert, Button, Platform, StyleSheet, Image, TouchableOpacity } from 're
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
-import { FlatList } from 'react-native-gesture-handler';
+import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { ChangeOrderData, renderChangeOrderTemplate } from '@/src/utils/renderChangeOrderTemplate';
@@ -21,6 +21,10 @@ import { loadTemplateHtmlAssetFileToString } from '@/src/utils/htmlFileGenerator
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useAuth } from '@clerk/clerk-expo';
+import SwipeableChangeOrderItem from '@/src/components/SwipeableChangeOrderItem';
+import { ActionButtonProps } from '@/src/components/ButtonBar';
+import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
+import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 
 const generateAndSavePdf = async (
   htmlContent: string,
@@ -100,9 +104,11 @@ const DefineChangeOrderScreen = () => {
   const addChangeOrderItem = useAddRowCallback(projectId, 'changeOrderItems');
   const [changeOrder, setChangeOrder] = useState<ChangeOrder | null>(null);
   const [changeOrderItems, setChangeOrderItems] = useState<ChangeOrderItem[]>([]);
+  const [changeOrderBidAmount, setChangeOrderBidAmount] = useState<number>(0);
   const appSettings = useAppSettings();
   const projectData = useProject(projectId);
   const auth = useAuth();
+  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
 
   useEffect(() => {
     if (allChangeOrders) {
@@ -111,7 +117,7 @@ const DefineChangeOrderScreen = () => {
         setChangeOrder(foundChangeOrder);
       }
     }
-  }, [allChangeOrders, allChangeOrderItems]);
+  }, [allChangeOrders]);
 
   useEffect(() => {
     if (changeOrder) {
@@ -119,6 +125,17 @@ const DefineChangeOrderScreen = () => {
       setChangeOrderItems(items);
     }
   }, [changeOrder, allChangeOrderItems]);
+
+  useEffect(() => {
+    setChangeOrderBidAmount(changeOrderItems.reduce((total, item) => total + item.amount, 0));
+  }, [changeOrderItems]);
+
+  useEffect(() => {
+    if (changeOrder && changeOrder.bidAmount !== changeOrderBidAmount) {
+      const updatedChangeOrder = { ...changeOrder, bidAmount: changeOrderBidAmount };
+      updateChangeOrder(changeOrder.id, updatedChangeOrder);
+    }
+  }, [changeOrder, changeOrderBidAmount, updateChangeOrder]);
 
   const changeOrderData = useMemo<ChangeOrderData | null>(() => {
     if (!changeOrder) return null;
@@ -225,37 +242,121 @@ const DefineChangeOrderScreen = () => {
     }
   }, [changeOrderData, changeOrder?.id]);
 
+  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
+    () => [
+      {
+        icon: <FontAwesome name="edit" size={28} color={colors.iconColor} />,
+        label: 'Edit Change Order Info',
+        onPress: () => {
+          router.push({
+            pathname: '/[projectId]/changeOrder/[changeOrderId]/edit',
+            params: { projectId, changeOrderId },
+          });
+          setHeaderMenuModalVisible(false);
+        },
+      },
+    ],
+    [colors, router],
+  );
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
         options={{
           headerShown: true,
           title: 'Change Order Details',
+          headerRight: () => (
+            <View style={{ marginRight: 0 }}>
+              <Pressable
+                style={{ marginRight: 0 }}
+                onPress={() => {
+                  setHeaderMenuModalVisible(!headerMenuModalVisible);
+                }}
+              >
+                {({ pressed }) => (
+                  <MaterialCommunityIcons
+                    name="menu"
+                    size={28}
+                    color={colors.iconColor}
+                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                  />
+                )}
+              </Pressable>
+            </View>
+          ),
         }}
       />
       <View style={{ flex: 1 }}>
         {changeOrder && (
-          <View style={{ padding: 10 }}>
+          <View style={{ padding: 10, marginBottom: 10 }}>
             {changeOrder.status === 'draft' && (
-              <ActionButton title="Send for Approval" type="action" onPress={handleSendForApproval} />
+              <View style={{ marginBottom: 10 }}>
+                <ActionButton title="Send for Approval" type="action" onPress={handleSendForApproval} />
+              </View>
             )}
             <Text text={changeOrder?.title} txtSize="title" />
             {changeOrder?.description && <Text text={changeOrder?.description} />}
-            <Text text={formatCurrency(changeOrder.bidAmount, true)} txtSize="title" />
           </View>
         )}
-        {changeOrderItems.length > 0 && (
-          <FlatList
-            data={changeOrderItems}
-            renderItem={({ item }) => (
-              <View style={{ padding: 10, borderBottomWidth: 1, borderColor: colors.border }}>
-                <Text text={item.label} />
-                <Text text={formatCurrency(item.amount, true)} />
+        <FlatList
+          style={{ backgroundColor: colors.background }}
+          data={changeOrderItems}
+          keyExtractor={(item, index) => `${item}-${index}`}
+          renderItem={({ item }) => <SwipeableChangeOrderItem projectId={projectId} item={item} />}
+          ListEmptyComponent={
+            <View style={{ width: '100%', alignItems: 'center' }}>
+              <Text>No items defined</Text>
+            </View>
+          }
+          ListHeaderComponent={() => (
+            <View
+              style={{
+                flexDirection: 'row',
+                backgroundColor: colors.listBackground,
+                alignItems: 'center',
+                paddingHorizontal: 20,
+                paddingVertical: 5,
+              }}
+            >
+              <View style={{ flex: 1, backgroundColor: colors.listBackground }}>
+                <Text style={{ fontWeight: '600' }}>Item</Text>
               </View>
-            )}
-          />
-        )}
+
+              <View style={{ width: 120, backgroundColor: colors.listBackground }}>
+                <Text style={{ textAlign: 'right', fontWeight: '600', paddingRight: 20 }}>Cost</Text>
+              </View>
+            </View>
+          )}
+          ListFooterComponent={() => (
+            <View
+              style={{
+                flexDirection: 'row',
+                backgroundColor: colors.listBackground,
+                alignItems: 'center',
+                paddingHorizontal: 20,
+                paddingVertical: 5,
+              }}
+            >
+              <View style={{ flex: 1, backgroundColor: colors.listBackground }}>
+                <Text style={{ fontWeight: '600' }}>Total</Text>
+              </View>
+              <View style={{ width: 120, backgroundColor: colors.listBackground }}>
+                <Text
+                  style={{ textAlign: 'right', fontWeight: '600' }}
+                  text={formatCurrency(changeOrderBidAmount, true, true)}
+                />
+              </View>
+            </View>
+          )}
+        />
       </View>
+      {headerMenuModalVisible && (
+        <RightHeaderMenu
+          modalVisible={headerMenuModalVisible}
+          setModalVisible={setHeaderMenuModalVisible}
+          buttons={rightHeaderMenuButtons}
+        />
+      )}
     </SafeAreaView>
   );
 };

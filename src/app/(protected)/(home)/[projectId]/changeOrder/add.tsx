@@ -30,7 +30,7 @@ import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import CostItemPickerModal from '@/src/components/CostItemPickerModal';
 import { OptionEntry } from '@/src/components/OptionList';
 import { ProposedChangeOrderItem } from '@/src/models/types';
-import SwipeableChangeOrderItem from '@/src/components/SwipeableChangeOrderItem';
+import SwipeableProposedChangeOrderItem from '@/src/components/SwipeableProposedChangeOrderItem';
 
 export default function AddChangeOrder() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
@@ -68,13 +68,6 @@ export default function AddChangeOrder() {
   useEffect(() => {
     setCanAdd(newChangeOrder.bidAmount > 0 && !!newChangeOrder.title && !!newChangeOrder.description);
   }, [newChangeOrder]);
-
-  const handleChangeOrderPropertyChange = (name: keyof ChangeOrder, value: string) => {
-    setNewChangeOrder((prev) => ({
-      ...prev,
-      [name]: name === 'bidAmount' ? Number(value) : value,
-    }));
-  };
 
   const handleAmountChange = (value: number) => {
     setNewChangeOrder((prev) => ({
@@ -171,13 +164,23 @@ export default function AddChangeOrder() {
             <TextInput
               style={[styles.input, { backgroundColor: colors.background }]}
               value={newChangeOrder.title}
-              onChangeText={(text) => handleChangeOrderPropertyChange('title', text)}
+              onChangeText={(text) =>
+                setNewChangeOrder((prev) => ({
+                  ...prev,
+                  title: text,
+                }))
+              }
               placeholder="Title"
             />
             <TextInput
               style={[styles.input, { backgroundColor: colors.background, maxHeight: 80 }]}
               value={newChangeOrder.description}
-              onChangeText={(text) => handleChangeOrderPropertyChange('description', text)}
+              onChangeText={(text) =>
+                setNewChangeOrder((prev) => ({
+                  ...prev,
+                  description: text,
+                }))
+              }
               placeholder="Detailed Description"
               numberOfLines={4}
               multiline
@@ -203,7 +206,7 @@ export default function AddChangeOrder() {
             data={items}
             keyExtractor={(item, index) => `${item}-${index}`}
             renderItem={({ item }) => (
-              <SwipeableChangeOrderItem
+              <SwipeableProposedChangeOrderItem
                 item={item}
                 removeItem={(item) => {
                   setItems((prev) => prev.filter((i) => i !== item));

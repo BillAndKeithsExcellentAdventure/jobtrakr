@@ -2,11 +2,7 @@ import { Text, View } from '@/src/components/Themed';
 import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
 
-import {
-  ChangeOrder,
-  ChangeOrderItem,
-  useDeleteRowCallback,
-} from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { ChangeOrder, useDeleteRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -14,6 +10,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SwipeableComponent } from '@/src/components/SwipeableComponent';
+import { ProposedChangeOrderItem } from '@/src/models/types';
 
 const ITEM_HEIGHT = 45;
 const RIGHT_ACTION_WIDTH = 80;
@@ -28,14 +25,13 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => {
 });
 
 interface Props {
-  item: ChangeOrderItem;
-  projectId: string;
+  item: ProposedChangeOrderItem;
+  removeItem: (item: ProposedChangeOrderItem) => void;
 }
 
-const SwipeableChangeOrderItem = React.memo(({ item, projectId }: Props) => {
+const SwipeableProposedChangeOrderItem = React.memo(({ item, removeItem }: Props) => {
   const colors = useColors();
-  const router = useRouter();
-  const removeItem = useDeleteRowCallback(projectId, 'changeOrderItems');
+
   const handleDelete = useCallback(() => {
     Alert.alert(
       'Delete Change Order Item',
@@ -45,7 +41,7 @@ const SwipeableChangeOrderItem = React.memo(({ item, projectId }: Props) => {
         {
           text: 'Delete',
           onPress: () => {
-            removeItem(item.id);
+            removeItem(item);
           },
         },
       ],
@@ -64,32 +60,23 @@ const SwipeableChangeOrderItem = React.memo(({ item, projectId }: Props) => {
       threshold={SWIPE_THRESHOLD_WIDTH}
       actionWidth={RIGHT_ACTION_WIDTH}
     >
-      <View style={[styles.itemEntry, { borderColor: colors.border }]}>
-        <Pressable
-          onPress={() =>
-            router.push({
-              pathname: '/[projectId]/changeOrder/[changeOrderId]/[changeOrderItemId]',
-              params: { projectId, changeOrderId: item.changeOrderId, changeOrderItemId: item.id },
-            })
-          }
-        >
-          <View style={styles.itemInfo}>
+      <View style={styles.itemEntry}>
+        <View style={styles.itemInfo}>
+          <Text
+            style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
+            text={item.label}
+            numberOfLines={1}
+          />
+          <View style={{ width: 130, flexDirection: 'row', alignItems: 'center' }}>
             <Text
-              style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
-              text={item.label}
-              numberOfLines={1}
+              style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
+              text={formatCurrency(item.amount, false, true)}
             />
-            <View style={{ width: 130, flexDirection: 'row', alignItems: 'center' }}>
-              <Text
-                style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
-                text={formatCurrency(item.amount, false, true)}
-              />
-              <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
-                <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
-              </View>
+            <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
+              <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
             </View>
           </View>
-        </Pressable>
+        </View>
       </View>
     </SwipeableComponent>
   );
@@ -126,4 +113,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SwipeableChangeOrderItem;
+export default SwipeableProposedChangeOrderItem;
