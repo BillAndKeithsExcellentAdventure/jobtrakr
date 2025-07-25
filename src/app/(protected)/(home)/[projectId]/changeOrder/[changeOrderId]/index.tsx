@@ -448,7 +448,7 @@ const DefineChangeOrderScreen = () => {
                 onChangeText={(text) =>
                   setNewChangeOrderItem((prev) => ({
                     ...prev,
-                    description: text,
+                    label: text,
                   }))
                 }
                 placeholder="Item Description"
