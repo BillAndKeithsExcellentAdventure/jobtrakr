@@ -9,7 +9,7 @@ import {
   useAllRows,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { Alert, Button, Platform, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { Alert, Button, Platform, StyleSheet, Image, TouchableOpacity, Modal, Keyboard } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
@@ -23,8 +23,13 @@ import * as Sharing from 'expo-sharing';
 import { useAuth } from '@clerk/clerk-expo';
 import SwipeableChangeOrderItem from '@/src/components/SwipeableChangeOrderItem';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
-import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Entypo, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
+import { KeyboardToolbar } from 'react-native-keyboard-controller';
+import CostItemPickerModal from '@/src/components/CostItemPickerModal';
+import { TextField } from '@/src/components/TextField';
+import { OptionEntry } from '@/src/components/OptionList';
+import { NumberInputField } from '@/src/components/NumberInputField';
 
 const generateAndSavePdf = async (
   htmlContent: string,
@@ -109,6 +114,14 @@ const DefineChangeOrderScreen = () => {
   const projectData = useProject(projectId);
   const auth = useAuth();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
+  const [showAddItemModal, setShowAddItemModal] = useState<boolean>(false);
+  const [newChangeOrderItem, setNewChangeOrderItem] = useState<ChangeOrderItem>({
+    id: '',
+    changeOrderId: changeOrderId,
+    label: '',
+    amount: 0,
+    workItemId: '',
+  });
 
   useEffect(() => {
     if (allChangeOrders) {
@@ -255,9 +268,72 @@ const DefineChangeOrderScreen = () => {
           setHeaderMenuModalVisible(false);
         },
       },
+      {
+        icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
+        label: 'Add Change Order Item',
+        onPress: () => {
+          setHeaderMenuModalVisible(false);
+          setShowAddItemModal(true);
+        },
+      },
     ],
     [colors, router],
   );
+
+  const [itemWorkItemEntry, setItemWorkItemEntry] = useState<OptionEntry>({
+    label: '',
+    value: '',
+  });
+
+  const [showCostItemPicker, setShowCostItemPicker] = useState(false);
+
+  const handleShowCostItemPicker = () => {
+    Keyboard.dismiss();
+    setShowCostItemPicker(true);
+  };
+
+  const handleAddItemCancel = () => {
+    setShowAddItemModal(false);
+    setNewChangeOrderItem({
+      id: '',
+      changeOrderId: changeOrderId,
+      label: '',
+      amount: 0,
+      workItemId: '',
+    });
+  };
+
+  const handleAddItemOk = () => {
+    if (!newChangeOrderItem.label || !newChangeOrderItem.amount || !itemWorkItemEntry.value) {
+      Alert.alert('Error', 'Please fill in all item fields.');
+      return;
+    }
+    addChangeOrderItem({ ...newChangeOrderItem, changeOrderId });
+    setShowAddItemModal(false);
+    setNewChangeOrderItem({
+      id: '',
+      changeOrderId: changeOrderId,
+      label: '',
+      amount: 0,
+      workItemId: '',
+    });
+    setItemWorkItemEntry({
+      label: 'Select Cost Item',
+      value: '',
+    });
+  };
+
+  const onCostItemOptionSelected = useCallback((costItemEntry: OptionEntry | undefined) => {
+    if (costItemEntry) {
+      const label = costItemEntry.label;
+      const workItemId = costItemEntry.value ?? '';
+      setItemWorkItemEntry({
+        label: costItemEntry.label,
+        value: costItemEntry.value,
+      });
+    }
+    setShowCostItemPicker(false);
+  }, []);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -350,6 +426,88 @@ const DefineChangeOrderScreen = () => {
           )}
         />
       </View>
+      {/* Modal for adding ChangeOrderItem */}
+      <Modal
+        visible={showAddItemModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={handleAddItemCancel}
+      >
+        <View style={[styles.modalOverlay, { backgroundColor: colors.opaqueModalOverlayBackgroundColor }]}>
+          <SafeAreaView
+            edges={['top']}
+            style={[styles.modalSafeArea, Platform.OS === 'ios' && { marginTop: 60 }]}
+          >
+            <View style={styles.modalContent}>
+              <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                <Text txtSize="title">Add Change Order Item</Text>
+              </View>
+              <TextField
+                style={[styles.input, { borderColor: colors.transparent }]}
+                value={newChangeOrderItem.label}
+                onChangeText={(text) =>
+                  setNewChangeOrderItem((prev) => ({
+                    ...prev,
+                    description: text,
+                  }))
+                }
+                placeholder="Item Description"
+                label="Item Description"
+              />
+              <NumberInputField
+                label="Amount"
+                style={styles.numberInput}
+                value={newChangeOrderItem.amount}
+                onChange={(value) =>
+                  setNewChangeOrderItem((prev) => ({
+                    ...prev,
+                    amount: value,
+                  }))
+                }
+                placeholder="Amount"
+              />
+              <View>
+                <Text style={styles.label}>Cost Item</Text>
+                <TouchableOpacity activeOpacity={1} onPress={handleShowCostItemPicker}>
+                  <View style={{ marginBottom: 10 }}>
+                    <TextInput
+                      style={styles.input}
+                      value={itemWorkItemEntry.label ?? null}
+                      readOnly={true}
+                      placeholder="Select Cost Item"
+                      onPressIn={handleShowCostItemPicker}
+                    />
+                  </View>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.saveButtonRow}>
+                <ActionButton
+                  style={styles.saveButton}
+                  onPress={handleAddItemOk}
+                  type="ok"
+                  title="Add Item"
+                />
+                <ActionButton
+                  style={styles.cancelButton}
+                  onPress={handleAddItemCancel}
+                  type="cancel"
+                  title="Cancel"
+                />
+              </View>
+            </View>
+          </SafeAreaView>
+          {showCostItemPicker && (
+            <CostItemPickerModal
+              isVisible={showCostItemPicker}
+              onClose={() => setShowCostItemPicker(false)}
+              projectId={projectId}
+              handleCostItemOptionSelected={onCostItemOptionSelected}
+            />
+          )}
+        </View>
+        {Platform.OS === 'ios' && <KeyboardToolbar />}
+      </Modal>
+
       {headerMenuModalVisible && (
         <RightHeaderMenu
           modalVisible={headerMenuModalVisible}
@@ -364,7 +522,7 @@ const DefineChangeOrderScreen = () => {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    gap: 8,
+    gap: 10,
   },
   button: {
     paddingVertical: 10,
@@ -388,6 +546,37 @@ const styles = StyleSheet.create({
   cancelButton: {
     flex: 1,
     marginLeft: 5,
+  },
+
+  input: {
+    borderWidth: 1,
+    borderRadius: 6,
+    padding: 8,
+  },
+  numberInput: {
+    borderWidth: 1,
+    borderRadius: 6,
+    padding: 0,
+  },
+  label: { marginBottom: 2, fontSize: 12 },
+
+  addButton: {
+    maxWidth: 100,
+  },
+  modalOverlay: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  modalSafeArea: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalContent: {
+    padding: 20,
+    width: '100%',
+    elevation: 5,
+    gap: 8,
   },
 });
 

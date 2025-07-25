@@ -11,7 +11,6 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Text, TextInput, View } from '@/src/components/Themed';
-import { SpeechToText } from '@/src/components/SpeechToText';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
 import {
@@ -136,7 +135,6 @@ export default function AddChangeOrder() {
   };
 
   const [showCostItemPicker, setShowCostItemPicker] = useState(false);
-
   const handleShowCostItemPicker = () => {
     Keyboard.dismiss();
     setShowCostItemPicker(true);

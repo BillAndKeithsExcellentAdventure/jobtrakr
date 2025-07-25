@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     height: 36,
     paddingEnd: 8,
   },
-  label: { marginBottom: -2 },
+  label: { marginBottom: 4 },
   input: {
     alignSelf: 'stretch',
     fontSize: 16,
