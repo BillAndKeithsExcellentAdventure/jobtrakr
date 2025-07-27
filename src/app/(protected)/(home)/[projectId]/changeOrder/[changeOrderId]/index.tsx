@@ -443,7 +443,7 @@ const DefineChangeOrderScreen = () => {
                 <Text txtSize="title">Add Change Order Item</Text>
               </View>
               <TextField
-                style={[styles.input, { borderColor: colors.transparent }]}
+                style={[styles.input, { borderColor: colors.transparent, maxHeight: 80 }]}
                 value={newChangeOrderItem.label}
                 onChangeText={(text) =>
                   setNewChangeOrderItem((prev) => ({
