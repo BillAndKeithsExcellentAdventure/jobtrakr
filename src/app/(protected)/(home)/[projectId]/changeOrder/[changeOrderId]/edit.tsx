@@ -1,5 +1,5 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useColors } from '@/src/context/ColorsContext';
 import {
   ChangeOrder,
@@ -13,6 +13,10 @@ import { Text, View } from '@/src/components/Themed';
 import { TextField } from '@/src/components/TextField';
 import { StyleSheet } from 'react-native';
 import { ActionButton } from '@/src/components/ActionButton';
+import { OptionPickerItem } from '@/src/components/OptionPickerItem';
+import OptionList, { OptionEntry } from '@/src/components/OptionList';
+import BottomSheetContainer from '@/src/components/BottomSheetContainer';
+import { useMediaLibraryPermissions } from 'expo-image-picker';
 
 const EditChangeOrder = () => {
   const { projectId, changeOrderId } = useLocalSearchParams<{
@@ -36,12 +40,43 @@ const EditChangeOrder = () => {
     }
   }, [allChangeOrders]);
 
+  const allStatusOptions = useMemo(() => {
+    return [
+      { label: 'Draft', value: 'draft' },
+      { label: 'Pending', value: 'approval-pending' },
+      { label: 'Cancelled', value: 'cancelled' },
+      { label: 'Approved', value: 'approved' },
+    ];
+  }, []);
+
   const handleSubmit = useCallback(async () => {
     if (changeOrder) {
       updateChangeOrder(changeOrderId, changeOrder);
       router.back();
     }
   }, [changeOrder, changeOrderId]);
+
+  const [isStatusPickerVisible, setIsStatusPickerVisible] = useState<boolean>(false);
+  const [pickedStatusOption, setPickedStatusOption] = useState<OptionEntry | undefined>(undefined);
+
+  const handleStatusChange = useCallback((selectedStatus: OptionEntry) => {
+    setPickedStatusOption(selectedStatus);
+  }, []);
+
+  useEffect(() => {
+    if (changeOrder) {
+      const matchingStatus = allStatusOptions.find((c) => c.value === changeOrder?.status);
+      if (matchingStatus) handleStatusChange(matchingStatus);
+    }
+  }, [changeOrder]);
+
+  const handleStatusOptionChange = (option: OptionEntry) => {
+    if (option) {
+      handleStatusChange(option);
+      if (changeOrder) setChangeOrder({ ...changeOrder, status: option.value });
+    }
+    setIsStatusPickerVisible(false);
+  };
 
   return (
     <>
@@ -70,6 +105,15 @@ const EditChangeOrder = () => {
               value={changeOrder.description}
               onChangeText={(text) => setChangeOrder({ ...changeOrder, description: text })}
             />
+            <OptionPickerItem
+              containerStyle={styles.inputContainer}
+              optionLabel={pickedStatusOption?.label}
+              label="Status"
+              placeholder="Select Status"
+              editable={false}
+              onPickerButtonPress={() => setIsStatusPickerVisible(true)}
+            />
+
             <View style={styles.saveButtonRow}>
               <ActionButton style={styles.saveButton} onPress={handleSubmit} type={'ok'} title="Save" />
 
@@ -85,6 +129,19 @@ const EditChangeOrder = () => {
           </View>
         )}
       </SafeAreaView>
+
+      {isStatusPickerVisible && (
+        <BottomSheetContainer
+          isVisible={isStatusPickerVisible}
+          onClose={() => setIsStatusPickerVisible(false)}
+        >
+          <OptionList
+            options={allStatusOptions}
+            onSelect={(option) => handleStatusOptionChange(option)}
+            selectedOption={pickedStatusOption}
+          />
+        </BottomSheetContainer>
+      )}
     </>
   );
 };
