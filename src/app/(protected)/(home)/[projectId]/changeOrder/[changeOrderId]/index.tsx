@@ -30,6 +30,7 @@ import CostItemPickerModal from '@/src/components/CostItemPickerModal';
 import { TextField } from '@/src/components/TextField';
 import { OptionEntry } from '@/src/components/OptionList';
 import { NumberInputField } from '@/src/components/NumberInputField';
+import { calculateHash } from '@/src/utils/calculateHash';
 
 const generateAndSavePdf = async (
   htmlContent: string,
@@ -196,6 +197,16 @@ const DefineChangeOrderScreen = () => {
 
   const handleSendForApproval = useCallback(async () => {
     if (!changeOrderData) return;
+
+    // Set 'now' to 48 hours in the future from the current time, measured in seconds since Jan 1, 2000 UTC
+    const now = Math.floor((Date.now() + 48 * 60 * 60 * 1000 - Date.UTC(2000, 0, 1, 0, 0, 0, 0)) / 1000);
+    const hash = await calculateHash(projectId, changeOrder?.id || '', now);
+
+    console.log('Sending change order for approval:', changeOrderData);
+    console.log('Change Order ID:', changeOrder?.id);
+    console.log('Project ID:', projectId);
+    console.log('Hash:', hash);
+    console.log('Now:', now);
 
     // Load the HTML template from the file system
     let templateHTMLString: string;
