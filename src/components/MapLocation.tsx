@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Alert, Dimensions, Modal, TouchableOpacity } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { StyleSheet, Alert, Dimensions, Modal, TouchableOpacity, Platform } from 'react-native';
+import { AppleMaps, GoogleMaps } from 'expo-maps';
 import * as Location from 'expo-location';
-import { Text } from './Themed';
 import { ActionButton } from './ActionButton';
 import { useColors } from '@/src/context/ColorsContext';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text } from '@/src/components/Themed';
 
 interface LocationPickerProps {
   visible: boolean;
@@ -162,7 +162,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     if (isLoading) {
       return (
         <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-          <Text text="Loading map..." txtSize="subtitle" />
+          <Text text="Loading map..." txtSize="sub-title" />
         </View>
       );
     }
@@ -170,7 +170,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     if (!region) {
       return (
         <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-          <Text text="Unable to load map" txtSize="subtitle" />
+          <Text text="Unable to load map" txtSize="sub-title" />
           <ActionButton title="Retry" type="action" onPress={getCurrentLocation} style={styles.retryButton} />
         </View>
       );
@@ -182,49 +182,31 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
           <Text text={`Select Location${projectName ? ` for ${projectName}` : ''}`} txtSize="title" />
           <Text
             text="Tap on the map to select a location. Use pinch and drag to adjust the view."
-            txtSize="caption"
-            style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 5 }}
+            txtSize="sub-title"
+            style={{ color: colors.text, textAlign: 'center', marginTop: 5 }}
           />
         </View>
-
-        <MapView
-          style={styles.map}
-          initialRegion={region}
-          onPress={handleMapPress}
-          showsUserLocation={!!currentLocation}
-          showsMyLocationButton={false}
-          mapType="standard"
-          provider={PROVIDER_GOOGLE}
-        >
-          {selectedLocation && (
-            <Marker
-              coordinate={selectedLocation}
-              title="Selected Location"
-              description={`${selectedLocation.latitude.toFixed(6)}, ${selectedLocation.longitude.toFixed(
-                6,
-              )}`}
-            />
-          )}
-        </MapView>
+        {Platform.OS === 'android' && <GoogleMaps.View style={styles.map}></GoogleMaps.View>}
+        {Platform.OS === 'ios' && <AppleMaps.View style={styles.map}></AppleMaps.View>}
 
         <View style={styles.infoContainer}>
           {selectedLocation ? (
             <View>
-              <Text text="Selected Coordinates:" txtSize="subtitle" />
+              <Text text="Selected Coordinates:" txtSize="sub-title" />
               <Text
                 text={`Latitude: ${selectedLocation.latitude.toFixed(6)}`}
-                style={{ color: colors.textSecondary }}
+                style={{ color: colors.text }}
               />
               <Text
                 text={`Longitude: ${selectedLocation.longitude.toFixed(6)}`}
-                style={{ color: colors.textSecondary }}
+                style={{ color: colors.text }}
               />
             </View>
           ) : (
             <Text
               text="Tap on the map to select a location"
-              txtSize="subtitle"
-              style={{ color: colors.textSecondary, textAlign: 'center' }}
+              txtSize="sub-title"
+              style={{ color: colors.text, textAlign: 'center' }}
             />
           )}
         </View>
@@ -233,7 +215,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
           {currentLocation && (
             <ActionButton
               title="Reset to Current Location"
-              type="secondary"
+              type="action"
               onPress={handleResetToCurrentLocation}
               style={styles.resetButton}
             />
