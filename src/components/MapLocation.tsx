@@ -212,23 +212,27 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                 minZoomPreference: 1,
                 maxZoomPreference: 20,
               }}
-              onMapLoaded={() => {
-                console.log(JSON.stringify({ type: 'onMapLoaded' }, null, 2));
-              }}
               onMapClick={(e) => {
                 console.log(JSON.stringify({ type: 'onMapClick', data: e }, null, 2));
-              }}
-              onMapLongClick={(e) => {
-                console.log(JSON.stringify({ type: 'onMapLongClick', data: e }, null, 2));
+                const { coordinates } = e;
+                if (coordinates && coordinates.latitude && coordinates.longitude) {
+                  setSelectedLocation({ latitude: coordinates.latitude, longitude: coordinates.longitude });
+                  console.log(JSON.stringify({ type: 'onMapClick', data: e }, null, 2));
+                }
               }}
               onPOIClick={(e) => {
-                console.log(JSON.stringify({ type: 'onPOIClick', data: e }, null, 2));
+                const { coordinates } = e;
+                if (coordinates && coordinates.latitude && coordinates.longitude) {
+                  console.log(JSON.stringify({ type: 'onPOIClick', data: e }, null, 2));
+                  setSelectedLocation({ latitude: coordinates.latitude, longitude: coordinates.longitude });
+                }
               }}
               onMarkerClick={(e) => {
-                console.log(JSON.stringify({ type: 'onMarkerClick', data: e }, null, 2));
-              }}
-              onCameraMove={(e) => {
-                console.log(JSON.stringify({ type: 'onCameraMove', data: e }, null, 2));
+                const { coordinates } = e;
+                if (coordinates && coordinates.latitude && coordinates.longitude) {
+                  console.log(JSON.stringify({ type: 'onMarkerClick', data: e }, null, 2));
+                  setSelectedLocation({ latitude: coordinates.latitude, longitude: coordinates.longitude });
+                }
               }}
             />
           )}
@@ -240,11 +244,11 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
             <View>
               <Text text="Selected Coordinates:" txtSize="sub-title" />
               <Text
-                text={`Latitude: ${selectedLocation.latitude.toFixed(6)}`}
+                text={`Latitude: ${selectedLocation.latitude.toFixed(14)}`}
                 style={{ color: colors.text }}
               />
               <Text
-                text={`Longitude: ${selectedLocation.longitude.toFixed(6)}`}
+                text={`Longitude: ${selectedLocation.longitude.toFixed(14)}`}
                 style={{ color: colors.text }}
               />
             </View>
@@ -279,16 +283,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
 
   return (
     <>
-      <View
-        style={[styles.modalHeader, { backgroundColor: colors.background, borderBottomColor: colors.border }]}
-      >
-        <View style={styles.headerLeft} />
-        <Text text="Select Location" txtSize="title" />
-        <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-          <Ionicons name="close" size={24} color={colors.text} />
-        </TouchableOpacity>
-      </View>
-
       <View style={[styles.container, { backgroundColor: colors.background }]}>{renderContent()}</View>
     </>
   );
@@ -303,7 +297,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
     borderBottomWidth: 1,
   },
   headerLeft: {

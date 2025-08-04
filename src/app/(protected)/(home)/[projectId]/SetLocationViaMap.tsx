@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProject, useUpdateProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { ProjectData } from '@/src/models/types';
 import { useColors } from '@/src/context/ColorsContext';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { StyleSheet } from 'react-native';
 
 const SetLocationViaMap = () => {
@@ -59,20 +59,24 @@ const SetLocationViaMap = () => {
   }, []);
 
   return (
-    <SafeAreaView
-      edges={['top', 'right', 'bottom', 'left']}
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
-      {project && (
-        <LocationPicker
-          onLocationSelected={handleLocationSelected}
-          onClose={() => router.back()}
-          projectName={project.name}
-          initialLatitude={project.latitude || undefined}
-          initialLongitude={project.longitude || undefined}
-        />
-      )}
-    </SafeAreaView>
+    <>
+      <Stack.Screen options={{ title: 'Set Project Location', headerShown: true }} />
+
+      <SafeAreaView
+        edges={['right', 'bottom', 'left']}
+        style={[styles.container, { backgroundColor: colors.background }]}
+      >
+        {project && (
+          <LocationPicker
+            onLocationSelected={handleLocationSelected}
+            onClose={() => router.back()}
+            projectName={project.name}
+            initialLatitude={project.latitude || undefined}
+            initialLongitude={project.longitude || undefined}
+          />
+        )}
+      </SafeAreaView>
+    </>
   );
 };
 
