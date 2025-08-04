@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { StyleSheet, Alert, Dimensions, Modal, TouchableOpacity, Platform } from 'react-native';
 import { AppleMaps, GoogleMaps } from 'expo-maps';
 import * as Location from 'expo-location';
@@ -7,9 +7,12 @@ import { useColors } from '@/src/context/ColorsContext';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text } from '@/src/components/Themed';
+import { AppleMapsMapType } from 'expo-maps/build/apple/AppleMaps.types';
+import { GoogleMapsMapType } from 'expo-maps/build/google/GoogleMaps.types';
+
+const SF_ZOOM = 12;
 
 interface LocationPickerProps {
-  visible: boolean;
   onLocationSelected: (latitude: number, longitude: number) => void;
   onClose: () => void;
   initialLatitude?: number;
@@ -32,7 +35,6 @@ interface Region {
 const { width, height } = Dimensions.get('window');
 
 export const LocationPicker: React.FC<LocationPickerProps> = ({
-  visible,
   onLocationSelected,
   onClose,
   initialLatitude,
@@ -45,6 +47,8 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const [region, setRegion] = useState<Region | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const ref = useRef<AppleMaps.MapView>(null);
+
   // Convert feet to approximate latitude/longitude delta
   // 1 degree latitude ≈ 364,000 feet
   // 1 degree longitude ≈ 288,000 feet (varies by latitude)
@@ -53,10 +57,8 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     feet / (288000 * Math.cos((latitude * Math.PI) / 180));
 
   useEffect(() => {
-    if (visible) {
-      getCurrentLocation();
-    }
-  }, [visible]);
+    getCurrentLocation();
+  }, []);
 
   const getCurrentLocation = async () => {
     setIsLoading(true);
@@ -151,6 +153,14 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     }
   }, [currentLocation]);
 
+  const cameraPosition = {
+    coordinates: {
+      latitude: currentLocation ? currentLocation.latitude : 0,
+      longitude: currentLocation ? currentLocation.longitude : 0,
+    },
+    zoom: SF_ZOOM,
+  };
+
   const handleClose = useCallback(() => {
     setSelectedLocation(null);
     setRegion(null);
@@ -186,8 +196,44 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
             style={{ color: colors.text, textAlign: 'center', marginTop: 5 }}
           />
         </View>
-        {Platform.OS === 'android' && <GoogleMaps.View style={styles.map}></GoogleMaps.View>}
-        {Platform.OS === 'ios' && <AppleMaps.View style={styles.map}></AppleMaps.View>}
+        <View style={{ flex: 1 }}>
+          {Platform.OS === 'android' && (
+            <GoogleMaps.View
+              ref={ref}
+              style={StyleSheet.absoluteFill}
+              cameraPosition={cameraPosition}
+              properties={{
+                isBuildingEnabled: true,
+                isIndoorEnabled: false,
+                mapType: GoogleMapsMapType.NORMAL,
+                selectionEnabled: false,
+                isMyLocationEnabled: true, // requires location permission
+                isTrafficEnabled: false,
+                minZoomPreference: 1,
+                maxZoomPreference: 20,
+              }}
+              onMapLoaded={() => {
+                console.log(JSON.stringify({ type: 'onMapLoaded' }, null, 2));
+              }}
+              onMapClick={(e) => {
+                console.log(JSON.stringify({ type: 'onMapClick', data: e }, null, 2));
+              }}
+              onMapLongClick={(e) => {
+                console.log(JSON.stringify({ type: 'onMapLongClick', data: e }, null, 2));
+              }}
+              onPOIClick={(e) => {
+                console.log(JSON.stringify({ type: 'onPOIClick', data: e }, null, 2));
+              }}
+              onMarkerClick={(e) => {
+                console.log(JSON.stringify({ type: 'onMarkerClick', data: e }, null, 2));
+              }}
+              onCameraMove={(e) => {
+                console.log(JSON.stringify({ type: 'onCameraMove', data: e }, null, 2));
+              }}
+            />
+          )}
+          {Platform.OS === 'ios' && <AppleMaps.View style={styles.map}></AppleMaps.View>}
+        </View>
 
         <View style={styles.infoContainer}>
           {selectedLocation ? (
@@ -232,27 +278,19 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
-      <SafeAreaView
-        edges={['top', 'right', 'bottom', 'left']}
-        style={[styles.modalContainer, { backgroundColor: colors.background }]}
+    <>
+      <View
+        style={[styles.modalHeader, { backgroundColor: colors.background, borderBottomColor: colors.border }]}
       >
-        <View
-          style={[
-            styles.modalHeader,
-            { backgroundColor: colors.background, borderBottomColor: colors.border },
-          ]}
-        >
-          <View style={styles.headerLeft} />
-          <Text text="Select Location" txtSize="title" />
-          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color={colors.text} />
-          </TouchableOpacity>
-        </View>
+        <View style={styles.headerLeft} />
+        <Text text="Select Location" txtSize="title" />
+        <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+          <Ionicons name="close" size={24} color={colors.text} />
+        </TouchableOpacity>
+      </View>
 
-        <View style={[styles.container, { backgroundColor: colors.background }]}>{renderContent()}</View>
-      </SafeAreaView>
-    </Modal>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>{renderContent()}</View>
+    </>
   );
 };
 
