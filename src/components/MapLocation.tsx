@@ -3,15 +3,13 @@ import { StyleSheet, Alert, Platform } from 'react-native';
 import { AppleMaps, GoogleMaps } from 'expo-maps';
 import { ActionButton } from './ActionButton';
 import { useColors } from '@/src/context/ColorsContext';
-import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text } from '@/src/components/Themed';
 import { AppleMapsMapType } from 'expo-maps/build/apple/AppleMaps.types';
 import { GoogleMapsMapType } from 'expo-maps/build/google/GoogleMaps.types';
 import { CoordinateLocation } from '../app/(protected)/(home)/[projectId]/SetLocationViaMap';
 import { useRouter } from 'expo-router';
 
-const SF_ZOOM = 12;
+const SF_ZOOM = 15;
 
 interface GoogleMarkerLocation {
   coordinates: CoordinateLocation;
@@ -87,13 +85,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const handleSaveLocation = useCallback(() => {
     if (selectedLocation) {
       onLocationSelected(selectedLocation.latitude, selectedLocation.longitude);
-      Alert.alert(
-        'Location Saved',
-        `Coordinates saved for ${projectName || 'project'}:\nLatitude: ${selectedLocation.latitude.toFixed(
-          6,
-        )}\nLongitude: ${selectedLocation.longitude.toFixed(6)}`,
-        [{ text: 'OK', onPress: onClose }],
-      );
     } else {
       Alert.alert('No Location Selected', 'Please tap on the map to select a location');
     }
@@ -167,7 +158,33 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
               }}
             />
           )}
-          {Platform.OS === 'ios' && <AppleMaps.View style={styles.map} />}
+          {Platform.OS === 'ios' && (
+            <AppleMaps.View
+              ref={ref}
+              style={StyleSheet.absoluteFill}
+              cameraPosition={cameraPosition}
+              properties={{
+                isTrafficEnabled: false,
+                mapType: AppleMapsMapType.STANDARD,
+                selectionEnabled: true,
+              }}
+              markers={appleMarkers}
+              onMapClick={(e) => {
+                const value = e as unknown as CoordinateLocation;
+                if (value.latitude && value.longitude) {
+                  setSelectedLocation({ latitude: value.latitude, longitude: value.longitude });
+                  console.log(JSON.stringify({ type: 'onMapClick', data: e }, null, 2));
+                }
+              }}
+              onMarkerClick={(e) => {
+                const { coordinates } = e;
+                if (coordinates && coordinates.latitude && coordinates.longitude) {
+                  console.log(JSON.stringify({ type: 'onMarkerClick', data: e }, null, 2));
+                  setSelectedLocation({ latitude: coordinates.latitude, longitude: coordinates.longitude });
+                }
+              }}
+            />
+          )}
         </View>
 
         <View style={styles.buttonContainer}>
@@ -230,6 +247,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     handleResetToCurrentDeviceLocation,
     handleSaveLocation,
     googleMarkers,
+    appleMarkers,
     ref,
     setSelectedLocation,
   ]);
@@ -242,22 +260,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
 };
 
 const styles = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-  },
-  headerLeft: {
-    width: 24,
-  },
-  closeButton: {
-    padding: 4,
-  },
   container: {
     flex: 1,
     padding: 16,
