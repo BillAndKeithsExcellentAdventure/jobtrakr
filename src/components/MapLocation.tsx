@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { StyleSheet, Alert, Dimensions, Modal, TouchableOpacity, Platform } from 'react-native';
+import { StyleSheet, Alert, Platform } from 'react-native';
 import { AppleMaps, GoogleMaps } from 'expo-maps';
 import { ActionButton } from './ActionButton';
 import { useColors } from '@/src/context/ColorsContext';
@@ -9,6 +9,7 @@ import { View, Text } from '@/src/components/Themed';
 import { AppleMapsMapType } from 'expo-maps/build/apple/AppleMaps.types';
 import { GoogleMapsMapType } from 'expo-maps/build/google/GoogleMaps.types';
 import { CoordinateLocation } from '../app/(protected)/(home)/[projectId]/SetLocationViaMap';
+import { useRouter } from 'expo-router';
 
 const SF_ZOOM = 12;
 
@@ -31,7 +32,7 @@ interface LocationPickerProps {
   onClose: () => void;
   projectLocation: CoordinateLocation;
   projectName?: string;
-  deviceLocation?: CoordinateLocation;
+  deviceLocation: CoordinateLocation | null;
 }
 
 export const LocationPicker: React.FC<LocationPickerProps> = ({
@@ -46,7 +47,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const [markerLocation, setMarkerLocation] = useState<CoordinateLocation | null>(null);
   const [googleMarkers, setGoogleMarkers] = useState<GoogleMarkerLocation[]>([]);
   const [appleMarkers, setAppleMarkers] = useState<AppleMarkerLocation[]>([]);
-
+  const router = useRouter();
   const ref = useRef<AppleMaps.MapView>(null);
   useEffect(() => {
     const location = selectedLocation ?? projectLocation;
@@ -119,7 +120,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     return (
       <>
         <View style={styles.headerContainer}>
-          <Text text={`Select Location${projectName ? ` for ${projectName}` : ''}`} txtSize="title" />
+          <Text text={projectName} txtSize="title" />
           <Text
             text="Tap on the map to select a location. Use pinch and drag to adjust the view."
             txtSize="sub-title"
@@ -169,28 +170,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
           {Platform.OS === 'ios' && <AppleMaps.View style={styles.map} />}
         </View>
 
-        <View style={styles.infoContainer}>
-          {selectedLocation ? (
-            <View>
-              <Text text="Selected Coordinates:" txtSize="sub-title" />
-              <Text
-                text={`Latitude: ${selectedLocation.latitude.toFixed(14)}`}
-                style={{ color: colors.text }}
-              />
-              <Text
-                text={`Longitude: ${selectedLocation.longitude.toFixed(14)}`}
-                style={{ color: colors.text }}
-              />
-            </View>
-          ) : (
-            <Text
-              text="Tap on the map to select a location"
-              txtSize="sub-title"
-              style={{ color: colors.text, textAlign: 'center' }}
-            />
-          )}
-        </View>
-
         <View style={styles.buttonContainer}>
           {deviceLocation && (
             <ActionButton
@@ -200,12 +179,44 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
               style={styles.resetButton}
             />
           )}
-          <ActionButton
-            title="Save Location"
-            type={selectedLocation ? 'action' : 'disabled'}
-            onPress={handleSaveLocation}
-            style={styles.saveButton}
-          />
+          <View style={[styles.infoContainer, { borderColor: colors.border, borderWidth: 1 }]}>
+            {selectedLocation ? (
+              <View>
+                <Text text="Selected Coordinates:" txtSize="sub-title" />
+                <Text
+                  text={`Latitude: ${selectedLocation.latitude.toFixed(14)}`}
+                  style={{ color: colors.text, paddingLeft: 10 }}
+                />
+                <Text
+                  text={`Longitude: ${selectedLocation.longitude.toFixed(14)}`}
+                  style={{ color: colors.text, paddingLeft: 10 }}
+                />
+              </View>
+            ) : (
+              <Text
+                text="Tap on the map to select a location"
+                txtSize="sub-title"
+                style={{ color: colors.text, textAlign: 'center' }}
+              />
+            )}
+          </View>
+          <View style={styles.saveButtonRow}>
+            <ActionButton
+              style={styles.saveButton}
+              onPress={handleSaveLocation}
+              type={selectedLocation ? 'ok' : 'disabled'}
+              title="Save"
+            />
+
+            <ActionButton
+              style={styles.cancelButton}
+              onPress={() => {
+                router.back();
+              }}
+              type={'cancel'}
+              title="Cancel"
+            />
+          </View>
         </View>
       </>
     );
@@ -265,29 +276,32 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#ddd',
   },
   infoContainer: {
-    padding: 16,
-    marginTop: 16,
-    borderRadius: 8,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 10,
     minHeight: 80,
     justifyContent: 'center',
   },
   buttonContainer: {
-    flexDirection: 'row',
     marginTop: 16,
     gap: 12,
   },
-  resetButton: {
-    flex: 1,
+  resetButton: {},
+  retryButton: {
+    marginTop: 16,
+    paddingHorizontal: 32,
+  },
+  saveButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
   },
   saveButton: {
     flex: 1,
   },
-  retryButton: {
-    marginTop: 16,
-    paddingHorizontal: 32,
+  cancelButton: {
+    flex: 1,
   },
 });
