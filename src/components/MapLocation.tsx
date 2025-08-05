@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { StyleSheet, Alert, Dimensions, Modal, TouchableOpacity, Platform } from 'react-native';
 import { AppleMaps, GoogleMaps } from 'expo-maps';
-import * as Location from 'expo-location';
 import { ActionButton } from './ActionButton';
 import { useColors } from '@/src/context/ColorsContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,119 +8,80 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text } from '@/src/components/Themed';
 import { AppleMapsMapType } from 'expo-maps/build/apple/AppleMaps.types';
 import { GoogleMapsMapType } from 'expo-maps/build/google/GoogleMaps.types';
+import { CoordinateLocation } from '../app/(protected)/(home)/[projectId]/SetLocationViaMap';
 
 const SF_ZOOM = 12;
+
+interface GoogleMarkerLocation {
+  coordinates: CoordinateLocation;
+  title: string;
+  snippet: string;
+  draggable: boolean;
+}
+
+interface AppleMarkerLocation {
+  coordinates: CoordinateLocation;
+  title: string;
+  tintColor: string;
+  systemImage?: string;
+}
 
 interface LocationPickerProps {
   onLocationSelected: (latitude: number, longitude: number) => void;
   onClose: () => void;
-  initialLatitude?: number;
-  initialLongitude?: number;
+  projectLocation: CoordinateLocation;
   projectName?: string;
+  deviceLocation?: CoordinateLocation;
 }
-
-interface LocationCoordinates {
-  latitude: number;
-  longitude: number;
-}
-
-interface Region {
-  latitude: number;
-  longitude: number;
-  latitudeDelta: number;
-  longitudeDelta: number;
-}
-
-const { width, height } = Dimensions.get('window');
 
 export const LocationPicker: React.FC<LocationPickerProps> = ({
   onLocationSelected,
   onClose,
-  initialLatitude,
-  initialLongitude,
+  projectLocation,
   projectName,
+  deviceLocation,
 }) => {
   const colors = useColors();
-  const [currentLocation, setCurrentLocation] = useState<LocationCoordinates | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<LocationCoordinates | null>(null);
-  const [region, setRegion] = useState<Region | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedLocation, setSelectedLocation] = useState<CoordinateLocation | null>(null);
+  const [markerLocation, setMarkerLocation] = useState<CoordinateLocation | null>(null);
+  const [googleMarkers, setGoogleMarkers] = useState<GoogleMarkerLocation[]>([]);
+  const [appleMarkers, setAppleMarkers] = useState<AppleMarkerLocation[]>([]);
 
   const ref = useRef<AppleMaps.MapView>(null);
-
-  // Convert feet to approximate latitude/longitude delta
-  // 1 degree latitude ≈ 364,000 feet
-  // 1 degree longitude ≈ 288,000 feet (varies by latitude)
-  const feetToLatDelta = (feet: number) => feet / 364000;
-  const feetToLngDelta = (feet: number, latitude: number) =>
-    feet / (288000 * Math.cos((latitude * Math.PI) / 180));
+  useEffect(() => {
+    const location = selectedLocation ?? projectLocation;
+    setMarkerLocation({ ...location });
+  }, [selectedLocation, projectLocation]);
 
   useEffect(() => {
-    getCurrentLocation();
-  }, []);
-
-  const getCurrentLocation = async () => {
-    setIsLoading(true);
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Permission to access location was denied');
-        setIsLoading(false);
-        return;
+    if (markerLocation) {
+      if (Platform.OS === 'android') {
+        setGoogleMarkers([
+          {
+            coordinates: {
+              latitude: markerLocation.latitude,
+              longitude: markerLocation.longitude,
+            },
+            title: 'Project Site',
+            snippet: 'Project Site',
+            draggable: false,
+          },
+        ]);
+      } else if (Platform.OS === 'ios') {
+        setAppleMarkers([
+          {
+            coordinates: {
+              latitude: markerLocation.latitude,
+              longitude: markerLocation.longitude,
+            },
+            title: 'Project Site',
+            tintColor: 'blue',
+            //systemImage: 'mappin',
+          },
+        ]);
       }
-
-      let coords: LocationCoordinates;
-
-      if (initialLatitude && initialLongitude) {
-        // Use provided initial coordinates
-        coords = {
-          latitude: initialLatitude,
-          longitude: initialLongitude,
-        };
-        setSelectedLocation(coords);
-      } else {
-        // Get current device location
-        const location = await Location.getCurrentPositionAsync({});
-        coords = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        };
-        setCurrentLocation(coords);
-      }
-
-      // Set initial region with 500x500 ft view
-      const latDelta = feetToLatDelta(500);
-      const lngDelta = feetToLngDelta(500, coords.latitude);
-
-      console.info('Current location:', coords);
-
-      setRegion({
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        latitudeDelta: latDelta,
-        longitudeDelta: lngDelta,
-      });
-
-      console.info('Initial region set:', {
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        latDelta,
-        lngDelta,
-      });
-
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error getting location:', error);
-      Alert.alert('Error', 'Could not get current location');
-      setIsLoading(false);
     }
-  };
-
-  // Fix the event handler typing for expo-maps
-  const handleMapPress = useCallback((event: { nativeEvent: { coordinate: LocationCoordinates } }) => {
-    const { coordinate } = event.nativeEvent;
-    setSelectedLocation(coordinate);
-  }, []);
+  }, [markerLocation]);
 
   const handleSaveLocation = useCallback(() => {
     if (selectedLocation) {
@@ -138,54 +98,24 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     }
   }, [selectedLocation, onLocationSelected, projectName, onClose]);
 
-  const handleResetToCurrentLocation = useCallback(() => {
-    if (currentLocation) {
-      const latDelta = feetToLatDelta(500);
-      const lngDelta = feetToLngDelta(500, currentLocation.latitude);
-
-      setRegion({
-        latitude: currentLocation.latitude,
-        longitude: currentLocation.longitude,
-        latitudeDelta: latDelta,
-        longitudeDelta: lngDelta,
-      });
-      setSelectedLocation(null);
+  const handleResetToCurrentDeviceLocation = useCallback(() => {
+    if (deviceLocation) {
+      // Use provided initial coordinates
+      setSelectedLocation({ ...deviceLocation });
     }
-  }, [currentLocation]);
+  }, [projectLocation]);
 
-  const cameraPosition = {
-    coordinates: {
-      latitude: currentLocation ? currentLocation.latitude : 0,
-      longitude: currentLocation ? currentLocation.longitude : 0,
-    },
-    zoom: SF_ZOOM,
-  };
+  const cameraPosition = useMemo(() => {
+    return {
+      coordinates: {
+        latitude: markerLocation ? markerLocation.latitude : 0,
+        longitude: markerLocation ? markerLocation.longitude : 0,
+      },
+      zoom: SF_ZOOM,
+    };
+  }, [markerLocation]);
 
-  const handleClose = useCallback(() => {
-    setSelectedLocation(null);
-    setRegion(null);
-    setIsLoading(true);
-    onClose();
-  }, [onClose]);
-
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-          <Text text="Loading map..." txtSize="sub-title" />
-        </View>
-      );
-    }
-
-    if (!region) {
-      return (
-        <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-          <Text text="Unable to load map" txtSize="sub-title" />
-          <ActionButton title="Retry" type="action" onPress={getCurrentLocation} style={styles.retryButton} />
-        </View>
-      );
-    }
-
+  const content = useMemo(() => {
     return (
       <>
         <View style={styles.headerContainer}>
@@ -207,16 +137,16 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                 isIndoorEnabled: false,
                 mapType: GoogleMapsMapType.NORMAL,
                 selectionEnabled: false,
-                isMyLocationEnabled: true, // requires location permission
+                isMyLocationEnabled: true,
                 isTrafficEnabled: false,
                 minZoomPreference: 1,
                 maxZoomPreference: 20,
               }}
+              markers={googleMarkers}
               onMapClick={(e) => {
-                console.log(JSON.stringify({ type: 'onMapClick', data: e }, null, 2));
-                const { coordinates } = e;
-                if (coordinates && coordinates.latitude && coordinates.longitude) {
-                  setSelectedLocation({ latitude: coordinates.latitude, longitude: coordinates.longitude });
+                const value = e as unknown as CoordinateLocation;
+                if (value.latitude && value.longitude) {
+                  setSelectedLocation({ latitude: value.latitude, longitude: value.longitude });
                   console.log(JSON.stringify({ type: 'onMapClick', data: e }, null, 2));
                 }
               }}
@@ -236,7 +166,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
               }}
             />
           )}
-          {Platform.OS === 'ios' && <AppleMaps.View style={styles.map}></AppleMaps.View>}
+          {Platform.OS === 'ios' && <AppleMaps.View style={styles.map} />}
         </View>
 
         <View style={styles.infoContainer}>
@@ -262,11 +192,11 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
         </View>
 
         <View style={styles.buttonContainer}>
-          {currentLocation && (
+          {deviceLocation && (
             <ActionButton
-              title="Reset to Current Location"
+              title="Set to Current Device Location"
               type="action"
-              onPress={handleResetToCurrentLocation}
+              onPress={handleResetToCurrentDeviceLocation}
               style={styles.resetButton}
             />
           )}
@@ -279,11 +209,23 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
         </View>
       </>
     );
-  };
+  }, [
+    colors,
+    projectName,
+    cameraPosition,
+    deviceLocation,
+    selectedLocation,
+    projectLocation,
+    handleResetToCurrentDeviceLocation,
+    handleSaveLocation,
+    googleMarkers,
+    ref,
+    setSelectedLocation,
+  ]);
 
   return (
     <>
-      <View style={[styles.container, { backgroundColor: colors.background }]}>{renderContent()}</View>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>{content}</View>
     </>
   );
 };

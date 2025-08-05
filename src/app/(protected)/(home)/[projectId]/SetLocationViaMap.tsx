@@ -1,62 +1,82 @@
 import { Text, View } from '@/src/components/Themed';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import * as Location from 'expo-location';
 import { LocationPicker } from '@/src/components/MapLocation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProject, useUpdateProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { ProjectData } from '@/src/models/types';
 import { useColors } from '@/src/context/ColorsContext';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { StyleSheet } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
+export interface CoordinateLocation {
+  latitude: number;
+  longitude: number;
+}
 
 const SetLocationViaMap = () => {
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const router = useRouter();
-
   const colors = useColors();
-  const [project, setProject] = useState<ProjectData>({
-    id: '',
-    name: '',
-    location: '',
-    ownerName: '',
-    bidPrice: 0,
-    amountSpent: 0,
-    longitude: 0,
-    latitude: 0,
-    radius: 50,
-    favorite: 0,
-    thumbnail: '',
-    status: 'active',
-    seedWorkItems: '',
-    startDate: 0,
-    plannedFinish: 0,
-    ownerAddress: '',
-    ownerAddress2: '',
-    ownerCity: '',
-    ownerState: '',
-    ownerZip: '',
-    ownerPhone: '',
-    ownerEmail: 'string',
-  });
-
+  const [currentLocation, setCurrentLocation] = useState<CoordinateLocation | null>(null);
+  const [deviceLocation, setDeviceLocation] = useState<CoordinateLocation | null>(null);
   const currentProject = useProject(projectId);
 
-  useEffect(() => {
-    if (currentProject && project.id !== currentProject.id) {
-      setProject({
-        ...currentProject,
+  const fetchCurrentDeviceLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Permission to access location was denied');
+        return;
+      }
+
+      // Get current device location
+      const location = await Location.getCurrentPositionAsync({});
+      setDeviceLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
       });
+    } catch (error) {
+      console.error('Error getting location:', error);
+      Alert.alert('Error', 'Could not get current device location');
     }
-  }, [currentProject]);
+  };
 
-  const updatedProject = useUpdateProjectCallback();
-
-  const handleLocationSelected = useCallback((latitude: number, longitude: number) => {
-    setProject((prevProject) => ({
-      ...prevProject,
-      latitude,
-      longitude,
-    }));
+  useEffect(() => {
+    fetchCurrentDeviceLocation();
   }, []);
+
+  useEffect(() => {
+    if (currentProject) {
+      if (currentProject.latitude && currentProject.longitude) {
+        setCurrentLocation({
+          latitude: currentProject.latitude,
+          longitude: currentProject.longitude,
+        });
+      } else {
+        if (deviceLocation) {
+          setCurrentLocation({
+            latitude: deviceLocation.latitude,
+            longitude: deviceLocation.longitude,
+          });
+        }
+      }
+    }
+  }, [currentProject, deviceLocation]);
+
+  const updateProject = useUpdateProjectCallback();
+
+  const handleLocationSelected = useCallback(
+    (latitude: number, longitude: number) => {
+      if (projectId && updateProject) {
+        const result = updateProject(projectId, { latitude, longitude });
+        if (result.status != 'Success') {
+          Alert.alert('Error updating project location', `Error updating project location - ${result.msg}`);
+        }
+        router.back();
+      }
+    },
+    [currentProject, projectId, updateProject, router],
+  );
 
   return (
     <>
@@ -66,13 +86,13 @@ const SetLocationViaMap = () => {
         edges={['right', 'bottom', 'left']}
         style={[styles.container, { backgroundColor: colors.background }]}
       >
-        {project && (
+        {currentProject && currentLocation && (
           <LocationPicker
             onLocationSelected={handleLocationSelected}
             onClose={() => router.back()}
-            projectName={project.name}
-            initialLatitude={project.latitude || undefined}
-            initialLongitude={project.longitude || undefined}
+            projectName={currentProject.name}
+            projectLocation={currentLocation}
+            deviceLocation={deviceLocation}
           />
         )}
       </SafeAreaView>
