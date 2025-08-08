@@ -1,297 +1,265 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Alert, Dimensions, Modal, TouchableOpacity } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import * as Location from 'expo-location';
-import { Text } from './Themed';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { StyleSheet, Alert, Platform } from 'react-native';
+import { AppleMaps, GoogleMaps } from 'expo-maps';
 import { ActionButton } from './ActionButton';
 import { useColors } from '@/src/context/ColorsContext';
-import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text } from '@/src/components/Themed';
+import { AppleMapsMapType } from 'expo-maps/build/apple/AppleMaps.types';
+import { GoogleMapsMapType } from 'expo-maps/build/google/GoogleMaps.types';
+import { CoordinateLocation } from '../app/(protected)/(home)/[projectId]/SetLocationViaMap';
+import { useRouter } from 'expo-router';
+
+const SF_ZOOM = 15;
+
+interface GoogleMarkerLocation {
+  coordinates: CoordinateLocation;
+  title: string;
+  snippet: string;
+  draggable: boolean;
+}
+
+interface AppleMarkerLocation {
+  coordinates: CoordinateLocation;
+  title: string;
+  tintColor: string;
+  systemImage?: string;
+}
 
 interface LocationPickerProps {
-  visible: boolean;
   onLocationSelected: (latitude: number, longitude: number) => void;
   onClose: () => void;
-  initialLatitude?: number;
-  initialLongitude?: number;
+  projectLocation: CoordinateLocation;
   projectName?: string;
+  deviceLocation: CoordinateLocation | null;
 }
-
-interface LocationCoordinates {
-  latitude: number;
-  longitude: number;
-}
-
-interface Region {
-  latitude: number;
-  longitude: number;
-  latitudeDelta: number;
-  longitudeDelta: number;
-}
-
-const { width, height } = Dimensions.get('window');
 
 export const LocationPicker: React.FC<LocationPickerProps> = ({
-  visible,
   onLocationSelected,
   onClose,
-  initialLatitude,
-  initialLongitude,
+  projectLocation,
   projectName,
+  deviceLocation,
 }) => {
   const colors = useColors();
-  const [currentLocation, setCurrentLocation] = useState<LocationCoordinates | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<LocationCoordinates | null>(null);
-  const [region, setRegion] = useState<Region | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Convert feet to approximate latitude/longitude delta
-  // 1 degree latitude ≈ 364,000 feet
-  // 1 degree longitude ≈ 288,000 feet (varies by latitude)
-  const feetToLatDelta = (feet: number) => feet / 364000;
-  const feetToLngDelta = (feet: number, latitude: number) =>
-    feet / (288000 * Math.cos((latitude * Math.PI) / 180));
+  const [selectedLocation, setSelectedLocation] = useState<CoordinateLocation | null>(null);
+  const [markerLocation, setMarkerLocation] = useState<CoordinateLocation | null>(null);
+  const [googleMarkers, setGoogleMarkers] = useState<GoogleMarkerLocation[]>([]);
+  const [appleMarkers, setAppleMarkers] = useState<AppleMarkerLocation[]>([]);
+  const router = useRouter();
+  const ref = useRef<AppleMaps.MapView>(null);
+  useEffect(() => {
+    const location = selectedLocation ?? projectLocation;
+    setMarkerLocation({ ...location });
+  }, [selectedLocation, projectLocation]);
 
   useEffect(() => {
-    if (visible) {
-      getCurrentLocation();
-    }
-  }, [visible]);
-
-  const getCurrentLocation = async () => {
-    setIsLoading(true);
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Permission to access location was denied');
-        setIsLoading(false);
-        return;
+    if (markerLocation) {
+      if (Platform.OS === 'android') {
+        setGoogleMarkers([
+          {
+            coordinates: {
+              latitude: markerLocation.latitude,
+              longitude: markerLocation.longitude,
+            },
+            title: 'Project Site',
+            snippet: 'Project Site',
+            draggable: false,
+          },
+        ]);
+      } else if (Platform.OS === 'ios') {
+        setAppleMarkers([
+          {
+            coordinates: {
+              latitude: markerLocation.latitude,
+              longitude: markerLocation.longitude,
+            },
+            title: 'Project Site',
+            tintColor: 'blue',
+            //systemImage: 'mappin',
+          },
+        ]);
       }
-
-      let coords: LocationCoordinates;
-
-      if (initialLatitude && initialLongitude) {
-        // Use provided initial coordinates
-        coords = {
-          latitude: initialLatitude,
-          longitude: initialLongitude,
-        };
-        setSelectedLocation(coords);
-      } else {
-        // Get current device location
-        const location = await Location.getCurrentPositionAsync({});
-        coords = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        };
-        setCurrentLocation(coords);
-      }
-
-      // Set initial region with 500x500 ft view
-      const latDelta = feetToLatDelta(500);
-      const lngDelta = feetToLngDelta(500, coords.latitude);
-
-      console.info('Current location:', coords);
-
-      setRegion({
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        latitudeDelta: latDelta,
-        longitudeDelta: lngDelta,
-      });
-
-      console.info('Initial region set:', {
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        latDelta,
-        lngDelta,
-      });
-
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error getting location:', error);
-      Alert.alert('Error', 'Could not get current location');
-      setIsLoading(false);
     }
-  };
-
-  // Fix the event handler typing for expo-maps
-  const handleMapPress = useCallback((event: { nativeEvent: { coordinate: LocationCoordinates } }) => {
-    const { coordinate } = event.nativeEvent;
-    setSelectedLocation(coordinate);
-  }, []);
+  }, [markerLocation]);
 
   const handleSaveLocation = useCallback(() => {
     if (selectedLocation) {
       onLocationSelected(selectedLocation.latitude, selectedLocation.longitude);
-      Alert.alert(
-        'Location Saved',
-        `Coordinates saved for ${projectName || 'project'}:\nLatitude: ${selectedLocation.latitude.toFixed(
-          6,
-        )}\nLongitude: ${selectedLocation.longitude.toFixed(6)}`,
-        [{ text: 'OK', onPress: onClose }],
-      );
     } else {
       Alert.alert('No Location Selected', 'Please tap on the map to select a location');
     }
   }, [selectedLocation, onLocationSelected, projectName, onClose]);
 
-  const handleResetToCurrentLocation = useCallback(() => {
-    if (currentLocation) {
-      const latDelta = feetToLatDelta(500);
-      const lngDelta = feetToLngDelta(500, currentLocation.latitude);
-
-      setRegion({
-        latitude: currentLocation.latitude,
-        longitude: currentLocation.longitude,
-        latitudeDelta: latDelta,
-        longitudeDelta: lngDelta,
-      });
-      setSelectedLocation(null);
+  const handleResetToCurrentDeviceLocation = useCallback(() => {
+    if (deviceLocation) {
+      // Use provided initial coordinates
+      setSelectedLocation({ ...deviceLocation });
     }
-  }, [currentLocation]);
+  }, [projectLocation]);
 
-  const handleClose = useCallback(() => {
-    setSelectedLocation(null);
-    setRegion(null);
-    setIsLoading(true);
-    onClose();
-  }, [onClose]);
+  const cameraPosition = useMemo(() => {
+    return {
+      coordinates: {
+        latitude: markerLocation ? markerLocation.latitude : 0,
+        longitude: markerLocation ? markerLocation.longitude : 0,
+      },
+      zoom: SF_ZOOM,
+    };
+  }, [markerLocation]);
 
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-          <Text text="Loading map..." txtSize="subtitle" />
-        </View>
-      );
-    }
-
-    if (!region) {
-      return (
-        <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-          <Text text="Unable to load map" txtSize="subtitle" />
-          <ActionButton title="Retry" type="action" onPress={getCurrentLocation} style={styles.retryButton} />
-        </View>
-      );
-    }
-
+  const content = useMemo(() => {
     return (
       <>
         <View style={styles.headerContainer}>
-          <Text text={`Select Location${projectName ? ` for ${projectName}` : ''}`} txtSize="title" />
+          <Text text={projectName} txtSize="title" />
           <Text
             text="Tap on the map to select a location. Use pinch and drag to adjust the view."
-            txtSize="caption"
-            style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 5 }}
+            txtSize="sub-title"
+            style={{ color: colors.text, textAlign: 'center', marginTop: 5 }}
           />
         </View>
-
-        <MapView
-          style={styles.map}
-          initialRegion={region}
-          onPress={handleMapPress}
-          showsUserLocation={!!currentLocation}
-          showsMyLocationButton={false}
-          mapType="standard"
-          provider={PROVIDER_GOOGLE}
-        >
-          {selectedLocation && (
-            <Marker
-              coordinate={selectedLocation}
-              title="Selected Location"
-              description={`${selectedLocation.latitude.toFixed(6)}, ${selectedLocation.longitude.toFixed(
-                6,
-              )}`}
+        <View style={{ flex: 1 }}>
+          {Platform.OS === 'android' && (
+            <GoogleMaps.View
+              ref={ref}
+              style={StyleSheet.absoluteFill}
+              cameraPosition={cameraPosition}
+              properties={{
+                isBuildingEnabled: true,
+                isIndoorEnabled: false,
+                mapType: GoogleMapsMapType.NORMAL,
+                selectionEnabled: false,
+                isMyLocationEnabled: true,
+                isTrafficEnabled: false,
+                minZoomPreference: 1,
+                maxZoomPreference: 20,
+              }}
+              markers={googleMarkers}
+              onMapClick={(e) => {
+                const value = e as unknown as CoordinateLocation;
+                if (value.latitude && value.longitude) {
+                  setSelectedLocation({ latitude: value.latitude, longitude: value.longitude });
+                  console.log(JSON.stringify({ type: 'onMapClick', data: e }, null, 2));
+                }
+              }}
+              onPOIClick={(e) => {
+                const { coordinates } = e;
+                if (coordinates && coordinates.latitude && coordinates.longitude) {
+                  console.log(JSON.stringify({ type: 'onPOIClick', data: e }, null, 2));
+                  setSelectedLocation({ latitude: coordinates.latitude, longitude: coordinates.longitude });
+                }
+              }}
+              onMarkerClick={(e) => {
+                const { coordinates } = e;
+                if (coordinates && coordinates.latitude && coordinates.longitude) {
+                  console.log(JSON.stringify({ type: 'onMarkerClick', data: e }, null, 2));
+                  setSelectedLocation({ latitude: coordinates.latitude, longitude: coordinates.longitude });
+                }
+              }}
             />
           )}
-        </MapView>
-
-        <View style={styles.infoContainer}>
-          {selectedLocation ? (
-            <View>
-              <Text text="Selected Coordinates:" txtSize="subtitle" />
-              <Text
-                text={`Latitude: ${selectedLocation.latitude.toFixed(6)}`}
-                style={{ color: colors.textSecondary }}
-              />
-              <Text
-                text={`Longitude: ${selectedLocation.longitude.toFixed(6)}`}
-                style={{ color: colors.textSecondary }}
-              />
-            </View>
-          ) : (
-            <Text
-              text="Tap on the map to select a location"
-              txtSize="subtitle"
-              style={{ color: colors.textSecondary, textAlign: 'center' }}
+          {Platform.OS === 'ios' && (
+            <AppleMaps.View
+              ref={ref}
+              style={StyleSheet.absoluteFill}
+              cameraPosition={cameraPosition}
+              properties={{
+                isTrafficEnabled: false,
+                mapType: AppleMapsMapType.STANDARD,
+                selectionEnabled: true,
+              }}
+              markers={appleMarkers}
+              onMapClick={(e) => {
+                const value = e as unknown as CoordinateLocation;
+                if (value.latitude && value.longitude) {
+                  setSelectedLocation({ latitude: value.latitude, longitude: value.longitude });
+                  console.log(JSON.stringify({ type: 'onMapClick', data: e }, null, 2));
+                }
+              }}
+              onMarkerClick={(e) => {
+                const { coordinates } = e;
+                if (coordinates && coordinates.latitude && coordinates.longitude) {
+                  console.log(JSON.stringify({ type: 'onMarkerClick', data: e }, null, 2));
+                  setSelectedLocation({ latitude: coordinates.latitude, longitude: coordinates.longitude });
+                }
+              }}
             />
           )}
         </View>
 
         <View style={styles.buttonContainer}>
-          {currentLocation && (
+          {deviceLocation && (
             <ActionButton
-              title="Reset to Current Location"
-              type="secondary"
-              onPress={handleResetToCurrentLocation}
+              title="Set to Current Device Location"
+              type="action"
+              onPress={handleResetToCurrentDeviceLocation}
               style={styles.resetButton}
             />
           )}
-          <ActionButton
-            title="Save Location"
-            type={selectedLocation ? 'action' : 'disabled'}
-            onPress={handleSaveLocation}
-            style={styles.saveButton}
-          />
+          <View style={[styles.infoContainer, { borderColor: colors.border, borderWidth: 1 }]}>
+            {selectedLocation ? (
+              <View>
+                <Text text="Selected Coordinates:" txtSize="sub-title" />
+                <Text
+                  text={`Latitude: ${selectedLocation.latitude.toFixed(14)}`}
+                  style={{ color: colors.text, paddingLeft: 10 }}
+                />
+                <Text
+                  text={`Longitude: ${selectedLocation.longitude.toFixed(14)}`}
+                  style={{ color: colors.text, paddingLeft: 10 }}
+                />
+              </View>
+            ) : (
+              <Text
+                text="Tap on the map to select a location"
+                txtSize="sub-title"
+                style={{ color: colors.text, textAlign: 'center' }}
+              />
+            )}
+          </View>
+          <View style={styles.saveButtonRow}>
+            <ActionButton
+              style={styles.saveButton}
+              onPress={handleSaveLocation}
+              type={selectedLocation ? 'ok' : 'disabled'}
+              title="Save"
+            />
+
+            <ActionButton
+              style={styles.cancelButton}
+              onPress={() => {
+                router.back();
+              }}
+              type={'cancel'}
+              title="Cancel"
+            />
+          </View>
         </View>
       </>
     );
-  };
+  }, [
+    colors,
+    projectName,
+    cameraPosition,
+    deviceLocation,
+    selectedLocation,
+    projectLocation,
+    handleResetToCurrentDeviceLocation,
+    handleSaveLocation,
+    googleMarkers,
+    appleMarkers,
+    ref,
+    setSelectedLocation,
+  ]);
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
-      <SafeAreaView
-        edges={['top', 'right', 'bottom', 'left']}
-        style={[styles.modalContainer, { backgroundColor: colors.background }]}
-      >
-        <View
-          style={[
-            styles.modalHeader,
-            { backgroundColor: colors.background, borderBottomColor: colors.border },
-          ]}
-        >
-          <View style={styles.headerLeft} />
-          <Text text="Select Location" txtSize="title" />
-          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color={colors.text} />
-          </TouchableOpacity>
-        </View>
-
-        <View style={[styles.container, { backgroundColor: colors.background }]}>{renderContent()}</View>
-      </SafeAreaView>
-    </Modal>
+    <>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>{content}</View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  headerLeft: {
-    width: 24,
-  },
-  closeButton: {
-    padding: 4,
-  },
   container: {
     flex: 1,
     padding: 16,
@@ -310,29 +278,32 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#ddd',
   },
   infoContainer: {
-    padding: 16,
-    marginTop: 16,
-    borderRadius: 8,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 10,
     minHeight: 80,
     justifyContent: 'center',
   },
   buttonContainer: {
-    flexDirection: 'row',
     marginTop: 16,
     gap: 12,
   },
-  resetButton: {
-    flex: 1,
+  resetButton: {},
+  retryButton: {
+    marginTop: 16,
+    paddingHorizontal: 32,
+  },
+  saveButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
   },
   saveButton: {
     flex: 1,
   },
-  retryButton: {
-    marginTop: 16,
-    paddingHorizontal: 32,
+  cancelButton: {
+    flex: 1,
   },
 });
