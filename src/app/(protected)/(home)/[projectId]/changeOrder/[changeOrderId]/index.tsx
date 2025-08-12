@@ -23,7 +23,7 @@ import * as Sharing from 'expo-sharing';
 import { useAuth } from '@clerk/clerk-expo';
 import SwipeableChangeOrderItem from '@/src/components/SwipeableChangeOrderItem';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
-import { Entypo, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
+import { AntDesign, Entypo, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import CostItemPickerModal from '@/src/components/CostItemPickerModal';
@@ -257,27 +257,42 @@ const DefineChangeOrderScreen = () => {
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
+      ...(changeOrder?.status !== 'cancelled'
+        ? [
+            {
+              icon: <FontAwesome name="edit" size={28} color={colors.iconColor} />,
+              label: 'Edit Change Order Info',
+              onPress: () => {
+                router.push({
+                  pathname: '/[projectId]/changeOrder/[changeOrderId]/edit',
+                  params: { projectId, changeOrderId },
+                });
+                setHeaderMenuModalVisible(false);
+              },
+            },
+            {
+              icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
+              label: 'Add Change Order Item',
+              onPress: () => {
+                setHeaderMenuModalVisible(false);
+                setShowAddItemModal(true);
+              },
+            },
+          ]
+        : []),
       {
-        icon: <FontAwesome name="edit" size={28} color={colors.iconColor} />,
-        label: 'Edit Change Order Info',
+        icon: <AntDesign name="check" size={28} color={colors.iconColor} />,
+        label: 'Set Change Order Status',
         onPress: () => {
           router.push({
-            pathname: '/[projectId]/changeOrder/[changeOrderId]/edit',
+            pathname: '/[projectId]/changeOrder/[changeOrderId]/setStatus',
             params: { projectId, changeOrderId },
           });
           setHeaderMenuModalVisible(false);
         },
       },
-      {
-        icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
-        label: 'Add Change Order Item',
-        onPress: () => {
-          setHeaderMenuModalVisible(false);
-          setShowAddItemModal(true);
-        },
-      },
     ],
-    [colors, router],
+    [colors, router, changeOrder],
   );
 
   const [itemWorkItemEntry, setItemWorkItemEntry] = useState<OptionEntry>({
