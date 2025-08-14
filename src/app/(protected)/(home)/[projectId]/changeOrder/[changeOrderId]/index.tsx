@@ -112,6 +112,7 @@ const DefineChangeOrderScreen = () => {
   const [changeOrderBidAmount, setChangeOrderBidAmount] = useState<number>(0);
   const appSettings = useAppSettings();
   const projectData = useProject(projectId);
+
   const auth = useAuth();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [showAddItemModal, setShowAddItemModal] = useState<boolean>(false);

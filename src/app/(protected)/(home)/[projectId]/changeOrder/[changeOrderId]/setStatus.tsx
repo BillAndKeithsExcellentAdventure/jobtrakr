@@ -11,6 +11,7 @@ import {
   useAddRowCallback,
   useAllRows,
   useUpdateRowCallback,
+  useBidAmountUpdater,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -30,6 +31,7 @@ const SetChangeOrderStatus = () => {
   const [changeOrder, setChangeOrder] = useState<ChangeOrder | null>(null);
   const allChangeOrderItems = useAllRows(projectId, 'changeOrderItems');
   const [changeOrderItems, setChangeOrderItems] = useState<ChangeOrderItem[]>([]);
+  useBidAmountUpdater(projectId);
 
   useEffect(() => {
     if (allChangeOrders) {
@@ -65,7 +67,18 @@ const SetChangeOrderStatus = () => {
 
   const mergeChangeOrderCostItems = useCallback(
     (isAdding = true) => {
-      changeOrderItems.forEach((item) => {
+      // create a new array of changeOrderItemsToPost by combining the amount of each changeOrderItems that has a matching workItemId
+      const changeOrderItemsToPost: ChangeOrderItem[] = changeOrderItems.reduce((acc, item) => {
+        const existingItem = acc.find((i) => i.workItemId === item.workItemId);
+        if (existingItem) {
+          existingItem.amount += item.amount;
+        } else {
+          acc.push({ ...item });
+        }
+        return acc;
+      }, [] as ChangeOrderItem[]);
+
+      changeOrderItemsToPost.forEach((item) => {
         const match = allWorkItemSummaries.find((s) => s.workItemId === item.workItemId);
         if (match) {
           // update existing item
