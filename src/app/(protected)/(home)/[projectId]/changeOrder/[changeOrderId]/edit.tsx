@@ -1,6 +1,4 @@
 import { ActionButton } from '@/src/components/ActionButton';
-import BottomSheetContainer from '@/src/components/BottomSheetContainer';
-import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
@@ -10,7 +8,7 @@ import {
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -53,7 +51,7 @@ const EditChangeOrder = () => {
 
       <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
         {changeOrder && (
-          <View style={{ padding: 10, gap: 6 }}>
+          <View style={{ gap: 6, padding: 10 }}>
             <TextField
               style={[styles.input, { borderColor: colors.transparent }]}
               label="Title"
@@ -85,19 +83,6 @@ const EditChangeOrder = () => {
           </View>
         )}
       </SafeAreaView>
-
-      {isStatusPickerVisible && (
-        <BottomSheetContainer
-          isVisible={isStatusPickerVisible}
-          onClose={() => setIsStatusPickerVisible(false)}
-        >
-          <OptionList
-            options={allStatusOptions}
-            onSelect={(option) => handleStatusOptionChange(option)}
-            selectedOption={pickedStatusOption}
-          />
-        </BottomSheetContainer>
-      )}
     </>
   );
 };

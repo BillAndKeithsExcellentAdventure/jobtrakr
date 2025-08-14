@@ -2,19 +2,18 @@ import { Text, View } from '@/src/components/Themed';
 import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
 
+import { SwipeableComponent } from '@/src/components/SwipeableComponent';
 import {
   ChangeOrder,
-  ChangeOrderItem,
-  useDeleteRowCallback,
   useAllRows,
+  useDeleteRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
-import { AntDesign, Feather, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { AntDesign, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-import { SwipeableComponent } from '@/src/components/SwipeableComponent';
 
 const ITEM_HEIGHT = 45;
 const RIGHT_ACTION_WIDTH = 80;
@@ -115,7 +114,7 @@ const SwipeableChangeOrder = React.memo(({ item, projectId }: Props) => {
             )}
             {item.status === 'cancelled' && (
               <View style={{ width: 30, paddingRight: 5, alignItems: 'center' }}>
-                <Feather name="x" size={24} color={colors.iconColor} />
+                <MaterialCommunityIcons name="cancel" size={24} color={colors.iconColor} />
               </View>
             )}
 

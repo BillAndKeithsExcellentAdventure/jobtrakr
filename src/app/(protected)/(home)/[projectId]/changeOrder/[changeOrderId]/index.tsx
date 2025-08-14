@@ -1,7 +1,15 @@
-import React, { useState, useEffect, use, useCallback, useMemo } from 'react';
 import { ActionButton } from '@/src/components/ActionButton';
+import { ActionButtonProps } from '@/src/components/ButtonBar';
+import CostItemPickerModal from '@/src/components/CostItemPickerModal';
+import { NumberInputField } from '@/src/components/NumberInputField';
+import { OptionEntry } from '@/src/components/OptionList';
+import RightHeaderMenu from '@/src/components/RightHeaderMenu';
+import SwipeableChangeOrderItem from '@/src/components/SwipeableChangeOrderItem';
+import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   ChangeOrder,
   ChangeOrderItem,
@@ -9,27 +17,19 @@ import {
   useAllRows,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { Alert, Button, Platform, StyleSheet, Image, TouchableOpacity, Modal, Keyboard } from 'react-native';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
-import { FlatList, Pressable } from 'react-native-gesture-handler';
-import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
-import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
-import { ChangeOrderData, renderChangeOrderTemplate } from '@/src/utils/renderChangeOrderTemplate';
 import { loadTemplateHtmlAssetFileToString } from '@/src/utils/htmlFileGenerator';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
+import { ChangeOrderData, renderChangeOrderTemplate } from '@/src/utils/renderChangeOrderTemplate';
 import { useAuth } from '@clerk/clerk-expo';
-import SwipeableChangeOrderItem from '@/src/components/SwipeableChangeOrderItem';
-import { ActionButtonProps } from '@/src/components/ButtonBar';
 import { AntDesign, Entypo, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
-import RightHeaderMenu from '@/src/components/RightHeaderMenu';
+import * as FileSystem from 'expo-file-system';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import * as Sharing from 'expo-sharing';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Keyboard, Modal, Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
-import CostItemPickerModal from '@/src/components/CostItemPickerModal';
-import { TextField } from '@/src/components/TextField';
-import { OptionEntry } from '@/src/components/OptionList';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const generateAndSavePdf = async (
   htmlContent: string,
@@ -385,8 +385,32 @@ const DefineChangeOrderScreen = () => {
                 <ActionButton title="Send for Approval" type="action" onPress={handleSendForApproval} />
               </View>
             )}
-            <Text text={changeOrder?.title} txtSize="title" />
-            {changeOrder?.description && <Text text={changeOrder?.description} />}
+            <View style={{ padding: 10, gap: 6, flexDirection: 'row', alignItems: 'center' }}>
+              {changeOrder.status === 'draft' && (
+                <View style={{ width: 30, paddingRight: 5, alignItems: 'center' }}>
+                  <MaterialCommunityIcons name="lightbulb-on-outline" size={24} color={colors.iconColor} />
+                </View>
+              )}
+              {changeOrder.status === 'approval-pending' && (
+                <View style={{ width: 30, paddingRight: 5, alignItems: 'center' }}>
+                  <MaterialCommunityIcons name="glasses" size={24} color={colors.iconColor} />
+                </View>
+              )}
+              {changeOrder.status === 'approved' && (
+                <View style={{ width: 30, paddingRight: 5, alignItems: 'center' }}>
+                  <AntDesign name="check" size={24} color={colors.iconColor} />
+                </View>
+              )}
+              {changeOrder.status === 'cancelled' && (
+                <View style={{ width: 30, paddingRight: 5, alignItems: 'center' }}>
+                  <MaterialCommunityIcons name="cancel" size={24} color={colors.iconColor} />
+                </View>
+              )}
+              <View style={{ gap: 6 }}>
+                <Text text={changeOrder?.title} txtSize="title" />
+                {changeOrder?.description && <Text text={changeOrder?.description} />}
+              </View>
+            </View>
           </View>
         )}
         <FlatList
