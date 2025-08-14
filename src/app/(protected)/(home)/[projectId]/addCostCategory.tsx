@@ -127,6 +127,7 @@ const AddCostCategoryWorkItemsScreen: React.FC = () => {
         id: '',
         workItemId,
         bidAmount: 0,
+        complete: false,
       });
     }
     router.back();

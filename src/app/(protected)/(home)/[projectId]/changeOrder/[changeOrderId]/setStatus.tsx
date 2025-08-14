@@ -7,6 +7,8 @@ import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import {
   ChangeOrder,
+  ChangeOrderItem,
+  useAddRowCallback,
   useAllRows,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
@@ -15,7 +17,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const EditChangeOrder = () => {
+const SetChangeOrderStatus = () => {
   const { projectId, changeOrderId } = useLocalSearchParams<{
     projectId: string;
     changeOrderId: string;
@@ -26,6 +28,8 @@ const EditChangeOrder = () => {
   const allChangeOrders = useAllRows(projectId, 'changeOrders');
   const updateChangeOrder = useUpdateRowCallback(projectId, 'changeOrders');
   const [changeOrder, setChangeOrder] = useState<ChangeOrder | null>(null);
+  const allChangeOrderItems = useAllRows(projectId, 'changeOrderItems');
+  const [changeOrderItems, setChangeOrderItems] = useState<ChangeOrderItem[]>([]);
 
   useEffect(() => {
     if (allChangeOrders) {
@@ -36,6 +40,16 @@ const EditChangeOrder = () => {
     }
   }, [allChangeOrders]);
 
+  useEffect(() => {
+    if (changeOrder) {
+      const items = allChangeOrderItems.filter((item) => item.changeOrderId === changeOrder.id);
+      setChangeOrderItems(items);
+    }
+  }, [changeOrder, allChangeOrderItems]);
+
+  const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
+  const updateBidEstimate = useUpdateRowCallback(projectId, 'workItemSummaries');
+  const addWorkItemSummary = useAddRowCallback(projectId, 'workItemSummaries');
   const [isStatusPickerVisible, setIsStatusPickerVisible] = useState<boolean>(false);
   const [currentStatusOption, setCurrentStatusOption] = useState<OptionEntry | undefined>(undefined);
   const [pickedStatusOption, setPickedStatusOption] = useState<OptionEntry | undefined>(undefined);
@@ -49,9 +63,30 @@ const EditChangeOrder = () => {
     ];
   }, []);
 
-  const mergeChangeOrderCostItems = useCallback((changeOrderId: string, isAdding = true) => {
-    console.log(`Merging cost items from change order ${changeOrderId} into main project cost items.`);
-  }, []);
+  const mergeChangeOrderCostItems = useCallback(
+    (isAdding = true) => {
+      changeOrderItems.forEach((item) => {
+        const match = allWorkItemSummaries.find((s) => s.workItemId === item.workItemId);
+        if (match) {
+          // update existing item
+          const updatedDatedBidAmount = isAdding
+            ? match.bidAmount + item.amount
+            : match.bidAmount - item.amount;
+          updateBidEstimate(match.id, { bidAmount: updatedDatedBidAmount });
+        } else {
+          if (isAdding) {
+            addWorkItemSummary({
+              id: '',
+              workItemId: item.workItemId,
+              bidAmount: item.amount,
+              complete: false,
+            });
+          }
+        }
+      });
+    },
+    [changeOrderItems, addWorkItemSummary, updateBidEstimate, allWorkItemSummaries],
+  );
 
   const handleSubmit = useCallback(async () => {
     if (changeOrder && pickedStatusOption) {
@@ -80,9 +115,14 @@ const EditChangeOrder = () => {
             { text: 'Cancel', style: 'cancel' },
             {
               text: 'Approve',
-              onPress: async () => {
-                //updateChangeOrder(changeOrderId, changeOrder);
-                //mergeChangeOrderCostItems(changeOrderId, true);
+              onPress: () => {
+                const result = updateChangeOrder(changeOrderId, {
+                  ...changeOrder,
+                  status: pickedStatusOption.value,
+                });
+                if (result.status === 'Success') {
+                  mergeChangeOrderCostItems(true);
+                }
                 router.back();
               },
             },
@@ -113,9 +153,14 @@ const EditChangeOrder = () => {
             { text: 'No', style: 'cancel' },
             {
               text: 'Yes',
-              onPress: async () => {
-                //updateChangeOrder(changeOrderId, { ...changeOrder, status: pickedStatusOption.value });
-                //mergeChangeOrderCostItems(changeOrderId, false); // unmerge cost items
+              onPress: () => {
+                const result = updateChangeOrder(changeOrderId, {
+                  ...changeOrder,
+                  status: pickedStatusOption.value,
+                });
+                if (result.status === 'Success') {
+                  mergeChangeOrderCostItems(false);
+                }
                 router.back();
               },
             },
@@ -124,7 +169,15 @@ const EditChangeOrder = () => {
         return;
       }
     }
-  }, [changeOrder, changeOrderId, pickedStatusOption]);
+  }, [
+    changeOrder,
+    changeOrderId,
+    pickedStatusOption,
+    currentStatusOption,
+    updateChangeOrder,
+    router,
+    mergeChangeOrderCostItems,
+  ]);
 
   const handleStatusChange = useCallback((selectedStatus: OptionEntry) => {
     setPickedStatusOption(selectedStatus);
@@ -303,4 +356,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EditChangeOrder;
+export default SetChangeOrderStatus;

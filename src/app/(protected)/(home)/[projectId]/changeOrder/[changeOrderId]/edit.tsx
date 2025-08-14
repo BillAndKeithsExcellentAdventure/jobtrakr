@@ -1,22 +1,18 @@
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActionButton } from '@/src/components/ActionButton';
+import BottomSheetContainer from '@/src/components/BottomSheetContainer';
+import OptionList, { OptionEntry } from '@/src/components/OptionList';
+import { TextField } from '@/src/components/TextField';
+import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import {
   ChangeOrder,
   useAllRows,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Pressable } from 'react-native-gesture-handler';
-import { Text, View } from '@/src/components/Themed';
-import { TextField } from '@/src/components/TextField';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
-import { ActionButton } from '@/src/components/ActionButton';
-import { OptionPickerItem } from '@/src/components/OptionPickerItem';
-import OptionList, { OptionEntry } from '@/src/components/OptionList';
-import BottomSheetContainer from '@/src/components/BottomSheetContainer';
-import { useMediaLibraryPermissions } from 'expo-image-picker';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditChangeOrder = () => {
   const { projectId, changeOrderId } = useLocalSearchParams<{
@@ -29,7 +25,6 @@ const EditChangeOrder = () => {
   const allChangeOrders = useAllRows(projectId, 'changeOrders');
   const updateChangeOrder = useUpdateRowCallback(projectId, 'changeOrders');
   const [changeOrder, setChangeOrder] = useState<ChangeOrder | null>(null);
-  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
 
   useEffect(() => {
     if (allChangeOrders) {
@@ -40,43 +35,12 @@ const EditChangeOrder = () => {
     }
   }, [allChangeOrders]);
 
-  const allStatusOptions = useMemo(() => {
-    return [
-      { label: 'Draft', value: 'draft' },
-      { label: 'Pending', value: 'approval-pending' },
-      { label: 'Cancelled', value: 'cancelled' },
-      { label: 'Approved', value: 'approved' },
-    ];
-  }, []);
-
   const handleSubmit = useCallback(async () => {
     if (changeOrder) {
       updateChangeOrder(changeOrderId, changeOrder);
       router.back();
     }
   }, [changeOrder, changeOrderId]);
-
-  const [isStatusPickerVisible, setIsStatusPickerVisible] = useState<boolean>(false);
-  const [pickedStatusOption, setPickedStatusOption] = useState<OptionEntry | undefined>(undefined);
-
-  const handleStatusChange = useCallback((selectedStatus: OptionEntry) => {
-    setPickedStatusOption(selectedStatus);
-  }, []);
-
-  useEffect(() => {
-    if (changeOrder) {
-      const matchingStatus = allStatusOptions.find((c) => c.value === changeOrder?.status);
-      if (matchingStatus) handleStatusChange(matchingStatus);
-    }
-  }, [changeOrder]);
-
-  const handleStatusOptionChange = (option: OptionEntry) => {
-    if (option) {
-      handleStatusChange(option);
-      if (changeOrder) setChangeOrder({ ...changeOrder, status: option.value });
-    }
-    setIsStatusPickerVisible(false);
-  };
 
   return (
     <>
