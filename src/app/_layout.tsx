@@ -24,9 +24,9 @@ export {
 SplashScreen.preventAutoHideAsync();
 
 // Import your Publishable Key
-const PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-if (!PUBLISHABLE_KEY) {
+if (!CLERK_PUBLISHABLE_KEY) {
   throw new Error('Add your Clerk Publishable Key to the .env file');
 }
 
@@ -57,7 +57,7 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   return (
-    <ClerkProvider tokenCache={tokenCache} publishableKey={PUBLISHABLE_KEY}>
+    <ClerkProvider tokenCache={tokenCache} publishableKey={CLERK_PUBLISHABLE_KEY}>
       <StatusBar style="auto" />
       <TinyBaseProvider>
         <ClerkLoaded>
