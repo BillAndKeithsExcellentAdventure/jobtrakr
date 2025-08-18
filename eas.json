@@ -7,7 +7,7 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "env": { "APP_VARIANT": "internal" },
+      "env": { "APP_VARIANT": "development" },
       "channel": "development"
     },
     "ios-simulator": {
