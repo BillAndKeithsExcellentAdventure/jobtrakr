@@ -9,6 +9,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { Alert } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
@@ -24,9 +25,13 @@ export {
 SplashScreen.preventAutoHideAsync();
 
 // Import your Publishable Key
-const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const CLERK_PUBLISHABLE_KEY =
+  process.env.NODE_ENV === 'production'
+    ? process.env.EXPO_PUBLIC_CLERK_PRODUCTION_PUBLISHABLE_KEY
+    : process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 if (!CLERK_PUBLISHABLE_KEY) {
+  Alert.alert('Error', `'CLERK_PUBLISHABLE_KEY' is not set. Env is set to ${process.env.NODE_ENV}`);
   throw new Error('Add your Clerk Publishable Key to the .env file');
 }
 

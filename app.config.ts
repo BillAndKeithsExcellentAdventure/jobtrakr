@@ -17,11 +17,11 @@ const getUniqueIdentifier = () => {
 
 const getAppName = () => {
   if (IS_DEV) {
-    return 'Project Hound (Dev)';
+    return 'PHound (Dev)';
   }
 
   if (IS_PREVIEW) {
-    return 'Project Hound (Preview)';
+    return 'PHound (Preview)';
   }
 
   return 'Project Hound';
