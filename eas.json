@@ -7,7 +7,10 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "env": { "APP_VARIANT": "development" },
+      "env": {
+        "APP_VARIANT": "development",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_dmFsdWVkLWNvbmRvci00OS5jbGVyay5hY2NvdW50cy5kZXYk"
+      },
       "channel": "development"
     },
     "ios-simulator": {
@@ -21,7 +24,7 @@
       "distribution": "internal",
       "env": {
         "APP_VARIANT": "preview",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_dmFsdWVkLWNvbmRvci00OS5jbGVyay5hY2NvdW50cy5kZXYk"
+        "EXPO_PUBLIC_CLERK_PRODUCTION_PUBLISHABLE_KEY": "pk_test_dmFsdWVkLWNvbmRvci00OS5jbGVyay5hY2NvdW50cy5kZXYk"
       },
       "android": {
         "gradleCommand": ":app:assembleRelease",
@@ -30,6 +33,10 @@
       "channel": "preview"
     },
     "production": {
+      "env": {
+        "EXPO_PUBLIC_CLERK_PRODUCTION_PUBLISHABLE_KEY": "pk_test_dmFsdWVkLWNvbmRvci00OS5jbGVyay5hY2NvdW50cy5kZXYk"
+      },
+
       "autoIncrement": true,
       "android": {
         "gradleCommand": ":app:assembleRelease",
