@@ -31,8 +31,14 @@ const CLERK_PUBLISHABLE_KEY =
     : process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 if (!CLERK_PUBLISHABLE_KEY) {
-  Alert.alert('Error', `'CLERK_PUBLISHABLE_KEY' is not set. Env is set to ${process.env.NODE_ENV}`);
-  throw new Error('Add your Clerk Publishable Key to the .env file');
+  Alert.alert('Error', `'CLERK_PUBLISHABLE_KEY' is not set. Env is set to ${process.env.NODE_ENV}`, [
+    {
+      text: 'Close App',
+      onPress: () => {
+        throw new Error('Add your Clerk Publishable Key to the .env file');
+      },
+    },
+  ]);
 }
 
 export default function RootLayout() {
