@@ -24,7 +24,7 @@
       "distribution": "internal",
       "env": {
         "APP_VARIANT": "preview",
-        "EXPO_PUBLIC_CLERK_PRODUCTION_PUBLISHABLE_KEY": "pk_test_dmFsdWVkLWNvbmRvci00OS5jbGVyay5hY2NvdW50cy5kZXYk"
+        "EXPO_PUBLIC_CLERK_PRODUCTION_PUBLISHABLE_KEY": "pk_live_Y2xlcmsucHJvamVjdGhvdW5kLmJpeiQ"
       },
       "android": {
         "gradleCommand": ":app:assembleRelease",
@@ -34,7 +34,7 @@
     },
     "production": {
       "env": {
-        "EXPO_PUBLIC_CLERK_PRODUCTION_PUBLISHABLE_KEY": "pk_test_dmFsdWVkLWNvbmRvci00OS5jbGVyay5hY2NvdW50cy5kZXYk"
+        "EXPO_PUBLIC_CLERK_PRODUCTION_PUBLISHABLE_KEY": "pk_live_Y2xlcmsucHJvamVjdGhvdW5kLmJpeiQ"
       },
 
       "autoIncrement": true,
