@@ -59,7 +59,14 @@ export default function RootLayout() {
   }, [loaded]);
 
   if (!loaded) {
-    return null;
+    Alert.alert('Warning', 'Waiting on fonts to load', [
+      {
+        text: 'OK',
+        onPress: () => {
+          return null;
+        },
+      },
+    ]);
   }
 
   return <RootLayoutNav />;
