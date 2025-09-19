@@ -57,6 +57,7 @@ export default function CreateOrganization() {
             },
           },
         ]);
+        return;
       }
 
       const data = await response.json();
@@ -66,15 +67,7 @@ export default function CreateOrganization() {
       console.log('Organization created:', data);
       return data;
     } catch (error) {
-      Alert.alert('Error', `Error creating organization: ${error}`, [
-        {
-          text: 'Report Error',
-          onPress: () => {
-            console.error('Error creating organization:', error);
-            throw error;
-          },
-        },
-      ]);
+      console.error('Error creating organization:', error);
     }
   };
 
