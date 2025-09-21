@@ -24,11 +24,14 @@ export {
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
+const isDev =
+  (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+  (global as any).__DEV__ === true;
+
 // Import your Publishable Key
-const CLERK_PUBLISHABLE_KEY =
-  process.env.NODE_ENV === 'production'
-    ? process.env.EXPO_PUBLIC_CLERK_PRODUCTION_PUBLISHABLE_KEY
-    : process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const CLERK_PUBLISHABLE_KEY = isDev
+  ? process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
+  : process.env.EXPO_PUBLIC_CLERK_PRODUCTION_PUBLISHABLE_KEY;
 
 if (!CLERK_PUBLISHABLE_KEY) {
   Alert.alert('Error', `'CLERK_PUBLISHABLE_KEY' is not set. Env is set to ${process.env.NODE_ENV}`, [

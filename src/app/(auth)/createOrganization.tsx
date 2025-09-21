@@ -26,12 +26,19 @@ export default function CreateOrganization() {
     }
   }, [auth]);
 
-  const createOrganization = async (token: string, userId: string, name: string, slug: string) => {
+  const createOrganization = async (
+    token: string,
+    userId: string,
+    name: string,
+    slug: string,
+    isDevDeployment?: boolean,
+  ) => {
     try {
       const organizationData = {
         name: name,
         userId: userId,
         slug: slug,
+        isDev: !!isDevDeployment,
       };
       console.log(' token:', token);
       const response = await fetch(
@@ -94,11 +101,17 @@ export default function CreateOrganization() {
       if (clerk && clerk.session) {
         const token = await auth.getToken();
         if (token && auth.userId) {
+          // Determine deployment type. Use NODE_ENV when available, fall back to React Native __DEV__.
+          const isDev =
+            (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+            (global as any).__DEV__ === true;
+
           await createOrganization(
             token,
             auth.userId,
             organizationName,
             `ph-${organizationName.toLocaleLowerCase()}`,
+            isDev,
           );
           console.log('Organization created successfully');
         }
