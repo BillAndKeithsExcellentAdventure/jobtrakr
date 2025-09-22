@@ -128,6 +128,11 @@ export default function SignUpScreen() {
             style={{ marginBottom: 20, backgroundColor: colors.listBackground }}
             text="Verify your email"
           />
+          <Text
+            txtSize="standard"
+            style={{ marginBottom: 20, backgroundColor: colors.listBackground }}
+            text="If you don't see code quickly, check your junk mail folder."
+          />
           <TextInput
             style={{ ...styles.input, backgroundColor: colors.neutral200 }}
             value={code}

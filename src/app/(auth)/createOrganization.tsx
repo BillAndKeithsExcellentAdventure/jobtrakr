@@ -5,6 +5,7 @@ import { useAuth, useClerk, useOrganizationList, useSignUp } from '@clerk/clerk-
 import { Redirect, Stack, useRouter } from 'expo-router';
 import * as React from 'react';
 import { useEffect } from 'react';
+import { Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CreateOrganization() {
@@ -25,12 +26,19 @@ export default function CreateOrganization() {
     }
   }, [auth]);
 
-  const createOrganization = async (token: string, userId: string, name: string, slug: string) => {
+  const createOrganization = async (
+    token: string,
+    userId: string,
+    name: string,
+    slug: string,
+    isDevDeployment?: boolean,
+  ) => {
     try {
       const organizationData = {
         name: name,
         userId: userId,
         slug: slug,
+        isDev: !!isDevDeployment,
       };
       console.log(' token:', token);
       const response = await fetch(
@@ -48,7 +56,15 @@ export default function CreateOrganization() {
       if (!response.ok) {
         const errorBody = await response.text();
         console.error('Error response:', errorBody);
-        throw new Error(`HTTP error! status: ${response.status}. Response: ${errorBody}`);
+        Alert.alert('Error', `HTTP error! status: ${response.status}. Response: ${errorBody}`, [
+          {
+            text: 'Report Error',
+            onPress: () => {
+              throw new Error(`HTTP error! status: ${response.status}. Response: ${errorBody}`);
+            },
+          },
+        ]);
+        return;
       }
 
       const data = await response.json();
@@ -59,7 +75,6 @@ export default function CreateOrganization() {
       return data;
     } catch (error) {
       console.error('Error creating organization:', error);
-      throw error;
     }
   };
 
@@ -86,11 +101,17 @@ export default function CreateOrganization() {
       if (clerk && clerk.session) {
         const token = await auth.getToken();
         if (token && auth.userId) {
+          // Determine deployment type. Use NODE_ENV when available, fall back to React Native __DEV__.
+          const isDev =
+            (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+            (global as any).__DEV__ === true;
+
           await createOrganization(
             token,
             auth.userId,
             organizationName,
             `ph-${organizationName.toLocaleLowerCase()}`,
+            isDev,
           );
           console.log('Organization created successfully');
         }
@@ -99,8 +120,15 @@ export default function CreateOrganization() {
     } catch (err) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
-      console.error('Error during create organization:', err);
-      console.error(JSON.stringify(err, null, 2));
+      Alert.alert('Error', `Error during create organization:: ${err}`, [
+        {
+          text: 'Report Error',
+          onPress: () => {
+            console.error('Error during create organization:', err);
+            console.error(JSON.stringify(err, null, 2));
+          },
+        },
+      ]);
     }
   };
 

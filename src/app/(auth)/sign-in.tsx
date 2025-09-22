@@ -30,7 +30,15 @@ function SignInForm() {
   const [showResetCode, setShowResetCode] = React.useState(false);
 
   const onResetPress = useCallback(async () => {
-    if (!isLoaded) return;
+    if (!isLoaded) {
+      Alert.alert('Warning', `Waiting for Clerk to load. Env is set to ${process.env.NODE_ENV}`, [
+        {
+          text: 'Close App',
+          onPress: () => {},
+        },
+      ]);
+      return;
+    }
 
     try {
       const signInAttempt = await signIn.attemptFirstFactor({
