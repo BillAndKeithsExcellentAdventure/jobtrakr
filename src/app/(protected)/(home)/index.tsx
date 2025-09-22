@@ -8,7 +8,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Platform, StyleSheet } from 'react-native';
+import { Alert, GestureResponderEvent, Platform, StyleSheet } from 'react-native';
 
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 
@@ -21,6 +21,10 @@ import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAuth, useClerk } from '@clerk/clerk-expo';
 import { AntDesign } from '@expo/vector-icons';
+import {
+  useAllRows,
+  WorkCategoryCodeCompareAsNumber,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -45,6 +49,8 @@ export default function ProjectHomeScreen() {
   const colors = useColors();
   const auth = useAuth();
   const { orgRole, orgId } = auth;
+  const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
+  const allWorkItems = useAllRows('workItems');
 
   useEffect(() => {
     // create an array of projectId that have been favorited
@@ -216,15 +222,20 @@ export default function ProjectHomeScreen() {
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(() => {
     const showInvite = orgId && orgRole.includes('admin');
+    const showAddProject = allCategories.length > 0;
 
     const menuButtons: ActionButtonProps[] = [
-      {
-        icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
-        label: 'Add Project',
-        onPress: (e, actionContext) => {
-          handleMenuItemPress('AddProject', actionContext);
-        },
-      },
+      ...(showAddProject
+        ? [
+            {
+              icon: <Entypo name="plus" size={28} color={colors.iconColor} />,
+              label: 'Add Project',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('AddProject', actionContext);
+              },
+            },
+          ]
+        : []),
       {
         icon: <AntDesign name="contacts" size={28} color={colors.iconColor} />,
         label: 'Company Settings',
@@ -315,7 +326,21 @@ export default function ProjectHomeScreen() {
       <View style={{ flex: 1, width: '100%' }}>
         {projectListEntries.length > 0 ? (
           <View style={[styles.twoColListContainer, { backgroundColor: colors.background }]}>
-            <ProjectList data={projectListEntries} onPress={handleSelection} buttons={projectActionButtons} />
+            {allCategories.length > 0 ? (
+              <ProjectList
+                data={projectListEntries}
+                onPress={handleSelection}
+                buttons={projectActionButtons}
+              />
+            ) : (
+              <View style={[styles.container, { padding: 20, backgroundColor: colors.background }]}>
+                <Text text="Missing Configuration Info!" txtSize="xl" />
+                <Text
+                  numberOfLines={3}
+                  text="Please use menu in upper right and select 'Configuration' to define job specific cost items and at least one job template."
+                />
+              </View>
+            )}
           </View>
         ) : (
           <View style={[styles.container, { padding: 20, backgroundColor: colors.background }]}>
