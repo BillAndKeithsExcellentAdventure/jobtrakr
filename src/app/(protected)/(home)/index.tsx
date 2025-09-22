@@ -50,7 +50,6 @@ export default function ProjectHomeScreen() {
   const auth = useAuth();
   const { orgRole, orgId } = auth;
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
-  const allWorkItems = useAllRows('workItems');
 
   useEffect(() => {
     // create an array of projectId that have been favorited
@@ -270,7 +269,7 @@ export default function ProjectHomeScreen() {
       },
     ];
     return menuButtons;
-  }, [colors, handleMenuItemPress]);
+  }, [colors, handleMenuItemPress, allCategories]);
 
   const headerRightComponent = useMemo(() => {
     return {
