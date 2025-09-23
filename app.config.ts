@@ -158,11 +158,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       projectId: '0d1178cf-26f4-4ce6-8014-1a3b95e0f7e5',
     },
   },
-  owner: 'bkea',
   runtimeVersion: {
     policy: 'appVersion',
   },
   updates: {
     url: 'https://u.expo.dev/0d1178cf-26f4-4ce6-8014-1a3b95e0f7e5',
   },
+  owner: 'bkea',
 });
