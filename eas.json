@@ -36,7 +36,6 @@
       "env": {
         "EXPO_PUBLIC_CLERK_PRODUCTION_PUBLISHABLE_KEY": "pk_live_Y2xlcmsucHJvamVjdGhvdW5kLmJpeiQ"
       },
-
       "autoIncrement": true,
       "android": {
         "gradleCommand": ":app:assembleRelease",
