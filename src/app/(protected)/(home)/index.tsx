@@ -84,6 +84,8 @@ export default function ProjectHomeScreen() {
       });
 
       setProjectListEntries(listData);
+    } else {
+      setProjectListEntries([]);
     }
   }, [allProjects]);
 
