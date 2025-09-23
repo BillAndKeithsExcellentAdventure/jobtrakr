@@ -31,6 +31,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: getAppName(),
   slug: 'jobplus',
+  version: '1.0.3',
   orientation: 'default',
   icon: './assets/images/icon.png',
   scheme: 'projecthound',
