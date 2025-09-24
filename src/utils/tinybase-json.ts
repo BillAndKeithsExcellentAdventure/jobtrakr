@@ -35,7 +35,7 @@ export function exportTinyBaseStore(store: TinyBaseStoreLike) {
           serialRows[rowId] = { ...(row || {}) };
         }
       }
-    } else if (typeof rows === "object" && rows !== null) {
+    } else if (typeof rows === 'object' && rows !== null) {
       for (const rowId of Object.keys(rows)) {
         const row = rows[rowId];
         if (row instanceof Map) {
@@ -58,10 +58,10 @@ export function exportTinyBaseStore(store: TinyBaseStoreLike) {
 export async function importFromJson(
   store: TinyBaseStoreLike,
   data: any,
-  options?: { clearExisting?: boolean }
+  options?: { clearExisting?: boolean },
 ) {
-  if (!data || typeof data !== "object") {
-    throw new Error("importFromJson: invalid data");
+  if (!data || typeof data !== 'object') {
+    throw new Error('importFromJson: invalid data');
   }
   const { version = 1, tables = {} } = data;
   if (version !== 1) {
@@ -76,7 +76,7 @@ export async function importFromJson(
     const existingTableIds = getTableIdsFromStore(store);
     for (const tableId of existingTableIds) {
       // Prefer deleteTable if available
-      if (typeof store.deleteTable === "function") {
+      if (typeof store.deleteTable === 'function') {
         try {
           store.deleteTable(tableId);
           continue;
@@ -86,7 +86,7 @@ export async function importFromJson(
       }
 
       // Prefer setTable(tableId, {}) if available
-      if (typeof store.setTable === "function") {
+      if (typeof store.setTable === 'function') {
         try {
           store.setTable(tableId, {});
           continue;
@@ -96,7 +96,7 @@ export async function importFromJson(
       }
 
       // Last resort: mutate tables map if present
-      if (store.tables && typeof store.tables === "object") {
+      if (store.tables && typeof store.tables === 'object') {
         delete store.tables[tableId];
       }
     }
@@ -108,7 +108,7 @@ export async function importFromJson(
 
     // Convert each row into either plain object or Maps depending on store API
     // Prefer calling setTable(tableId, rowsObject) if available.
-    if (typeof store.setTable === "function") {
+    if (typeof store.setTable === 'function') {
       try {
         // Many TinyBase versions accept a plain record of rows
         store.setTable(tableId, rowsObj);
@@ -119,7 +119,7 @@ export async function importFromJson(
     }
 
     // If store.setTableRow or setCell APIs exist, try to populate rows/cells manually
-    if (typeof store.setRow === "function") {
+    if (typeof store.setRow === 'function') {
       // hypothetical API: setRow(tableId, rowId, rowObject)
       for (const rowId of Object.keys(rowsObj)) {
         store.setRow(tableId, rowId, rowsObj[rowId]);
@@ -127,7 +127,7 @@ export async function importFromJson(
       continue;
     }
 
-    if (typeof store.setCell === "function") {
+    if (typeof store.setCell === 'function') {
       // populate cell-by-cell
       for (const rowId of Object.keys(rowsObj)) {
         const row = rowsObj[rowId];
@@ -139,7 +139,7 @@ export async function importFromJson(
     }
 
     // As last resort, try to place the table into store.tables map
-    if (!store.tables || typeof store.tables !== "object") {
+    if (!store.tables || typeof store.tables !== 'object') {
       store.tables = {};
     }
     // Some TinyBase shapes expect Map for rows/cells; use plain objects which are JSON-serializable
@@ -147,7 +147,7 @@ export async function importFromJson(
   }
 
   // Some TinyBase stores have async/commit semantics; if there's a flush/commit, call it
-  if (typeof store.commit === "function") {
+  if (typeof store.commit === 'function') {
     try {
       await store.commit();
     } catch {
@@ -162,32 +162,32 @@ export async function importFromJson(
 
 function getTableIdsFromStore(store: TinyBaseStoreLike): string[] {
   if (!store) return [];
-  if (typeof store.getTableIds === "function") {
+  if (typeof store.getTableIds === 'function') {
     try {
       const ids = store.getTableIds();
       if (Array.isArray(ids)) return ids;
       // some implementations return an iterator
-      if (ids && typeof ids[Symbol.iterator] === "function") return Array.from(ids as Iterable<string>);
+      if (ids && typeof ids[Symbol.iterator] === 'function') return Array.from(ids as Iterable<string>);
     } catch {
       /* fallthrough */
     }
   }
 
-  if (typeof store.getTables === "function") {
+  if (typeof store.getTables === 'function') {
     try {
       const tables = store.getTables();
-      if (tables && typeof tables === "object") return Object.keys(tables);
+      if (tables && typeof tables === 'object') return Object.keys(tables);
     } catch {
       /* fallthrough */
     }
   }
 
-  if (store.tables && typeof store.tables === "object") {
+  if (store.tables && typeof store.tables === 'object') {
     return Object.keys(store.tables);
   }
 
   // Try to infer from forEachTable
-  if (typeof store.forEachTable === "function") {
+  if (typeof store.forEachTable === 'function') {
     const ids: string[] = [];
     try {
       store.forEachTable((tableId: string) => ids.push(tableId));
@@ -201,7 +201,7 @@ function getTableIdsFromStore(store: TinyBaseStoreLike): string[] {
 }
 
 function getTableRowsFromStore(store: TinyBaseStoreLike, tableId: string): any {
-  if (typeof store.getTable === "function") {
+  if (typeof store.getTable === 'function') {
     try {
       return store.getTable(tableId);
     } catch {
@@ -209,7 +209,7 @@ function getTableRowsFromStore(store: TinyBaseStoreLike, tableId: string): any {
     }
   }
 
-  if (typeof store.getTableRows === "function") {
+  if (typeof store.getTableRows === 'function') {
     try {
       return store.getTableRows(tableId);
     } catch {
@@ -217,12 +217,12 @@ function getTableRowsFromStore(store: TinyBaseStoreLike, tableId: string): any {
     }
   }
 
-  if (store.tables && typeof store.tables === "object") {
+  if (store.tables && typeof store.tables === 'object') {
     return store.tables[tableId];
   }
 
   // Last resort: try store.table(tableId)
-  if (typeof store.table === "function") {
+  if (typeof store.table === 'function') {
     try {
       return store.table(tableId);
     } catch {
