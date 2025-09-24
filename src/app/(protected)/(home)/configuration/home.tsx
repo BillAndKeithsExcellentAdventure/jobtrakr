@@ -4,10 +4,12 @@ import { useColors } from '@/src/context/ColorsContext';
 import { Stack, useRouter } from 'expo-router';
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
 
 const home = () => {
   const router = useRouter();
   const colors = useColors();
+  const appVersion = Constants?.expoConfig?.version ?? 'unknown';
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -22,7 +24,7 @@ const home = () => {
         <Text txtSize="title" text="Project Hound" style={{ marginBottom: 5 }} />
         <Text
           txtSize="standard"
-          text="version 1.0.1"
+          text={`version ${appVersion}`}
           style={{ marginBottom: 10, backgroundColor: colors.listBackground }}
         />
       </View>
@@ -33,14 +35,14 @@ const home = () => {
           onPress={() => router.push('/configuration/workcategory/workCategories')}
         />
         <ConfigurationEntry
-          label="Vendors"
-          description="Add and Edit Vendors"
-          onPress={() => router.push('/configuration/vendor/vendors')}
-        />
-        <ConfigurationEntry
           label="Project Templates"
           description="Define Project-specific Work Items"
           onPress={() => router.push('/configuration/template/templates')}
+        />
+        <ConfigurationEntry
+          label="Vendors"
+          description="Add and Edit Vendors"
+          onPress={() => router.push('/configuration/vendor/vendors')}
         />
       </View>
     </SafeAreaView>

@@ -50,6 +50,7 @@ export default function ProjectHomeScreen() {
   const auth = useAuth();
   const { orgRole, orgId } = auth;
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
+  const allProjectTemplates = useAllRows('templates');
 
   useEffect(() => {
     // create an array of projectId that have been favorited
@@ -92,6 +93,11 @@ export default function ProjectHomeScreen() {
   const onLikePressed = (projId: string) => {
     toggleFavorite(projId);
   };
+
+  const minConfigMet: boolean = useMemo(
+    () => allCategories && allCategories.length > 0 && allProjectTemplates && allProjectTemplates.length > 0,
+    [allCategories, allProjectTemplates],
+  );
 
   const projectActionButtons: ActionButtonProps[] = useMemo(
     () => [
@@ -323,30 +329,24 @@ export default function ProjectHomeScreen() {
           ...headerRightComponent,
         }}
       />
-
       <View style={{ flex: 1, width: '100%' }}>
         {projectListEntries.length > 0 ? (
           <View style={[styles.twoColListContainer, { backgroundColor: colors.background }]}>
-            {allCategories.length > 0 ? (
-              <ProjectList
-                data={projectListEntries}
-                onPress={handleSelection}
-                buttons={projectActionButtons}
-              />
-            ) : (
-              <View style={[styles.container, { padding: 20, backgroundColor: colors.background }]}>
-                <Text text="Missing Configuration Info!" txtSize="xl" />
-                <Text
-                  numberOfLines={3}
-                  text="Please use menu in upper right and select 'Configuration' to define job specific cost items and at least one job template."
-                />
-              </View>
-            )}
+            <ProjectList data={projectListEntries} onPress={handleSelection} buttons={projectActionButtons} />
           </View>
         ) : (
-          <View style={[styles.container, { padding: 20, backgroundColor: colors.background }]}>
-            <Text text="No Projects Found!" txtSize="xl" />
-            <Text text="Use menu in upper right to add one." />
+          <View style={[styles.container, { padding: 10, backgroundColor: colors.background }]}>
+            {minConfigMet ? (
+              <>
+                <Text text="No Projects Found!" txtSize="xl" style={{ marginBottom: 10 }} />
+                <Text text="Use menu in upper right to add one." />
+              </>
+            ) : (
+              <>
+                <Text text="Missing Configuration!" txtSize="xl" style={{ marginBottom: 10 }} />
+                <Text text="Please use menu in upper right and select 'Configuration' to define job specific cost items and at least one job template." />
+              </>
+            )}
           </View>
         )}
       </View>
