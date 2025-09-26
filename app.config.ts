@@ -121,6 +121,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     [
+      'expo-document-picker',
+      {
+        iCloudContainerEnvironment: 'Production',
+      },
+    ],
+    [
       'react-native-share',
       {
         ios: ['fb', 'instagram', 'twitter', 'tiktoksharesdk'],
