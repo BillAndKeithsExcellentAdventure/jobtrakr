@@ -90,7 +90,7 @@ const SeedWorkItemSelectorPage = () => {
       <View style={styles.container}>
         <TextField
           label="Selected Project Type"
-          style={[styles.input, { borderColor: colors.neutral200 }]}
+          style={[{ borderColor: colors.neutral200 }]}
           value={selectedProjectType}
           readOnly
           placeholder="Select a Project Type from list below"
@@ -148,12 +148,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   input: {
-    height: 40,
     borderColor: '#ccc',
     borderWidth: 1,
     marginBottom: 12,
     paddingLeft: 8,
     borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   saveButton: {
     backgroundColor: '#28a745',

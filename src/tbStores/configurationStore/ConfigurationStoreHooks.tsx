@@ -20,6 +20,7 @@ const {
 import { useCallback, useEffect, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import { CrudResult } from '@/src/models/types';
+import { exportTinyBaseStore, importFromJson } from '@/src/utils/tinybase-json';
 
 export interface WorkCategoryData {
   id: string;
@@ -302,3 +303,22 @@ export const useTemplateWorkItemData = (templateId: string) => {
 
   return { templateWorkItemIds, toggleWorkItemId, setActiveWorkItemIds }; // Return the template work item data or null if not found
 };
+
+export function exportStoreDataCallback() {
+  const store = useStore(useStoreId());
+  return useCallback((): any => {
+    if (!store) return null;
+    return exportTinyBaseStore(store);
+  }, [store]);
+}
+
+export function importJsonConfigurationDataCallback() {
+  const store = useStore(useStoreId());
+  return useCallback(
+    (jsonData: any): any => {
+      if (!store) return null;
+      importFromJson(store, jsonData);
+    },
+    [store],
+  );
+}
