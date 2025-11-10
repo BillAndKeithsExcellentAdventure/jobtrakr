@@ -2,7 +2,7 @@ import { ConfigurationEntry } from '@/src/components/ConfigurationEntry';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { Stack, useRouter } from 'expo-router';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import React, { useCallback, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
