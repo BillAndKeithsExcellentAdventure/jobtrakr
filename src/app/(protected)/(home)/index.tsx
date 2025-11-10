@@ -260,7 +260,7 @@ export default function ProjectHomeScreen() {
       ...(showInvite
         ? [
             {
-              icon: <AntDesign name="adduser" size={28} color={colors.iconColor} />,
+              icon: <AntDesign name="user-add" size={28} color={colors.iconColor} />,
               label: 'Manage Team',
               onPress: (e, actionContext) => {
                 handleMenuItemPress('Invite', actionContext);
