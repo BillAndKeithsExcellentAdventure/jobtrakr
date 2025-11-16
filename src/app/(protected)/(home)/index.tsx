@@ -213,7 +213,7 @@ export default function ProjectHomeScreen() {
         router.push({ pathname: '/[projectId]', params: { projectId: project.id } });
       } else Alert.alert(`Project not found: ${entry.projectName} (${entry.projectId})`);
     },
-    [allProjects],
+    [allProjects, router],
   );
 
   const handleMenuItemPress = useCallback(
@@ -239,7 +239,7 @@ export default function ProjectHomeScreen() {
     await signOut(() => {
       router.replace('/sign-in');
     });
-  }, [signOut]);
+  }, [signOut, router]);
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(() => {
     const showInvite = orgId && orgRole.includes('admin');
@@ -291,7 +291,7 @@ export default function ProjectHomeScreen() {
       },
     ];
     return menuButtons;
-  }, [colors, handleMenuItemPress, allCategories]);
+  }, [colors, handleMenuItemPress, allCategories, orgId, orgRole, handleSignOut]);
 
   const headerRightComponent = useMemo(() => {
     return {
