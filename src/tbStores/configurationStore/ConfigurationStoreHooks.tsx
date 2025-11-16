@@ -121,7 +121,7 @@ export const useAllRows = <K extends keyof TableDataMap>(
       : [];
     if (!compareFn) return array;
     return array.sort(compareFn);
-  }, [store, tableName]);
+  }, [store, tableName, compareFn]);
 
   useEffect(() => {
     setRows(fetchRows());
@@ -133,7 +133,7 @@ export const useAllRows = <K extends keyof TableDataMap>(
     return () => {
       store.delListener(listenerId);
     };
-  }, [store, tableName]);
+  }, [store, tableName, fetchRows]);
 
   return rows;
 };
@@ -304,7 +304,7 @@ export const useTemplateWorkItemData = (templateId: string) => {
   return { templateWorkItemIds, toggleWorkItemId, setActiveWorkItemIds }; // Return the template work item data or null if not found
 };
 
-export function exportStoreDataCallback() {
+export function useExportStoreDataCallback() {
   const store = useStore(useStoreId());
   return useCallback((): any => {
     if (!store) return null;
@@ -312,7 +312,7 @@ export function exportStoreDataCallback() {
   }, [store]);
 }
 
-export function importJsonConfigurationDataCallback() {
+export function useImportJsonConfigurationDataCallback() {
   const store = useStore(useStoreId());
   return useCallback(
     (jsonData: any): any => {

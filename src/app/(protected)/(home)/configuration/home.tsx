@@ -11,8 +11,8 @@ import { Pressable } from 'react-native-gesture-handler';
 import * as Sharing from 'expo-sharing';
 import { Alert, GestureResponderEvent, Platform } from 'react-native';
 import {
-  exportStoreDataCallback,
-  importJsonConfigurationDataCallback,
+  useExportStoreDataCallback,
+  useImportJsonConfigurationDataCallback,
   useAllRows,
   WorkCategoryCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
@@ -29,8 +29,8 @@ const Home = () => {
   const allWorkItems = useAllRows('workItems');
   const allProjectTemplates = useAllRows('templates');
 
-  const exportConfiguration = exportStoreDataCallback();
-  const importConfiguration = importJsonConfigurationDataCallback();
+  const exportConfiguration = useExportStoreDataCallback();
+  const importConfiguration = useImportJsonConfigurationDataCallback();
   const hasConfigurationData: boolean = useMemo(
     () =>
       (allCategories && allCategories.length > 0) ||

@@ -102,7 +102,7 @@ export const useAllProjects = () => {
     return () => {
       store.delListener(listenerId);
     };
-  }, [store]);
+  }, [store, handleTableChange]);
 
   return allProjects;
 };
@@ -178,7 +178,6 @@ export const useProjectValue = <ValueId extends ProjectsCellId>(
 // --- UPDATE ROW ---
 export function useUpdateProjectCallback() {
   const store = useStore(useProjectListStoreId());
-  if (!store) return undefined;
 
   return useCallback(
     (id: string, updates: Partial<ProjectData>): CrudResult => {
