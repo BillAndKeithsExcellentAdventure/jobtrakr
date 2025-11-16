@@ -31,14 +31,14 @@ const EditChangeOrder = () => {
         setChangeOrder(foundChangeOrder);
       }
     }
-  }, [allChangeOrders]);
+  }, [allChangeOrders, changeOrderId]);
 
   const handleSubmit = useCallback(async () => {
     if (changeOrder) {
       updateChangeOrder(changeOrderId, changeOrder);
       router.back();
     }
-  }, [changeOrder, changeOrderId]);
+  }, [changeOrder, changeOrderId, router, updateChangeOrder]);
 
   return (
     <>

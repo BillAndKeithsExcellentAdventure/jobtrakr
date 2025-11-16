@@ -102,7 +102,7 @@ function SignInForm() {
         Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       }
     }
-  }, [isLoaded, signIn, resetCode, password, setActive, router]);
+  }, [isLoaded, signIn, resetCode, password, setActive, router, emailAddress]);
 
   // Handle the submission of the sign-in form
   const onSignInPress = useCallback(async () => {

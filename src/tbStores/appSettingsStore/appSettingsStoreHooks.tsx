@@ -78,7 +78,7 @@ export const useAppSettings = (): SettingsData => {
     return () => {
       store.delListener(listenerId);
     };
-  }, [store]);
+  }, [store, fetchRow]);
 
   return row;
 };

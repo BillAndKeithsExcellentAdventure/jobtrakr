@@ -193,7 +193,7 @@ export const useAllRows = <K extends keyof TableDataMap>(
           id: id,
         })) as TableDataMap[K][])
       : [];
-  }, [store, tableName, projectId]);
+  }, [store, tableName]);
 
   useEffect(() => {
     setRows(fetchRows());
@@ -224,7 +224,7 @@ export function useAddRowCallback<K extends PROJECTDETAILS_TABLES>(projectId: st
         ? { status: 'Success', id, msg: '' }
         : { status: 'Error', id: '0', msg: 'Failed to write' };
     },
-    [store, projectId, tableId],
+    [store, tableId],
   );
 }
 
@@ -241,7 +241,7 @@ export function useUpdateRowCallback<K extends PROJECTDETAILS_TABLES>(projectId:
         ? { status: 'Success', id, msg: '' }
         : { status: 'Error', id: '0', msg: 'Failed to update' };
     },
-    [store, tableId, projectId],
+    [store, tableId],
   );
 }
 
@@ -256,7 +256,7 @@ export function useDeleteRowCallback<K extends PROJECTDETAILS_TABLES>(projectId:
         ? { status: 'Success', id, msg: '' }
         : { status: 'Error', id: '0', msg: 'Failed to delete' };
     },
-    [store, tableId, projectId],
+    [store, tableId],
   );
 }
 
@@ -366,7 +366,7 @@ export function useSetWorkItemSpentSummaryCallback(projectId: string) {
         ? { status: 'Success', id: workItemId, msg: '' }
         : { status: 'Error', id: '0', msg: 'Failed to update' };
     },
-    [store, projectId],
+    [store],
   );
 }
 

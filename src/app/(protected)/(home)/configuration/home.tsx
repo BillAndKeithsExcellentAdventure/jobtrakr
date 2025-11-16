@@ -11,8 +11,8 @@ import { Pressable } from 'react-native-gesture-handler';
 import * as Sharing from 'expo-sharing';
 import { Alert, GestureResponderEvent, Platform } from 'react-native';
 import {
-  exportStoreDataCallback,
-  importJsonConfigurationDataCallback,
+  useExportStoreDataCallback,
+  useImportJsonConfigurationDataCallback,
   useAllRows,
   WorkCategoryCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
@@ -20,7 +20,7 @@ import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import * as DocumentPicker from 'expo-document-picker';
 
-const home = () => {
+const Home = () => {
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const router = useRouter();
   const colors = useColors();
@@ -29,8 +29,8 @@ const home = () => {
   const allWorkItems = useAllRows('workItems');
   const allProjectTemplates = useAllRows('templates');
 
-  const exportConfiguration = exportStoreDataCallback();
-  const importConfiguration = importJsonConfigurationDataCallback();
+  const exportConfiguration = useExportStoreDataCallback();
+  const importConfiguration = useImportJsonConfigurationDataCallback();
   const hasConfigurationData: boolean = useMemo(
     () =>
       (allCategories && allCategories.length > 0) ||
@@ -131,7 +131,7 @@ const home = () => {
         ]);
       }
     },
-    [exportConfiguration],
+    [exportConfiguration, importConfiguration],
   );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(() => {
@@ -157,7 +157,7 @@ const home = () => {
           ]),
     ];
     return menuButtons;
-  }, [colors, handleMenuItemPress, allCategories]);
+  }, [colors, handleMenuItemPress, hasConfigurationData]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -205,4 +205,4 @@ const home = () => {
   );
 };
 
-export default home;
+export default Home;

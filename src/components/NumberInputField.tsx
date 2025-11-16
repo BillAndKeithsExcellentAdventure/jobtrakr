@@ -31,7 +31,7 @@ export const NumberInputField: React.FC<NumberInputFieldProps> = ({
 
     if (isEditingRef.current) setInputValue(value.toString());
     else setInputValue(value.toFixed(numDecimalPlaces));
-  }, [value]);
+  }, [value, numDecimalPlaces]);
 
   const handleInputChange = (text: string) => {
     if (readOnly) return; // Prevent changes if readOnly is true
@@ -64,7 +64,7 @@ export const NumberInputField: React.FC<NumberInputFieldProps> = ({
       setInputValue(zero.toFixed(numDecimalPlaces));
       onChange(0);
     }
-  }, [onChange, inputValue]);
+  }, [onChange, inputValue, numDecimalPlaces]);
 
   const colors = useColors();
 

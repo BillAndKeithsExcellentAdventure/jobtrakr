@@ -99,7 +99,7 @@ const AddProjectScreen = () => {
       addActiveProjectIds(result.id);
     }
     router.back();
-  }, [project, canAddProject, pickedTemplate, allProjectTemplates, allTemplateWorkItems, addProject, router]);
+  }, [project, canAddProject, pickedTemplate, allProjectTemplates, allTemplateWorkItems, addProject, router, addActiveProjectIds]);
 
   return (
     <>

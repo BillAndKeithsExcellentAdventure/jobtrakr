@@ -122,8 +122,6 @@ const ProjectDetailsPage = () => {
     return sections.sort(CostSectionDataCodeCompareAsNumber);
   }, [
     allWorkItemSummaries,
-    allWorkItems,
-    allProjectCategories,
     allActualCostItems,
     workItemMap,
     categoryMap,
@@ -154,83 +152,7 @@ const ProjectDetailsPage = () => {
 
   const unusedCategoriesString = useMemo(() => unusedCategories.join(','), [unusedCategories]);
 
-  const handleMenuItemPress = useCallback(
-    (menuItem: string, actionContext: any) => {
-      setHeaderMenuModalVisible(false);
-      if (menuItem === 'Edit' && projectId) {
-        router.push({
-          pathname: '/[projectId]/edit',
-          params: { projectId, projectName: projectData!.name },
-        });
-        return;
-      } else if (menuItem === 'SetEstimates' && projectId) {
-        router.push({
-          pathname: '/[projectId]/setEstimatedCosts',
-          params: { projectId, projectName: projectData!.name },
-        });
-        return;
-      } else if (menuItem === 'AddCostCategory' && projectId) {
-        router.push({
-          pathname: '/[projectId]/addCostCategory',
-          params: {
-            projectId,
-            projectName: projectData!.name,
-            availableCategories: unusedCategoriesString,
-          },
-        });
-        return;
-      } else if (menuItem === 'Delete' && projectId) {
-        Alert.alert('Delete Project', 'Are you sure you want to delete this project?', [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            onPress: () => {
-              const result = processDeleteProject(projectId);
-              if (result.status === 'Success') {
-                removeActiveProjectId(projectId);
-              }
-              router.replace('/');
-            },
-          },
-        ]);
-        return;
-      } else if (menuItem === 'CleanCostItems' && projectId) {
-        Alert.alert(
-          'Clean Cost Items',
-          'Are you sure you want to clean cost items that do not have a match receipt?',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Clean-up',
-              onPress: () => {
-                // remove all cost items that do not have a matching receipt
-                const costItemsToRemove = allActualCostItems.filter(
-                  (costItem) =>
-                    !allReceiptItems.some(
-                      (r) => r.id === costItem.parentId && costItem.documentationType === 'receipt',
-                    ),
-                );
-                costItemsToRemove.forEach((item) => {
-                  const result = removeCostItem(item.id);
-                  if (result.status !== 'Success') {
-                    console.error(`Error cleaning cost item ${item.id}: ${result.msg}`);
-                  }
-                });
-              },
-            },
-          ],
-        );
-        return;
-      } else if (menuItem === 'ExportCostItems' && projectId) {
-        ExportCostItems();
-
-        return;
-      }
-    },
-    [projectId, projectData, router, processDeleteProject, removeActiveProjectId],
-  );
-
-  const ExportCostItems = async () => {
+  const ExportCostItems = useCallback(async () => {
     if (!projectId || !projectData) return;
 
     try {
@@ -328,7 +250,83 @@ const ProjectDetailsPage = () => {
       console.error('Error exporting cost items:', error);
       Alert.alert('Error', 'Failed to export cost items');
     }
-  };
+  }, [projectId, projectData, allWorkItems, categoryMap, allWorkItemSummaries, allActualCostItems]);
+
+  const handleMenuItemPress = useCallback(
+    (menuItem: string, actionContext: any) => {
+      setHeaderMenuModalVisible(false);
+      if (menuItem === 'Edit' && projectId) {
+        router.push({
+          pathname: '/[projectId]/edit',
+          params: { projectId, projectName: projectData!.name },
+        });
+        return;
+      } else if (menuItem === 'SetEstimates' && projectId) {
+        router.push({
+          pathname: '/[projectId]/setEstimatedCosts',
+          params: { projectId, projectName: projectData!.name },
+        });
+        return;
+      } else if (menuItem === 'AddCostCategory' && projectId) {
+        router.push({
+          pathname: '/[projectId]/addCostCategory',
+          params: {
+            projectId,
+            projectName: projectData!.name,
+            availableCategories: unusedCategoriesString,
+          },
+        });
+        return;
+      } else if (menuItem === 'Delete' && projectId) {
+        Alert.alert('Delete Project', 'Are you sure you want to delete this project?', [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            onPress: () => {
+              const result = processDeleteProject(projectId);
+              if (result.status === 'Success') {
+                removeActiveProjectId(projectId);
+              }
+              router.replace('/');
+            },
+          },
+        ]);
+        return;
+      } else if (menuItem === 'CleanCostItems' && projectId) {
+        Alert.alert(
+          'Clean Cost Items',
+          'Are you sure you want to clean cost items that do not have a match receipt?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Clean-up',
+              onPress: () => {
+                // remove all cost items that do not have a matching receipt
+                const costItemsToRemove = allActualCostItems.filter(
+                  (costItem) =>
+                    !allReceiptItems.some(
+                      (r) => r.id === costItem.parentId && costItem.documentationType === 'receipt',
+                    ),
+                );
+                costItemsToRemove.forEach((item) => {
+                  const result = removeCostItem(item.id);
+                  if (result.status !== 'Success') {
+                    console.error(`Error cleaning cost item ${item.id}: ${result.msg}`);
+                  }
+                });
+              },
+            },
+          ],
+        );
+        return;
+      } else if (menuItem === 'ExportCostItems' && projectId) {
+        ExportCostItems();
+
+        return;
+      }
+    },
+    [projectId, projectData, router, processDeleteProject, removeActiveProjectId, ExportCostItems, allActualCostItems, allReceiptItems, removeCostItem, unusedCategoriesString],
+  );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
@@ -383,7 +381,7 @@ const ProjectDetailsPage = () => {
         },
       },
     ],
-    [colors, allWorkItemSummaries, handleMenuItemPress, router, addActiveProjectIds, unusedCategories],
+    [colors, allWorkItemSummaries, handleMenuItemPress, unusedCategories],
   );
 
   const renderItem = (item: CostSectionData, projectId: string) => {

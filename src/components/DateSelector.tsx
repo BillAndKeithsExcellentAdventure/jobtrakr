@@ -19,7 +19,7 @@ export const DateSelector = ({
 
   const handleAndroidShowDatePicker = useCallback((): void => {
     setShowDatePicker(!showDatePicker);
-  }, []);
+  }, [showDatePicker]);
 
   const colors = useColors();
 
@@ -29,7 +29,7 @@ export const DateSelector = ({
     if (selectedDate) {
       setSelectedDate(selectedDate);
     }
-  }, []);
+  }, [setSelectedDate]);
 
   return (
     <View style={[styles.input, { flexDirection: 'row' }]}>

@@ -55,7 +55,7 @@ const EditChangeOrderItem = () => {
       .sort((a, b) => a.sortValue1 - b.sortValue1)
       .sort((a, b) => a.sortValue2 - b.sortValue2)
       .map((i) => ({ label: i.label, value: i.value }));
-  }, [allWorkItemCostSummaries, allWorkItems]);
+  }, [allWorkItemCostSummaries, allWorkItems, allWorkCategories]);
 
   const [amount, setAmount] = useState<number>(0);
   const [label, setLabel] = useState<string>('');
@@ -84,7 +84,7 @@ const EditChangeOrderItem = () => {
         if (option) setItemWorkItemEntry(option);
       }
     }
-  }, [newChangeOrderItem, allChangeOrderItems]);
+  }, [newChangeOrderItem, allChangeOrderItems, allAvailableCostItemOptions, changeOrderItemId]);
 
   const [showCostItemPicker, setShowCostItemPicker] = useState(false);
 
