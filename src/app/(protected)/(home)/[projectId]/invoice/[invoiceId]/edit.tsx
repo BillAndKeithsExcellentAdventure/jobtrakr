@@ -110,7 +110,7 @@ const EditInvoiceDetailsPage = () => {
   const handleSubmit = useCallback(async () => {
     updateInvoice(invoiceId, invoice);
     router.back();
-  }, [invoice]);
+  }, [invoice, invoiceId, router, updateInvoice]);
 
   const invoiceAmount = invoice.amount ?? 0;
 

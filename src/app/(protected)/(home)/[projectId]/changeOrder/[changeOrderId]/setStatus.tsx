@@ -40,7 +40,7 @@ const SetChangeOrderStatus = () => {
         setChangeOrder(foundChangeOrder);
       }
     }
-  }, [allChangeOrders]);
+  }, [allChangeOrders, changeOrderId]);
 
   useEffect(() => {
     if (changeOrder) {
@@ -204,7 +204,7 @@ const SetChangeOrderStatus = () => {
         setCurrentStatusOption(matchingStatus);
       }
     }
-  }, [changeOrder]);
+  }, [changeOrder, allStatusOptions, handleStatusChange]);
 
   const handleStatusOptionChange = (option: OptionEntry) => {
     if (option) {

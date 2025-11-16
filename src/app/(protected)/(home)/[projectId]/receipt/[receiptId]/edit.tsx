@@ -108,7 +108,7 @@ const EditReceiptDetailsPage = () => {
   const handleSubmit = useCallback(async () => {
     updateReceipt(receiptId, receipt);
     router.back();
-  }, [receipt]);
+  }, [receipt, receiptId, router, updateReceipt]);
 
   const receiptAmount = receipt.amount ?? 0;
 

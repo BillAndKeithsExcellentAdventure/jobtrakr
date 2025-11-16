@@ -131,7 +131,7 @@ const DefineChangeOrderScreen = () => {
         setChangeOrder(foundChangeOrder);
       }
     }
-  }, [allChangeOrders]);
+  }, [allChangeOrders, changeOrderId]);
 
   useEffect(() => {
     if (changeOrder) {
@@ -193,7 +193,7 @@ const DefineChangeOrderScreen = () => {
       formattedTotal: formatCurrency(changeOrder.bidAmount, true),
       changeItems: changeItemArray,
     };
-  }, [changeOrder, projectData, appSettings]);
+  }, [changeOrder, projectData, appSettings, changeOrderItems]);
 
   const handleSendForApproval = useCallback(async () => {
     if (!changeOrderData) return;
@@ -254,7 +254,7 @@ const DefineChangeOrderScreen = () => {
         Alert.alert('Error', errorMessage);
       }
     }
-  }, [changeOrderData, changeOrder?.id]);
+  }, [changeOrderData, changeOrder?.id, auth]);
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
@@ -293,7 +293,7 @@ const DefineChangeOrderScreen = () => {
         },
       },
     ],
-    [colors, router, changeOrder],
+    [colors, router, changeOrder, projectId, changeOrderId],
   );
 
   const [itemWorkItemEntry, setItemWorkItemEntry] = useState<OptionEntry>({
