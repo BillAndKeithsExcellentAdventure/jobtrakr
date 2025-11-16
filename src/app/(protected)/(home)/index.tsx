@@ -8,7 +8,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, GestureResponderEvent, Platform, StyleSheet } from 'react-native';
+import { Alert, GestureResponderEvent, Platform, StyleSheet, ActivityIndicator } from 'react-native';
 
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 
@@ -44,6 +44,7 @@ export default function ProjectHomeScreen() {
   const [projectListEntries, setProjectListEntries] = useState<ProjectListEntryProps[]>([]);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [isReady, setIsReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const { signOut } = useClerk();
   const colors = useColors();
@@ -98,6 +99,19 @@ export default function ProjectHomeScreen() {
     () => allCategories && allCategories.length > 0 && allProjectTemplates && allProjectTemplates.length > 0,
     [allCategories, allProjectTemplates],
   );
+
+  useEffect(() => {
+    if (minConfigMet) {
+      setIsLoading(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [minConfigMet]);
 
   const projectActionButtons: ActionButtonProps[] = useMemo(
     () => [
@@ -304,10 +318,11 @@ export default function ProjectHomeScreen() {
     };
   }, [colors.iconColor, headerMenuModalVisible, setHeaderMenuModalVisible]);
 
+  // wait to give tiny base to get and sync any data
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsReady(true);
-    }, 50);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, []);
@@ -315,7 +330,22 @@ export default function ProjectHomeScreen() {
   if (!isReady) {
     return (
       <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
-        <Text txtSize="title">Loading...</Text>
+        <ActivityIndicator size="large" color={colors.iconColor} />
+        <Text txtSize="title" style={{ marginTop: 16 }}>
+          Loading...
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
+  // wait a little longer if we still haven't loaded up cost codes and project templates
+  if (isLoading) {
+    return (
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
+        <ActivityIndicator size="large" color={colors.iconColor} />
+        <Text txtSize="title" style={{ marginTop: 16 }}>
+          Loading configuration...
+        </Text>
       </SafeAreaView>
     );
   }
