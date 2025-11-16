@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 import { buildLocalMediaUri, useAddImageCallback, useGetImageCallback } from '@/src/utils/images';
 import { useColors } from '@/src/context/ColorsContext';
 import { useColorScheme } from './useColorScheme';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useAuth } from '@clerk/clerk-expo';
 import { mediaType } from '@/src/utils/images';
 

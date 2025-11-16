@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { TouchableWithoutFeedback, Image, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import Base64Image from './Base64Image';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useColors } from '../context/ColorsContext';
 
 interface InvoiceSummaryProps {

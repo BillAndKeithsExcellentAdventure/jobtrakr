@@ -2,7 +2,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { randomUUID } from 'expo-crypto';
 import { useCallback } from 'react';
 import { Platform } from 'react-native';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { FailedToUploadData, useAddItemCallback } from '@/src/tbStores/UploadSyncStore';
 
 type ImageResult = { status: 'Success' | 'Error'; id: string; uri?: string | undefined; msg: string };
