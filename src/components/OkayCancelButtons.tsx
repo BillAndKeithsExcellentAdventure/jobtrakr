@@ -17,7 +17,7 @@ const OkayCancelButtons = ({
 }) => {
   const router = useRouter();
 
-  const onCancel = useCallback(() => (onCancelPress ? onCancelPress() : router.back()), [useCallback]);
+  const onCancel = useCallback(() => (onCancelPress ? onCancelPress() : router.back()), [onCancelPress, router]);
 
   return (
     <View style={styles.saveButtonRow}>

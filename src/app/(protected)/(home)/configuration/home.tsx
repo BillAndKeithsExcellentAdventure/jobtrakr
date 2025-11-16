@@ -20,7 +20,7 @@ import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import * as DocumentPicker from 'expo-document-picker';
 
-const home = () => {
+const Home = () => {
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const router = useRouter();
   const colors = useColors();
@@ -131,7 +131,7 @@ const home = () => {
         ]);
       }
     },
-    [exportConfiguration],
+    [exportConfiguration, importConfiguration],
   );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(() => {
@@ -157,7 +157,7 @@ const home = () => {
           ]),
     ];
     return menuButtons;
-  }, [colors, handleMenuItemPress, allCategories]);
+  }, [colors, handleMenuItemPress, hasConfigurationData]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -205,4 +205,4 @@ const home = () => {
   );
 };
 
-export default home;
+export default Home;

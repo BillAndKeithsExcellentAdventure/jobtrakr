@@ -48,7 +48,7 @@ const PercentCompleteBar: React.FC<PercentCompleteProps> = ({
       duration: 500,
       useNativeDriver: false,
     }).start();
-  }, [percent]);
+  }, [percent, animatedWidth]);
 
   const widthInterpolated = animatedWidth.interpolate({
     inputRange: [0, 100],

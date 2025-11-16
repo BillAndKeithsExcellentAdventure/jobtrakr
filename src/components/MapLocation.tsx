@@ -88,14 +88,14 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     } else {
       Alert.alert('No Location Selected', 'Please tap on the map to select a location');
     }
-  }, [selectedLocation, onLocationSelected, projectName, onClose]);
+  }, [selectedLocation, onLocationSelected]);
 
   const handleResetToCurrentDeviceLocation = useCallback(() => {
     if (deviceLocation) {
       // Use provided initial coordinates
       setSelectedLocation({ ...deviceLocation });
     }
-  }, [projectLocation]);
+  }, [deviceLocation]);
 
   const cameraPosition = useMemo(() => {
     return {
@@ -250,6 +250,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     appleMarkers,
     ref,
     setSelectedLocation,
+    router,
   ]);
 
   return (

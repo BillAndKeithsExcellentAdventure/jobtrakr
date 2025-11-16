@@ -341,7 +341,7 @@ export const useAddImageCallback = () => {
 
       return uploadResult;
     },
-    [userId, orgId],
+    [userId, orgId, addFailedToUploadRecord, auth],
   );
 };
 
@@ -413,6 +413,6 @@ export const useGetImageCallback = () => {
         };
       }
     },
-    [userId, orgId],
+    [userId, orgId, auth],
   );
 };
