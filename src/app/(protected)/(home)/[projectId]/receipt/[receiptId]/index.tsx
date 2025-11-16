@@ -184,7 +184,7 @@ const ReceiptDetailsPage = () => {
         imageId: receipt.imageId,
       },
     });
-  }, [projectId, receiptId, receipt.imageId]);
+  }, [projectId, receiptId, receipt.imageId, router]);
 
   const [containerHeight, setContainerHeight] = useState(0);
 

@@ -50,7 +50,7 @@ const EditProjectScreen = () => {
         ...currentProject,
       });
     }
-  }, [currentProject]);
+  }, [currentProject, project.id]);
 
   const updatedProject = useUpdateProjectCallback();
   const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
