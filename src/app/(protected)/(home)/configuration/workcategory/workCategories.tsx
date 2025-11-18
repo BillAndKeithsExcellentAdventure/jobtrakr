@@ -110,15 +110,15 @@ const ListWorkCategories = () => {
 
   return (
     <>
-      <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-        <Stack.Screen
-          options={{
-            headerShown: true,
-            title: 'Work Categories',
-            headerRight: renderHeaderRight,
-          }}
-        />
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Work Categories',
+          headerRight: renderHeaderRight,
+        }}
+      />
 
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
         <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
           {showAdd && (
             <View style={{ backgroundColor: colors.listBackground }}>
@@ -151,7 +151,7 @@ const ListWorkCategories = () => {
               </View>
             </View>
           )}
-          <View>
+          <View style={{ flex: 1 }}>
             <FlatList
               data={allCategories}
               keyExtractor={(item) => item.id}

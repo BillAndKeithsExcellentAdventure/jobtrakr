@@ -63,15 +63,14 @@ const ListProjectTemplates = () => {
 
   return (
     <>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Project Templates',
+          headerRight: renderHeaderRight,
+        }}
+      />
       <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-        <Stack.Screen
-          options={{
-            headerShown: true,
-            title: 'Project Templates',
-            headerRight: renderHeaderRight,
-          }}
-        />
-
         <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
           {showAdd && (
             <View style={{ backgroundColor: colors.listBackground }}>
@@ -100,7 +99,7 @@ const ListProjectTemplates = () => {
               </View>
             </View>
           )}
-          <View>
+          <View style={{ flex: 1 }}>
             <FlatList
               data={allProjectTemplates}
               keyExtractor={(item) => item.id}

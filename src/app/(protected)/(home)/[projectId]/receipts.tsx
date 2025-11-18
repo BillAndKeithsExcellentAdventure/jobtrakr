@@ -186,7 +186,6 @@ const ProjectReceiptsPage = () => {
                     }}
                   >
                     <FlashList
-                      estimatedItemSize={ITEM_HEIGHT}
                       data={allReceipts}
                       keyExtractor={(item, index) => item.id ?? index.toString()}
                       renderItem={({ item }) => (

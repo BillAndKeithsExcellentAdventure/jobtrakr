@@ -60,9 +60,13 @@ const AddProjectScreen = () => {
   };
 
   useEffect(() => {
-    const availableOptions = allProjectTemplates.map((t) => {
-      return { label: t.name, value: t.id };
-    });
+    // Build template options from available templates that have work items
+    const availableOptions = allProjectTemplates
+      .map((t) => {
+        return { label: t.name, value: t.id };
+      })
+      .filter((option) => allTemplateWorkItems.some((tw) => tw.templateId === option.value));
+
     if (availableOptions.length === 0) {
       availableOptions.push({ label: 'No templates available', value: '' });
       setTemplateOptions(availableOptions);
@@ -99,7 +103,16 @@ const AddProjectScreen = () => {
       addActiveProjectIds(result.id);
     }
     router.back();
-  }, [project, canAddProject, pickedTemplate, allProjectTemplates, allTemplateWorkItems, addProject, router, addActiveProjectIds]);
+  }, [
+    project,
+    canAddProject,
+    pickedTemplate,
+    allProjectTemplates,
+    allTemplateWorkItems,
+    addProject,
+    router,
+    addActiveProjectIds,
+  ]);
 
   return (
     <>

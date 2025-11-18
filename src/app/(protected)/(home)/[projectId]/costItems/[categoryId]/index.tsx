@@ -225,7 +225,6 @@ const CategorySpecificCostItemsPage = () => {
                 )}
                 keyExtractor={(item) => item.id}
                 ListEmptyComponent={<Text>No data available</Text>}
-                estimatedItemSize={ITEM_HEIGHT}
               />
             </View>
             {headerMenuModalVisible && (

@@ -5,6 +5,7 @@ import { useColors } from '@/src/context/ColorsContext';
 import {
   ProjectTemplateData,
   useDeleteRowCallback,
+  useTemplateWorkItemData,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -25,6 +26,9 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => {
 const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: ProjectTemplateData }) => {
   const router = useRouter();
   const removeProjectTemplate = useDeleteRowCallback('templates');
+  const { templateWorkItemIds, templateWorkCategoryIds } = useTemplateWorkItemData(projectTemplate.id);
+  //const numberOfCostItems = templateWorkItemIds.length;
+
   const colors = useColors();
 
   const handleDelete = useCallback(
@@ -62,7 +66,14 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
           <View style={styles.itemInfo}>
             <View style={{ flex: 1 }}>
               <Text txtSize="title" text={projectTemplate.name} />
-              <Text style={styles.itemName}>{projectTemplate.description}</Text>
+              <Text
+                style={[
+                  styles.itemName,
+                  { color: templateWorkItemIds.length > 0 ? colors.text : colors.error },
+                ]}
+              >
+                {`${projectTemplate.description} (${templateWorkCategoryIds.length} work categories)`}
+              </Text>
             </View>
             <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
           </View>

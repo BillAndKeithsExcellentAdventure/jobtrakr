@@ -340,12 +340,7 @@ export const DeviceMediaList = ({
             )}
           </View>
 
-          <FlashList
-            data={deviceMediaAssets}
-            estimatedItemSize={200}
-            ListFooterComponent={renderFooter}
-            renderItem={renderItem}
-          />
+          <FlashList data={deviceMediaAssets} ListFooterComponent={renderFooter} renderItem={renderItem} />
 
           <View style={styles.buttonContainer}>
             <View style={styles.buttonRow}>

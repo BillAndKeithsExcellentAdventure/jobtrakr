@@ -204,12 +204,7 @@ export const ProjectMediaList = ({
             {hasSelectedItems && <Text>{`${selectedCount} selected`}</Text>}
           </View>
 
-          <FlashList
-            numColumns={showInSingleColumn ? 1 : 2}
-            data={mediaItems}
-            estimatedItemSize={200}
-            renderItem={renderItem}
-          />
+          <FlashList numColumns={showInSingleColumn ? 1 : 2} data={mediaItems} renderItem={renderItem} />
 
           {hasSelectedItems && (
             <View style={styles.buttonContainer}>

@@ -120,13 +120,7 @@ const ProjectDetailsPage = () => {
     });
 
     return sections.sort(CostSectionDataCodeCompareAsNumber);
-  }, [
-    allWorkItemSummaries,
-    allActualCostItems,
-    workItemMap,
-    categoryMap,
-    updateWorkItemSpentSummary,
-  ]);
+  }, [allWorkItemSummaries, allActualCostItems, workItemMap, categoryMap, updateWorkItemSpentSummary]);
 
   // get a list of unused work items not represented in allWorkItemSummaries
   const unusedWorkItems = useMemo(
@@ -325,7 +319,18 @@ const ProjectDetailsPage = () => {
         return;
       }
     },
-    [projectId, projectData, router, processDeleteProject, removeActiveProjectId, ExportCostItems, allActualCostItems, allReceiptItems, removeCostItem, unusedCategoriesString],
+    [
+      projectId,
+      projectData,
+      router,
+      processDeleteProject,
+      removeActiveProjectId,
+      ExportCostItems,
+      allActualCostItems,
+      allReceiptItems,
+      removeCostItem,
+      unusedCategoriesString,
+    ],
   );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
@@ -523,7 +528,6 @@ const ProjectDetailsPage = () => {
                 renderItem={({ item }) => renderItem(item, projectId)}
                 keyExtractor={(item) => item.categoryId}
                 ListEmptyComponent={<Text>No data available</Text>}
-                estimatedItemSize={ITEM_HEIGHT}
               />
             </View>
           </>
