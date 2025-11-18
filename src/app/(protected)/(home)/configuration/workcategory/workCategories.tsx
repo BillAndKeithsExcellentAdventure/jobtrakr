@@ -11,7 +11,7 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'; // Right caret icon
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, Platform, StyleSheet } from 'react-native';
+import { Alert, FlatList, Platform, StyleSheet, KeyboardAvoidingView } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -118,65 +118,71 @@ const ListWorkCategories = () => {
         }}
       />
 
-      <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-        <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
-          {showAdd && (
-            <View style={{ backgroundColor: colors.listBackground }}>
-              <View style={{ padding: 10, borderRadius: 10, marginVertical: 15, marginHorizontal: 15 }}>
-                <View style={{ flexDirection: 'row' }}>
-                  <View style={{ width: 120 }}>
-                    <TextInput
-                      style={[styles.input, { backgroundColor: colors.neutral200 }]}
-                      placeholder="Code"
-                      keyboardType="number-pad"
-                      value={category.code}
-                      onChangeText={(text) => handleInputChange('code', text)}
-                    />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+          <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
+            {showAdd && (
+              <View style={{ backgroundColor: colors.listBackground }}>
+                <View style={{ padding: 10, borderRadius: 10, marginVertical: 15, marginHorizontal: 15 }}>
+                  <View style={{ flexDirection: 'row' }}>
+                    <View style={{ width: 120 }}>
+                      <TextInput
+                        style={[styles.input, { backgroundColor: colors.neutral200 }]}
+                        placeholder="Code"
+                        keyboardType="number-pad"
+                        value={category.code}
+                        onChangeText={(text) => handleInputChange('code', text)}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <TextInput
+                        style={[styles.input, { backgroundColor: colors.neutral200, marginLeft: 5 }]}
+                        placeholder="Name"
+                        value={category.name}
+                        onChangeText={(text) => handleInputChange('name', text)}
+                      />
+                    </View>
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <TextInput
-                      style={[styles.input, { backgroundColor: colors.neutral200, marginLeft: 5 }]}
-                      placeholder="Name"
-                      value={category.name}
-                      onChangeText={(text) => handleInputChange('name', text)}
-                    />
-                  </View>
-                </View>
-                <ActionButton
-                  style={{ zIndex: 1 }}
-                  onPress={handleAddCategory}
-                  type={category.code && category.name ? 'action' : 'disabled'}
-                  title="Add Work Category"
-                />
-              </View>
-            </View>
-          )}
-          <View style={{ flex: 1 }}>
-            <FlatList
-              data={allCategories}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => <SwipeableCategory category={item} />}
-              ListEmptyComponent={() => (
-                <View
-                  style={{
-                    padding: 20,
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text txtSize="title" text="No work categories found." />
-                  <Text text="Use the '+' in the upper right to add one." />
                   <ActionButton
-                    style={{ zIndex: 1, marginTop: 10 }}
-                    onPress={() => router.push(`/configuration/workcategory/seedCategoriesSelection/`)}
-                    type="action"
-                    title="Or, use one of our sets of Work Categories..."
+                    style={{ zIndex: 1 }}
+                    onPress={handleAddCategory}
+                    type={category.code && category.name ? 'action' : 'disabled'}
+                    title="Add Work Category"
                   />
                 </View>
-              )}
-            />
+              </View>
+            )}
+            <View style={{ flex: 1 }}>
+              <FlatList
+                data={allCategories}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => <SwipeableCategory category={item} />}
+                ListEmptyComponent={() => (
+                  <View
+                    style={{
+                      padding: 20,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text txtSize="title" text="No work categories found." />
+                    <Text text="Use the '+' in the upper right to add one." />
+                    <ActionButton
+                      style={{ zIndex: 1, marginTop: 10 }}
+                      onPress={() => router.push(`/configuration/workcategory/seedCategoriesSelection/`)}
+                      type="action"
+                      title="Or, use one of our sets of Work Categories..."
+                    />
+                  </View>
+                )}
+              />
+            </View>
           </View>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
       {Platform.OS === 'ios' && <KeyboardToolbar />}
     </>
   );

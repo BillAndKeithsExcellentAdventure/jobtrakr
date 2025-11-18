@@ -11,7 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { FlatList, Platform, StyleSheet } from 'react-native';
+import { FlatList, Platform, StyleSheet, KeyboardAvoidingView } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -85,102 +85,111 @@ const VendorsScreen = () => {
 
   return (
     <>
-      <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-        <Stack.Screen
-          options={{
-            headerShown: true,
-            title: 'Vendors',
-            headerRight: renderHeaderRight,
-          }}
-        />
-        <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
-          {showAdd && (
-            <View style={{ backgroundColor: colors.listBackground }}>
-              <View style={{ padding: 10, borderRadius: 10, marginVertical: 10, marginHorizontal: 15 }}>
-                <TextInput
-                  style={[styles.input, { backgroundColor: colors.neutral200 }]}
-                  placeholder="Vendor Name"
-                  value={vendor.name}
-                  onChangeText={(text) => handleInputChange('name', text)}
-                />
-                <TextInput
-                  style={[styles.input, { backgroundColor: colors.neutral200 }]}
-                  placeholder="Address"
-                  value={vendor.address}
-                  onChangeText={(text) => handleInputChange('address', text)}
-                />
-                <View style={{ flexDirection: 'row' }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+          <Stack.Screen
+            options={{
+              headerShown: true,
+              title: 'Vendors',
+              headerRight: renderHeaderRight,
+            }}
+          />
+          <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
+            {showAdd && (
+              <View style={{ backgroundColor: colors.listBackground }}>
+                <View style={{ padding: 10, borderRadius: 10, marginVertical: 10, marginHorizontal: 15 }}>
                   <TextInput
-                    style={[styles.input, { flex: 1, marginRight: 8, backgroundColor: colors.neutral200 }]}
-                    placeholder="City"
-                    value={vendor.city}
-                    onChangeText={(text) => handleInputChange('city', text)}
+                    style={[styles.input, { backgroundColor: colors.neutral200 }]}
+                    placeholder="Vendor Name"
+                    value={vendor.name}
+                    onChangeText={(text) => handleInputChange('name', text)}
                   />
                   <TextInput
-                    style={[styles.input, { width: 75, marginRight: 8, backgroundColor: colors.neutral200 }]}
-                    placeholder="State"
-                    value={vendor.state}
-                    onChangeText={(text) => handleInputChange('state', text)}
+                    style={[styles.input, { backgroundColor: colors.neutral200 }]}
+                    placeholder="Address"
+                    value={vendor.address}
+                    onChangeText={(text) => handleInputChange('address', text)}
                   />
+                  <View style={{ flexDirection: 'row' }}>
+                    <TextInput
+                      style={[styles.input, { flex: 1, marginRight: 8, backgroundColor: colors.neutral200 }]}
+                      placeholder="City"
+                      value={vendor.city}
+                      onChangeText={(text) => handleInputChange('city', text)}
+                    />
+                    <TextInput
+                      style={[
+                        styles.input,
+                        { width: 75, marginRight: 8, backgroundColor: colors.neutral200 },
+                      ]}
+                      placeholder="State"
+                      value={vendor.state}
+                      onChangeText={(text) => handleInputChange('state', text)}
+                    />
+                    <TextInput
+                      style={[styles.input, { width: 80, backgroundColor: colors.neutral200 }]}
+                      placeholder="Zip"
+                      value={vendor.zip}
+                      keyboardType="number-pad"
+                      onChangeText={(text) => handleInputChange('zip', text)}
+                    />
+                  </View>
+                  <View style={{ flexDirection: 'row' }}>
+                    <TextInput
+                      style={[styles.input, { flex: 1, marginRight: 8, backgroundColor: colors.neutral200 }]}
+                      placeholder="Mobile Phone"
+                      keyboardType="phone-pad"
+                      value={vendor.mobilePhone}
+                      onChangeText={(text) => handleInputChange('mobilePhone', text)}
+                    />
+                    <TextInput
+                      style={[styles.input, { flex: 1, backgroundColor: colors.neutral200 }]}
+                      placeholder="Business Phone"
+                      value={vendor.businessPhone}
+                      keyboardType="phone-pad"
+                      onChangeText={(text) => handleInputChange('businessPhone', text)}
+                    />
+                  </View>
                   <TextInput
-                    style={[styles.input, { width: 80, backgroundColor: colors.neutral200 }]}
-                    placeholder="Zip"
-                    value={vendor.zip}
-                    keyboardType="number-pad"
-                    onChangeText={(text) => handleInputChange('zip', text)}
+                    style={[styles.input, { backgroundColor: colors.neutral200 }]}
+                    placeholder="Notes"
+                    value={vendor.notes}
+                    onChangeText={(text) => handleInputChange('notes', text)}
+                  />
+
+                  <ActionButton
+                    onPress={handleSave}
+                    type={vendor.name ? 'action' : 'disabled'}
+                    title="Add Vendor"
                   />
                 </View>
-                <View style={{ flexDirection: 'row' }}>
-                  <TextInput
-                    style={[styles.input, { flex: 1, marginRight: 8, backgroundColor: colors.neutral200 }]}
-                    placeholder="Mobile Phone"
-                    keyboardType="phone-pad"
-                    value={vendor.mobilePhone}
-                    onChangeText={(text) => handleInputChange('mobilePhone', text)}
-                  />
-                  <TextInput
-                    style={[styles.input, { flex: 1, backgroundColor: colors.neutral200 }]}
-                    placeholder="Business Phone"
-                    value={vendor.businessPhone}
-                    keyboardType="phone-pad"
-                    onChangeText={(text) => handleInputChange('businessPhone', text)}
-                  />
-                </View>
-                <TextInput
-                  style={[styles.input, { backgroundColor: colors.neutral200 }]}
-                  placeholder="Notes"
-                  value={vendor.notes}
-                  onChangeText={(text) => handleInputChange('notes', text)}
-                />
-
-                <ActionButton
-                  onPress={handleSave}
-                  type={vendor.name ? 'action' : 'disabled'}
-                  title="Add Vendor"
-                />
-              </View>
-            </View>
-          )}
-
-          <FlatList
-            style={{ borderTopColor: colors.border }}
-            data={allVendors}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => <SwipeableVendor vendor={item} />}
-            ListEmptyComponent={() => (
-              <View
-                style={{
-                  padding: 20,
-                  alignItems: 'center',
-                }}
-              >
-                <Text txtSize="title" text="No vendors found." />
-                <Text text="Use the '+' in the upper right to add one." />
               </View>
             )}
-          />
-        </View>
-      </SafeAreaView>
+
+            <FlatList
+              style={{ borderTopColor: colors.border }}
+              data={allVendors}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => <SwipeableVendor vendor={item} />}
+              ListEmptyComponent={() => (
+                <View
+                  style={{
+                    padding: 20,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text txtSize="title" text="No vendors found." />
+                  <Text text="Use the '+' in the upper right to add one." />
+                </View>
+              )}
+            />
+          </View>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
       {Platform.OS === 'ios' && <KeyboardToolbar />}
     </>
   );
