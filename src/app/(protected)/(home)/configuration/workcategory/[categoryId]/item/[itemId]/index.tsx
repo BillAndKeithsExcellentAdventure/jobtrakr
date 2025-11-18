@@ -1,4 +1,4 @@
-import OkayCancelButtons from '@/src/components/OkayCancelButtons';
+// OkayCancelButtons removed — updates applied on input blur
 import { Text, TextInput, View } from '@/src/components/Themed';
 // import { useWorkCategoryItemDataStore } from '@/stores/categoryItemDataStore';
 import {
@@ -20,8 +20,9 @@ const EditWorkItem = () => {
   const status = useTableValue('workItems', itemId, 'status');
   const [newCode, setNewCode] = useState(code);
 
-  const handleSave = () => {
-    if (newName && newCode) {
+  const handleBlur = () => {
+    if (!itemId) return;
+    if (newName.length && newCode.length) {
       applyWorkItemUpdates(itemId, {
         id: itemId,
         categoryId: categoryId,
@@ -29,9 +30,9 @@ const EditWorkItem = () => {
         name: newName,
         status,
       });
-
-      // Go back to the categories list screen
-      router.back();
+    } else {
+      if (newName.length === 0) setNewName(name);
+      if (newCode.length === 0) setNewCode(code);
     }
   };
 
@@ -70,15 +71,21 @@ const EditWorkItem = () => {
       />
 
       <View style={styles.container}>
-        <TextInput style={styles.input} placeholder="Name" value={newName} onChangeText={setNewName} />
+        <TextInput
+          style={styles.input}
+          placeholder="Name"
+          value={newName}
+          onChangeText={setNewName}
+          onBlur={handleBlur}
+        />
         <TextInput
           style={styles.input}
           placeholder="Code"
           keyboardType="number-pad"
           value={newCode}
           onChangeText={setNewCode}
+          onBlur={handleBlur}
         />
-        <OkayCancelButtons okTitle="Save" isOkEnabled={!!newName && !!newCode} onOkPress={handleSave} />
       </View>
     </SafeAreaView>
   );

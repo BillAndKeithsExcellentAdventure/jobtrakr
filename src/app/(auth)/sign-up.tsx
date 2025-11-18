@@ -43,6 +43,7 @@ export default function SignUpScreen() {
     }
   };
 
+  /*--------------
   const createOrganization = async (token: string, userId: string, name: string, slug: string) => {
     try {
       const organizationData = {
@@ -71,6 +72,7 @@ export default function SignUpScreen() {
       throw error;
     }
   };
+  --------------*/
 
   // Handle submission of verification form
   const onVerifyPress = async () => {
@@ -90,8 +92,8 @@ export default function SignUpScreen() {
         await setActive({ session: signUpAttempt.createdSessionId });
         console.log('Sign-up verification completed successfully');
         console.log('  Ready to useAuth');
-
         console.log('Auth:', auth);
+        /*-------- I can't understand why this is necessary here. It seems to work without it. -------
         if (auth) {
           const token = await auth.getToken();
           if (token && auth.userId) {
@@ -99,6 +101,7 @@ export default function SignUpScreen() {
             console.log('Organization created successfully');
           }
         }
+        ---------------------*/
         router.replace('/');
       } else {
         // If the status is not complete, check why. User may need to

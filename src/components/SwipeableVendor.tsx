@@ -61,7 +61,9 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
         >
           <View style={[styles.vendorInfo, { borderColor: colors.border, borderTopWidth: 1 }]}>
             <View style={styles.vendorSummary}>
-              <Text style={styles.vendorName}>{vendor.name}</Text>
+              <Text style={styles.vendorName}>{`${
+                vendor.name.length > 0 ? vendor.name : 'Not Specified'
+              }`}</Text>
               {(vendor.city || vendor.address) && (
                 <View style={{ flexDirection: 'row' }}>
                   <Text>{vendor.address}</Text>

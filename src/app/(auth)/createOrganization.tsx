@@ -1,6 +1,7 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { getOrganizationSlug } from '@/src/utils/organization';
 import { useAuth, useClerk, useOrganizationList, useSignUp } from '@clerk/clerk-expo';
 import { Redirect, Stack, useRouter } from 'expo-router';
 import * as React from 'react';
@@ -110,7 +111,7 @@ export default function CreateOrganization() {
             token,
             auth.userId,
             organizationName,
-            `ph-${organizationName.toLocaleLowerCase()}`,
+            getOrganizationSlug(organizationName),
             isDev,
           );
           console.log('Organization created successfully');

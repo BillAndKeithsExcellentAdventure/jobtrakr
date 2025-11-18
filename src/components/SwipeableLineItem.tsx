@@ -76,7 +76,7 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
                   backgroundColor: 'transparent',
                 }}
               >
-                <AntDesign name="checkcircleo" size={24} color={colors.iconColor} />
+                <AntDesign name="check-circle" size={24} color={colors.iconColor} />
               </View>
             ) : (
               <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />

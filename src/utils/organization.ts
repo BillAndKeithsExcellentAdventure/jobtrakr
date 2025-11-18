@@ -28,3 +28,7 @@ export const inviteUserToOrganization = async (
     };
   }
 };
+
+export const getOrganizationSlug = (orgName: string) => {
+  return orgName.toLowerCase().replace(/\s+/g, '-');
+};

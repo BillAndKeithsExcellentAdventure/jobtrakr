@@ -27,7 +27,6 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
   const router = useRouter();
   const removeProjectTemplate = useDeleteRowCallback('templates');
   const { templateWorkItemIds, templateWorkCategoryIds } = useTemplateWorkItemData(projectTemplate.id);
-  //const numberOfCostItems = templateWorkItemIds.length;
 
   const colors = useColors();
 
@@ -47,6 +46,12 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
     return <RightAction onDelete={() => handleDelete(projectTemplate.id)} />;
   }, [handleDelete, projectTemplate.id]);
 
+  const textColor = templateWorkItemIds.length > 0 ? colors.text : colors.error;
+
+  const descriptionText =
+    templateWorkItemIds.length > 0
+      ? projectTemplate.description
+      : `${projectTemplate.description} (No cost items specified)`;
   return (
     <SwipeableComponent
       key={projectTemplate.id}
@@ -65,15 +70,8 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
         >
           <View style={styles.itemInfo}>
             <View style={{ flex: 1 }}>
-              <Text txtSize="title" text={projectTemplate.name} />
-              <Text
-                style={[
-                  styles.itemName,
-                  { color: templateWorkItemIds.length > 0 ? colors.text : colors.error },
-                ]}
-              >
-                {`${projectTemplate.description} (${templateWorkCategoryIds.length} work categories)`}
-              </Text>
+              <Text txtSize="title" style={{ color: textColor }} text={projectTemplate.name} />
+              <Text style={[styles.itemName, { color: textColor }]}>{descriptionText}</Text>
             </View>
             <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
           </View>

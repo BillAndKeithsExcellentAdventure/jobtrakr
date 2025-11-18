@@ -1,4 +1,3 @@
-import OkayCancelButtons from '@/src/components/OkayCancelButtons';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import {
@@ -30,17 +29,17 @@ const EditWorkCategory = () => {
 
   const colors = useColors();
 
-  const handleSave = () => {
-    if (newName && newCode) {
+  const handleBlur = () => {
+    if (newName.length && newCode.length) {
       applyWorkCategoryUpdates(categoryId, {
         id: categoryId,
         code: newCode,
         name: newName,
         status,
       });
-
-      // Go back to the categories list screen
-      router.back();
+    } else {
+      if (newName.length === 0) setNewName(name);
+      if (newCode.length === 0) setNewCode(code);
     }
   };
 
@@ -67,6 +66,7 @@ const EditWorkCategory = () => {
           placeholder="Name"
           value={newName}
           onChangeText={setNewName}
+          onBlur={handleBlur}
         />
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
@@ -74,8 +74,8 @@ const EditWorkCategory = () => {
           keyboardType="number-pad"
           value={newCode}
           onChangeText={setNewCode}
+          onBlur={handleBlur}
         />
-        <OkayCancelButtons okTitle="Save" isOkEnabled={!!newName && !!newCode} onOkPress={handleSave} />
       </View>
     </SafeAreaView>
   );

@@ -154,6 +154,7 @@ const ShowWorkCategory = () => {
                 <FlatList
                   style={{ borderTopWidth: 1, borderColor: colors.border }}
                   data={categorySpecificItems}
+                  showsVerticalScrollIndicator={false}
                   keyExtractor={(item) => item.id}
                   renderItem={({ item }) => <SwipeableCategoryItem item={item} category={category} />}
                 />
