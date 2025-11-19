@@ -141,13 +141,13 @@ const EditLineItemPage = () => {
   );
 
   const handleOkPress = useCallback(async () => {
-    if (!itemizedEntry.label || !itemizedEntry.amount || !pickedSubCategoryOption) {
+    if (!itemizedEntry.label || !itemizedEntry.amount) {
       Alert.alert('Error', 'Please fill in all required fields.');
       return;
     }
     const updatedItemizedEntry: WorkItemCostEntry = {
       ...itemizedEntry,
-      workItemId: pickedSubCategoryOption.value,
+      workItemId: pickedSubCategoryOption ? (pickedSubCategoryOption.value as string) : '',
     };
     const result = updateLineItem(updatedItemizedEntry.id, updatedItemizedEntry);
     if (result.status !== 'Success') {
@@ -159,7 +159,7 @@ const EditLineItemPage = () => {
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1, overflowY: 'hidden' }}>
-      <Stack.Screen options={{ title: 'Add Receipt Line Item', headerShown: true }} />
+      <Stack.Screen options={{ title: 'Edit Receipt Line Item', headerShown: true }} />
       <View style={[styles.container, { borderColor: colors.border }]}>
         <NumberInputField
           style={styles.inputContainer}

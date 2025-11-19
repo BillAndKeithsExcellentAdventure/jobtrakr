@@ -1,5 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
+import { HeaderBackButton } from '@/src/components/HeaderBackButton';
 import { NumberInputField } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
@@ -19,7 +20,7 @@ import {
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -113,6 +114,9 @@ const AddReceiptLineItemPage = () => {
 
   const [itemizedEntry, setItemizedEntry] = useState<WorkItemCostEntry>(initItemizedEntry);
 
+  // tracks whether any field has been changed since load/save
+  const isDirtyRef = useRef<boolean>(false);
+
   const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
     setPickedSubCategoryOption(selectedSubCategory);
   }, []);
@@ -136,25 +140,50 @@ const AddReceiptLineItemPage = () => {
   );
 
   const handleOkPress = useCallback(async () => {
-    if (!itemizedEntry.label || !itemizedEntry.amount || !pickedSubCategoryOption) {
+    if (!itemizedEntry.label || !itemizedEntry.amount) {
       Alert.alert('Error', 'Please fill in all required fields.');
       return;
     }
     const newItemizedEntry: WorkItemCostEntry = {
       ...itemizedEntry,
-      workItemId: pickedSubCategoryOption.value,
+      workItemId: pickedSubCategoryOption ? (pickedSubCategoryOption.value as string) : '',
     };
     const result = addLineItem(newItemizedEntry);
     if (result.status !== 'Success') {
       Alert.alert('Error', 'Failed to add line item.');
       return;
     }
+    // saved successfully -> clear dirty flag
+    isDirtyRef.current = false;
     router.back();
   }, [itemizedEntry, pickedSubCategoryOption]);
 
+  const showBlockReason = useCallback(() => {
+    Alert.alert('Data Not Saved', 'Are you sure you want to leave without saving?', [
+      {
+        text: 'Stay',
+        style: 'cancel',
+      },
+      {
+        text: 'Leave',
+        style: 'destructive',
+        onPress: () => {
+          router.back();
+        },
+      },
+    ]);
+  }, [router]);
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1, overflowY: 'hidden' }}>
-      <Stack.Screen options={{ title: 'Add Receipt Line Item', headerShown: true }} />
+      <Stack.Screen
+        options={{
+          title: 'Add Receipt Line Item',
+          headerShown: true,
+          gestureEnabled: false,
+          headerLeft: () => <HeaderBackButton blocked={isDirtyRef.current} onBlock={showBlockReason} />,
+        }}
+      />
       <View style={[styles.container, { borderColor: colors.border }]}>
         <View style={{ flex: 1 }}>
           <NumberInputField
@@ -162,6 +191,7 @@ const AddReceiptLineItemPage = () => {
             label="Amount"
             value={itemizedEntry.amount}
             onChange={(value: number): void => {
+              isDirtyRef.current = true;
               setItemizedEntry((prevItem) => ({
                 ...prevItem,
                 amount: value,
@@ -174,6 +204,7 @@ const AddReceiptLineItemPage = () => {
             label="Description"
             value={itemizedEntry.label}
             onChangeText={(text): void => {
+              isDirtyRef.current = true;
               setItemizedEntry((prevItem) => ({
                 ...prevItem,
                 label: text,
@@ -201,9 +232,7 @@ const AddReceiptLineItemPage = () => {
           <ActionButton
             style={styles.saveButton}
             onPress={handleOkPress}
-            type={
-              !itemizedEntry.label || !itemizedEntry.amount || !pickedSubCategoryOption ? 'disabled' : 'ok'
-            }
+            type={!itemizedEntry.label || !itemizedEntry.amount ? 'disabled' : 'ok'}
             title="Save"
           />
 
