@@ -217,7 +217,7 @@ const AddInvoiceLineItemPage = () => {
         </View>
         {isCategoryPickerVisible && (
           <BottomSheetContainer
-            modalHeight={'55%'}
+            modalHeight="65%"
             isVisible={isCategoryPickerVisible}
             onClose={() => setIsCategoryPickerVisible(false)}
           >
@@ -230,7 +230,7 @@ const AddInvoiceLineItemPage = () => {
         )}
         {isSubCategoryPickerVisible && (
           <BottomSheetContainer
-            modalHeight={'55%'}
+            modalHeight="80%"
             isVisible={isSubCategoryPickerVisible}
             onClose={() => setIsSubCategoryPickerVisible(false)}
           >

@@ -269,12 +269,12 @@ const ReceiptDetailsPage = () => {
               }}
             >
               <Text
-                style={{ width: 90, textAlign: 'right', fontWeight: '600' }}
+                style={{ width: 100, textAlign: 'right' }}
                 txtSize="standard"
                 text={itemsTotalCost ? formatCurrency(itemsTotalCost, true, true) : '$0.00'}
               />
               <Text
-                style={{ flex: 1, marginHorizontal: 10, textAlign: 'center', fontWeight: '600' }}
+                style={{ flex: 1, marginHorizontal: 10, textAlign: 'center' }}
                 txtSize="standard"
                 text={`Total for ${allReceiptLineItems.length} line ${
                   allReceiptLineItems.length?.toString() === '1' ? 'item' : 'items'
@@ -292,7 +292,6 @@ export default ReceiptDetailsPage;
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 10,
     flex: 1,
     width: '100%',
   },

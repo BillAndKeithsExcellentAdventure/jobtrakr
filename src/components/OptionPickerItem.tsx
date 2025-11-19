@@ -1,7 +1,8 @@
 import { TextField } from '@/src/components/TextField';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, ViewStyle, Keyboard, TextInput } from 'react-native';
 import { useThemeColor, View } from './Themed';
+import { Pressable } from 'react-native-gesture-handler';
 
 /* -------------------------------------------
  Standard Supporting React State 
@@ -67,16 +68,27 @@ export const OptionPickerItem: React.FC<OptionPickerItemProps> = ({
   containerStyle,
   inputStyle,
 }) => {
+  const blurAndOpen = () => {
+    const focused = TextInput.State?.currentlyFocusedInput ? TextInput.State.currentlyFocusedInput() : null;
+    if (focused && TextInput.State?.blurTextInput) {
+      TextInput.State.blurTextInput(focused);
+    } else {
+      Keyboard.dismiss();
+    }
+    onPickerButtonPress();
+  };
+
   const iconColor = useThemeColor({ light: undefined, dark: undefined }, 'iconColor');
   const textDim = useThemeColor({ light: undefined, dark: undefined }, 'textDim');
+  const text = useThemeColor({ light: undefined, dark: undefined }, 'text');
 
   if (!editable) {
     return (
-      <Pressable onPress={onPickerButtonPress}>
+      <Pressable onPress={blurAndOpen}>
         <View style={[styles.optionPickerRow, containerStyle]}>
           <View style={{ flex: 1 }}>
             <TextField
-              style={inputStyle}
+              style={[inputStyle, { color: text }]}
               label={label}
               placeholder={placeholder}
               placeholderTextColor={textDim}
@@ -106,7 +118,7 @@ export const OptionPickerItem: React.FC<OptionPickerItemProps> = ({
           editable={editable}
         />
       </View>
-      <Pressable onPress={onPickerButtonPress} style={{ justifyContent: 'flex-end' }}>
+      <Pressable onPress={blurAndOpen} style={{ justifyContent: 'flex-end' }}>
         <View style={styles.pickerButtonContainer}>
           <Ionicons name="ellipsis-horizontal-circle" size={36} color={iconColor} />
         </View>

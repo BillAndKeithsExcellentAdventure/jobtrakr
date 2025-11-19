@@ -165,7 +165,7 @@ const CostItemPickerModal = ({
           </View>
           {isCategoryPickerVisible && (
             <BottomSheetContainer
-              modalHeight={'75%'}
+              modalHeight="65%"
               isVisible={isCategoryPickerVisible}
               onClose={() => setIsCategoryPickerVisible(false)}
             >
@@ -178,7 +178,7 @@ const CostItemPickerModal = ({
           )}
           {isCostItemPickerVisible && (
             <BottomSheetContainer
-              modalHeight={'75%'}
+              modalHeight="80%"
               isVisible={isCostItemPickerVisible}
               onClose={() => setIsCostItemPickerVisible(false)}
             >

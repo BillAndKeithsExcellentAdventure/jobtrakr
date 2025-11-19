@@ -66,17 +66,24 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
         >
           <View style={styles.itemInfo}>
             <Text style={styles.itemAmount} text={formatCurrency(amount, true, true)} />
-            <Text style={styles.itemName}>{label}</Text>
+            <Text style={styles.itemName} numberOfLines={1}>
+              {label}
+            </Text>
             {lineItem.workItemId ? (
               <View
                 style={{
                   width: 40,
-                  justifyContent: 'center',
+                  justifyContent: 'flex-end',
                   alignItems: 'center',
                   backgroundColor: 'transparent',
                 }}
               >
-                <AntDesign name="check-circle" size={24} color={colors.iconColor} />
+                <AntDesign
+                  style={{ marginRight: -12 }}
+                  name="check-circle"
+                  size={24}
+                  color={colors.iconColor}
+                />
               </View>
             ) : (
               <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />

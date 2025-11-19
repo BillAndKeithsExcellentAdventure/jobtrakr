@@ -48,12 +48,18 @@ export const NumberInputField: React.FC<NumberInputFieldProps> = ({
     // If the number is valid, update the input value
     setInputValue(sanitizedValue);
 
+    /*****  
+     below code commented out because it caused problems
+     when relying on onBlur to auto-save edits like in
+     receipt processing 
+    *****/
     // Convert to number and ensure it's not less than zero
-    const numericValue = Math.max(0, parseFloat(sanitizedValue || '0'));
-    onChange(numericValue);
+    //const numericValue = Math.max(0, parseFloat(sanitizedValue || '0'));
+    //onChange(numericValue);
   };
 
   const handleBlur = useCallback(() => {
+    console.log('NumberInputField: handleBlur called with inputValue:', inputValue);
     isEditingRef.current = false;
     const numericValue = parseFloat(inputValue.replace(/[^0-9.]/g, ''));
     if (!isNaN(numericValue)) {
