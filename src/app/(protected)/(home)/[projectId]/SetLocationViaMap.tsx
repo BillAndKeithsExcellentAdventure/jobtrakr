@@ -1,10 +1,8 @@
-import { Text, View } from '@/src/components/Themed';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import * as Location from 'expo-location';
 import { LocationPicker } from '@/src/components/MapLocation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProject, useUpdateProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
-import { ProjectData } from '@/src/models/types';
 import { useColors } from '@/src/context/ColorsContext';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert, StyleSheet } from 'react-native';
@@ -14,7 +12,7 @@ export interface CoordinateLocation {
 }
 
 const SetLocationViaMap = () => {
-  const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
+  const { projectId } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const router = useRouter();
   const colors = useColors();
   const [currentLocation, setCurrentLocation] = useState<CoordinateLocation | null>(null);

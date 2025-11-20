@@ -2,7 +2,7 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { getOrganizationSlug } from '@/src/utils/organization';
-import { useAuth, useClerk, useOrganizationList, useSignUp } from '@clerk/clerk-expo';
+import { useAuth, useOrganizationList, useSignUp } from '@clerk/clerk-expo';
 import { Redirect, Stack, useRouter } from 'expo-router';
 import * as React from 'react';
 import { useEffect } from 'react';
@@ -11,9 +11,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CreateOrganization() {
   const colors = useColors();
-  const { isLoaded, signUp } = useSignUp();
+  const { isLoaded } = useSignUp();
   const router = useRouter();
-  const clerk = useClerk();
   const [organizationName, setOrganizationName] = React.useState('');
   const [organizationExists, setOrganizationExists] = React.useState(false);
   const auth = useAuth();
@@ -76,19 +75,6 @@ export default function CreateOrganization() {
       return data;
     } catch (error) {
       console.error('Error creating organization:', error);
-    }
-  };
-
-  // Handle submission of sign-up form
-  const onInvitePress = async () => {
-    if (!isLoaded) return;
-
-    // Start sign-up process using email and password provided
-    try {
-    } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2));
     }
   };
 
