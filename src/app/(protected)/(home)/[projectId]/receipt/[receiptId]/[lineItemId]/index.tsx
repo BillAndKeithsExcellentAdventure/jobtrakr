@@ -54,16 +54,19 @@ const EditLineItemPage = () => {
   // tracks whether any field has been changed since load/save
   const isDirtyRef = useRef<boolean>(false);
 
-  const saveEntry = useCallback(async () => {
+  const saveEntry = useCallback(async (updatedEntry?: WorkItemCostEntry) => {
+    // Use the provided updated entry or fall back to current state
+    const entryToSave = updatedEntry || itemizedEntry;
+    
     // don't save if nothing changed
     if (!isDirtyRef.current) return;
     // require label and amount to be present before saving
-    if (!itemizedEntry.label || !itemizedEntry.amount) return;
+    if (!entryToSave.label || !entryToSave.amount) return;
     // ensure we have an id to update
-    if (!itemizedEntry.id) return;
+    if (!entryToSave.id) return;
 
     const updatedItemizedEntry: WorkItemCostEntry = {
-      ...itemizedEntry,
+      ...entryToSave,
       workItemId: pickedSubCategoryOption ? (pickedSubCategoryOption.value as string) : '',
     };
     const result = updateLineItem(updatedItemizedEntry.id, updatedItemizedEntry);
@@ -204,15 +207,14 @@ const EditLineItemPage = () => {
           label="Amount"
           value={itemizedEntry.amount}
           onChange={(value: number): void => {
-            console;
             isDirtyRef.current = true;
-            setItemizedEntry((prevItem) => ({
-              ...prevItem,
+            const updatedEntry = {
+              ...itemizedEntry,
               amount: value,
-            }));
-            // autosave when change occurs
-            isDirtyRef.current = true;
-            void saveEntry();
+            };
+            setItemizedEntry(updatedEntry);
+            // autosave when change occurs with the updated entry
+            void saveEntry(updatedEntry);
           }}
         />
         <TextField
