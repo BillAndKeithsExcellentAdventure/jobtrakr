@@ -1,8 +1,8 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
-import { NumberInputField, NumberInputFieldHandle } from '@/src/components/NumberInputField';
+import { NumberInputField } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
-import { OptionPickerItem, OptionPickerItemHandle } from '@/src/components/OptionPickerItem';
+import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
@@ -15,7 +15,7 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Keyboard, StyleSheet, TouchableOpacity, TextInput as RNTextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
@@ -23,8 +23,6 @@ import { HeaderBackButton } from '@react-navigation/elements';
 
 const EditReceiptDetailsPage = () => {
   const defaultDate = new Date();
-  const numberInputFieldRef = useRef<NumberInputFieldHandle>(null);
-  const optionPickerItemRef = useRef<OptionPickerItemHandle>(null);
 
   const router = useRouter();
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
@@ -89,9 +87,8 @@ const EditReceiptDetailsPage = () => {
 
   const handleDateConfirm = useCallback(
     (date: Date) => {
-      const newReceipt = { ...receipt, date: date.getTime() };
+      const newReceipt = { ...receipt, receiptDate: date.getTime() };
       updateReceipt(receiptId, newReceipt);
-
       hideDatePicker();
     },
     [receipt, receiptId, updateReceipt],
@@ -105,14 +102,21 @@ const EditReceiptDetailsPage = () => {
     [receipt, receiptId, updateReceipt],
   );
 
-  const handleVendorChange = useCallback(() => {
-    updateReceipt(receiptId, receipt);
-  }, [receipt, receiptId, updateReceipt]);
+  const handleVendorChange = useCallback(
+    (vendor: string) => {
+      const newReceipt = { ...receipt, vendor };
+      updateReceipt(receiptId, newReceipt);
+    },
+    [receipt, receiptId, updateReceipt],
+  );
 
-  const handleDescriptionChange = useCallback(() => {
-    const newReceipt = { ...receipt };
-    updateReceipt(receiptId, newReceipt);
-  }, [receipt, receiptId, updateReceipt]);
+  const handleDescriptionChange = useCallback(
+    (description: string) => {
+      const newReceipt = { ...receipt, description };
+      updateReceipt(receiptId, newReceipt);
+    },
+    [receipt, receiptId, updateReceipt],
+  );
 
   const handleVendorLabelChange = useCallback(
     (vendor: string) => {
@@ -174,7 +178,6 @@ const EditReceiptDetailsPage = () => {
             </View>
 
             <NumberInputField
-              ref={numberInputFieldRef}
               style={styles.inputContainer}
               label="Amount"
               value={receiptAmount}
@@ -182,7 +185,6 @@ const EditReceiptDetailsPage = () => {
             />
             {vendors && vendors.length ? (
               <OptionPickerItem
-                ref={optionPickerItemRef}
                 containerStyle={styles.inputContainer}
                 optionLabel={receipt.vendor}
                 placeholder="Vendor"
@@ -196,13 +198,13 @@ const EditReceiptDetailsPage = () => {
                 placeholder="Vendor"
                 label="Vendor"
                 value={receipt.vendor}
-                onBlur={handleVendorChange}
                 onChangeText={(text): void => {
                   setReceipt((prevReceipt) => ({
                     ...prevReceipt,
                     vendor: text,
                   }));
                 }}
+                onBlur={() => handleVendorChange(receipt.vendor)}
               />
             )}
             <TextField
@@ -216,7 +218,7 @@ const EditReceiptDetailsPage = () => {
                   description: text,
                 }));
               }}
-              onBlur={handleDescriptionChange}
+              onBlur={() => handleDescriptionChange(receipt.description)}
             />
           </View>
           {vendors && isVendorListPickerVisible && (
