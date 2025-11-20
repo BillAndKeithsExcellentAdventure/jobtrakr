@@ -46,12 +46,12 @@ const EditProjectScreen = () => {
   const currentProject = useProject(projectId);
 
   useEffect(() => {
-    if (currentProject && project.id !== currentProject.id) {
+    if (currentProject) {
       setProject({
         ...currentProject,
       });
     }
-  }, [currentProject, project.id]);
+  }, [currentProject]);
 
   const updatedProject = useUpdateProjectCallback();
   const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
@@ -85,7 +85,6 @@ const EditProjectScreen = () => {
   const handleStartDateConfirm = useCallback(
     (date: Date) => {
       const newProject = { ...project, startDate: date.getTime() };
-      setProject(newProject);
       if (updatedProject && projectId) {
         updatedProject(projectId, newProject);
       }
@@ -114,7 +113,6 @@ const EditProjectScreen = () => {
         longitude: currentLocation.coords.longitude,
         latitude: currentLocation.coords.latitude,
       };
-      setProject(newProject);
       if (updatedProject && projectId) {
         updatedProject(projectId, newProject);
       }
@@ -124,7 +122,6 @@ const EditProjectScreen = () => {
   const handleFinishDateConfirm = useCallback(
     (date: Date) => {
       const newProject = { ...project, plannedFinish: date.getTime() };
-      setProject(newProject);
       if (updatedProject && projectId) {
         updatedProject(projectId, newProject);
       }
