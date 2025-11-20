@@ -1,5 +1,6 @@
 import OkayCancelButtons from '@/src/components/OkayCancelButtons'; // Assuming you have this component
 import { TextInput, View } from '@/src/components/Themed';
+import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import {
   useTableValue,
   useUpdateRowCallback,
@@ -40,18 +41,9 @@ const EditProjectTemplate = () => {
     }
   }, [applyTemplateUpdates, description, newDescription, newName, router, templateId]);
 
-  const handleBackPress = useCallback(() => {
-    const focused = RNTextInput.State?.currentlyFocusedInput
-      ? RNTextInput.State.currentlyFocusedInput()
-      : null;
-    if (focused && RNTextInput.State?.blurTextInput) {
-      RNTextInput.State.blurTextInput(focused);
-    } else {
-      Keyboard.dismiss();
-    }
-
+  const handleBackPress = useAutoSaveNavigation(() => {
     handleSave();
-  }, [handleSave]);
+  });
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

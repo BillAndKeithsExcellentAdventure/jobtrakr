@@ -3,7 +3,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleProp, StyleSheet, ViewStyle, Keyboard, TextInput } from 'react-native';
 import { useThemeColor, View } from './Themed';
 import { Pressable } from 'react-native-gesture-handler';
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, useId } from 'react';
+import { useFocusManager } from '@/src/hooks/useFocusManager';
 
 /* -------------------------------------------
  Standard Supporting React State 
@@ -78,22 +79,42 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
     ref,
   ) => {
     const inputRef = useRef<TextInput | null>(null);
+    const fieldId = useId();
+    
+    // Try to get FocusManager context, but don't require it
+    let focusManager;
+    try {
+      focusManager = useFocusManager();
+    } catch {
+      // FocusManager not available, continue without it
+      focusManager = null;
+    }
+
+    const handleOnBlur = () => {
+      console.log('OptionPickerItem handleOnBlur called');
+      onOptionLabelChange?.(labelText ?? '');
+    };
 
     useImperativeHandle(ref, () => ({
       blur: () => {
         handleOnBlur();
       },
     }));
-
-    const blurAndOpen = () => {
-      const focused = TextInput.State?.currentlyFocusedInput ? TextInput.State.currentlyFocusedInput() : null;
-      if (focused && TextInput.State?.blurTextInput) {
-        TextInput.State.blurTextInput(focused);
-      } else {
-        Keyboard.dismiss();
+    
+    // Register with FocusManager
+    useEffect(() => {
+      if (focusManager && editable) {
+        focusManager.registerField(fieldId, () => {
+          // Call handleOnBlur directly to ensure blur logic executes
+          // Calling inputRef.current?.blur() doesn't reliably trigger onBlur in React Native
+          handleOnBlur();
+          inputRef.current?.blur();
+        });
+        return () => {
+          focusManager.unregisterField(fieldId);
+        };
       }
-      onPickerButtonPress();
-    };
+    }, [fieldId, focusManager, editable, handleOnBlur]);
 
     const [labelText, setLabelText] = useState<string | undefined>();
 
@@ -105,9 +126,14 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
     const textDim = useThemeColor({ light: undefined, dark: undefined }, 'textDim');
     const text = useThemeColor({ light: undefined, dark: undefined }, 'text');
 
-    const handleOnBlur = () => {
-      console.log('OptionPickerItem handleOnBlur called');
-      onOptionLabelChange?.(labelText ?? '');
+    const blurAndOpen = () => {
+      const focused = TextInput.State?.currentlyFocusedInput ? TextInput.State.currentlyFocusedInput() : null;
+      if (focused && TextInput.State?.blurTextInput) {
+        TextInput.State.blurTextInput(focused);
+      } else {
+        Keyboard.dismiss();
+      }
+      onPickerButtonPress();
     };
 
     if (!editable) {
