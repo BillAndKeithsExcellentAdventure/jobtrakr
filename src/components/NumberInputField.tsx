@@ -74,13 +74,16 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
     useEffect(() => {
       if (focusManager) {
         focusManager.registerField(fieldId, () => {
+          // Call handleBlurInternal directly to ensure blur logic executes
+          // Calling inputRef.current?.blur() doesn't reliably trigger onBlur in React Native
+          handleBlurInternal();
           inputRef.current?.blur();
         });
         return () => {
           focusManager.unregisterField(fieldId);
         };
       }
-    }, [fieldId, focusManager]);
+    }, [fieldId, focusManager, handleBlurInternal]);
 
     useEffect(() => {
       if (undefined === value || null === value) return;

@@ -147,13 +147,18 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
   useEffect(() => {
     if (focusManager && !disabled) {
       focusManager.registerField(fieldId, () => {
+        // Call onBlur handler directly if provided to ensure blur logic executes
+        // Calling input.current?.blur() doesn't reliably trigger onBlur in React Native
+        if (TextInputProps.onBlur) {
+          TextInputProps.onBlur({} as any);
+        }
         input.current?.blur();
       });
       return () => {
         focusManager.unregisterField(fieldId);
       };
     }
-  }, [fieldId, focusManager, disabled]);
+  }, [fieldId, focusManager, disabled, TextInputProps.onBlur]);
 
   function focusInput() {
     if (disabled) return;

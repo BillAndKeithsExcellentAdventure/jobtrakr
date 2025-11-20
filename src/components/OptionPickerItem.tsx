@@ -105,13 +105,16 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
     useEffect(() => {
       if (focusManager && editable) {
         focusManager.registerField(fieldId, () => {
+          // Call handleOnBlur directly to ensure blur logic executes
+          // Calling inputRef.current?.blur() doesn't reliably trigger onBlur in React Native
+          handleOnBlur();
           inputRef.current?.blur();
         });
         return () => {
           focusManager.unregisterField(fieldId);
         };
       }
-    }, [fieldId, focusManager, editable]);
+    }, [fieldId, focusManager, editable, handleOnBlur]);
 
     const [labelText, setLabelText] = useState<string | undefined>();
 
