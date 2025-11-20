@@ -62,6 +62,11 @@ const handleBackPress = useAutoSaveNavigation(() => {
 - Unregisters when unmounted or when editable changes to false
 - Made FocusManager optional
 
+#### TextField
+- Registers with FocusManager when not disabled
+- Unregisters when unmounted or when disabled changes to true
+- Made FocusManager optional
+
 ### 3. Screen Integration
 
 Screens with `HeaderBackButton` now use `useAutoSaveNavigation`:
@@ -106,6 +111,7 @@ const handleBackPress = useAutoSaveNavigation(() => {
 - `src/app/_layout.tsx` - Added FocusManagerProvider to app root
 - `src/components/NumberInputField.tsx` - Integrated with FocusManager
 - `src/components/OptionPickerItem.tsx` - Integrated with FocusManager
+- `src/components/TextField.tsx` - Integrated with FocusManager
 - `src/app/(protected)/(home)/[projectId]/receipt/[receiptId]/edit.tsx` - Uses useAutoSaveNavigation
 - `src/app/(protected)/(home)/[projectId]/receipt/[receiptId]/addLineItem.tsx` - Uses useAutoSaveNavigation
 - `src/app/(protected)/(home)/configuration/template/[templateId]/edit.tsx` - Uses useAutoSaveNavigation
