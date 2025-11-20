@@ -14,6 +14,7 @@ import { useColorScheme } from './useColorScheme';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useAuth } from '@clerk/clerk-expo';
 import { mediaType } from '@/src/utils/images';
+import { useProjectValue } from '../tbStores/listOfProjects/ListOfProjectsStore';
 
 export interface MediaEntryDisplayData extends MediaEntryData {
   isSelected: boolean;
