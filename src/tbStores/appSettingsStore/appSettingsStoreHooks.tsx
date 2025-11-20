@@ -1,25 +1,13 @@
-import { NoValuesSchema, Value } from 'tinybase/with-schemas';
+import { NoValuesSchema } from 'tinybase/with-schemas';
 import { TABLES_SCHEMA, useStoreId } from './appSettingsStore';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
-
-const {
-  useCell,
-  useCreateMergeableStore,
-  useDelRowCallback,
-  useProvideStore,
-  useRowIds,
-  useSetCellCallback,
-  useSetValueCallback,
-  useSortedRowIds,
-  useStore,
-  useRow,
-  useTable,
-  useValue,
-} = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
-
 import { useCallback, useEffect, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import { CrudResult } from '@/src/models/types';
+
+const {
+  useStore,
+} = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
 export interface SettingsData {
   id: string;
