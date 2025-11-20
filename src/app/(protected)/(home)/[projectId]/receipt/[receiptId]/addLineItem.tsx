@@ -15,8 +15,6 @@ import {
 import {
   useAddRowCallback,
   useAllRows,
-  useDeleteRowCallback,
-  useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { HeaderBackButton } from '@react-navigation/elements';
@@ -29,7 +27,6 @@ const AddReceiptLineItemPage = () => {
   const router = useRouter();
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
   const allWorkItemCostSummaries = useAllRows(projectId, 'workItemSummaries');
-  const allLineItemCostEntries = useAllRows(projectId, 'workItemCostEntries');
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
   const allWorkItems = useAllRowsConfiguration('workItems');
   const allWorkCategories = useAllRowsConfiguration('categories', WorkCategoryCodeCompareAsNumber);
