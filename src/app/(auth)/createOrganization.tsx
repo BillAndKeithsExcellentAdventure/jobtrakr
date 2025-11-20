@@ -84,8 +84,8 @@ export default function CreateOrganization() {
     if (!isLoaded) return;
 
     try {
-      console.log('Auth:', auth);
-      console.log('Clerk:', clerk);
+      //console.log('onCreateOrganizationPress-Auth:', auth);
+      //console.log('onCreateOrganizationPress-Clerk:', clerk);
       if (clerk && clerk.session) {
         const token = await auth.getToken();
         if (token && auth.userId) {

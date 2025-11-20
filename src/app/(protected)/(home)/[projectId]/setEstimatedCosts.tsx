@@ -268,6 +268,7 @@ const SetEstimatedCostsPage = () => {
       </View>
       {isCategoryPickerVisible && (
         <BottomSheetContainer
+          modalHeight="70%"
           isVisible={isCategoryPickerVisible}
           onClose={() => setIsCategoryPickerVisible(false)}
         >
