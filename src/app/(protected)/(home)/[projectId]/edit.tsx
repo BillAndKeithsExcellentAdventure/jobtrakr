@@ -1,13 +1,14 @@
-import { ActionButton } from '@/src/components/ActionButton';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import { ProjectData } from '@/src/models/types';
 import { useProject, useUpdateProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatDate } from '@/src/utils/formatters';
+import { HeaderBackButton } from '@react-navigation/elements';
 import * as Location from 'expo-location';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
@@ -45,12 +46,12 @@ const EditProjectScreen = () => {
   const currentProject = useProject(projectId);
 
   useEffect(() => {
-    if (currentProject && project.id !== currentProject.id) {
+    if (currentProject) {
       setProject({
         ...currentProject,
       });
     }
-  }, [currentProject, project.id]);
+  }, [currentProject]);
 
   const updatedProject = useUpdateProjectCallback();
   const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
@@ -81,14 +82,16 @@ const EditProjectScreen = () => {
     setStartDatePickerVisible(false);
   };
 
-  const handleStartDateConfirm = (date: Date) => {
-    setProject((prev) => ({
-      ...prev,
-      startDate: date.getTime(),
-    }));
-
-    hideStartDatePicker();
-  };
+  const handleStartDateConfirm = useCallback(
+    (date: Date) => {
+      const newProject = { ...project, startDate: date.getTime() };
+      if (updatedProject && projectId) {
+        updatedProject(projectId, newProject);
+      }
+      hideStartDatePicker();
+    },
+    [project, projectId, updatedProject],
+  );
 
   const showFinishDatePicker = () => {
     setFinishDatePickerVisible(true);
@@ -105,23 +108,27 @@ const EditProjectScreen = () => {
   const handleSetCurrentGpsLocation = useCallback(async () => {
     if (currentLocation) {
       console.log('Current location:', currentLocation);
-      setProject((prevProject) => ({
-        ...prevProject,
+      const newProject = {
+        ...project,
         longitude: currentLocation.coords.longitude,
         latitude: currentLocation.coords.latitude,
-      }));
+      };
+      if (updatedProject && projectId) {
+        updatedProject(projectId, newProject);
+      }
     }
-  }, [currentLocation]);
+  }, [currentLocation, project, projectId, updatedProject]);
 
-  const handleFinishDateConfirm = useCallback((date: Date) => {
-    setProject((prevProject) => ({
-      ...prevProject,
-      plannedFinish: date.getTime(),
-    }));
-    hideFinishDatePicker();
-  }, []);
-
-  const canAddProject = useMemo(() => project.name?.length > 4, [project.name]);
+  const handleFinishDateConfirm = useCallback(
+    (date: Date) => {
+      const newProject = { ...project, plannedFinish: date.getTime() };
+      if (updatedProject && projectId) {
+        updatedProject(projectId, newProject);
+      }
+      hideFinishDatePicker();
+    },
+    [project, projectId, updatedProject],
+  );
 
   const handleSubmit = useCallback(async () => {
     if (!project || !projectId || !updatedProject) return;
@@ -130,12 +137,23 @@ const EditProjectScreen = () => {
     if (result.status !== 'Success') {
       console.log('Project update failed:', project);
     }
+  }, [project, projectId, updatedProject]);
+
+  const handleBackPress = useAutoSaveNavigation(() => {
+    handleSubmit();
     router.back();
-  }, [project, projectId, updatedProject, router]);
+  });
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Edit Project', headerShown: true }} />
+      <Stack.Screen
+        options={{
+          title: 'Edit Project',
+          headerShown: true,
+          gestureEnabled: false,
+          headerLeft: () => <HeaderBackButton onPress={handleBackPress} />,
+        }}
+      />
       <KeyboardAwareScrollView
         bottomOffset={62}
         style={[{ backgroundColor: colors.modalOverlayBackgroundColor }]}
@@ -148,6 +166,7 @@ const EditProjectScreen = () => {
             placeholder="Project Name"
             value={project.name}
             onChangeText={(text) => setProject({ ...project, name: text })}
+            onBlur={handleSubmit}
           />
           <TextField
             containerStyle={styles.inputContainer}
@@ -156,6 +175,7 @@ const EditProjectScreen = () => {
             label="Location"
             value={project.location}
             onChangeText={(text) => setProject({ ...project, location: text })}
+            onBlur={handleSubmit}
           />
           <TextField
             containerStyle={styles.inputContainer}
@@ -164,6 +184,7 @@ const EditProjectScreen = () => {
             label="Owner Name"
             value={project.ownerName}
             onChangeText={(text) => setProject({ ...project, ownerName: text })}
+            onBlur={handleSubmit}
           />
           <TextField
             containerStyle={styles.inputContainer}
@@ -175,6 +196,7 @@ const EditProjectScreen = () => {
             numberOfLines={2}
             autoCapitalize="none"
             autoCorrect={false}
+            onBlur={handleSubmit}
           />
           <TextField
             containerStyle={styles.inputContainer}
@@ -185,6 +207,7 @@ const EditProjectScreen = () => {
             style={[styles.input, { borderColor: colors.transparent }]}
             autoCapitalize="none"
             autoCorrect={false}
+            onBlur={handleSubmit}
           />
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <View style={{ marginBottom: 0, flex: 1 }}>
@@ -197,6 +220,7 @@ const EditProjectScreen = () => {
                 style={[styles.input, { borderColor: colors.transparent }]}
                 autoCapitalize="none"
                 autoCorrect={false}
+                onBlur={handleSubmit}
               />
             </View>
             <View style={{ marginBottom: 0, width: 120 }}>
@@ -209,6 +233,7 @@ const EditProjectScreen = () => {
                 style={[styles.input, { borderColor: colors.transparent }]}
                 autoCapitalize="none"
                 autoCorrect={false}
+                onBlur={handleSubmit}
               />
             </View>
           </View>
@@ -223,6 +248,7 @@ const EditProjectScreen = () => {
             style={[styles.input, { borderColor: colors.transparent }]}
             autoCapitalize="none"
             autoCorrect={false}
+            onBlur={handleSubmit}
           />
           <TextField
             containerStyle={styles.inputContainer}
@@ -234,6 +260,7 @@ const EditProjectScreen = () => {
             style={[styles.input, { borderColor: colors.transparent }]}
             autoCapitalize="none"
             autoCorrect={false}
+            onBlur={handleSubmit}
           />
 
           <View style={styles.dateContainer}>
@@ -298,23 +325,6 @@ const EditProjectScreen = () => {
               <Text style={[styles.gpsButtonText, { color: colors.buttonBlue }]}>Select on Map</Text>
             </TouchableOpacity>
           </View>
-        </View>
-        <View style={styles.saveButtonRow}>
-          <ActionButton
-            style={styles.saveButton}
-            onPress={handleSubmit}
-            type={canAddProject ? 'ok' : 'disabled'}
-            title="Save"
-          />
-
-          <ActionButton
-            style={styles.cancelButton}
-            onPress={() => {
-              router.back();
-            }}
-            type={'cancel'}
-            title="Cancel"
-          />
         </View>
       </KeyboardAwareScrollView>
 
@@ -393,18 +403,6 @@ const styles = StyleSheet.create({
   gpsButtonText: {
     fontSize: 16,
     fontWeight: 'semibold',
-  },
-  saveButtonRow: {
-    padding: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  saveButton: {
-    flex: 1,
-  },
-  cancelButton: {
-    flex: 1,
   },
 });
 
