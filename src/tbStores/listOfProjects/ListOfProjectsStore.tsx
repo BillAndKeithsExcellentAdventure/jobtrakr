@@ -133,13 +133,13 @@ export const useAddProjectCallback = () => {
 
 export const useProject = (id: string): ProjectData | undefined => {
   const store = useStore(useProjectListStoreId());
+  const allProjects = useAllProjects();
 
   return useMemo(() => {
     if (!store) return undefined;
-    const row = store.getRow('projects', id);
-    if (!row) return undefined;
-    return { id, ...row } as ProjectData;
-  }, [store, id]);
+    const match = allProjects.find((p) => p.id === id);
+    if (match) return match;
+  }, [store, id, allProjects]);
 };
 
 // Returns a callback that deletes a project from the store.
