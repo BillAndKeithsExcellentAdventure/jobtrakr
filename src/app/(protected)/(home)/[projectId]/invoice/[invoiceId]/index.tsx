@@ -248,13 +248,11 @@ const InvoiceDetailsPage = () => {
               }}
             >
               <Text
-                style={{ width: 90, textAlign: 'right', fontWeight: '600' }}
-                txtSize="standard"
+                style={{ width: 110, textAlign: 'right', fontWeight: '600' }}
                 text={itemsTotalCost ? formatCurrency(itemsTotalCost, true, true) : '$0.00'}
               />
               <Text
-                style={{ flex: 1, marginHorizontal: 10, textAlign: 'center', fontWeight: '600' }}
-                txtSize="standard"
+                style={{ flex: 1, marginHorizontal: 10, marginLeft: 30, fontWeight: '600' }}
                 text={`Total for ${allInvoiceLineItems.length} line ${
                   allInvoiceLineItems.length?.toString() === '1' ? 'item' : 'items'
                 }`}
@@ -285,5 +283,4 @@ const styles = StyleSheet.create({
   leftButton: {
     flex: 1,
   },
-
 });

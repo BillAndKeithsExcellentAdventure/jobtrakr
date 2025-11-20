@@ -264,18 +264,17 @@ const ReceiptDetailsPage = () => {
                   width: '100%',
                   height: 40,
                   alignItems: 'center',
+                  marginLeft: 10,
                   borderTopColor: colors.separatorColor,
                   borderTopWidth: 2,
                 }}
               >
                 <Text
-                  style={{ width: 100, textAlign: 'right' }}
-                  txtSize="standard"
+                  style={{ width: 100, textAlign: 'right', fontWeight: '600' }}
                   text={itemsTotalCost ? formatCurrency(itemsTotalCost, true, true) : '$0.00'}
                 />
                 <Text
-                  style={{ flex: 1, marginHorizontal: 10, textAlign: 'center' }}
-                  txtSize="standard"
+                  style={{ flex: 1, marginHorizontal: 10, marginLeft: 30, fontWeight: '600' }}
                   text={`Total for ${allReceiptLineItems.length} line ${
                     allReceiptLineItems.length?.toString() === '1' ? 'item' : 'items'
                   }`}

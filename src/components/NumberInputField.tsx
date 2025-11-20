@@ -56,7 +56,7 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
     }
 
     const handleBlurInternal = useCallback(() => {
-      console.log('NumberInputField: handleBlur called with inputValue:', inputValue);
+      // console.log('NumberInputField: handleBlur called with inputValue:', inputValue);
       isEditingRef.current = false;
       const numericValue = parseFloat(inputValue.replace(/[^0-9.]/g, ''));
       if (!isNaN(numericValue)) {

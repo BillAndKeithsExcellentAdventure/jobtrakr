@@ -181,7 +181,7 @@ const AddReceiptLineItemPage = () => {
           title: 'Add Receipt Line Item',
           headerShown: true,
           gestureEnabled: false,
-          headerLeft: () => <HeaderBackButton onPress={showBlockReason} />,
+          headerLeft: () => <HeaderBackButton onPress={showBlockReason} label="Back" />,
         }}
       />
       <View style={[styles.container, { borderColor: colors.border }]}>
@@ -192,7 +192,8 @@ const AddReceiptLineItemPage = () => {
             label="Amount"
             value={itemizedEntry.amount}
             onChange={(value: number): void => {
-              isDirtyRef.current = true;
+              const dirty = isDirtyRef.current || value !== itemizedEntry.amount;
+              isDirtyRef.current = dirty;
               setItemizedEntry((prevItem) => ({
                 ...prevItem,
                 amount: value,

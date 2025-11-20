@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   itemAmount: {
     textAlign: 'right',
-    width: 80,
+    width: 100,
     marginRight: 30,
   },
   rightAction: {
