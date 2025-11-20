@@ -1,5 +1,14 @@
 import { useColors } from '@/src/context/ColorsContext';
-import React, { useCallback, useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
+import { useFocusManager } from '@/src/context/FocusManagerContext';
+import React, {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
 import { StyleSheet, TextInput, ViewStyle } from 'react-native';
 import { Text, View } from './Themed';
 
@@ -35,6 +44,8 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
     const [inputValue, setInputValue] = useState(value ? value.toFixed(numDecimalPlaces) : '0.00');
     const inputRef = useRef<TextInput | null>(null);
     const isEditingRef = useRef(false);
+    const fieldId = useId();
+    const focusManager = useFocusManager();
 
     useImperativeHandle(ref, () => ({
       blur: () => {
@@ -77,8 +88,8 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
       //onChange(numericValue);
     };
 
-    const handleBlur = useCallback(() => {
-      console.log('NumberInputField: handleBlur called with inputValue:', inputValue);
+    const handleBlurInternal = useCallback(() => {
+      console.log('NumberInputField: handleBlurInternal called with inputValue:', inputValue);
       isEditingRef.current = false;
       const numericValue = parseFloat(inputValue.replace(/[^0-9.]/g, ''));
       if (!isNaN(numericValue)) {
@@ -90,6 +101,19 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
         onChange(0);
       }
     }, [onChange, inputValue, numDecimalPlaces]);
+
+    const handleBlur = useCallback(() => {
+      handleBlurInternal();
+    }, [handleBlurInternal]);
+
+    useEffect(() => {
+      const cb = () => {
+        handleBlurInternal();
+        inputRef.current?.blur();
+      };
+      focusManager.registerField(fieldId, cb);
+      return () => focusManager.unregisterField(fieldId);
+    }, [fieldId, focusManager, handleBlurInternal]);
 
     const colors = useColors();
 
