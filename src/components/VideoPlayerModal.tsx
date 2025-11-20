@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEvent, useEventListener } from 'expo';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { Text, View } from '@/src/components/Themed';
+import { View } from '@/src/components/Themed';
 import { useCallback, useEffect, useState } from 'react';
 import { Dimensions, Modal, Pressable, SafeAreaView, StyleSheet } from 'react-native';
 
@@ -13,7 +13,6 @@ interface VideoPlayerModalProps {
 
 export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, videoUri, onClose }) => {
   const [isPlaying, setIsPlaying] = useState(true);
-  const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
   const [playerStatus, setPlayerStatus] = useState('');
   const [playerError, setPlayerError] = useState('');

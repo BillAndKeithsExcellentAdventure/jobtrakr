@@ -3,7 +3,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleProp, StyleSheet, ViewStyle, Keyboard, TextInput } from 'react-native';
 import { useThemeColor, View } from './Themed';
 import { Pressable } from 'react-native-gesture-handler';
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, useId } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useId } from 'react';
 import { useFocusManager } from '@/src/hooks/useFocusManager';
 
 /* -------------------------------------------

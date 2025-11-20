@@ -37,13 +37,7 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   const [cameraModeSwitch, setCameraModeSwitch] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const cameraRef = useRef<CameraView>(null);
-  const colorScheme = useColorScheme();
   const colors = useColors();
-
-  // Move the callback definition here, before any conditional returns
-  const onCameraModeChanged = useCallback((value: boolean) => {
-    setCameraModeSwitch(value);
-  }, []);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;

@@ -46,7 +46,6 @@ export const DeviceMediaList = ({
     }
   }, []);
 
-  const colors = useColors();
   const [loadingNearest, setLoadingNearest] = useState<boolean>(false);
   const [fetchStatus, setFetchStatus] = useState<string>('');
   const [deviceMediaAssets, setDeviceMediaAssets] = useState<AssetsItem[]>([]);

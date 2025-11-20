@@ -1,4 +1,3 @@
-import { View, Text } from 'react-native';
 import React, { PropsWithChildren, useMemo } from 'react';
 import { useActiveProjectIds } from '../context/ActiveProjectIdsContext';
 import { useRowIds } from 'tinybase/ui-react';

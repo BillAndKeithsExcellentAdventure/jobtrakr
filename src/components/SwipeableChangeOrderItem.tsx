@@ -3,7 +3,6 @@ import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
 
 import {
-  ChangeOrder,
   ChangeOrderItem,
   useDeleteRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';

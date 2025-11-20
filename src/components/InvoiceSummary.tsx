@@ -1,7 +1,7 @@
 import { View, Text } from '@/src/components/Themed';
 import { InvoiceData } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { TouchableWithoutFeedback, Image, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import Base64Image from './Base64Image';
