@@ -82,14 +82,17 @@ const EditProjectScreen = () => {
     setStartDatePickerVisible(false);
   };
 
-  const handleStartDateConfirm = (date: Date) => {
-    setProject((prev) => ({
-      ...prev,
-      startDate: date.getTime(),
-    }));
-
-    hideStartDatePicker();
-  };
+  const handleStartDateConfirm = useCallback(
+    (date: Date) => {
+      const newProject = { ...project, startDate: date.getTime() };
+      setProject(newProject);
+      if (updatedProject && projectId) {
+        updatedProject(projectId, newProject);
+      }
+      hideStartDatePicker();
+    },
+    [project, projectId, updatedProject],
+  );
 
   const showFinishDatePicker = () => {
     setFinishDatePickerVisible(true);
@@ -106,21 +109,29 @@ const EditProjectScreen = () => {
   const handleSetCurrentGpsLocation = useCallback(async () => {
     if (currentLocation) {
       console.log('Current location:', currentLocation);
-      setProject((prevProject) => ({
-        ...prevProject,
+      const newProject = {
+        ...project,
         longitude: currentLocation.coords.longitude,
         latitude: currentLocation.coords.latitude,
-      }));
+      };
+      setProject(newProject);
+      if (updatedProject && projectId) {
+        updatedProject(projectId, newProject);
+      }
     }
-  }, [currentLocation]);
+  }, [currentLocation, project, projectId, updatedProject]);
 
-  const handleFinishDateConfirm = useCallback((date: Date) => {
-    setProject((prevProject) => ({
-      ...prevProject,
-      plannedFinish: date.getTime(),
-    }));
-    hideFinishDatePicker();
-  }, []);
+  const handleFinishDateConfirm = useCallback(
+    (date: Date) => {
+      const newProject = { ...project, plannedFinish: date.getTime() };
+      setProject(newProject);
+      if (updatedProject && projectId) {
+        updatedProject(projectId, newProject);
+      }
+      hideFinishDatePicker();
+    },
+    [project, projectId, updatedProject],
+  );
 
   const handleSubmit = useCallback(async () => {
     if (!project || !projectId || !updatedProject) return;
