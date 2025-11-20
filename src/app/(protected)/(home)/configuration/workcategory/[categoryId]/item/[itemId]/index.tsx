@@ -5,15 +5,14 @@ import {
   useTableValue,
   useUpdateRowCallback,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import React, { useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditWorkItem = () => {
   const { categoryId, itemId } = useLocalSearchParams<{ categoryId: string; itemId: string }>();
   const applyWorkItemUpdates = useUpdateRowCallback('workItems');
-  const router = useRouter();
   const name = useTableValue('workItems', itemId, 'name');
   const [newName, setNewName] = useState(name);
   const code = useTableValue('workItems', itemId, 'code');

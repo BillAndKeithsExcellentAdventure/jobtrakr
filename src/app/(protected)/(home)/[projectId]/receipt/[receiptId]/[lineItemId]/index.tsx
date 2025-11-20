@@ -24,7 +24,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditLineItemPage = () => {
   const router = useRouter();
-  const { projectId, receiptId, lineItemId } = useLocalSearchParams<{
+  const { projectId, lineItemId } = useLocalSearchParams<{
     projectId: string;
     receiptId: string;
     lineItemId: string;

@@ -28,12 +28,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const AddReceiptLineItemPage = () => {
   const router = useRouter();
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
-  const allReceipts = useAllRows(projectId, 'receipts');
   const allWorkItemCostSummaries = useAllRows(projectId, 'workItemSummaries');
   const allLineItemCostEntries = useAllRows(projectId, 'workItemCostEntries');
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
-  const updateLineItem = useUpdateRowCallback(projectId, 'workItemCostEntries');
-  const deleteLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
   const allWorkItems = useAllRowsConfiguration('workItems');
   const allWorkCategories = useAllRowsConfiguration('categories', WorkCategoryCodeCompareAsNumber);
   const numberInputFieldRef = useRef<NumberInputFieldHandle>(null);

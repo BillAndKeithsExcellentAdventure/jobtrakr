@@ -48,13 +48,6 @@ const ListWorkCategories = () => {
     }
   };
 
-  const handleEditCategory = (id: string) => {
-    router.push({
-      pathname: '/configuration/workcategory/[categoryId]',
-      params: { categoryId: category.id },
-    });
-  };
-
   const handleCleanup = useCallback(() => {
     Alert.alert(
       'Configuration Clean-up',

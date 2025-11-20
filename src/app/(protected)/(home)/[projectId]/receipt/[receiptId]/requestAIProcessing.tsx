@@ -6,11 +6,10 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
-  Switch,
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, TextInput, View } from '@/src/components/Themed';
+import { Text, View } from '@/src/components/Themed';
 import { useAuth } from '@clerk/clerk-expo';
 import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/formatters';
 import { ActionButton } from '@/src/components/ActionButton';

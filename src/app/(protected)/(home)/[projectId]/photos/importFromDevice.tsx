@@ -18,7 +18,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ImportDevicePhotosPage = () => {
   const router = useRouter();
-  const colorScheme = useColorScheme();
   const colors = useColors();
 
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();

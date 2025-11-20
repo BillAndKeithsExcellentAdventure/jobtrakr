@@ -36,13 +36,6 @@ const VendorsScreen = () => {
 
   const colors = useColors();
 
-  const handleEditVendor = (id: string) => {
-    router.push({
-      pathname: '/configuration/vendor/[id]',
-      params: { id },
-    });
-  };
-
   const handleInputChange = (name: keyof VendorData, value: string) => {
     setVendor((prevVendor) => ({
       ...prevVendor,

@@ -31,7 +31,6 @@ const LISTITEM_HEIGHT = 40;
 
 const SetEstimatedCostsPage = () => {
   const colors = useColors();
-  const router = useRouter();
   const { projectId, projectName, categoryId } = useLocalSearchParams<{
     projectId: string;
     projectName: string;
@@ -39,13 +38,11 @@ const SetEstimatedCostsPage = () => {
   }>();
 
   const currentProject = useProject(projectId);
-  const updatedProject = useUpdateProjectCallback();
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
 
   const allWorkItemCostSummaries = useAllRows(projectId, 'workItemSummaries');
   const updateWorkItemCostSummary = useUpdateRowCallback(projectId, 'workItemSummaries');
-  const allLineItemCostEntries = useAllRows(projectId, 'workItemCostEntries');
   const allWorkItems = useAllRowsConfiguration('workItems');
   const allWorkCategories = useAllRowsConfiguration('categories', WorkCategoryCodeCompareAsNumber);
   const availableCategoriesOptions: OptionEntry[] = useMemo(() => {
