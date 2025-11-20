@@ -103,7 +103,6 @@ const DefineChangeOrderScreen = () => {
   const colors = useColors();
   const router = useRouter();
   const allChangeOrders = useAllRows(projectId, 'changeOrders');
-  const addChangeOrder = useAddRowCallback(projectId, 'changeOrders');
   const updateChangeOrder = useUpdateRowCallback(projectId, 'changeOrders');
   const allChangeOrderItems = useAllRows(projectId, 'changeOrderItems');
   const addChangeOrderItem = useAddRowCallback(projectId, 'changeOrderItems');
@@ -341,8 +340,6 @@ const DefineChangeOrderScreen = () => {
 
   const onCostItemOptionSelected = useCallback((costItemEntry: OptionEntry | undefined) => {
     if (costItemEntry) {
-      const label = costItemEntry.label;
-      const workItemId = costItemEntry.value ?? '';
       setItemWorkItemEntry({
         label: costItemEntry.label,
         value: costItemEntry.value,

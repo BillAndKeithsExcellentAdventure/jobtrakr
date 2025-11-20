@@ -120,8 +120,6 @@ const EditChangeOrderItem = () => {
 
   const onCostItemOptionSelected = useCallback((costItemEntry: OptionEntry | undefined) => {
     if (costItemEntry) {
-      const label = costItemEntry.label;
-      const workItemId = costItemEntry.value ?? '';
       setItemWorkItemEntry({
         label: costItemEntry.label,
         value: costItemEntry.value,

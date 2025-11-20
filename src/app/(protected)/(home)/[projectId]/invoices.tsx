@@ -6,7 +6,7 @@ import { FlashList } from '@shopify/flash-list';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import {
   InvoiceData,
@@ -21,15 +21,11 @@ import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableInvoiceItem, { ITEM_HEIGHT } from '@/src/components/SwipeableInvoiceItem';
-
-function isInvoiceEntry(actionContext: any): actionContext is { PictureUri: string } {
-  return actionContext && typeof actionContext.PictureUri === 'string';
-}
+import SwipeableInvoiceItem from '@/src/components/SwipeableInvoiceItem';
 
 const ProjectInvoicesPage = () => {
   const router = useRouter();
-  const { projectId, invoiceId, projectName } = useLocalSearchParams<{
+  const { projectId, projectName } = useLocalSearchParams<{
     projectId: string;
     invoiceId: string;
     projectName: string;

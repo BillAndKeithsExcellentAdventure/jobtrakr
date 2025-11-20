@@ -4,7 +4,7 @@ import { NumberInputField } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
-import { Text, View } from '@/src/components/Themed';
+import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import {
   useAllRows,
@@ -13,7 +13,7 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet, ScrollView, Alert } from 'react-native';
+import { StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   useAllRows as useAllRowsConfiguration,
@@ -22,7 +22,7 @@ import {
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 
 const EditLineItemPage = () => {
-  const { projectId, invoiceId, lineItemId } = useLocalSearchParams<{
+  const { projectId, lineItemId } = useLocalSearchParams<{
     projectId: string;
     invoiceId: string;
     lineItemId: string;

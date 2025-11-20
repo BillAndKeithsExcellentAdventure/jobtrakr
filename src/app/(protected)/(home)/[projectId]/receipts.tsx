@@ -8,7 +8,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
-import SwipeableReceiptItem, { ITEM_HEIGHT } from '@/src/components/SwipeableReceiptItem';
+import SwipeableReceiptItem from '@/src/components/SwipeableReceiptItem';
 import {
   ReceiptData,
   RecentReceiptDateCompare,
@@ -23,13 +23,9 @@ import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
-  return actionContext && typeof actionContext.PictureUri === 'string';
-}
-
 const ProjectReceiptsPage = () => {
   const router = useRouter();
-  const { projectId, receiptId, projectName } = useLocalSearchParams<{
+  const { projectId, projectName } = useLocalSearchParams<{
     projectId: string;
     receiptId: string;
     projectName: string;

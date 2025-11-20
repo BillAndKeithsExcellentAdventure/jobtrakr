@@ -8,7 +8,7 @@ import {
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAddRowCallback, useAllRows } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,7 +21,7 @@ interface ItemData {
 }
 
 const AddCostWorkItemsScreen: React.FC = () => {
-  const { projectId, categoryId, categoryName, categoryCode, availableWorkItemIds } = useLocalSearchParams<{
+  const { projectId, categoryId, categoryCode, availableWorkItemIds } = useLocalSearchParams<{
     projectId: string;
     categoryId: string;
     categoryName: string;

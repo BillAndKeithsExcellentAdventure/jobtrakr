@@ -15,7 +15,7 @@ import { FontAwesome5, FontAwesome6, MaterialCommunityIcons } from '@expo/vector
 import { FlashList } from '@shopify/flash-list';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CostItemData, CostItemDataCodeCompareAsNumber } from '@/src/models/types';
@@ -37,7 +37,7 @@ const CategorySpecificCostItemsPage = () => {
   const colors = useColors();
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
-  const { removeActiveProjectId, addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
+  const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
   const allProjectCategories = useAllConfigRows('categories', WorkCategoryCodeCompareAsNumber);

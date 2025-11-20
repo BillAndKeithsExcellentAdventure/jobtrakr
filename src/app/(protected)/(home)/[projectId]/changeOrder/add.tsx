@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Button,
   StyleSheet,
-  ScrollView,
   Alert,
   Modal,
   FlatList,
@@ -12,13 +10,10 @@ import {
 } from 'react-native';
 import { Text, TextInput, View } from '@/src/components/Themed';
 
-import { useNavigation, useRoute } from '@react-navigation/native';
 import {
   ChangeOrder,
   ChangeOrderItem,
   useAddRowCallback,
-  useAllRows,
-  useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useColors } from '@/src/context/ColorsContext';
@@ -142,8 +137,6 @@ export default function AddChangeOrder() {
 
   const onCostItemOptionSelected = useCallback((costItemEntry: OptionEntry | undefined) => {
     if (costItemEntry) {
-      const label = costItemEntry.label;
-      const workItemId = costItemEntry.value ?? '';
       setItemWorkItemEntry({
         label: costItemEntry.label,
         value: costItemEntry.value,
