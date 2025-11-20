@@ -1,5 +1,13 @@
 import { useColors } from '@/src/context/ColorsContext';
-import React, { useCallback, useEffect, useRef, useState, forwardRef, useImperativeHandle, useId } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+  useId,
+} from 'react';
 import { StyleSheet, TextInput, ViewStyle } from 'react-native';
 import { Text, View } from './Themed';
 import { useFocusManager } from '@/src/hooks/useFocusManager';
@@ -37,7 +45,7 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
     const inputRef = useRef<TextInput | null>(null);
     const isEditingRef = useRef(false);
     const fieldId = useId();
-    
+
     // Try to get FocusManager context, but don't require it
     let focusManager;
     try {
@@ -69,7 +77,7 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
         inputRef.current?.focus();
       },
     }));
-    
+
     // Register with FocusManager
     useEffect(() => {
       if (focusManager) {
@@ -106,15 +114,6 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
 
       // If the number is valid, update the input value
       setInputValue(sanitizedValue);
-
-      /*****  
-     below code commented out because it caused problems
-     when relying on onBlur to auto-save edits like in
-     receipt processing 
-    *****/
-      // Convert to number and ensure it's not less than zero
-      //const numericValue = Math.max(0, parseFloat(sanitizedValue || '0'));
-      //onChange(numericValue);
     };
 
     const handleBlur = useCallback(() => {

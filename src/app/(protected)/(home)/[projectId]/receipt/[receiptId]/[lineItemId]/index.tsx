@@ -1,27 +1,26 @@
-import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import { NumberInputField } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
-import { Text, View } from '@/src/components/Themed';
+import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
-import {
-  useAllRows,
-  useUpdateRowCallback,
-  WorkItemCostEntry,
-} from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { useLocalSearchParams, router, Stack, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState, useRef, use } from 'react';
-import { StyleSheet, ScrollView, Alert, Keyboard, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   useAllRows as useAllRowsConfiguration,
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  useAllRows,
+  useUpdateRowCallback,
+  WorkItemCostEntry,
+} from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { HeaderBackButton } from '@react-navigation/elements';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditLineItemPage = () => {
   const router = useRouter();
@@ -54,28 +53,31 @@ const EditLineItemPage = () => {
   // tracks whether any field has been changed since load/save
   const isDirtyRef = useRef<boolean>(false);
 
-  const saveEntry = useCallback(async (updatedEntry?: WorkItemCostEntry) => {
-    // Use the provided updated entry or fall back to current state
-    const entryToSave = updatedEntry || itemizedEntry;
-    
-    // don't save if nothing changed
-    if (!isDirtyRef.current) return;
-    // require label and amount to be present before saving
-    if (!entryToSave.label || !entryToSave.amount) return;
-    // ensure we have an id to update
-    if (!entryToSave.id) return;
+  const saveEntry = useCallback(
+    async (updatedEntry?: WorkItemCostEntry) => {
+      // Use the provided updated entry or fall back to current state
+      const entryToSave = updatedEntry || itemizedEntry;
 
-    const updatedItemizedEntry: WorkItemCostEntry = {
-      ...entryToSave,
-      workItemId: pickedSubCategoryOption ? (pickedSubCategoryOption.value as string) : '',
-    };
-    const result = updateLineItem(updatedItemizedEntry.id, updatedItemizedEntry);
-    if (result.status !== 'Success') {
-      Alert.alert('Error', 'Failed to save line item.');
-      return;
-    }
-    isDirtyRef.current = false;
-  }, [itemizedEntry, pickedSubCategoryOption, updateLineItem]);
+      // don't save if nothing changed
+      if (!isDirtyRef.current) return;
+      // require label and amount to be present before saving
+      if (!entryToSave.label || !entryToSave.amount) return;
+      // ensure we have an id to update
+      if (!entryToSave.id) return;
+
+      const updatedItemizedEntry: WorkItemCostEntry = {
+        ...entryToSave,
+        workItemId: pickedSubCategoryOption ? (pickedSubCategoryOption.value as string) : '',
+      };
+      const result = updateLineItem(updatedItemizedEntry.id, updatedItemizedEntry);
+      if (result.status !== 'Success') {
+        Alert.alert('Error', 'Failed to save line item.');
+        return;
+      }
+      isDirtyRef.current = false;
+    },
+    [itemizedEntry, pickedSubCategoryOption, updateLineItem],
+  );
 
   useEffect(() => {
     if (lineItemId) {
@@ -144,7 +146,6 @@ const EditLineItemPage = () => {
       handleSubCategoryChange(option);
     }
     setIsSubCategoryPickerVisible(false);
-    // autosave when subcategory chosen
     isDirtyRef.current = true;
     void saveEntry();
   };
@@ -154,7 +155,6 @@ const EditLineItemPage = () => {
       handleCategoryChange(option);
     }
     setIsCategoryPickerVisible(false);
-    // autosave when category chosen
     isDirtyRef.current = true;
     void saveEntry();
   };
