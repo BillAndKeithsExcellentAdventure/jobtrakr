@@ -1,5 +1,6 @@
 import { useColorScheme } from '@/src/components/useColorScheme';
 import { ColorsProvider } from '@/src/context/ColorsContext';
+import { FocusManagerProvider } from '@/src/hooks/useFocusManager';
 import { ClerkLoaded, ClerkProvider } from '@clerk/clerk-expo';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -78,24 +79,26 @@ function RootLayoutNav() {
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <KeyboardProvider>
               <ColorsProvider>
-                <SafeAreaProvider>
-                  <GestureHandlerRootView>
-                    <Stack screenOptions={{ headerShown: false }}>
-                      <Stack.Screen
-                        name="(auth)"
-                        options={{
-                          animation: 'none',
-                        }}
-                      />
-                      <Stack.Screen
-                        name="(protected)"
-                        options={{
-                          animation: 'none',
-                        }}
-                      />
-                    </Stack>
-                  </GestureHandlerRootView>
-                </SafeAreaProvider>
+                <FocusManagerProvider>
+                  <SafeAreaProvider>
+                    <GestureHandlerRootView>
+                      <Stack screenOptions={{ headerShown: false }}>
+                        <Stack.Screen
+                          name="(auth)"
+                          options={{
+                            animation: 'none',
+                          }}
+                        />
+                        <Stack.Screen
+                          name="(protected)"
+                          options={{
+                            animation: 'none',
+                          }}
+                        />
+                      </Stack>
+                    </GestureHandlerRootView>
+                  </SafeAreaProvider>
+                </FocusManagerProvider>
               </ColorsProvider>
             </KeyboardProvider>
           </ThemeProvider>

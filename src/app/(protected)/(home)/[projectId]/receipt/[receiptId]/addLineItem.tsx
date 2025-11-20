@@ -6,6 +6,7 @@ import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import {
   useAllRows as useAllRowsConfiguration,
   WorkCategoryCodeCompareAsNumber,
@@ -159,29 +160,25 @@ const AddReceiptLineItemPage = () => {
     router.back();
   }, [itemizedEntry, pickedSubCategoryOption]);
 
-  const showBlockReason = useCallback(() => {
-    if (numberInputFieldRef.current) numberInputFieldRef.current.blur();
-    // give time for blur to process and update value
-    requestAnimationFrame(() => {
-      if (isDirtyRef.current) {
-        Alert.alert('Data Not Saved', 'Are you sure you want to leave without saving?', [
-          {
-            text: 'Stay',
-            style: 'cancel',
+  const showBlockReason = useAutoSaveNavigation(() => {
+    if (isDirtyRef.current) {
+      Alert.alert('Data Not Saved', 'Are you sure you want to leave without saving?', [
+        {
+          text: 'Stay',
+          style: 'cancel',
+        },
+        {
+          text: 'Leave',
+          style: 'destructive',
+          onPress: () => {
+            router.back();
           },
-          {
-            text: 'Leave',
-            style: 'destructive',
-            onPress: () => {
-              router.back();
-            },
-          },
-        ]);
-      } else {
-        router.back();
-      }
-    });
-  }, [router]);
+        },
+      ]);
+    } else {
+      router.back();
+    }
+  });
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1, overflowY: 'hidden' }}>

@@ -1,7 +1,8 @@
 import { useColors } from '@/src/context/ColorsContext';
-import React, { useCallback, useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useCallback, useEffect, useRef, useState, forwardRef, useImperativeHandle, useId } from 'react';
 import { StyleSheet, TextInput, ViewStyle } from 'react-native';
 import { Text, View } from './Themed';
+import { useFocusManager } from '@/src/hooks/useFocusManager';
 
 interface NumberInputFieldProps {
   value: number;
@@ -35,6 +36,30 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
     const [inputValue, setInputValue] = useState(value ? value.toFixed(numDecimalPlaces) : '0.00');
     const inputRef = useRef<TextInput | null>(null);
     const isEditingRef = useRef(false);
+    const fieldId = useId();
+    
+    // Try to get FocusManager context, but don't require it
+    let focusManager;
+    try {
+      focusManager = useFocusManager();
+    } catch {
+      // FocusManager not available, continue without it
+      focusManager = null;
+    }
+
+    const handleBlurInternal = useCallback(() => {
+      console.log('NumberInputField: handleBlur called with inputValue:', inputValue);
+      isEditingRef.current = false;
+      const numericValue = parseFloat(inputValue.replace(/[^0-9.]/g, ''));
+      if (!isNaN(numericValue)) {
+        setInputValue(numericValue.toFixed(numDecimalPlaces));
+        onChange(numericValue);
+      } else {
+        const zero = 0;
+        setInputValue(zero.toFixed(numDecimalPlaces));
+        onChange(0);
+      }
+    }, [onChange, inputValue, numDecimalPlaces]);
 
     useImperativeHandle(ref, () => ({
       blur: () => {
@@ -44,6 +69,18 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
         inputRef.current?.focus();
       },
     }));
+    
+    // Register with FocusManager
+    useEffect(() => {
+      if (focusManager) {
+        focusManager.registerField(fieldId, () => {
+          inputRef.current?.blur();
+        });
+        return () => {
+          focusManager.unregisterField(fieldId);
+        };
+      }
+    }, [fieldId, focusManager]);
 
     useEffect(() => {
       if (undefined === value || null === value) return;
@@ -78,18 +115,8 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
     };
 
     const handleBlur = useCallback(() => {
-      console.log('NumberInputField: handleBlur called with inputValue:', inputValue);
-      isEditingRef.current = false;
-      const numericValue = parseFloat(inputValue.replace(/[^0-9.]/g, ''));
-      if (!isNaN(numericValue)) {
-        setInputValue(numericValue.toFixed(numDecimalPlaces));
-        onChange(numericValue);
-      } else {
-        const zero = 0;
-        setInputValue(zero.toFixed(numDecimalPlaces));
-        onChange(0);
-      }
-    }, [onChange, inputValue, numDecimalPlaces]);
+      handleBlurInternal();
+    }, [handleBlurInternal]);
 
     const colors = useColors();
 

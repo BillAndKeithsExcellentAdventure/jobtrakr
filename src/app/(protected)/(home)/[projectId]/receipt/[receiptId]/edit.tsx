@@ -6,6 +6,7 @@ import { OptionPickerItem, OptionPickerItemHandle } from '@/src/components/Optio
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   ReceiptData,
@@ -134,16 +135,10 @@ const EditReceiptDetailsPage = () => {
 
   const receiptAmount = receipt.amount ?? 0;
 
-  const handleBackPress = useCallback(() => {
+  const handleBackPress = useAutoSaveNavigation(() => {
     updateReceipt(receiptId, receipt);
-    // explicitly blur the number input field to finalize any in-progress edits
-    if (numberInputFieldRef.current) numberInputFieldRef.current.blur();
-    if (optionPickerItemRef.current) optionPickerItemRef.current.blur();
-    // give time for blur to process and update value
-    requestAnimationFrame(() => {
-      router.back();
-    });
-  }, [router, receipt, receiptId, updateReceipt]);
+    router.back();
+  });
 
   return (
     <>
