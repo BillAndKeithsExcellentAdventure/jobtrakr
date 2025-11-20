@@ -2,7 +2,7 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { getOrganizationSlug } from '@/src/utils/organization';
-import { useAuth, useOrganizationList, useSignUp } from '@clerk/clerk-expo';
+import { useAuth, useClerk, useOrganizationList, useSignUp } from '@clerk/clerk-expo';
 import { Redirect, Stack, useRouter } from 'expo-router';
 import * as React from 'react';
 import { useEffect } from 'react';
@@ -10,6 +10,7 @@ import { Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CreateOrganization() {
+  const clerk = useClerk();
   const colors = useColors();
   const { isLoaded } = useSignUp();
   const router = useRouter();
