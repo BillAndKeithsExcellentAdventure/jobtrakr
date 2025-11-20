@@ -105,12 +105,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 5,
   },
-  costItemInput: {
-    flex: 1,
-    overflow: 'hidden',
-    borderWidth: 1,
-    padding: 5,
-  },
   pickerButtonContainer: {
     paddingLeft: 10,
   },

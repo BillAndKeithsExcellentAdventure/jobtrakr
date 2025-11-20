@@ -264,18 +264,17 @@ const ReceiptDetailsPage = () => {
                   width: '100%',
                   height: 40,
                   alignItems: 'center',
+                  marginLeft: 10,
                   borderTopColor: colors.separatorColor,
                   borderTopWidth: 2,
                 }}
               >
                 <Text
-                  style={{ width: 100, textAlign: 'right' }}
-                  txtSize="standard"
+                  style={{ width: 100, textAlign: 'right', fontWeight: '600' }}
                   text={itemsTotalCost ? formatCurrency(itemsTotalCost, true, true) : '$0.00'}
                 />
                 <Text
-                  style={{ flex: 1, marginHorizontal: 10, textAlign: 'center' }}
-                  txtSize="standard"
+                  style={{ flex: 1, marginHorizontal: 10, marginLeft: 30, fontWeight: '600' }}
                   text={`Total for ${allReceiptLineItems.length} line ${
                     allReceiptLineItems.length?.toString() === '1' ? 'item' : 'items'
                   }`}
@@ -296,9 +295,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
   },
-  inputContainer: {
-    marginTop: 6,
-  },
   itemContainer: {
     flexDirection: 'row',
     borderRadius: 15,
@@ -308,11 +304,6 @@ const styles = StyleSheet.create({
     height: 100,
     borderWidth: StyleSheet.hairlineWidth,
   },
-
-  amountColumn: {
-    width: 90,
-  },
-
   leftButton: {
     flex: 1,
   },
@@ -320,6 +311,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-function addReceiptImage(uri: any, projectId: string, arg2: string) {
-  throw new Error('Function not implemented.');
-}

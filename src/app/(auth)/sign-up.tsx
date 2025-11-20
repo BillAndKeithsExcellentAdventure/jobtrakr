@@ -4,7 +4,7 @@ import { StyleSheet } from 'react-native';
 
 import { ActionButton } from '@/src/components/ActionButton';
 import { useColors } from '@/src/context/ColorsContext';
-import { useAuth, useClerk, useSignUp } from '@clerk/clerk-expo';
+import { useAuth, useSignUp } from '@clerk/clerk-expo';
 import { Link, Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -12,7 +12,6 @@ export default function SignUpScreen() {
   const colors = useColors();
   const { isLoaded, signUp, setActive } = useSignUp();
   const router = useRouter();
-  const clerk = useClerk();
   const [emailAddress, setEmailAddress] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [pendingVerification, setPendingVerification] = React.useState(false);

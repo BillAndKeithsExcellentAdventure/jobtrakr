@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
-import { createMergeableStore, createStore, NoValuesSchema, Value } from 'tinybase/with-schemas';
+import { createMergeableStore, NoValuesSchema } from 'tinybase/with-schemas';
 import { useCreateClientPersisterAndStart } from './persistence/useCreateClientPersisterAndStart';
 import { TBStatus } from '@/src/models/types';
 import { useAuth } from '@clerk/clerk-expo';
@@ -29,19 +29,11 @@ const TABLES_SCHEMA = {
   },
 } as const;
 
-type FailedToUploadSchema = typeof TABLES_SCHEMA.failedToUpload;
-type FailedToUploadCellId = keyof (typeof TABLES_SCHEMA)['failedToUpload'];
-
 const {
-  useCell,
   useCreateMergeableStore,
   useDelRowCallback,
   useProvideStore,
-  useRowIds,
-  useSetCellCallback,
-  useSortedRowIds,
   useStore,
-  useTable,
 } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
 const useStoreId = () => {

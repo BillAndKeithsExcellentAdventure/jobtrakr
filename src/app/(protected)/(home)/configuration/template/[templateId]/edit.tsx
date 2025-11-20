@@ -1,4 +1,3 @@
-import OkayCancelButtons from '@/src/components/OkayCancelButtons'; // Assuming you have this component
 import { TextInput, View } from '@/src/components/Themed';
 import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import {
@@ -8,7 +7,7 @@ import {
 import { HeaderBackButton } from '@react-navigation/elements';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Keyboard, StyleSheet, TextInput as RNTextInput } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditProjectTemplate = () => {

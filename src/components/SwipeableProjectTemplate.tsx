@@ -26,7 +26,7 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => {
 const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: ProjectTemplateData }) => {
   const router = useRouter();
   const removeProjectTemplate = useDeleteRowCallback('templates');
-  const { templateWorkItemIds, templateWorkCategoryIds } = useTemplateWorkItemData(projectTemplate.id);
+  const { templateWorkItemIds } = useTemplateWorkItemData(projectTemplate.id);
 
   const colors = useColors();
 
@@ -82,9 +82,6 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   itemInfo: {
     flexDirection: 'row',
     alignItems: 'center',

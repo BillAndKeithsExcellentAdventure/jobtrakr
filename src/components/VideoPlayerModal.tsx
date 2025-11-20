@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEvent, useEventListener } from 'expo';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { Text, View } from '@/src/components/Themed';
+import { View } from '@/src/components/Themed';
 import { useCallback, useEffect, useState } from 'react';
 import { Dimensions, Modal, Pressable, SafeAreaView, StyleSheet } from 'react-native';
 
@@ -13,7 +13,6 @@ interface VideoPlayerModalProps {
 
 export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, videoUri, onClose }) => {
   const [isPlaying, setIsPlaying] = useState(true);
-  const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
   const [playerStatus, setPlayerStatus] = useState('');
   const [playerError, setPlayerError] = useState('');
@@ -134,22 +133,9 @@ const styles = StyleSheet.create({
     width: Dimensions.get('window').width,
     height: Dimensions.get('window').height - 120,
   },
-  controls: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 10,
-  },
   playButton: {
     alignSelf: 'center',
     padding: 10,
-  },
-  timeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 15,
   },
   timeText: {
     color: 'white',

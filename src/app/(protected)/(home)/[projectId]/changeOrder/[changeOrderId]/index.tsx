@@ -103,7 +103,6 @@ const DefineChangeOrderScreen = () => {
   const colors = useColors();
   const router = useRouter();
   const allChangeOrders = useAllRows(projectId, 'changeOrders');
-  const addChangeOrder = useAddRowCallback(projectId, 'changeOrders');
   const updateChangeOrder = useUpdateRowCallback(projectId, 'changeOrders');
   const allChangeOrderItems = useAllRows(projectId, 'changeOrderItems');
   const addChangeOrderItem = useAddRowCallback(projectId, 'changeOrderItems');
@@ -341,8 +340,6 @@ const DefineChangeOrderScreen = () => {
 
   const onCostItemOptionSelected = useCallback((costItemEntry: OptionEntry | undefined) => {
     if (costItemEntry) {
-      const label = costItemEntry.label;
-      const workItemId = costItemEntry.value ?? '';
       setItemWorkItemEntry({
         label: costItemEntry.label,
         value: costItemEntry.value,
@@ -560,20 +557,6 @@ const DefineChangeOrderScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    gap: 10,
-  },
-  button: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    marginRight: 16,
-  },
-  modalContainer: {
-    maxWidth: 460,
-    width: '100%',
-  },
   saveButtonRow: {
     marginTop: 10,
     flexDirection: 'row',
@@ -587,7 +570,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 5,
   },
-
   input: {
     borderWidth: 1,
     borderRadius: 6,
@@ -599,10 +581,6 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   label: { marginBottom: 2, fontSize: 12 },
-
-  addButton: {
-    maxWidth: 100,
-  },
   modalOverlay: {
     flex: 1,
     alignItems: 'center',

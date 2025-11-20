@@ -251,18 +251,9 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginTop: 6,
   },
-  saveButtonRow: {
-    marginTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
   saveButton: {
     flex: 1,
     marginRight: 5,
-  },
-  cancelButton: {
-    flex: 1,
-    marginLeft: 5,
   },
   inputLabel: {
     marginTop: 6,

@@ -84,10 +84,6 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
   vendorInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -98,7 +94,6 @@ const styles = StyleSheet.create({
   vendorSummary: {
     flex: 1,
   },
-
   vendorName: {
     fontSize: 18,
     fontWeight: '600',
@@ -106,9 +101,6 @@ const styles = StyleSheet.create({
   itemEntry: {
     width: '100%',
     paddingHorizontal: 10,
-  },
-  itemCode: {
-    flex: 1,
   },
   rightAction: {
     width: RIGHT_ACTION_WIDTH,

@@ -6,7 +6,7 @@ import { FlashList } from '@shopify/flash-list';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import {
   InvoiceData,
@@ -21,15 +21,11 @@ import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableInvoiceItem, { ITEM_HEIGHT } from '@/src/components/SwipeableInvoiceItem';
-
-function isInvoiceEntry(actionContext: any): actionContext is { PictureUri: string } {
-  return actionContext && typeof actionContext.PictureUri === 'string';
-}
+import SwipeableInvoiceItem from '@/src/components/SwipeableInvoiceItem';
 
 const ProjectInvoicesPage = () => {
   const router = useRouter();
-  const { projectId, invoiceId, projectName } = useLocalSearchParams<{
+  const { projectId, projectName } = useLocalSearchParams<{
     projectId: string;
     invoiceId: string;
     projectName: string;
@@ -218,37 +214,7 @@ export const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 550,
   },
-  itemContainer: {
-    flexDirection: 'row',
-    marginTop: 10,
-    marginHorizontal: 10,
-    borderRadius: 15,
-    elevation: 20, // Adds shadow effect for Android
-    shadowOffset: { width: 2, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 15,
-    padding: 10,
-    height: 100,
-  },
-  deleteButton: {
-    backgroundColor: 'red',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 80,
-    height: 80,
-    position: 'absolute',
-    right: 10,
-    elevation: 100,
-    zIndex: 20,
-    top: 10,
-    bottom: 0,
-    borderRadius: 10,
-  },
-  deleteText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
+
 });
 
 export default ProjectInvoicesPage;

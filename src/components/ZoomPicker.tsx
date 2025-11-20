@@ -26,9 +26,6 @@ const ZoomPicker = ({
     [],
   );
 
-  const colorScheme = useColorScheme();
-  const colors = useColors();
-
   return (
     <View style={styles.container}>
       {Platform.OS === 'ios' ? (

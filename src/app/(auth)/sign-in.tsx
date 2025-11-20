@@ -235,12 +235,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  button: {
-    backgroundColor: '#000',
-    padding: 15,
-    borderRadius: 5,
-    marginTop: 10,
-  },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',

@@ -8,7 +8,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
-import SwipeableReceiptItem, { ITEM_HEIGHT } from '@/src/components/SwipeableReceiptItem';
+import SwipeableReceiptItem from '@/src/components/SwipeableReceiptItem';
 import {
   ReceiptData,
   RecentReceiptDateCompare,
@@ -23,13 +23,9 @@ import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-function isReceiptEntry(actionContext: any): actionContext is { PictureUri: string } {
-  return actionContext && typeof actionContext.PictureUri === 'string';
-}
-
 const ProjectReceiptsPage = () => {
   const router = useRouter();
-  const { projectId, receiptId, projectName } = useLocalSearchParams<{
+  const { projectId, projectName } = useLocalSearchParams<{
     projectId: string;
     receiptId: string;
     projectName: string;
@@ -217,18 +213,6 @@ export const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 550,
   },
-  itemContainer: {
-    flexDirection: 'row',
-    marginTop: 10,
-    marginHorizontal: 10,
-    borderRadius: 15,
-    elevation: 20, // Adds shadow effect for Android
-    shadowOffset: { width: 2, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 15,
-    padding: 10,
-    height: 100,
-  },
   deleteButton: {
     backgroundColor: 'red',
     justifyContent: 'center',
@@ -243,11 +227,7 @@ export const styles = StyleSheet.create({
     bottom: 0,
     borderRadius: 10,
   },
-  deleteText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
+
 });
 
 export default ProjectReceiptsPage;

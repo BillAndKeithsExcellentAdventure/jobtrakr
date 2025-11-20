@@ -41,13 +41,9 @@ type ProjectsCellId = keyof (typeof TABLES_SCHEMA)['projects'];
 const {
   useCell,
   useCreateMergeableStore,
-  useDelRowCallback,
   useProvideStore,
-  useRowIds,
   useSetCellCallback,
-  useSortedRowIds,
   useStore,
-  useTable,
 } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
 export const useProjectListStoreId = () => {

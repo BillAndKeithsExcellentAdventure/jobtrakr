@@ -10,10 +10,10 @@ import { Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CreateOrganization() {
-  const colors = useColors();
-  const { isLoaded, signUp } = useSignUp();
-  const router = useRouter();
   const clerk = useClerk();
+  const colors = useColors();
+  const { isLoaded } = useSignUp();
+  const router = useRouter();
   const [organizationName, setOrganizationName] = React.useState('');
   const [organizationExists, setOrganizationExists] = React.useState(false);
   const auth = useAuth();
@@ -79,26 +79,13 @@ export default function CreateOrganization() {
     }
   };
 
-  // Handle submission of sign-up form
-  const onInvitePress = async () => {
-    if (!isLoaded) return;
-
-    // Start sign-up process using email and password provided
-    try {
-    } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2));
-    }
-  };
-
   // Handle submission of verification form
   const onCreateOrganizationPress = async () => {
     if (!isLoaded) return;
 
     try {
-      console.log('Auth:', auth);
-      console.log('Clerk:', clerk);
+      //console.log('onCreateOrganizationPress-Auth:', auth);
+      //console.log('onCreateOrganizationPress-Clerk:', clerk);
       if (clerk && clerk.session) {
         const token = await auth.getToken();
         if (token && auth.userId) {

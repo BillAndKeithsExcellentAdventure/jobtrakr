@@ -37,13 +37,7 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   const [cameraModeSwitch, setCameraModeSwitch] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const cameraRef = useRef<CameraView>(null);
-  const colorScheme = useColorScheme();
   const colors = useColors();
-
-  // Move the callback definition here, before any conditional returns
-  const onCameraModeChanged = useCallback((value: boolean) => {
-    setCameraModeSwitch(value);
-  }, []);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -321,10 +315,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: 10,
   },
-  projectName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
   closeButton: {
     padding: 5,
   },
@@ -385,11 +375,6 @@ const styles = StyleSheet.create({
     right: 10,
     borderRadius: 15,
     overflow: 'hidden',
-  },
-  zoomPicker: {
-    width: '100%',
-    color: 'white',
-    backgroundColor: 'transparent',
   },
   buttonText: {
     color: 'white',

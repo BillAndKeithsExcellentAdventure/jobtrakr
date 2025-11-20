@@ -16,7 +16,6 @@ import {
   ReceiptData,
   useAddRowCallback,
   useAllRows,
-  useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';

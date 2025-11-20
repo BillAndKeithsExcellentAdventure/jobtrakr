@@ -37,10 +37,6 @@ const ListProjectTemplates = () => {
     }
   };
 
-  const handleEditProjectTemplate = (id: string) => {
-    router.push({ pathname: '/configuration/template/[templateId]', params: { templateId: id } });
-  };
-
   const renderHeaderRight = () => (
     <Pressable onPress={() => setShowAdd(!showAdd)} hitSlop={10} style={styles.headerButton}>
       <Ionicons name={showAdd ? 'chevron-up-sharp' : 'add'} size={24} color={colors.iconColor} />

@@ -150,13 +150,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingLeft: 10,
   },
-  rightAction: {
-    width: RIGHT_ACTION_WIDTH,
-    minHeight: 40,
-    backgroundColor: deleteBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
 });
 
 export default SwipeableNote;

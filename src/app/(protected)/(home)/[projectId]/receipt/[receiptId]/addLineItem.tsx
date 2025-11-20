@@ -15,8 +15,6 @@ import {
 import {
   useAddRowCallback,
   useAllRows,
-  useDeleteRowCallback,
-  useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { HeaderBackButton } from '@react-navigation/elements';
@@ -28,12 +26,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const AddReceiptLineItemPage = () => {
   const router = useRouter();
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
-  const allReceipts = useAllRows(projectId, 'receipts');
   const allWorkItemCostSummaries = useAllRows(projectId, 'workItemSummaries');
-  const allLineItemCostEntries = useAllRows(projectId, 'workItemCostEntries');
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
-  const updateLineItem = useUpdateRowCallback(projectId, 'workItemCostEntries');
-  const deleteLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
   const allWorkItems = useAllRowsConfiguration('workItems');
   const allWorkCategories = useAllRowsConfiguration('categories', WorkCategoryCodeCompareAsNumber);
   const numberInputFieldRef = useRef<NumberInputFieldHandle>(null);
@@ -187,7 +181,7 @@ const AddReceiptLineItemPage = () => {
           title: 'Add Receipt Line Item',
           headerShown: true,
           gestureEnabled: false,
-          headerLeft: () => <HeaderBackButton onPress={showBlockReason} />,
+          headerLeft: () => <HeaderBackButton onPress={showBlockReason} label="Back" />,
         }}
       />
       <View style={[styles.container, { borderColor: colors.border }]}>
@@ -198,7 +192,8 @@ const AddReceiptLineItemPage = () => {
             label="Amount"
             value={itemizedEntry.amount}
             onChange={(value: number): void => {
-              isDirtyRef.current = true;
+              const dirty = isDirtyRef.current || value !== itemizedEntry.amount;
+              isDirtyRef.current = dirty;
               setItemizedEntry((prevItem) => ({
                 ...prevItem,
                 amount: value,
@@ -296,13 +291,6 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginTop: 6,
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    margin: 10,
-    borderRadius: 15,
-    padding: 10,
-    height: 100,
   },
   saveButtonRow: {
     marginVertical: 20,
