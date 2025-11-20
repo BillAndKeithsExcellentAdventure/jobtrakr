@@ -1,5 +1,5 @@
 import { useColors } from '@/src/context/ColorsContext';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { StyleSheet, TextInput, ViewStyle } from 'react-native';
 import { Text, View } from './Themed';
 
@@ -13,112 +13,138 @@ interface NumberInputFieldProps {
   style?: ViewStyle;
 }
 
-export const NumberInputField: React.FC<NumberInputFieldProps> = ({
-  value,
-  numDecimalPlaces = 2, // Default to 2 decimal places
-  onChange,
-  label,
-  placeholder = 'Enter number',
-  readOnly = false,
-  style = {},
-}) => {
-  const [inputValue, setInputValue] = useState(value ? value.toFixed(numDecimalPlaces) : '0.00');
-  const inputRef = useRef<TextInput>(null);
-  const isEditingRef = useRef(false);
+// handle exposed to parent via ref
+export type NumberInputFieldHandle = {
+  blur: () => void;
+  focus?: () => void;
+};
 
-  useEffect(() => {
-    if (undefined === value || null === value) return;
+export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFieldProps>(
+  (
+    {
+      value,
+      numDecimalPlaces = 2, // Default to 2 decimal places
+      onChange,
+      label,
+      placeholder = 'Enter number',
+      readOnly = false,
+      style = {},
+    },
+    ref,
+  ) => {
+    const [inputValue, setInputValue] = useState(value ? value.toFixed(numDecimalPlaces) : '0.00');
+    const inputRef = useRef<TextInput | null>(null);
+    const isEditingRef = useRef(false);
 
-    if (isEditingRef.current) setInputValue(value.toString());
-    else setInputValue(value.toFixed(numDecimalPlaces));
-  }, [value, numDecimalPlaces]);
+    useImperativeHandle(ref, () => ({
+      blur: () => {
+        inputRef.current?.blur();
+      },
+      focus: () => {
+        inputRef.current?.focus();
+      },
+    }));
 
-  const handleInputChange = (text: string) => {
-    if (readOnly) return; // Prevent changes if readOnly is true
+    useEffect(() => {
+      if (undefined === value || null === value) return;
 
-    // Remove any non-numeric characters except for the decimal point
-    const sanitizedValue = text.replace(/[^0-9.]/g, '');
+      if (isEditingRef.current) setInputValue(value.toString());
+      else setInputValue(value.toFixed(numDecimalPlaces));
+    }, [value, numDecimalPlaces]);
 
-    // Make sure we don't allow more decimal places than specified
-    const parts = sanitizedValue.split('.');
-    if (parts.length > 1 && parts[1].length > numDecimalPlaces) {
-      return; // Don't update input if decimal places exceed the limit
-    }
+    const handleInputChange = (text: string) => {
+      if (readOnly) return; // Prevent changes if readOnly is true
 
-    // If the number is valid, update the input value
-    setInputValue(sanitizedValue);
+      // Remove any non-numeric characters except for the decimal point
+      const sanitizedValue = text.replace(/[^0-9.]/g, '');
 
-    /*****  
+      // Make sure we don't allow more decimal places than specified
+      const parts = sanitizedValue.split('.');
+      if (parts.length > 1 && parts[1].length > numDecimalPlaces) {
+        return; // Don't update input if decimal places exceed the limit
+      }
+
+      // If the number is valid, update the input value
+      setInputValue(sanitizedValue);
+
+      /*****  
      below code commented out because it caused problems
      when relying on onBlur to auto-save edits like in
      receipt processing 
     *****/
-    // Convert to number and ensure it's not less than zero
-    //const numericValue = Math.max(0, parseFloat(sanitizedValue || '0'));
-    //onChange(numericValue);
-  };
+      // Convert to number and ensure it's not less than zero
+      //const numericValue = Math.max(0, parseFloat(sanitizedValue || '0'));
+      //onChange(numericValue);
+    };
 
-  const handleBlur = useCallback(() => {
-    console.log('NumberInputField: handleBlur called with inputValue:', inputValue);
-    isEditingRef.current = false;
-    const numericValue = parseFloat(inputValue.replace(/[^0-9.]/g, ''));
-    if (!isNaN(numericValue)) {
-      setInputValue(numericValue.toFixed(numDecimalPlaces));
-      onChange(numericValue);
-    } else {
-      const zero = 0;
-      setInputValue(zero.toFixed(numDecimalPlaces));
-      onChange(0);
-    }
-  }, [onChange, inputValue, numDecimalPlaces]);
-
-  const colors = useColors();
-
-  const handleFocus = useCallback(
-    (event: any) => {
-      if (inputRef.current) {
-        isEditingRef.current = true;
-        const textLength = inputValue.length;
-        inputRef.current.setSelection(0, textLength);
+    const handleBlur = useCallback(() => {
+      console.log('NumberInputField: handleBlur called with inputValue:', inputValue);
+      isEditingRef.current = false;
+      const numericValue = parseFloat(inputValue.replace(/[^0-9.]/g, ''));
+      if (!isNaN(numericValue)) {
+        setInputValue(numericValue.toFixed(numDecimalPlaces));
+        onChange(numericValue);
+      } else {
+        const zero = 0;
+        setInputValue(zero.toFixed(numDecimalPlaces));
+        onChange(0);
       }
-    },
-    [inputRef, inputValue],
-  );
+    }, [onChange, inputValue, numDecimalPlaces]);
 
-  return (
-    <View style={[styles.container, style]}>
-      {!!label && <Text txtSize="formLabel" text={label} style={styles.label} />}
-      <View
-        style={[
-          style,
-          {
-            backgroundColor: colors.neutral200,
-            borderColor: colors.neutral400,
-          },
-          styles.inputContainer,
-        ]}
-      >
-        <TextInput
-          ref={inputRef}
+    const colors = useColors();
+
+    const handleFocus = useCallback(
+      (event: any) => {
+        if (inputRef.current) {
+          isEditingRef.current = true;
+          const textLength = inputValue.length;
+          try {
+            inputRef.current.setSelection && inputRef.current.setSelection(0, textLength);
+          } catch {
+            // ignore if method not available
+          }
+        }
+      },
+      [inputRef, inputValue],
+    );
+
+    return (
+      <View style={[styles.container, style]}>
+        {!!label && <Text txtSize="formLabel" text={label} style={styles.label} />}
+        <View
           style={[
-            styles.input,
+            style,
             {
-              color: colors.text,
+              backgroundColor: colors.neutral200,
+              borderColor: colors.neutral400,
             },
-            readOnly && { color: colors.textDim },
+            styles.inputContainer,
           ]}
-          value={inputValue}
-          onChangeText={handleInputChange}
-          onFocus={handleFocus}
-          placeholder={placeholder}
-          keyboardType="numeric"
-          editable={!readOnly}
-          onBlur={handleBlur}
-        />
+        >
+          <TextInput
+            ref={(r) => {
+              inputRef.current = r;
+            }}
+            style={[
+              styles.input,
+              {
+                color: colors.text,
+              },
+              readOnly && { color: colors.textDim },
+            ]}
+            value={inputValue}
+            onChangeText={handleInputChange}
+            onFocus={handleFocus}
+            placeholder={placeholder}
+            keyboardType="numeric"
+            editable={!readOnly}
+            onBlur={handleBlur}
+          />
+        </View>
       </View>
-    </View>
-  );
-};
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   container: {

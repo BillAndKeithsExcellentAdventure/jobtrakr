@@ -1,7 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
-import { HeaderBackButton } from '@/src/components/HeaderBackButton';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumberInputField, NumberInputFieldHandle } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
@@ -19,6 +18,7 @@ import {
   useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { HeaderBackButton } from '@react-navigation/elements';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Alert, StyleSheet } from 'react-native';
@@ -35,6 +35,7 @@ const AddReceiptLineItemPage = () => {
   const deleteLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
   const allWorkItems = useAllRowsConfiguration('workItems');
   const allWorkCategories = useAllRowsConfiguration('categories', WorkCategoryCodeCompareAsNumber);
+  const numberInputFieldRef = useRef<NumberInputFieldHandle>(null);
 
   const availableCategoriesOptions: OptionEntry[] = useMemo(() => {
     // get a list of all unique workitemids from allWorkItemCostSummaries available in the project
@@ -159,19 +160,27 @@ const AddReceiptLineItemPage = () => {
   }, [itemizedEntry, pickedSubCategoryOption]);
 
   const showBlockReason = useCallback(() => {
-    Alert.alert('Data Not Saved', 'Are you sure you want to leave without saving?', [
-      {
-        text: 'Stay',
-        style: 'cancel',
-      },
-      {
-        text: 'Leave',
-        style: 'destructive',
-        onPress: () => {
-          router.back();
-        },
-      },
-    ]);
+    if (numberInputFieldRef.current) numberInputFieldRef.current.blur();
+    // give time for blur to process and update value
+    requestAnimationFrame(() => {
+      if (isDirtyRef.current) {
+        Alert.alert('Data Not Saved', 'Are you sure you want to leave without saving?', [
+          {
+            text: 'Stay',
+            style: 'cancel',
+          },
+          {
+            text: 'Leave',
+            style: 'destructive',
+            onPress: () => {
+              router.back();
+            },
+          },
+        ]);
+      } else {
+        router.back();
+      }
+    });
   }, [router]);
 
   return (
@@ -181,12 +190,13 @@ const AddReceiptLineItemPage = () => {
           title: 'Add Receipt Line Item',
           headerShown: true,
           gestureEnabled: false,
-          headerLeft: () => <HeaderBackButton blocked={isDirtyRef.current} onBlock={showBlockReason} />,
+          headerLeft: () => <HeaderBackButton onPress={showBlockReason} />,
         }}
       />
       <View style={[styles.container, { borderColor: colors.border }]}>
         <View style={{ flex: 1 }}>
           <NumberInputField
+            ref={numberInputFieldRef}
             style={styles.inputContainer}
             label="Amount"
             value={itemizedEntry.amount}

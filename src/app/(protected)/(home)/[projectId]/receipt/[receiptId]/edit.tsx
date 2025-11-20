@@ -1,8 +1,8 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumberInputField, NumberInputFieldHandle } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
-import { OptionPickerItem } from '@/src/components/OptionPickerItem';
+import { OptionPickerItem, OptionPickerItemHandle } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
@@ -14,13 +14,16 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Keyboard, StyleSheet, TouchableOpacity, TextInput as RNTextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { HeaderBackButton } from '@react-navigation/elements';
 
 const EditReceiptDetailsPage = () => {
   const defaultDate = new Date();
+  const numberInputFieldRef = useRef<NumberInputFieldHandle>(null);
+  const optionPickerItemRef = useRef<OptionPickerItemHandle>(null);
 
   const router = useRouter();
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
@@ -35,22 +38,6 @@ const EditReceiptDetailsPage = () => {
 
   const hideDatePicker = () => {
     setDatePickerVisible(false);
-  };
-
-  const handleDateConfirm = useCallback((date: Date) => {
-    setReceipt((prevInvoice) => ({
-      ...prevInvoice,
-      date,
-    }));
-
-    hideDatePicker();
-  }, []);
-
-  const handleVendorOptionChange = (option: OptionEntry) => {
-    if (option) {
-      handleVendorChange(option.label);
-    }
-    setIsVendorListPickerVisible(false);
   };
 
   const allVendors = useAllConfigurationRows('vendors');
@@ -98,119 +85,161 @@ const EditReceiptDetailsPage = () => {
   }, [receipt, vendors]);
 
   const colors = useColors();
-  const handleVendorChange = useCallback((vendor: string) => {
-    setReceipt((prevReceipt) => ({
-      ...prevReceipt,
-      vendor,
-    }));
-  }, []);
 
-  const handleSubmit = useCallback(async () => {
+  const handleDateConfirm = useCallback(
+    (date: Date) => {
+      const newReceipt = { ...receipt, date: date.getTime() };
+      updateReceipt(receiptId, newReceipt);
+
+      hideDatePicker();
+    },
+    [receipt, receiptId, updateReceipt],
+  );
+
+  const handleAmountChange = useCallback(
+    (amount: number) => {
+      const newReceipt = { ...receipt, amount };
+      updateReceipt(receiptId, newReceipt);
+    },
+    [receipt, receiptId, updateReceipt],
+  );
+
+  const handleVendorChange = useCallback(() => {
     updateReceipt(receiptId, receipt);
-    router.back();
-  }, [receipt, receiptId, router, updateReceipt]);
+  }, [receipt, receiptId, updateReceipt]);
+
+  const handleDescriptionChange = useCallback(() => {
+    const newReceipt = { ...receipt };
+    updateReceipt(receiptId, newReceipt);
+  }, [receipt, receiptId, updateReceipt]);
+
+  const handleVendorLabelChange = useCallback(
+    (vendor: string) => {
+      const newReceipt = { ...receipt, vendor };
+      updateReceipt(receiptId, newReceipt);
+    },
+    [receipt, receiptId, updateReceipt],
+  );
+
+  const handleVendorOptionChange = useCallback(
+    (option: OptionEntry) => {
+      if (option) {
+        const newReceipt = { ...receipt, vendor: option.label };
+        updateReceipt(receiptId, newReceipt);
+      }
+      setIsVendorListPickerVisible(false);
+    },
+    [receipt, receiptId, updateReceipt],
+  );
 
   const receiptAmount = receipt.amount ?? 0;
 
+  const handleBackPress = useCallback(() => {
+    updateReceipt(receiptId, receipt);
+    // explicitly blur the number input field to finalize any in-progress edits
+    if (numberInputFieldRef.current) numberInputFieldRef.current.blur();
+    if (optionPickerItemRef.current) optionPickerItemRef.current.blur();
+    // give time for blur to process and update value
+    requestAnimationFrame(() => {
+      router.back();
+    });
+  }, [router, receipt, receiptId, updateReceipt]);
+
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: 'Edit Receipt Summary', headerShown: false }} />
-
-      <View style={[styles.container, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
-        <View style={styles.editContainer}>
-          <View style={{ alignItems: 'center' }}>
-            <Text txtSize="title" text="Edit Receipt Summary" />
-          </View>
-          <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border }}>
-            <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
-              <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
-              <TextInput
-                readOnly={true}
-                style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
-                placeholder="Date"
-                onPressIn={showDatePicker}
-                value={formatDate(receipt.receiptDate)}
+    <>
+      <Stack.Screen
+        options={{
+          title: 'Edit Receipt Summary',
+          headerShown: true,
+          gestureEnabled: false,
+          headerLeft: () => <HeaderBackButton onPress={handleBackPress} />,
+        }}
+      />
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+        <View style={[styles.container, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
+          <View style={styles.editContainer}>
+            <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border }}>
+              <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
+                <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
+                <TextInput
+                  readOnly={true}
+                  style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                  placeholder="Date"
+                  onPressIn={showDatePicker}
+                  value={formatDate(receipt.receiptDate)}
+                />
+              </TouchableOpacity>
+              <DateTimePickerModal
+                style={{ alignSelf: 'stretch' }}
+                date={receipt.receiptDate ? new Date(receipt.receiptDate) : defaultDate}
+                isVisible={datePickerVisible}
+                mode="date"
+                onConfirm={handleDateConfirm}
+                onCancel={hideDatePicker}
               />
-            </TouchableOpacity>
-            <DateTimePickerModal
-              style={{ alignSelf: 'stretch' }}
-              date={receipt.receiptDate ? new Date(receipt.receiptDate) : defaultDate}
-              isVisible={datePickerVisible}
-              mode="date"
-              onConfirm={handleDateConfirm}
-              onCancel={hideDatePicker}
-            />
-          </View>
+            </View>
 
-          <NumberInputField
-            style={styles.inputContainer}
-            label="Amount"
-            value={receiptAmount}
-            onChange={(value: number): void => {
-              setReceipt((prevReceipt) => ({
-                ...prevReceipt,
-                amount: value,
-              }));
-            }}
-          />
-          {vendors && vendors.length ? (
-            <OptionPickerItem
-              containerStyle={styles.inputContainer}
-              optionLabel={receipt.vendor}
-              placeholder="Vendor"
-              label="Vendor"
-              onOptionLabelChange={handleVendorChange}
-              onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
+            <NumberInputField
+              ref={numberInputFieldRef}
+              style={styles.inputContainer}
+              label="Amount"
+              value={receiptAmount}
+              onChange={handleAmountChange}
             />
-          ) : (
+            {vendors && vendors.length ? (
+              <OptionPickerItem
+                ref={optionPickerItemRef}
+                containerStyle={styles.inputContainer}
+                optionLabel={receipt.vendor}
+                placeholder="Vendor"
+                label="Vendor"
+                onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
+                onOptionLabelChange={handleVendorLabelChange}
+              />
+            ) : (
+              <TextField
+                containerStyle={styles.inputContainer}
+                placeholder="Vendor"
+                label="Vendor"
+                value={receipt.vendor}
+                onBlur={handleVendorChange}
+                onChangeText={(text): void => {
+                  setReceipt((prevReceipt) => ({
+                    ...prevReceipt,
+                    vendor: text,
+                  }));
+                }}
+              />
+            )}
             <TextField
               containerStyle={styles.inputContainer}
-              placeholder="Vendor"
-              label="Vendor"
-              value={receipt.vendor}
-              onChangeText={handleVendorChange}
-            />
-          )}
-
-          <TextField
-            containerStyle={styles.inputContainer}
-            placeholder="Description"
-            label="Description"
-            value={receipt.description}
-            onChangeText={(text): void => {
-              setReceipt((prevReceipt) => ({
-                ...prevReceipt,
-                description: text,
-              }));
-            }}
-          />
-          <View style={styles.saveButtonRow}>
-            <ActionButton style={styles.saveButton} onPress={handleSubmit} type={'ok'} title="Save" />
-
-            <ActionButton
-              style={styles.cancelButton}
-              onPress={() => {
-                router.back();
+              placeholder="Description"
+              label="Description"
+              value={receipt.description}
+              onChangeText={(text): void => {
+                setReceipt((prevReceipt) => ({
+                  ...prevReceipt,
+                  description: text,
+                }));
               }}
-              type={'cancel'}
-              title="Cancel"
+              onBlur={handleDescriptionChange}
             />
           </View>
+          {vendors && isVendorListPickerVisible && (
+            <BottomSheetContainer
+              isVisible={isVendorListPickerVisible}
+              onClose={() => setIsVendorListPickerVisible(false)}
+            >
+              <OptionList
+                options={vendors}
+                onSelect={(option) => handleVendorOptionChange(option)}
+                selectedOption={pickedOption}
+              />
+            </BottomSheetContainer>
+          )}
         </View>
-        {vendors && isVendorListPickerVisible && (
-          <BottomSheetContainer
-            isVisible={isVendorListPickerVisible}
-            onClose={() => setIsVendorListPickerVisible(false)}
-          >
-            <OptionList
-              options={vendors}
-              onSelect={(option) => handleVendorOptionChange(option)}
-              selectedOption={pickedOption}
-            />
-          </BottomSheetContainer>
-        )}
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </>
   );
 };
 

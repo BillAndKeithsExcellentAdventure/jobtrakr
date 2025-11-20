@@ -226,60 +226,61 @@ const ReceiptDetailsPage = () => {
                 />
               )}
             </View>
+            <View style={{ flex: 1 }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  width: '100%',
+                  height: 40,
+                  alignItems: 'center',
+                  borderBottomColor: colors.separatorColor,
+                  borderBottomWidth: 2,
+                }}
+              >
+                <Text
+                  style={{ width: 90, textAlign: 'center', fontWeight: '600' }}
+                  txtSize="standard"
+                  text="Amount"
+                />
+                <Text
+                  style={{ flex: 1, marginHorizontal: 20, textAlign: 'center', fontWeight: '600' }}
+                  txtSize="standard"
+                  text="Description"
+                />
+                <Text style={{ width: 40, fontWeight: '600' }} txtSize="standard" text="" />
+              </View>
 
-            <View
-              style={{
-                flexDirection: 'row',
-                width: '100%',
-                height: 40,
-                alignItems: 'center',
-                borderBottomColor: colors.separatorColor,
-                borderBottomWidth: 2,
-              }}
-            >
-              <Text
-                style={{ width: 90, textAlign: 'center', fontWeight: '600' }}
-                txtSize="standard"
-                text="Amount"
-              />
-              <Text
-                style={{ flex: 1, marginHorizontal: 20, textAlign: 'center', fontWeight: '600' }}
-                txtSize="standard"
-                text="Description"
-              />
-              <Text style={{ width: 40, fontWeight: '600' }} txtSize="standard" text="" />
-            </View>
+              <View style={{ maxHeight: containerHeight - 290 }}>
+                <FlatList
+                  showsVerticalScrollIndicator={Platform.OS === 'web'}
+                  data={allReceiptLineItems}
+                  renderItem={({ item }) => <SwipeableLineItem lineItem={item} projectId={projectId} />}
+                />
+              </View>
 
-            <View style={{ maxHeight: containerHeight - 290 }}>
-              <FlatList
-                showsVerticalScrollIndicator={Platform.OS === 'web'}
-                data={allReceiptLineItems}
-                renderItem={({ item }) => <SwipeableLineItem lineItem={item} projectId={projectId} />}
-              />
-            </View>
-
-            <View
-              style={{
-                flexDirection: 'row',
-                width: '100%',
-                height: 40,
-                alignItems: 'center',
-                borderTopColor: colors.separatorColor,
-                borderTopWidth: 2,
-              }}
-            >
-              <Text
-                style={{ width: 100, textAlign: 'right' }}
-                txtSize="standard"
-                text={itemsTotalCost ? formatCurrency(itemsTotalCost, true, true) : '$0.00'}
-              />
-              <Text
-                style={{ flex: 1, marginHorizontal: 10, textAlign: 'center' }}
-                txtSize="standard"
-                text={`Total for ${allReceiptLineItems.length} line ${
-                  allReceiptLineItems.length?.toString() === '1' ? 'item' : 'items'
-                }`}
-              />
+              <View
+                style={{
+                  flexDirection: 'row',
+                  width: '100%',
+                  height: 40,
+                  alignItems: 'center',
+                  borderTopColor: colors.separatorColor,
+                  borderTopWidth: 2,
+                }}
+              >
+                <Text
+                  style={{ width: 100, textAlign: 'right' }}
+                  txtSize="standard"
+                  text={itemsTotalCost ? formatCurrency(itemsTotalCost, true, true) : '$0.00'}
+                />
+                <Text
+                  style={{ flex: 1, marginHorizontal: 10, textAlign: 'center' }}
+                  txtSize="standard"
+                  text={`Total for ${allReceiptLineItems.length} line ${
+                    allReceiptLineItems.length?.toString() === '1' ? 'item' : 'items'
+                  }`}
+                />
+              </View>
             </View>
           </View>
         </>
@@ -300,10 +301,12 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     flexDirection: 'row',
-    margin: 10,
     borderRadius: 15,
+    marginBottom: 10,
+    marginRight: 5,
     padding: 10,
     height: 100,
+    borderWidth: StyleSheet.hairlineWidth,
   },
 
   amountColumn: {

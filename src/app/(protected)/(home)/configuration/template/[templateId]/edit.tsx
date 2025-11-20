@@ -4,9 +4,10 @@ import {
   useTableValue,
   useUpdateRowCallback,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { HeaderBackButton } from '@react-navigation/elements';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Keyboard, StyleSheet, TextInput as RNTextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditProjectTemplate = () => {
@@ -26,7 +27,7 @@ const EditProjectTemplate = () => {
     setNewDescription(description);
   }, [description]);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (newName && newDescription) {
       applyTemplateUpdates(templateId, {
         id: templateId,
@@ -37,7 +38,20 @@ const EditProjectTemplate = () => {
       // Go back to the categories list screen
       router.back();
     }
-  };
+  }, [applyTemplateUpdates, description, newDescription, newName, router, templateId]);
+
+  const handleBackPress = useCallback(() => {
+    const focused = RNTextInput.State?.currentlyFocusedInput
+      ? RNTextInput.State.currentlyFocusedInput()
+      : null;
+    if (focused && RNTextInput.State?.blurTextInput) {
+      RNTextInput.State.blurTextInput(focused);
+    } else {
+      Keyboard.dismiss();
+    }
+
+    handleSave();
+  }, [handleSave]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -45,6 +59,8 @@ const EditProjectTemplate = () => {
         options={{
           headerShown: true,
           title: 'Edit Project Template',
+          gestureEnabled: false,
+          headerLeft: () => <HeaderBackButton onPress={handleBackPress} />,
         }}
       />
 
@@ -54,18 +70,14 @@ const EditProjectTemplate = () => {
           placeholder="Template Name"
           value={newName}
           onChangeText={setNewName}
+          onBlur={handleSave}
         />
         <TextInput
           style={styles.input}
           placeholder="Description"
           value={newDescription}
           onChangeText={setNewDescription}
-        />
-
-        <OkayCancelButtons
-          okTitle="Save"
-          isOkEnabled={!!newName && !!newDescription}
-          onOkPress={handleSave}
+          onBlur={handleSave}
         />
       </View>
     </SafeAreaView>
