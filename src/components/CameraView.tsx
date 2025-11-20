@@ -315,10 +315,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: 10,
   },
-  projectName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
   closeButton: {
     padding: 5,
   },
@@ -379,11 +375,6 @@ const styles = StyleSheet.create({
     right: 10,
     borderRadius: 15,
     overflow: 'hidden',
-  },
-  zoomPicker: {
-    width: '100%',
-    color: 'white',
-    backgroundColor: 'transparent',
   },
   buttonText: {
     color: 'white',

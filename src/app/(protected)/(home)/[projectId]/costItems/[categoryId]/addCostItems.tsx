@@ -143,12 +143,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    padding: 5,
-    borderTopWidth: 1,
-    height: 45,
-  },
   item: {
     height: 45,
     flexDirection: 'row',
@@ -166,17 +160,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  categoryContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    padding: 8,
-    borderRadius: 10,
-  },
-
-  categoryInfo: {
-    flex: 1,
-  },
 });
 
 export default AddCostWorkItemsScreen;

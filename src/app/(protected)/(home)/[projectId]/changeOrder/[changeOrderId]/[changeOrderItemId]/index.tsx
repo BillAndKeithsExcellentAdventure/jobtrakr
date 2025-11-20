@@ -211,7 +211,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 5,
   },
-
   input: {
     borderWidth: 1,
     borderRadius: 6,
@@ -223,10 +222,6 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   label: { marginBottom: 2, fontSize: 12 },
-
-  addButton: {
-    maxWidth: 100,
-  },
   safeArea: {
     flex: 1,
     width: '100%',

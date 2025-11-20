@@ -96,17 +96,12 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
   itemInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
     height: 40,
   },
-
   itemEntry: {
     width: '100%',
     paddingHorizontal: 10,
@@ -117,13 +112,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginRight: 10,
   },
-
   itemAmount: {
     textAlign: 'right',
     width: 80,
     marginRight: 30,
   },
-
   rightAction: {
     width: 100,
     height: 40,

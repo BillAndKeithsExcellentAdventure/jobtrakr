@@ -561,9 +561,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  unspecifiedBg: {
-    backgroundColor: '#F44336',
-  },
   unspecifiedFg: {
     color: '#FFF',
   },

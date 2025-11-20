@@ -185,12 +185,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    backgroundColor: 'transparent',
-  },
   input: {
     height: 40,
     borderWidth: 1,
@@ -198,22 +192,12 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     borderRadius: 4,
   },
-
-  categoryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 10,
-  },
   categoryContent: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
     padding: 8,
     borderRadius: 8,
-  },
-
-  categoryInfo: {
-    flex: 1,
   },
   categoryName: {
     fontSize: 18,

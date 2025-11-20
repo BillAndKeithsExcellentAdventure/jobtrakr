@@ -82,9 +82,6 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   itemInfo: {
     flexDirection: 'row',
     alignItems: 'center',

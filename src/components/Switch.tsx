@@ -79,12 +79,6 @@ export const Switch: FC<SwitchProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
   switchContainer: {
     width: 40,
     height: 20,
@@ -109,7 +103,6 @@ const styles = StyleSheet.create({
   switchContainerOff: {
     backgroundColor: '#D1D1D6',
   },
-
   switchThumb: {
     width: 16,
     height: 16,

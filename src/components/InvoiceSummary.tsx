@@ -68,16 +68,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  itemContainer: {
-    flexDirection: 'row',
-    marginTop: 10,
-    marginHorizontal: 10,
-    borderRadius: 15,
-    elevation: 20, // Adds shadow effect for Android
-    shadowOffset: { width: 2, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 15,
-    padding: 10,
-    height: 100,
-  },
+
 });

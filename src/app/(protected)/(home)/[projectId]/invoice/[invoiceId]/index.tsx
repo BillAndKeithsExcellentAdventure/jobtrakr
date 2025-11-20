@@ -275,9 +275,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
   },
-  inputContainer: {
-    marginTop: 6,
-  },
   itemContainer: {
     flexDirection: 'row',
     margin: 10,
@@ -285,15 +282,8 @@ const styles = StyleSheet.create({
     padding: 10,
     height: 100,
   },
-
-  amountColumn: {
-    width: 90,
-  },
-
   leftButton: {
     flex: 1,
   },
-  rightButton: {
-    flex: 1,
-  },
+
 });

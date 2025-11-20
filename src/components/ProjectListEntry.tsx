@@ -109,17 +109,11 @@ export function ProjectListEntry({ item, onPress, buttons }: ProjectListEntryCom
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    width: '100%',
-  },
   flatList: {
     flex: 1,
     padding: 10,
     width: '100%',
   },
-
   itemContainer: {
     marginBottom: 10,
     borderRadius: 15,
@@ -129,21 +123,18 @@ const styles = StyleSheet.create({
     shadowRadius: 15,
     padding: 10,
   },
-
   itemContentContainer: {
     flexDirection: 'column',
   },
   headerContentContainer: {
     flexDirection: 'row',
   },
-
   imageContentContainer: {
     marginRight: 5,
     width: 120,
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   textContentContainer: {
     flex: 1,
   },
@@ -158,7 +149,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     overflow: 'hidden',
   },
-
   subtitleRow: {
     flexDirection: 'row',
     paddingHorizontal: 10,

@@ -183,29 +183,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
   vendorItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: 10,
   },
-  vendorContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    padding: 8,
-    borderRadius: 8,
-  },
   vendorInfo: {
     flex: 1,
-  },
-  vendorName: {
-    fontSize: 18,
-    fontWeight: '600',
   },
   headerButton: {
     padding: 8,

@@ -138,11 +138,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
   input: {
     height: 40,
     borderColor: '#ccc',
@@ -151,19 +146,11 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
     borderRadius: 4,
   },
-  saveButtonRow: {
-    marginTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
   saveButton: {
     flex: 1,
     marginRight: 5,
   },
-  cancelButton: {
-    flex: 1,
-    marginLeft: 5,
-  },
+
 });
 
 export default EditVendor;

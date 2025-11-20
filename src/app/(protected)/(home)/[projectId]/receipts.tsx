@@ -213,18 +213,6 @@ export const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 550,
   },
-  itemContainer: {
-    flexDirection: 'row',
-    marginTop: 10,
-    marginHorizontal: 10,
-    borderRadius: 15,
-    elevation: 20, // Adds shadow effect for Android
-    shadowOffset: { width: 2, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 15,
-    padding: 10,
-    height: 100,
-  },
   deleteButton: {
     backgroundColor: 'red',
     justifyContent: 'center',
@@ -239,11 +227,7 @@ export const styles = StyleSheet.create({
     bottom: 0,
     borderRadius: 10,
   },
-  deleteText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
+
 });
 
 export default ProjectReceiptsPage;

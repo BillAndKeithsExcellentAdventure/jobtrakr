@@ -293,21 +293,10 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginTop: 6,
   },
-  itemContainer: {
-    flexDirection: 'row',
-    margin: 10,
-    borderRadius: 15,
-    padding: 10,
-    height: 100,
-  },
   saveButtonRow: {
     marginVertical: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-  saveButton: {
-    flex: 1,
-    marginRight: 5,
   },
   cancelButton: {
     flex: 1,

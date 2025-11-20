@@ -125,15 +125,6 @@ export default function OptionList({
 }
 
 const styles = StyleSheet.create({
-  listContainer: {
-    borderTopRightRadius: 10,
-    borderTopLeftRadius: 10,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    width: '100%',
-    borderBottomWidth: 1,
-    borderColor: 'white',
-  },
   saveButtonRow: {
     paddingHorizontal: 10,
     borderTopWidth: 2,

@@ -226,9 +226,6 @@ const styles = StyleSheet.create({
   input: {
     width: '100%',
   },
-  label: {
-    marginBottom: 5,
-  },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',

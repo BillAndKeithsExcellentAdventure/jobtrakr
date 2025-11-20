@@ -324,19 +324,11 @@ const renderItem = (
 };
 
 const styles = StyleSheet.create({
-  modalBackground: {
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-  },
   container: {
     flex: 1,
     justifyContent: 'flex-start', // Align items at the top vertically
     alignItems: 'center', // Center horizontally
     width: '100%',
-  },
-  dateContainer: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
   },
   modalContainer: {
     flex: 1,
@@ -351,24 +343,11 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginTop: 6,
   },
-  inputLabel: {
-    marginTop: 6,
-    marginBottom: 4,
-  },
   input: {
     borderWidth: 1,
     alignContent: 'stretch',
     justifyContent: 'center',
     borderRadius: 5,
-  },
-  dateInput: {
-    borderWidth: 1,
-    alignContent: 'stretch',
-    justifyContent: 'center',
-    borderRadius: 5,
-    paddingHorizontal: 8,
-    height: LISTITEM_HEIGHT,
-    paddingVertical: 0,
   },
   saveButtonRow: {
     marginTop: 10,

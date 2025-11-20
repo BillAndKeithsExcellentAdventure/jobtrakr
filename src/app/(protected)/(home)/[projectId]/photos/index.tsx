@@ -218,11 +218,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 10,
   },
-  separator: {
-    width: 1,
-    backgroundColor: '#ccc',
-    marginHorizontal: 10,
-  },
+
 });
 
 export default ProjectPhotosPage;

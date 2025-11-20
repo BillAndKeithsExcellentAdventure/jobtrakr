@@ -62,22 +62,10 @@ export const DateSelector = ({
 };
 
 const styles = StyleSheet.create({
-  modalBackground: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
   modalContainer: {
     width: 300,
     padding: 20,
     borderRadius: 20,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
   },
   input: {
     height: 40,
@@ -87,20 +75,8 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
     borderRadius: 5,
   },
-  dateButton: {
-    backgroundColor: '#4CAF50',
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-    alignItems: 'center',
-  },
   dateButtonText: {
     color: 'white',
   },
-  buttons: {
-    marginTop: 10,
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    justifyContent: 'space-evenly',
-  },
+
 });

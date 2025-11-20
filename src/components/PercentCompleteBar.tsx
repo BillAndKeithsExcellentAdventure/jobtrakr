@@ -119,9 +119,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  text: {
-    fontWeight: 'bold',
-  },
   insideText: {
     position: 'absolute',
     left: 0,

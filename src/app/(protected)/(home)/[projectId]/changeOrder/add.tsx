@@ -349,11 +349,6 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
   },
-  header: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
   label: {
     fontWeight: '500',
     marginTop: 12,

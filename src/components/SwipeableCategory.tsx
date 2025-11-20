@@ -75,17 +75,12 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
   itemInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
     height: 40,
   },
-
   itemEntry: {
     width: '100%',
     paddingHorizontal: 10,
@@ -96,13 +91,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginRight: 10,
   },
-
   itemCode: {
     textOverflow: 'ellipsis',
     overflow: 'hidden',
     width: 100,
   },
-
   rightAction: {
     height: 40,
     backgroundColor: deleteBg,

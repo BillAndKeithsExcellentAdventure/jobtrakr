@@ -194,7 +194,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 5,
   },
-
   input: {
     height: 40,
     borderColor: '#ccc',
@@ -214,13 +213,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  categoryItem: {
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 10,
-  },
-
   categoryInfo: {
     flex: 1,
   },

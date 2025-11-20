@@ -334,16 +334,6 @@ const EditProjectScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  modalBackground: {
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'flex-start', // Align items at the top vertically
-    alignItems: 'center', // Center horizontally
-    width: '100%',
-    paddingTop: 10,
-  },
   dateContainer: {
     width: '100%',
     flexDirection: 'row',
@@ -352,12 +342,6 @@ const styles = StyleSheet.create({
   modalContainer: {
     maxWidth: 460,
     width: '100%',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
   },
   inputContainer: {
     marginTop: 0, // use gap instead

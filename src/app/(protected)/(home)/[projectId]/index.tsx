@@ -554,7 +554,6 @@ const styles = StyleSheet.create({
     padding: 5,
     borderTopWidth: 1,
   },
-
   headerContainer: {
     marginTop: 5,
     marginHorizontal: 10,
@@ -563,32 +562,7 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
     borderBottomWidth: 1,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 18,
-    marginBottom: 16,
-  },
-  itemContainer: {
-    marginBottom: 12,
-  },
-  categoryTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  item: {
-    height: ITEM_HEIGHT,
-    flexDirection: 'row',
-    padding: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  itemText: {
-    fontSize: 16,
-  },
+
 });
 
 export default ProjectDetailsPage;
