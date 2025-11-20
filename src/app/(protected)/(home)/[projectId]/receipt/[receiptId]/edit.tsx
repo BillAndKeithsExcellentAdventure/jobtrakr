@@ -136,7 +136,6 @@ const EditReceiptDetailsPage = () => {
   const receiptAmount = receipt.amount ?? 0;
 
   const handleBackPress = useAutoSaveNavigation(() => {
-    updateReceipt(receiptId, receipt);
     router.back();
   });
 
