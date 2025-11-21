@@ -5,18 +5,10 @@ import { Platform, StyleSheet } from 'react-native';
 /**
  * A styled HeaderBackButton that matches the default expo-router header styling.
  * This addresses the issue where the default HeaderBackButton from @react-navigation/elements
- * appears too small and has too much left margin compared to the default expo-router header.
+ * has too much left margin when compared to the default expo-router header.
  */
 export const StyledHeaderBackButton: React.FC<HeaderBackButtonProps> = (props) => {
-  return (
-    <HeaderBackButton
-      {...props}
-      style={[
-        styles.backButton,
-        props.style,
-      ]}
-    />
-  );
+  return <HeaderBackButton {...props} style={[styles.backButton, props.style]} />;
 };
 
 const styles = StyleSheet.create({
