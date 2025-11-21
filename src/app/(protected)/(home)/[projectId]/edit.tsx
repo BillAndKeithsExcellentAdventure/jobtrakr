@@ -1,3 +1,4 @@
+import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
@@ -5,7 +6,6 @@ import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import { ProjectData } from '@/src/models/types';
 import { useProject, useUpdateProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatDate } from '@/src/utils/formatters';
-import { HeaderBackButton } from '@react-navigation/elements';
 import * as Location from 'expo-location';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -151,7 +151,7 @@ const EditProjectScreen = () => {
           title: 'Edit Project',
           headerShown: true,
           gestureEnabled: false,
-          headerLeft: () => <HeaderBackButton onPress={handleBackPress} />,
+          headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
         }}
       />
       <KeyboardAwareScrollView

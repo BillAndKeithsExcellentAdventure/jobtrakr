@@ -3,6 +3,7 @@ import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import { NumberInputField, NumberInputFieldHandle } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
+import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
@@ -17,7 +18,6 @@ import {
   useAllRows,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { HeaderBackButton } from '@react-navigation/elements';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Alert, StyleSheet } from 'react-native';
@@ -181,7 +181,7 @@ const AddReceiptLineItemPage = () => {
           title: 'Add Receipt Line Item',
           headerShown: true,
           gestureEnabled: false,
-          headerLeft: () => <HeaderBackButton onPress={showBlockReason} label="Back" />,
+          headerLeft: () => <StyledHeaderBackButton onPress={showBlockReason} label="Back" />,
         }}
       />
       <View style={[styles.container, { borderColor: colors.border }]}>
