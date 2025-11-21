@@ -21,7 +21,7 @@ export const StyledHeaderBackButton: React.FC<HeaderBackButtonProps> = (props) =
 
 const styles = StyleSheet.create({
   backButton: {
-    // Remove the default left margin to match expo-router's default header
+    // Apply negative left margin to align with expo-router's default header positioning
     marginLeft: Platform.OS === 'ios' ? -8 : -4,
   },
 });
