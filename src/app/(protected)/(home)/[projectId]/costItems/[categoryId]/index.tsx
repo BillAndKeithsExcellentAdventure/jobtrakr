@@ -142,7 +142,7 @@ const CategorySpecificCostItemsPage = () => {
           ]
         : []),
     ],
-    [colors, allWorkItemSummaries],
+    [colors, allWorkItemSummaries, unusedWorkItemsIdsInCategory, costItemsCategory, projectData, projectId, categoryId, unusedWorkItemsInCategoryString, router],
   );
 
   if (!projectData) {
