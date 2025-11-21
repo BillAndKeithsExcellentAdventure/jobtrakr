@@ -48,7 +48,7 @@ const PercentCompleteBar: React.FC<PercentCompleteProps> = ({
       duration: 500,
       useNativeDriver: false,
     }).start();
-  }, [percent]);
+  }, [percent, animatedWidth]);
 
   const widthInterpolated = animatedWidth.interpolate({
     inputRange: [0, 100],
@@ -118,9 +118,6 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  text: {
-    fontWeight: 'bold',
   },
   insideText: {
     position: 'absolute',

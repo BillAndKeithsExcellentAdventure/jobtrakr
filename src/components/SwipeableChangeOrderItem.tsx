@@ -3,7 +3,6 @@ import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
 
 import {
-  ChangeOrder,
   ChangeOrderItem,
   useDeleteRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
@@ -96,9 +95,6 @@ const SwipeableChangeOrderItem = React.memo(({ item, projectId }: Props) => {
 });
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   itemEntry: {
     width: '100%',
     alignItems: 'center',
@@ -106,16 +102,12 @@ const styles = StyleSheet.create({
     height: ITEM_HEIGHT,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-
   itemInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
     paddingLeft: 10,
-  },
-  itemName: {
-    marginRight: 10,
   },
   rightAction: {
     width: RIGHT_ACTION_WIDTH,

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { createMergeableStore, NoValuesSchema } from 'tinybase/with-schemas';
 import { useCreateClientPersisterAndStart } from '../persistence/useCreateClientPersisterAndStart';
@@ -99,7 +99,7 @@ export const getStoreId = (projId: string) => STORE_ID_PREFIX + projId;
 
 // Create, persist, and sync a store containing the project and its categories.
 export default function ProjectDetailsStore({ projectId }: { projectId: string }) {
-  useEffect(() => console.log('Mounting ProjectDetailsStore for projectId:', projectId), []);
+  useEffect(() => console.log('Mounting ProjectDetailsStore for projectId:', projectId), [projectId]);
   const storeId = getStoreId(projectId);
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
 

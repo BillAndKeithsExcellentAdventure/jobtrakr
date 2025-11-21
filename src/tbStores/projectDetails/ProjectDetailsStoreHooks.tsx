@@ -1,27 +1,16 @@
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
-import { NoValuesSchema, Value } from 'tinybase/with-schemas';
+import { NoValuesSchema } from 'tinybase/with-schemas';
 import { getStoreId, TABLES_SCHEMA } from './ProjectDetailsStore';
-
-const {
-  useCell,
-  useCreateMergeableStore,
-  useDelRowCallback,
-  useProvideStore,
-  useRowIds,
-  useSetCellCallback,
-  useSetValueCallback,
-  useSortedRowIds,
-  useStore,
-  useRow,
-  useTable,
-  useValue,
-} = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
-
 import { CrudResult } from '@/src/models/types';
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useEffect, useState } from 'react';
 import { useProjectValue } from '../listOfProjects/ListOfProjectsStore';
+
+const {
+  useCell,
+  useStore,
+} = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
 export interface WorkItemSummaryData {
   id: string;
@@ -193,7 +182,7 @@ export const useAllRows = <K extends keyof TableDataMap>(
           id: id,
         })) as TableDataMap[K][])
       : [];
-  }, [store, tableName, projectId]);
+  }, [store, tableName]);
 
   useEffect(() => {
     setRows(fetchRows());
@@ -224,7 +213,7 @@ export function useAddRowCallback<K extends PROJECTDETAILS_TABLES>(projectId: st
         ? { status: 'Success', id, msg: '' }
         : { status: 'Error', id: '0', msg: 'Failed to write' };
     },
-    [store, projectId, tableId],
+    [store, tableId],
   );
 }
 
@@ -241,7 +230,7 @@ export function useUpdateRowCallback<K extends PROJECTDETAILS_TABLES>(projectId:
         ? { status: 'Success', id, msg: '' }
         : { status: 'Error', id: '0', msg: 'Failed to update' };
     },
-    [store, tableId, projectId],
+    [store, tableId],
   );
 }
 
@@ -256,7 +245,7 @@ export function useDeleteRowCallback<K extends PROJECTDETAILS_TABLES>(projectId:
         ? { status: 'Success', id, msg: '' }
         : { status: 'Error', id: '0', msg: 'Failed to delete' };
     },
-    [store, tableId, projectId],
+    [store, tableId],
   );
 }
 
@@ -366,7 +355,7 @@ export function useSetWorkItemSpentSummaryCallback(projectId: string) {
         ? { status: 'Success', id: workItemId, msg: '' }
         : { status: 'Error', id: '0', msg: 'Failed to update' };
     },
-    [store, projectId],
+    [store],
   );
 }
 

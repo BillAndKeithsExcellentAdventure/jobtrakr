@@ -88,14 +88,14 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     } else {
       Alert.alert('No Location Selected', 'Please tap on the map to select a location');
     }
-  }, [selectedLocation, onLocationSelected, projectName, onClose]);
+  }, [selectedLocation, onLocationSelected]);
 
   const handleResetToCurrentDeviceLocation = useCallback(() => {
     if (deviceLocation) {
       // Use provided initial coordinates
       setSelectedLocation({ ...deviceLocation });
     }
-  }, [projectLocation]);
+  }, [deviceLocation]);
 
   const cameraPosition = useMemo(() => {
     return {
@@ -250,6 +250,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     appleMarkers,
     ref,
     setSelectedLocation,
+    router,
   ]);
 
   return (
@@ -264,20 +265,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   headerContainer: {
     marginBottom: 16,
     alignItems: 'center',
-  },
-  map: {
-    flex: 1,
-    borderRadius: 8,
-    overflow: 'hidden',
-    borderWidth: 1,
   },
   infoContainer: {
     paddingVertical: 5,
@@ -291,10 +281,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   resetButton: {},
-  retryButton: {
-    marginTop: 16,
-    paddingHorizontal: 32,
-  },
   saveButtonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

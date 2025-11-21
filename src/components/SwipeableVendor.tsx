@@ -61,7 +61,9 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
         >
           <View style={[styles.vendorInfo, { borderColor: colors.border, borderTopWidth: 1 }]}>
             <View style={styles.vendorSummary}>
-              <Text style={styles.vendorName}>{vendor.name}</Text>
+              <Text style={styles.vendorName}>{`${
+                vendor.name.length > 0 ? vendor.name : 'Not Specified'
+              }`}</Text>
               {(vendor.city || vendor.address) && (
                 <View style={{ flexDirection: 'row' }}>
                   <Text>{vendor.address}</Text>
@@ -82,10 +84,6 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
   vendorInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -96,7 +94,6 @@ const styles = StyleSheet.create({
   vendorSummary: {
     flex: 1,
   },
-
   vendorName: {
     fontSize: 18,
     fontWeight: '600',
@@ -104,9 +101,6 @@ const styles = StyleSheet.create({
   itemEntry: {
     width: '100%',
     paddingHorizontal: 10,
-  },
-  itemCode: {
-    flex: 1,
   },
   rightAction: {
     width: RIGHT_ACTION_WIDTH,

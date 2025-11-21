@@ -1,11 +1,13 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumberInputField, NumberInputFieldHandle } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
+import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import {
   useAllRows as useAllRowsConfiguration,
   WorkCategoryCodeCompareAsNumber,
@@ -14,26 +16,21 @@ import {
 import {
   useAddRowCallback,
   useAllRows,
-  useDeleteRowCallback,
-  useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AddReceiptLineItemPage = () => {
   const router = useRouter();
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
-  const allReceipts = useAllRows(projectId, 'receipts');
   const allWorkItemCostSummaries = useAllRows(projectId, 'workItemSummaries');
-  const allLineItemCostEntries = useAllRows(projectId, 'workItemCostEntries');
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
-  const updateLineItem = useUpdateRowCallback(projectId, 'workItemCostEntries');
-  const deleteLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
   const allWorkItems = useAllRowsConfiguration('workItems');
   const allWorkCategories = useAllRowsConfiguration('categories', WorkCategoryCodeCompareAsNumber);
+  const numberInputFieldRef = useRef<NumberInputFieldHandle>(null);
 
   const availableCategoriesOptions: OptionEntry[] = useMemo(() => {
     // get a list of all unique workitemids from allWorkItemCostSummaries available in the project
@@ -113,6 +110,9 @@ const AddReceiptLineItemPage = () => {
 
   const [itemizedEntry, setItemizedEntry] = useState<WorkItemCostEntry>(initItemizedEntry);
 
+  // tracks whether any field has been changed since load/save
+  const isDirtyRef = useRef<boolean>(false);
+
   const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
     setPickedSubCategoryOption(selectedSubCategory);
   }, []);
@@ -136,32 +136,64 @@ const AddReceiptLineItemPage = () => {
   );
 
   const handleOkPress = useCallback(async () => {
-    if (!itemizedEntry.label || !itemizedEntry.amount || !pickedSubCategoryOption) {
+    if (!itemizedEntry.label || !itemizedEntry.amount) {
       Alert.alert('Error', 'Please fill in all required fields.');
       return;
     }
     const newItemizedEntry: WorkItemCostEntry = {
       ...itemizedEntry,
-      workItemId: pickedSubCategoryOption.value,
+      workItemId: pickedSubCategoryOption ? (pickedSubCategoryOption.value as string) : '',
     };
     const result = addLineItem(newItemizedEntry);
     if (result.status !== 'Success') {
       Alert.alert('Error', 'Failed to add line item.');
       return;
     }
+    // saved successfully -> clear dirty flag
+    isDirtyRef.current = false;
     router.back();
   }, [itemizedEntry, pickedSubCategoryOption]);
 
+  const showBlockReason = useAutoSaveNavigation(() => {
+    if (isDirtyRef.current) {
+      Alert.alert('Data Not Saved', 'Are you sure you want to leave without saving?', [
+        {
+          text: 'Stay',
+          style: 'cancel',
+        },
+        {
+          text: 'Leave',
+          style: 'destructive',
+          onPress: () => {
+            router.back();
+          },
+        },
+      ]);
+    } else {
+      router.back();
+    }
+  });
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1, overflowY: 'hidden' }}>
-      <Stack.Screen options={{ title: 'Add Receipt Line Item', headerShown: true }} />
+      <Stack.Screen
+        options={{
+          title: 'Add Receipt Line Item',
+          headerShown: true,
+          gestureEnabled: false,
+          headerLeft: () => <StyledHeaderBackButton onPress={showBlockReason} label="Back" />,
+        }}
+      />
       <View style={[styles.container, { borderColor: colors.border }]}>
         <View style={{ flex: 1 }}>
           <NumberInputField
+            ref={numberInputFieldRef}
             style={styles.inputContainer}
             label="Amount"
             value={itemizedEntry.amount}
             onChange={(value: number): void => {
+              const dirty = isDirtyRef.current || value !== itemizedEntry.amount;
+              isDirtyRef.current = dirty;
               setItemizedEntry((prevItem) => ({
                 ...prevItem,
                 amount: value,
@@ -174,6 +206,7 @@ const AddReceiptLineItemPage = () => {
             label="Description"
             value={itemizedEntry.label}
             onChangeText={(text): void => {
+              isDirtyRef.current = true;
               setItemizedEntry((prevItem) => ({
                 ...prevItem,
                 label: text,
@@ -201,9 +234,7 @@ const AddReceiptLineItemPage = () => {
           <ActionButton
             style={styles.saveButton}
             onPress={handleOkPress}
-            type={
-              !itemizedEntry.label || !itemizedEntry.amount || !pickedSubCategoryOption ? 'disabled' : 'ok'
-            }
+            type={!itemizedEntry.label || !itemizedEntry.amount ? 'disabled' : 'ok'}
             title="Save"
           />
 
@@ -218,7 +249,7 @@ const AddReceiptLineItemPage = () => {
         </View>
         {isCategoryPickerVisible && (
           <BottomSheetContainer
-            modalHeight={'55%'}
+            modalHeight="65%"
             isVisible={isCategoryPickerVisible}
             onClose={() => setIsCategoryPickerVisible(false)}
           >
@@ -231,7 +262,7 @@ const AddReceiptLineItemPage = () => {
         )}
         {isSubCategoryPickerVisible && (
           <BottomSheetContainer
-            modalHeight={'55%'}
+            modalHeight="80%"
             isVisible={isSubCategoryPickerVisible}
             onClose={() => setIsSubCategoryPickerVisible(false)}
           >
@@ -260,13 +291,6 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginTop: 6,
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    margin: 10,
-    borderRadius: 15,
-    padding: 10,
-    height: 100,
   },
   saveButtonRow: {
     marginVertical: 20,

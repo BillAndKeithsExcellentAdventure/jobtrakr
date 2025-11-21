@@ -14,8 +14,6 @@ import {
 import {
   useAddRowCallback,
   useAllRows,
-  useDeleteRowCallback,
-  useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -26,12 +24,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const AddInvoiceLineItemPage = () => {
   const router = useRouter();
   const { projectId, invoiceId } = useLocalSearchParams<{ projectId: string; invoiceId: string }>();
-  const allInvoices = useAllRows(projectId, 'invoices');
   const allWorkItemCostSummaries = useAllRows(projectId, 'workItemSummaries');
-  const allLineItemCostEntries = useAllRows(projectId, 'workItemCostEntries');
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
-  const updateLineItem = useUpdateRowCallback(projectId, 'workItemCostEntries');
-  const deleteLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
   const allWorkItems = useAllRowsConfiguration('workItems');
   const allWorkCategories = useAllRowsConfiguration('categories', WorkCategoryCodeCompareAsNumber);
 
@@ -217,7 +211,7 @@ const AddInvoiceLineItemPage = () => {
         </View>
         {isCategoryPickerVisible && (
           <BottomSheetContainer
-            modalHeight={'55%'}
+            modalHeight="65%"
             isVisible={isCategoryPickerVisible}
             onClose={() => setIsCategoryPickerVisible(false)}
           >
@@ -230,7 +224,7 @@ const AddInvoiceLineItemPage = () => {
         )}
         {isSubCategoryPickerVisible && (
           <BottomSheetContainer
-            modalHeight={'55%'}
+            modalHeight="80%"
             isVisible={isSubCategoryPickerVisible}
             onClose={() => setIsSubCategoryPickerVisible(false)}
           >
@@ -259,13 +253,6 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginTop: 6,
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    margin: 10,
-    borderRadius: 15,
-    padding: 10,
-    height: 100,
   },
   saveButtonRow: {
     marginVertical: 20,

@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, memo, useEffect } from 'react';
+import React from 'react';
 import ConfigurationStore from '@/src/tbStores/configurationStore/ConfigurationStore';
 import ListOfProjectsStore from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { useAuth } from '@clerk/clerk-expo';

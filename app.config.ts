@@ -27,6 +27,18 @@ const getAppName = () => {
   return 'Project Hound';
 };
 
+const getChannel = () => {
+  if (IS_DEV) {
+    return 'development';
+  }
+
+  if (IS_PREVIEW) {
+    return 'preview';
+  }
+
+  return 'production';
+};
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: getAppName(),
@@ -170,6 +182,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   updates: {
     url: 'https://u.expo.dev/0d1178cf-26f4-4ce6-8014-1a3b95e0f7e5',
+    requestHeaders: {
+      'expo-channel-name': getChannel(),
+    },
   },
   owner: 'bkea',
 });

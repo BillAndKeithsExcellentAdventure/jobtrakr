@@ -1,26 +1,15 @@
-import { NoValuesSchema, Value } from 'tinybase/with-schemas';
+import { NoValuesSchema } from 'tinybase/with-schemas';
 import { TABLES_SCHEMA, useStoreId } from './ConfigurationStore';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
-
-const {
-  useCell,
-  useCreateMergeableStore,
-  useDelRowCallback,
-  useProvideStore,
-  useRowIds,
-  useSetCellCallback,
-  useSetValueCallback,
-  useSortedRowIds,
-  useStore,
-  useRow,
-  useTable,
-  useValue,
-} = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
-
 import { useCallback, useEffect, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import { CrudResult } from '@/src/models/types';
 import { exportTinyBaseStore, importFromJson } from '@/src/utils/tinybase-json';
+
+const {
+  useCell,
+  useStore,
+} = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
 export interface WorkCategoryData {
   id: string;
@@ -121,7 +110,7 @@ export const useAllRows = <K extends keyof TableDataMap>(
       : [];
     if (!compareFn) return array;
     return array.sort(compareFn);
-  }, [store, tableName]);
+  }, [store, tableName, compareFn]);
 
   useEffect(() => {
     setRows(fetchRows());
@@ -133,7 +122,7 @@ export const useAllRows = <K extends keyof TableDataMap>(
     return () => {
       store.delListener(listenerId);
     };
-  }, [store, tableName]);
+  }, [store, tableName, fetchRows]);
 
   return rows;
 };
@@ -210,7 +199,9 @@ export const useTableValue = <T extends keyof SchemaMap, C extends Extract<keyof
 export const useTemplateWorkItemData = (templateId: string) => {
   const [templateWorkItemData, setTemplateWorkItemData] = useState<TemplateWorkItemData | null>();
   const [templateWorkItemIds, setTemplateWorkItemIds] = useState<string[]>([]);
+  const [templateWorkCategoryIds, setTemplateWorkCategoryIds] = useState<string[]>([]);
   let store = useStore(useStoreId());
+  const allWorkItems = useAllRows('workItems');
 
   const fetchTemplateWorkItemData = useCallback((): TemplateWorkItemData | null => {
     if (!store) {
@@ -259,7 +250,22 @@ export const useTemplateWorkItemData = (templateId: string) => {
         templateWorkItemData.workItemIds.length > 0 ? templateWorkItemData.workItemIds.split(',') : [];
       setTemplateWorkItemIds(workItemIds);
     }
-  }, [templateWorkItemData]);
+  }, [templateWorkItemData, setTemplateWorkItemIds]);
+
+  useEffect(() => {
+    if (templateWorkItemIds.length > 0) {
+      const categoryIds = new Set<string>();
+      for (const workItemId of templateWorkItemIds) {
+        const workItem = allWorkItems.find((w) => w.id === workItemId);
+        if (workItem) {
+          categoryIds.add(workItem.categoryId);
+        }
+      }
+      setTemplateWorkCategoryIds(Array.from(categoryIds));
+    } else {
+      setTemplateWorkCategoryIds([]); // Reset categories when work items change
+    }
+  }, [templateWorkItemIds, allWorkItems, setTemplateWorkCategoryIds]);
 
   const toggleWorkItemId = useCallback(
     (workItemId: string) => {
@@ -301,10 +307,10 @@ export const useTemplateWorkItemData = (templateId: string) => {
     [store, templateId],
   );
 
-  return { templateWorkItemIds, toggleWorkItemId, setActiveWorkItemIds }; // Return the template work item data or null if not found
+  return { templateWorkItemIds, toggleWorkItemId, setActiveWorkItemIds, templateWorkCategoryIds }; // Return the template work item data or null if not found
 };
 
-export function exportStoreDataCallback() {
+export function useExportStoreDataCallback() {
   const store = useStore(useStoreId());
   return useCallback((): any => {
     if (!store) return null;
@@ -312,7 +318,7 @@ export function exportStoreDataCallback() {
   }, [store]);
 }
 
-export function importJsonConfigurationDataCallback() {
+export function useImportJsonConfigurationDataCallback() {
   const store = useStore(useStoreId());
   return useCallback(
     (jsonData: any): any => {

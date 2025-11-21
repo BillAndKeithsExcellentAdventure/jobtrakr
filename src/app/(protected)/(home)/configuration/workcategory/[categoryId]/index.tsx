@@ -154,6 +154,7 @@ const ShowWorkCategory = () => {
                 <FlatList
                   style={{ borderTopWidth: 1, borderColor: colors.border }}
                   data={categorySpecificItems}
+                  showsVerticalScrollIndicator={false}
                   keyExtractor={(item) => item.id}
                   renderItem={({ item }) => <SwipeableCategoryItem item={item} category={category} />}
                 />
@@ -193,7 +194,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 5,
   },
-
   input: {
     height: 40,
     borderColor: '#ccc',
@@ -213,13 +213,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  categoryItem: {
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 10,
-  },
-
   categoryInfo: {
     flex: 1,
   },

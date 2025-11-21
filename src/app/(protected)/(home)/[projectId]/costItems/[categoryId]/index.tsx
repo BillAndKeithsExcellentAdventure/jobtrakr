@@ -15,7 +15,7 @@ import { FontAwesome5, FontAwesome6, MaterialCommunityIcons } from '@expo/vector
 import { FlashList } from '@shopify/flash-list';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CostItemData, CostItemDataCodeCompareAsNumber } from '@/src/models/types';
@@ -37,7 +37,7 @@ const CategorySpecificCostItemsPage = () => {
   const colors = useColors();
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
-  const { removeActiveProjectId, addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
+  const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
   const allProjectCategories = useAllConfigRows('categories', WorkCategoryCodeCompareAsNumber);
@@ -225,7 +225,6 @@ const CategorySpecificCostItemsPage = () => {
                 )}
                 keyExtractor={(item) => item.id}
                 ListEmptyComponent={<Text>No data available</Text>}
-                estimatedItemSize={ITEM_HEIGHT}
               />
             </View>
             {headerMenuModalVisible && (
@@ -246,12 +245,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    padding: 5,
-    borderTopWidth: 1,
-  },
-
   headerContainer: {
     marginTop: 5,
     marginHorizontal: 10,
@@ -260,32 +253,7 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
     borderBottomWidth: 1,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 18,
-    marginBottom: 16,
-  },
-  itemContainer: {
-    marginBottom: 12,
-  },
-  categoryTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  item: {
-    height: ITEM_HEIGHT,
-    flexDirection: 'row',
-    padding: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  itemText: {
-    fontSize: 16,
-  },
+
 });
 
 export default CategorySpecificCostItemsPage;

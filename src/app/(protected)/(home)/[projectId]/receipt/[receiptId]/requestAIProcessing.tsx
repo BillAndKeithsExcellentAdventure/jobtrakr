@@ -6,11 +6,10 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
-  Switch,
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, TextInput, View } from '@/src/components/Themed';
+import { Text, View } from '@/src/components/Themed';
 import { useAuth } from '@clerk/clerk-expo';
 import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/formatters';
 import { ActionButton } from '@/src/components/ActionButton';
@@ -435,12 +434,14 @@ const requestAIProcessingPage = () => {
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: 'AI Receipt Processing', headerShown: true }} />
+      <Stack.Screen options={{ title: 'Process Receipt Image', headerShown: true }} />
       <View style={[styles.container, { marginBottom: 20, backgroundColor: colors.listBackground }]}>
         {fetchingData ? (
           <View style={{ width: '100%', gap: 20 }}>
             <ActivityIndicator size="large" />
-            <Text txtSize="title">Waiting for AI to extract data from receipt image.</Text>
+            <Text txtSize="title">
+              Working on extracting data from receipt image, this shouldn't take long.
+            </Text>
           </View>
         ) : (
           <View style={{ width: '100%', gap: 10, flex: 1, backgroundColor: colors.listBackground }}>
@@ -559,9 +560,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  unspecifiedBg: {
-    backgroundColor: '#F44336',
   },
   unspecifiedFg: {
     color: '#FFF',

@@ -38,7 +38,7 @@ const EditChangeOrder = () => {
         setChangeOrder(foundChangeOrder);
       }
     }
-  }, [allChangeOrders]);
+  }, [allChangeOrders, changeOrderId]);
 
   const allStatusOptions = useMemo(() => {
     return [
@@ -54,7 +54,7 @@ const EditChangeOrder = () => {
       updateChangeOrder(changeOrderId, changeOrder);
       router.back();
     }
-  }, [changeOrder, changeOrderId]);
+  }, [changeOrder, changeOrderId, router, updateChangeOrder]);
 
   const [isStatusPickerVisible, setIsStatusPickerVisible] = useState<boolean>(false);
   const [pickedStatusOption, setPickedStatusOption] = useState<OptionEntry | undefined>(undefined);
@@ -147,75 +147,14 @@ const EditChangeOrder = () => {
 };
 
 const styles = StyleSheet.create({
-  modalBackground: {
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'flex-start', // Align items at the top vertically
-    alignItems: 'center', // Center horizontally
-    width: '100%',
-    paddingTop: 10,
-  },
-  dateContainer: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  modalContainer: {
-    maxWidth: 460,
-    width: '100%',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
   inputContainer: {
     marginTop: 0, // use gap instead
-  },
-  inputLabel: {
-    marginTop: 0, // use gap instead
-    marginBottom: 4,
   },
   input: {
     borderWidth: 1,
     alignContent: 'stretch',
     justifyContent: 'center',
     borderRadius: 5,
-  },
-  dateInput: {
-    borderWidth: 1,
-    alignContent: 'stretch',
-    justifyContent: 'center',
-    borderRadius: 5,
-    paddingHorizontal: 8,
-    height: 40,
-    paddingVertical: 0,
-  },
-  gpsButtonContainer: {
-    flexDirection: 'row',
-    width: '100%',
-    justifyContent: 'space-between',
-  },
-  gpsButton: {
-    flex: 1,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 10, // Rounded edges
-  },
-  gpsButtonLeft: {
-    marginRight: 10, // Add margin between the two buttons
-  },
-  gpsButtonRight: {
-    marginLeft: 10, // Add margin between the two buttons
-  },
-  gpsButtonText: {
-    fontSize: 16,
-    fontWeight: 'semibold',
   },
   saveButtonRow: {
     padding: 10,

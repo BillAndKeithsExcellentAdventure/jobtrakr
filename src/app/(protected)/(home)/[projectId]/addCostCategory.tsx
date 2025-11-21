@@ -1,4 +1,3 @@
-import { ActionButton } from '@/src/components/ActionButton';
 import OkayCancelButtons from '@/src/components/OkayCancelButtons';
 import { Text, View } from '@/src/components/Themed';
 import { Colors } from '@/src/constants/Colors';
@@ -32,7 +31,7 @@ interface SectionData {
 }
 
 const AddCostCategoryWorkItemsScreen: React.FC = () => {
-  const { projectId, projectName, availableCategories } = useLocalSearchParams<{
+  const { projectId, availableCategories } = useLocalSearchParams<{
     projectId: string;
     projectName: string;
     availableCategories: string;
@@ -284,17 +283,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  categoryContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    padding: 8,
-    borderRadius: 10,
-  },
-
-  categoryInfo: {
-    flex: 1,
-  },
 });
 
 export default AddCostCategoryWorkItemsScreen;

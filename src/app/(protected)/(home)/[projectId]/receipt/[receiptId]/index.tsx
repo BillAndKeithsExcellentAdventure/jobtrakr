@@ -14,7 +14,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import SwipeableLineItem from '@/src/components/SwipeableLineItem';
 import { useAuth } from '@clerk/clerk-expo';
 import { buildLocalMediaUri, useAddImageCallback, useGetImageCallback } from '@/src/utils/images';
@@ -184,7 +184,7 @@ const ReceiptDetailsPage = () => {
         imageId: receipt.imageId,
       },
     });
-  }, [projectId, receiptId, receipt.imageId]);
+  }, [projectId, receiptId, receipt.imageId, router]);
 
   const [containerHeight, setContainerHeight] = useState(0);
 
@@ -226,60 +226,60 @@ const ReceiptDetailsPage = () => {
                 />
               )}
             </View>
+            <View style={{ flex: 1 }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  width: '100%',
+                  height: 40,
+                  alignItems: 'center',
+                  borderBottomColor: colors.separatorColor,
+                  borderBottomWidth: 2,
+                }}
+              >
+                <Text
+                  style={{ width: 90, textAlign: 'center', fontWeight: '600' }}
+                  txtSize="standard"
+                  text="Amount"
+                />
+                <Text
+                  style={{ flex: 1, marginHorizontal: 20, textAlign: 'center', fontWeight: '600' }}
+                  txtSize="standard"
+                  text="Description"
+                />
+                <Text style={{ width: 40, fontWeight: '600' }} txtSize="standard" text="" />
+              </View>
 
-            <View
-              style={{
-                flexDirection: 'row',
-                width: '100%',
-                height: 40,
-                alignItems: 'center',
-                borderBottomColor: colors.separatorColor,
-                borderBottomWidth: 2,
-              }}
-            >
-              <Text
-                style={{ width: 90, textAlign: 'center', fontWeight: '600' }}
-                txtSize="standard"
-                text="Amount"
-              />
-              <Text
-                style={{ flex: 1, marginHorizontal: 20, textAlign: 'center', fontWeight: '600' }}
-                txtSize="standard"
-                text="Description"
-              />
-              <Text style={{ width: 40, fontWeight: '600' }} txtSize="standard" text="" />
-            </View>
+              <View style={{ maxHeight: containerHeight - 290 }}>
+                <FlatList
+                  showsVerticalScrollIndicator={Platform.OS === 'web'}
+                  data={allReceiptLineItems}
+                  renderItem={({ item }) => <SwipeableLineItem lineItem={item} projectId={projectId} />}
+                />
+              </View>
 
-            <View style={{ maxHeight: containerHeight - 290 }}>
-              <FlatList
-                showsVerticalScrollIndicator={Platform.OS === 'web'}
-                data={allReceiptLineItems}
-                renderItem={({ item }) => <SwipeableLineItem lineItem={item} projectId={projectId} />}
-              />
-            </View>
-
-            <View
-              style={{
-                flexDirection: 'row',
-                width: '100%',
-                height: 40,
-                alignItems: 'center',
-                borderTopColor: colors.separatorColor,
-                borderTopWidth: 2,
-              }}
-            >
-              <Text
-                style={{ width: 90, textAlign: 'right', fontWeight: '600' }}
-                txtSize="standard"
-                text={itemsTotalCost ? formatCurrency(itemsTotalCost, true, true) : '$0.00'}
-              />
-              <Text
-                style={{ flex: 1, marginHorizontal: 10, textAlign: 'center', fontWeight: '600' }}
-                txtSize="standard"
-                text={`Total for ${allReceiptLineItems.length} line ${
-                  allReceiptLineItems.length?.toString() === '1' ? 'item' : 'items'
-                }`}
-              />
+              <View
+                style={{
+                  flexDirection: 'row',
+                  width: '100%',
+                  height: 40,
+                  alignItems: 'center',
+                  marginLeft: 10,
+                  borderTopColor: colors.separatorColor,
+                  borderTopWidth: 2,
+                }}
+              >
+                <Text
+                  style={{ width: 100, textAlign: 'right', fontWeight: '600' }}
+                  text={itemsTotalCost ? formatCurrency(itemsTotalCost, true, true) : '$0.00'}
+                />
+                <Text
+                  style={{ flex: 1, marginHorizontal: 10, marginLeft: 30, fontWeight: '600' }}
+                  text={`Total for ${allReceiptLineItems.length} line ${
+                    allReceiptLineItems.length?.toString() === '1' ? 'item' : 'items'
+                  }`}
+                />
+              </View>
             </View>
           </View>
         </>
@@ -292,25 +292,18 @@ export default ReceiptDetailsPage;
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 10,
     flex: 1,
     width: '100%',
   },
-  inputContainer: {
-    marginTop: 6,
-  },
   itemContainer: {
     flexDirection: 'row',
-    margin: 10,
     borderRadius: 15,
+    marginBottom: 10,
+    marginRight: 5,
     padding: 10,
     height: 100,
+    borderWidth: StyleSheet.hairlineWidth,
   },
-
-  amountColumn: {
-    width: 90,
-  },
-
   leftButton: {
     flex: 1,
   },
@@ -318,6 +311,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-function addReceiptImage(uri: any, projectId: string, arg2: string) {
-  throw new Error('Function not implemented.');
-}

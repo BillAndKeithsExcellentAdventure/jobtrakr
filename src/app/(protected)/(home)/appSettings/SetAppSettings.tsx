@@ -7,7 +7,7 @@ import {
   useAppSettings,
   SettingsData,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
-import { Alert, Button, Platform, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { Alert, Platform, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import * as ImagePicker from 'expo-image-picker';

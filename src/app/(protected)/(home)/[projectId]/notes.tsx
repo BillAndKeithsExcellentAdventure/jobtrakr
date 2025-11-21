@@ -188,19 +188,12 @@ const styles = StyleSheet.create({
     alignItems: 'center', // Center horizontally
     width: '100%',
   },
-
   inputAreaView: {
     padding: 10,
     borderRadius: 8,
   },
-
   centeredView: {
     width: '100%',
-  },
-  input: {
-    borderWidth: 1,
-    padding: 8,
-    marginBottom: 10,
   },
   buttonRow: {
     flexDirection: 'row',

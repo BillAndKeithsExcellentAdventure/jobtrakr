@@ -66,17 +66,24 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
         >
           <View style={styles.itemInfo}>
             <Text style={styles.itemAmount} text={formatCurrency(amount, true, true)} />
-            <Text style={styles.itemName}>{label}</Text>
+            <Text style={styles.itemName} numberOfLines={1}>
+              {label}
+            </Text>
             {lineItem.workItemId ? (
               <View
                 style={{
                   width: 40,
-                  justifyContent: 'center',
+                  justifyContent: 'flex-end',
                   alignItems: 'center',
                   backgroundColor: 'transparent',
                 }}
               >
-                <AntDesign name="checkcircleo" size={24} color={colors.iconColor} />
+                <AntDesign
+                  style={{ marginRight: -12 }}
+                  name="check-circle"
+                  size={24}
+                  color={colors.iconColor}
+                />
               </View>
             ) : (
               <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
@@ -89,17 +96,12 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
   itemInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
     height: 40,
   },
-
   itemEntry: {
     width: '100%',
     paddingHorizontal: 10,
@@ -110,13 +112,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginRight: 10,
   },
-
   itemAmount: {
     textAlign: 'right',
-    width: 80,
+    width: 100,
     marginRight: 30,
   },
-
   rightAction: {
     width: 100,
     height: 40,

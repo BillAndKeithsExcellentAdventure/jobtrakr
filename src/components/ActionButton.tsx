@@ -1,5 +1,14 @@
-import React from 'react';
-import { Text, TouchableOpacity, StyleSheet, Platform, ViewStyle, TextStyle } from 'react-native';
+import React, { useCallback } from 'react';
+import {
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+  ViewStyle,
+  TextStyle,
+  Keyboard,
+  TextInput,
+} from 'react-native';
 import { useColorScheme } from './useColorScheme';
 
 type ActionButtonProps = {
@@ -19,6 +28,18 @@ interface ButtonSettings {
 export const ActionButton: React.FC<ActionButtonProps> = ({ title, onPress, type, style, textStyle }) => {
   const platform = Platform.OS; // Get the current platform (iOS or Android)
   const colorScheme = useColorScheme();
+
+  const handlePress = useCallback(() => {
+    if (type === 'disabled') return;
+    // blur any focused input so its onBlur runs before invoking caller onPress
+    const focused = TextInput.State?.currentlyFocusedInput ? TextInput.State.currentlyFocusedInput() : null;
+    if (focused && TextInput.State?.blurTextInput) {
+      TextInput.State.blurTextInput(focused);
+    } else {
+      Keyboard.dismiss();
+    }
+    onPress();
+  }, [onPress, type]);
 
   const getButtonStyles = (buttonType: ActionButtonProps['type'], platform: string): ButtonSettings => {
     switch (buttonType) {
@@ -72,10 +93,7 @@ export const ActionButton: React.FC<ActionButtonProps> = ({ title, onPress, type
   const { backgroundColor, borderColor, color } = getButtonStyles(type, platform);
 
   return (
-    <TouchableOpacity
-      onPress={type !== 'disabled' ? onPress : undefined}
-      style={[styles.button, { backgroundColor, borderColor }, style]}
-    >
+    <TouchableOpacity onPress={handlePress} style={[styles.button, { backgroundColor, borderColor }, style]}>
       <Text style={[styles.buttonText, { color }, textStyle]}>{title}</Text>
     </TouchableOpacity>
   );

@@ -5,6 +5,7 @@ import { useColors } from '@/src/context/ColorsContext';
 import {
   ProjectTemplateData,
   useDeleteRowCallback,
+  useTemplateWorkItemData,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -25,6 +26,8 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => {
 const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: ProjectTemplateData }) => {
   const router = useRouter();
   const removeProjectTemplate = useDeleteRowCallback('templates');
+  const { templateWorkItemIds } = useTemplateWorkItemData(projectTemplate.id);
+
   const colors = useColors();
 
   const handleDelete = useCallback(
@@ -43,6 +46,12 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
     return <RightAction onDelete={() => handleDelete(projectTemplate.id)} />;
   }, [handleDelete, projectTemplate.id]);
 
+  const textColor = templateWorkItemIds.length > 0 ? colors.text : colors.error;
+
+  const descriptionText =
+    templateWorkItemIds.length > 0
+      ? projectTemplate.description
+      : `${projectTemplate.description} (No cost items specified)`;
   return (
     <SwipeableComponent
       key={projectTemplate.id}
@@ -61,8 +70,8 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
         >
           <View style={styles.itemInfo}>
             <View style={{ flex: 1 }}>
-              <Text txtSize="title" text={projectTemplate.name} />
-              <Text style={styles.itemName}>{projectTemplate.description}</Text>
+              <Text txtSize="title" style={{ color: textColor }} text={projectTemplate.name} />
+              <Text style={[styles.itemName, { color: textColor }]}>{descriptionText}</Text>
             </View>
             <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
           </View>
@@ -73,9 +82,6 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   itemInfo: {
     flexDirection: 'row',
     alignItems: 'center',

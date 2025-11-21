@@ -1,11 +1,10 @@
-import OkayCancelButtons from '@/src/components/OkayCancelButtons';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import {
   useTableValue,
   useUpdateRowCallback,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,7 +12,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const EditWorkCategory = () => {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
   const applyWorkCategoryUpdates = useUpdateRowCallback('categories');
-  const router = useRouter();
   const status = useTableValue('categories', categoryId, 'status');
   const name = useTableValue('categories', categoryId, 'name');
   const [newName, setNewName] = useState(name);
@@ -30,17 +28,17 @@ const EditWorkCategory = () => {
 
   const colors = useColors();
 
-  const handleSave = () => {
-    if (newName && newCode) {
+  const handleBlur = () => {
+    if (newName.length && newCode.length) {
       applyWorkCategoryUpdates(categoryId, {
         id: categoryId,
         code: newCode,
         name: newName,
         status,
       });
-
-      // Go back to the categories list screen
-      router.back();
+    } else {
+      if (newName.length === 0) setNewName(name);
+      if (newCode.length === 0) setNewCode(code);
     }
   };
 
@@ -67,6 +65,7 @@ const EditWorkCategory = () => {
           placeholder="Name"
           value={newName}
           onChangeText={setNewName}
+          onBlur={handleBlur}
         />
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
@@ -74,8 +73,8 @@ const EditWorkCategory = () => {
           keyboardType="number-pad"
           value={newCode}
           onChangeText={setNewCode}
+          onBlur={handleBlur}
         />
-        <OkayCancelButtons okTitle="Save" isOkEnabled={!!newName && !!newCode} onOkPress={handleSave} />
       </View>
     </SafeAreaView>
   );
@@ -86,11 +85,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
   input: {
     height: 40,
     borderColor: '#ccc',
@@ -98,12 +92,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingLeft: 8,
     borderRadius: 4,
-  },
-  saveButton: {
-    backgroundColor: '#28a745',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 20,
   },
   saveButtonText: {
     color: '#fff',

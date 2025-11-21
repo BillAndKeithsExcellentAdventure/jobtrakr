@@ -1,7 +1,7 @@
 import { DeviceMediaList } from '@/src/components/DeviceMediaList';
 import { Switch } from '@/src/components/Switch';
 import { Text, View } from '@/src/components/Themed';
-import { useColorScheme } from '@/src/components/useColorScheme';
+
 import { VideoPlayerModal } from '@/src/components/VideoPlayerModal';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
@@ -18,8 +18,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ImportDevicePhotosPage = () => {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const colors = useColors();
 
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const [useProjectLocation, setUseProjectLocation] = useState(false);
@@ -37,7 +35,6 @@ const ImportDevicePhotosPage = () => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
   }, [projectId, activeProjectIds, isStoreReady]);
 
-  const addPhotoImage = useAddImageCallback();
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
 
   // Memoize the permission check callback

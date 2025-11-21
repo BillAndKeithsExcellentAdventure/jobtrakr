@@ -4,7 +4,7 @@ import { NumberInputField } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
-import { Text, View } from '@/src/components/Themed';
+import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import {
   useAllRows,
@@ -13,7 +13,7 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet, ScrollView, Alert } from 'react-native';
+import { StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   useAllRows as useAllRowsConfiguration,
@@ -22,7 +22,7 @@ import {
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 
 const EditLineItemPage = () => {
-  const { projectId, invoiceId, lineItemId } = useLocalSearchParams<{
+  const { projectId, lineItemId } = useLocalSearchParams<{
     projectId: string;
     invoiceId: string;
     lineItemId: string;
@@ -79,12 +79,18 @@ const EditLineItemPage = () => {
       const category = allWorkCategories.find((o) => o.id === item.categoryId);
       const categoryCode = category ? `${category.code}.` : '';
       return {
+        sortValue1: Number.parseFloat(item.code),
+        sortValue2: Number.parseFloat(category ? category.code : '0'),
         label: `${categoryCode}${item.code} - ${item.name}`,
         value: item.id,
       };
     });
-    return uniqueCostItems;
-  }, [allWorkItemCostSummaries, allWorkItems]);
+
+    return uniqueCostItems
+      .sort((a, b) => a.sortValue1 - b.sortValue1)
+      .sort((a, b) => a.sortValue2 - b.sortValue2)
+      .map((i) => ({ label: i.label, value: i.value }));
+  }, [allWorkItemCostSummaries, allWorkItems, allWorkCategories]);
 
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
@@ -260,13 +266,6 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginTop: 6,
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    margin: 10,
-    borderRadius: 15,
-    padding: 10,
-    height: 100,
   },
   saveButtonRow: {
     marginVertical: 20,

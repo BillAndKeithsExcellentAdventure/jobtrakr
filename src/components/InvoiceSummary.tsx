@@ -1,11 +1,11 @@
 import { View, Text } from '@/src/components/Themed';
 import { InvoiceData } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { TouchableWithoutFeedback, Image, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import Base64Image from './Base64Image';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useColors } from '../context/ColorsContext';
 
 interface InvoiceSummaryProps {
@@ -68,16 +68,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  itemContainer: {
-    flexDirection: 'row',
-    marginTop: 10,
-    marginHorizontal: 10,
-    borderRadius: 15,
-    elevation: 20, // Adds shadow effect for Android
-    shadowOffset: { width: 2, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 15,
-    padding: 10,
-    height: 100,
-  },
+
 });

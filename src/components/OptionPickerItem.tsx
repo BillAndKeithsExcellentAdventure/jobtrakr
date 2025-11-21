@@ -1,7 +1,10 @@
 import { TextField } from '@/src/components/TextField';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, ViewStyle, Keyboard, TextInput } from 'react-native';
 import { useThemeColor, View } from './Themed';
+import { Pressable } from 'react-native-gesture-handler';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useId } from 'react';
+import { useFocusManager } from '@/src/hooks/useFocusManager';
 
 /* -------------------------------------------
  Standard Supporting React State 
@@ -57,63 +60,128 @@ interface OptionPickerItemProps {
   inputStyle?: StyleProp<ViewStyle>;
 }
 
-export const OptionPickerItem: React.FC<OptionPickerItemProps> = ({
-  optionLabel,
-  onOptionLabelChange,
-  onPickerButtonPress,
-  label,
-  placeholder,
-  editable = true,
-  containerStyle,
-  inputStyle,
-}) => {
-  const iconColor = useThemeColor({ light: undefined, dark: undefined }, 'iconColor');
-  const textDim = useThemeColor({ light: undefined, dark: undefined }, 'textDim');
+export type OptionPickerItemHandle = {
+  blur: () => void;
+};
 
-  if (!editable) {
-    return (
-      <Pressable onPress={onPickerButtonPress}>
-        <View style={[styles.optionPickerRow, containerStyle]}>
-          <View style={{ flex: 1 }}>
-            <TextField
-              style={inputStyle}
-              label={label}
-              placeholder={placeholder}
-              placeholderTextColor={textDim}
-              onChangeText={onOptionLabelChange}
-              value={optionLabel}
-              editable={editable}
-            />
+export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerItemProps>(
+  (
+    {
+      optionLabel,
+      onOptionLabelChange,
+      onPickerButtonPress,
+      label,
+      placeholder,
+      editable = true,
+      containerStyle,
+      inputStyle,
+    },
+    ref,
+  ) => {
+    const inputRef = useRef<TextInput | null>(null);
+    const fieldId = useId();
+    
+    // Try to get FocusManager context, but don't require it
+    let focusManager;
+    try {
+      focusManager = useFocusManager();
+    } catch {
+      // FocusManager not available, continue without it
+      focusManager = null;
+    }
+
+    const handleOnBlur = () => {
+      console.log('OptionPickerItem handleOnBlur called');
+      onOptionLabelChange?.(labelText ?? '');
+    };
+
+    useImperativeHandle(ref, () => ({
+      blur: () => {
+        handleOnBlur();
+      },
+    }));
+    
+    // Register with FocusManager
+    useEffect(() => {
+      if (focusManager && editable) {
+        focusManager.registerField(fieldId, () => {
+          // Call handleOnBlur directly to ensure blur logic executes
+          // Calling inputRef.current?.blur() doesn't reliably trigger onBlur in React Native
+          handleOnBlur();
+          inputRef.current?.blur();
+        });
+        return () => {
+          focusManager.unregisterField(fieldId);
+        };
+      }
+    }, [fieldId, focusManager, editable, handleOnBlur]);
+
+    const [labelText, setLabelText] = useState<string | undefined>();
+
+    useEffect(() => {
+      setLabelText(optionLabel);
+    }, [optionLabel]);
+
+    const iconColor = useThemeColor({ light: undefined, dark: undefined }, 'iconColor');
+    const textDim = useThemeColor({ light: undefined, dark: undefined }, 'textDim');
+    const text = useThemeColor({ light: undefined, dark: undefined }, 'text');
+
+    const blurAndOpen = () => {
+      const focused = TextInput.State?.currentlyFocusedInput ? TextInput.State.currentlyFocusedInput() : null;
+      if (focused && TextInput.State?.blurTextInput) {
+        TextInput.State.blurTextInput(focused);
+      } else {
+        Keyboard.dismiss();
+      }
+      onPickerButtonPress();
+    };
+
+    if (!editable) {
+      return (
+        <Pressable onPress={blurAndOpen}>
+          <View style={[styles.optionPickerRow, containerStyle]}>
+            <View style={{ flex: 1 }}>
+              <TextField
+                style={[inputStyle, { color: text }]}
+                label={label}
+                placeholder={placeholder}
+                placeholderTextColor={textDim}
+                value={labelText}
+                editable={editable}
+              />
+            </View>
+            <View style={[styles.pickerButtonContainer, { justifyContent: 'flex-end' }]}>
+              <Ionicons name="ellipsis-horizontal-circle" size={36} color={iconColor} />
+            </View>
           </View>
-          <View style={[styles.pickerButtonContainer, { justifyContent: 'flex-end' }]}>
+        </Pressable>
+      );
+    }
+
+    return (
+      <View style={[styles.optionPickerRow, containerStyle]}>
+        <View style={{ flex: 1 }}>
+          <TextField
+            ref={inputRef}
+            style={inputStyle}
+            label={label}
+            placeholder={placeholder}
+            placeholderTextColor={textDim}
+            onChangeText={setLabelText}
+            onBlur={handleOnBlur}
+            value={labelText}
+            editable={editable}
+          />
+        </View>
+        <Pressable onPress={blurAndOpen} style={{ justifyContent: 'flex-end' }}>
+          <View style={styles.pickerButtonContainer}>
             <Ionicons name="ellipsis-horizontal-circle" size={36} color={iconColor} />
           </View>
-        </View>
-      </Pressable>
-    );
-  }
-
-  return (
-    <View style={[styles.optionPickerRow, containerStyle]}>
-      <View style={{ flex: 1 }}>
-        <TextField
-          style={inputStyle}
-          label={label}
-          placeholder={placeholder}
-          placeholderTextColor={textDim}
-          onChangeText={onOptionLabelChange}
-          value={optionLabel}
-          editable={editable}
-        />
+        </Pressable>
       </View>
-      <Pressable onPress={onPickerButtonPress} style={{ justifyContent: 'flex-end' }}>
-        <View style={styles.pickerButtonContainer}>
-          <Ionicons name="ellipsis-horizontal-circle" size={36} color={iconColor} />
-        </View>
-      </Pressable>
-    </View>
-  );
-};
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   optionPickerRow: {

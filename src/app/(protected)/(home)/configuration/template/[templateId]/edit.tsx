@@ -1,11 +1,12 @@
-import OkayCancelButtons from '@/src/components/OkayCancelButtons'; // Assuming you have this component
+import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextInput, View } from '@/src/components/Themed';
+import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import {
   useTableValue,
   useUpdateRowCallback,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -26,7 +27,7 @@ const EditProjectTemplate = () => {
     setNewDescription(description);
   }, [description]);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (newName && newDescription) {
       applyTemplateUpdates(templateId, {
         id: templateId,
@@ -37,7 +38,11 @@ const EditProjectTemplate = () => {
       // Go back to the categories list screen
       router.back();
     }
-  };
+  }, [applyTemplateUpdates, description, newDescription, newName, router, templateId]);
+
+  const handleBackPress = useAutoSaveNavigation(() => {
+    handleSave();
+  });
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -45,6 +50,8 @@ const EditProjectTemplate = () => {
         options={{
           headerShown: true,
           title: 'Edit Project Template',
+          gestureEnabled: false,
+          headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
         }}
       />
 
@@ -54,18 +61,14 @@ const EditProjectTemplate = () => {
           placeholder="Template Name"
           value={newName}
           onChangeText={setNewName}
+          onBlur={handleSave}
         />
         <TextInput
           style={styles.input}
           placeholder="Description"
           value={newDescription}
           onChangeText={setNewDescription}
-        />
-
-        <OkayCancelButtons
-          okTitle="Save"
-          isOkEnabled={!!newName && !!newDescription}
-          onOkPress={handleSave}
+          onBlur={handleSave}
         />
       </View>
     </SafeAreaView>

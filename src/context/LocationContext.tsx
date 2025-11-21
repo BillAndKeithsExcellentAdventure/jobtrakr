@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import * as Location from 'expo-location'; // Import the Location namespace from expo-location
 
 // Define the context and its types
@@ -18,7 +18,6 @@ interface LocationHostProviderProps {
 }
 
 export const LocationHostProvider: React.FC<LocationHostProviderProps> = ({ children }) => {
-  const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
   const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
 
   useEffect(() => {

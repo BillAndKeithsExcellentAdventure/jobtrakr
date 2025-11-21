@@ -14,7 +14,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import SwipeableLineItem from '@/src/components/SwipeableLineItem';
 import { useAuth } from '@clerk/clerk-expo';
 import { buildLocalMediaUri, useAddImageCallback, useGetImageCallback } from '@/src/utils/images';
@@ -248,13 +248,11 @@ const InvoiceDetailsPage = () => {
               }}
             >
               <Text
-                style={{ width: 90, textAlign: 'right', fontWeight: '600' }}
-                txtSize="standard"
+                style={{ width: 110, textAlign: 'right', fontWeight: '600' }}
                 text={itemsTotalCost ? formatCurrency(itemsTotalCost, true, true) : '$0.00'}
               />
               <Text
-                style={{ flex: 1, marginHorizontal: 10, textAlign: 'center', fontWeight: '600' }}
-                txtSize="standard"
+                style={{ flex: 1, marginHorizontal: 10, marginLeft: 30, fontWeight: '600' }}
                 text={`Total for ${allInvoiceLineItems.length} line ${
                   allInvoiceLineItems.length?.toString() === '1' ? 'item' : 'items'
                 }`}
@@ -275,9 +273,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
   },
-  inputContainer: {
-    marginTop: 6,
-  },
   itemContainer: {
     flexDirection: 'row',
     margin: 10,
@@ -285,15 +280,7 @@ const styles = StyleSheet.create({
     padding: 10,
     height: 100,
   },
-
-  amountColumn: {
-    width: 90,
-  },
-
   leftButton: {
-    flex: 1,
-  },
-  rightButton: {
     flex: 1,
   },
 });

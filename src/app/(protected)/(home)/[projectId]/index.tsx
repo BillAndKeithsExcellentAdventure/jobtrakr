@@ -29,7 +29,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
 const ITEM_HEIGHT = 45;
@@ -120,15 +120,7 @@ const ProjectDetailsPage = () => {
     });
 
     return sections.sort(CostSectionDataCodeCompareAsNumber);
-  }, [
-    allWorkItemSummaries,
-    allWorkItems,
-    allProjectCategories,
-    allActualCostItems,
-    workItemMap,
-    categoryMap,
-    updateWorkItemSpentSummary,
-  ]);
+  }, [allWorkItemSummaries, allActualCostItems, workItemMap, categoryMap, updateWorkItemSpentSummary]);
 
   // get a list of unused work items not represented in allWorkItemSummaries
   const unusedWorkItems = useMemo(
@@ -154,83 +146,7 @@ const ProjectDetailsPage = () => {
 
   const unusedCategoriesString = useMemo(() => unusedCategories.join(','), [unusedCategories]);
 
-  const handleMenuItemPress = useCallback(
-    (menuItem: string, actionContext: any) => {
-      setHeaderMenuModalVisible(false);
-      if (menuItem === 'Edit' && projectId) {
-        router.push({
-          pathname: '/[projectId]/edit',
-          params: { projectId, projectName: projectData!.name },
-        });
-        return;
-      } else if (menuItem === 'SetEstimates' && projectId) {
-        router.push({
-          pathname: '/[projectId]/setEstimatedCosts',
-          params: { projectId, projectName: projectData!.name },
-        });
-        return;
-      } else if (menuItem === 'AddCostCategory' && projectId) {
-        router.push({
-          pathname: '/[projectId]/addCostCategory',
-          params: {
-            projectId,
-            projectName: projectData!.name,
-            availableCategories: unusedCategoriesString,
-          },
-        });
-        return;
-      } else if (menuItem === 'Delete' && projectId) {
-        Alert.alert('Delete Project', 'Are you sure you want to delete this project?', [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            onPress: () => {
-              const result = processDeleteProject(projectId);
-              if (result.status === 'Success') {
-                removeActiveProjectId(projectId);
-              }
-              router.replace('/');
-            },
-          },
-        ]);
-        return;
-      } else if (menuItem === 'CleanCostItems' && projectId) {
-        Alert.alert(
-          'Clean Cost Items',
-          'Are you sure you want to clean cost items that do not have a match receipt?',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Clean-up',
-              onPress: () => {
-                // remove all cost items that do not have a matching receipt
-                const costItemsToRemove = allActualCostItems.filter(
-                  (costItem) =>
-                    !allReceiptItems.some(
-                      (r) => r.id === costItem.parentId && costItem.documentationType === 'receipt',
-                    ),
-                );
-                costItemsToRemove.forEach((item) => {
-                  const result = removeCostItem(item.id);
-                  if (result.status !== 'Success') {
-                    console.error(`Error cleaning cost item ${item.id}: ${result.msg}`);
-                  }
-                });
-              },
-            },
-          ],
-        );
-        return;
-      } else if (menuItem === 'ExportCostItems' && projectId) {
-        ExportCostItems();
-
-        return;
-      }
-    },
-    [projectId, projectData, router, processDeleteProject, removeActiveProjectId],
-  );
-
-  const ExportCostItems = async () => {
+  const ExportCostItems = useCallback(async () => {
     if (!projectId || !projectData) return;
 
     try {
@@ -328,7 +244,94 @@ const ProjectDetailsPage = () => {
       console.error('Error exporting cost items:', error);
       Alert.alert('Error', 'Failed to export cost items');
     }
-  };
+  }, [projectId, projectData, allWorkItems, categoryMap, allWorkItemSummaries, allActualCostItems]);
+
+  const handleMenuItemPress = useCallback(
+    (menuItem: string, actionContext: any) => {
+      setHeaderMenuModalVisible(false);
+      if (menuItem === 'Edit' && projectId) {
+        router.push({
+          pathname: '/[projectId]/edit',
+          params: { projectId, projectName: projectData!.name },
+        });
+        return;
+      } else if (menuItem === 'SetEstimates' && projectId) {
+        router.push({
+          pathname: '/[projectId]/setEstimatedCosts',
+          params: { projectId, projectName: projectData!.name },
+        });
+        return;
+      } else if (menuItem === 'AddCostCategory' && projectId) {
+        router.push({
+          pathname: '/[projectId]/addCostCategory',
+          params: {
+            projectId,
+            projectName: projectData!.name,
+            availableCategories: unusedCategoriesString,
+          },
+        });
+        return;
+      } else if (menuItem === 'Delete' && projectId) {
+        Alert.alert('Delete Project', 'Are you sure you want to delete this project?', [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            onPress: () => {
+              const result = processDeleteProject(projectId);
+              if (result.status === 'Success') {
+                removeActiveProjectId(projectId);
+              }
+              router.replace('/');
+            },
+          },
+        ]);
+        return;
+      } else if (menuItem === 'CleanCostItems' && projectId) {
+        Alert.alert(
+          'Clean Cost Items',
+          'Are you sure you want to clean cost items that do not have a match receipt?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Clean-up',
+              onPress: () => {
+                // remove all cost items that do not have a matching receipt
+                const costItemsToRemove = allActualCostItems.filter(
+                  (costItem) =>
+                    !allReceiptItems.some(
+                      (r) => r.id === costItem.parentId && costItem.documentationType === 'receipt',
+                    ),
+                );
+                costItemsToRemove.forEach((item) => {
+                  const result = removeCostItem(item.id);
+                  if (result.status !== 'Success') {
+                    console.error(`Error cleaning cost item ${item.id}: ${result.msg}`);
+                  }
+                });
+              },
+            },
+          ],
+        );
+        return;
+      } else if (menuItem === 'ExportCostItems' && projectId) {
+        ExportCostItems();
+
+        return;
+      }
+    },
+    [
+      projectId,
+      projectData,
+      router,
+      processDeleteProject,
+      removeActiveProjectId,
+      ExportCostItems,
+      allActualCostItems,
+      allReceiptItems,
+      removeCostItem,
+      unusedCategoriesString,
+    ],
+  );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
@@ -383,7 +386,7 @@ const ProjectDetailsPage = () => {
         },
       },
     ],
-    [colors, allWorkItemSummaries, handleMenuItemPress, router, addActiveProjectIds, unusedCategories],
+    [colors, allWorkItemSummaries, handleMenuItemPress, unusedCategories],
   );
 
   const renderItem = (item: CostSectionData, projectId: string) => {
@@ -525,7 +528,6 @@ const ProjectDetailsPage = () => {
                 renderItem={({ item }) => renderItem(item, projectId)}
                 keyExtractor={(item) => item.categoryId}
                 ListEmptyComponent={<Text>No data available</Text>}
-                estimatedItemSize={ITEM_HEIGHT}
               />
             </View>
           </>
@@ -552,7 +554,6 @@ const styles = StyleSheet.create({
     padding: 5,
     borderTopWidth: 1,
   },
-
   headerContainer: {
     marginTop: 5,
     marginHorizontal: 10,
@@ -561,32 +562,7 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
     borderBottomWidth: 1,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 18,
-    marginBottom: 16,
-  },
-  itemContainer: {
-    marginBottom: 12,
-  },
-  categoryTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  item: {
-    height: ITEM_HEIGHT,
-    flexDirection: 'row',
-    padding: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  itemText: {
-    fontSize: 16,
-  },
+
 });
 
 export default ProjectDetailsPage;

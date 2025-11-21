@@ -85,9 +85,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
   },
-  closeButton: {
-    padding: 8,
-  },
   overlay: {
     flex: 1,
     justifyContent: 'center',
@@ -97,12 +94,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backgroundImage: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    resizeMode: 'contain',
   },
   image: {
     width: '100%',

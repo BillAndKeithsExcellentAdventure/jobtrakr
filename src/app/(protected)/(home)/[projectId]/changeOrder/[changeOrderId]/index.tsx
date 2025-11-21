@@ -22,7 +22,7 @@ import { loadTemplateHtmlAssetFileToString } from '@/src/utils/htmlFileGenerator
 import { ChangeOrderData, renderChangeOrderTemplate } from '@/src/utils/renderChangeOrderTemplate';
 import { useAuth } from '@clerk/clerk-expo';
 import { AntDesign, Entypo, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -104,7 +104,6 @@ const DefineChangeOrderScreen = () => {
   const colors = useColors();
   const router = useRouter();
   const allChangeOrders = useAllRows(projectId, 'changeOrders');
-  const addChangeOrder = useAddRowCallback(projectId, 'changeOrders');
   const updateChangeOrder = useUpdateRowCallback(projectId, 'changeOrders');
   const allChangeOrderItems = useAllRows(projectId, 'changeOrderItems');
   const addChangeOrderItem = useAddRowCallback(projectId, 'changeOrderItems');
@@ -132,7 +131,7 @@ const DefineChangeOrderScreen = () => {
         setChangeOrder(foundChangeOrder);
       }
     }
-  }, [allChangeOrders]);
+  }, [allChangeOrders, changeOrderId]);
 
   useEffect(() => {
     if (changeOrder) {
@@ -194,7 +193,7 @@ const DefineChangeOrderScreen = () => {
       formattedTotal: formatCurrency(changeOrder.bidAmount, true),
       changeItems: changeItemArray,
     };
-  }, [changeOrder, projectData, appSettings]);
+  }, [changeOrder, projectData, appSettings, changeOrderItems]);
 
   const handleSendForApproval = useCallback(async () => {
     if (!changeOrderData) return;
@@ -265,7 +264,7 @@ const DefineChangeOrderScreen = () => {
         Alert.alert('Error', errorMessage);
       }
     }
-  }, [changeOrderData, changeOrder?.id]);
+  }, [changeOrderData, changeOrder?.id, auth]);
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
@@ -304,7 +303,7 @@ const DefineChangeOrderScreen = () => {
         },
       },
     ],
-    [colors, router, changeOrder],
+    [colors, router, changeOrder, projectId, changeOrderId],
   );
 
   const [itemWorkItemEntry, setItemWorkItemEntry] = useState<OptionEntry>({
@@ -352,8 +351,6 @@ const DefineChangeOrderScreen = () => {
 
   const onCostItemOptionSelected = useCallback((costItemEntry: OptionEntry | undefined) => {
     if (costItemEntry) {
-      const label = costItemEntry.label;
-      const workItemId = costItemEntry.value ?? '';
       setItemWorkItemEntry({
         label: costItemEntry.label,
         value: costItemEntry.value,
@@ -571,20 +568,6 @@ const DefineChangeOrderScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    gap: 10,
-  },
-  button: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    marginRight: 16,
-  },
-  modalContainer: {
-    maxWidth: 460,
-    width: '100%',
-  },
   saveButtonRow: {
     marginTop: 10,
     flexDirection: 'row',
@@ -598,7 +581,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 5,
   },
-
   input: {
     borderWidth: 1,
     borderRadius: 6,
@@ -610,10 +592,6 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   label: { marginBottom: 2, fontSize: 12 },
-
-  addButton: {
-    maxWidth: 100,
-  },
   modalOverlay: {
     flex: 1,
     alignItems: 'center',

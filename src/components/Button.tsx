@@ -128,7 +128,7 @@ export function Button(props: ButtonProps) {
       };
     }
     return vwStyles;
-  }, [colors]);
+  }, [colors, preset]);
 
   const textStyles = useMemo<StyleProp<TextStyle>>(() => {
     let txtStyles: StyleProp<TextStyle> = {};
@@ -150,7 +150,7 @@ export function Button(props: ButtonProps) {
       };
     }
     return txtStyles;
-  }, [colors]);
+  }, [colors, preset]);
 
   const content = text || children;
 

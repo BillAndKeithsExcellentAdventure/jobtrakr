@@ -41,13 +41,9 @@ type ProjectsCellId = keyof (typeof TABLES_SCHEMA)['projects'];
 const {
   useCell,
   useCreateMergeableStore,
-  useDelRowCallback,
   useProvideStore,
-  useRowIds,
   useSetCellCallback,
-  useSortedRowIds,
   useStore,
-  useTable,
 } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
 export const useProjectListStoreId = () => {
@@ -102,7 +98,7 @@ export const useAllProjects = () => {
     return () => {
       store.delListener(listenerId);
     };
-  }, [store]);
+  }, [store, handleTableChange]);
 
   return allProjects;
 };
@@ -133,13 +129,13 @@ export const useAddProjectCallback = () => {
 
 export const useProject = (id: string): ProjectData | undefined => {
   const store = useStore(useProjectListStoreId());
+  const allProjects = useAllProjects();
 
   return useMemo(() => {
     if (!store) return undefined;
-    const row = store.getRow('projects', id);
-    if (!row) return undefined;
-    return { id, ...row } as ProjectData;
-  }, [store, id]);
+    const match = allProjects.find((p) => p.id === id);
+    if (match) return match;
+  }, [store, id, allProjects]);
 };
 
 // Returns a callback that deletes a project from the store.
@@ -178,7 +174,6 @@ export const useProjectValue = <ValueId extends ProjectsCellId>(
 // --- UPDATE ROW ---
 export function useUpdateProjectCallback() {
   const store = useStore(useProjectListStoreId());
-  if (!store) return undefined;
 
   return useCallback(
     (id: string, updates: Partial<ProjectData>): CrudResult => {

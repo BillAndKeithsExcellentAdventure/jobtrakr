@@ -1,5 +1,5 @@
 import { useColors } from '@/src/context/ColorsContext';
-import { ComponentType, forwardRef, Ref, useImperativeHandle, useRef } from 'react';
+import { ComponentType, forwardRef, Ref, useImperativeHandle, useRef, useId, useEffect } from 'react';
 import {
   ImageStyle,
   StyleProp,
@@ -11,6 +11,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Text, TextProps, View } from './Themed';
+import { useFocusManager } from '@/src/hooks/useFocusManager';
 
 export interface TextFieldAccessoryProps {
   style: StyleProp<ViewStyle | TextStyle | ImageStyle>;
@@ -93,6 +94,16 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
     ...TextInputProps
   } = props;
   const input = useRef<TextInput>(null);
+  const fieldId = useId();
+
+  // Try to get FocusManager context, but don't require it
+  let focusManager;
+  try {
+    focusManager = useFocusManager();
+  } catch {
+    // FocusManager not available, continue without it
+    focusManager = null;
+  }
 
   const disabled = TextInputProps.editable === false || status === 'disabled';
 
@@ -131,6 +142,23 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
     status === 'error' && { color: colors.error },
     HelperTextProps?.style,
   ];
+
+  // Register with FocusManager
+  useEffect(() => {
+    if (focusManager && !disabled) {
+      focusManager.registerField(fieldId, () => {
+        // Call onBlur handler directly if provided to ensure blur logic executes
+        // Calling input.current?.blur() doesn't reliably trigger onBlur in React Native
+        if (TextInputProps.onBlur) {
+          TextInputProps.onBlur({} as any);
+        }
+        input.current?.blur();
+      });
+      return () => {
+        focusManager.unregisterField(fieldId);
+      };
+    }
+  }, [fieldId, focusManager, disabled, TextInputProps.onBlur]);
 
   function focusInput() {
     if (disabled) return;

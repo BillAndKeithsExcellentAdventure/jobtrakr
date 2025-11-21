@@ -8,7 +8,7 @@ import {
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAddRowCallback, useAllRows } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,7 +21,7 @@ interface ItemData {
 }
 
 const AddCostWorkItemsScreen: React.FC = () => {
-  const { projectId, categoryId, categoryName, categoryCode, availableWorkItemIds } = useLocalSearchParams<{
+  const { projectId, categoryId, categoryCode, availableWorkItemIds } = useLocalSearchParams<{
     projectId: string;
     categoryId: string;
     categoryName: string;
@@ -143,12 +143,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    padding: 5,
-    borderTopWidth: 1,
-    height: 45,
-  },
   item: {
     height: 45,
     flexDirection: 'row',
@@ -166,17 +160,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  categoryContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    padding: 8,
-    borderRadius: 10,
-  },
-
-  categoryInfo: {
-    flex: 1,
-  },
 });
 
 export default AddCostWorkItemsScreen;
