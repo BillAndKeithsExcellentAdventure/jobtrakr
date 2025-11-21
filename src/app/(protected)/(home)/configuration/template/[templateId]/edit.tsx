@@ -1,10 +1,10 @@
+import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextInput, View } from '@/src/components/Themed';
 import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import {
   useTableValue,
   useUpdateRowCallback,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { HeaderBackButton } from '@react-navigation/elements';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
@@ -51,7 +51,7 @@ const EditProjectTemplate = () => {
           headerShown: true,
           title: 'Edit Project Template',
           gestureEnabled: false,
-          headerLeft: () => <HeaderBackButton onPress={handleBackPress} />,
+          headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
         }}
       />
 

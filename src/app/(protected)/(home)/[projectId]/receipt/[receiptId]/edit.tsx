@@ -2,6 +2,7 @@ import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import { NumberInputField } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
+import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
@@ -13,7 +14,6 @@ import {
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
-import { HeaderBackButton } from '@react-navigation/elements';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
@@ -149,7 +149,7 @@ const EditReceiptDetailsPage = () => {
           title: 'Edit Receipt Summary',
           headerShown: true,
           gestureEnabled: false,
-          headerLeft: () => <HeaderBackButton onPress={handleBackPress} />,
+          headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
         }}
       />
       <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
