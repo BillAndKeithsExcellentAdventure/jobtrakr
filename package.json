@@ -4,7 +4,7 @@
   "version": "1.0.4",
   "scripts": {
     "start": "expo start",
-    "dev": "APP_VARIANT=development npx expo start --dev-client --clear",
+    "dev": "cross-env APP_VARIANT=development npx expo start --dev-client --clear",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
@@ -82,6 +82,7 @@
     "@babel/core": "^7.25.2",
     "@types/mustache": "^4.2.6",
     "@types/react": "~19.1.10",
+    "cross-env": "^10.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "typescript": "~5.9.2"
