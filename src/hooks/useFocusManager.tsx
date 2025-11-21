@@ -9,6 +9,8 @@ interface FocusManagerContextType {
 
 const FocusManagerContext = createContext<FocusManagerContextType | null>(null);
 
+export { FocusManagerContext };
+
 export const FocusManagerProvider = ({ children }: { children: React.ReactNode }) => {
   const fieldsRef = useRef<Map<string, () => void>>(new Map());
 

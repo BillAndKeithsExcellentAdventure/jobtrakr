@@ -55,11 +55,7 @@ const CategorySpecificCostItemsPage = () => {
 
   const projectData = useProject(projectId);
 
-  if (!projectData) {
-    // Redirect to the projects list if no project data is found
-    return <Redirect href="/" />;
-  }
-
+  // All hooks must be called before any conditional returns
   const costItemsCategory = useMemo(
     () => allProjectCategories.find((c) => c.id === categoryId),
     [allProjectCategories, categoryId],
@@ -146,8 +142,13 @@ const CategorySpecificCostItemsPage = () => {
           ]
         : []),
     ],
-    [colors, allWorkItemSummaries],
+    [colors, allWorkItemSummaries, unusedWorkItemsIdsInCategory, costItemsCategory, projectData, projectId, categoryId, unusedWorkItemsInCategoryString, router],
   );
+
+  if (!projectData) {
+    // Redirect to the projects list if no project data is found
+    return <Redirect href="/" />;
+  }
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

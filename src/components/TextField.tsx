@@ -1,5 +1,5 @@
 import { useColors } from '@/src/context/ColorsContext';
-import { ComponentType, forwardRef, Ref, useImperativeHandle, useRef, useId, useEffect } from 'react';
+import { ComponentType, forwardRef, Ref, useImperativeHandle, useRef, useId, useEffect, useContext } from 'react';
 import {
   ImageStyle,
   StyleProp,
@@ -11,7 +11,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Text, TextProps, View } from './Themed';
-import { useFocusManager } from '@/src/hooks/useFocusManager';
+import { FocusManagerContext } from '@/src/hooks/useFocusManager';
 
 export interface TextFieldAccessoryProps {
   style: StyleProp<ViewStyle | TextStyle | ImageStyle>;
@@ -97,13 +97,7 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
   const fieldId = useId();
 
   // Try to get FocusManager context, but don't require it
-  let focusManager;
-  try {
-    focusManager = useFocusManager();
-  } catch {
-    // FocusManager not available, continue without it
-    focusManager = null;
-  }
+  const focusManager = useContext(FocusManagerContext);
 
   const disabled = TextInputProps.editable === false || status === 'disabled';
 

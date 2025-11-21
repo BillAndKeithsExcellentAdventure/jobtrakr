@@ -72,7 +72,7 @@ export const useAppSettings = (): SettingsData => {
 };
 
 // --- UPDATE or ADD ROW ---
-export function setAppSettingsCallback() {
+export function useSetAppSettingsCallback() {
   const store = useStore(useStoreId());
   return useCallback(
     (settings: Partial<SettingsData>): CrudResult => {

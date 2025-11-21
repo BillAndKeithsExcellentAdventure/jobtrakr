@@ -75,7 +75,7 @@ const processAIProcessing = async (
   }
 };
 
-const requestAIProcessingPage = () => {
+const RequestAIProcessingPage = () => {
   const { projectId, imageId, receiptId } = useLocalSearchParams<{
     projectId: string;
     imageId: string;
@@ -543,7 +543,7 @@ const requestAIProcessingPage = () => {
   );
 };
 
-export default requestAIProcessingPage;
+export default RequestAIProcessingPage;
 
 const styles = StyleSheet.create({
   container: {

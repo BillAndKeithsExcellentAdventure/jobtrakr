@@ -3,7 +3,7 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import {
-  setAppSettingsCallback,
+  useSetAppSettingsCallback,
   useAppSettings,
   SettingsData,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
@@ -34,7 +34,7 @@ const SetAppSettingScreen = () => {
   const router = useRouter();
 
   const appSettings = useAppSettings();
-  const setAppSettings = setAppSettingsCallback();
+  const setAppSettings = useSetAppSettingsCallback();
   const [settings, setSettings] = useState<SettingsData>(appSettings);
 
   // Sync settings state when appSettings changes
