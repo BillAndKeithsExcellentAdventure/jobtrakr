@@ -3,8 +3,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleProp, StyleSheet, ViewStyle, Keyboard, TextInput } from 'react-native';
 import { useThemeColor, View } from './Themed';
 import { Pressable } from 'react-native-gesture-handler';
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useId } from 'react';
-import { useFocusManager } from '@/src/hooks/useFocusManager';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useId, useContext } from 'react';
+import { FocusManagerContext } from '@/src/hooks/useFocusManager';
 
 /* -------------------------------------------
  Standard Supporting React State 
@@ -82,13 +82,7 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
     const fieldId = useId();
     
     // Try to get FocusManager context, but don't require it
-    let focusManager;
-    try {
-      focusManager = useFocusManager();
-    } catch {
-      // FocusManager not available, continue without it
-      focusManager = null;
-    }
+    const focusManager = useContext(FocusManagerContext);
 
     const handleOnBlur = () => {
       console.log('OptionPickerItem handleOnBlur called');

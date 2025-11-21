@@ -7,10 +7,11 @@ import React, {
   forwardRef,
   useImperativeHandle,
   useId,
+  useContext,
 } from 'react';
 import { StyleSheet, TextInput, ViewStyle } from 'react-native';
 import { Text, View } from './Themed';
-import { useFocusManager } from '@/src/hooks/useFocusManager';
+import { FocusManagerContext } from '@/src/hooks/useFocusManager';
 
 interface NumberInputFieldProps {
   value: number;
@@ -47,13 +48,7 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
     const fieldId = useId();
 
     // Try to get FocusManager context, but don't require it
-    let focusManager;
-    try {
-      focusManager = useFocusManager();
-    } catch {
-      // FocusManager not available, continue without it
-      focusManager = null;
-    }
+    const focusManager = useContext(FocusManagerContext);
 
     const handleBlurInternal = useCallback(() => {
       // console.log('NumberInputField: handleBlur called with inputValue:', inputValue);
