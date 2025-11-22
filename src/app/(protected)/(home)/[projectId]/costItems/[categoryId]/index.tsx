@@ -134,7 +134,7 @@ const CategorySpecificCostItemsPage = () => {
               onPress: (e, actionContext) => {
                 setHeaderMenuModalVisible(false);
                 router.push({
-                  pathname: '/[projectId]/photos/showImage',
+                  pathname: '/[projectId]/setEstimatedCosts',
                   params: { projectId, projectName: projectData!.name, categoryId },
                 });
               },
@@ -142,7 +142,17 @@ const CategorySpecificCostItemsPage = () => {
           ]
         : []),
     ],
-    [colors, allWorkItemSummaries, unusedWorkItemsIdsInCategory, costItemsCategory, projectData, projectId, categoryId, unusedWorkItemsInCategoryString, router],
+    [
+      colors,
+      allWorkItemSummaries,
+      unusedWorkItemsIdsInCategory,
+      costItemsCategory,
+      projectData,
+      projectId,
+      categoryId,
+      unusedWorkItemsInCategoryString,
+      router,
+    ],
   );
 
   if (!projectData) {
@@ -254,7 +264,6 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
     borderBottomWidth: 1,
   },
-
 });
 
 export default CategorySpecificCostItemsPage;

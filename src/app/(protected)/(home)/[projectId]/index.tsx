@@ -562,7 +562,6 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
     borderBottomWidth: 1,
   },
-
 });
 
 export default ProjectDetailsPage;

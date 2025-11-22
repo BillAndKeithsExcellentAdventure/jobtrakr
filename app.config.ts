@@ -1,14 +1,12 @@
 import { ConfigContext, ExpoConfig } from 'expo/config';
 
 const IS_DEV = process.env.APP_VARIANT === 'development';
-const IS_PREVIEW = process.env.APP_VARIANT === 'preview';
+const IS_PREVIEW = false; //process.env.APP_VARIANT === 'preview';
 
 const getUniqueIdentifier = () => {
   if (IS_DEV) {
     return 'com.projecthound.app.dev';
-  }
-
-  if (IS_PREVIEW) {
+  } else if (IS_PREVIEW) {
     return 'com.projecthound.app.preview';
   }
 
@@ -18,9 +16,7 @@ const getUniqueIdentifier = () => {
 const getAppName = () => {
   if (IS_DEV) {
     return 'PHound (Dev)';
-  }
-
-  if (IS_PREVIEW) {
+  } else if (IS_PREVIEW) {
     return 'PHound (Preview)';
   }
 
@@ -30,9 +26,7 @@ const getAppName = () => {
 const getChannel = () => {
   if (IS_DEV) {
     return 'development';
-  }
-
-  if (IS_PREVIEW) {
+  } else if (IS_PREVIEW) {
     return 'preview';
   }
 
@@ -43,7 +37,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: getAppName(),
   slug: 'jobplus',
-  version: '1.0.3',
+  version: '1.0.4',
   orientation: 'default',
   icon: './assets/images/icon.png',
   scheme: 'projecthound',
