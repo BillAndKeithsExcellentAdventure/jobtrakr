@@ -7,6 +7,8 @@ import { Platform, StyleSheet } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+const BUTTON_ROW_HEIGHT = 62;
+
 type ModalScreenContainerProps = PropsWithChildren<{
   title: string;
   modalTitle?: string;
@@ -37,8 +39,10 @@ export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
       >
         <Stack.Screen options={{ title }} />
         <KeyboardAwareScrollView
-          bottomOffset={62}
-          style={[{ backgroundColor: colors.modalOverlayBackgroundColor, flex: 1, marginBottom: 62 }]}
+          bottomOffset={BUTTON_ROW_HEIGHT}
+          style={[
+            { backgroundColor: colors.modalOverlayBackgroundColor, flex: 1, marginBottom: BUTTON_ROW_HEIGHT },
+          ]}
           contentContainerStyle={styles.modalContainer}
         >
           <View style={styles.container}>
@@ -56,7 +60,7 @@ export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
               <ActionButton
                 style={styles.cancelButton}
                 onPress={onCancel}
-                type={'cancel'}
+                type="cancel"
                 title={cancelButtonTitle}
               />
             </View>
