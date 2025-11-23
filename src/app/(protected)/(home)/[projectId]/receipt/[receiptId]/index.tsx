@@ -1,4 +1,5 @@
 import { ActionButton } from '@/src/components/ActionButton';
+import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import { ReceiptSummary } from '@/src/components/ReceiptSummary';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
@@ -10,10 +11,9 @@ import {
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system/legacy';
 import SwipeableLineItem from '@/src/components/SwipeableLineItem';
 import { useAuth } from '@clerk/clerk-expo';
@@ -192,99 +192,105 @@ const ReceiptDetailsPage = () => {
     setContainerHeight(event.nativeEvent.layout.height);
   };
 
-  return (
-    <SafeAreaView
-      onLayout={onLayout}
-      edges={['right', 'bottom', 'left']}
-      style={{ flex: 1, overflowY: 'hidden' }}
-    >
-      <Stack.Screen options={{ title: 'Receipt Details', headerShown: true }} />
-      {containerHeight > 0 && (
-        <>
-          <View style={[styles.itemContainer, { borderColor: colors.border }]}>
-            {orgId && (
-              <ReceiptSummary item={receipt} onShowDetails={editDetails} onShowReceipt={showReceipt} />
-            )}
-          </View>
+  const handleClose = useCallback(() => {
+    router.back();
+  }, [router]);
 
-          <View style={styles.container}>
-            <View
-              style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}
-            >
-              <ActionButton
-                style={styles.leftButton}
-                onPress={addLineItem}
-                type={'action'}
-                title="Add Line Item"
-              />
-              {allReceiptLineItems.length === 0 && !!receipt.imageId && (
-                <ActionButton
-                  style={styles.rightButton}
-                  onPress={requestAIProcessing}
-                  type={'action'}
-                  title="Load from Photo"
-                />
+  return (
+    <View style={{ flex: 1, width: '100%' }} onLayout={onLayout}>
+      <ModalScreenContainer
+        onSave={handleClose}
+        onCancel={handleClose}
+        saveButtonTitle="Close"
+        cancelButtonTitle="Back"
+      >
+        {containerHeight > 0 && (
+          <>
+            <View style={[styles.itemContainer, { borderColor: colors.border }]}>
+              {orgId && (
+                <ReceiptSummary item={receipt} onShowDetails={editDetails} onShowReceipt={showReceipt} />
               )}
             </View>
-            <View style={{ flex: 1 }}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  width: '100%',
-                  height: 40,
-                  alignItems: 'center',
-                  borderBottomColor: colors.separatorColor,
-                  borderBottomWidth: 2,
-                }}
-              >
-                <Text
-                  style={{ width: 90, textAlign: 'center', fontWeight: '600' }}
-                  txtSize="standard"
-                  text="Amount"
-                />
-                <Text
-                  style={{ flex: 1, marginHorizontal: 20, textAlign: 'center', fontWeight: '600' }}
-                  txtSize="standard"
-                  text="Description"
-                />
-                <Text style={{ width: 40, fontWeight: '600' }} txtSize="standard" text="" />
-              </View>
 
-              <View style={{ maxHeight: containerHeight - 290 }}>
-                <FlatList
-                  showsVerticalScrollIndicator={Platform.OS === 'web'}
-                  data={allReceiptLineItems}
-                  renderItem={({ item }) => <SwipeableLineItem lineItem={item} projectId={projectId} />}
-                />
-              </View>
-
+            <View style={styles.container}>
               <View
-                style={{
-                  flexDirection: 'row',
-                  width: '100%',
-                  height: 40,
-                  alignItems: 'center',
-                  marginLeft: 10,
-                  borderTopColor: colors.separatorColor,
-                  borderTopWidth: 2,
-                }}
+                style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}
               >
-                <Text
-                  style={{ width: 100, textAlign: 'right', fontWeight: '600' }}
-                  text={itemsTotalCost ? formatCurrency(itemsTotalCost, true, true) : '$0.00'}
+                <ActionButton
+                  style={styles.leftButton}
+                  onPress={addLineItem}
+                  type={'action'}
+                  title="Add Line Item"
                 />
-                <Text
-                  style={{ flex: 1, marginHorizontal: 10, marginLeft: 30, fontWeight: '600' }}
-                  text={`Total for ${allReceiptLineItems.length} line ${
-                    allReceiptLineItems.length?.toString() === '1' ? 'item' : 'items'
-                  }`}
-                />
+                {allReceiptLineItems.length === 0 && !!receipt.imageId && (
+                  <ActionButton
+                    style={styles.rightButton}
+                    onPress={requestAIProcessing}
+                    type={'action'}
+                    title="Load from Photo"
+                  />
+                )}
+              </View>
+              <View style={{ flex: 1 }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    width: '100%',
+                    height: 40,
+                    alignItems: 'center',
+                    borderBottomColor: colors.separatorColor,
+                    borderBottomWidth: 2,
+                  }}
+                >
+                  <Text
+                    style={{ width: 90, textAlign: 'center', fontWeight: '600' }}
+                    txtSize="standard"
+                    text="Amount"
+                  />
+                  <Text
+                    style={{ flex: 1, marginHorizontal: 20, textAlign: 'center', fontWeight: '600' }}
+                    txtSize="standard"
+                    text="Description"
+                  />
+                  <Text style={{ width: 40, fontWeight: '600' }} txtSize="standard" text="" />
+                </View>
+
+                <View style={{ maxHeight: containerHeight - 290 }}>
+                  <FlatList
+                    showsVerticalScrollIndicator={Platform.OS === 'web'}
+                    data={allReceiptLineItems}
+                    renderItem={({ item }) => <SwipeableLineItem lineItem={item} projectId={projectId} />}
+                  />
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    width: '100%',
+                    height: 40,
+                    alignItems: 'center',
+                    marginLeft: 10,
+                    borderTopColor: colors.separatorColor,
+                    borderTopWidth: 2,
+                  }}
+                >
+                  <Text
+                    style={{ width: 100, textAlign: 'right', fontWeight: '600' }}
+                    text={itemsTotalCost ? formatCurrency(itemsTotalCost, true, true) : '$0.00'}
+                  />
+                  <Text
+                    style={{ flex: 1, marginHorizontal: 10, marginLeft: 30, fontWeight: '600' }}
+                    text={`Total for ${allReceiptLineItems.length} line ${
+                      allReceiptLineItems.length?.toString() === '1' ? 'item' : 'items'
+                    }`}
+                  />
+                </View>
               </View>
             </View>
-          </View>
-        </>
-      )}
-    </SafeAreaView>
+          </>
+        )}
+      </ModalScreenContainer>
+    </View>
   );
 };
 
