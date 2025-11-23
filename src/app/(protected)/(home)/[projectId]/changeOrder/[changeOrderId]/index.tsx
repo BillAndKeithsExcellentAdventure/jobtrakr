@@ -31,67 +31,40 @@ import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const generateAndSavePdf = async (
-  htmlContent: string,
+interface SendPdfParams {
+  userId: string;
+  htmlPdf: string;
+  htmlBody: string;
+  toEmail: string;
+  fromEmail: string;
+  fromName: string;
+  subject: string;
+}
+
+const generateAndSendPdf = async (
+  params: SendPdfParams,
   changeOrderId: string,
-  userId: string,
   token: string,
 ): Promise<string | null> => {
   try {
-    // RESTful API call to generate PDF
-    const response = await fetch('https://projecthoundbackend.keith-m-bertram.workers.dev/generatePdf', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
+    // RESTful API call to generate and send PDF
+    const response = await fetch(
+      'https://projecthoundbackend.keith-m-bertram.workers.dev/sendChangeOrderEmail',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(params),
       },
-      body: JSON.stringify({
-        userId: userId,
-        html: htmlContent,
-      }),
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    // Handle PDF response as blob
-    const pdfBlob = await response.blob();
-
-    // Convert blob to base64 for React Native
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-
-      reader.onloadend = async () => {
-        try {
-          const base64data = reader.result as string;
-
-          // Save PDF to cache directory
-          const fileName = `change_order_${changeOrderId}_${Date.now()}.pdf`;
-          const filePath = `${FileSystem.cacheDirectory}${fileName}`;
-
-          // Remove the data:application/pdf;base64, prefix if present
-          const base64Content = base64data.split(',')[1] || base64data;
-
-          await FileSystem.writeAsStringAsync(filePath, base64Content, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-
-          console.log('PDF saved to cache:', filePath);
-          resolve(filePath);
-        } catch (fileError) {
-          console.error('Error saving PDF file:', fileError);
-          reject(new Error('Failed to save PDF file'));
-        }
-      };
-
-      reader.onerror = () => {
-        console.error('Error reading PDF blob');
-        reject(new Error('Failed to process PDF response'));
-      };
-
-      reader.readAsDataURL(pdfBlob);
-    });
+    return await response.text();
   } catch (error) {
     console.error('Error generating PDF:', error);
     throw new Error('Failed to generate PDF. Please try again.');
@@ -219,32 +192,27 @@ const DefineChangeOrderScreen = () => {
         }
 
         const token = (await auth.getToken()) ?? '';
-        // Generate and save PDF using the new function
-        const pdfFilePath = await generateAndSavePdf(htmlOutput, changeOrder?.id || 'unknown', userId, token);
 
-        if (pdfFilePath) {
-          // Show success alert with sharing option
-          Alert.alert('PDF Generated Successfully', 'Would you like to share the PDF?', [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-            {
-              text: 'Share',
-              onPress: async () => {
-                try {
-                  await Sharing.shareAsync(pdfFilePath, {
-                    mimeType: 'application/pdf',
-                    dialogTitle: 'Share Change Order PDF',
-                  });
-                } catch (shareError) {
-                  console.error('Error sharing PDF:', shareError);
-                  Alert.alert('Error', 'Failed to share PDF');
-                }
-              },
-            },
-          ]);
-        }
+        // NOTE: Need to get with Bill to figure out how to create a email body
+
+        // Generate and send PDF using the new function with object parameter
+        const pdfFilePath = await generateAndSendPdf(
+          {
+            userId: userId,
+            htmlPdf: htmlOutput,
+            htmlBody:
+              'Hello ' +
+              (projectData?.ownerName ?? '') +
+              ', Please review the attached change order. Best regards, ' +
+              (appSettings.ownerName ?? ''),
+            toEmail: projectData?.ownerEmail ?? '',
+            fromEmail: appSettings.email ?? '',
+            fromName: appSettings.ownerName ?? '',
+            subject: `Change Order ${changeOrder?.id || 'unknown'} for your review`,
+          },
+          changeOrder?.id || 'unknown',
+          token,
+        );
       } catch (error) {
         const errorMessage =
           typeof error === 'object' && error !== null && 'message' in error
