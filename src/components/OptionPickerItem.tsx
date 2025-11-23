@@ -80,12 +80,12 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
   ) => {
     const inputRef = useRef<TextInput | null>(null);
     const fieldId = useId();
-    
+
     // Try to get FocusManager context, but don't require it
     const focusManager = useContext(FocusManagerContext);
 
     const handleOnBlur = () => {
-      console.log('OptionPickerItem handleOnBlur called');
+      //console.log('OptionPickerItem handleOnBlur called');
       onOptionLabelChange?.(labelText ?? '');
     };
 
@@ -94,7 +94,7 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
         handleOnBlur();
       },
     }));
-    
+
     // Register with FocusManager
     useEffect(() => {
       if (focusManager && editable) {

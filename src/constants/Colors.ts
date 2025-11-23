@@ -60,7 +60,7 @@ export const Colors = {
     percentCompleteBackground: '#73bf73',
     boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.8)', // ...(Platform.OS === 'web'
     placeHolder: 'rgba(0, 0, 0, 0.4)',
-    modalOverlayBackgroundColor: 'rgba(0, 0, 0, 0.5)',
+    modalOverlayBackgroundColor: 'rgba(0, 0, 0, 0.3)',
     opaqueModalOverlayBackgroundColor: '#F8F8F8',
     error: '#C03403',
     errorBackground: '#F2D6CD',

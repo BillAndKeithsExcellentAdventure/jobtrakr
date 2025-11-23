@@ -10,8 +10,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const BUTTON_ROW_HEIGHT = 62;
 
 type ModalScreenContainerProps = PropsWithChildren<{
-  title: string;
-  modalTitle?: string;
   onSave: () => void;
   onCancel: () => void;
   canSave?: boolean;
@@ -20,8 +18,6 @@ type ModalScreenContainerProps = PropsWithChildren<{
 }>;
 
 export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
-  title,
-  modalTitle,
   onSave,
   onCancel,
   canSave = true,
@@ -33,11 +29,12 @@ export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
 
   return (
     <>
+      <Stack.Screen options={{ headerShown: false }} />
+
       <SafeAreaView
-        edges={['right', 'bottom', 'left']}
+        edges={['top', 'right', 'bottom', 'left']}
         style={[styles.modalBackground, { backgroundColor: colors.modalOverlayBackgroundColor }]}
       >
-        <Stack.Screen options={{ title }} />
         <KeyboardAwareScrollView
           bottomOffset={BUTTON_ROW_HEIGHT}
           style={[
@@ -46,8 +43,6 @@ export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
           contentContainerStyle={styles.modalContainer}
         >
           <View style={styles.container}>
-            {modalTitle && <Text style={styles.modalTitle}>{modalTitle}</Text>}
-
             {children}
 
             <View style={styles.saveButtonRow}>
@@ -76,22 +71,21 @@ const styles = StyleSheet.create({
   modalBackground: {
     flex: 1,
     justifyContent: 'flex-start',
-    alignItems: 'center',
+    alignItems: 'stretch',
   },
   container: {
     width: '100%',
-    padding: 20,
+    padding: 10,
+    borderRadius: 20,
     flex: 1,
+    elevation: 20, // Adds shadow effect for Android
+    shadowOffset: { width: 2, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
   },
   modalContainer: {
     width: '100%',
-    borderRadius: 20,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
+    padding: 10,
   },
   saveButtonRow: {
     marginTop: 10,
