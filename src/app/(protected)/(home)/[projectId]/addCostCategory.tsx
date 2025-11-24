@@ -1,4 +1,4 @@
-import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
+import { ModalScreenContainerWithList } from '@/src/components/ModalScreenContainerWithList';import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import { Text, View } from '@/src/components/Themed';
 import { Colors } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
@@ -133,7 +133,7 @@ const AddCostCategoryWorkItemsScreen: React.FC = () => {
 
   return (
     <View style={{ flex: 1, width: '100%' }}>
-      <ModalScreenContainer
+      <ModalScreenContainerWithList
         onSave={addSelectedWorkItems}
         onCancel={() => router.back()}
         canSave={selectedWorkItemIds.length > 0}
