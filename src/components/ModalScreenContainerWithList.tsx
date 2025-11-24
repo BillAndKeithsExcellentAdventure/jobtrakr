@@ -20,10 +20,10 @@ type ModalScreenContainerWithListProps = PropsWithChildren<{
 /**
  * ModalScreenContainerWithList is a variant of ModalScreenContainer that uses
  * KeyboardAvoidingView instead of KeyboardAwareScrollView.
- * 
+ *
  * Use this variant when your modal content contains scrollable lists (FlatList, SectionList, FlashList)
  * as KeyboardAwareScrollView can interfere with nested scrollable components.
- * 
+ *
  * The children should manage their own scrolling (e.g., include a FlatList).
  */
 export const ModalScreenContainerWithList: React.FC<ModalScreenContainerWithListProps> = ({
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   container: {
-    width: '100%',
+    margin: 10,
     padding: 10,
     borderRadius: 20,
     flex: 1,

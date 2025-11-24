@@ -1,4 +1,5 @@
-import { ModalScreenContainerWithList } from '@/src/components/ModalScreenContainerWithList';import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
+import { ModalScreenContainerWithList } from '@/src/components/ModalScreenContainerWithList';
+import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import { Text, View } from '@/src/components/Themed';
 import { Colors } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
@@ -155,7 +156,7 @@ const AddCostCategoryWorkItemsScreen: React.FC = () => {
           keyExtractor={(item) => item.id}
           ListEmptyComponent={<Text>No categories available</Text>}
         />
-      </ModalScreenContainer>
+      </ModalScreenContainerWithList>
     </View>
   );
 };
@@ -281,7 +282,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
 });
 
 export default AddCostCategoryWorkItemsScreen;
