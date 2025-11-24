@@ -1,4 +1,4 @@
-import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
+import { ModalScreenContainerWithList } from '@/src/components/ModalScreenContainerWithList';
 import { TextField } from '@/src/components/TextField';
 import { Text, View } from '@/src/components/Themed';
 import { SeedProjectWorkItems } from '@/src/constants/seedWorkItems';
@@ -80,7 +80,7 @@ const SeedWorkItemSelectorPage = () => {
 
   return (
     <View style={{ flex: 1, width: '100%' }}>
-      <ModalScreenContainer
+      <ModalScreenContainerWithList
         onSave={handleSave}
         onCancel={() => router.back()}
         canSave={!!selectedProjectType && selectedProjectType !== 'None'}
@@ -124,7 +124,7 @@ const SeedWorkItemSelectorPage = () => {
             />
           </View>
         </View>
-      </ModalScreenContainer>
+      </ModalScreenContainerWithList>
     </View>
   );
 };
