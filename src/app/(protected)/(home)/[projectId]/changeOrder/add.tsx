@@ -15,7 +15,7 @@ import {
   ChangeOrderItem,
   useAddRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useColors } from '@/src/context/ColorsContext';
 import { ActionButton } from '@/src/components/ActionButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,6 +25,7 @@ import CostItemPickerModal from '@/src/components/CostItemPickerModal';
 import { OptionEntry } from '@/src/components/OptionList';
 import { ProposedChangeOrderItem } from '@/src/models/types';
 import SwipeableProposedChangeOrderItem from '@/src/components/SwipeableProposedChangeOrderItem';
+import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 
 export default function AddChangeOrder() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
@@ -147,10 +148,15 @@ export default function AddChangeOrder() {
 
   return (
     <>
-      <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-        <Stack.Screen options={{ title: 'Add Change Order', headerShown: true }} />
+      <View style={{ flex: 1, width: '100%' }}>
+        <ModalScreenContainer
+          onSave={handleSubmit}
+          onCancel={() => router.back()}
+          canSave={canAdd}
+          saveButtonTitle="Add"
+        >
+          <Text style={styles.modalTitle}>Add Change Order</Text>
 
-        <View style={[styles.container, { gap: 8 }]}>
           <View style={{ gap: 8, padding: 16, backgroundColor: colors.listBackground }}>
             <TextInput
               style={[styles.input, { backgroundColor: colors.background }]}
@@ -250,25 +256,8 @@ export default function AddChangeOrder() {
               </View>
             )}
           />
-          <View style={styles.saveButtonRow}>
-            <ActionButton
-              style={styles.saveButton}
-              onPress={handleSubmit}
-              type={canAdd ? 'ok' : 'disabled'}
-              title="Add"
-            />
-
-            <ActionButton
-              style={styles.cancelButton}
-              onPress={() => {
-                router.back();
-              }}
-              type={'cancel'}
-              title="Cancel"
-            />
-          </View>
-        </View>
-      </SafeAreaView>
+        </ModalScreenContainer>
+      </View>
       {/* Modal for adding ChangeItem */}
       <Modal
         visible={showAddItemModal}
@@ -340,12 +329,17 @@ export default function AddChangeOrder() {
         {Platform.OS === 'ios' && <KeyboardToolbar />}
       </Modal>
 
-      {Platform.OS === 'ios' && <KeyboardToolbar />}
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
   container: {
     flexGrow: 1,
   },
