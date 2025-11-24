@@ -289,7 +289,7 @@ const ProjectDetailsPage = () => {
       } else if (menuItem === 'CleanCostItems' && projectId) {
         Alert.alert(
           'Clean Cost Items',
-          'Are you sure you want to clean cost items that do not have a match receipt?',
+          'Are you sure you want to clean cost items that do not have a matching receipt?',
           [
             { text: 'Cancel', style: 'cancel' },
             {
