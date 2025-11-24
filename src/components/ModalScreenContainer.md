@@ -12,6 +12,23 @@ A reusable React Native component for creating consistent modal screens with a t
 - Consistent styling and spacing
 - iOS keyboard toolbar support
 
+## Variants
+
+There are two variants of ModalScreenContainer:
+
+1. **ModalScreenContainer** (this component) - For forms with input fields
+   - Uses `KeyboardAwareScrollView` for automatic keyboard handling
+   - Best for modals with text inputs, pickers, and non-scrollable content
+
+2. **ModalScreenContainerWithList** - For modals with scrollable lists
+   - Uses `KeyboardAvoidingView` instead of `KeyboardAwareScrollView`
+   - Best for modals containing FlatList, SectionList, or FlashList
+   - See [ModalScreenContainerWithList.md](./ModalScreenContainerWithList.md) for details
+
+**When to use which:**
+- Use `ModalScreenContainer` for form-based modals (adding/editing items with input fields)
+- Use `ModalScreenContainerWithList` when your modal contains scrollable lists that manage their own scrolling
+
 ## Props
 
 | Prop | Type | Required | Default | Description |
