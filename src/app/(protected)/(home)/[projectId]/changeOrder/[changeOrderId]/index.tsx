@@ -1,6 +1,7 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import CostItemPickerModal from '@/src/components/CostItemPickerModal';
+import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import { NumberInputField } from '@/src/components/NumberInputField';
 import { OptionEntry } from '@/src/components/OptionList';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
@@ -26,9 +27,8 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Keyboard, Modal, Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, Keyboard, StyleSheet, TouchableOpacity } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
-import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface SendPdfParams {
@@ -291,7 +291,7 @@ const DefineChangeOrderScreen = () => {
       Alert.alert('Error', 'Please fill in all item fields.');
       return;
     }
-    addChangeOrderItem({ ...newChangeOrderItem, changeOrderId });
+    addChangeOrderItem({ ...newChangeOrderItem, workItemId: itemWorkItemEntry.value, changeOrderId });
     setShowAddItemModal(false);
     setNewChangeOrderItem({
       id: '',
@@ -432,75 +432,54 @@ const DefineChangeOrderScreen = () => {
         />
       </View>
       {/* Modal for adding ChangeOrderItem */}
-      <Modal
-        visible={showAddItemModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={handleAddItemCancel}
-      >
-        <View style={[styles.modalOverlay, { backgroundColor: colors.opaqueModalOverlayBackgroundColor }]}>
-          <SafeAreaView
-            edges={['top']}
-            style={[styles.modalSafeArea, Platform.OS === 'ios' && { marginTop: 60 }]}
+      {showAddItemModal && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+          <ModalScreenContainer
+            onSave={handleAddItemOk}
+            onCancel={handleAddItemCancel}
+            canSave={!!newChangeOrderItem.label && !!newChangeOrderItem.amount && !!itemWorkItemEntry.value}
+            saveButtonTitle="Add Item"
           >
-            <View style={styles.modalContent}>
-              <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                <Text txtSize="title">Add Change Order Item</Text>
-              </View>
-              <TextField
-                style={[styles.input, { borderColor: colors.transparent, maxHeight: 80 }]}
-                value={newChangeOrderItem.label}
-                onChangeText={(text) =>
-                  setNewChangeOrderItem((prev) => ({
-                    ...prev,
-                    label: text,
-                  }))
-                }
-                placeholder="Item Description"
-                label="Item Description"
-              />
-              <NumberInputField
-                label="Amount"
-                style={styles.numberInput}
-                value={newChangeOrderItem.amount}
-                onChange={(value) =>
-                  setNewChangeOrderItem((prev) => ({
-                    ...prev,
-                    amount: value,
-                  }))
-                }
-                placeholder="Amount"
-              />
-              <View>
-                <Text style={styles.label}>Cost Item</Text>
-                <TouchableOpacity activeOpacity={1} onPress={handleShowCostItemPicker}>
-                  <View style={{ marginBottom: 10 }}>
-                    <TextInput
-                      style={styles.input}
-                      value={itemWorkItemEntry.label ?? null}
-                      readOnly={true}
-                      placeholder="Select Cost Item"
-                      onPressIn={handleShowCostItemPicker}
-                    />
-                  </View>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.saveButtonRow}>
-                <ActionButton
-                  style={styles.saveButton}
-                  onPress={handleAddItemOk}
-                  type="ok"
-                  title="Add Item"
-                />
-                <ActionButton
-                  style={styles.cancelButton}
-                  onPress={handleAddItemCancel}
-                  type="cancel"
-                  title="Cancel"
-                />
-              </View>
+            <Text style={styles.modalTitle}>Add Change Order Item</Text>
+            <TextField
+              style={[styles.input, { borderColor: colors.transparent, maxHeight: 80 }]}
+              value={newChangeOrderItem.label}
+              onChangeText={(text) =>
+                setNewChangeOrderItem((prev) => ({
+                  ...prev,
+                  label: text,
+                }))
+              }
+              placeholder="Item Description"
+              label="Item Description"
+            />
+            <NumberInputField
+              label="Amount"
+              style={styles.numberInput}
+              value={newChangeOrderItem.amount}
+              onChange={(value) =>
+                setNewChangeOrderItem((prev) => ({
+                  ...prev,
+                  amount: value,
+                }))
+              }
+              placeholder="Amount"
+            />
+            <View>
+              <Text style={styles.label}>Cost Item</Text>
+              <TouchableOpacity activeOpacity={1} onPress={handleShowCostItemPicker}>
+                <View style={{ marginBottom: 10 }}>
+                  <TextInput
+                    style={styles.input}
+                    value={itemWorkItemEntry.label ?? null}
+                    readOnly={true}
+                    placeholder="Select Cost Item"
+                    onPressIn={handleShowCostItemPicker}
+                  />
+                </View>
+              </TouchableOpacity>
             </View>
-          </SafeAreaView>
+          </ModalScreenContainer>
           {showCostItemPicker && (
             <CostItemPickerModal
               isVisible={showCostItemPicker}
@@ -510,8 +489,7 @@ const DefineChangeOrderScreen = () => {
             />
           )}
         </View>
-        {Platform.OS === 'ios' && <KeyboardToolbar />}
-      </Modal>
+      )}
 
       {headerMenuModalVisible && (
         <RightHeaderMenu
@@ -525,6 +503,12 @@ const DefineChangeOrderScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
   saveButtonRow: {
     marginTop: 10,
     flexDirection: 'row',
