@@ -1,5 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
+import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import { NumberInputField } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
@@ -22,20 +23,27 @@ import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import * as ImagePicker from 'expo-image-picker';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Platform, StyleSheet, TouchableOpacity } from 'react-native';
-import { KeyboardToolbar } from 'react-native-keyboard-controller';
+import { Alert, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AddInvoicePage = () => {
   const defaultDate = new Date();
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const addInvoice = useAddRowCallback(projectId, 'invoices');
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
-  const [pickedVendorOption, setPickedVendorOption] = useState<OptionEntry | undefined>(undefined);
+  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
+
+  const handleVendorOptionChange = (option: OptionEntry) => {
+    setPickedOption(option);
+    if (option) {
+      handleVendorChange(option.label);
+    }
+    setIsVendorListPickerVisible(false);
+  };
+
   const router = useRouter();
   const [projectInvoice, setProjectInvoice] = useState<InvoiceData>({
     id: '',
@@ -59,13 +67,7 @@ const AddInvoicePage = () => {
     }));
   }, []);
 
-  const handleVendorOptionChange = (option: OptionEntry) => {
-    setPickedVendorOption(option);
-    if (option) {
-      handleVendorChange(option.label);
-    }
-    setIsVendorListPickerVisible(false);
-  };
+
 
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [canAddInvoice, setCanAddInvoice] = useState(false);
@@ -274,251 +276,200 @@ const AddInvoicePage = () => {
     setIsCategoryPickerVisible(false);
   };
 
+  const handleCancel = useCallback(() => {
+    // clear state of invoice data
+    setProjectInvoice({
+      id: '',
+      vendor: '',
+      description: '',
+      amount: 0,
+      numLineItems: 0,
+      invoiceDate: defaultDate.getTime(),
+      thumbnail: '',
+      pictureDate: 0,
+      imageId: '',
+      notes: '',
+      markedComplete: false,
+      invoiceNumber: '',
+    });
+    router.back();
+  }, [router, defaultDate]);
+
   return (
-    <>
-      <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={{ flex: 1 }}>
-        <Stack.Screen options={{ title: 'Add Invoice', headerShown: false }} />
-        <View
-          style={[
-            styles.container,
-            styles.modalBackground,
-            { backgroundColor: colors.modalOverlayBackgroundColor, paddingHorizontal: 10 },
-          ]}
-        >
-          <View style={[styles.modalContainer, { marginTop: 10 }]}>
-            <Text txtSize="standard" style={[styles.modalTitle, { fontWeight: '600' }]} text={projectName} />
-            <Text txtSize="title" style={styles.modalTitle} text="Add Invoice" />
+    <View style={{ flex: 1, width: '100%' }}>
+      <ModalScreenContainer onSave={handleAddInvoice} onCancel={handleCancel} canSave={canAddInvoice}>
+        <Text txtSize="standard" style={[styles.modalTitle, { fontWeight: '600' }]} text={projectName} />
+        <Text txtSize="title" style={styles.modalTitle} text="Add Invoice" />
 
-            <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border }}>
-              <TextField
-                containerStyle={styles.inputContainer}
-                style={[styles.input, { borderColor: colors.transparent }]}
-                placeholder="Invoice Number"
-                label="Invoice Number"
-                value={projectInvoice.invoiceNumber}
-                onChangeText={(invoiceNumber) =>
-                  setProjectInvoice((prevInvoice) => ({
-                    ...prevInvoice,
-                    invoiceNumber,
-                  }))
-                }
-              />
+        <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border }}>
+          <TextField
+            containerStyle={styles.inputContainer}
+            style={[styles.input, { borderColor: colors.transparent }]}
+            placeholder="Invoice Number"
+            label="Invoice Number"
+            value={projectInvoice.invoiceNumber}
+            onChangeText={(invoiceNumber) =>
+              setProjectInvoice((prevInvoice) => ({
+                ...prevInvoice,
+                invoiceNumber,
+              }))
+            }
+          />
 
-              <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
-                <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
-                <TextInput
-                  readOnly={true}
-                  style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
-                  placeholder="Date"
-                  onPressIn={showDatePicker}
-                  value={formatDate(projectInvoice.invoiceDate)}
-                />
-              </TouchableOpacity>
-              <DateTimePickerModal
-                style={{ alignSelf: 'stretch' }}
-                date={projectInvoice.invoiceDate ? new Date(projectInvoice.invoiceDate) : defaultDate}
-                isVisible={datePickerVisible}
-                mode="date"
-                onConfirm={handleDateConfirm}
-                onCancel={hideDatePicker}
-              />
+          <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
+            <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
+            <TextInput
+              readOnly={true}
+              style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+              placeholder="Date"
+              onPressIn={showDatePicker}
+              value={formatDate(projectInvoice.invoiceDate)}
+            />
+          </TouchableOpacity>
+          <DateTimePickerModal
+            style={{ alignSelf: 'stretch' }}
+            date={projectInvoice.invoiceDate ? new Date(projectInvoice.invoiceDate) : defaultDate}
+            isVisible={datePickerVisible}
+            mode="date"
+            onConfirm={handleDateConfirm}
+            onCancel={hideDatePicker}
+          />
 
-              {vendors && vendors.length ? (
-                <OptionPickerItem
-                  containerStyle={styles.inputContainer}
-                  optionLabel={projectInvoice.vendor}
-                  label="Vendor"
-                  placeholder="Vendor"
-                  onOptionLabelChange={(vendor: string) =>
-                    setProjectInvoice((prevInvoice) => ({
-                      ...prevInvoice,
-                      vendor,
-                    }))
-                  }
-                  onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
-                />
-              ) : (
-                <TextField
-                  containerStyle={styles.inputContainer}
-                  style={[styles.input, { borderColor: colors.transparent }]}
-                  placeholder="Vendor"
-                  label="Vendor"
-                  value={projectInvoice.vendor}
-                  onChangeText={(vendor: string) =>
-                    setProjectInvoice((prevInvoice) => ({
-                      ...prevInvoice,
-                      vendor,
-                    }))
-                  }
-                />
-              )}
+          {vendors && vendors.length ? (
+            <OptionPickerItem
+              containerStyle={styles.inputContainer}
+              optionLabel={projectInvoice.vendor}
+              label="Vendor"
+              placeholder="Vendor"
+              onOptionLabelChange={handleVendorChange}
+              onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
+            />
+          ) : (
+            <TextField
+              containerStyle={styles.inputContainer}
+              style={[styles.input, { borderColor: colors.transparent }]}
+              placeholder="Vendor"
+              label="Vendor"
+              value={projectInvoice.vendor}
+              onChangeText={handleVendorChange}
+            />
+          )}
 
-              <NumberInputField
-                style={styles.inputContainer}
-                placeholder="Amount"
-                label="Amount"
-                value={projectInvoice.amount}
-                onChange={(amount: number) =>
-                  setProjectInvoice((prevInvoice) => ({
-                    ...prevInvoice,
-                    amount,
-                  }))
-                }
-              />
-              <TextField
-                containerStyle={styles.inputContainer}
-                style={[styles.input, { borderColor: colors.transparent }]}
-                placeholder="Description"
-                label="Description"
-                value={projectInvoice.description}
-                onChangeText={(description) =>
-                  setProjectInvoice((prevInvoice) => ({
-                    ...prevInvoice,
-                    description,
-                  }))
-                }
-              />
-              {projectInvoice.thumbnail && (
-                <>
-                  <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                    <Image
-                      style={{ width: 80, height: 120, marginVertical: 10 }}
-                      source={{ uri: `data:image/png;base64,${projectInvoice.thumbnail}` }}
-                    />
-                  </View>
-                </>
-              )}
-
-              <View style={styles.takePictureButtonRow}>
-                <ActionButton
-                  style={styles.saveButton}
-                  onPress={handleCaptureImage}
-                  type={'action'}
-                  title={projectInvoice.imageId ? 'Retake Picture' : 'Take Picture'}
+          <NumberInputField
+            style={styles.inputContainer}
+            placeholder="Amount"
+            label="Amount"
+            value={projectInvoice.amount}
+            onChange={(amount: number) =>
+              setProjectInvoice((prevInvoice) => ({
+                ...prevInvoice,
+                amount,
+              }))
+            }
+          />
+          <TextField
+            containerStyle={styles.inputContainer}
+            style={[styles.input, { borderColor: colors.transparent }]}
+            placeholder="Description"
+            label="Description"
+            value={projectInvoice.description}
+            onChangeText={(description) =>
+              setProjectInvoice((prevInvoice) => ({
+                ...prevInvoice,
+                description,
+              }))
+            }
+          />
+          {projectInvoice.thumbnail && (
+            <>
+              <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                <Image
+                  style={{ width: 80, height: 120, marginVertical: 10 }}
+                  source={{ uri: `data:image/png;base64,${projectInvoice.thumbnail}` }}
                 />
               </View>
+            </>
+          )}
 
-              <View style={styles.applyToSingleCostCodeRow}>
-                <Switch value={applyToSingleCostCode} onValueChange={setApplyToSingleCostCode} size="large" />
-                <Text text="Apply to Single Cost Code" txtSize="standard" style={{ marginLeft: 10 }} />
-              </View>
-
-              {applyToSingleCostCode && (
-                <>
-                  <OptionPickerItem
-                    containerStyle={styles.inputContainer}
-                    optionLabel={pickedCategoryOption?.label}
-                    label="Category"
-                    placeholder="Category"
-                    editable={false}
-                    onPickerButtonPress={() => setIsCategoryPickerVisible(true)}
-                  />
-                  <OptionPickerItem
-                    containerStyle={styles.inputContainer}
-                    optionLabel={pickedSubCategoryOption?.label}
-                    label="Cost Item Type"
-                    placeholder="Cost Item Type"
-                    editable={false}
-                    onPickerButtonPress={() => setIsSubCategoryPickerVisible(true)}
-                  />
-                </>
-              )}
-            </View>
-
-            <View style={styles.saveButtonRow}>
-              <ActionButton
-                style={styles.saveButton}
-                onPress={handleAddInvoice}
-                type={canAddInvoice ? 'ok' : 'disabled'}
-                title="Save"
-              />
-
-              <ActionButton
-                style={styles.cancelButton}
-                onPress={() => {
-                  // clear state of invoice dat;
-                  setProjectInvoice({
-                    id: '',
-                    vendor: '',
-                    description: '',
-                    amount: 0,
-                    numLineItems: 0,
-                    invoiceDate: defaultDate.getTime(),
-                    thumbnail: '',
-                    pictureDate: 0,
-                    imageId: '',
-                    notes: '',
-                    markedComplete: false,
-                    invoiceNumber: '',
-                  });
-                  router.back();
-                }}
-                type={'cancel'}
-                title="Cancel"
-              />
-            </View>
+          <View style={styles.takePictureButtonRow}>
+            <ActionButton
+              style={styles.saveButton}
+              onPress={handleCaptureImage}
+              type={'action'}
+              title={projectInvoice.imageId ? 'Retake Picture' : 'Take Picture'}
+            />
           </View>
-          {vendors && isVendorListPickerVisible && (
-            <BottomSheetContainer
-              isVisible={isVendorListPickerVisible}
-              onClose={() => setIsVendorListPickerVisible(false)}
-            >
-              <OptionList
-                options={vendors}
-                onSelect={(option) => handleVendorOptionChange(option)}
-                selectedOption={pickedVendorOption}
+
+          <View style={styles.applyToSingleCostCodeRow}>
+            <Switch value={applyToSingleCostCode} onValueChange={setApplyToSingleCostCode} size="large" />
+            <Text text="Apply to Single Cost Code" txtSize="standard" style={{ marginLeft: 10 }} />
+          </View>
+
+          {applyToSingleCostCode && (
+            <>
+              <OptionPickerItem
+                containerStyle={styles.inputContainer}
+                optionLabel={pickedCategoryOption?.label}
+                label="Category"
+                placeholder="Category"
+                editable={false}
+                onPickerButtonPress={() => setIsCategoryPickerVisible(true)}
               />
-            </BottomSheetContainer>
+              <OptionPickerItem
+                containerStyle={styles.inputContainer}
+                optionLabel={pickedSubCategoryOption?.label}
+                label="Cost Item Type"
+                placeholder="Cost Item Type"
+                editable={false}
+                onPickerButtonPress={() => setIsSubCategoryPickerVisible(true)}
+              />
+            </>
           )}
         </View>
-        {isCategoryPickerVisible && (
-          <BottomSheetContainer
-            isVisible={isCategoryPickerVisible}
-            onClose={() => setIsCategoryPickerVisible(false)}
-          >
-            <OptionList
-              options={availableCategoriesOptions}
-              onSelect={(option) => handleCategoryOptionChange(option)}
-              selectedOption={pickedCategoryOption}
-            />
-          </BottomSheetContainer>
-        )}
-        {isSubCategoryPickerVisible && (
-          <BottomSheetContainer
-            isVisible={isSubCategoryPickerVisible}
-            onClose={() => setIsSubCategoryPickerVisible(false)}
-          >
-            <OptionList
-              centerOptions={false}
-              boldSelectedOption={false}
-              options={subCategories}
-              onSelect={(option) => handleSubCategoryOptionChange(option)}
-              selectedOption={pickedSubCategoryOption}
-            />
-          </BottomSheetContainer>
-        )}
-      </SafeAreaView>
-      {Platform.OS === 'ios' && <KeyboardToolbar />}
-    </>
+      </ModalScreenContainer>
+      {vendors && isVendorListPickerVisible && (
+        <BottomSheetContainer
+          isVisible={isVendorListPickerVisible}
+          onClose={() => setIsVendorListPickerVisible(false)}
+        >
+          <OptionList
+            options={vendors}
+            onSelect={(option) => handleVendorOptionChange(option)}
+            selectedOption={pickedOption}
+          />
+        </BottomSheetContainer>
+      )}
+      {isCategoryPickerVisible && (
+        <BottomSheetContainer
+          isVisible={isCategoryPickerVisible}
+          onClose={() => setIsCategoryPickerVisible(false)}
+        >
+          <OptionList
+            options={availableCategoriesOptions}
+            onSelect={(option) => handleCategoryOptionChange(option)}
+            selectedOption={pickedCategoryOption}
+          />
+        </BottomSheetContainer>
+      )}
+      {isSubCategoryPickerVisible && (
+        <BottomSheetContainer
+          isVisible={isSubCategoryPickerVisible}
+          onClose={() => setIsSubCategoryPickerVisible(false)}
+        >
+          <OptionList
+            centerOptions={false}
+            boldSelectedOption={false}
+            options={subCategories}
+            onSelect={(option) => handleSubCategoryOptionChange(option)}
+            selectedOption={pickedSubCategoryOption}
+          />
+        </BottomSheetContainer>
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  modalBackground: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'flex-start', // Align items at the top vertically
-    alignItems: 'center', // Center horizontally
-    width: '100%',
-  },
-  modalContainer: {
-    maxWidth: 550,
-    width: '100%',
-    padding: 10,
-    borderRadius: 20,
-  },
   modalTitle: {
     textAlign: 'center',
   },
@@ -554,19 +505,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  saveButtonRow: {
-    marginTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
   saveButton: {
     flex: 1,
     marginRight: 5,
-  },
-  cancelButton: {
-    flex: 1,
-    marginLeft: 5,
   },
 });
 
