@@ -1,5 +1,4 @@
 import { ModalScreenContainerWithList } from '@/src/components/ModalScreenContainerWithList';
-import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import { Text, View } from '@/src/components/Themed';
 import { Colors } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
