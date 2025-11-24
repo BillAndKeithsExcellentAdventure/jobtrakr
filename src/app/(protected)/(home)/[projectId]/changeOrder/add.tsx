@@ -1,13 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  StyleSheet,
-  Alert,
-  Modal,
-  FlatList,
-  Keyboard,
-  Platform,
-  TouchableOpacity,
-} from 'react-native';
+import { StyleSheet, Alert, Modal, FlatList, Keyboard, Platform, TouchableOpacity } from 'react-native';
 import { Text, TextInput, View } from '@/src/components/Themed';
 
 import {
@@ -25,7 +17,7 @@ import CostItemPickerModal from '@/src/components/CostItemPickerModal';
 import { OptionEntry } from '@/src/components/OptionList';
 import { ProposedChangeOrderItem } from '@/src/models/types';
 import SwipeableProposedChangeOrderItem from '@/src/components/SwipeableProposedChangeOrderItem';
-import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
+import { ModalScreenContainerWithList } from '@/src/components/ModalScreenContainerWithList';
 
 export default function AddChangeOrder() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
@@ -149,7 +141,7 @@ export default function AddChangeOrder() {
   return (
     <>
       <View style={{ flex: 1, width: '100%' }}>
-        <ModalScreenContainer
+        <ModalScreenContainerWithList
           onSave={handleSubmit}
           onCancel={() => router.back()}
           canSave={canAdd}
@@ -256,7 +248,7 @@ export default function AddChangeOrder() {
               </View>
             )}
           />
-        </ModalScreenContainer>
+        </ModalScreenContainerWithList>
       </View>
       {/* Modal for adding ChangeItem */}
       <Modal
@@ -328,7 +320,6 @@ export default function AddChangeOrder() {
         </View>
         {Platform.OS === 'ios' && <KeyboardToolbar />}
       </Modal>
-
     </>
   );
 }
