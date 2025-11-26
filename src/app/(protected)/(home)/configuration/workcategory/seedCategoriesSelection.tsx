@@ -1,14 +1,13 @@
-import OkayCancelButtons from '@/src/components/OkayCancelButtons';
+import { ModalScreenContainerWithList } from '@/src/components/ModalScreenContainerWithList';
 import { TextField } from '@/src/components/TextField';
 import { Text, View } from '@/src/components/Themed';
 import { SeedProjectWorkItems } from '@/src/constants/seedWorkItems';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAddRowCallback } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { Stack, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export interface ProjectTypesPickerEntry {
   projectType: string;
@@ -80,14 +79,14 @@ const SeedWorkItemSelectorPage = () => {
   };
 
   return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: 'Choose Work Category Set',
-        }}
-      />
-      <View style={styles.container}>
+    <View style={{ flex: 1, width: '100%' }}>
+      <ModalScreenContainerWithList
+        onSave={handleSave}
+        onCancel={() => router.back()}
+        canSave={!!selectedProjectType && selectedProjectType !== 'None'}
+        saveButtonTitle="Save"
+      >
+        <Text style={styles.modalTitle}>Choose Work Category Set</Text>
         <TextField
           label="Selected Project Type"
           style={[{ borderColor: colors.neutral200 }]}
@@ -125,19 +124,18 @@ const SeedWorkItemSelectorPage = () => {
             />
           </View>
         </View>
-        <View style={{ flex: 1 }}>
-          <OkayCancelButtons
-            okTitle="Save"
-            isOkEnabled={!!selectedProjectType && selectedProjectType !== 'None'}
-            onOkPress={handleSave}
-          />
-        </View>
-      </View>
-    </SafeAreaView>
+      </ModalScreenContainerWithList>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
   container: {
     flex: 1,
     padding: 16,

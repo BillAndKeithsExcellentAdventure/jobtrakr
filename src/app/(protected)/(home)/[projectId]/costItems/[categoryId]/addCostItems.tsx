@@ -1,4 +1,4 @@
-import OkayCancelButtons from '@/src/components/OkayCancelButtons';
+import { ModalScreenContainerWithList } from '@/src/components/ModalScreenContainerWithList';
 import { Text, View } from '@/src/components/Themed';
 import { Colors } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
@@ -7,11 +7,10 @@ import {
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAddRowCallback, useAllRows } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { FlatList, Platform, StyleSheet } from 'react-native';
+import { FlatList, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface ItemData {
   id: string;
@@ -80,17 +79,15 @@ const AddCostWorkItemsScreen: React.FC = () => {
     router.back();
   }, [router, selectedWorkItemIds, addWorkItemSummary]);
 
-  const marginBottom = Platform.OS === 'android' ? 40 : 0;
-
   return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: 'Add Work Items',
-        }}
-      />
-      <View style={[styles.container, { marginBottom, paddingHorizontal: 10 }]}>
+    <View style={{ flex: 1, width: '100%' }}>
+      <ModalScreenContainerWithList
+        onSave={addSelectedWorkItems}
+        onCancel={() => router.back()}
+        canSave={selectedWorkItemIds.length > 0}
+        saveButtonTitle="Add Selected"
+      >
+        <Text style={styles.modalTitle}>Add Work Items</Text>
         <FlatList
           showsVerticalScrollIndicator={false}
           data={availableItems}
@@ -98,13 +95,8 @@ const AddCostWorkItemsScreen: React.FC = () => {
           keyExtractor={(item) => item.id}
           ListEmptyComponent={<Text>No items available</Text>}
         />
-        <OkayCancelButtons
-          okTitle="Add Selected"
-          isOkEnabled={selectedWorkItemIds.length > 0}
-          onOkPress={addSelectedWorkItems}
-        />
-      </View>
-    </SafeAreaView>
+      </ModalScreenContainerWithList>
+    </View>
   );
 };
 
@@ -140,6 +132,12 @@ const renderItem = (
 };
 
 const styles = StyleSheet.create({
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
   container: {
     flex: 1,
   },

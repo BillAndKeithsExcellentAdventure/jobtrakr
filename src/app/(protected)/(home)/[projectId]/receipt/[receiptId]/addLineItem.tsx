@@ -1,13 +1,10 @@
-import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
-import { NumberInputField, NumberInputFieldHandle } from '@/src/components/NumberInputField';
+import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
+import { NumberInputField } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
-import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
-import { useColors } from '@/src/context/ColorsContext';
-import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import {
   useAllRows as useAllRowsConfiguration,
   WorkCategoryCodeCompareAsNumber,
@@ -18,10 +15,9 @@ import {
   useAllRows,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AddReceiptLineItemPage = () => {
   const router = useRouter();
@@ -30,7 +26,6 @@ const AddReceiptLineItemPage = () => {
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
   const allWorkItems = useAllRowsConfiguration('workItems');
   const allWorkCategories = useAllRowsConfiguration('categories', WorkCategoryCodeCompareAsNumber);
-  const numberInputFieldRef = useRef<NumberInputFieldHandle>(null);
 
   const availableCategoriesOptions: OptionEntry[] = useMemo(() => {
     // get a list of all unique workitemids from allWorkItemCostSummaries available in the project
@@ -71,7 +66,6 @@ const AddReceiptLineItemPage = () => {
       .map((i) => ({ label: i.label, value: i.value }));
   }, [allWorkItemCostSummaries, allWorkItems]);
 
-  const colors = useColors();
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
 
@@ -110,9 +104,6 @@ const AddReceiptLineItemPage = () => {
 
   const [itemizedEntry, setItemizedEntry] = useState<WorkItemCostEntry>(initItemizedEntry);
 
-  // tracks whether any field has been changed since load/save
-  const isDirtyRef = useRef<boolean>(false);
-
   const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
     setPickedSubCategoryOption(selectedSubCategory);
   }, []);
@@ -149,160 +140,92 @@ const AddReceiptLineItemPage = () => {
       Alert.alert('Error', 'Failed to add line item.');
       return;
     }
-    // saved successfully -> clear dirty flag
-    isDirtyRef.current = false;
     router.back();
   }, [itemizedEntry, pickedSubCategoryOption]);
 
-  const showBlockReason = useAutoSaveNavigation(() => {
-    if (isDirtyRef.current) {
-      Alert.alert('Data Not Saved', 'Are you sure you want to leave without saving?', [
-        {
-          text: 'Stay',
-          style: 'cancel',
-        },
-        {
-          text: 'Leave',
-          style: 'destructive',
-          onPress: () => {
-            router.back();
-          },
-        },
-      ]);
-    } else {
-      router.back();
-    }
-  });
-
   return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1, overflowY: 'hidden' }}>
-      <Stack.Screen
-        options={{
-          title: 'Add Receipt Line Item',
-          headerShown: true,
-          gestureEnabled: false,
-          headerLeft: () => <StyledHeaderBackButton onPress={showBlockReason} label="Back" />,
-        }}
-      />
-      <View style={[styles.container, { borderColor: colors.border }]}>
-        <View style={{ flex: 1 }}>
-          <NumberInputField
-            ref={numberInputFieldRef}
-            style={styles.inputContainer}
-            label="Amount"
-            value={itemizedEntry.amount}
-            onChange={(value: number): void => {
-              const dirty = isDirtyRef.current || value !== itemizedEntry.amount;
-              isDirtyRef.current = dirty;
-              setItemizedEntry((prevItem) => ({
-                ...prevItem,
-                amount: value,
-              }));
-            }}
+    <View style={{ flex: 1, width: '100%' }}>
+      <ModalScreenContainer
+        onSave={handleOkPress}
+        onCancel={() => router.back()}
+        canSave={!!itemizedEntry.label && !!itemizedEntry.amount}
+      >
+        <NumberInputField
+          style={styles.inputContainer}
+          label="Amount"
+          value={itemizedEntry.amount}
+          onChange={(value: number): void => {
+            setItemizedEntry((prevItem) => ({
+              ...prevItem,
+              amount: value,
+            }));
+          }}
+        />
+        <TextField
+          containerStyle={styles.inputContainer}
+          placeholder="Description"
+          label="Description"
+          value={itemizedEntry.label}
+          onChangeText={(text): void => {
+            setItemizedEntry((prevItem) => ({
+              ...prevItem,
+              label: text,
+            }));
+          }}
+        />
+        <OptionPickerItem
+          containerStyle={styles.inputContainer}
+          optionLabel={pickedCategoryOption?.label}
+          label="Category"
+          placeholder="Category"
+          editable={false}
+          onPickerButtonPress={() => setIsCategoryPickerVisible(true)}
+        />
+        <OptionPickerItem
+          containerStyle={styles.inputContainer}
+          optionLabel={pickedSubCategoryOption?.label}
+          label="Cost Item Type"
+          placeholder="Cost Item Type"
+          editable={false}
+          onPickerButtonPress={() => setIsSubCategoryPickerVisible(true)}
+        />
+      </ModalScreenContainer>
+      {isCategoryPickerVisible && (
+        <BottomSheetContainer
+          modalHeight="65%"
+          isVisible={isCategoryPickerVisible}
+          onClose={() => setIsCategoryPickerVisible(false)}
+        >
+          <OptionList
+            options={availableCategoriesOptions}
+            onSelect={(option) => handleCategoryOptionChange(option)}
+            selectedOption={pickedCategoryOption}
           />
-          <TextField
-            containerStyle={styles.inputContainer}
-            placeholder="Description"
-            label="Description"
-            value={itemizedEntry.label}
-            onChangeText={(text): void => {
-              isDirtyRef.current = true;
-              setItemizedEntry((prevItem) => ({
-                ...prevItem,
-                label: text,
-              }));
-            }}
+        </BottomSheetContainer>
+      )}
+      {isSubCategoryPickerVisible && (
+        <BottomSheetContainer
+          modalHeight="80%"
+          isVisible={isSubCategoryPickerVisible}
+          onClose={() => setIsSubCategoryPickerVisible(false)}
+        >
+          <OptionList
+            centerOptions={false}
+            boldSelectedOption={false}
+            options={subCategories}
+            onSelect={(option) => handleSubCategoryOptionChange(option)}
+            selectedOption={pickedSubCategoryOption}
           />
-          <OptionPickerItem
-            containerStyle={styles.inputContainer}
-            optionLabel={pickedCategoryOption?.label}
-            label="Category"
-            placeholder="Category"
-            editable={false}
-            onPickerButtonPress={() => setIsCategoryPickerVisible(true)}
-          />
-          <OptionPickerItem
-            containerStyle={styles.inputContainer}
-            optionLabel={pickedSubCategoryOption?.label}
-            label="Cost Item Type"
-            placeholder="Cost Item Type"
-            editable={false}
-            onPickerButtonPress={() => setIsSubCategoryPickerVisible(true)}
-          />
-        </View>
-        <View style={styles.saveButtonRow}>
-          <ActionButton
-            style={styles.saveButton}
-            onPress={handleOkPress}
-            type={!itemizedEntry.label || !itemizedEntry.amount ? 'disabled' : 'ok'}
-            title="Save"
-          />
-
-          <ActionButton
-            style={styles.cancelButton}
-            onPress={() => {
-              router.back();
-            }}
-            type={'cancel'}
-            title="Cancel"
-          />
-        </View>
-        {isCategoryPickerVisible && (
-          <BottomSheetContainer
-            modalHeight="65%"
-            isVisible={isCategoryPickerVisible}
-            onClose={() => setIsCategoryPickerVisible(false)}
-          >
-            <OptionList
-              options={availableCategoriesOptions}
-              onSelect={(option) => handleCategoryOptionChange(option)}
-              selectedOption={pickedCategoryOption}
-            />
-          </BottomSheetContainer>
-        )}
-        {isSubCategoryPickerVisible && (
-          <BottomSheetContainer
-            modalHeight="80%"
-            isVisible={isSubCategoryPickerVisible}
-            onClose={() => setIsSubCategoryPickerVisible(false)}
-          >
-            <OptionList
-              centerOptions={false}
-              boldSelectedOption={false}
-              options={subCategories}
-              onSelect={(option) => handleSubCategoryOptionChange(option)}
-              selectedOption={pickedSubCategoryOption}
-            />
-          </BottomSheetContainer>
-        )}
-      </View>
-    </SafeAreaView>
+        </BottomSheetContainer>
+      )}
+    </View>
   );
 };
 
 export default AddReceiptLineItemPage;
 
 const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: 10,
-    width: '100%',
-    minHeight: 350,
-    height: '55%',
-  },
   inputContainer: {
     marginTop: 6,
-  },
-  saveButtonRow: {
-    marginVertical: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  saveButton: {
-    flex: 1,
-    marginRight: 5,
-  },
-  cancelButton: {
-    flex: 1,
-    marginLeft: 5,
   },
 });

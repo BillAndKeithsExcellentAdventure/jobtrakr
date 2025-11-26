@@ -1,11 +1,10 @@
-import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
+import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import { NumberInputField } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
-import { useColors } from '@/src/context/ColorsContext';
 import {
   useAllRows as useAllRowsConfiguration,
   WorkCategoryCodeCompareAsNumber,
@@ -16,10 +15,9 @@ import {
   useAllRows,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AddInvoiceLineItemPage = () => {
   const router = useRouter();
@@ -68,7 +66,6 @@ const AddInvoiceLineItemPage = () => {
       .map((i) => ({ label: i.label, value: i.value }));
   }, [allWorkItemCostSummaries, allWorkItems]);
 
-  const colors = useColors();
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
 
@@ -130,13 +127,13 @@ const AddInvoiceLineItemPage = () => {
   );
 
   const handleOkPress = useCallback(async () => {
-    if (!itemizedEntry.label || !itemizedEntry.amount || !pickedSubCategoryOption) {
+    if (!itemizedEntry.label || !itemizedEntry.amount) {
       Alert.alert('Error', 'Please fill in all required fields.');
       return;
     }
     const newItemizedEntry: WorkItemCostEntry = {
       ...itemizedEntry,
-      workItemId: pickedSubCategoryOption.value,
+      workItemId: pickedSubCategoryOption ? (pickedSubCategoryOption.value as string) : '',
     };
     const result = addLineItem(newItemizedEntry);
     if (result.status !== 'Success') {
@@ -147,9 +144,12 @@ const AddInvoiceLineItemPage = () => {
   }, [itemizedEntry, pickedSubCategoryOption]);
 
   return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1, overflowY: 'hidden' }}>
-      <Stack.Screen options={{ title: 'Add Invoice Line Item', headerShown: true }} />
-      <View style={[styles.container, { borderColor: colors.border }]}>
+    <View style={{ flex: 1, width: '100%' }}>
+      <ModalScreenContainer
+        onSave={handleOkPress}
+        onCancel={() => router.back()}
+        canSave={!!itemizedEntry.label && !!itemizedEntry.amount}
+      >
         <NumberInputField
           style={styles.inputContainer}
           label="Amount"
@@ -189,82 +189,43 @@ const AddInvoiceLineItemPage = () => {
           editable={false}
           onPickerButtonPress={() => setIsSubCategoryPickerVisible(true)}
         />
-
-        <View style={styles.saveButtonRow}>
-          <ActionButton
-            style={styles.saveButton}
-            onPress={handleOkPress}
-            type={
-              !itemizedEntry.label || !itemizedEntry.amount || !pickedSubCategoryOption ? 'disabled' : 'ok'
-            }
-            title="Save"
+      </ModalScreenContainer>
+      {isCategoryPickerVisible && (
+        <BottomSheetContainer
+          modalHeight="65%"
+          isVisible={isCategoryPickerVisible}
+          onClose={() => setIsCategoryPickerVisible(false)}
+        >
+          <OptionList
+            options={availableCategoriesOptions}
+            onSelect={(option) => handleCategoryOptionChange(option)}
+            selectedOption={pickedCategoryOption}
           />
-
-          <ActionButton
-            style={styles.cancelButton}
-            onPress={() => {
-              router.back();
-            }}
-            type={'cancel'}
-            title="Cancel"
+        </BottomSheetContainer>
+      )}
+      {isSubCategoryPickerVisible && (
+        <BottomSheetContainer
+          modalHeight="80%"
+          isVisible={isSubCategoryPickerVisible}
+          onClose={() => setIsSubCategoryPickerVisible(false)}
+        >
+          <OptionList
+            centerOptions={false}
+            boldSelectedOption={false}
+            options={subCategories}
+            onSelect={(option) => handleSubCategoryOptionChange(option)}
+            selectedOption={pickedSubCategoryOption}
           />
-        </View>
-        {isCategoryPickerVisible && (
-          <BottomSheetContainer
-            modalHeight="65%"
-            isVisible={isCategoryPickerVisible}
-            onClose={() => setIsCategoryPickerVisible(false)}
-          >
-            <OptionList
-              options={availableCategoriesOptions}
-              onSelect={(option) => handleCategoryOptionChange(option)}
-              selectedOption={pickedCategoryOption}
-            />
-          </BottomSheetContainer>
-        )}
-        {isSubCategoryPickerVisible && (
-          <BottomSheetContainer
-            modalHeight="80%"
-            isVisible={isSubCategoryPickerVisible}
-            onClose={() => setIsSubCategoryPickerVisible(false)}
-          >
-            <OptionList
-              centerOptions={false}
-              boldSelectedOption={false}
-              options={subCategories}
-              onSelect={(option) => handleSubCategoryOptionChange(option)}
-              selectedOption={pickedSubCategoryOption}
-            />
-          </BottomSheetContainer>
-        )}
-      </View>
-    </SafeAreaView>
+        </BottomSheetContainer>
+      )}
+    </View>
   );
 };
 
 export default AddInvoiceLineItemPage;
 
 const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: 10,
-    width: '100%',
-    minHeight: 350,
-    height: '55%',
-  },
   inputContainer: {
     marginTop: 6,
-  },
-  saveButtonRow: {
-    marginVertical: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  saveButton: {
-    flex: 1,
-    marginRight: 5,
-  },
-  cancelButton: {
-    flex: 1,
-    marginLeft: 5,
   },
 });
