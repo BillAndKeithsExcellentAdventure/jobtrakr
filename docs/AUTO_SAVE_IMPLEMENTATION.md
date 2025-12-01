@@ -12,9 +12,10 @@ The application needed an auto-save mechanism that would update the store as val
 ## Solution Overview
 
 The solution implements a centralized **FocusManager** system that:
+
 - Tracks all focusable input fields globally
 - Ensures all fields are properly blurred before navigation
-- Uses React Native's `InteractionManager` to wait for blur operations to complete
+- Uses `setTimeout` to wait for blur operations to complete
 - Works seamlessly with existing input components
 
 ## Architecture
@@ -24,15 +25,15 @@ The solution implements a centralized **FocusManager** system that:
 The core of the solution consists of three exported items:
 
 #### `FocusManagerProvider`
+
 A React context provider that maintains a registry of all focusable fields in the application.
 
 ```typescript
-<FocusManagerProvider>
-  {/* Your app components */}
-</FocusManagerProvider>
+<FocusManagerProvider>{/* Your app components */}</FocusManagerProvider>
 ```
 
 #### `useFocusManager()`
+
 A hook that components use to register their blur handlers with the FocusManager.
 
 ```typescript
@@ -41,6 +42,7 @@ focusManager.registerField(fieldId, () => inputRef.current?.blur());
 ```
 
 #### `useAutoSaveNavigation(onNavigateBack)`
+
 A hook for screens that handles the back navigation with auto-save behavior.
 
 ```typescript
@@ -53,16 +55,19 @@ const handleBackPress = useAutoSaveNavigation(() => {
 ### 2. Component Integration
 
 #### NumberInputField
+
 - Registers with FocusManager on mount using `useId()` for unique identification
 - Calls its blur handler when FocusManager triggers `blurAllFields()`
 - Made FocusManager optional (gracefully degrades when not available)
 
 #### OptionPickerItem
+
 - Registers with FocusManager when `editable=true`
 - Unregisters when unmounted or when editable changes to false
 - Made FocusManager optional
 
 #### TextField
+
 - Registers with FocusManager when not disabled
 - Unregisters when unmounted or when disabled changes to true
 - Made FocusManager optional
@@ -73,29 +78,31 @@ Screens with `HeaderBackButton` now use `useAutoSaveNavigation`:
 
 ```typescript
 const handleBackPress = useAutoSaveNavigation(() => {
-  updateData(id, data);  // Save any pending state
+  updateData(id, data); // Save any pending state
   router.back();
 });
 
 <Stack.Screen
   options={{
-    headerLeft: () => <HeaderBackButton onPress={handleBackPress} />
+    headerLeft: () => <HeaderBackButton onPress={handleBackPress} />,
   }}
-/>
+/>;
 ```
 
 ## How It Works
 
 1. **Field Registration**:
+
    - When an input field mounts, it registers its blur function with FocusManager
    - Each field gets a unique ID from React's `useId()` hook
    - The blur function is stored in a `Map` for efficient access
 
 2. **Navigation with Auto-Save**:
+
    - User presses the back button
    - `useAutoSaveNavigation` calls `blurAllFields()`
    - All registered blur functions are called synchronously
-   - `InteractionManager.runAfterInteractions()` waits for React to finish processing
+   - `setTimeout` waits for React to finish processing
    - Navigation occurs after all blur operations complete
 
 3. **Cleanup**:
@@ -105,9 +112,11 @@ const handleBackPress = useAutoSaveNavigation(() => {
 ## Updated Files
 
 ### New Files
+
 - `src/hooks/useFocusManager.tsx` - Core FocusManager implementation
 
 ### Modified Files
+
 - `src/app/_layout.tsx` - Added FocusManagerProvider to app root
 - `src/components/NumberInputField.tsx` - Integrated with FocusManager
 - `src/components/OptionPickerItem.tsx` - Integrated with FocusManager

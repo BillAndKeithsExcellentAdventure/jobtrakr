@@ -1,5 +1,4 @@
 import { createContext, useContext, useCallback, useRef } from 'react';
-import { InteractionManager } from 'react-native';
 
 interface FocusManagerContextType {
   registerField: (id: string, blur: () => void) => void;
@@ -27,12 +26,12 @@ export const FocusManagerProvider = ({ children }: { children: React.ReactNode }
     fieldsRef.current.forEach((blur) => {
       blur();
     });
-    
+
     // Wait for all interactions to complete
     return new Promise<void>((resolve) => {
-      InteractionManager.runAfterInteractions(() => {
+      setTimeout(() => {
         resolve();
-      });
+      }, 0);
     });
   }, []);
 
