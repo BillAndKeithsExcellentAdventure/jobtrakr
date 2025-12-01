@@ -144,8 +144,8 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
     // Auto-focus and select all text on mount when autoFocus is true
     useEffect(() => {
       if (autoFocus && inputRef.current) {
-        // Use setTimeout to ensure the input is fully mounted
-        const timeoutId = setTimeout(() => {
+        // Use requestAnimationFrame to ensure the input is fully mounted and laid out
+        const frameId = requestAnimationFrame(() => {
           if (inputRef.current) {
             inputRef.current.focus();
             const textLength = inputValueRef.current.length;
@@ -153,8 +153,8 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
               inputRef.current.setSelection(0, textLength);
             } catch {}
           }
-        }, 50);
-        return () => clearTimeout(timeoutId);
+        });
+        return () => cancelAnimationFrame(frameId);
       }
     }, [autoFocus]);
 
