@@ -31,6 +31,12 @@ interface NumberInputFieldProps {
    * When true, the input will be focused and all text will be selected on mount.
    */
   autoFocus?: boolean;
+  /**
+   * Optional identifier for the current item being edited.
+   * When this changes, the input will sync to the current value prop even if the
+   * value hasn't changed (e.g., when navigating between items that have the same value).
+   */
+  itemId?: string;
 }
 
 // handle exposed to parent via ref
@@ -52,6 +58,7 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
       style = {},
       focusManagerId,
       autoFocus = false,
+      itemId,
     },
     ref,
   ) => {
@@ -131,10 +138,11 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
     }, [fieldId, focusManager, handleBlurInternal, getValueFromInput]);
 
     useEffect(() => {
-      console.log('NumberInputField: value prop changed to ', value);
+      console.log('NumberInputField: value prop changed to ', value, 'itemId:', itemId);
       if (undefined === value || null === value) return;
-      // Reset editing flag when value prop changes from outside
+      // Reset editing flag when value prop or itemId changes from outside
       // This ensures the input accepts the new value even if user was previously editing
+      // and even when the value hasn't changed (e.g., navigating between items with same value)
       isEditingRef.current = false;
       const strValue = value.toFixed(numDecimalPlaces);
       setInputValue(strValue);
@@ -142,7 +150,7 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
       try {
         if (inputRef.current) inputRef.current.setSelection(0, textLength);
       } catch {}
-    }, [value, numDecimalPlaces]);
+    }, [value, numDecimalPlaces, itemId]);
 
     // Auto-focus and select all text on mount when autoFocus is true
     useEffect(() => {

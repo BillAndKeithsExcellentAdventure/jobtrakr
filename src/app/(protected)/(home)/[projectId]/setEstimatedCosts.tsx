@@ -233,6 +233,7 @@ const SetEstimatedCostsPage = () => {
                         onChange={setItemEstimate}
                         placeholder="Estimated Amount"
                         autoFocus={true}
+                        itemId={currentCostSummary?.id}
                       />
                     </View>
                   </View>
