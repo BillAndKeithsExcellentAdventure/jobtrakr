@@ -138,7 +138,7 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
     }, [fieldId, focusManager, handleBlurInternal, getValueFromInput]);
 
     useEffect(() => {
-      console.log('NumberInputField: value prop changed to ', value, 'itemId:', itemId);
+      // console.log('NumberInputField: value prop changed to ', value, 'itemId:', itemId);
       if (undefined === value || null === value) return;
       // Reset editing flag when value prop or itemId changes from outside
       // This ensures the input accepts the new value even if user was previously editing
