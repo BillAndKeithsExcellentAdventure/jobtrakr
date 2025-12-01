@@ -80,6 +80,8 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
 
     const getValueFromInput = useCallback(() => {
       const numericValue = parseFloat(inputValueRef.current.replace(/[^0-9.]/g, ''));
+      isEditingRef.current = false;
+
       return isNaN(numericValue) ? 0 : numericValue;
     }, []);
 
@@ -91,6 +93,16 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
         inputRef.current?.focus();
       },
       getValue: getValueFromInput,
+      selectAll: () => {
+        if (inputRef.current) {
+          const textLength = inputValueRef.current.length;
+          try {
+            inputRef.current.setSelection && inputRef.current.setSelection(0, textLength);
+          } catch {
+            // ignore if method not available
+          }
+        }
+      },
     }));
 
     // Register with FocusManager - includes getCurrentValue callback for accessing input value
@@ -114,15 +126,27 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
     }, [fieldId, focusManager, handleBlurInternal, getValueFromInput]);
 
     useEffect(() => {
+      console.log('NumberInputField: value prop changed to ', value);
       if (undefined === value || null === value) return;
-
-      if (isEditingRef.current) setInputValue(value.toString());
-      else setInputValue(value.toFixed(numDecimalPlaces));
+      const strValue = value.toFixed(numDecimalPlaces);
+      setInputValue(strValue);
+      const textLength = strValue.length;
+      try {
+        if (inputRef.current) inputRef.current.setSelection(0, textLength);
+      } catch {}
     }, [value, numDecimalPlaces]);
+
+    useEffect(() => {
+      if (isEditingRef.current) return;
+      const textLength = inputValue.length;
+      try {
+        if (inputRef.current) inputRef.current.setSelection(0, textLength);
+      } catch {}
+    }, [inputValue]);
 
     const handleInputChange = (text: string) => {
       if (readOnly) return; // Prevent changes if readOnly is true
-
+      isEditingRef.current = true;
       // Remove any non-numeric characters except for the decimal point
       const sanitizedValue = text.replace(/[^0-9.]/g, '');
 
@@ -145,7 +169,6 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
     const handleFocus = useCallback(
       (event: any) => {
         if (inputRef.current) {
-          isEditingRef.current = true;
           const textLength = inputValue.length;
           try {
             inputRef.current.setSelection && inputRef.current.setSelection(0, textLength);

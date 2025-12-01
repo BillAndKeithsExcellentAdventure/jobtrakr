@@ -40,7 +40,6 @@ const SetEstimatedCostsPage = () => {
   }>();
 
   const focusManager = useFocusManager();
-  const currentProject = useProject(projectId);
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
 
@@ -127,9 +126,11 @@ const SetEstimatedCostsPage = () => {
 
   useEffect(() => {
     setCurrentCostSummary(allAvailableCostItems[currentItemIndex]);
+    console.log('Set currentCostSummary to ', allAvailableCostItems[currentItemIndex]);
   }, [allAvailableCostItems, currentItemIndex]);
 
   useEffect(() => {
+    console.log('Set itemEstimate to ', currentCostSummary ? currentCostSummary.bidAmount : 0);
     setItemEstimate(currentCostSummary ? currentCostSummary.bidAmount : 0);
   }, [currentCostSummary]);
 
@@ -162,14 +163,14 @@ const SetEstimatedCostsPage = () => {
     const newValue = focusManager.getFieldValue<number>(ESTIMATE_FIELD_ID) ?? 0;
     setTimeout(() => {
       updateWorkItemCostSummary(currentCostSummary.id, { ...currentCostSummary, bidAmount: newValue });
-      if (currentItemIndex < allAvailableCostItems.length - 1) setCurrentItemIndex(currentItemIndex + 1);
+      setCurrentItemIndex((prev) => (prev < allAvailableCostItems.length - 1 ? prev + 1 : prev));
     }, 0);
-  }, [currentCostSummary, updateWorkItemCostSummary, focusManager, currentItemIndex, allAvailableCostItems]);
+  }, [currentCostSummary, updateWorkItemCostSummary, focusManager, allAvailableCostItems]);
 
   const skipToNext = useCallback(() => {
     if (!currentCostSummary) return;
-    if (currentItemIndex < allAvailableCostItems.length - 1) setCurrentItemIndex(currentItemIndex + 1);
-  }, [currentCostSummary, currentItemIndex, allAvailableCostItems]);
+    setCurrentItemIndex((prev) => (prev < allAvailableCostItems.length - 1 ? prev + 1 : prev));
+  }, [currentCostSummary, allAvailableCostItems]);
 
   const prevLayoutHeightRef = useRef(0);
 
@@ -240,6 +241,7 @@ const SetEstimatedCostsPage = () => {
                       onPress={updateBidEstimate}
                       type={'ok'}
                       title="Save"
+                      triggerBlurOnPress={false}
                     />
                     <ActionButton
                       style={styles.cancelButton}

@@ -10,6 +10,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useColorScheme } from './useColorScheme';
+import { useFocusManager } from '../hooks/useFocusManager';
 
 type ActionButtonProps = {
   title: string;
@@ -17,6 +18,7 @@ type ActionButtonProps = {
   type: 'action' | 'ok' | 'cancel' | 'disabled';
   style?: ViewStyle; // Optional custom border style
   textStyle?: TextStyle; // Optional custom text style
+  triggerBlurOnPress?: boolean; // Optional flag to trigger blur on press
 };
 
 interface ButtonSettings {
@@ -25,21 +27,29 @@ interface ButtonSettings {
   color: string;
 }
 
-export const ActionButton: React.FC<ActionButtonProps> = ({ title, onPress, type, style, textStyle }) => {
+export const ActionButton: React.FC<ActionButtonProps> = ({
+  title,
+  onPress,
+  type,
+  style,
+  textStyle,
+  triggerBlurOnPress = true,
+}) => {
   const platform = Platform.OS; // Get the current platform (iOS or Android)
   const colorScheme = useColorScheme();
-
+  const focusManager = useFocusManager();
   const handlePress = useCallback(() => {
     if (type === 'disabled') return;
-    // blur any focused input so its onBlur runs before invoking caller onPress
-    const focused = TextInput.State?.currentlyFocusedInput ? TextInput.State.currentlyFocusedInput() : null;
-    if (focused && TextInput.State?.blurTextInput) {
-      TextInput.State.blurTextInput(focused);
-    } else {
-      Keyboard.dismiss();
+
+    if (triggerBlurOnPress) {
+      // call focusManger to blur all fields before invoking onPress
+      focusManager?.blurAllFields();
     }
-    onPress();
-  }, [onPress, type]);
+
+    setTimeout(() => {
+      onPress();
+    }, 0);
+  }, [onPress, type, triggerBlurOnPress]);
 
   const getButtonStyles = (buttonType: ActionButtonProps['type'], platform: string): ButtonSettings => {
     switch (buttonType) {
