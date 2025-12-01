@@ -133,6 +133,9 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
     useEffect(() => {
       console.log('NumberInputField: value prop changed to ', value);
       if (undefined === value || null === value) return;
+      // Reset editing flag when value prop changes from outside
+      // This ensures the input accepts the new value even if user was previously editing
+      isEditingRef.current = false;
       const strValue = value.toFixed(numDecimalPlaces);
       setInputValue(strValue);
       const textLength = strValue.length;
