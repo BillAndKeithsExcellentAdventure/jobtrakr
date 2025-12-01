@@ -1,7 +1,7 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import { KeyboardSpacer } from '@/src/components/KeyboardSpacer';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumberInputField, NumberInputFieldHandle } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { Text, View } from '@/src/components/Themed';
@@ -23,7 +23,7 @@ import { formatCurrency } from '@/src/utils/formatters';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { InteractionManager, Keyboard, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
+import { Keyboard, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 
@@ -37,6 +37,7 @@ const SetEstimatedCostsPage = () => {
     categoryId?: string;
   }>();
 
+  const numRef = useRef<NumberInputFieldHandle>(null);
   const currentProject = useProject(projectId);
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
@@ -95,13 +96,13 @@ const SetEstimatedCostsPage = () => {
       currentItemIndex >= 0 &&
       currentItemIndex < allAvailableCostItems.length
     ) {
-      InteractionManager.runAfterInteractions(() => {
+      setTimeout(() => {
         // console.log(`scrollToIndex ${currentItemIndex}`);
         flatListRef.current?.scrollToOffset({
           offset: currentItemIndex * LISTITEM_HEIGHT,
           animated: true,
         });
-      });
+      }, 0);
     }
   }, [currentItemIndex, allAvailableCostItems.length]);
 
@@ -153,10 +154,11 @@ const SetEstimatedCostsPage = () => {
 
   const updateBidEstimate = useCallback(() => {
     if (!currentCostSummary) return;
-    updateWorkItemCostSummary(currentCostSummary.id, { ...currentCostSummary, bidAmount: itemEstimate });
-    InteractionManager.runAfterInteractions(() => {
+    const newValue = numRef.current ? numRef.current.getValue() : 0;
+    setTimeout(() => {
+      updateWorkItemCostSummary(currentCostSummary.id, { ...currentCostSummary, bidAmount: newValue });
       if (currentItemIndex < allAvailableCostItems.length - 1) setCurrentItemIndex(currentItemIndex + 1);
-    });
+    }, 0);
   }, [currentCostSummary, updateWorkItemCostSummary, itemEstimate, currentItemIndex, allAvailableCostItems]);
 
   const skipToNext = useCallback(() => {
@@ -220,6 +222,7 @@ const SetEstimatedCostsPage = () => {
                     <Text text="Estimate" txtSize="standard" style={{ marginRight: 10 }} />
                     <View style={{ flex: 1 }}>
                       <NumberInputField
+                        ref={numRef}
                         value={itemEstimate}
                         onChange={setItemEstimate}
                         placeholder="Estimated Amount"
