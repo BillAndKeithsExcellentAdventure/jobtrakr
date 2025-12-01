@@ -21,6 +21,12 @@ interface NumberInputFieldProps {
   placeholder?: string;
   readOnly?: boolean;
   style?: ViewStyle;
+  /**
+   * Optional custom ID for FocusManager registration.
+   * When provided, the field's current value can be retrieved via
+   * focusManager.getFieldValue(focusManagerId) without waiting for blur.
+   */
+  focusManagerId?: string;
 }
 
 // handle exposed to parent via ref
@@ -40,13 +46,16 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
       placeholder = 'Enter number',
       readOnly = false,
       style = {},
+      focusManagerId,
     },
     ref,
   ) => {
     const [inputValue, setInputValue] = useState(value ? value.toFixed(numDecimalPlaces) : '0.00');
     const inputRef = useRef<TextInput | null>(null);
     const isEditingRef = useRef(false);
-    const fieldId = useId();
+    const autoFieldId = useId();
+    // Use custom focusManagerId if provided, otherwise use auto-generated ID
+    const fieldId = focusManagerId ?? autoFieldId;
 
     // Try to get FocusManager context, but don't require it
     const focusManager = useContext(FocusManagerContext);
@@ -65,6 +74,15 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
       }
     }, [onChange, inputValue, numDecimalPlaces]);
 
+    // Store the current input value in a ref for stable access in callbacks
+    const inputValueRef = useRef(inputValue);
+    inputValueRef.current = inputValue;
+
+    const getValueFromInput = useCallback(() => {
+      const numericValue = parseFloat(inputValueRef.current.replace(/[^0-9.]/g, ''));
+      return isNaN(numericValue) ? 0 : numericValue;
+    }, []);
+
     useImperativeHandle(ref, () => ({
       blur: () => {
         inputRef.current?.blur();
@@ -72,26 +90,28 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
       focus: () => {
         inputRef.current?.focus();
       },
-      getValue: () => {
-        const numericValue = parseFloat(inputValue.replace(/[^0-9.]/g, ''));
-        return isNaN(numericValue) ? 0 : numericValue;
-      },
+      getValue: getValueFromInput,
     }));
 
-    // Register with FocusManager
+    // Register with FocusManager - includes getCurrentValue callback for accessing input value
+    // without waiting for blur events
     useEffect(() => {
       if (focusManager) {
-        focusManager.registerField(fieldId, () => {
-          // Call handleBlurInternal directly to ensure blur logic executes
-          // Calling inputRef.current?.blur() doesn't reliably trigger onBlur in React Native
-          handleBlurInternal();
-          inputRef.current?.blur();
-        });
+        focusManager.registerField(
+          fieldId,
+          () => {
+            // Call handleBlurInternal directly to ensure blur logic executes
+            // Calling inputRef.current?.blur() doesn't reliably trigger onBlur in React Native
+            handleBlurInternal();
+            inputRef.current?.blur();
+          },
+          getValueFromInput,
+        );
         return () => {
           focusManager.unregisterField(fieldId);
         };
       }
-    }, [fieldId, focusManager, handleBlurInternal]);
+    }, [fieldId, focusManager, handleBlurInternal, getValueFromInput]);
 
     useEffect(() => {
       if (undefined === value || null === value) return;
