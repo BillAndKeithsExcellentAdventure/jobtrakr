@@ -96,13 +96,13 @@ const SetEstimatedCostsPage = () => {
       currentItemIndex >= 0 &&
       currentItemIndex < allAvailableCostItems.length
     ) {
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         // console.log(`scrollToIndex ${currentItemIndex}`);
         flatListRef.current?.scrollToOffset({
           offset: currentItemIndex * LISTITEM_HEIGHT,
           animated: true,
         });
-      }, 0);
+      });
     }
   }, [currentItemIndex, allAvailableCostItems.length]);
 
