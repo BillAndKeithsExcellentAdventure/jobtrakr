@@ -27,6 +27,10 @@ interface NumberInputFieldProps {
    * focusManager.getFieldValue(focusManagerId) without waiting for blur.
    */
   focusManagerId?: string;
+  /**
+   * When true, the input will be focused and all text will be selected on mount.
+   */
+  autoFocus?: boolean;
 }
 
 // handle exposed to parent via ref
@@ -47,6 +51,7 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
       readOnly = false,
       style = {},
       focusManagerId,
+      autoFocus = false,
     },
     ref,
   ) => {
@@ -135,6 +140,23 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
         if (inputRef.current) inputRef.current.setSelection(0, textLength);
       } catch {}
     }, [value, numDecimalPlaces]);
+
+    // Auto-focus and select all text on mount when autoFocus is true
+    useEffect(() => {
+      if (autoFocus && inputRef.current) {
+        // Use requestAnimationFrame to ensure the input is fully mounted and laid out
+        const frameId = requestAnimationFrame(() => {
+          if (inputRef.current) {
+            inputRef.current.focus();
+            const textLength = inputValueRef.current.length;
+            try {
+              inputRef.current.setSelection(0, textLength);
+            } catch {}
+          }
+        });
+        return () => cancelAnimationFrame(frameId);
+      }
+    }, [autoFocus]);
 
     useEffect(() => {
       if (isEditingRef.current) return;
