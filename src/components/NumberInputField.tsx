@@ -27,6 +27,7 @@ interface NumberInputFieldProps {
 export type NumberInputFieldHandle = {
   blur: () => void;
   focus?: () => void;
+  getValue: () => number;
 };
 
 export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFieldProps>(
@@ -70,6 +71,10 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
       },
       focus: () => {
         inputRef.current?.focus();
+      },
+      getValue: () => {
+        const numericValue = parseFloat(inputValue.replace(/[^0-9.]/g, ''));
+        return isNaN(numericValue) ? 0 : numericValue;
       },
     }));
 
