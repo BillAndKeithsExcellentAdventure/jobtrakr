@@ -167,7 +167,7 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
         });
         return () => cancelAnimationFrame(frameId);
       }
-    }, [autoFocus]);
+    }, [autoFocus, itemId]);
 
     useEffect(() => {
       if (isEditingRef.current) return;
