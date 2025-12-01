@@ -228,7 +228,6 @@ const SetEstimatedCostsPage = () => {
                     <Text text="Estimate" txtSize="standard" style={{ marginRight: 10 }} />
                     <View style={{ flex: 1 }}>
                       <NumberInputField
-                        key={currentCostSummary?.id}
                         focusManagerId={ESTIMATE_FIELD_ID}
                         value={itemEstimate}
                         onChange={setItemEstimate}
