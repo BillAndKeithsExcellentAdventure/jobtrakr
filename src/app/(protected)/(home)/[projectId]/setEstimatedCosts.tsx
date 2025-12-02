@@ -126,11 +126,9 @@ const SetEstimatedCostsPage = () => {
 
   useEffect(() => {
     setCurrentCostSummary(allAvailableCostItems[currentItemIndex]);
-    console.log('Set currentCostSummary to ', allAvailableCostItems[currentItemIndex]);
   }, [allAvailableCostItems, currentItemIndex]);
 
   useEffect(() => {
-    console.log('Set itemEstimate to ', currentCostSummary ? currentCostSummary.bidAmount : 0);
     setItemEstimate(currentCostSummary ? currentCostSummary.bidAmount : 0);
   }, [currentCostSummary]);
 
@@ -161,8 +159,8 @@ const SetEstimatedCostsPage = () => {
     // without waiting for blur. This solves the issue where NumberInputField only
     // calls onChange on blur events.
     const newValue = focusManager.getFieldValue<number>(ESTIMATE_FIELD_ID) ?? 0;
+    updateWorkItemCostSummary(currentCostSummary.id, { ...currentCostSummary, bidAmount: newValue });
     setTimeout(() => {
-      updateWorkItemCostSummary(currentCostSummary.id, { ...currentCostSummary, bidAmount: newValue });
       setCurrentItemIndex((prev) => (prev < allAvailableCostItems.length - 1 ? prev + 1 : prev));
     }, 0);
   }, [currentCostSummary, updateWorkItemCostSummary, focusManager, allAvailableCostItems]);
@@ -288,6 +286,7 @@ const SetEstimatedCostsPage = () => {
             options={availableCategoriesOptions}
             onSelect={(option) => handleCategoryOptionChange(option)}
             selectedOption={pickedCategoryOption}
+            enableSearch={availableCategoriesOptions.length > 15}
           />
         </BottomSheetContainer>
       )}

@@ -277,6 +277,7 @@ const SetChangeOrderStatus = () => {
             options={allStatusOptions}
             onSelect={(option) => handleStatusOptionChange(option)}
             selectedOption={pickedStatusOption}
+            enableSearch={allStatusOptions.length > 15}
           />
         </BottomSheetContainer>
       )}

@@ -439,6 +439,7 @@ const AddReceiptPage = () => {
             options={vendors}
             onSelect={(option) => handleVendorOptionChange(option)}
             selectedOption={pickedOption}
+            enableSearch={vendors.length > 15}
           />
         </BottomSheetContainer>
       )}
@@ -451,6 +452,7 @@ const AddReceiptPage = () => {
             options={availableCategoriesOptions}
             onSelect={(option) => handleCategoryOptionChange(option)}
             selectedOption={pickedCategoryOption}
+            enableSearch={availableCategoriesOptions.length > 15}
           />
         </BottomSheetContainer>
       )}
@@ -465,6 +467,7 @@ const AddReceiptPage = () => {
             options={subCategories}
             onSelect={(option) => handleSubCategoryOptionChange(option)}
             selectedOption={pickedSubCategoryOption}
+            enableSearch={subCategories.length > 15}
           />
         </BottomSheetContainer>
       )}

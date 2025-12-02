@@ -229,6 +229,7 @@ const EditReceiptDetailsPage = () => {
                 options={vendors}
                 onSelect={(option) => handleVendorOptionChange(option)}
                 selectedOption={pickedOption}
+                enableSearch={vendors.length > 15}
               />
             </BottomSheetContainer>
           )}

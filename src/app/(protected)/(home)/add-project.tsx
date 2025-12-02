@@ -220,6 +220,7 @@ const AddProjectScreen = () => {
             options={templateOptions}
             onSelect={(option) => handleTemplateOptionChange(option)}
             selectedOption={pickedTemplate}
+            enableSearch={templateOptions.length > 15}
           />
         </BottomSheetContainer>
       )}
