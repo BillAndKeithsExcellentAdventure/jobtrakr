@@ -137,7 +137,7 @@ export default function OptionList({
           )}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text text="No options found" style={{ color: colors.textSecondary }} />
+              <Text text="No options found" />
             </View>
           }
         />
