@@ -1,12 +1,13 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import { KeyboardSpacer } from '@/src/components/KeyboardSpacer';
-import { NumberInputField, NumberInputFieldHandle } from '@/src/components/NumberInputField';
+import { NumberInputField } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { Text, View } from '@/src/components/Themed';
 import { useKeyboardGradualAnimation } from '@/src/components/useKeyboardGradualAnimation';
 import { ColorSchemeColors, useColors } from '@/src/context/ColorsContext';
+import { useFocusManager } from '@/src/hooks/useFocusManager';
 import {
   useAllRows as useAllRowsConfiguration,
   WorkCategoryCodeCompareAsNumber,
@@ -28,6 +29,7 @@ import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 
 const LISTITEM_HEIGHT = 40;
+const ESTIMATE_FIELD_ID = 'estimate-input';
 
 const SetEstimatedCostsPage = () => {
   const colors = useColors();
@@ -37,8 +39,7 @@ const SetEstimatedCostsPage = () => {
     categoryId?: string;
   }>();
 
-  const numRef = useRef<NumberInputFieldHandle>(null);
-  const currentProject = useProject(projectId);
+  const focusManager = useFocusManager();
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
 
@@ -125,9 +126,11 @@ const SetEstimatedCostsPage = () => {
 
   useEffect(() => {
     setCurrentCostSummary(allAvailableCostItems[currentItemIndex]);
+    console.log('Set currentCostSummary to ', allAvailableCostItems[currentItemIndex]);
   }, [allAvailableCostItems, currentItemIndex]);
 
   useEffect(() => {
+    console.log('Set itemEstimate to ', currentCostSummary ? currentCostSummary.bidAmount : 0);
     setItemEstimate(currentCostSummary ? currentCostSummary.bidAmount : 0);
   }, [currentCostSummary]);
 
@@ -154,17 +157,20 @@ const SetEstimatedCostsPage = () => {
 
   const updateBidEstimate = useCallback(() => {
     if (!currentCostSummary) return;
-    const newValue = numRef.current ? numRef.current.getValue() : 0;
+    // Use FocusManager.getFieldValue to get the current value from the input field
+    // without waiting for blur. This solves the issue where NumberInputField only
+    // calls onChange on blur events.
+    const newValue = focusManager.getFieldValue<number>(ESTIMATE_FIELD_ID) ?? 0;
     setTimeout(() => {
       updateWorkItemCostSummary(currentCostSummary.id, { ...currentCostSummary, bidAmount: newValue });
-      if (currentItemIndex < allAvailableCostItems.length - 1) setCurrentItemIndex(currentItemIndex + 1);
+      setCurrentItemIndex((prev) => (prev < allAvailableCostItems.length - 1 ? prev + 1 : prev));
     }, 0);
-  }, [currentCostSummary, updateWorkItemCostSummary, itemEstimate, currentItemIndex, allAvailableCostItems]);
+  }, [currentCostSummary, updateWorkItemCostSummary, focusManager, allAvailableCostItems]);
 
   const skipToNext = useCallback(() => {
     if (!currentCostSummary) return;
-    if (currentItemIndex < allAvailableCostItems.length - 1) setCurrentItemIndex(currentItemIndex + 1);
-  }, [currentCostSummary, currentItemIndex, allAvailableCostItems]);
+    setCurrentItemIndex((prev) => (prev < allAvailableCostItems.length - 1 ? prev + 1 : prev));
+  }, [currentCostSummary, allAvailableCostItems]);
 
   const prevLayoutHeightRef = useRef(0);
 
@@ -222,10 +228,12 @@ const SetEstimatedCostsPage = () => {
                     <Text text="Estimate" txtSize="standard" style={{ marginRight: 10 }} />
                     <View style={{ flex: 1 }}>
                       <NumberInputField
-                        ref={numRef}
+                        focusManagerId={ESTIMATE_FIELD_ID}
                         value={itemEstimate}
                         onChange={setItemEstimate}
                         placeholder="Estimated Amount"
+                        autoFocus={true}
+                        itemId={currentCostSummary?.id}
                       />
                     </View>
                   </View>
@@ -235,6 +243,7 @@ const SetEstimatedCostsPage = () => {
                       onPress={updateBidEstimate}
                       type={'ok'}
                       title="Save"
+                      triggerBlurOnPress={false}
                     />
                     <ActionButton
                       style={styles.cancelButton}

@@ -21,6 +21,22 @@ interface NumberInputFieldProps {
   placeholder?: string;
   readOnly?: boolean;
   style?: ViewStyle;
+  /**
+   * Optional custom ID for FocusManager registration.
+   * When provided, the field's current value can be retrieved via
+   * focusManager.getFieldValue(focusManagerId) without waiting for blur.
+   */
+  focusManagerId?: string;
+  /**
+   * When true, the input will be focused and all text will be selected on mount.
+   */
+  autoFocus?: boolean;
+  /**
+   * Optional identifier for the current item being edited.
+   * When this changes, the input will sync to the current value prop even if the
+   * value hasn't changed (e.g., when navigating between items that have the same value).
+   */
+  itemId?: string;
 }
 
 // handle exposed to parent via ref
@@ -40,13 +56,18 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
       placeholder = 'Enter number',
       readOnly = false,
       style = {},
+      focusManagerId,
+      autoFocus = false,
+      itemId,
     },
     ref,
   ) => {
     const [inputValue, setInputValue] = useState(value ? value.toFixed(numDecimalPlaces) : '0.00');
     const inputRef = useRef<TextInput | null>(null);
     const isEditingRef = useRef(false);
-    const fieldId = useId();
+    const autoFieldId = useId();
+    // Use custom focusManagerId if provided, otherwise use auto-generated ID
+    const fieldId = focusManagerId ?? autoFieldId;
 
     // Try to get FocusManager context, but don't require it
     const focusManager = useContext(FocusManagerContext);
@@ -65,6 +86,17 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
       }
     }, [onChange, inputValue, numDecimalPlaces]);
 
+    // Store the current input value in a ref for stable access in callbacks
+    const inputValueRef = useRef(inputValue);
+    inputValueRef.current = inputValue;
+
+    const getValueFromInput = useCallback(() => {
+      const numericValue = parseFloat(inputValueRef.current.replace(/[^0-9.]/g, ''));
+      isEditingRef.current = false;
+
+      return isNaN(numericValue) ? 0 : numericValue;
+    }, []);
+
     useImperativeHandle(ref, () => ({
       blur: () => {
         inputRef.current?.blur();
@@ -72,37 +104,82 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
       focus: () => {
         inputRef.current?.focus();
       },
-      getValue: () => {
-        const numericValue = parseFloat(inputValue.replace(/[^0-9.]/g, ''));
-        return isNaN(numericValue) ? 0 : numericValue;
+      getValue: getValueFromInput,
+      selectAll: () => {
+        if (inputRef.current) {
+          const textLength = inputValueRef.current.length;
+          try {
+            inputRef.current.setSelection && inputRef.current.setSelection(0, textLength);
+          } catch {
+            // ignore if method not available
+          }
+        }
       },
     }));
 
-    // Register with FocusManager
+    // Register with FocusManager - includes getCurrentValue callback for accessing input value
+    // without waiting for blur events
     useEffect(() => {
       if (focusManager) {
-        focusManager.registerField(fieldId, () => {
-          // Call handleBlurInternal directly to ensure blur logic executes
-          // Calling inputRef.current?.blur() doesn't reliably trigger onBlur in React Native
-          handleBlurInternal();
-          inputRef.current?.blur();
-        });
+        focusManager.registerField(
+          fieldId,
+          () => {
+            // Call handleBlurInternal directly to ensure blur logic executes
+            // Calling inputRef.current?.blur() doesn't reliably trigger onBlur in React Native
+            handleBlurInternal();
+            inputRef.current?.blur();
+          },
+          getValueFromInput,
+        );
         return () => {
           focusManager.unregisterField(fieldId);
         };
       }
-    }, [fieldId, focusManager, handleBlurInternal]);
+    }, [fieldId, focusManager, handleBlurInternal, getValueFromInput]);
 
     useEffect(() => {
+      // console.log('NumberInputField: value prop changed to ', value, 'itemId:', itemId);
       if (undefined === value || null === value) return;
+      // Reset editing flag when value prop or itemId changes from outside
+      // This ensures the input accepts the new value even if user was previously editing
+      // and even when the value hasn't changed (e.g., navigating between items with same value)
+      isEditingRef.current = false;
+      const strValue = value.toFixed(numDecimalPlaces);
+      setInputValue(strValue);
+      const textLength = strValue.length;
+      try {
+        if (inputRef.current) inputRef.current.setSelection(0, textLength);
+      } catch {}
+    }, [value, numDecimalPlaces, itemId]);
 
-      if (isEditingRef.current) setInputValue(value.toString());
-      else setInputValue(value.toFixed(numDecimalPlaces));
-    }, [value, numDecimalPlaces]);
+    // Auto-focus and select all text on mount when autoFocus is true
+    useEffect(() => {
+      if (autoFocus && inputRef.current) {
+        // Use requestAnimationFrame to ensure the input is fully mounted and laid out
+        const frameId = requestAnimationFrame(() => {
+          if (inputRef.current) {
+            inputRef.current.focus();
+            const textLength = inputValueRef.current.length;
+            try {
+              inputRef.current.setSelection(0, textLength);
+            } catch {}
+          }
+        });
+        return () => cancelAnimationFrame(frameId);
+      }
+    }, [autoFocus, itemId]);
+
+    useEffect(() => {
+      if (isEditingRef.current) return;
+      const textLength = inputValue.length;
+      try {
+        if (inputRef.current) inputRef.current.setSelection(0, textLength);
+      } catch {}
+    }, [inputValue]);
 
     const handleInputChange = (text: string) => {
       if (readOnly) return; // Prevent changes if readOnly is true
-
+      isEditingRef.current = true;
       // Remove any non-numeric characters except for the decimal point
       const sanitizedValue = text.replace(/[^0-9.]/g, '');
 
@@ -125,7 +202,6 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
     const handleFocus = useCallback(
       (event: any) => {
         if (inputRef.current) {
-          isEditingRef.current = true;
           const textLength = inputValue.length;
           try {
             inputRef.current.setSelection && inputRef.current.setSelection(0, textLength);
