@@ -10,7 +10,7 @@ import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
-import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { useProject, useProjectListStoreId } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   ChangeOrder,
   ChangeOrderItem,
@@ -53,6 +53,7 @@ const generateAndSendPdf = async (
   try {
     // TODO: Save the backend URI in a config file
 
+    console.log('generateAndSendPdf params.projectId:', params.projectId);
     // RESTful API call to generate and send PDF
     const response = await fetch(
       'https://projecthoundbackend.keith-m-bertram.workers.dev/sendChangeOrderEmail',
@@ -90,7 +91,6 @@ const DefineChangeOrderScreen = () => {
   const [changeOrderBidAmount, setChangeOrderBidAmount] = useState<number>(0);
   const appSettings = useAppSettings();
   const projectData = useProject(projectId);
-
   const auth = useAuth();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [showAddItemModal, setShowAddItemModal] = useState<boolean>(false);
@@ -273,7 +273,7 @@ const DefineChangeOrderScreen = () => {
     <p>To accept this change order, please click the button below:</p>
     
     <p style="text-align: center;">
-      <a href="<AcceptURL>" class="button">Accept Change Order</a>
+      <a href="<[AcceptURL]>" class="button">Accept Change Order</a>
     </p>
     
     <p style="margin-top: 30px;">

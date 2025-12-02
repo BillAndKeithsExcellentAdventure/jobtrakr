@@ -12,12 +12,56 @@ import {
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { FlatList, StyleSheet } from 'react-native';
 import { ActionButton } from '@/src/components/ActionButton';
+import { useProjectListStoreId, useProjectValue } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { useAuth } from '@clerk/clerk-expo';
+
+const getChangeOrderStatuses = async (projectId: string, token: string): Promise<string | null> => {
+  try {
+    // TODO: Save the backend URI in a config file
+    console.log('getChangeOrderStatuses projectId:', projectId);
+    // RESTful API call to generate and send PDF
+    const response = await fetch(
+      'https://projecthoundbackend.keith-m-bertram.workers.dev/GetChangeOrderStatuses',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ projectId: projectId }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.text();
+  } catch (error) {
+    console.error('Error fetching change order statuses:', error);
+    throw new Error('Failed to fetch change order statuses. Please try again.');
+  }
+};
 
 const ChangeOrdersScreen = () => {
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const colors = useColors();
   const router = useRouter();
+
+  const auth = useAuth();
+
+  // Get Bill to help with this code.
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      const token = (await auth.getToken()) ?? '';
+      console.log('token:', token);
+      const xyz = await getChangeOrderStatuses(projectId, token);
+      console.log('Change Order Statuses:', xyz);
+    };
+
+    fetchStatuses();
+  }, [auth, projectId]);
 
   useEffect(() => {
     if (projectId) {
