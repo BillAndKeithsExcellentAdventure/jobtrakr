@@ -156,17 +156,14 @@ export const InviteUser = () => {
         </View>
       ) : (
         <>
-          <View
-            style={{ marginBottom: 10, borderColor: colors.border, borderWidth: 1, paddingHorizontal: 5 }}
-          >
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Email address of user to invite"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
+          <TextInput
+            style={[styles.input, { borderColor: colors.border }]}
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email address of user to invite"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
           <ActionButton onPress={handleInvite} title="Send Invitation" type={email ? 'action' : 'disabled'} />
 
           {members.length > 0 && (
@@ -175,8 +172,12 @@ export const InviteUser = () => {
               {members.map((member) => (
                 <View key={member.id} style={[styles.memberItem, { borderColor: colors.border }]}>
                   <View style={styles.memberRow}>
-                    <Text style={styles.memberRole}>{member.role.replace('org:', '')}</Text>
-                    <Text style={styles.memberEmail}>{member.publicUserData.identifier}</Text>
+                    <Text numberOfLines={1} style={styles.memberRole}>
+                      {member.role.replace('org:', '')}
+                    </Text>
+                    <Text numberOfLines={2} style={styles.memberEmail}>
+                      {member.publicUserData.identifier}
+                    </Text>
                   </View>
                   {member.publicUserData.userId !== currentUserId && (
                     <View style={styles.memberButtonRow}>
@@ -231,6 +232,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  input: {
+    height: 40,
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingLeft: 10,
+    borderRadius: 4,
   },
   membersContainer: {
     marginTop: 20,

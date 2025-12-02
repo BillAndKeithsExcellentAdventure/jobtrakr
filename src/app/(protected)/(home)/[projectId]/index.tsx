@@ -315,7 +315,6 @@ const ProjectDetailsPage = () => {
         return;
       } else if (menuItem === 'ExportCostItems' && projectId) {
         ExportCostItems();
-
         return;
       }
     },
@@ -371,20 +370,24 @@ const ProjectDetailsPage = () => {
           handleMenuItemPress('Delete', actionContext);
         },
       },
-      {
-        icon: <FontAwesome5 name="broom" size={28} color={colors.iconColor} />,
-        label: 'Cost Item Cleanup',
-        onPress: (e, actionContext) => {
-          handleMenuItemPress('CleanCostItems', actionContext);
-        },
-      },
-      {
-        icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
-        label: 'Export Cost Items',
-        onPress: (e, actionContext) => {
-          handleMenuItemPress('ExportCostItems', actionContext);
-        },
-      },
+      ...(allWorkItemSummaries.length > 0
+        ? [
+            {
+              icon: <FontAwesome5 name="broom" size={28} color={colors.iconColor} />,
+              label: 'Cost Item Cleanup',
+              onPress: (e, actionContext) => {
+                handleMenuItemPress('CleanCostItems', actionContext);
+              },
+            } as ActionButtonProps,
+            {
+              icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
+              label: 'Export Cost Items',
+              onPress: (e, actionContext) => {
+                handleMenuItemPress('ExportCostItems', actionContext);
+              },
+            } as ActionButtonProps,
+          ]
+        : []),
     ],
     [colors, allWorkItemSummaries, handleMenuItemPress, unusedCategories],
   );

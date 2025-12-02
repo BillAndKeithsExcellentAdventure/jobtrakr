@@ -13,7 +13,11 @@ import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 
-async function createBase64LogoImage(uri: string, width = 200, height = 200): Promise<string | undefined> {
+async function createBase64LogoImage(
+  uri: string,
+  width = undefined,
+  height = 200,
+): Promise<string | undefined> {
   let thumbnailUrlInBase64: string | undefined = undefined;
 
   try {
