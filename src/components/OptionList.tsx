@@ -77,7 +77,7 @@ export default function OptionList({
   const colors = useColors();
 
   return (
-    <View style={{ flex: 1 }}>
+    <>
       <View style={{ flex: 1 }}>
         {enableSearch && (
           <View style={[styles.searchContainer, { borderBottomColor: colors.border }]}>
@@ -103,6 +103,7 @@ export default function OptionList({
           showsVerticalScrollIndicator={Platform.OS === 'web'}
           data={filteredOptions}
           keyExtractor={(item, index) => `${item.label}-${index}`}
+          keyboardShouldPersistTaps="handled"
           renderItem={({ item, index }) => (
             <View>
               <Pressable
@@ -141,26 +142,26 @@ export default function OptionList({
             </View>
           }
         />
-      </View>
-      {showOkCancel && (
-        <View style={{ borderTopColor: colors.border }}>
-          <View style={[styles.saveButtonRow, { borderTopColor: colors.border }]}>
-            <ActionButton
-              style={styles.saveButton}
-              onPress={onOkSelected}
-              type={isOkToSaveSelectedValue ? 'ok' : 'disabled'}
-              title="Save"
-            />
-            <ActionButton
-              style={styles.cancelButton}
-              onPress={() => onCancel && onCancel()}
-              type={'cancel'}
-              title="Cancel"
-            />
+        {showOkCancel && (
+          <View style={{ borderTopColor: colors.border }}>
+            <View style={[styles.saveButtonRow, { borderTopColor: colors.border }]}>
+              <ActionButton
+                style={styles.saveButton}
+                onPress={onOkSelected}
+                type={isOkToSaveSelectedValue ? 'ok' : 'disabled'}
+                title="Save"
+              />
+              <ActionButton
+                style={styles.cancelButton}
+                onPress={() => onCancel && onCancel()}
+                type={'cancel'}
+                title="Cancel"
+              />
+            </View>
           </View>
-        </View>
-      )}
-    </View>
+        )}
+      </View>
+    </>
   );
 }
 
