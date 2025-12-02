@@ -19,7 +19,7 @@ export default function BottomSheetContainer({
   title,
   modalHeight = '40%',
 }: Props) {
-  const { top } = useSafeAreaInsets();
+  const { top, bottom } = useSafeAreaInsets();
   const colors = useColors();
 
   if (!isVisible) return null;
@@ -32,6 +32,7 @@ export default function BottomSheetContainer({
             style={{
               flex: 1,
               marginTop: top,
+              marginBottom: bottom,
               backgroundColor: colors.modalOverlayBackgroundColor,
             }}
           >
