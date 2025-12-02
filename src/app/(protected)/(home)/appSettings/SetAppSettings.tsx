@@ -15,7 +15,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 
 async function createBase64LogoImage(
   uri: string,
-  width = undefined,
+  width: number | undefined,
   height = 200,
 ): Promise<string | undefined> {
   let thumbnailUrlInBase64: string | undefined = undefined;
@@ -67,7 +67,7 @@ const SetAppSettingScreen = () => {
 
     if (!result.canceled) {
       const asset = result.assets[0];
-      const base64Image = await createBase64LogoImage(asset.uri, 200, 200);
+      const base64Image = await createBase64LogoImage(asset.uri, undefined, 200);
 
       const dataUrl = base64Image ? `data:image/png;base64,${base64Image}` : '';
       handleChange('companyLogo', dataUrl);
