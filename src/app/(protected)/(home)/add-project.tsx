@@ -206,7 +206,7 @@ const AddProjectScreen = () => {
         <OptionPickerItem
           containerStyle={{ backgroundColor: colors.neutral200, height: 36 }}
           optionLabel={pickedTemplate?.label}
-          placeholder="Work Template"
+          placeholder="Project Template"
           editable={false}
           onPickerButtonPress={() => setIsTemplateListPickerVisible(true)}
         />
