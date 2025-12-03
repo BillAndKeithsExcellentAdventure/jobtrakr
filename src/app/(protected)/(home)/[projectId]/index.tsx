@@ -6,6 +6,7 @@ import { useColors } from '@/src/context/ColorsContext';
 import { CostSectionData, CostSectionDataCodeCompareAsNumber } from '@/src/models/types';
 import {
   useAllRows as useAllConfigRows,
+  useDeleteRowCallback as useConfigurationDeleteRowCallback,
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
@@ -43,6 +44,7 @@ const ProjectDetailsPage = () => {
   const { removeActiveProjectId, addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const allProjectCategories = useAllConfigRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
+  const removeWorkItem = useConfigurationDeleteRowCallback('workItems');
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const updateWorkItemSpentSummary = useSetWorkItemSpentSummaryCallback(projectId);
@@ -191,7 +193,7 @@ const ProjectDetailsPage = () => {
 
         // First row for this work item with all details and total cost
         csvRows.push(
-          `'${item.code},${item.category},${item.workItem},${item.estimate.toFixed(2)},${totalCost.toFixed(
+          `'${item.code}',${item.category},${item.workItem},${item.estimate.toFixed(2)},${totalCost.toFixed(
             2,
           )},`,
         );
@@ -295,7 +297,7 @@ const ProjectDetailsPage = () => {
       } else if (menuItem === 'CleanCostItems' && projectId) {
         Alert.alert(
           'Clean Cost Items',
-          'Are you sure you want to clean cost items that do not have a match receipt?',
+          'Are you sure you want to clean cost items that do not have a matching receipt?',
           [
             { text: 'Cancel', style: 'cancel' },
             {
