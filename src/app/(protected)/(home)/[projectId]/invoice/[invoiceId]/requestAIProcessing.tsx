@@ -63,7 +63,7 @@ const processAIProcessing = async (
 
     return data;
   } catch (error) {
-    console.error('Error processing receipt:', error);
+    console.error('Error processing invoice:', error);
     throw error;
   }
 };
