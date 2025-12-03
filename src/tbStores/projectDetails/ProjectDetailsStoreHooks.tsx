@@ -63,6 +63,8 @@ export type ReceiptData = {
   markedComplete: boolean;
 };
 
+export type ClassifiedReceiptData = ReceiptData & { fullyClassified: boolean };
+
 export type InvoiceData = {
   id: string;
   vendor: string;

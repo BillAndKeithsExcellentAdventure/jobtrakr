@@ -5,7 +5,7 @@ import { useColors } from '@/src/context/ColorsContext';
 import { FlashList } from '@shopify/flash-list';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
 import SwipeableReceiptItem from '@/src/components/SwipeableReceiptItem';
@@ -17,7 +17,10 @@ import {
   useCostUpdater,
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
+  ClassifiedReceiptData,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
@@ -48,9 +51,35 @@ const ProjectReceiptsPage = () => {
 
   const auth = useAuth();
   const allReceipts = useAllRows(projectId, 'receipts', RecentReceiptDateCompare);
+  const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const addReceiptImage = useAddImageCallback();
   const addReceipt = useAddRowCallback(projectId, 'receipts');
+  const allWorkItems = useAllRowsConfiguration('workItems');
+
   useCostUpdater(projectId);
+
+  // return ClassifiedReceiptData array using allReceipts where fullyClassified is true if
+  // all cost items for this receipt have a valid work item id
+  const classifiedReceipts: ClassifiedReceiptData[] = useMemo(() => {
+    return allReceipts.map((receipt) => {
+      // get all cost items for this receipt
+      const receiptCostItems = allCostItems.filter((item) => item.parentId === receipt.id);
+      // check if all cost items have a valid work item id
+      const fullyClassified =
+        receiptCostItems.length > 0 &&
+        receiptCostItems.every(
+          (item) =>
+            item.workItemId &&
+            item.workItemId.length > 0 &&
+            allWorkItems.find((wi) => wi.id === item.workItemId) !== undefined,
+        );
+
+      return {
+        ...receipt,
+        fullyClassified,
+      };
+    });
+  }, [allReceipts, allCostItems, allWorkItems]);
 
   const colors = useColors();
 
@@ -182,7 +211,7 @@ const ProjectReceiptsPage = () => {
                     }}
                   >
                     <FlashList
-                      data={allReceipts}
+                      data={classifiedReceipts}
                       keyExtractor={(item, index) => item.id ?? index.toString()}
                       renderItem={({ item }) => (
                         <SwipeableReceiptItem orgId={auth.orgId!!} projectId={projectId} item={item} />
@@ -227,7 +256,6 @@ export const styles = StyleSheet.create({
     bottom: 0,
     borderRadius: 10,
   },
-
 });
 
 export default ProjectReceiptsPage;
