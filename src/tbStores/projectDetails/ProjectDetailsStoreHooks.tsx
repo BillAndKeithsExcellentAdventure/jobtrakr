@@ -80,6 +80,8 @@ export type InvoiceData = {
   markedComplete: boolean;
 };
 
+export type ClassifiedInvoiceData = InvoiceData & { fullyClassified: boolean };
+
 export type WorkItemCostEntry = {
   id: string;
   label: string;
