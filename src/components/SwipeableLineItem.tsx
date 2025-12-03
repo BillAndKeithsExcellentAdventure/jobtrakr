@@ -12,12 +12,19 @@ import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
+import {
+  useAllRows as useAllRowsConfiguration,
+  WorkCategoryCodeCompareAsNumber,
+  WorkItemDataCodeCompareAsNumber,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 
 const RIGHT_ACTION_WIDTH = 80;
 const SWIPE_THRESHOLD_WIDTH = 50;
 
 const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntry; projectId: string }) => {
   const processDelete = useDeleteRowCallback(projectId, 'workItemCostEntries');
+  const allWorkItems = useAllRowsConfiguration('workItems');
+
   const router = useRouter();
   const colors = useColors();
   const handleDelete = useCallback(
@@ -47,6 +54,7 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
 
   const label = useTableValue(projectId, 'workItemCostEntries', lineItem.id, 'label');
   const amount = useTableValue(projectId, 'workItemCostEntries', lineItem.id, 'amount');
+  const isValidWorkItemId = allWorkItems.find((item) => item.id === lineItem.workItemId) !== undefined;
 
   return (
     <SwipeableComponent
@@ -69,7 +77,7 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
             <Text style={styles.itemName} numberOfLines={1}>
               {label}
             </Text>
-            {lineItem.workItemId ? (
+            {lineItem.workItemId && isValidWorkItemId ? (
               <View
                 style={{
                   width: 40,
