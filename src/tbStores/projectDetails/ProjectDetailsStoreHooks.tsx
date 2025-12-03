@@ -7,10 +7,7 @@ import { randomUUID } from 'expo-crypto';
 import { useCallback, useEffect, useState } from 'react';
 import { useProjectValue } from '../listOfProjects/ListOfProjectsStore';
 
-const {
-  useCell,
-  useStore,
-} = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
+const { useCell, useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
 export interface WorkItemSummaryData {
   id: string;
@@ -361,3 +358,14 @@ export function useSetWorkItemSpentSummaryCallback(projectId: string) {
 
 export const useWorkItemSpentValue = (projectId: string, workItemId: string): number =>
   useCell('workItemSpentSummaries', workItemId, 'spentAmount', getStoreId(projectId)) as number;
+
+// function to get workitems for a given project that has no costs associated with it and no bid amount
+export const useWorkItemsWithoutCosts = (projectId: string): WorkItemSummaryData[] => {
+  const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
+  const allWorkItemCostEntries = useAllRows(projectId, 'workItemCostEntries');
+
+  return allWorkItemSummaries.filter(
+    (wis) =>
+      wis.bidAmount === 0 && !allWorkItemCostEntries.some((wice) => wice.workItemId === wis.workItemId),
+  );
+};

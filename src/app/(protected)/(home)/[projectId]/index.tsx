@@ -6,7 +6,6 @@ import { useColors } from '@/src/context/ColorsContext';
 import { CostSectionData, CostSectionDataCodeCompareAsNumber } from '@/src/models/types';
 import {
   useAllRows as useAllConfigRows,
-  useDeleteRowCallback as useConfigurationDeleteRowCallback,
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
@@ -19,6 +18,7 @@ import {
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
   useSetWorkItemSpentSummaryCallback,
+  useWorkItemsWithoutCosts,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { FontAwesome5, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
@@ -44,15 +44,15 @@ const ProjectDetailsPage = () => {
   const { removeActiveProjectId, addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const allProjectCategories = useAllConfigRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
-  const removeWorkItem = useConfigurationDeleteRowCallback('workItems');
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const updateWorkItemSpentSummary = useSetWorkItemSpentSummaryCallback(projectId);
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
   const allReceiptItems = useAllRows(projectId, 'receipts');
-  const removeCostItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
+  const removeWorkItemSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
+  const workItemsWithoutCosts = useWorkItemsWithoutCosts(projectId);
 
   useEffect(() => {
     if (projectId) {
@@ -295,26 +295,23 @@ const ProjectDetailsPage = () => {
         ]);
         return;
       } else if (menuItem === 'CleanCostItems' && projectId) {
+        if (workItemsWithoutCosts.length === 0) {
+          Alert.alert(
+            'No Cost Items to Clean',
+            'There are no cost items without estimates or costs to clean.',
+          );
+          return;
+        }
         Alert.alert(
           'Clean Cost Items',
-          'Are you sure you want to clean cost items that do not have a matching receipt?',
+          'Are you sure you want to clean cost items that do not have any estimate or costs associated with it? This action cannot be undone.',
           [
             { text: 'Cancel', style: 'cancel' },
             {
               text: 'Clean-up',
               onPress: () => {
-                // remove all cost items that do not have a matching receipt
-                const costItemsToRemove = allActualCostItems.filter(
-                  (costItem) =>
-                    !allReceiptItems.some(
-                      (r) => r.id === costItem.parentId && costItem.documentationType === 'receipt',
-                    ),
-                );
-                costItemsToRemove.forEach((item) => {
-                  const result = removeCostItem(item.id);
-                  if (result.status !== 'Success') {
-                    console.error(`Error cleaning cost item ${item.id}: ${result.msg}`);
-                  }
+                workItemsWithoutCosts.forEach((wi) => {
+                  removeWorkItemSummary(wi.id);
                 });
               },
             },
@@ -335,8 +332,8 @@ const ProjectDetailsPage = () => {
       ExportCostItems,
       allActualCostItems,
       allReceiptItems,
-      removeCostItem,
       unusedCategoriesString,
+      workItemsWithoutCosts,
     ],
   );
 
@@ -378,7 +375,7 @@ const ProjectDetailsPage = () => {
           handleMenuItemPress('Delete', actionContext);
         },
       },
-      ...(allWorkItemSummaries.length > 0
+      ...(workItemsWithoutCosts.length > 0
         ? [
             {
               icon: <FontAwesome5 name="broom" size={28} color={colors.iconColor} />,
@@ -387,6 +384,10 @@ const ProjectDetailsPage = () => {
                 handleMenuItemPress('CleanCostItems', actionContext);
               },
             } as ActionButtonProps,
+          ]
+        : []),
+      ...(allWorkItemSummaries.length > 0
+        ? [
             {
               icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
               label: 'Export Cost Items',
@@ -397,7 +398,7 @@ const ProjectDetailsPage = () => {
           ]
         : []),
     ],
-    [colors, allWorkItemSummaries, handleMenuItemPress, unusedCategories],
+    [colors, allWorkItemSummaries, handleMenuItemPress, unusedCategories, workItemsWithoutCosts],
   );
 
   const renderItem = (item: CostSectionData, projectId: string) => {
