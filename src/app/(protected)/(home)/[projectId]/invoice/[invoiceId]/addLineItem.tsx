@@ -200,6 +200,7 @@ const AddInvoiceLineItemPage = () => {
             options={availableCategoriesOptions}
             onSelect={(option) => handleCategoryOptionChange(option)}
             selectedOption={pickedCategoryOption}
+            enableSearch={availableCategoriesOptions.length > 15}
           />
         </BottomSheetContainer>
       )}
@@ -215,6 +216,7 @@ const AddInvoiceLineItemPage = () => {
             options={subCategories}
             onSelect={(option) => handleSubCategoryOptionChange(option)}
             selectedOption={pickedSubCategoryOption}
+            enableSearch={subCategories.length > 15}
           />
         </BottomSheetContainer>
       )}

@@ -67,8 +67,6 @@ const AddInvoicePage = () => {
     }));
   }, []);
 
-
-
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [canAddInvoice, setCanAddInvoice] = useState(false);
   const addPhotoImage = useAddImageCallback();
@@ -436,6 +434,7 @@ const AddInvoicePage = () => {
             options={vendors}
             onSelect={(option) => handleVendorOptionChange(option)}
             selectedOption={pickedOption}
+            enableSearch={vendors.length > 15}
           />
         </BottomSheetContainer>
       )}
@@ -448,6 +447,7 @@ const AddInvoicePage = () => {
             options={availableCategoriesOptions}
             onSelect={(option) => handleCategoryOptionChange(option)}
             selectedOption={pickedCategoryOption}
+            enableSearch={availableCategoriesOptions.length > 15}
           />
         </BottomSheetContainer>
       )}
@@ -462,6 +462,7 @@ const AddInvoicePage = () => {
             options={subCategories}
             onSelect={(option) => handleSubCategoryOptionChange(option)}
             selectedOption={pickedSubCategoryOption}
+            enableSearch={subCategories.length > 15}
           />
         </BottomSheetContainer>
       )}

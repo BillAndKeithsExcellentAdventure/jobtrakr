@@ -1,7 +1,7 @@
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Platform, Pressable, StyleProp, StyleSheet, TextStyle } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FlatList, Platform, Pressable, StyleProp, StyleSheet, TextInput, TextStyle } from 'react-native';
 import { ActionButton } from './ActionButton';
 
 // Define types for the props
@@ -19,6 +19,8 @@ type Props = {
   selectedOption?: OptionEntry;
   centerOptions?: boolean;
   boldSelectedOption?: boolean;
+  enableSearch?: boolean;
+  searchPlaceholder?: string;
 };
 
 export default function OptionList({
@@ -30,9 +32,12 @@ export default function OptionList({
   selectedOption,
   centerOptions = true,
   boldSelectedOption = true,
+  enableSearch = true,
+  searchPlaceholder = 'Search...',
 }: Props) {
   const [isOkToSaveSelectedValue, setIsOkToSaveSelectedValue] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
+  const [searchText, setSearchText] = useState<string>('');
 
   const onOkSelected = useCallback(() => {
     if (pickedOption) onSelect(pickedOption);
@@ -60,14 +65,45 @@ export default function OptionList({
     }
   }, [selectedOption, options, showOkCancel, onOptionSelected]);
 
+  // Filter options based on search text
+  const filteredOptions = useMemo(() => {
+    if (!searchText.trim()) {
+      return options;
+    }
+    const searchLower = searchText.toLowerCase();
+    return options.filter((option) => option.label.toLowerCase().includes(searchLower));
+  }, [options, searchText]);
+
   const colors = useColors();
 
   return (
-    <View style={{ flex: 1 }}>
+    <>
       <View style={{ flex: 1 }}>
+        {enableSearch && (
+          <View style={[styles.searchContainer, { borderBottomColor: colors.border }]}>
+            <TextInput
+              style={[
+                styles.searchInput,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
+              placeholder={searchPlaceholder}
+              placeholderTextColor={colors.textPlaceholder}
+              value={searchText}
+              onChangeText={setSearchText}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+        )}
         <FlatList
           showsVerticalScrollIndicator={Platform.OS === 'web'}
-          data={options}
+          data={filteredOptions}
+          keyExtractor={(item, index) => `${item.label}-${index}`}
+          keyboardShouldPersistTaps="handled"
           renderItem={({ item, index }) => (
             <View>
               <Pressable
@@ -100,31 +136,52 @@ export default function OptionList({
               </Pressable>
             </View>
           )}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text text="No options found" />
+            </View>
+          }
         />
-      </View>
-      {showOkCancel && (
-        <View style={{ borderTopColor: colors.border }}>
-          <View style={[styles.saveButtonRow, { borderTopColor: colors.border }]}>
-            <ActionButton
-              style={styles.saveButton}
-              onPress={onOkSelected}
-              type={isOkToSaveSelectedValue ? 'ok' : 'disabled'}
-              title="Save"
-            />
-            <ActionButton
-              style={styles.cancelButton}
-              onPress={() => onCancel && onCancel()}
-              type={'cancel'}
-              title="Cancel"
-            />
+        {showOkCancel && (
+          <View style={{ borderTopColor: colors.border }}>
+            <View style={[styles.saveButtonRow, { borderTopColor: colors.border }]}>
+              <ActionButton
+                style={styles.saveButton}
+                onPress={onOkSelected}
+                type={isOkToSaveSelectedValue ? 'ok' : 'disabled'}
+                title="Save"
+              />
+              <ActionButton
+                style={styles.cancelButton}
+                onPress={() => onCancel && onCancel()}
+                type={'cancel'}
+                title="Cancel"
+              />
+            </View>
           </View>
-        </View>
-      )}
-    </View>
+        )}
+      </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
+  searchContainer: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+  },
+  searchInput: {
+    height: 40,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontSize: 16,
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
   saveButtonRow: {
     paddingHorizontal: 10,
     borderTopWidth: 2,

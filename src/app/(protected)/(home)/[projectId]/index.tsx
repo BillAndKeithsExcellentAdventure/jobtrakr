@@ -158,56 +158,54 @@ const ProjectDetailsPage = () => {
       // Create CSV header
       const header = 'Code,Category,Work Item,Estimate,Cost\n';
 
-      // Create CSV content starting with all work items
-      const csvContent = allWorkItems
+      // Group work items by category and work item, then sort
+      const sortedWorkItems = allWorkItems
         .map((workItem) => {
           const category = categoryMap.get(workItem.categoryId);
           const workItemSummary = allWorkItemSummaries.find((summary) => summary.workItemId === workItem.id);
           const costs = allActualCostItems.filter((cost) => cost.workItemId === workItem.id);
 
-          // If there are costs, create a row for each cost
-          if (costs.length > 0) {
-            return costs.map((cost) => ({
-              catCode: category?.code || '',
-              workItemCode: workItem.code || '',
-              code: category?.code + '.' + workItem.code,
-              category: (category?.name || '').replace(/,/g, ' '),
-              workItem: workItem.name.replace(/,/g, ' '),
-              estimate: (workItemSummary?.bidAmount || 0).toString(),
-              cost: cost.amount.toString(),
-            }));
-          }
-
-          // If no costs, create a single row with just the work item and estimate
-          return [
-            {
-              catCode: category?.code || '',
-              workItemCode: workItem.code || '',
-              code: category?.code + '.' + workItem.code,
-              category: (category?.name || '').replace(/,/g, ' '),
-              workItem: workItem.name.replace(/,/g, ' '),
-              estimate: (workItemSummary?.bidAmount || 0).toString(),
-              cost: '0',
-            },
-          ];
+          return {
+            catCode: parseInt(category?.code || '0'),
+            workItemCode: parseInt(workItem.code || '0'),
+            code: `${category?.code}.${workItem.code}`,
+            category: (category?.name || '').replace(/,/g, ' '),
+            workItem: workItem.name.replace(/,/g, ' '),
+            estimate: workItemSummary?.bidAmount || 0,
+            costs: costs.map((c) => parseFloat(c.amount.toFixed(2))),
+          };
         })
-        .flat()
         .sort((a, b) => {
           // Compare categories first
-          const catCompare = parseInt(a.catCode) - parseInt(b.catCode);
-          if (catCompare === 0) {
-            return parseInt(a.workItemCode) - parseInt(b.workItemCode);
-          }
+          const catCompare = a.catCode - b.catCode;
+          if (catCompare !== 0) return catCompare;
+          // Then compare work items
+          return a.workItemCode - b.workItemCode;
+        });
 
-          return catCompare;
-        })
-        // The single quote in front of ${row.code} is to ensure the CSV is properly formatted with
-        // the code being a text string and not a number. 10.10 remains 10.10 and not a number converted to 10.1
-        .map((row) => `'${row.code},${row.category},${row.workItem},${row.estimate},${row.cost}`)
-        .join('\n');
+      // Build CSV rows
+      const csvRows: string[] = [];
+
+      sortedWorkItems.forEach((item) => {
+        const totalCost = item.costs.reduce((sum, cost) => sum + cost, 0);
+
+        // First row for this work item with all details and total cost
+        csvRows.push(
+          `'${item.code},${item.category},${item.workItem},${item.estimate.toFixed(2)},${totalCost.toFixed(
+            2,
+          )}`,
+        );
+
+        // Subsequent rows for individual costs (if there are multiple costs)
+        if (item.costs.length > 1) {
+          item.costs.forEach((cost) => {
+            csvRows.push(`,,,,${cost.toFixed(2)}`);
+          });
+        }
+      });
 
       // Combine header and content
-      const fullContent = header + csvContent;
+      const fullContent = header + csvRows.join('\n');
 
       // Create file path in cache directory
       const fileName = `${projectData.name.replace(/[^a-zA-Z0-9]/g, '_')}_costs_${
@@ -320,7 +318,6 @@ const ProjectDetailsPage = () => {
         return;
       } else if (menuItem === 'ExportCostItems' && projectId) {
         ExportCostItems();
-
         return;
       }
     },
@@ -376,20 +373,24 @@ const ProjectDetailsPage = () => {
           handleMenuItemPress('Delete', actionContext);
         },
       },
-      {
-        icon: <FontAwesome5 name="broom" size={28} color={colors.iconColor} />,
-        label: 'Cost Item Cleanup',
-        onPress: (e, actionContext) => {
-          handleMenuItemPress('CleanCostItems', actionContext);
-        },
-      },
-      {
-        icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
-        label: 'Export Cost Items',
-        onPress: (e, actionContext) => {
-          handleMenuItemPress('ExportCostItems', actionContext);
-        },
-      },
+      ...(allWorkItemSummaries.length > 0
+        ? [
+            {
+              icon: <FontAwesome5 name="broom" size={28} color={colors.iconColor} />,
+              label: 'Cost Item Cleanup',
+              onPress: (e, actionContext) => {
+                handleMenuItemPress('CleanCostItems', actionContext);
+              },
+            } as ActionButtonProps,
+            {
+              icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
+              label: 'Export Cost Items',
+              onPress: (e, actionContext) => {
+                handleMenuItemPress('ExportCostItems', actionContext);
+              },
+            } as ActionButtonProps,
+          ]
+        : []),
     ],
     [colors, allWorkItemSummaries, handleMenuItemPress, unusedCategories],
   );

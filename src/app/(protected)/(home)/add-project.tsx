@@ -206,7 +206,7 @@ const AddProjectScreen = () => {
         <OptionPickerItem
           containerStyle={{ backgroundColor: colors.neutral200, height: 36 }}
           optionLabel={pickedTemplate?.label}
-          placeholder="Work Template"
+          placeholder="Project Template"
           editable={false}
           onPickerButtonPress={() => setIsTemplateListPickerVisible(true)}
         />
@@ -220,6 +220,7 @@ const AddProjectScreen = () => {
             options={templateOptions}
             onSelect={(option) => handleTemplateOptionChange(option)}
             selectedOption={pickedTemplate}
+            enableSearch={templateOptions.length > 15}
           />
         </BottomSheetContainer>
       )}

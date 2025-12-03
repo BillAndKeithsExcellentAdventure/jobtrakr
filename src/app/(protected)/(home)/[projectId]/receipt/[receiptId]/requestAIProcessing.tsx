@@ -1,13 +1,6 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, View } from '@/src/components/Themed';
 import { useAuth } from '@clerk/clerk-expo';
@@ -364,35 +357,10 @@ const RequestAIProcessingPage = () => {
     setReceiptSummary(updatedSummary);
   };
 
-  const handleSaveReceiptCostItems = useCallback(() => {
-    let save = false;
-    if (!someCostItemsSpecified) {
-      Alert.alert(
-        'Cost Item Required',
-        "At least one line item must have a Cost Item specified. Use the 'Set Cost Item for Selection' button to specify a cost item.",
-      );
-      return;
-    }
-    if (!allCostItemsSpecified) {
-      Alert.alert(
-        'Save Cost Items',
-        'Line items that have Cost Item set to NOT SPECIFIED will not be saved for this receipt. Is this want you really want to do?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Yes, Save specified Cost Items',
-            onPress: () => {
-              save = true;
-            },
-          },
-        ],
-      );
-    } else {
-      save = true;
-    }
+  const saveReceiptProcessing = useCallback(() => {
+    if (!receiptSummary) return;
 
-    if (!save || !receiptSummary) return;
-
+    // save receipt processing
     const updatedReceipt = {
       ...receipt,
       amount: receiptSummary.totalAmount,
@@ -421,21 +389,40 @@ const RequestAIProcessingPage = () => {
     });
 
     router.back();
-  }, [
-    someCostItemsSpecified,
-    allCostItemsSpecified,
-    receiptSummary,
-    receiptItems,
-    receipt,
-    receiptId,
-    updateReceipt,
-    addLineItem,
-  ]);
+  }, [receiptSummary, receipt, receiptId, updateReceipt, receiptItems, addLineItem]);
+
+  const handleSaveReceiptCostItems = useCallback(() => {
+    if (!someCostItemsSpecified) {
+      Alert.alert(
+        'Cost Item Required',
+        "At least one line item must have a Cost Item specified. Use the 'Set Cost Item for Selection' button to specify a cost item.",
+      );
+      return;
+    }
+    if (!allCostItemsSpecified) {
+      Alert.alert(
+        'Save Cost Items',
+        'Line items that have Cost Item set to NOT SPECIFIED will not be saved for this receipt. Is this want you really want to do?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Yes, Save specified Cost Items',
+            onPress: saveReceiptProcessing,
+          },
+        ],
+      );
+    } else {
+      saveReceiptProcessing();
+    }
+  }, [someCostItemsSpecified, allCostItemsSpecified, saveReceiptProcessing]);
 
   return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: 'Process Receipt Image', headerShown: true }} />
-      <View style={[styles.container, { marginBottom: 20, backgroundColor: colors.listBackground }]}>
+    <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={{ flex: 1 }}>
+      <Stack.Screen options={{ title: 'Process Receipt Image', headerShown: false, gestureEnabled: false }} />
+      <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
+        <Text txtSize="title" style={{ marginBottom: 10 }}>
+          Receipt Photo Processing
+        </Text>
         {fetchingData ? (
           <View style={{ width: '100%', gap: 20 }}>
             <ActivityIndicator size="large" />
@@ -517,7 +504,10 @@ const RequestAIProcessingPage = () => {
               </>
             ) : (
               <>
-                <Text>SORRY, AI could not process the receipt! You can always manually add line items.</Text>
+                <Text>
+                  SORRY, The receipt could not be processed automatically! You can always manually add line
+                  items.
+                </Text>
               </>
             )}
           </View>

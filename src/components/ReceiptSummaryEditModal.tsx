@@ -105,7 +105,7 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
 
   return (
     <Modal visible={isVisible} transparent={true} animationType="fade">
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
         <View style={[styles.container, { backgroundColor: colors.opaqueModalOverlayBackgroundColor }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
             <Text txtSize="title" style={styles.title}>
@@ -194,6 +194,7 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
               options={vendors}
               onSelect={(option) => handleVendorOptionChange(option)}
               selectedOption={pickedVendorOption}
+              enableSearch={vendors.length > 15}
             />
           </BottomSheetContainer>
         )}

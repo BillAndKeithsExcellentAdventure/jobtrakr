@@ -200,6 +200,7 @@ const AddReceiptLineItemPage = () => {
             options={availableCategoriesOptions}
             onSelect={(option) => handleCategoryOptionChange(option)}
             selectedOption={pickedCategoryOption}
+            enableSearch={availableCategoriesOptions.length > 15}
           />
         </BottomSheetContainer>
       )}
@@ -215,6 +216,7 @@ const AddReceiptLineItemPage = () => {
             options={subCategories}
             onSelect={(option) => handleSubCategoryOptionChange(option)}
             selectedOption={pickedSubCategoryOption}
+            enableSearch={subCategories.length > 15}
           />
         </BottomSheetContainer>
       )}

@@ -1,9 +1,18 @@
 import { useColors } from '@/src/context/ColorsContext';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { PropsWithChildren } from 'react';
-import { DimensionValue, Modal, Pressable, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import {
+  DimensionValue,
+  Modal,
+  Pressable,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, View } from './Themed';
+import { KeyboardToolbar } from 'react-native-keyboard-controller';
 
 type Props = PropsWithChildren<{
   isVisible: boolean;
@@ -19,47 +28,51 @@ export default function BottomSheetContainer({
   title,
   modalHeight = '40%',
 }: Props) {
-  const { top } = useSafeAreaInsets();
+  const { top, bottom } = useSafeAreaInsets();
   const colors = useColors();
 
   if (!isVisible) return null;
 
   return (
     <Modal animationType="slide" transparent={true} visible={isVisible} onRequestClose={() => onClose()}>
-      <TouchableWithoutFeedback onPress={() => onClose()}>
-        <View style={{ flex: 1, backgroundColor: 'transparent' }}>
-          <View
-            style={{
-              flex: 1,
-              marginTop: top,
-              backgroundColor: colors.modalOverlayBackgroundColor,
-            }}
-          >
-            <View style={[styles.modalContent, { bottom: 0, height: modalHeight }]}>
-              {title ? (
-                <View
-                  style={[
-                    styles.titleContainer,
-                    {
-                      backgroundColor: colors.bottomSheetBackground,
-                      borderBottomWidth: 2,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                >
-                  <Text txtSize="standard" style={[{ fontWeight: '600' }]} text={title} />
-                  <Pressable onPress={() => onClose()}>
-                    <MaterialIcons name="close" color={colors.iconColor} size={22} />
-                  </Pressable>
-                </View>
-              ) : (
-                <View style={{ height: 10 }} />
-              )}
-              {children}
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <TouchableWithoutFeedback onPress={() => onClose()}>
+          <View style={{ flex: 1, backgroundColor: 'transparent' }}>
+            <View
+              style={{
+                flex: 1,
+                marginTop: top,
+                marginBottom: bottom,
+                backgroundColor: colors.modalOverlayBackgroundColor,
+              }}
+            >
+              <View style={[styles.modalContent, { bottom: 0, height: modalHeight }]}>
+                {title ? (
+                  <View
+                    style={[
+                      styles.titleContainer,
+                      {
+                        backgroundColor: colors.bottomSheetBackground,
+                        borderBottomWidth: 2,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <Text txtSize="standard" style={[{ fontWeight: '600' }]} text={title} />
+                    <Pressable onPress={() => onClose()}>
+                      <MaterialIcons name="close" color={colors.iconColor} size={22} />
+                    </Pressable>
+                  </View>
+                ) : (
+                  <View style={{ height: 10 }} />
+                )}
+                {children}
+              </View>
             </View>
           </View>
-        </View>
-      </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+      {Platform.OS === 'ios' && <KeyboardToolbar />}
     </Modal>
   );
 }

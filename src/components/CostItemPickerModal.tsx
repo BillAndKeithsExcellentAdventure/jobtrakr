@@ -171,6 +171,7 @@ const CostItemPickerModal = ({
             >
               <OptionList
                 options={availableCategoriesOptions}
+                enableSearch={availableCategoriesOptions.length > 15}
                 onSelect={(option) => handleCategoryOptionChange(option)}
                 selectedOption={pickedCategoryOption}
               />
@@ -190,6 +191,7 @@ const CostItemPickerModal = ({
                   handleSubCategoryOptionChange(option);
                 }}
                 selectedOption={pickedCostItemOption}
+                enableSearch={costItemEntries.length > 15}
               />
             </BottomSheetContainer>
           )}

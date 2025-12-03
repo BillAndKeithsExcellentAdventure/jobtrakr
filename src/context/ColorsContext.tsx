@@ -35,6 +35,7 @@ export type ColorSchemeColors = {
   text: string;
   background: string;
   tint: string;
+  inputBackground: string;
   tabIconDefault: string;
   tabIconSelected: string;
   border: string;
@@ -53,6 +54,7 @@ export type ColorSchemeColors = {
   error: string;
   errorBackground: string;
   textDim: string;
+  textPlaceholder: string;
   transparent: string;
   bottomSheetBackground: string;
   actionBg: string;
