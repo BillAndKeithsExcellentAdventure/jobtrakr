@@ -151,14 +151,19 @@ const ProjectDetailsPage = () => {
 
     try {
       // Create CSV header
-      const header = 'Code,Category,Work Item,Estimate,Cost\n';
+      const header = 'Code,Category,Work Item,Estimate,Cost,Cost Type\n';
 
       // Group work items by category and work item, then sort
       const sortedWorkItems = allWorkItems
         .map((workItem) => {
           const category = categoryMap.get(workItem.categoryId);
           const workItemSummary = allWorkItemSummaries.find((summary) => summary.workItemId === workItem.id);
-          const costs = allActualCostItems.filter((cost) => cost.workItemId === workItem.id);
+          const costs = allActualCostItems
+            .filter((cost) => cost.workItemId === workItem.id)
+            .map((c) => ({
+              amount: parseFloat(c.amount.toFixed(2)),
+              documentationType: c.documentationType || '',
+            }));
 
           return {
             catCode: parseInt(category?.code || '0'),
@@ -167,7 +172,7 @@ const ProjectDetailsPage = () => {
             category: (category?.name || '').replace(/,/g, ' '),
             workItem: workItem.name.replace(/,/g, ' '),
             estimate: workItemSummary?.bidAmount || 0,
-            costs: costs.map((c) => parseFloat(c.amount.toFixed(2))),
+            costs,
           };
         })
         .sort((a, b) => {
@@ -182,20 +187,23 @@ const ProjectDetailsPage = () => {
       const csvRows: string[] = [];
 
       sortedWorkItems.forEach((item) => {
-        const totalCost = item.costs.reduce((sum, cost) => sum + cost, 0);
+        const totalCost = item.costs.reduce((sum, cost) => sum + cost.amount, 0);
 
         // First row for this work item with all details and total cost
         csvRows.push(
           `'${item.code},${item.category},${item.workItem},${item.estimate.toFixed(2)},${totalCost.toFixed(
             2,
-          )}`,
+          )},`,
         );
 
         // Subsequent rows for individual costs (if there are multiple costs)
         if (item.costs.length > 1) {
           item.costs.forEach((cost) => {
-            csvRows.push(`,,,,${cost.toFixed(2)}`);
+            csvRows.push(`,,,,${cost.amount.toFixed(2)},${cost.documentationType}`);
           });
+        } else if (item.costs.length === 1) {
+          // Update the first row to include cost type if there's only one cost
+          csvRows[csvRows.length - 1] = csvRows[csvRows.length - 1] + item.costs[0].documentationType;
         }
       });
 
