@@ -282,6 +282,7 @@ const InvoiceDetailsPage = () => {
                 }`}
               />
             </View>
+            </View>
           </View>
         </>
       )}
