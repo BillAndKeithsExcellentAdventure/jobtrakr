@@ -1,7 +1,7 @@
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useWorkItemSpentSummary } from '@/src/context/WorkItemSpentSummaryContext';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
-import { NoValuesSchema } from 'tinybase/with-schemas';
+import { NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { getStoreId, TABLES_SCHEMA } from './ProjectDetailsStore';
 import { CrudResult } from '@/src/models/types';
 import { randomUUID } from 'expo-crypto';
