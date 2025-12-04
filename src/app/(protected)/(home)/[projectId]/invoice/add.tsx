@@ -9,7 +9,10 @@ import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
-import { WorkItemDataCodeCompareAsNumber } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  WorkItemDataCodeCompareAsNumber,
+  useAllRows as useAllConfigurationRows,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   InvoiceData,
   useAddRowCallback,
