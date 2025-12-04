@@ -118,12 +118,14 @@ const AddReceiptPage = () => {
     }));
   }, []);
 
+  /*
   const handleNotesChange = useCallback((notes: string) => {
     setProjectReceipt((prevReceipt) => ({
       ...prevReceipt,
       notes,
     }));
   }, []);
+  */
 
   const handleAddReceipt = useCallback(async () => {
     if (!canAddReceipt) return;

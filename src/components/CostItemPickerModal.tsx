@@ -22,7 +22,7 @@ const CostItemPickerModal = ({
   handleCostItemOptionSelected: (entry: OptionEntry | undefined) => void;
 }) => {
   const colors = useColors();
-  const { availableCategoriesOptions, allAvailableCostItemOptions, allWorkItems } =
+  const { availableCategoriesOptions, allAvailableCostItemOptions, projectWorkItems } =
     useProjectWorkItems(projectId);
 
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
@@ -39,7 +39,7 @@ const CostItemPickerModal = ({
     (selectedCategory: OptionEntry) => {
       setPickedCategoryOption(selectedCategory);
       if (selectedCategory) {
-        const workItems = allWorkItems
+        const workItems = projectWorkItems
           .filter((item) => item.categoryId === selectedCategory.value)
           .sort(WorkItemDataCodeCompareAsNumber);
         const subCategories = workItems.map((item) => {
@@ -50,7 +50,7 @@ const CostItemPickerModal = ({
         setPickedCostItemOption(undefined);
       }
     },
-    [availableCategoriesOptions, allWorkItems, allAvailableCostItemOptions],
+    [availableCategoriesOptions, projectWorkItems, allAvailableCostItemOptions],
   );
 
   useEffect(() => {
