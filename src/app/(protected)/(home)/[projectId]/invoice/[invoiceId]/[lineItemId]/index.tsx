@@ -131,7 +131,9 @@ const EditLineItemPage = () => {
     (selectedCategory: OptionEntry) => {
       setPickedCategoryOption(selectedCategory);
       if (selectedCategory) {
-        const workItems = projectWorkItems.filter((item) => item.categoryId === selectedCategory.value);
+        const workItems = projectWorkItems
+          .filter((item) => item.categoryId === selectedCategory.value)
+          .sort(WorkItemDataCodeCompareAsNumber);
         const subCategories = workItems.map((item) => {
           return allAvailableCostItemOptions.find((o) => o.value === item.id) ?? { label: '', value: '' };
         });

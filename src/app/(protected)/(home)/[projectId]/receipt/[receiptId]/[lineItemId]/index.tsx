@@ -175,7 +175,9 @@ const EditLineItemPage = () => {
   useEffect(() => {
     const selectedCategoryId = pickedCategoryOption?.value;
     if (selectedCategoryId) {
-      const workItems = projectWorkItems.filter((item) => item.categoryId === selectedCategoryId);
+      const workItems = projectWorkItems
+        .filter((item) => item.categoryId === selectedCategoryId)
+        .sort(WorkItemDataCodeCompareAsNumber);
       const subCategories = workItems.map((item) => {
         return allAvailableCostItemOptions.find((o) => o.value === item.id) ?? { label: '', value: '' };
       });
