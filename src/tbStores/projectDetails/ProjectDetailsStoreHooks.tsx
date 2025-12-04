@@ -360,8 +360,11 @@ export const useWorkItemSpentValue = (projectId: string, workItemId: string): nu
  * Hook that watches workItemCostEntries and updates the WorkItemSpentSummary context
  * This replaces the old useSetWorkItemSpentSummaryCallback hook
  * 
- * Note: The context's setWorkItemSpentAmount method checks if values have changed
- * before updating state, preventing unnecessary re-renders.
+ * Note: 
+ * - The context's setWorkItemSpentAmount method checks if values have changed
+ *   before updating state, preventing unnecessary re-renders.
+ * - Work items with no cost entries will not be in the map, and will return 0
+ *   from getWorkItemSpentAmount (handled by the context getter).
  */
 export const useWorkItemSpentUpdater = (projectId: string): void => {
   const allWorkItemCostEntries = useAllRows(projectId, 'workItemCostEntries');
@@ -372,8 +375,10 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
     const spentByWorkItem = new Map<string, number>();
 
     for (const costEntry of allWorkItemCostEntries) {
-      const currentSpent = spentByWorkItem.get(costEntry.workItemId) || 0;
-      spentByWorkItem.set(costEntry.workItemId, currentSpent + costEntry.amount);
+      spentByWorkItem.set(
+        costEntry.workItemId,
+        (spentByWorkItem.get(costEntry.workItemId) ?? 0) + costEntry.amount,
+      );
     }
 
     // Update the context with all spent amounts
