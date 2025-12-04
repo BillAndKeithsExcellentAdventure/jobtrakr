@@ -8,13 +8,11 @@ import { Text, View } from '@/src/components/Themed';
 import { useKeyboardGradualAnimation } from '@/src/components/useKeyboardGradualAnimation';
 import { ColorSchemeColors, useColors } from '@/src/context/ColorsContext';
 import { useFocusManager } from '@/src/hooks/useFocusManager';
+import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import {
-  useAllRows as useAllRowsConfiguration,
-  WorkCategoryCodeCompareAsNumber,
   WorkCategoryData,
   WorkItemData,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useProject, useUpdateProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   useAllRows,
   useUpdateRowCallback,
@@ -45,26 +43,7 @@ const SetEstimatedCostsPage = () => {
 
   const allWorkItemCostSummaries = useAllRows(projectId, 'workItemSummaries');
   const updateWorkItemCostSummary = useUpdateRowCallback(projectId, 'workItemSummaries');
-  const allWorkItems = useAllRowsConfiguration('workItems');
-  const allWorkCategories = useAllRowsConfiguration('categories', WorkCategoryCodeCompareAsNumber);
-  const availableCategoriesOptions: OptionEntry[] = useMemo(() => {
-    // get a list of all unique workitemids from allWorkItemCostSummaries available in the project
-    const uniqueWorkItemIds = allWorkItemCostSummaries.map((item) => item.workItemId);
-
-    // now get list of all unique categoryIds from allWorkItems given list of uniqueWorkItemIds
-    const uniqueCategoryIds = allWorkItems
-      .filter((item) => uniqueWorkItemIds.includes(item.id))
-      .map((item) => item.categoryId);
-
-    // now get an array of OptionEntry for each entry in uniqueCategoryIds using allWorkCategories
-    const uniqueCategories = allWorkCategories
-      .filter((item) => uniqueCategoryIds.includes(item.id))
-      .map((item) => ({
-        label: item.name,
-        value: item.id,
-      }));
-    return uniqueCategories;
-  }, [allWorkItemCostSummaries, allWorkItems, allWorkCategories]);
+  const { availableCategoriesOptions, allWorkItems, allWorkCategories } = useProjectWorkItems(projectId);
 
   useEffect(() => {
     if (categoryId && availableCategoriesOptions.length > 0) {
