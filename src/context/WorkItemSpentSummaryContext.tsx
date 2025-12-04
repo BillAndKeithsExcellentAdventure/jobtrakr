@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useMemo } from 'react';
 
 // Define the WorkItemSpentSummary type
+// IMPORTANT - workItemId is the workItemId NOT the id of the WorkItemSummaryData.
+// This is because the receipts are linked to the workItem and category.
 export interface WorkItemSpentSummary {
   workItemId: string;
   spentAmount: number;

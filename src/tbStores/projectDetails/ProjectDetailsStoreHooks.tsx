@@ -1,5 +1,8 @@
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
-import { useWorkItemSpentSummary } from '@/src/context/WorkItemSpentSummaryContext';
+import {
+  useWorkItemSpentSummary,
+  WorkItemSpentSummary,
+} from '@/src/context/WorkItemSpentSummaryContext';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { getStoreId, TABLES_SCHEMA } from './ProjectDetailsStore';
@@ -15,11 +18,6 @@ export interface WorkItemSummaryData {
   workItemId: string;
   bidAmount: number;
   complete: boolean; // true if all cost items are accounted for
-}
-
-export interface WorkItemSpentSummary {
-  workItemId: string; // IMPORTANT - this is the workItemId NOT the id of the WorkItemSummaryData.
-  spentAmount: number; //     This is because the receipts are linked to the workItem and category.
 }
 
 // show the most recent date first
