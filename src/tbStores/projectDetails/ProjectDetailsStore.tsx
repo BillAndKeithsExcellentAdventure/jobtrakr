@@ -14,11 +14,6 @@ export const TABLES_SCHEMA = {
     complete: { type: 'boolean' },
   },
 
-  workItemSpentSummaries: {
-    workItemId: { type: 'string' },
-    spentAmount: { type: 'number' },
-  },
-
   receipts: {
     id: { type: 'string' },
     vendor: { type: 'string' },
