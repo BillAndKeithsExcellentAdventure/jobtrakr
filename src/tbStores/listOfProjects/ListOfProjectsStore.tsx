@@ -74,7 +74,7 @@ export const useAllProjects = () => {
           } as ProjectData),
       );
 
-      return projects.sort((a, b) => (b.favorite ?? 0) - (a.favorite ?? 0));
+      return [...projects].sort((a, b) => (b.favorite ?? 0) - (a.favorite ?? 0));
     }
 
     return [];
