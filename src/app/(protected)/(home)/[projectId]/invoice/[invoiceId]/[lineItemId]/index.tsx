@@ -164,7 +164,7 @@ const EditLineItemPage = () => {
   }, [itemizedEntry, pickedSubCategoryOption]);
 
   return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1, overflowY: 'hidden' }}>
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen options={{ title: 'Add Invoice Line Item', headerShown: true }} />
       <View style={[styles.container, { borderColor: colors.border }]}>
         <NumberInputField

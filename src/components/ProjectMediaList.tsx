@@ -83,12 +83,20 @@ export const ProjectMediaList = ({
   }, []);
 
   const handleImageLongPress = useCallback(
-    async (id: string, type: mediaType, photoDate: string) => {
+    async (imageId: string, type: mediaType, photoDate: string) => {
       if (!orgId) {
         return;
       }
 
-      const uri = buildLocalMediaUri(orgId, projectId, id, type, 'photo');
+      if (!imageId) {
+        Alert.alert(
+          'Missing Server Image ID',
+          'There is no server image ID specified for this media item. This means that no larger image is available.',
+        );
+        return;
+      }
+
+      const uri = buildLocalMediaUri(orgId, projectId, imageId, type, 'photo');
 
       if (type === 'video') {
         playVideo(uri);
@@ -109,7 +117,7 @@ export const ProjectMediaList = ({
               console.log('*** File does not exist. Need to retrieve from backend.');
               // Call your backend API to retrieve the file and save it locally
               // After retrieving the file, you can navigate to the image viewer
-              const result = await getImage(projectId, id, type);
+              const result = await getImage(projectId, imageId, type);
               if (result.result.status !== 'Success') {
                 console.error('*** Error retrieving image from backend:', result.result.msg);
               }

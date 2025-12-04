@@ -195,11 +195,7 @@ const InvoiceDetailsPage = () => {
   };
 
   return (
-    <SafeAreaView
-      onLayout={onLayout}
-      edges={['right', 'bottom', 'left']}
-      style={{ flex: 1, overflowY: 'hidden' }}
-    >
+    <SafeAreaView onLayout={onLayout} edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen options={{ title: 'Invoice Details', headerShown: true }} />
       {containerHeight > 0 && (
         <>
@@ -229,59 +225,58 @@ const InvoiceDetailsPage = () => {
               )}
             </View>
             <View style={{ flex: 1 }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  width: '100%',
+                  height: 40,
+                  alignItems: 'center',
+                  borderBottomColor: colors.separatorColor,
+                  borderBottomWidth: 2,
+                }}
+              >
+                <Text
+                  style={{ width: 90, textAlign: 'center', fontWeight: '600' }}
+                  txtSize="standard"
+                  text="Amount"
+                />
+                <Text
+                  style={{ flex: 1, marginHorizontal: 20, textAlign: 'center', fontWeight: '600' }}
+                  txtSize="standard"
+                  text="Description"
+                />
+                <Text style={{ width: 40, fontWeight: '600' }} txtSize="standard" text="" />
+              </View>
 
-            <View
-              style={{
-                flexDirection: 'row',
-                width: '100%',
-                height: 40,
-                alignItems: 'center',
-                borderBottomColor: colors.separatorColor,
-                borderBottomWidth: 2,
-              }}
-            >
-              <Text
-                style={{ width: 90, textAlign: 'center', fontWeight: '600' }}
-                txtSize="standard"
-                text="Amount"
-              />
-              <Text
-                style={{ flex: 1, marginHorizontal: 20, textAlign: 'center', fontWeight: '600' }}
-                txtSize="standard"
-                text="Description"
-              />
-              <Text style={{ width: 40, fontWeight: '600' }} txtSize="standard" text="" />
-            </View>
+              <View style={{ maxHeight: containerHeight - 290 }}>
+                <FlatList
+                  showsVerticalScrollIndicator={Platform.OS === 'web'}
+                  data={allInvoiceLineItems}
+                  renderItem={({ item }) => <SwipeableLineItem lineItem={item} projectId={projectId} />}
+                />
+              </View>
 
-            <View style={{ maxHeight: containerHeight - 290 }}>
-              <FlatList
-                showsVerticalScrollIndicator={Platform.OS === 'web'}
-                data={allInvoiceLineItems}
-                renderItem={({ item }) => <SwipeableLineItem lineItem={item} projectId={projectId} />}
-              />
-            </View>
-
-            <View
-              style={{
-                flexDirection: 'row',
-                width: '100%',
-                height: 40,
-                alignItems: 'center',
-                borderTopColor: colors.separatorColor,
-                borderTopWidth: 2,
-              }}
-            >
-              <Text
-                style={{ width: 110, textAlign: 'right', fontWeight: '600' }}
-                text={itemsTotalCost ? formatCurrency(itemsTotalCost, true, true) : '$0.00'}
-              />
-              <Text
-                style={{ flex: 1, marginHorizontal: 10, marginLeft: 30, fontWeight: '600' }}
-                text={`Total for ${allInvoiceLineItems.length} line ${
-                  allInvoiceLineItems.length?.toString() === '1' ? 'item' : 'items'
-                }`}
-              />
-            </View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  width: '100%',
+                  height: 40,
+                  alignItems: 'center',
+                  borderTopColor: colors.separatorColor,
+                  borderTopWidth: 2,
+                }}
+              >
+                <Text
+                  style={{ width: 110, textAlign: 'right', fontWeight: '600' }}
+                  text={itemsTotalCost ? formatCurrency(itemsTotalCost, true, true) : '$0.00'}
+                />
+                <Text
+                  style={{ flex: 1, marginHorizontal: 10, marginLeft: 30, fontWeight: '600' }}
+                  text={`Total for ${allInvoiceLineItems.length} line ${
+                    allInvoiceLineItems.length?.toString() === '1' ? 'item' : 'items'
+                  }`}
+                />
+              </View>
             </View>
           </View>
         </>
