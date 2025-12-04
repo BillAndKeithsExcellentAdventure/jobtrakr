@@ -7,18 +7,15 @@ import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
-import {
-  useAllRows as useAllRowsConfiguration,
-  WorkCategoryCodeCompareAsNumber,
-  WorkItemDataCodeCompareAsNumber,
-} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
+import { WorkItemDataCodeCompareAsNumber } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   useAllRows,
   useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -31,9 +28,10 @@ const EditLineItemPage = () => {
   }>();
 
   const colors = useColors();
-  const allWorkItemCostSummaries = useAllRows(projectId, 'workItemSummaries');
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const updateLineItem = useUpdateRowCallback(projectId, 'workItemCostEntries');
+  const { projectWorkItems, availableCategoriesOptions, allAvailableCostItemOptions, allWorkItems, allWorkCategories } =
+    useProjectWorkItems(projectId);
   const [itemizedEntry, setItemizedEntry] = useState<WorkItemCostEntry>({
     id: '',
     label: '',
@@ -88,48 +86,6 @@ const EditLineItemPage = () => {
     }
   }, [allCostItems, lineItemId]);
 
-  const allWorkItems = useAllRowsConfiguration('workItems', WorkItemDataCodeCompareAsNumber);
-  const allWorkCategories = useAllRowsConfiguration('categories', WorkCategoryCodeCompareAsNumber);
-
-  const availableCategoriesOptions: OptionEntry[] = useMemo(() => {
-    // get a list of all unique workitemids from allWorkItemCostSummaries available in the project
-    const uniqueWorkItemIds = allWorkItemCostSummaries.map((item) => item.workItemId);
-
-    // now get list of all unique categoryIds from allWorkItems given list of uniqueWorkItemIds
-    const uniqueCategoryIds = allWorkItems
-      .filter((item) => uniqueWorkItemIds.includes(item.id))
-      .map((item) => item.categoryId);
-
-    // now get an array of OptionEntry for each entry in uniqueCategoryIds using allWorkCategories
-    const uniqueCategories = allWorkCategories
-      .filter((item) => uniqueCategoryIds.includes(item.id))
-      .map((item) => ({
-        label: item.name,
-        value: item.id,
-      }));
-    return uniqueCategories;
-  }, [allWorkItemCostSummaries, allWorkItems, allWorkCategories]);
-
-  const allAvailableCostItemOptions: OptionEntry[] = useMemo(() => {
-    const uniqueWorkItemIds = allWorkItemCostSummaries.map((item) => item.workItemId);
-    const uniqueWorkItems = allWorkItems.filter((item) => uniqueWorkItemIds.includes(item.id));
-    const uniqueCostItems = uniqueWorkItems.map((item) => {
-      const category = allWorkCategories.find((o) => o.id === item.categoryId);
-      const categoryCode = category ? `${category.code}.` : '';
-      return {
-        sortValue1: Number.parseFloat(item.code),
-        sortValue2: Number.parseFloat(category ? category.code : '0'),
-        label: `${categoryCode}${item.code} - ${item.name}`,
-        value: item.id,
-      };
-    });
-
-    return uniqueCostItems
-      .sort((a, b) => a.sortValue1 - b.sortValue1)
-      .sort((a, b) => a.sortValue2 - b.sortValue2)
-      .map((i) => ({ label: i.label, value: i.value }));
-  }, [allWorkItemCostSummaries, allWorkItems]);
-
   useEffect(() => {
     if (itemizedEntry.workItemId) {
       const workItem = allWorkItems.find((item) => item.id === itemizedEntry.workItemId);
@@ -170,13 +126,15 @@ const EditLineItemPage = () => {
       setPickedCategoryOption(selectedCategory);
       setPickedSubCategoryOption(undefined);
     },
-    [availableCategoriesOptions, allWorkItems],
+    [],
   );
 
   useEffect(() => {
     const selectedCategoryId = pickedCategoryOption?.value;
     if (selectedCategoryId) {
-      const workItems = allWorkItems.filter((item) => item.categoryId === selectedCategoryId);
+      const workItems = projectWorkItems
+        .filter((item) => item.categoryId === selectedCategoryId)
+        .sort(WorkItemDataCodeCompareAsNumber);
       const subCategories = workItems.map((item) => {
         return allAvailableCostItemOptions.find((o) => o.value === item.id) ?? { label: '', value: '' };
       });
@@ -185,7 +143,7 @@ const EditLineItemPage = () => {
     } else {
       setSubCategories(allAvailableCostItemOptions);
     }
-  }, [pickedCategoryOption, allWorkItems, allAvailableCostItemOptions]);
+  }, [pickedCategoryOption, projectWorkItems, allAvailableCostItemOptions]);
 
   const handleBackPress = useAutoSaveNavigation(() => {
     router.back();
