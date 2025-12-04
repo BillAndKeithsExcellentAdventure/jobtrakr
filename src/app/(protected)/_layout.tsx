@@ -1,6 +1,7 @@
 import { Redirect, Stack } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { ActiveProjectIdsProvider } from '@/src/context/ActiveProjectIdsContext';
+import { WorkItemSpentSummaryProvider } from '@/src/context/WorkItemSpentSummaryContext';
 import AuthorizedStoresProvider from '@/src/components/AuthorizedStoresProvider';
 import ActiveProjectDetailsStoreProvider from '@/src/components/ActiveProjectDetailsStoreProvider';
 
@@ -23,17 +24,19 @@ export default function ProtectedLayout() {
     <>
       <AuthorizedStoresProvider />
       <ActiveProjectIdsProvider>
-        <ActiveProjectDetailsStoreProvider>
-          <Stack>
-            <Stack.Screen
-              name="(home)"
-              options={{
-                headerShown: false,
-                animation: 'none',
-              }}
-            />
-          </Stack>
-        </ActiveProjectDetailsStoreProvider>
+        <WorkItemSpentSummaryProvider>
+          <ActiveProjectDetailsStoreProvider>
+            <Stack>
+              <Stack.Screen
+                name="(home)"
+                options={{
+                  headerShown: false,
+                  animation: 'none',
+                }}
+              />
+            </Stack>
+          </ActiveProjectDetailsStoreProvider>
+        </WorkItemSpentSummaryProvider>
       </ActiveProjectIdsProvider>
     </>
   );

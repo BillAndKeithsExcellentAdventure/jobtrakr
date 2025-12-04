@@ -1,6 +1,10 @@
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
+import {
+  useWorkItemSpentSummary,
+  WorkItemSpentSummary,
+} from '@/src/context/WorkItemSpentSummaryContext';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
-import { NoValuesSchema } from 'tinybase/with-schemas';
+import { NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { getStoreId, TABLES_SCHEMA } from './ProjectDetailsStore';
 import { CrudResult } from '@/src/models/types';
 import { randomUUID } from 'expo-crypto';
@@ -14,11 +18,6 @@ export interface WorkItemSummaryData {
   workItemId: string;
   bidAmount: number;
   complete: boolean; // true if all cost items are accounted for
-}
-
-export interface WorkItemSpentSummary {
-  workItemId: string; // IMPORTANT - this is the workItemId NOT the id of the WorkItemSummaryData.
-  spentAmount: number; //     This is because the receipts are linked to the workItem and category.
 }
 
 // show the most recent date first
@@ -125,7 +124,6 @@ export interface ChangeOrderItem {
 }
 
 export type WorkItemSummarySchema = typeof TABLES_SCHEMA.workItemSummaries;
-export type WorkItemSpentSummarySchema = typeof TABLES_SCHEMA.workItemSpentSummaries;
 export type ReceiptsSchema = typeof TABLES_SCHEMA.receipts;
 export type InvoicesSchema = typeof TABLES_SCHEMA.invoices;
 export type WorkItemCostEntriesSchema = typeof TABLES_SCHEMA.workItemCostEntries;
@@ -338,31 +336,6 @@ export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
   }, [projectId, seedWorkItems, allWorkItemSummaries, activeProjectIds, seedInitialData]);
 };
 
-export function useSetWorkItemSpentSummaryCallback(projectId: string) {
-  const store = useStore(getStoreId(projectId));
-  return useCallback(
-    (workItemId: string, updates: Partial<WorkItemSpentSummary>): CrudResult => {
-      if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
-      const existing = store.getRow('workItemSpentSummaries', workItemId);
-      if (!existing) {
-        const insertSuccess = store.setRow('workItemSpentSummaries', workItemId, { workItemId, ...updates });
-        return insertSuccess
-          ? { status: 'Success', id: workItemId, msg: '' }
-          : { status: 'Error', id: '0', msg: 'Failed to insert work item spent summary' };
-      }
-
-      const success = store.setRow('workItemSpentSummaries', workItemId, { ...existing, ...updates });
-      return success
-        ? { status: 'Success', id: workItemId, msg: '' }
-        : { status: 'Error', id: '0', msg: 'Failed to update' };
-    },
-    [store],
-  );
-}
-
-export const useWorkItemSpentValue = (projectId: string, workItemId: string): number =>
-  useCell('workItemSpentSummaries', workItemId, 'spentAmount', getStoreId(projectId)) as number;
-
 // function to get workitems for a given project that has no costs associated with it and no bid amount
 export const useWorkItemsWithoutCosts = (projectId: string): WorkItemSummaryData[] => {
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
@@ -372,4 +345,46 @@ export const useWorkItemsWithoutCosts = (projectId: string): WorkItemSummaryData
     (wis) =>
       wis.bidAmount === 0 && !allWorkItemCostEntries.some((wice) => wice.workItemId === wis.workItemId),
   );
+};
+
+/**
+ * Hook to get the spent amount for a specific work item
+ * This replaces the old useWorkItemSpentValue hook that read from the store
+ */
+export const useWorkItemSpentValue = (projectId: string, workItemId: string): number => {
+  const { getWorkItemSpentAmount } = useWorkItemSpentSummary();
+  return getWorkItemSpentAmount(projectId, workItemId);
+};
+
+/**
+ * Hook that watches workItemCostEntries and updates the WorkItemSpentSummary context
+ * This replaces the old useSetWorkItemSpentSummaryCallback hook
+ * 
+ * Note: 
+ * - The context's setWorkItemSpentAmount method checks if values have changed
+ *   before updating state, preventing unnecessary re-renders.
+ * - Work items with no cost entries will not be in the map, and will return 0
+ *   from getWorkItemSpentAmount (handled by the context getter).
+ */
+export const useWorkItemSpentUpdater = (projectId: string): void => {
+  const allWorkItemCostEntries = useAllRows(projectId, 'workItemCostEntries');
+  const { setWorkItemSpentAmount } = useWorkItemSpentSummary();
+
+  useEffect(() => {
+    // Group cost entries by workItemId and calculate total spent per work item
+    const spentByWorkItem = new Map<string, number>();
+
+    for (const costEntry of allWorkItemCostEntries) {
+      spentByWorkItem.set(
+        costEntry.workItemId,
+        (spentByWorkItem.get(costEntry.workItemId) ?? 0) + costEntry.amount,
+      );
+    }
+
+    // Update the context with all spent amounts
+    // The setWorkItemSpentAmount method will skip updates if the value hasn't changed
+    for (const [workItemId, spentAmount] of spentByWorkItem) {
+      setWorkItemSpentAmount(projectId, workItemId, spentAmount);
+    }
+  }, [allWorkItemCostEntries, projectId, setWorkItemSpentAmount]);
 };

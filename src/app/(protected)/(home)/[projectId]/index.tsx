@@ -17,7 +17,7 @@ import {
   useDeleteRowCallback,
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
-  useSetWorkItemSpentSummaryCallback,
+  useWorkItemSpentUpdater,
   useWorkItemsWithoutCosts,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
@@ -46,7 +46,6 @@ const ProjectDetailsPage = () => {
   const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
-  const updateWorkItemSpentSummary = useSetWorkItemSpentSummaryCallback(projectId);
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
   const allReceiptItems = useAllRows(projectId, 'receipts');
   const removeWorkItemSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
@@ -67,6 +66,7 @@ const ProjectDetailsPage = () => {
   useSeedWorkItemsIfNecessary(projectId);
   useCostUpdater(projectId);
   useBidAmountUpdater(projectId);
+  useWorkItemSpentUpdater(projectId);
 
   const workItemMap = useMemo(() => {
     return new Map(allWorkItems.map((w) => [w.id, w]));
@@ -89,9 +89,6 @@ const ProjectDetailsPage = () => {
       const spentAmount = allActualCostItems
         .filter((i) => i.workItemId === workItem.id)
         .reduce((sum, item) => sum + item.amount, 0);
-
-      // update the spent amount per workItem
-      updateWorkItemSpentSummary(costItem.workItemId, { spentAmount: spentAmount });
 
       let section = sections.find((sec) => sec.categoryId === category.id);
       if (!section) {
@@ -122,7 +119,7 @@ const ProjectDetailsPage = () => {
     });
 
     return sections.sort(CostSectionDataCodeCompareAsNumber);
-  }, [allWorkItemSummaries, allActualCostItems, workItemMap, categoryMap, updateWorkItemSpentSummary]);
+  }, [allWorkItemSummaries, allActualCostItems, workItemMap, categoryMap]);
 
   // get a list of unused work items not represented in allWorkItemSummaries
   const unusedWorkItems = useMemo(
