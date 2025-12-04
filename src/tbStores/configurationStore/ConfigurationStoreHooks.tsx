@@ -106,7 +106,7 @@ export const useAllRows = <K extends keyof TableDataMap>(
         })) as TableDataMap[K][])
       : [];
     if (!compareFn) return array;
-    return array.sort(compareFn);
+    return [...array].sort(compareFn);
   }, [store, tableName, compareFn]);
 
   useEffect(() => {

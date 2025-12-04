@@ -196,7 +196,7 @@ export const useAllRows = <K extends keyof TableDataMap>(
   }, [store, tableName, fetchRows]);
 
   if (!compareFn) return rows;
-  return rows.sort(compareFn);
+  return [...rows].sort(compareFn);
 };
 
 // --- ADD ROW ---
