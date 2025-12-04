@@ -129,18 +129,13 @@ const ProjectDetailsPage = () => {
 
   // get a list of all unique categories from unusedWorkItems
   const unusedCategories = useMemo(() => {
-    const usedCategories = new Set(
-      allWorkItemSummaries.map((ws) => {
-        const wrkItem = workItemMap.get(ws.workItemId);
-        return wrkItem ? categoryMap.get(wrkItem.categoryId) : null;
+    const usedCategoryIds = new Set(
+      unusedWorkItems.map((wi) => {
+        return wi.categoryId;
       }),
     );
 
-    return Array.from(
-      new Set(
-        unusedWorkItems.map((w) => w.categoryId).filter((id) => !usedCategories.has(categoryMap.get(id))),
-      ),
-    );
+    return Array.from(usedCategoryIds);
   }, [unusedWorkItems, allWorkItemSummaries, workItemMap, categoryMap]);
 
   const unusedCategoriesString = useMemo(() => unusedCategories.join(','), [unusedCategories]);

@@ -2,6 +2,7 @@ import { ModalScreenContainerWithList } from '@/src/components/ModalScreenContai
 import { Text, View } from '@/src/components/Themed';
 import { Colors } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
+import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import {
   useAllRows,
   WorkCategoryCodeCompareAsNumber,
@@ -37,6 +38,7 @@ const AddCostCategoryWorkItemsScreen: React.FC = () => {
   }>();
   const colors = useColors();
   const allProjectCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
+  const { projectWorkItems } = useProjectWorkItems(projectId);
   const allWorkItems = useAllRows('workItems', WorkItemDataCodeCompareAsNumber);
   const [selectedWorkItemIds, setSelectedWorkItemIds] = useState<string[]>([]);
   const [sectionData, setSectionData] = useState<SectionData[]>([]);
@@ -54,7 +56,10 @@ const AddCostCategoryWorkItemsScreen: React.FC = () => {
       );
 
       const sections: SectionData[] = filteredCategories.map((category) => {
-        const items = allWorkItems.filter((item) => item.categoryId === category.id);
+        // Get work items in this category that are not already in projectWorkItems
+        const items = allWorkItems
+          .filter((item) => item.categoryId === category.id)
+          .filter((item) => !projectWorkItems.find((pwi) => pwi.id === item.id));
 
         return {
           id: category.id,
@@ -73,7 +78,7 @@ const AddCostCategoryWorkItemsScreen: React.FC = () => {
       setSectionData(sections);
     };
     fetchAllSectionsData();
-  }, [allProjectCategories, allWorkItems, selectedWorkItemIds, availableCategoryIds]);
+  }, [allProjectCategories, allWorkItems, selectedWorkItemIds, availableCategoryIds, projectWorkItems]);
 
   const toggleSection = (id: string) => {
     expandedSectionIdRef.current = expandedSectionIdRef.current === id ? '' : id;
