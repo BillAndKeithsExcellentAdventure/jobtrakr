@@ -5,11 +5,13 @@ import { useColors } from '@/src/context/ColorsContext';
 import { FlashList } from '@shopify/flash-list';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
 import SwipeableReceiptItem from '@/src/components/SwipeableReceiptItem';
+import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
+  ClassifiedReceiptData,
   ReceiptData,
   RecentReceiptDateCompare,
   useAddRowCallback,
@@ -17,9 +19,7 @@ import {
   useCostUpdater,
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
-  ClassifiedReceiptData,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
@@ -33,7 +33,8 @@ const ProjectReceiptsPage = () => {
     receiptId: string;
     projectName: string;
   }>();
-
+  const flashListRef = useRef<any>(null);
+  const previousReceiptCount = useRef(0);
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
@@ -147,6 +148,14 @@ const ProjectReceiptsPage = () => {
     });
   }, [projectId, projectName, router]);
 
+  // Scroll to top when new receipts are added
+  useEffect(() => {
+    if (classifiedReceipts.length > previousReceiptCount.current && previousReceiptCount.current > 0) {
+      flashListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    }
+    previousReceiptCount.current = classifiedReceipts.length;
+  }, [classifiedReceipts.length]);
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
       <Stack.Screen options={{ title: `${projectName}`, headerShown: true }} />
@@ -211,6 +220,7 @@ const ProjectReceiptsPage = () => {
                     }}
                   >
                     <FlashList
+                      ref={flashListRef}
                       data={classifiedReceipts}
                       keyExtractor={(item, index) => item.id ?? index.toString()}
                       renderItem={({ item }) => (

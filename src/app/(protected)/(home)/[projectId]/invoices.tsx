@@ -5,7 +5,7 @@ import { useColors } from '@/src/context/ColorsContext';
 import { FlashList } from '@shopify/flash-list';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
 import {
@@ -54,6 +54,8 @@ const ProjectInvoicesPage = () => {
   const addInvoiceImage = useAddImageCallback();
   const addInvoice = useAddRowCallback(projectId, 'invoices');
   const allWorkItems = useAllRowsConfiguration('workItems');
+  const flashListRef = useRef<any>(null);
+  const previousInvoiceCount = useRef(0);
 
   useCostUpdater(projectId);
 
@@ -146,6 +148,14 @@ const ProjectInvoicesPage = () => {
       },
     });
   }, [projectId, projectName, router]);
+
+  // Scroll to top when new invoices are added
+  useEffect(() => {
+    if (classifiedInvoices.length > previousInvoiceCount.current && previousInvoiceCount.current > 0) {
+      flashListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    }
+    previousInvoiceCount.current = classifiedInvoices.length;
+  }, [classifiedInvoices.length]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
@@ -242,7 +252,6 @@ export const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 550,
   },
-
 });
 
 export default ProjectInvoicesPage;
