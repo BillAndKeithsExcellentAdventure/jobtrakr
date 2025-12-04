@@ -7,7 +7,7 @@ import { FailedToUploadData, useAddItemCallback } from '@/src/tbStores/UploadSyn
 
 type ImageResult = { status: 'Success' | 'Error'; id: string; uri?: string | undefined; msg: string };
 
-interface imageDetails {
+interface ImageDetails {
   id: string;
   userId: string;
   orgId: string;
@@ -54,7 +54,7 @@ const getFetchImageEndPointUrl = (resourceType: resourceType) => {
 };
 
 const downloadImage = async (
-  details: imageDetails,
+  details: ImageDetails,
   token: string,
   resourceType: resourceType,
   localUri: string,
@@ -130,7 +130,7 @@ function arrayBufferToBase64(buffer: Uint8Array): string {
 }
 
 const uploadImage = async (
-  details: imageDetails,
+  details: ImageDetails,
   token: string,
   mediaType: mediaType,
   resourceType: resourceType,
@@ -228,7 +228,7 @@ export const buildLocalMediaUri = (
 
 const copyToLocalFolder = async (
   imageUri: string,
-  details: imageDetails,
+  details: ImageDetails,
   mediaType: mediaType,
   resourceType: resourceType,
 ): Promise<ImageResult> => {
@@ -302,7 +302,7 @@ export const useAddImageCallback = () => {
       const latitude = 0;
       const longitude = 0;
 
-      const details: imageDetails = {
+      const details: ImageDetails = {
         id: id,
         userId: userId,
         orgId: orgId,
@@ -385,7 +385,7 @@ export const useGetImageCallback = () => {
         }
 
         // If not found locally, then download from server and return the local version.
-        const details: imageDetails = {
+        const details: ImageDetails = {
           id: itemId,
           userId: userId,
           orgId: orgId,

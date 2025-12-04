@@ -192,7 +192,7 @@ const EditLineItemPage = () => {
   });
 
   return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1, overflowY: 'hidden' }}>
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
         options={{
           title: 'Edit Receipt Line Item',

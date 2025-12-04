@@ -174,6 +174,20 @@ const InvoiceDetailsPage = () => {
     });
   }, [projectId, invoiceId, router]);
 
+  const requestAIProcessing = useCallback(() => {
+    console.log(
+      `requestAIProcessing - route = /${projectId}/invoice/${invoiceId}/requestAIProcessing?imageId=${invoice.imageId}`,
+    );
+    router.push({
+      pathname: '/[projectId]/invoice/[invoiceId]/requestAIProcessing',
+      params: {
+        projectId,
+        invoiceId,
+        imageId: invoice.imageId,
+      },
+    });
+  }, [projectId, invoiceId, invoice.imageId, router]);
+
   const [containerHeight, setContainerHeight] = useState(0);
 
   const onLayout = (event: LayoutChangeEvent) => {
@@ -181,11 +195,7 @@ const InvoiceDetailsPage = () => {
   };
 
   return (
-    <SafeAreaView
-      onLayout={onLayout}
-      edges={['right', 'bottom', 'left']}
-      style={{ flex: 1, overflowY: 'hidden' }}
-    >
+    <SafeAreaView onLayout={onLayout} edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen options={{ title: 'Invoice Details', headerShown: true }} />
       {containerHeight > 0 && (
         <>
@@ -205,59 +215,68 @@ const InvoiceDetailsPage = () => {
                 type={'action'}
                 title="Add Line Item"
               />
+              {allInvoiceLineItems.length === 0 && !!invoice.imageId && (
+                <ActionButton
+                  style={styles.rightButton}
+                  onPress={requestAIProcessing}
+                  type={'action'}
+                  title="Load from Photo"
+                />
+              )}
             </View>
+            <View style={{ flex: 1 }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  width: '100%',
+                  height: 40,
+                  alignItems: 'center',
+                  borderBottomColor: colors.separatorColor,
+                  borderBottomWidth: 2,
+                }}
+              >
+                <Text
+                  style={{ width: 90, textAlign: 'center', fontWeight: '600' }}
+                  txtSize="standard"
+                  text="Amount"
+                />
+                <Text
+                  style={{ flex: 1, marginHorizontal: 20, textAlign: 'center', fontWeight: '600' }}
+                  txtSize="standard"
+                  text="Description"
+                />
+                <Text style={{ width: 40, fontWeight: '600' }} txtSize="standard" text="" />
+              </View>
 
-            <View
-              style={{
-                flexDirection: 'row',
-                width: '100%',
-                height: 40,
-                alignItems: 'center',
-                borderBottomColor: colors.separatorColor,
-                borderBottomWidth: 2,
-              }}
-            >
-              <Text
-                style={{ width: 90, textAlign: 'center', fontWeight: '600' }}
-                txtSize="standard"
-                text="Amount"
-              />
-              <Text
-                style={{ flex: 1, marginHorizontal: 20, textAlign: 'center', fontWeight: '600' }}
-                txtSize="standard"
-                text="Description"
-              />
-              <Text style={{ width: 40, fontWeight: '600' }} txtSize="standard" text="" />
-            </View>
+              <View style={{ maxHeight: containerHeight - 290 }}>
+                <FlatList
+                  showsVerticalScrollIndicator={Platform.OS === 'web'}
+                  data={allInvoiceLineItems}
+                  renderItem={({ item }) => <SwipeableLineItem lineItem={item} projectId={projectId} />}
+                />
+              </View>
 
-            <View style={{ maxHeight: containerHeight - 290 }}>
-              <FlatList
-                showsVerticalScrollIndicator={Platform.OS === 'web'}
-                data={allInvoiceLineItems}
-                renderItem={({ item }) => <SwipeableLineItem lineItem={item} projectId={projectId} />}
-              />
-            </View>
-
-            <View
-              style={{
-                flexDirection: 'row',
-                width: '100%',
-                height: 40,
-                alignItems: 'center',
-                borderTopColor: colors.separatorColor,
-                borderTopWidth: 2,
-              }}
-            >
-              <Text
-                style={{ width: 110, textAlign: 'right', fontWeight: '600' }}
-                text={itemsTotalCost ? formatCurrency(itemsTotalCost, true, true) : '$0.00'}
-              />
-              <Text
-                style={{ flex: 1, marginHorizontal: 10, marginLeft: 30, fontWeight: '600' }}
-                text={`Total for ${allInvoiceLineItems.length} line ${
-                  allInvoiceLineItems.length?.toString() === '1' ? 'item' : 'items'
-                }`}
-              />
+              <View
+                style={{
+                  flexDirection: 'row',
+                  width: '100%',
+                  height: 40,
+                  alignItems: 'center',
+                  borderTopColor: colors.separatorColor,
+                  borderTopWidth: 2,
+                }}
+              >
+                <Text
+                  style={{ width: 110, textAlign: 'right', fontWeight: '600' }}
+                  text={itemsTotalCost ? formatCurrency(itemsTotalCost, true, true) : '$0.00'}
+                />
+                <Text
+                  style={{ flex: 1, marginHorizontal: 10, marginLeft: 30, fontWeight: '600' }}
+                  text={`Total for ${allInvoiceLineItems.length} line ${
+                    allInvoiceLineItems.length?.toString() === '1' ? 'item' : 'items'
+                  }`}
+                />
+              </View>
             </View>
           </View>
         </>
@@ -282,6 +301,9 @@ const styles = StyleSheet.create({
     height: 100,
   },
   leftButton: {
+    flex: 1,
+  },
+  rightButton: {
     flex: 1,
   },
 });
