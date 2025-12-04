@@ -45,18 +45,18 @@ export const WorkItemSpentSummaryProvider: React.FC<WorkItemSpentSummaryProvider
   const setWorkItemSpentAmount = useCallback(
     (projectId: string, workItemId: string, spentAmount: number) => {
       setSummariesMap((prev) => {
-        const newMap = new Map(prev);
-        let projectMap = newMap.get(projectId);
+        const projectMap = prev.get(projectId);
+        const existingSummary = projectMap?.get(workItemId);
 
-        if (!projectMap) {
-          projectMap = new Map();
-          newMap.set(projectId, projectMap);
-        } else {
-          projectMap = new Map(projectMap);
-          newMap.set(projectId, projectMap);
+        // Avoid unnecessary updates if the value hasn't changed
+        if (existingSummary && existingSummary.spentAmount === spentAmount) {
+          return prev;
         }
 
-        projectMap.set(workItemId, { workItemId, spentAmount });
+        const newMap = new Map(prev);
+        let newProjectMap = projectMap ? new Map(projectMap) : new Map();
+        newProjectMap.set(workItemId, { workItemId, spentAmount });
+        newMap.set(projectId, newProjectMap);
         return newMap;
       });
     },
