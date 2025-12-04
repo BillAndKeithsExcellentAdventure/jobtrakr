@@ -260,7 +260,7 @@ const AddReceiptPage = () => {
         setPickedSubCategoryOption(undefined);
       }
     },
-    [availableCategoriesOptions, allWorkItems],
+    [allWorkItems, allAvailableCostItemOptions],
   );
 
   useEffect(() => {

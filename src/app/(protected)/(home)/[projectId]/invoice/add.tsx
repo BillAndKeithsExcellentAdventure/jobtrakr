@@ -240,7 +240,7 @@ const AddInvoicePage = () => {
         setPickedSubCategoryOption(undefined);
       }
     },
-    [availableCategoriesOptions, allWorkItems],
+    [allWorkItems, allAvailableCostItemOptions],
   );
 
   useEffect(() => {

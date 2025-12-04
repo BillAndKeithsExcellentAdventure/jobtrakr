@@ -143,7 +143,7 @@ const EditLineItemPage = () => {
         setPickedSubCategoryOption(undefined);
       }
     },
-    [availableCategoriesOptions, allWorkItems],
+    [allWorkItems, allAvailableCostItemOptions],
   );
 
   const handleOkPress = useCallback(async () => {
