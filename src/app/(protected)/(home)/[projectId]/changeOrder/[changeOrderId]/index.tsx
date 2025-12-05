@@ -10,7 +10,7 @@ import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
-import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { useProject, useProjectListStoreId } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   ChangeOrder,
   ChangeOrderItem,
@@ -38,6 +38,10 @@ interface SendPdfParams {
   toEmail: string;
   fromEmail: string;
   fromName: string;
+  changeOrderId: string;
+  projectId: string;
+  expirationDate: string;
+  ownerEmail: string;
   subject: string;
 }
 
@@ -47,6 +51,9 @@ const generateAndSendPdf = async (
   token: string,
 ): Promise<string | null> => {
   try {
+    // TODO: Save the backend URI in a config file
+
+    console.log('generateAndSendPdf params.projectId:', params.projectId);
     // RESTful API call to generate and send PDF
     const response = await fetch(
       'https://projecthoundbackend.keith-m-bertram.workers.dev/sendChangeOrderEmail',
@@ -84,7 +91,6 @@ const DefineChangeOrderScreen = () => {
   const [changeOrderBidAmount, setChangeOrderBidAmount] = useState<number>(0);
   const appSettings = useAppSettings();
   const projectData = useProject(projectId);
-
   const auth = useAuth();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [showAddItemModal, setShowAddItemModal] = useState<boolean>(false);
@@ -170,6 +176,17 @@ const DefineChangeOrderScreen = () => {
   const handleSendForApproval = useCallback(async () => {
     if (!changeOrderData) return;
 
+    // Validate required settings
+    if (!appSettings?.ownerName || !appSettings?.email || !appSettings?.companyName) {
+      Alert.alert('Missing Settings', 'Please configure your company settings before sending change orders.');
+      return;
+    }
+
+    if (!projectData?.ownerEmail) {
+      Alert.alert('Missing Client Email', 'The project does not have a client email address specified.');
+      return;
+    }
+
     // Load the HTML template from the file system
     let templateHTMLString: string;
     try {
@@ -182,8 +199,6 @@ const DefineChangeOrderScreen = () => {
 
     const htmlOutput = renderChangeOrderTemplate(templateHTMLString, changeOrderData);
     if (htmlOutput) {
-      console.log(htmlOutput);
-
       try {
         const userId = auth.userId;
         if (!userId) {
@@ -193,35 +208,128 @@ const DefineChangeOrderScreen = () => {
 
         const token = (await auth.getToken()) ?? '';
 
-        // NOTE: Need to get with Bill to figure out how to create a email body
+        // Calculate hash and expiration (48 hours from now in seconds since Jan 1, 2000)
+        const expirationDate = Math.floor(
+          (Date.now() + 48 * 60 * 60 * 1000 - Date.UTC(2000, 0, 1, 0, 0, 0, 0)) / 1000,
+        );
 
-        // Generate and send PDF using the new function with object parameter
+        // Create HTML email body with inline styles for better email client compatibility
+        const msgBody = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background-color: #f4f4f4;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 3px solid #007bff;
+    }
+    .content {
+      padding: 20px;
+      background-color: #ffffff;
+    }
+    .button {
+      display: inline-block;
+      padding: 12px 24px;
+      margin: 20px 0;
+      background-color: #007bff;
+      color: #ffffff !important;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    .button:hover {
+      background-color: #0056b3;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #dddddd;
+      font-size: 12px;
+      color: #666666;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>${appSettings.companyName}</h1>
+  </div>
+  <div class="content">
+    <p>Dear ${projectData?.ownerName ?? 'Client'},</p>
+    
+    <p>Please review the attached change order titled <strong>"${
+      changeOrder?.title || 'unknown'
+    }"</strong>.</p>
+    
+    <p><strong>Project:</strong> ${projectData?.name ?? 'Unknown Project'}</p>
+    <p><strong>Change Order Amount:</strong> ${formatCurrency(changeOrder?.bidAmount ?? 0, true)}</p>
+    
+    <p>To accept this change order, please click the button below:</p>
+    
+    <p style="text-align: center;">
+      <a href="<[AcceptURL]>" class="button">Accept Change Order</a>
+    </p>
+    
+    <p style="margin-top: 30px;">
+      Best regards,<br/>
+      <strong>${appSettings.ownerName}</strong><br/>
+      ${appSettings.companyName}<br/>
+      ${appSettings.phone ? `Phone: ${appSettings.phone}<br/>` : ''}
+      ${appSettings.email ? `Email: ${appSettings.email}` : ''}
+    </p>
+  </div>
+  <div class="footer">
+    <p>This is an automated email. Please do not reply directly to this message.</p>
+    <p>If you have any questions, please contact us at ${appSettings.email ?? 'our office'}.</p>
+  </div>
+</body>
+</html>
+      `.trim();
+
+        // Generate and send PDF with HTML email body
         const pdfFilePath = await generateAndSendPdf(
           {
             userId: userId,
             htmlPdf: htmlOutput,
-            htmlBody:
-              'Hello ' +
-              (projectData?.ownerName ?? '') +
-              ', Please review the attached change order. Best regards, ' +
-              (appSettings.ownerName ?? ''),
+            htmlBody: msgBody,
             toEmail: projectData?.ownerEmail ?? '',
             fromEmail: appSettings.email ?? '',
             fromName: appSettings.ownerName ?? '',
-            subject: `Change Order ${changeOrder?.id || 'unknown'} for your review`,
+            changeOrderId: changeOrder?.id,
+            projectId: projectData?.id,
+            expirationDate: expirationDate,
+            ownerEmail: projectData?.ownerEmail ?? '',
+            subject: `${appSettings.companyName} : Please review and accept change order "${
+              changeOrder?.title || 'unknown'
+            }"`,
           },
           changeOrder?.id || 'unknown',
           token,
         );
+
+        if (pdfFilePath) {
+          Alert.alert('Success', 'Change order sent successfully!');
+        }
       } catch (error) {
         const errorMessage =
           typeof error === 'object' && error !== null && 'message' in error
             ? (error as { message?: string }).message
-            : 'Failed to generate PDF';
+            : 'Failed to send change order';
         Alert.alert('Error', errorMessage);
       }
     }
-  }, [changeOrderData, changeOrder?.id, auth]);
+  }, [changeOrderData, changeOrder, appSettings, projectData, auth, projectId, changeOrderId]);
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
