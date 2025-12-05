@@ -4,7 +4,7 @@ import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
 import { useDeleteRowCallback, VendorData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 
-import { MaterialIcons } from '@expo/vector-icons';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
@@ -74,7 +74,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
               {vendor.businessPhone && <Text text={vendor.businessPhone} />}
             </View>
             <View>
-              <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
+              <Feather name="chevrons-right" size={24} color={colors.iconColor} />
             </View>
           </View>
         </Pressable>

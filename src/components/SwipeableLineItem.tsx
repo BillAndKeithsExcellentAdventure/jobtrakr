@@ -8,7 +8,7 @@ import {
   useTableValue,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
-import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
@@ -94,7 +94,7 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
                 />
               </View>
             ) : (
-              <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
+              <Feather name="chevrons-right" size={24} color={colors.iconColor} />
             )}
           </View>
         </Pressable>

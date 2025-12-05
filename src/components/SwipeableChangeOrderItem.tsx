@@ -7,7 +7,7 @@ import {
   useDeleteRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet } from 'react-native';
@@ -84,7 +84,7 @@ const SwipeableChangeOrderItem = React.memo(({ item, projectId }: Props) => {
                 text={formatCurrency(item.amount, false, true)}
               />
               <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
-                <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
+                <Feather name="chevrons-right" size={24} color={colors.iconColor} />
               </View>
             </View>
           </View>

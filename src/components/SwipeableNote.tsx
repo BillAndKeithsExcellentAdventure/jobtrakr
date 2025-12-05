@@ -1,4 +1,4 @@
-import { MaterialIcons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import FontAwesomeIcon from '@expo/vector-icons/FontAwesome';
 import React, { useCallback, useRef } from 'react';
 import { Alert, StyleSheet } from 'react-native';
@@ -127,7 +127,7 @@ const SwipeableNote = React.memo(
                 {note.task}
               </Text>
               <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
-                <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
+                <Feather name="chevrons-right" size={24} color={colors.iconColor} />
               </View>
             </View>
           </Pressable>
