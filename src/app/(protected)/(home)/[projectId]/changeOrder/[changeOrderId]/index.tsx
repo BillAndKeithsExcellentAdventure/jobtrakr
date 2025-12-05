@@ -182,6 +182,11 @@ const DefineChangeOrderScreen = () => {
       return;
     }
 
+    if (!projectData?.ownerEmail) {
+      Alert.alert('Missing Client Email', 'The project does not have a client email address specified.');
+      return;
+    }
+
     // Load the HTML template from the file system
     let templateHTMLString: string;
     try {
