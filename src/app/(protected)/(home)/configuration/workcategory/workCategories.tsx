@@ -1,4 +1,5 @@
 import { ActionButton } from '@/src/components/ActionButton';
+import SwipeableCategory from '@/src/components/SwipeableCategory';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import {
@@ -11,17 +12,18 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'; // Right caret icon
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, Platform, StyleSheet, KeyboardAvoidingView } from 'react-native';
+import { Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableCategory from '../../../../../components/SwipeableCategory';
 
 const ListWorkCategories = () => {
   const addWorkCategory = useAddRowCallback('categories');
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllRows('workItems');
   const removeWorkItemCallback = useDeleteRowCallback('workItems');
+
+  const visibleCategories = useMemo(() => allCategories.filter((c) => !c.hidden), [allCategories]);
 
   const orphanedWorkItemIds = useMemo(
     () => allWorkItems.filter((w) => undefined === w.categoryId || null === w.categoryId).map((i) => i.id),
@@ -151,7 +153,7 @@ const ListWorkCategories = () => {
             )}
             <View style={{ flex: 1 }}>
               <FlatList
-                data={allCategories}
+                data={visibleCategories}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => <SwipeableCategory category={item} />}
                 ListEmptyComponent={() => (

@@ -2,8 +2,9 @@ import { ActionButtonProps } from '@/src/components/ButtonBar';
 import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import React from 'react';
-import { FlatList, Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { ProjectListEntry } from './ProjectListEntry';
+import { FlatList } from 'react-native-gesture-handler';
 
 // Define types for the props
 export interface ProjectListEntryProps {

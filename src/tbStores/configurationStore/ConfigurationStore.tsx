@@ -12,6 +12,7 @@ export const TABLES_SCHEMA = {
     code: { type: 'string' },
     name: { type: 'string' },
     status: { type: 'string' },
+    hidden: { type: 'boolean' },
   },
   workItems: {
     id: { type: 'string' },
@@ -19,6 +20,7 @@ export const TABLES_SCHEMA = {
     code: { type: 'string' },
     name: { type: 'string' },
     status: { type: 'string' },
+    hidden: { type: 'boolean' },
   },
   templates: {
     id: { type: 'string' },

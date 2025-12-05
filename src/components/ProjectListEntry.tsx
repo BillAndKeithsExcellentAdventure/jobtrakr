@@ -2,11 +2,12 @@ import { ActionButtonProps, ButtonBar } from '@/src/components/ButtonBar';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import React from 'react';
-import { Platform, Pressable, StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 import Base64Image from './Base64Image';
 import { ProjectListEntryProps } from './ProjectList';
 import PercentCompleteBar from './PercentCompleteBar';
+import { Pressable } from 'react-native-gesture-handler';
 
 interface ProjectListEntryComponentProps {
   item: ProjectListEntryProps;

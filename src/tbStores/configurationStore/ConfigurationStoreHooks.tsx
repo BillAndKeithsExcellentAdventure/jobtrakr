@@ -1,4 +1,4 @@
-import { NoValuesSchema, Value } from 'tinybase/with-schemas';
+import { NoValuesSchema, Store, Value } from 'tinybase/with-schemas';
 import { TABLES_SCHEMA, useStoreId } from './ConfigurationStore';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { useCallback, useEffect, useState } from 'react';
@@ -13,6 +13,7 @@ export interface WorkCategoryData {
   code: string;
   name: string;
   status: string;
+  hidden?: boolean;
 }
 
 export interface WorkItemData {
@@ -21,6 +22,7 @@ export interface WorkItemData {
   code: string;
   name: string;
   status: string;
+  hidden?: boolean;
 }
 
 export interface ProjectTemplateData {
@@ -108,7 +110,6 @@ export const useAllRows = <K extends keyof TableDataMap>(
     if (!compareFn) return array;
     return [...array].sort(compareFn);
   }, [store, tableName, compareFn]);
-
   useEffect(() => {
     setRows(fetchRows());
   }, [fetchRows]);
@@ -164,48 +165,58 @@ export function useDeleteRowCallback<K extends CONFIGURATION_TABLES>(tableId: K)
   return useCallback(
     (id: string): CrudResult => {
       if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
-      const success = store.delRow(tableId, id);
 
-      // if successful and the table is 'categories', also delete any workItems that reference this categoryId
-      if (success && tableId === 'categories') {
+      // if deleting a category, mark the category as hidden and then mark any workItems that reference this categoryId as hidden
+      if (tableId === 'categories') {
+        const category = store.getRow('categories', id);
+        if (category) {
+          store.setRow('categories', id, { ...category, hidden: true });
+        }
+
         const workItemsTable = store.getTable('workItems') || {};
         for (const [workItemId, workItem] of Object.entries(workItemsTable)) {
           if (workItem.categoryId === id) {
-            store.delRow('workItems', workItemId);
+            store.setRow('workItems', workItemId, { ...workItem, hidden: true });
+
+            // remove the workItemId from any TemplateWorkItemData entries
+            const templateWorkItemsTable = store.getTable('templateWorkItems') || {};
+            for (const [templateId, templateWorkItem] of Object.entries(templateWorkItemsTable)) {
+              const workItemIds = templateWorkItem.workItemIds
+                ? templateWorkItem.workItemIds.split(',').filter((wid) => wid !== workItemId)
+                : [];
+              store.setRow('templateWorkItems', templateId, {
+                ...templateWorkItem,
+                workItemIds: workItemIds.join(','),
+              });
+            }
           }
         }
+        return { status: 'Success', id, msg: '' };
       }
 
-      // if successful and the table is 'categories', also delete any TemplateWorkItemData that reference these workItems
-      if (success && tableId === 'categories') {
-        const templateWorkItemsTable = store.getTable('templateWorkItems') || {};
-        for (const [templateWorkItemId, templateWorkItem] of Object.entries(templateWorkItemsTable)) {
-          const workItemIds = templateWorkItem.workItemIds ? templateWorkItem.workItemIds.split(',') : [];
-          if (
-            workItemIds.some((workItemId) => {
-              const workItem = store.getRow('workItems', workItemId);
-              return !workItem || workItem.categoryId === id;
-            })
-          ) {
-            store.delRow('templateWorkItems', templateWorkItemId);
-          }
-        }
-      }
+      // if deleting a workItem, mark the workItem as hidden
+      if (tableId === 'workItems') {
+        const workItem = store.getRow('workItems', id);
+        if (workItem) {
+          store.setRow('workItems', id, { ...workItem, hidden: true });
 
-      // if successful and the table is 'workItems', also remove references from TemplateWorkItemData
-      if (success && tableId === 'workItems') {
-        const templateWorkItemsTable = store.getTable('templateWorkItems') || {};
-        for (const [templateWorkItemId, templateWorkItem] of Object.entries(templateWorkItemsTable)) {
-          const workItemIds = templateWorkItem.workItemIds ? templateWorkItem.workItemIds.split(',') : [];
-          if (workItemIds.includes(id)) {
-            const updatedWorkItemIds = workItemIds.filter((workItemId) => workItemId !== id);
-            store.setRow('templateWorkItems', templateWorkItemId, {
+          // remove the workItemId from any TemplateWorkItemData entries
+          const templateWorkItemsTable = store.getTable('templateWorkItems') || {};
+          for (const [templateId, templateWorkItem] of Object.entries(templateWorkItemsTable)) {
+            const workItemIds = templateWorkItem.workItemIds
+              ? templateWorkItem.workItemIds.split(',').filter((wid) => wid !== id)
+              : [];
+            store.setRow('templateWorkItems', templateId, {
               ...templateWorkItem,
-              workItemIds: updatedWorkItemIds.join(','),
+              workItemIds: workItemIds.join(','),
             });
           }
         }
+        return { status: 'Success', id, msg: '' };
       }
+
+      // For other tables, perform actual deletion
+      const success = store.delRow(tableId, id);
 
       return success
         ? { status: 'Success', id, msg: '' }

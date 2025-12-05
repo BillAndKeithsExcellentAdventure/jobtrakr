@@ -11,7 +11,7 @@ import {
 import { createItemsArray } from '@/src/utils/array';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, SectionList, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -41,12 +41,18 @@ const ProjectTemplatesConfigurationScreen: React.FC = () => {
   const { setActiveWorkItemIds, templateWorkItemIds, toggleWorkItemId } = useTemplateWorkItemData(templateId);
   const [sectionData, setSectionData] = useState<SectionData[]>([]);
 
+  const visibleProjectCategories = useMemo(
+    () => allProjectCategories.filter((c) => !c.hidden),
+    [allProjectCategories],
+  );
+  const visibleWorkItems = useMemo(() => allWorkItems.filter((w) => !w.hidden), [allWorkItems]);
+
   const expandedSectionIdRef = useRef<string>(''); // Ref to keep track of the expanded section ID
 
   useEffect(() => {
     const fetchAllSectionsData = () => {
-      const sections: SectionData[] = allProjectCategories.map((category) => {
-        const items = allWorkItems.filter((item) => item.categoryId === category.id);
+      const sections: SectionData[] = visibleProjectCategories.map((category) => {
+        const items = visibleWorkItems.filter((item) => item.categoryId === category.id);
         const activeWorkItemIds = templateWorkItemIds ?? [];
 
         return {
@@ -66,7 +72,7 @@ const ProjectTemplatesConfigurationScreen: React.FC = () => {
       setSectionData(sections);
     };
     fetchAllSectionsData();
-  }, [allProjectCategories, allWorkItems, templateWorkItemIds]);
+  }, [templateWorkItemIds, visibleProjectCategories, visibleWorkItems]);
 
   const toggleSection = (id: string) => {
     expandedSectionIdRef.current = expandedSectionIdRef.current === id ? '' : id;
