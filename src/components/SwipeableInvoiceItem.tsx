@@ -9,7 +9,7 @@ import { Text, View } from '@/src/components/Themed';
 import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
 import {
-  InvoiceData,
+  ClassifiedInvoiceData,
   useAllRows,
   useDeleteRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
@@ -27,12 +27,13 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => (
 ));
 
 const SwipeableInvoiceItem = React.memo(
-  ({ orgId, projectId, item }: { orgId: string; projectId: string; item: InvoiceData }) => {
+  ({ orgId, projectId, item }: { orgId: string; projectId: string; item: ClassifiedInvoiceData }) => {
     const router = useRouter();
     const colors = useColors();
     const deleteInvoice = useDeleteRowCallback(projectId, 'invoices');
     const deleteInvoiceLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
     const allInvoiceLineItems = useAllRows(projectId, 'workItemCostEntries');
+    const textColor = item.fullyClassified ? colors.text : colors.errorText;
 
     const allInvoiceItems = useMemo(
       () => allInvoiceLineItems.filter((lineItem) => lineItem.parentId === item.id),
@@ -75,7 +76,7 @@ const SwipeableInvoiceItem = React.memo(
     }, [item.id, removeInvoice]);
 
     const renderRightActions = useCallback(() => <RightAction onDelete={handleDelete} />, [handleDelete]);
-
+    const photoDate = formatDate(item.pictureDate, undefined, true);
     return (
       <SwipeableComponent
         key={item.id}
@@ -95,7 +96,12 @@ const SwipeableInvoiceItem = React.memo(
             <View style={styles.itemInfo}>
               {item.amount === 0 && totalOfAllInvoiceItems === 0 && item.imageId ? (
                 <>
-                  <Base64Image base64String={item.thumbnail} height={ITEM_HEIGHT - 20} width={120} />
+                  <View style={{ flex: 1, alignItems: 'center' }}>
+                    <Base64Image base64String={item.thumbnail} height={ITEM_HEIGHT - 20} width={150} />
+                    <View style={{ width: 150 }}>
+                      <Text style={styles.dateOverlay}>{photoDate}</Text>
+                    </View>
+                  </View>
                   <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
                     <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
                   </View>
@@ -103,12 +109,14 @@ const SwipeableInvoiceItem = React.memo(
               ) : (
                 <>
                   <View style={{ flex: 1, justifyContent: 'center', paddingLeft: 10 }}>
-                    <Text>Amount: {formatCurrency(item.amount, true, true)}</Text>
-                    <Text>Vendor: {item.vendor}</Text>
-                    <Text>
+                    <Text style={{ color: textColor }}>
+                      Amount: {formatCurrency(item.amount, true, true)}
+                    </Text>
+                    <Text style={{ color: textColor }}>Vendor: {item.vendor}</Text>
+                    <Text style={{ color: textColor }}>
                       # Items: {allInvoiceItems.length} / ({totalOfAllInvoiceItemsFormatted})
                     </Text>
-                    <Text>Date: {formatDate(item.invoiceDate)}</Text>
+                    <Text style={{ color: textColor }}>Date: {formatDate(item.invoiceDate)}</Text>
                   </View>
                   <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
                     <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
@@ -143,6 +151,18 @@ const styles = StyleSheet.create({
     backgroundColor: deleteBg,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  dateOverlay: {
+    position: 'absolute',
+    bottom: -25, // Adjust as needed
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    color: 'white',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingVertical: 2,
+    borderRadius: 4,
+    fontSize: 12,
   },
 });
 

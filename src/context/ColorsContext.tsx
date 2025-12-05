@@ -52,6 +52,7 @@ export type ColorSchemeColors = {
   modalOverlayBackgroundColor: string;
   opaqueModalOverlayBackgroundColor: string;
   error: string;
+  errorText: string;
   errorBackground: string;
   textDim: string;
   textPlaceholder: string;

@@ -5,7 +5,7 @@ import { useColors } from '@/src/context/ColorsContext';
 import { FlashList } from '@shopify/flash-list';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
 import {
@@ -16,7 +16,9 @@ import {
   useCostUpdater,
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
+  ClassifiedInvoiceData,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
@@ -48,9 +50,37 @@ const ProjectInvoicesPage = () => {
 
   const auth = useAuth();
   const allInvoices = useAllRows(projectId, 'invoices', RecentInvoiceDateCompare);
+  const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const addInvoiceImage = useAddImageCallback();
   const addInvoice = useAddRowCallback(projectId, 'invoices');
+  const allWorkItems = useAllRowsConfiguration('workItems');
+  const flashListRef = useRef<any>(null);
+  const previousInvoiceCount = useRef(0);
+
   useCostUpdater(projectId);
+
+  // return ClassifiedInvoiceData array using allInvoices where fullyClassified is true if
+  // all cost items for this invoice have a valid work item id
+  const classifiedInvoices: ClassifiedInvoiceData[] = useMemo(() => {
+    return allInvoices.map((invoice) => {
+      // get all cost items for this invoice
+      const invoiceCostItems = allCostItems.filter((item) => item.parentId === invoice.id);
+      // check if all cost items have a valid work item id
+      const fullyClassified =
+        invoiceCostItems.length > 0 &&
+        invoiceCostItems.every(
+          (item) =>
+            item.workItemId &&
+            item.workItemId.length > 0 &&
+            allWorkItems.find((wi) => wi.id === item.workItemId) !== undefined,
+        );
+
+      return {
+        ...invoice,
+        fullyClassified,
+      };
+    });
+  }, [allInvoices, allCostItems, allWorkItems]);
 
   const colors = useColors();
 
@@ -119,6 +149,14 @@ const ProjectInvoicesPage = () => {
     });
   }, [projectId, projectName, router]);
 
+  // Scroll to top when new invoices are added
+  useEffect(() => {
+    if (classifiedInvoices.length > previousInvoiceCount.current && previousInvoiceCount.current > 0) {
+      flashListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    }
+    previousInvoiceCount.current = classifiedInvoices.length;
+  }, [classifiedInvoices.length]);
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
       <Stack.Screen options={{ title: `${projectName}`, headerShown: true }} />
@@ -183,7 +221,7 @@ const ProjectInvoicesPage = () => {
                     }}
                   >
                     <FlashList
-                      data={allInvoices}
+                      data={classifiedInvoices}
                       keyExtractor={(item, index) => item.id ?? index.toString()}
                       renderItem={({ item }) => (
                         <SwipeableInvoiceItem orgId={auth.orgId!!} projectId={projectId} item={item} />
@@ -214,7 +252,6 @@ export const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 550,
   },
-
 });
 
 export default ProjectInvoicesPage;

@@ -9,7 +9,7 @@ import { Text, View } from '@/src/components/Themed';
 import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
 import {
-  ReceiptData,
+  ClassifiedReceiptData,
   useAllRows,
   useDeleteRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
@@ -27,13 +27,13 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => (
 ));
 
 const SwipeableReceiptItem = React.memo(
-  ({ orgId, projectId, item }: { orgId: string; projectId: string; item: ReceiptData }) => {
+  ({ orgId, projectId, item }: { orgId: string; projectId: string; item: ClassifiedReceiptData }) => {
     const router = useRouter();
     const colors = useColors();
     const deleteReceipt = useDeleteRowCallback(projectId, 'receipts');
     const deleteReceiptLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
     const allReceiptLineItems = useAllRows(projectId, 'workItemCostEntries');
-
+    const textColor = item.fullyClassified ? colors.text : colors.errorText;
     const allReceiptItems = useMemo(
       () => allReceiptLineItems.filter((lineItem) => lineItem.parentId === item.id),
       [allReceiptLineItems, item.id],
@@ -108,12 +108,14 @@ const SwipeableReceiptItem = React.memo(
               ) : (
                 <>
                   <View style={{ flex: 1, justifyContent: 'center', paddingLeft: 10 }}>
-                    <Text>Amount: {formatCurrency(item.amount, true, true)}</Text>
-                    <Text>Vendor: {item.vendor}</Text>
-                    <Text>
+                    <Text style={{ color: textColor }}>
+                      Amount: {formatCurrency(item.amount, true, true)}
+                    </Text>
+                    <Text style={{ color: textColor }}>Vendor: {item.vendor}</Text>
+                    <Text style={{ color: textColor }}>
                       # Items: {allReceiptItems.length} / ({totalOfAllReceiptItemsFormatted})
                     </Text>
-                    <Text>Date: {formatDate(item.receiptDate)}</Text>
+                    <Text style={{ color: textColor }}>Date: {formatDate(item.receiptDate)}</Text>
                   </View>
                   <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
                     <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />

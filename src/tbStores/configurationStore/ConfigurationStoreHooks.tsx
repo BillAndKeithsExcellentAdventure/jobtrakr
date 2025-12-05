@@ -1,4 +1,4 @@
-import { NoValuesSchema } from 'tinybase/with-schemas';
+import { NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { TABLES_SCHEMA, useStoreId } from './ConfigurationStore';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { useCallback, useEffect, useState } from 'react';
@@ -6,10 +6,7 @@ import { randomUUID } from 'expo-crypto';
 import { CrudResult } from '@/src/models/types';
 import { exportTinyBaseStore, importFromJson } from '@/src/utils/tinybase-json';
 
-const {
-  useCell,
-  useStore,
-} = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
+const { useCell, useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
 export interface WorkCategoryData {
   id: string;
@@ -109,7 +106,7 @@ export const useAllRows = <K extends keyof TableDataMap>(
         })) as TableDataMap[K][])
       : [];
     if (!compareFn) return array;
-    return array.sort(compareFn);
+    return [...array].sort(compareFn);
   }, [store, tableName, compareFn]);
 
   useEffect(() => {
@@ -168,6 +165,48 @@ export function useDeleteRowCallback<K extends CONFIGURATION_TABLES>(tableId: K)
     (id: string): CrudResult => {
       if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
       const success = store.delRow(tableId, id);
+
+      // if successful and the table is 'categories', also delete any workItems that reference this categoryId
+      if (success && tableId === 'categories') {
+        const workItemsTable = store.getTable('workItems') || {};
+        for (const [workItemId, workItem] of Object.entries(workItemsTable)) {
+          if (workItem.categoryId === id) {
+            store.delRow('workItems', workItemId);
+          }
+        }
+      }
+
+      // if successful and the table is 'categories', also delete any TemplateWorkItemData that reference these workItems
+      if (success && tableId === 'categories') {
+        const templateWorkItemsTable = store.getTable('templateWorkItems') || {};
+        for (const [templateWorkItemId, templateWorkItem] of Object.entries(templateWorkItemsTable)) {
+          const workItemIds = templateWorkItem.workItemIds ? templateWorkItem.workItemIds.split(',') : [];
+          if (
+            workItemIds.some((workItemId) => {
+              const workItem = store.getRow('workItems', workItemId);
+              return !workItem || workItem.categoryId === id;
+            })
+          ) {
+            store.delRow('templateWorkItems', templateWorkItemId);
+          }
+        }
+      }
+
+      // if successful and the table is 'workItems', also remove references from TemplateWorkItemData
+      if (success && tableId === 'workItems') {
+        const templateWorkItemsTable = store.getTable('templateWorkItems') || {};
+        for (const [templateWorkItemId, templateWorkItem] of Object.entries(templateWorkItemsTable)) {
+          const workItemIds = templateWorkItem.workItemIds ? templateWorkItem.workItemIds.split(',') : [];
+          if (workItemIds.includes(id)) {
+            const updatedWorkItemIds = workItemIds.filter((workItemId) => workItemId !== id);
+            store.setRow('templateWorkItems', templateWorkItemId, {
+              ...templateWorkItem,
+              workItemIds: updatedWorkItemIds.join(','),
+            });
+          }
+        }
+      }
+
       return success
         ? { status: 'Success', id, msg: '' }
         : { status: 'Error', id: '0', msg: 'Failed to delete' };
@@ -327,4 +366,44 @@ export function useImportJsonConfigurationDataCallback() {
     },
     [store],
   );
+}
+
+// Create a function that would look for workItems that have no matching categoryId in
+// categories and delete them and also delete any TemplateWorkItemData that reference
+// those workItems
+export function useCleanOrphanedWorkItemsCallback() {
+  const store = useStore(useStoreId());
+  return useCallback((): void => {
+    if (!store) return;
+
+    const categoriesTable = store.getTable('categories') || {};
+    const validCategoryIds = new Set(Object.keys(categoriesTable));
+
+    const workItemsTable = store.getTable('workItems') || {};
+    const orphanedWorkItemIds: string[] = [];
+
+    // Identify orphaned work items
+    for (const [workItemId, workItem] of Object.entries(workItemsTable)) {
+      if (!validCategoryIds.has(workItem.categoryId ?? '')) {
+        orphanedWorkItemIds.push(workItemId);
+      }
+    }
+
+    // Delete orphaned work items
+    for (const workItemId of orphanedWorkItemIds) {
+      store.delRow('workItems', workItemId);
+    }
+
+    // Clean up TemplateWorkItemData references
+    const templateWorkItemsTable = store.getTable('templateWorkItems') || {};
+    for (const [templateId, templateWorkItem] of Object.entries(templateWorkItemsTable)) {
+      const workItemIds = templateWorkItem.workItemIds
+        ? templateWorkItem.workItemIds.split(',').filter((id) => !orphanedWorkItemIds.includes(id))
+        : [];
+      store.setRow('templateWorkItems', templateId, {
+        ...templateWorkItem,
+        workItemIds: workItemIds.join(','),
+      });
+    }
+  }, [store]);
 }

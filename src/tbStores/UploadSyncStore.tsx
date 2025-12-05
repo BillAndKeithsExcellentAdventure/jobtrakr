@@ -66,7 +66,7 @@ export const useAllFailedToUpload = () => {
         uploadDate: row.uploadDate ?? 0,
       }));
 
-      return items.sort((a, b) => (b.uploadDate ?? 0) - (a.uploadDate ?? 0));
+      return [...items].sort((a, b) => (b.uploadDate ?? 0) - (a.uploadDate ?? 0));
     }
 
     return [];

@@ -8,15 +8,14 @@ import { Switch } from '@/src/components/Switch';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import {
-  useAllRows as useAllConfigurationRows,
-  WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
+  useAllRows as useAllConfigurationRows,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   InvoiceData,
   useAddRowCallback,
-  useAllRows,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
@@ -24,7 +23,7 @@ import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
@@ -171,49 +170,9 @@ const AddInvoicePage = () => {
   }, []);
 
   const [applyToSingleCostCode, setApplyToSingleCostCode] = useState(false);
-  const allWorkItemCostSummaries = useAllRows(projectId, 'workItemSummaries');
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
-  const allWorkItems = useAllConfigurationRows('workItems');
-  const allWorkCategories = useAllConfigurationRows('categories', WorkCategoryCodeCompareAsNumber);
-
-  const availableCategoriesOptions: OptionEntry[] = useMemo(() => {
-    // get a list of all unique workitemids from allWorkItemCostSummaries available in the project
-    const uniqueWorkItemIds = allWorkItemCostSummaries.map((item) => item.workItemId);
-
-    // now get list of all unique categoryIds from allWorkItems given list of uniqueWorkItemIds
-    const uniqueCategoryIds = allWorkItems
-      .filter((item) => uniqueWorkItemIds.includes(item.id))
-      .map((item) => item.categoryId);
-
-    // now get an array of OptionEntry for each entry in uniqueCategoryIds using allWorkCategories
-    const uniqueCategories = allWorkCategories
-      .filter((item) => uniqueCategoryIds.includes(item.id))
-      .map((item) => ({
-        label: item.name,
-        value: item.id,
-      }));
-    return uniqueCategories;
-  }, [allWorkItemCostSummaries, allWorkItems, allWorkCategories]);
-
-  const allAvailableCostItemOptions: OptionEntry[] = useMemo(() => {
-    const uniqueWorkItemIds = allWorkItemCostSummaries.map((item) => item.workItemId);
-    const uniqueWorkItems = allWorkItems.filter((item) => uniqueWorkItemIds.includes(item.id));
-    const uniqueCostItems = uniqueWorkItems.map((item) => {
-      const category = allWorkCategories.find((o) => o.id === item.categoryId);
-      const categoryCode = category ? `${category.code}.` : '';
-      return {
-        sortValue1: Number.parseFloat(item.code),
-        sortValue2: Number.parseFloat(category ? category.code : '0'),
-        label: `${categoryCode}${item.code} - ${item.name}`,
-        value: item.id,
-      };
-    });
-
-    return uniqueCostItems
-      .sort((a, b) => a.sortValue1 - b.sortValue1)
-      .sort((a, b) => a.sortValue2 - b.sortValue2)
-      .map((i) => ({ label: i.label, value: i.value }));
-  }, [allWorkItemCostSummaries, allWorkItems, allWorkCategories]);
+  const { projectWorkItems, availableCategoriesOptions, allAvailableCostItemOptions } =
+    useProjectWorkItems(projectId);
 
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
@@ -229,7 +188,7 @@ const AddInvoicePage = () => {
     (selectedCategory: OptionEntry) => {
       setPickedCategoryOption(selectedCategory);
       if (selectedCategory) {
-        const workItems = allWorkItems
+        const workItems = projectWorkItems
           .filter((item) => item.categoryId === selectedCategory.value)
           .sort(WorkItemDataCodeCompareAsNumber);
         const subCategories = workItems.map((item) => {
@@ -240,7 +199,7 @@ const AddInvoicePage = () => {
         setPickedSubCategoryOption(undefined);
       }
     },
-    [availableCategoriesOptions, allWorkItems],
+    [projectWorkItems, allAvailableCostItemOptions],
   );
 
   useEffect(() => {

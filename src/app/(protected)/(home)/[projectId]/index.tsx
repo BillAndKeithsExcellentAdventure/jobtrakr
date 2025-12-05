@@ -21,7 +21,8 @@ import {
   useDeleteRowCallback,
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
-  useSetWorkItemSpentSummaryCallback,
+  useWorkItemSpentUpdater,
+  useWorkItemsWithoutCosts,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { FontAwesome5, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
@@ -50,12 +51,12 @@ const ProjectDetailsPage = () => {
   const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
-  const updateWorkItemSpentSummary = useSetWorkItemSpentSummaryCallback(projectId);
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
   const allReceiptItems = useAllRows(projectId, 'receipts');
-  const removeCostItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
+  const removeWorkItemSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
+  const workItemsWithoutCosts = useWorkItemsWithoutCosts(projectId);
 
   useEffect(() => {
     if (projectId) {
@@ -70,6 +71,7 @@ const ProjectDetailsPage = () => {
   useSeedWorkItemsIfNecessary(projectId);
   useCostUpdater(projectId);
   useBidAmountUpdater(projectId);
+  useWorkItemSpentUpdater(projectId);
 
   const workItemMap = useMemo(() => {
     return new Map(allWorkItems.map((w) => [w.id, w]));
@@ -92,9 +94,6 @@ const ProjectDetailsPage = () => {
       const spentAmount = allActualCostItems
         .filter((i) => i.workItemId === workItem.id)
         .reduce((sum, item) => sum + item.amount, 0);
-
-      // update the spent amount per workItem
-      updateWorkItemSpentSummary(costItem.workItemId, { spentAmount: spentAmount });
 
       let section = sections.find((sec) => sec.categoryId === category.id);
       if (!section) {
@@ -125,7 +124,7 @@ const ProjectDetailsPage = () => {
     });
 
     return sections.sort(CostSectionDataCodeCompareAsNumber);
-  }, [allWorkItemSummaries, allActualCostItems, workItemMap, categoryMap, updateWorkItemSpentSummary]);
+  }, [allWorkItemSummaries, allActualCostItems, workItemMap, categoryMap]);
 
   // get a list of unused work items not represented in allWorkItemSummaries
   const unusedWorkItems = useMemo(
@@ -135,18 +134,13 @@ const ProjectDetailsPage = () => {
 
   // get a list of all unique categories from unusedWorkItems
   const unusedCategories = useMemo(() => {
-    const usedCategories = new Set(
-      allWorkItemSummaries.map((ws) => {
-        const wrkItem = workItemMap.get(ws.workItemId);
-        return wrkItem ? categoryMap.get(wrkItem.categoryId) : null;
+    const usedCategoryIds = new Set(
+      unusedWorkItems.map((wi) => {
+        return wi.categoryId;
       }),
     );
 
-    return Array.from(
-      new Set(
-        unusedWorkItems.map((w) => w.categoryId).filter((id) => !usedCategories.has(categoryMap.get(id))),
-      ),
-    );
+    return Array.from(usedCategoryIds);
   }, [unusedWorkItems, allWorkItemSummaries, workItemMap, categoryMap]);
 
   const unusedCategoriesString = useMemo(() => unusedCategories.join(','), [unusedCategories]);
@@ -156,14 +150,19 @@ const ProjectDetailsPage = () => {
 
     try {
       // Create CSV header
-      const header = 'Code,Category,Work Item,Estimate,Cost\n';
+      const header = 'Code,Category,Work Item,Estimate,Cost,Cost Type\n';
 
       // Group work items by category and work item, then sort
       const sortedWorkItems = allWorkItems
         .map((workItem) => {
           const category = categoryMap.get(workItem.categoryId);
           const workItemSummary = allWorkItemSummaries.find((summary) => summary.workItemId === workItem.id);
-          const costs = allActualCostItems.filter((cost) => cost.workItemId === workItem.id);
+          const costs = allActualCostItems
+            .filter((cost) => cost.workItemId === workItem.id)
+            .map((c) => ({
+              amount: parseFloat(c.amount.toFixed(2)),
+              documentationType: c.documentationType || '',
+            }));
 
           return {
             catCode: parseInt(category?.code || '0'),
@@ -172,7 +171,7 @@ const ProjectDetailsPage = () => {
             category: (category?.name || '').replace(/,/g, ' '),
             workItem: workItem.name.replace(/,/g, ' '),
             estimate: workItemSummary?.bidAmount || 0,
-            costs: costs.map((c) => parseFloat(c.amount.toFixed(2))),
+            costs,
           };
         })
         .sort((a, b) => {
@@ -187,20 +186,23 @@ const ProjectDetailsPage = () => {
       const csvRows: string[] = [];
 
       sortedWorkItems.forEach((item) => {
-        const totalCost = item.costs.reduce((sum, cost) => sum + cost, 0);
+        const totalCost = item.costs.reduce((sum, cost) => sum + cost.amount, 0);
 
         // First row for this work item with all details and total cost
         csvRows.push(
-          `'${item.code},${item.category},${item.workItem},${item.estimate.toFixed(2)},${totalCost.toFixed(
+          `'${item.code}',${item.category},${item.workItem},${item.estimate.toFixed(2)},${totalCost.toFixed(
             2,
-          )}`,
+          )},`,
         );
 
         // Subsequent rows for individual costs (if there are multiple costs)
         if (item.costs.length > 1) {
           item.costs.forEach((cost) => {
-            csvRows.push(`,,,,${cost.toFixed(2)}`);
+            csvRows.push(`,,,,${cost.amount.toFixed(2)},${cost.documentationType}`);
           });
+        } else if (item.costs.length === 1) {
+          // Update the first row to include cost type if there's only one cost
+          csvRows[csvRows.length - 1] = csvRows[csvRows.length - 1] + item.costs[0].documentationType;
         }
       });
 
@@ -290,26 +292,23 @@ const ProjectDetailsPage = () => {
         ]);
         return;
       } else if (menuItem === 'CleanCostItems' && projectId) {
+        if (workItemsWithoutCosts.length === 0) {
+          Alert.alert(
+            'No Cost Items to Clean',
+            'There are no cost items without estimates or costs to clean.',
+          );
+          return;
+        }
         Alert.alert(
           'Clean Cost Items',
-          'Are you sure you want to clean cost items that do not have a match receipt?',
+          'Are you sure you want to clean cost items that do not have any estimate or costs associated with it? This action cannot be undone.',
           [
             { text: 'Cancel', style: 'cancel' },
             {
               text: 'Clean-up',
               onPress: () => {
-                // remove all cost items that do not have a matching receipt
-                const costItemsToRemove = allActualCostItems.filter(
-                  (costItem) =>
-                    !allReceiptItems.some(
-                      (r) => r.id === costItem.parentId && costItem.documentationType === 'receipt',
-                    ),
-                );
-                costItemsToRemove.forEach((item) => {
-                  const result = removeCostItem(item.id);
-                  if (result.status !== 'Success') {
-                    console.error(`Error cleaning cost item ${item.id}: ${result.msg}`);
-                  }
+                workItemsWithoutCosts.forEach((wi) => {
+                  removeWorkItemSummary(wi.id);
                 });
               },
             },
@@ -330,8 +329,8 @@ const ProjectDetailsPage = () => {
       ExportCostItems,
       allActualCostItems,
       allReceiptItems,
-      removeCostItem,
       unusedCategoriesString,
+      workItemsWithoutCosts,
     ],
   );
 
@@ -373,7 +372,7 @@ const ProjectDetailsPage = () => {
           handleMenuItemPress('Delete', actionContext);
         },
       },
-      ...(allWorkItemSummaries.length > 0
+      ...(workItemsWithoutCosts.length > 0
         ? [
             {
               icon: <FontAwesome5 name="broom" size={28} color={colors.iconColor} />,
@@ -382,6 +381,10 @@ const ProjectDetailsPage = () => {
                 handleMenuItemPress('CleanCostItems', actionContext);
               },
             } as ActionButtonProps,
+          ]
+        : []),
+      ...(allWorkItemSummaries.length > 0
+        ? [
             {
               icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
               label: 'Export Cost Items',
@@ -392,7 +395,7 @@ const ProjectDetailsPage = () => {
           ]
         : []),
     ],
-    [colors, allWorkItemSummaries, handleMenuItemPress, unusedCategories],
+    [colors, allWorkItemSummaries, handleMenuItemPress, unusedCategories, workItemsWithoutCosts],
   );
 
   const renderItem = (item: CostSectionData, projectId: string) => {

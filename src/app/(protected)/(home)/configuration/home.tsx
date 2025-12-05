@@ -6,7 +6,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import React, { useCallback, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable } from 'react-native-gesture-handler';
 import * as Sharing from 'expo-sharing';
 import { Alert, GestureResponderEvent, Platform } from 'react-native';
@@ -15,6 +15,7 @@ import {
   useImportJsonConfigurationDataCallback,
   useAllRows,
   WorkCategoryCodeCompareAsNumber,
+  useCleanOrphanedWorkItemsCallback,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
@@ -28,7 +29,7 @@ const Home = () => {
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllRows('workItems');
   const allProjectTemplates = useAllRows('templates');
-
+  const cleanupOrphanedWorkItems = useCleanOrphanedWorkItemsCallback();
   const exportConfiguration = useExportStoreDataCallback();
   const importConfiguration = useImportJsonConfigurationDataCallback();
   const hasConfigurationData: boolean = useMemo(
@@ -67,6 +68,7 @@ const Home = () => {
   const handleMenuItemPress = useCallback(
     async (menuItem: string) => {
       setHeaderMenuModalVisible(false);
+
       if (menuItem === 'Export') {
         Alert.alert('Export Configuration Data', 'Would you like to export all configuration data?', [
           {
@@ -129,6 +131,26 @@ const Home = () => {
             },
           },
         ]);
+        return;
+      } else if (menuItem === 'CleanWorkItems') {
+        Alert.alert(
+          'Clean Work Items',
+          'This processing will verify that work items are properly linked to a category. It also validates that a template does not reference a work item that no longer exist. Please confirm you want to do this clean up.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Clean-up',
+              onPress: () => {
+                try {
+                  cleanupOrphanedWorkItems();
+                } catch (error) {
+                  console.error('Error during work item cleanup:', error);
+                }
+              },
+            },
+          ],
+        );
+        return;
       }
     },
     [exportConfiguration, importConfiguration],
@@ -143,6 +165,13 @@ const Home = () => {
               label: 'Export Configuration Data',
               onPress: (e: GestureResponderEvent, actionContext?: any) => {
                 handleMenuItemPress('Export');
+              },
+            },
+            {
+              icon: <FontAwesome5 name="broom" size={28} color={colors.iconColor} />,
+              label: 'Work Item Cleanup',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('CleanWorkItems');
               },
             },
           ]

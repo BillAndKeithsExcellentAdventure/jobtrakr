@@ -5,11 +5,13 @@ import { useColors } from '@/src/context/ColorsContext';
 import { FlashList } from '@shopify/flash-list';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
 import SwipeableReceiptItem from '@/src/components/SwipeableReceiptItem';
+import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
+  ClassifiedReceiptData,
   ReceiptData,
   RecentReceiptDateCompare,
   useAddRowCallback,
@@ -18,6 +20,7 @@ import {
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
@@ -30,7 +33,8 @@ const ProjectReceiptsPage = () => {
     receiptId: string;
     projectName: string;
   }>();
-
+  const flashListRef = useRef<any>(null);
+  const previousReceiptCount = useRef(0);
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
@@ -48,9 +52,35 @@ const ProjectReceiptsPage = () => {
 
   const auth = useAuth();
   const allReceipts = useAllRows(projectId, 'receipts', RecentReceiptDateCompare);
+  const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const addReceiptImage = useAddImageCallback();
   const addReceipt = useAddRowCallback(projectId, 'receipts');
+  const allWorkItems = useAllRowsConfiguration('workItems');
+
   useCostUpdater(projectId);
+
+  // return ClassifiedReceiptData array using allReceipts where fullyClassified is true if
+  // all cost items for this receipt have a valid work item id
+  const classifiedReceipts: ClassifiedReceiptData[] = useMemo(() => {
+    return allReceipts.map((receipt) => {
+      // get all cost items for this receipt
+      const receiptCostItems = allCostItems.filter((item) => item.parentId === receipt.id);
+      // check if all cost items have a valid work item id
+      const fullyClassified =
+        receiptCostItems.length > 0 &&
+        receiptCostItems.every(
+          (item) =>
+            item.workItemId &&
+            item.workItemId.length > 0 &&
+            allWorkItems.find((wi) => wi.id === item.workItemId) !== undefined,
+        );
+
+      return {
+        ...receipt,
+        fullyClassified,
+      };
+    });
+  }, [allReceipts, allCostItems, allWorkItems]);
 
   const colors = useColors();
 
@@ -118,6 +148,14 @@ const ProjectReceiptsPage = () => {
     });
   }, [projectId, projectName, router]);
 
+  // Scroll to top when new receipts are added
+  useEffect(() => {
+    if (classifiedReceipts.length > previousReceiptCount.current && previousReceiptCount.current > 0) {
+      flashListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    }
+    previousReceiptCount.current = classifiedReceipts.length;
+  }, [classifiedReceipts.length]);
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
       <Stack.Screen options={{ title: `${projectName}`, headerShown: true }} />
@@ -182,7 +220,8 @@ const ProjectReceiptsPage = () => {
                     }}
                   >
                     <FlashList
-                      data={allReceipts}
+                      ref={flashListRef}
+                      data={classifiedReceipts}
                       keyExtractor={(item, index) => item.id ?? index.toString()}
                       renderItem={({ item }) => (
                         <SwipeableReceiptItem orgId={auth.orgId!!} projectId={projectId} item={item} />
@@ -227,7 +266,6 @@ export const styles = StyleSheet.create({
     bottom: 0,
     borderRadius: 10,
   },
-
 });
 
 export default ProjectReceiptsPage;
