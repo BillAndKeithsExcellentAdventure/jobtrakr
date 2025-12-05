@@ -1,30 +1,27 @@
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import { ProjectList, ProjectListEntryProps } from '@/src/components/ProjectList';
 import { Text, View } from '@/src/components/Themed';
-import { formatCurrency, formatDate } from '@/src/utils/formatters';
+import { formatDate } from '@/src/utils/formatters';
 import Entypo from '@expo/vector-icons/Entypo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, GestureResponderEvent, Platform, StyleSheet, ActivityIndicator } from 'react-native';
-
+import { ActivityIndicator, Alert, GestureResponderEvent, Platform, StyleSheet } from 'react-native';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
-
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { useAllProjects, useToggleFavoriteCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
-
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
-import { useAuth, useClerk } from '@clerk/clerk-expo';
-import { AntDesign } from '@expo/vector-icons';
 import {
   useAllRows,
   WorkCategoryCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useAuth, useClerk } from '@clerk/clerk-expo';
+import { AntDesign } from '@expo/vector-icons';
+import { ActionButton } from '@/src/components/ActionButton';
 
 function MaterialDesignTabBarIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -373,8 +370,24 @@ export default function ProjectHomeScreen() {
               </>
             ) : (
               <>
-                <Text text="Missing Configuration!" txtSize="xl" style={{ marginBottom: 10 }} />
-                <Text text="Please use menu in upper right and select 'Configuration' to define job specific cost items and at least one job template." />
+                <Text text="Welcome to Project Hound!" txtSize="xl" style={{ marginBottom: 10 }} />
+                <Text
+                  text="Before we can start helping you manage project costs we must know what cost items you want to track. 
+                We have provided some defaults specifically for basic home building that you can import using the 'Import Defaults' button below, or you can press the 'Go To Configuration' button to set up your own. If you want to get more information on how to set up your cost codes and project templates please visit our support site."
+                />
+
+                <ActionButton
+                  title="Import Defaults"
+                  type="action"
+                  onPress={() => router.push(`/configuration/workcategory/seedCategoriesSelection/`)}
+                  style={{ marginTop: 20, marginBottom: 10 }}
+                />
+                <ActionButton
+                  title="Go To Configuration"
+                  type="action"
+                  onPress={() => router.push('/configuration/home')}
+                  style={{ marginTop: 10, marginBottom: 10 }}
+                />
               </>
             )}
           </View>
