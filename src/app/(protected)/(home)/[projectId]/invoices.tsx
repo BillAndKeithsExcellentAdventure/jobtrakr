@@ -221,6 +221,7 @@ const ProjectInvoicesPage = () => {
                     }}
                   >
                     <FlashList
+                      ref={flashListRef}
                       data={classifiedInvoices}
                       keyExtractor={(item, index) => item.id ?? index.toString()}
                       renderItem={({ item }) => (
