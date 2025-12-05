@@ -2,7 +2,7 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableCategoryItem from './SwipeableCategoryItem';
@@ -36,11 +36,13 @@ const ShowWorkCategory = () => {
   const router = useRouter();
   const colors = useColors();
 
+  const visibleWorkItems = useMemo(() => allWorkItems.filter((w) => !w.hidden), [allWorkItems]);
+
   useEffect(() => {
     // Simulate fetching the existing category data by ID
-    const fetchedWorkItems = allWorkItems.filter((c) => c.categoryId === categoryId);
+    const fetchedWorkItems = visibleWorkItems.filter((c) => c.categoryId === categoryId);
     setCategorySpecificItems(fetchedWorkItems);
-  }, [categoryId, allWorkItems]);
+  }, [categoryId, visibleWorkItems]);
 
   const handleInputChange = (name: keyof WorkItemData, value: string) => {
     if (item) {
