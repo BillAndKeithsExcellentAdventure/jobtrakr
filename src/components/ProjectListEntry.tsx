@@ -25,7 +25,7 @@ export function ProjectListEntry({ item, onPress, buttons }: ProjectListEntryCom
         { backgroundColor: colors.itemBackground, shadowColor: colors.shadowColor, boxShadow },
       ]}
     >
-      <Pressable onPress={() => onPress(item)} style={{ width: '100%' }}>
+      <Pressable onPress={() => onPress(item)} style={{ width: '100%' }} hitSlop={0}>
         <View style={styles.itemContentContainer}>
           <View style={styles.headerContentContainer}>
             {item.imageUri && (
