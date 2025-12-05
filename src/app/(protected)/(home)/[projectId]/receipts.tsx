@@ -6,7 +6,7 @@ import { FlashList } from '@shopify/flash-list';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, TextInput } from 'react-native';
 
 import SwipeableReceiptItem from '@/src/components/SwipeableReceiptItem';
 import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
@@ -25,6 +25,7 @@ import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView, KeyboardToolbar } from 'react-native-keyboard-controller';
 
 const ProjectReceiptsPage = () => {
   const router = useRouter();
@@ -36,6 +37,7 @@ const ProjectReceiptsPage = () => {
   const flashListRef = useRef<any>(null);
   const previousReceiptCount = useRef(0);
   const [projectIsReady, setProjectIsReady] = useState(false);
+  const [vendorFilter, setVendorFilter] = useState('');
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
 
@@ -62,7 +64,7 @@ const ProjectReceiptsPage = () => {
   // return ClassifiedReceiptData array using allReceipts where fullyClassified is true if
   // all cost items for this receipt have a valid work item id
   const classifiedReceipts: ClassifiedReceiptData[] = useMemo(() => {
-    return allReceipts.map((receipt) => {
+    const receipts = allReceipts.map((receipt) => {
       // get all cost items for this receipt
       const receiptCostItems = allCostItems.filter((item) => item.parentId === receipt.id);
       // check if all cost items have a valid work item id
@@ -80,7 +82,14 @@ const ProjectReceiptsPage = () => {
         fullyClassified,
       };
     });
-  }, [allReceipts, allCostItems, allWorkItems]);
+
+    // Filter by vendor if filter text exists
+    if (vendorFilter.trim()) {
+      return receipts.filter((receipt) => receipt.vendor.toLowerCase().includes(vendorFilter.toLowerCase()));
+    }
+
+    return receipts;
+  }, [allReceipts, allCostItems, allWorkItems, vendorFilter]);
 
   const colors = useColors();
 
@@ -157,84 +166,105 @@ const ProjectReceiptsPage = () => {
   }, [classifiedReceipts.length]);
 
   return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
-      <Stack.Screen options={{ title: `${projectName}`, headerShown: true }} />
-      <View style={styles.viewCenteringContainer}>
-        {!projectIsReady ? (
-          <Text>Loading...</Text>
-        ) : (
-          <>
-            <View style={styles.viewContentContainer}>
-              <View
-                style={{
-                  backgroundColor: colors.listBackground,
-                  padding: 10,
-                }}
-              >
+    <>
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
+        <Stack.Screen options={{ title: `${projectName}`, headerShown: true }} />
+        <View style={styles.viewCenteringContainer}>
+          {!projectIsReady ? (
+            <Text>Loading...</Text>
+          ) : (
+            <>
+              <View style={styles.viewContentContainer}>
                 <View
                   style={{
-                    flexDirection: 'row',
-                    width: '100%',
-                    padding: 5,
-                    borderRadius: 5,
-                    gap: 10,
+                    backgroundColor: colors.listBackground,
+                    padding: 10,
                   }}
                 >
-                  <ActionButton
-                    style={{ flex: 1 }}
-                    onPress={handleAddPhotoReceipt}
-                    type={'action'}
-                    title="Add Photo"
-                  />
-                  <ActionButton
-                    style={{ flex: 1 }}
-                    onPress={handleAddReceipt}
-                    type={'action'}
-                    title="Add Manual"
-                  />
-                </View>
-              </View>
-              <View
-                style={{
-                  alignItems: 'center',
-                  borderBottomWidth: 1,
-                  borderColor: colors.border,
-                }}
-              >
-                <Text txtSize="title" style={{ marginVertical: 5 }}>
-                  Project Receipts
-                </Text>
-              </View>
-
-              {allReceipts.length === 0 ? (
-                <View style={{ alignItems: 'center', margin: 40 }}>
-                  <Text txtSize="xl" text="No receipts found." />
-                </View>
-              ) : (
-                <View style={{ flex: 1 }}>
                   <View
                     style={{
-                      flex: 1,
+                      flexDirection: 'row',
                       width: '100%',
-                      backgroundColor: colors.listBackground,
+                      padding: 5,
+                      borderRadius: 5,
+                      gap: 10,
                     }}
                   >
-                    <FlashList
-                      ref={flashListRef}
-                      data={classifiedReceipts}
-                      keyExtractor={(item, index) => item.id ?? index.toString()}
-                      renderItem={({ item }) => (
-                        <SwipeableReceiptItem orgId={auth.orgId!!} projectId={projectId} item={item} />
-                      )}
+                    <ActionButton
+                      style={{ flex: 1 }}
+                      onPress={handleAddPhotoReceipt}
+                      type={'action'}
+                      title="Add Photo"
+                    />
+                    <ActionButton
+                      style={{ flex: 1 }}
+                      onPress={handleAddReceipt}
+                      type={'action'}
+                      title="Add Manual"
                     />
                   </View>
                 </View>
-              )}
-            </View>
-          </>
-        )}
-      </View>
-    </SafeAreaView>
+                <View
+                  style={{
+                    alignItems: 'center',
+                    borderBottomWidth: 1,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <Text txtSize="title" style={{ marginVertical: 5 }}>
+                    Project Receipts
+                  </Text>
+                </View>
+                <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding" keyboardVerticalOffset={100}>
+                  <View style={{ backgroundColor: colors.listBackground, padding: 5 }}>
+                    <TextInput
+                      style={[
+                        styles.filterInput,
+                        {
+                          borderColor: colors.border,
+                          backgroundColor: colors.background,
+                          color: colors.text,
+                        },
+                      ]}
+                      placeholder="Filter by vendor..."
+                      placeholderTextColor={colors.border}
+                      value={vendorFilter}
+                      onChangeText={setVendorFilter}
+                    />
+                  </View>
+
+                  {allReceipts.length === 0 ? (
+                    <View style={{ alignItems: 'center', margin: 40 }}>
+                      <Text txtSize="xl" text="No receipts found." />
+                    </View>
+                  ) : (
+                    <View style={{ flex: 1 }}>
+                      <View
+                        style={{
+                          flex: 1,
+                          width: '100%',
+                          backgroundColor: colors.listBackground,
+                        }}
+                      >
+                        <FlashList
+                          ref={flashListRef}
+                          data={classifiedReceipts}
+                          keyExtractor={(item, index) => item.id ?? index.toString()}
+                          renderItem={({ item }) => (
+                            <SwipeableReceiptItem orgId={auth.orgId!!} projectId={projectId} item={item} />
+                          )}
+                        />
+                      </View>
+                    </View>
+                  )}
+                </KeyboardAvoidingView>
+              </View>
+            </>
+          )}
+        </View>
+      </SafeAreaView>
+      <KeyboardToolbar />
+    </>
   );
 };
 
@@ -265,6 +295,13 @@ export const styles = StyleSheet.create({
     top: 10,
     bottom: 0,
     borderRadius: 10,
+  },
+  filterInput: {
+    height: 40,
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    fontSize: 16,
   },
 });
 
