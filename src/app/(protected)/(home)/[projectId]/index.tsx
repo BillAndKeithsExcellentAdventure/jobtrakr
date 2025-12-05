@@ -425,7 +425,7 @@ const ProjectDetailsPage = () => {
           },
         ]}
       >
-        <Pressable style={{ flex: 1 }} onPress={showSection} hitSlop={10}>
+        <Pressable style={{ flex: 1 }} onPress={showSection}>
           <View
             style={{
               flexDirection: 'row',
