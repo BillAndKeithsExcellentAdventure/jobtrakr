@@ -85,6 +85,54 @@ const ProjectInvoicesPage = () => {
 
   const colors = useColors();
 
+  const processInvoiceImage = useCallback(
+    async (assetUri: string) => {
+      try {
+        // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
+        const imageAddResult = await addInvoiceImage(assetUri, projectId, 'photo', 'invoice');
+        if (imageAddResult.status !== 'Success') {
+          alert(`Unable to add invoice image: ${JSON.stringify(imageAddResult)}`);
+          return;
+        }
+
+        console.log('Finished adding Invoice Image.', imageAddResult.id);
+        const thumbnail = await createThumbnail(assetUri);
+
+        const newInvoice: InvoiceData = {
+          id: '',
+          vendor: '',
+          description: '',
+          amount: 0,
+          numLineItems: 0,
+          thumbnail: thumbnail ?? '',
+          invoiceDate: new Date().getTime(),
+          notes: '',
+          markedComplete: false,
+          imageId: imageAddResult.id,
+          pictureDate: new Date().getTime(),
+          invoiceNumber: '',
+        };
+
+        console.log('Adding a new Invoice.', newInvoice);
+
+        const response = addInvoice(newInvoice);
+        if (response?.status === 'Success') {
+          newInvoice.id = response.id;
+          console.log('Project invoice successfully added:', newInvoice);
+        } else {
+          alert(
+            `Unable to insert Project invoice: ${JSON.stringify(newInvoice.imageId)} - ${JSON.stringify(
+              response,
+            )}`,
+          );
+        }
+      } finally {
+        setIsProcessingImage(false); // Reset processImage state
+      }
+    },
+    [projectId, addInvoiceImage, addInvoice],
+  );
+
   const handleAddPhotoInvoice = useCallback(async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
@@ -102,47 +150,10 @@ const ProjectInvoicesPage = () => {
       console.log('Adding Invoice Image from photo capture:', asset.uri);
       setIsProcessingImage(true);
 
-      // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
-      const imageAddResult = await addInvoiceImage(asset.uri, projectId, 'photo', 'invoice');
-      if (imageAddResult.status !== 'Success') {
-        alert(`Unable to add invoice image: ${JSON.stringify(imageAddResult)}`);
-        return;
-      }
-
-      console.log('Finished adding Invoice Image.', imageAddResult.id);
-      const thumbnail = await createThumbnail(asset.uri);
-
-      const newInvoice: InvoiceData = {
-        id: '',
-        vendor: '',
-        description: '',
-        amount: 0,
-        numLineItems: 0,
-        thumbnail: thumbnail ?? '',
-        invoiceDate: new Date().getTime(),
-        notes: '',
-        markedComplete: false,
-        imageId: imageAddResult.id,
-        pictureDate: new Date().getTime(),
-        invoiceNumber: '',
-      };
-
-      console.log('Adding a new Invoice.', newInvoice);
-
-      const response = addInvoice(newInvoice);
-      if (response?.status === 'Success') {
-        newInvoice.id = response.id;
-        console.log('Project invoice successfully added:', newInvoice);
-      } else {
-        alert(
-          `Unable to insert Project invoice: ${JSON.stringify(newInvoice.imageId)} - ${JSON.stringify(
-            response,
-          )}`,
-        );
-      }
-      setIsProcessingImage(false); // Reset processImage state
+      // Use requestAnimationFrame to ensure React renders the ActivityIndicator before starting heavy operations
+      requestAnimationFrame(() => processInvoiceImage(asset.uri));
     }
-  }, [projectId, addInvoiceImage, addInvoice, projectName]);
+  }, [processInvoiceImage]);
 
   const handleAddInvoice = useCallback(() => {
     router.push({
