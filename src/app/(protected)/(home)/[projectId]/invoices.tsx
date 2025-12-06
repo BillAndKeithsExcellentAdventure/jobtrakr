@@ -102,45 +102,52 @@ const ProjectInvoicesPage = () => {
       console.log('Adding Invoice Image from photo capture:', asset.uri);
       setIsProcessingImage(true);
 
-      // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
-      const imageAddResult = await addInvoiceImage(asset.uri, projectId, 'photo', 'invoice');
-      if (imageAddResult.status !== 'Success') {
-        alert(`Unable to add invoice image: ${JSON.stringify(imageAddResult)}`);
-        return;
-      }
+      // Use setTimeout to ensure React has time to render the ActivityIndicator before starting heavy operations
+      setTimeout(async () => {
+        try {
+          // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
+          const imageAddResult = await addInvoiceImage(asset.uri, projectId, 'photo', 'invoice');
+          if (imageAddResult.status !== 'Success') {
+            alert(`Unable to add invoice image: ${JSON.stringify(imageAddResult)}`);
+            setIsProcessingImage(false);
+            return;
+          }
 
-      console.log('Finished adding Invoice Image.', imageAddResult.id);
-      const thumbnail = await createThumbnail(asset.uri);
+          console.log('Finished adding Invoice Image.', imageAddResult.id);
+          const thumbnail = await createThumbnail(asset.uri);
 
-      const newInvoice: InvoiceData = {
-        id: '',
-        vendor: '',
-        description: '',
-        amount: 0,
-        numLineItems: 0,
-        thumbnail: thumbnail ?? '',
-        invoiceDate: new Date().getTime(),
-        notes: '',
-        markedComplete: false,
-        imageId: imageAddResult.id,
-        pictureDate: new Date().getTime(),
-        invoiceNumber: '',
-      };
+          const newInvoice: InvoiceData = {
+            id: '',
+            vendor: '',
+            description: '',
+            amount: 0,
+            numLineItems: 0,
+            thumbnail: thumbnail ?? '',
+            invoiceDate: new Date().getTime(),
+            notes: '',
+            markedComplete: false,
+            imageId: imageAddResult.id,
+            pictureDate: new Date().getTime(),
+            invoiceNumber: '',
+          };
 
-      console.log('Adding a new Invoice.', newInvoice);
+          console.log('Adding a new Invoice.', newInvoice);
 
-      const response = addInvoice(newInvoice);
-      if (response?.status === 'Success') {
-        newInvoice.id = response.id;
-        console.log('Project invoice successfully added:', newInvoice);
-      } else {
-        alert(
-          `Unable to insert Project invoice: ${JSON.stringify(newInvoice.imageId)} - ${JSON.stringify(
-            response,
-          )}`,
-        );
-      }
-      setIsProcessingImage(false); // Reset processImage state
+          const response = addInvoice(newInvoice);
+          if (response?.status === 'Success') {
+            newInvoice.id = response.id;
+            console.log('Project invoice successfully added:', newInvoice);
+          } else {
+            alert(
+              `Unable to insert Project invoice: ${JSON.stringify(newInvoice.imageId)} - ${JSON.stringify(
+                response,
+              )}`,
+            );
+          }
+        } finally {
+          setIsProcessingImage(false); // Reset processImage state
+        }
+      }, 100);
     }
   }, [projectId, addInvoiceImage, addInvoice, projectName]);
 
