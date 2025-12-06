@@ -41,7 +41,6 @@ export const SwipeableComponent = forwardRef<SwipeableHandles, SwipeableProps>(
     const gestureOffset = useSharedValue(0); // tracks full gesture
     const isOpen = useSharedValue(false);
     const openDirection = useSharedValue<'left' | 'right' | null>(null);
-    const isHorizontal = useSharedValue(false);
 
     // Add close functionality
     const close = () => {
@@ -57,10 +56,11 @@ export const SwipeableComponent = forwardRef<SwipeableHandles, SwipeableProps>(
     }));
 
     const pan = Gesture.Pan()
-      .activeOffsetX([-15, 15]) // Only activate after 15px horizontal movement
-      .failOffsetY([-10, 10]) // Fail gesture if vertical movement exceeds 10px
-      .onTouchesDown(() => {
-        isHorizontal.value = false;
+      .activeOffsetX([-20, 20]) // Require 20px horizontal movement to activate
+      .failOffsetY([-15, 15]) // Fail gesture if vertical movement exceeds 15px
+      .shouldCancelWhenOutside(false) // Don't cancel when touch moves outside
+      .onStart(() => {
+        // Gesture is starting
       })
       .onUpdate((event) => {
         if (isOpen.value) return; // prevent dragging open cell
@@ -139,6 +139,8 @@ export const SwipeableComponent = forwardRef<SwipeableHandles, SwipeableProps>(
     );
   },
 );
+
+SwipeableComponent.displayName = 'SwipeableComponent';
 
 const styles = StyleSheet.create({
   root: {
