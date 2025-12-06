@@ -42,7 +42,7 @@ const areEqual = (prevProps: Props, nextProps: Props) => {
   );
 };
 
-const SwipeableCostSummary = React.memo(({ item, sectionCode, projectId }: Props) => {
+const CostSummaryItem = React.memo(({ item, sectionCode, projectId }: Props) => {
   const router = useRouter();
   const removeCostItemSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
   const colors = useColors();
@@ -143,4 +143,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SwipeableCostSummary;
+export default CostSummaryItem;

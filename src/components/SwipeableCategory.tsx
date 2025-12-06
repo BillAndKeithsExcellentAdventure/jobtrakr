@@ -7,7 +7,7 @@ import {
   useTableValue,
   WorkCategoryData,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Alert, StyleSheet } from 'react-native';
@@ -66,7 +66,7 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
           <View style={styles.itemInfo}>
             <Text style={styles.itemCode} text={code} />
             <Text style={styles.itemName}>{name}</Text>
-            <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
+            <Feather name="chevrons-right" size={24} color={colors.iconColor} />
           </View>
         </Pressable>
       </View>
