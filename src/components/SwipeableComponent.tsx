@@ -57,7 +57,7 @@ export const SwipeableComponent = forwardRef<SwipeableHandles, SwipeableProps>(
     }));
 
     const pan = Gesture.Pan()
-      .activeOffsetX([-10, 10]) // Only activate after 10px horizontal movement
+      .activeOffsetX([-15, 15]) // Only activate after 15px horizontal movement
       .failOffsetY([-10, 10]) // Fail gesture if vertical movement exceeds 10px
       .onTouchesDown(() => {
         isHorizontal.value = false;
