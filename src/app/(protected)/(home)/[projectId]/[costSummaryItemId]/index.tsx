@@ -155,7 +155,7 @@ const CostItemDetails = () => {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text
-                    text="All spending entries for this code have been entered"
+                    text="All spending entries for this Cost Item have been entered"
                     txtSize="standard"
                     numberOfLines={2}
                     style={{ flexShrink: 1, flexWrap: 'wrap' }}
