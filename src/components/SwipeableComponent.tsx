@@ -41,7 +41,6 @@ export const SwipeableComponent = forwardRef<SwipeableHandles, SwipeableProps>(
     const gestureOffset = useSharedValue(0); // tracks full gesture
     const isOpen = useSharedValue(false);
     const openDirection = useSharedValue<'left' | 'right' | null>(null);
-    const isHorizontal = useSharedValue(false);
 
     // Add close functionality
     const close = () => {
@@ -57,11 +56,10 @@ export const SwipeableComponent = forwardRef<SwipeableHandles, SwipeableProps>(
     }));
 
     const pan = Gesture.Pan()
-      .activeOffsetX([-15, 15]) // Only activate after 15px horizontal movement
-      .failOffsetY([-10, 10]) // Fail gesture if vertical movement exceeds 10px
-      .onTouchesDown(() => {
-        isHorizontal.value = false;
-      })
+      .activeOffsetX([-5, 5]) // Activate quickly after just 5px horizontal movement
+      .failOffsetY([-20, 20]) // Fail if vertical movement exceeds 20px
+      .enableTrackpadTwoFingerGesture(false)
+      .shouldCancelWhenOutside(false) // Don't cancel when finger moves outside
       .onUpdate((event) => {
         if (isOpen.value) return; // prevent dragging open cell
 
@@ -106,6 +104,9 @@ export const SwipeableComponent = forwardRef<SwipeableHandles, SwipeableProps>(
         gestureOffset.value = 0;
       });
 
+    // Use Exclusive to ensure Pan blocks child gestures when active
+    const composedGesture = Gesture.Exclusive(pan);
+
     const animatedStyle = useAnimatedStyle(() => ({
       transform: [{ translateX: translateX.value }],
     }));
@@ -132,13 +133,15 @@ export const SwipeableComponent = forwardRef<SwipeableHandles, SwipeableProps>(
         </View>
 
         {/* Foreground Swipeable Content */}
-        <GestureDetector gesture={pan}>
+        <GestureDetector gesture={composedGesture}>
           <Animated.View style={[styles.foreground, animatedStyle]}>{children}</Animated.View>
         </GestureDetector>
       </View>
     );
   },
 );
+
+SwipeableComponent.displayName = 'SwipeableComponent';
 
 const styles = StyleSheet.create({
   root: {
