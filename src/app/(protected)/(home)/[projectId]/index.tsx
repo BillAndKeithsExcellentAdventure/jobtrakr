@@ -282,11 +282,13 @@ const ProjectDetailsPage = () => {
           {
             text: 'Delete',
             onPress: () => {
+              // Navigate away first to prevent race condition with re-rendering
+              router.replace('/');
+              // Then delete the project and remove from active IDs
               const result = processDeleteProject(projectId);
               if (result.status === 'Success') {
                 removeActiveProjectId(projectId);
               }
-              router.replace('/');
             },
           },
         ]);

@@ -134,7 +134,7 @@ export const useProject = (id: string): ProjectData | undefined => {
   return useMemo(() => {
     if (!store) return undefined;
     const match = allProjects.find((p) => p.id === id);
-    if (match) return match;
+    return match;
   }, [store, id, allProjects]);
 };
 
