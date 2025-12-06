@@ -31,23 +31,23 @@ const processAIProcessing = async (
   organizationId: string,
 ) => {
   try {
-    const receiptImageData = {
+    const invoiceImageData = {
       imageId: imageId,
       projectId: projectId,
       userId: userId,
       organizationId: organizationId,
     };
     console.log(' token:', token);
-    console.log(' receiptImageData:', receiptImageData);
+    console.log(' invoiceImageData:', invoiceImageData);
     const response = await fetch(
-      'https://projecthoundbackend.keith-m-bertram.workers.dev/getReceiptIntelligence',
+      'https://projecthoundbackend.keith-m-bertram.workers.dev/getInvoiceIntelligence',
       {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(receiptImageData),
+        body: JSON.stringify(invoiceImageData),
       },
     );
 
