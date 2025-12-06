@@ -12,11 +12,10 @@ import {
   useIsStoreAvailableCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { FontAwesome5, FontAwesome6, MaterialCommunityIcons } from '@expo/vector-icons';
-import { FlashList } from '@shopify/flash-list';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
-import { Pressable } from 'react-native-gesture-handler';
+import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CostItemData, CostItemDataCodeCompareAsNumber } from '@/src/models/types';
 import CostSummaryItem from '@/src/components/CostSummaryItem';
@@ -224,7 +223,7 @@ const CategorySpecificCostItemsPage = () => {
                 <Text style={{ width: 100, textAlign: 'right' }} text="Estimate $" />
                 <Text style={{ width: 100, textAlign: 'right' }} text="Spent $" />
               </View>
-              <FlashList
+              <FlatList
                 showsVerticalScrollIndicator={false}
                 data={costItemSummaries}
                 renderItem={({ item }) => (
