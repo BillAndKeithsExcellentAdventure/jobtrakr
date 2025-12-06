@@ -55,14 +55,11 @@ export const SwipeableComponent = forwardRef<SwipeableHandles, SwipeableProps>(
       close,
     }));
 
-    // Create a Native gesture for the children to wait for the Pan gesture
-    const nativeGesture = Gesture.Native();
-
     const pan = Gesture.Pan()
-      .activeOffsetX([-20, 20]) // Require 20px horizontal movement to activate
-      .failOffsetY([-15, 15]) // Fail gesture if vertical movement exceeds 15px
-      .shouldCancelWhenOutside(false) // Don't cancel when touch moves outside
-      .simultaneousWithExternalGesture(nativeGesture) // Allow Pan and native gestures to run simultaneously
+      .activeOffsetX([-10, 10]) // Activate after 10px horizontal movement
+      .failOffsetY([-20, 20]) // Fail if vertical movement exceeds 20px
+      .enableTrackpadTwoFingerGesture(false)
+      .shouldCancelWhenOutside(false) // Don't cancel when finger moves outside
       .onUpdate((event) => {
         if (isOpen.value) return; // prevent dragging open cell
 
@@ -107,10 +104,6 @@ export const SwipeableComponent = forwardRef<SwipeableHandles, SwipeableProps>(
         gestureOffset.value = 0;
       });
 
-    // Combine gestures: Pan and native gestures can run simultaneously
-    // The activeOffsetX ensures Pan only activates with sufficient horizontal movement
-    const composedGesture = Gesture.Simultaneous(pan, nativeGesture);
-
     const animatedStyle = useAnimatedStyle(() => ({
       transform: [{ translateX: translateX.value }],
     }));
@@ -137,7 +130,7 @@ export const SwipeableComponent = forwardRef<SwipeableHandles, SwipeableProps>(
         </View>
 
         {/* Foreground Swipeable Content */}
-        <GestureDetector gesture={composedGesture}>
+        <GestureDetector gesture={pan}>
           <Animated.View style={[styles.foreground, animatedStyle]}>{children}</Animated.View>
         </GestureDetector>
       </View>
