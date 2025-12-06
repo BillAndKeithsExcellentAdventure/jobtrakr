@@ -1,4 +1,4 @@
-import { MaterialIcons } from '@expo/vector-icons';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
@@ -103,7 +103,7 @@ const SwipeableInvoiceItem = React.memo(
                     </View>
                   </View>
                   <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
-                    <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
+                    <Feather name="chevrons-right" size={24} color={colors.iconColor} />
                   </View>
                 </>
               ) : (
@@ -119,7 +119,7 @@ const SwipeableInvoiceItem = React.memo(
                     <Text style={{ color: textColor }}>Date: {formatDate(item.invoiceDate)}</Text>
                   </View>
                   <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
-                    <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
+                    <Feather name="chevrons-right" size={24} color={colors.iconColor} />
                   </View>
                 </>
               )}

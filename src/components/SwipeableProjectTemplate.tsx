@@ -7,7 +7,7 @@ import {
   useDeleteRowCallback,
   useTemplateWorkItemData,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
@@ -73,7 +73,7 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
               <Text txtSize="title" style={{ color: textColor }} text={projectTemplate.name} />
               <Text style={[styles.itemName, { color: textColor }]}>{descriptionText}</Text>
             </View>
-            <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
+            <Feather name="chevrons-right" size={24} color={colors.iconColor} />
           </View>
         </Pressable>
       </View>
