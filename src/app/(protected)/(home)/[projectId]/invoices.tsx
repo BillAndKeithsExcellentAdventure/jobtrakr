@@ -150,8 +150,8 @@ const ProjectInvoicesPage = () => {
       console.log('Adding Invoice Image from photo capture:', asset.uri);
       setIsProcessingImage(true);
 
-      // Use setTimeout to ensure React has time to render the ActivityIndicator before starting heavy operations
-      setTimeout(() => processInvoiceImage(asset.uri), 100);
+      // Use requestAnimationFrame to ensure React renders the ActivityIndicator before starting heavy operations
+      requestAnimationFrame(() => processInvoiceImage(asset.uri));
     }
   }, [processInvoiceImage]);
 
