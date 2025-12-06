@@ -62,10 +62,7 @@ export const SwipeableComponent = forwardRef<SwipeableHandles, SwipeableProps>(
       .activeOffsetX([-20, 20]) // Require 20px horizontal movement to activate
       .failOffsetY([-15, 15]) // Fail gesture if vertical movement exceeds 15px
       .shouldCancelWhenOutside(false) // Don't cancel when touch moves outside
-      .simultaneousWithExternalGesture(nativeGesture) // Allow simultaneous detection but Pan takes priority
-      .onStart(() => {
-        // Gesture is starting
-      })
+      .simultaneousWithExternalGesture(nativeGesture) // Allow Pan and native gestures to run simultaneously
       .onUpdate((event) => {
         if (isOpen.value) return; // prevent dragging open cell
 
@@ -110,7 +107,8 @@ export const SwipeableComponent = forwardRef<SwipeableHandles, SwipeableProps>(
         gestureOffset.value = 0;
       });
 
-    // Combine gestures: Native gesture waits for Pan to fail or activate
+    // Combine gestures: Pan and native gestures can run simultaneously
+    // The activeOffsetX ensures Pan only activates with sufficient horizontal movement
     const composedGesture = Gesture.Simultaneous(pan, nativeGesture);
 
     const animatedStyle = useAnimatedStyle(() => ({
