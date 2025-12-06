@@ -19,7 +19,7 @@ import { StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CostItemData, CostItemDataCodeCompareAsNumber } from '@/src/models/types';
-import SwipeableCostSummary from '@/src/components/SwipeableCostSummary';
+import CostSummaryItem from '@/src/components/CostSummaryItem';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 
@@ -228,7 +228,7 @@ const CategorySpecificCostItemsPage = () => {
                 showsVerticalScrollIndicator={false}
                 data={costItemSummaries}
                 renderItem={({ item }) => (
-                  <SwipeableCostSummary
+                  <CostSummaryItem
                     item={item}
                     sectionCode={costItemsCategory?.code ?? ''}
                     projectId={projectId}

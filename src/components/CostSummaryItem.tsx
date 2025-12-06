@@ -4,7 +4,7 @@ import { useColors } from '@/src/context/ColorsContext';
 
 import { useDeleteRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
-import { Feather, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet } from 'react-native';
@@ -42,7 +42,7 @@ const areEqual = (prevProps: Props, nextProps: Props) => {
   );
 };
 
-const SwipeableCostSummary = React.memo(({ item, sectionCode, projectId }: Props) => {
+const CostSummaryItem = React.memo(({ item, sectionCode, projectId }: Props) => {
   const router = useRouter();
   const removeCostItemSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
   const colors = useColors();
@@ -110,7 +110,7 @@ const SwipeableCostSummary = React.memo(({ item, sectionCode, projectId }: Props
               text={formatCurrency(item.spentAmount, false, true)}
             />
             <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
-              <Feather name="chevrons-right" size={24} color={colors.iconColor} />
+              <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
             </View>
           </View>
         </Pressable>
@@ -143,4 +143,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SwipeableCostSummary;
+export default CostSummaryItem;
