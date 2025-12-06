@@ -6,7 +6,7 @@ import { FlatList } from 'react-native-gesture-handler';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { ActivityIndicator, StyleSheet } from 'react-native';
 
 import {
   InvoiceData,
@@ -56,6 +56,7 @@ const ProjectInvoicesPage = () => {
   const allWorkItems = useAllRowsConfiguration('workItems');
   const listRef = useRef<any>(null);
   const previousInvoiceCount = useRef(0);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
 
   useCostUpdater(projectId);
 
@@ -97,6 +98,9 @@ const ProjectInvoicesPage = () => {
     if (!cameraResponse.canceled) {
       const asset = cameraResponse.assets[0];
       if (!cameraResponse.assets || cameraResponse.assets.length === 0 || !asset) return;
+      // Set processImage to true to show loading indicator
+      console.log('Adding Invoice Image from photo capture:', asset.uri);
+      setIsProcessingImage(true);
 
       // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
       const imageAddResult = await addInvoiceImage(asset.uri, projectId, 'photo', 'invoice');
@@ -136,6 +140,7 @@ const ProjectInvoicesPage = () => {
           )}`,
         );
       }
+      setIsProcessingImage(false); // Reset processImage state
     }
   }, [projectId, addInvoiceImage, addInvoice, projectName]);
 
@@ -155,7 +160,7 @@ const ProjectInvoicesPage = () => {
       listRef.current?.scrollToOffset({ offset: 0, animated: true });
     }
     previousInvoiceCount.current = classifiedInvoices.length;
-  }, [classifiedInvoices.length]);
+  }, [classifiedInvoices]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
@@ -206,6 +211,16 @@ const ProjectInvoicesPage = () => {
                   Project Invoices
                 </Text>
               </View>
+
+              {isProcessingImage && (
+                <View style={{ padding: 10, alignItems: 'center' }}>
+                  <ActivityIndicator size="large" color={colors.text} />
+                  <Text
+                    text="Processing invoice image, this should only take a moment..."
+                    style={{ marginTop: 10 }}
+                  />
+                </View>
+              )}
 
               {allInvoices.length === 0 ? (
                 <View style={{ alignItems: 'center', margin: 40 }}>
