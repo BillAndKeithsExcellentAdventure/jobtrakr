@@ -109,7 +109,6 @@ const ProjectInvoicesPage = () => {
           const imageAddResult = await addInvoiceImage(asset.uri, projectId, 'photo', 'invoice');
           if (imageAddResult.status !== 'Success') {
             alert(`Unable to add invoice image: ${JSON.stringify(imageAddResult)}`);
-            setIsProcessingImage(false);
             return;
           }
 
