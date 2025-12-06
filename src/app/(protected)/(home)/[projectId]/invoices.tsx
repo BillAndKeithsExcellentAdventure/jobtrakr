@@ -2,13 +2,16 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
-import { FlatList } from 'react-native-gesture-handler';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet } from 'react-native';
+import { FlatList } from 'react-native-gesture-handler';
 
+import SwipeableInvoiceItem from '@/src/components/SwipeableInvoiceItem';
+import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
+  ClassifiedInvoiceData,
   InvoiceData,
   RecentInvoiceDateCompare,
   useAddRowCallback,
@@ -16,14 +19,11 @@ import {
   useCostUpdater,
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
-  ClassifiedInvoiceData,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableInvoiceItem from '@/src/components/SwipeableInvoiceItem';
 
 const ProjectInvoicesPage = () => {
   const router = useRouter();
@@ -113,12 +113,12 @@ const ProjectInvoicesPage = () => {
           invoiceNumber: '',
         };
 
-        console.log('Adding a new Invoice.', newInvoice);
+        //console.log('Adding a new Invoice.', newInvoice);
 
         const response = addInvoice(newInvoice);
         if (response?.status === 'Success') {
           newInvoice.id = response.id;
-          console.log('Project invoice successfully added:', newInvoice);
+          console.log('Project invoice successfully added:', newInvoice.imageId);
         } else {
           alert(
             `Unable to insert Project invoice: ${JSON.stringify(newInvoice.imageId)} - ${JSON.stringify(
@@ -146,8 +146,7 @@ const ProjectInvoicesPage = () => {
     if (!cameraResponse.canceled) {
       const asset = cameraResponse.assets[0];
       if (!cameraResponse.assets || cameraResponse.assets.length === 0 || !asset) return;
-      // Set processImage to true to show loading indicator
-      console.log('Adding Invoice Image from photo capture:', asset.uri);
+      //console.log('Adding Invoice Image from photo capture:', asset.uri);
       setIsProcessingImage(true);
 
       // Use requestAnimationFrame to ensure React renders the ActivityIndicator before starting heavy operations

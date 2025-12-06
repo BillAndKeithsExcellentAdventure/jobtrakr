@@ -1,14 +1,8 @@
 import { ActionButton } from '@/src/components/ActionButton';
+import SwipeableReceiptItem from '@/src/components/SwipeableReceiptItem';
 import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
-import * as ImagePicker from 'expo-image-picker';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, TextInput } from 'react-native';
-import { FlatList } from 'react-native-gesture-handler';
-
-import SwipeableReceiptItem from '@/src/components/SwipeableReceiptItem';
 import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   ClassifiedReceiptData,
@@ -20,12 +14,16 @@ import {
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, StyleSheet, TextInput } from 'react-native';
+import { FlatList } from 'react-native-gesture-handler';
 import { KeyboardAvoidingView, KeyboardToolbar } from 'react-native-keyboard-controller';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ProjectReceiptsPage = () => {
   const router = useRouter();
@@ -38,6 +36,7 @@ const ProjectReceiptsPage = () => {
   const previousReceiptCount = useRef(0);
   const [projectIsReady, setProjectIsReady] = useState(false);
   const [vendorFilter, setVendorFilter] = useState('');
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
 
@@ -93,6 +92,53 @@ const ProjectReceiptsPage = () => {
 
   const colors = useColors();
 
+  const processReceiptImage = useCallback(
+    async (assetUri: string) => {
+      try {
+        // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
+        const imageAddResult = await addReceiptImage(assetUri, projectId, 'photo', 'receipt');
+        if (imageAddResult.status !== 'Success') {
+          alert(`Unable to add receipt image: ${JSON.stringify(imageAddResult)}`);
+          return;
+        }
+
+        console.log('Finished adding Receipt Image.', imageAddResult.id);
+        const thumbnail = await createThumbnail(assetUri);
+
+        const newReceipt: ReceiptData = {
+          id: '',
+          vendor: '',
+          description: '',
+          amount: 0,
+          numLineItems: 0,
+          thumbnail: thumbnail ?? '',
+          receiptDate: new Date().getTime(),
+          notes: '',
+          markedComplete: false,
+          imageId: imageAddResult.id,
+          pictureDate: new Date().getTime(),
+        };
+
+        //console.log('Adding a new Receipt.', newReceipt);
+
+        const response = addReceipt(newReceipt);
+        if (response?.status === 'Success') {
+          newReceipt.id = response.id;
+          console.log('Project receipt successfully added:', newReceipt.imageId);
+        } else {
+          alert(
+            `Unable to insert Project receipt: ${JSON.stringify(newReceipt.imageId)} - ${JSON.stringify(
+              response,
+            )}`,
+          );
+        }
+      } finally {
+        setIsProcessingImage(false);
+      }
+    },
+    [projectId, addReceiptImage, addReceipt],
+  );
+
   const handleAddPhotoReceipt = useCallback(async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
@@ -106,46 +152,12 @@ const ProjectReceiptsPage = () => {
     if (!cameraResponse.canceled) {
       const asset = cameraResponse.assets[0];
       if (!cameraResponse.assets || cameraResponse.assets.length === 0 || !asset) return;
+      setIsProcessingImage(true);
 
-      // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
-      const imageAddResult = await addReceiptImage(asset.uri, projectId, 'photo', 'receipt');
-      if (imageAddResult.status !== 'Success') {
-        alert(`Unable to add receipt image: ${JSON.stringify(imageAddResult)}`);
-        return;
-      }
-
-      console.log('Finished adding Receipt Image.', imageAddResult.id);
-      const thumbnail = await createThumbnail(asset.uri);
-
-      const newReceipt: ReceiptData = {
-        id: '',
-        vendor: '',
-        description: '',
-        amount: 0,
-        numLineItems: 0,
-        thumbnail: thumbnail ?? '',
-        receiptDate: new Date().getTime(),
-        notes: '',
-        markedComplete: false,
-        imageId: imageAddResult.id,
-        pictureDate: new Date().getTime(),
-      };
-
-      console.log('Adding a new Receipt.', newReceipt);
-
-      const response = addReceipt(newReceipt);
-      if (response?.status === 'Success') {
-        newReceipt.id = response.id;
-        console.log('Project receipt successfully added:', newReceipt);
-      } else {
-        alert(
-          `Unable to insert Project receipt: ${JSON.stringify(newReceipt.imageId)} - ${JSON.stringify(
-            response,
-          )}`,
-        );
-      }
+      // Use requestAnimationFrame to ensure React renders the ActivityIndicator before starting heavy operations
+      requestAnimationFrame(() => processReceiptImage(asset.uri));
     }
-  }, [projectId, addReceiptImage, addReceipt, projectName]);
+  }, [processReceiptImage]);
 
   const handleAddReceipt = useCallback(() => {
     router.push({
@@ -215,6 +227,17 @@ const ProjectReceiptsPage = () => {
                     Project Receipts
                   </Text>
                 </View>
+
+                {isProcessingImage && (
+                  <View style={{ padding: 10, alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color={colors.text} />
+                    <Text
+                      text="Processing receipt image, this should only take a moment..."
+                      style={{ marginTop: 10 }}
+                    />
+                  </View>
+                )}
+
                 <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding" keyboardVerticalOffset={100}>
                   <View style={{ backgroundColor: colors.listBackground, padding: 5 }}>
                     <TextInput
