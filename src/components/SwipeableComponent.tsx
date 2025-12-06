@@ -56,7 +56,7 @@ export const SwipeableComponent = forwardRef<SwipeableHandles, SwipeableProps>(
     }));
 
     const pan = Gesture.Pan()
-      .activeOffsetX([-10, 10]) // Activate after 10px horizontal movement
+      .activeOffsetX([-5, 5]) // Activate quickly after just 5px horizontal movement
       .failOffsetY([-20, 20]) // Fail if vertical movement exceeds 20px
       .enableTrackpadTwoFingerGesture(false)
       .shouldCancelWhenOutside(false) // Don't cancel when finger moves outside
@@ -104,6 +104,9 @@ export const SwipeableComponent = forwardRef<SwipeableHandles, SwipeableProps>(
         gestureOffset.value = 0;
       });
 
+    // Use Exclusive to ensure Pan blocks child gestures when active
+    const composedGesture = Gesture.Exclusive(pan);
+
     const animatedStyle = useAnimatedStyle(() => ({
       transform: [{ translateX: translateX.value }],
     }));
@@ -130,7 +133,7 @@ export const SwipeableComponent = forwardRef<SwipeableHandles, SwipeableProps>(
         </View>
 
         {/* Foreground Swipeable Content */}
-        <GestureDetector gesture={pan}>
+        <GestureDetector gesture={composedGesture}>
           <Animated.View style={[styles.foreground, animatedStyle]}>{children}</Animated.View>
         </GestureDetector>
       </View>
