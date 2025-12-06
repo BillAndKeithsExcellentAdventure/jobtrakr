@@ -2,7 +2,7 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
-import { FlashList } from '@shopify/flash-list';
+import { FlatList } from 'react-native-gesture-handler';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -54,7 +54,7 @@ const ProjectInvoicesPage = () => {
   const addInvoiceImage = useAddImageCallback();
   const addInvoice = useAddRowCallback(projectId, 'invoices');
   const allWorkItems = useAllRowsConfiguration('workItems');
-  const flashListRef = useRef<any>(null);
+  const listRef = useRef<any>(null);
   const previousInvoiceCount = useRef(0);
 
   useCostUpdater(projectId);
@@ -152,7 +152,7 @@ const ProjectInvoicesPage = () => {
   // Scroll to top when new invoices are added
   useEffect(() => {
     if (classifiedInvoices.length > previousInvoiceCount.current && previousInvoiceCount.current > 0) {
-      flashListRef.current?.scrollToOffset({ offset: 0, animated: true });
+      listRef.current?.scrollToOffset({ offset: 0, animated: true });
     }
     previousInvoiceCount.current = classifiedInvoices.length;
   }, [classifiedInvoices.length]);
@@ -220,8 +220,8 @@ const ProjectInvoicesPage = () => {
                       backgroundColor: colors.listBackground,
                     }}
                   >
-                    <FlashList
-                      ref={flashListRef}
+                    <FlatList
+                      ref={listRef}
                       data={classifiedInvoices}
                       keyExtractor={(item, index) => item.id ?? index.toString()}
                       renderItem={({ item }) => (

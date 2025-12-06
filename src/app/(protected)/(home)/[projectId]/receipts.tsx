@@ -2,11 +2,11 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
-import { FlashList } from '@shopify/flash-list';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, TextInput } from 'react-native';
+import { FlatList } from 'react-native-gesture-handler';
 
 import SwipeableReceiptItem from '@/src/components/SwipeableReceiptItem';
 import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
@@ -34,7 +34,7 @@ const ProjectReceiptsPage = () => {
     receiptId: string;
     projectName: string;
   }>();
-  const flashListRef = useRef<any>(null);
+  const listRef = useRef<any>(null);
   const previousReceiptCount = useRef(0);
   const [projectIsReady, setProjectIsReady] = useState(false);
   const [vendorFilter, setVendorFilter] = useState('');
@@ -160,7 +160,7 @@ const ProjectReceiptsPage = () => {
   // Scroll to top when new receipts are added
   useEffect(() => {
     if (classifiedReceipts.length > previousReceiptCount.current && previousReceiptCount.current > 0) {
-      flashListRef.current?.scrollToOffset({ offset: 0, animated: true });
+      listRef.current?.scrollToOffset({ offset: 0, animated: true });
     }
     previousReceiptCount.current = classifiedReceipts.length;
   }, [classifiedReceipts.length]);
@@ -246,8 +246,8 @@ const ProjectReceiptsPage = () => {
                           backgroundColor: colors.listBackground,
                         }}
                       >
-                        <FlashList
-                          ref={flashListRef}
+                        <FlatList
+                          ref={listRef}
                           data={classifiedReceipts}
                           keyExtractor={(item, index) => item.id ?? index.toString()}
                           renderItem={({ item }) => (
