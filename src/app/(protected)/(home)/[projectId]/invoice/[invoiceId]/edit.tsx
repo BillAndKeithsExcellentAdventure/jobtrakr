@@ -24,36 +24,36 @@ const EditInvoiceDetailsPage = () => {
 
   const router = useRouter();
   const { projectId, invoiceId } = useLocalSearchParams<{ projectId: string; invoiceId: string }>();
-  const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
+  const [isSupplierListPickerVisible, setIsSupplierListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const allProjectInvoices = useAllRows(projectId, 'invoices');
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
   const [datePickerVisible, setDatePickerVisible] = useState(false);
 
-  const handleVendorOptionChange = (option: OptionEntry) => {
+  const handleSupplierOptionChange = (option: OptionEntry) => {
     if (option) {
-      handleVendorChange(option.label);
+      handleSupplierChange(option.label);
     }
-    setIsVendorListPickerVisible(false);
+    setIsSupplierListPickerVisible(false);
   };
 
-  const allVendors = useAllConfigurationRows('vendors');
-  const [vendors, setVendors] = useState<OptionEntry[]>([]);
+  const allSuppliers = useAllConfigurationRows('suppliers');
+  const [suppliers, setSuppliers] = useState<OptionEntry[]>([]);
 
   useEffect(() => {
-    if (allVendors && allVendors.length > 0) {
-      const vendorOptions: OptionEntry[] = allVendors.map((vendor) => ({
-        label: `${vendor.name} ${
-          vendor.address ? ` - ${vendor.address}` : vendor.city ? ` - ${vendor.city}` : ''
+    if (allSuppliers && allSuppliers.length > 0) {
+      const supplierOptions: OptionEntry[] = allSuppliers.map((supplier) => ({
+        label: `${supplier.name} ${
+          supplier.address ? ` - ${supplier.address}` : supplier.city ? ` - ${supplier.city}` : ''
         }`,
-        value: vendor.id,
+        value: supplier.id,
       }));
 
-      setVendors(vendorOptions);
+      setSuppliers(supplierOptions);
     } else {
-      setVendors([]);
+      setSuppliers([]);
     }
-  }, [allVendors]);
+  }, [allSuppliers]);
 
   const showDatePicker = () => {
     setDatePickerVisible(true);
@@ -75,7 +75,7 @@ const EditInvoiceDetailsPage = () => {
   const [invoice, setInvoice] = useState<InvoiceData>({
     id: '',
     invoiceNumber: '',
-    vendor: '',
+    supplier: '',
     description: '',
     amount: 0,
     numLineItems: 0,
@@ -95,15 +95,15 @@ const EditInvoiceDetailsPage = () => {
   }, [invoiceId, allProjectInvoices]);
 
   useEffect(() => {
-    const match = vendors.find((o) => o.label === invoice.vendor);
+    const match = suppliers.find((o) => o.label === invoice.supplier);
     setPickedOption(match);
-  }, [invoice, vendors]);
+  }, [invoice, suppliers]);
 
   const colors = useColors();
-  const handleVendorChange = useCallback((vendor: string) => {
+  const handleSupplierChange = useCallback((supplier: string) => {
     setInvoice((prevInvoice) => ({
       ...prevInvoice,
-      vendor,
+      supplier,
     }));
   }, []);
 
@@ -167,22 +167,22 @@ const EditInvoiceDetailsPage = () => {
               }));
             }}
           />
-          {vendors && vendors.length ? (
+          {suppliers && suppliers.length ? (
             <OptionPickerItem
               containerStyle={styles.inputContainer}
-              optionLabel={invoice.vendor}
-              placeholder="Vendor"
-              label="Vendor"
-              onOptionLabelChange={handleVendorChange}
-              onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
+              optionLabel={invoice.supplier}
+              placeholder="Supplier"
+              label="Supplier"
+              onOptionLabelChange={handleSupplierChange}
+              onPickerButtonPress={() => setIsSupplierListPickerVisible(true)}
             />
           ) : (
             <TextField
               containerStyle={styles.inputContainer}
-              placeholder="Vendor"
-              label="Vendor"
-              value={invoice.vendor}
-              onChangeText={handleVendorChange}
+              placeholder="Supplier"
+              label="Supplier"
+              value={invoice.supplier}
+              onChangeText={handleSupplierChange}
             />
           )}
 
@@ -211,16 +211,16 @@ const EditInvoiceDetailsPage = () => {
             />
           </View>
         </View>
-        {vendors && isVendorListPickerVisible && (
+        {suppliers && isSupplierListPickerVisible && (
           <BottomSheetContainer
-            isVisible={isVendorListPickerVisible}
-            onClose={() => setIsVendorListPickerVisible(false)}
+            isVisible={isSupplierListPickerVisible}
+            onClose={() => setIsSupplierListPickerVisible(false)}
           >
             <OptionList
-              options={vendors}
-              onSelect={(option) => handleVendorOptionChange(option)}
+              options={suppliers}
+              onSelect={(option) => handleSupplierOptionChange(option)}
               selectedOption={pickedOption}
-              enableSearch={vendors.length > 15}
+              enableSearch={suppliers.length > 15}
             />
           </BottomSheetContainer>
         )}
