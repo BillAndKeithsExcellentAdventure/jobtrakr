@@ -84,6 +84,13 @@ export interface ReceiptSummary {
   totalTax: number;
 }
 
+export interface InvoiceSummary {
+  supplier: string;
+  receiptDate: number;
+  totalAmount: number;
+  totalTax: number;
+}
+
 export interface ProposedChangeOrderItem {
   label: string;
   amount: number;

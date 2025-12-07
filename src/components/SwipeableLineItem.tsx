@@ -66,9 +66,14 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
       <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
         <Pressable
           onPress={() => {
+            const isInvoice = lineItem.documentationType === 'invoice';
             router.push({
-              pathname: '/[projectId]/receipt/[receiptId]/[lineItemId]',
-              params: { projectId, receiptId: lineItem.parentId, lineItemId: lineItem.id },
+              pathname: isInvoice
+                ? '/[projectId]/invoice/[invoiceId]/[lineItemId]'
+                : '/[projectId]/receipt/[receiptId]/[lineItemId]',
+              params: isInvoice
+                ? { projectId, invoiceId: lineItem.parentId, lineItemId: lineItem.id }
+                : { projectId, receiptId: lineItem.parentId, lineItemId: lineItem.id },
             });
           }}
         >

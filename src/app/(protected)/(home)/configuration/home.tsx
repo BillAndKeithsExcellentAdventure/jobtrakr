@@ -222,6 +222,11 @@ const Home = () => {
           description="Add and Edit Vendors"
           onPress={() => router.push('/configuration/vendor/vendors')}
         />
+        <ConfigurationEntry
+          label="Suppliers"
+          description="Add and Edit Suppliers"
+          onPress={() => router.push('/configuration/supplier/suppliers')}
+        />
       </View>
       {headerMenuModalVisible && (
         <RightHeaderMenu

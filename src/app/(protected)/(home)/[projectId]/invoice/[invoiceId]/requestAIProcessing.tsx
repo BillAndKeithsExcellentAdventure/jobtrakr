@@ -8,11 +8,11 @@ import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/for
 import { ActionButton } from '@/src/components/ActionButton';
 import { useColors } from '@/src/context/ColorsContext';
 import { AiLineItem } from '@/src/components/AiLineItem';
-import { ReceiptItem, ReceiptItemFromAI, ReceiptSummary } from '@/src/models/types';
+import { ReceiptItem, ReceiptItemFromAI, InvoiceSummary } from '@/src/models/types';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import CostItemPickerModal from '@/src/components/CostItemPickerModal';
 import { OptionEntry } from '@/src/components/OptionList';
-import { ReceiptSummaryEditModal } from '@/src/components/ReceiptSummaryEditModal';
+import { InvoiceSummaryEditModal } from '@/src/components/InvoiceSummaryEditModal';
 import {
   useAddRowCallback,
   useAllRows,
@@ -78,7 +78,7 @@ const RequestAIProcessingPage = () => {
   const { userId, orgId } = auth;
   const [fetchingData, setFetchingData] = useState(true);
   const [showCostItemPicker, setShowCostItemPicker] = useState(false);
-  const [invoiceSummary, setInvoiceSummary] = useState<ReceiptSummary>();
+  const [invoiceSummary, setInvoiceSummary] = useState<InvoiceSummary>();
   const [aiItems, setAiItems] = useState<ReceiptItemFromAI[]>([]);
   const [invoiceItems, setInvoiceItems] = useState<ReceiptItem[]>([]);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -157,7 +157,7 @@ const RequestAIProcessingPage = () => {
     };
 
     const summary = {
-      vendor: replaceNonPrintable(mockResult.response.MerchantName.value),
+      supplier: replaceNonPrintable(mockResult.response.MerchantName.value),
       receiptDate: Date.parse(mockResult.response.TransactionDate.value),
       totalAmount: Number.parseFloat(mockResult.response.Total.value),
       totalTax: Number.parseFloat(mockResult.response.TotalTax.value),
@@ -186,7 +186,7 @@ const RequestAIProcessingPage = () => {
     const result = await processAIProcessing(token, imageId, projectId, userId!, orgId!);
     if (result.status === 'Success') {
       const summary = {
-        vendor: replaceNonPrintable(result.response.MerchantName.value),
+        supplier: replaceNonPrintable(result.response.MerchantName.value),
         receiptDate: Date.parse(result.response.TransactionDate.value),
         totalAmount: Number.parseFloat(result.response.Total.value),
         totalTax: Number.parseFloat(result.response.TotalTax.value),
@@ -349,7 +349,7 @@ const RequestAIProcessingPage = () => {
 
   // Handler for saving edited summary
   const handleSaveInvoiceSummary = (updatedSummary: {
-    vendor: string;
+    supplier: string;
     totalAmount: number;
     totalTax: number;
     receiptDate: number;
@@ -365,7 +365,7 @@ const RequestAIProcessingPage = () => {
       ...invoice,
       amount: invoiceSummary.totalAmount,
       invoiceDate: invoiceSummary.receiptDate,
-      vendor: invoiceSummary.vendor,
+      supplier: invoiceSummary.supplier,
     };
     // Proceed with saving cost items
     const invoiceResult = updateInvoice(invoiceId, updatedInvoice);
@@ -440,8 +440,8 @@ const RequestAIProcessingPage = () => {
                   >
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: 'row' }}>
-                        <Text style={styles.label}>Vendor:</Text>
-                        <Text>{invoiceSummary.vendor}</Text>
+                        <Text style={styles.label}>Supplier:</Text>
+                        <Text>{invoiceSummary.supplier}</Text>
                       </View>
                       <View style={{ flexDirection: 'row' }}>
                         <Text style={styles.label}>Amount:</Text>
@@ -522,10 +522,10 @@ const RequestAIProcessingPage = () => {
         />
       )}
       {invoiceSummary && (
-        <ReceiptSummaryEditModal
+        <InvoiceSummaryEditModal
           isVisible={isEditModalVisible}
           onClose={() => setIsEditModalVisible(false)}
-          receiptSummary={invoiceSummary}
+          invoiceSummary={invoiceSummary}
           onSave={handleSaveInvoiceSummary}
         />
       )}
