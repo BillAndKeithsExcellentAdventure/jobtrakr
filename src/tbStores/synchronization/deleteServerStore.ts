@@ -17,7 +17,8 @@ export const deleteServerStore = async (storeId: string): Promise<void> => {
   try {
     // Convert WebSocket URL to HTTP(S) URL for the deletion request
     const httpUrl = SYNC_SERVER_URL.replace('wss://', 'https://').replace('ws://', 'http://');
-    const deleteUrl = `${httpUrl}${storeId}`;
+    // Use URL constructor for proper path construction
+    const deleteUrl = new URL(storeId, httpUrl).href;
     
     console.log(`Sending deletion request to server for storeId: ${storeId}`);
     

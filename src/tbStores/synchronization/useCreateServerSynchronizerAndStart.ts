@@ -39,10 +39,12 @@ export const useCreateServerSynchronizerAndStart = <Schemas extends OptionalSche
         await synchronizer.stopSync();
         
         // Close the WebSocket connection if it exists (WsSynchronizer specific)
-        // Type assertion is safe here because we know this is a WsSynchronizer
-        const ws = (synchronizer as any).getWebSocket?.();
-        if (ws && ws.readyState !== WebSocket.CLOSED) {
-          ws.close();
+        // Use type-safe check for the getWebSocket method
+        if ('getWebSocket' in synchronizer && typeof synchronizer.getWebSocket === 'function') {
+          const ws = synchronizer.getWebSocket();
+          if (ws && ws.readyState !== WebSocket.CLOSED) {
+            ws.close();
+          }
         }
         
         // Request server-side deletion of the store data
