@@ -97,6 +97,35 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     }
   }, [deviceLocation]);
 
+  const handleMapClick = useCallback((e: any) => {
+    //const value = e as unknown as CoordinateLocation;
+    //if (value.latitude && value.longitude) {
+    //  setSelectedLocation({ latitude: value.latitude, longitude: value.longitude });
+    //  console.log(JSON.stringify({ type: 'onMapClick', data: e }, null, 2));
+    //}
+    const { coordinates } = e;
+    if (coordinates && coordinates.latitude && coordinates.longitude) {
+      console.log(JSON.stringify({ type: 'onMapClick', data: e }, null, 2));
+      setSelectedLocation({ latitude: coordinates.latitude, longitude: coordinates.longitude });
+    }
+  }, []);
+
+  const handlePOIClick = useCallback((e: any) => {
+    const { coordinates } = e;
+    if (coordinates && coordinates.latitude && coordinates.longitude) {
+      console.log(JSON.stringify({ type: 'onPOIClick', data: e }, null, 2));
+      setSelectedLocation({ latitude: coordinates.latitude, longitude: coordinates.longitude });
+    }
+  }, []);
+
+  const handleMarkerClick = useCallback((e: any) => {
+    const { coordinates } = e;
+    if (coordinates && coordinates.latitude && coordinates.longitude) {
+      console.log(JSON.stringify({ type: 'onMarkerClick', data: e }, null, 2));
+      setSelectedLocation({ latitude: coordinates.latitude, longitude: coordinates.longitude });
+    }
+  }, []);
+
   const cameraPosition = useMemo(() => {
     return {
       coordinates: {
@@ -135,27 +164,9 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                 maxZoomPreference: 20,
               }}
               markers={googleMarkers}
-              onMapClick={(e) => {
-                const value = e as unknown as CoordinateLocation;
-                if (value.latitude && value.longitude) {
-                  setSelectedLocation({ latitude: value.latitude, longitude: value.longitude });
-                  console.log(JSON.stringify({ type: 'onMapClick', data: e }, null, 2));
-                }
-              }}
-              onPOIClick={(e) => {
-                const { coordinates } = e;
-                if (coordinates && coordinates.latitude && coordinates.longitude) {
-                  console.log(JSON.stringify({ type: 'onPOIClick', data: e }, null, 2));
-                  setSelectedLocation({ latitude: coordinates.latitude, longitude: coordinates.longitude });
-                }
-              }}
-              onMarkerClick={(e) => {
-                const { coordinates } = e;
-                if (coordinates && coordinates.latitude && coordinates.longitude) {
-                  console.log(JSON.stringify({ type: 'onMarkerClick', data: e }, null, 2));
-                  setSelectedLocation({ latitude: coordinates.latitude, longitude: coordinates.longitude });
-                }
-              }}
+              onMapClick={handleMapClick}
+              onPOIClick={handlePOIClick}
+              onMarkerClick={handleMarkerClick}
             />
           )}
           {Platform.OS === 'ios' && (
@@ -169,20 +180,8 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                 selectionEnabled: true,
               }}
               markers={appleMarkers}
-              onMapClick={(e) => {
-                const value = e as unknown as CoordinateLocation;
-                if (value.latitude && value.longitude) {
-                  setSelectedLocation({ latitude: value.latitude, longitude: value.longitude });
-                  console.log(JSON.stringify({ type: 'onMapClick', data: e }, null, 2));
-                }
-              }}
-              onMarkerClick={(e) => {
-                const { coordinates } = e;
-                if (coordinates && coordinates.latitude && coordinates.longitude) {
-                  console.log(JSON.stringify({ type: 'onMarkerClick', data: e }, null, 2));
-                  setSelectedLocation({ latitude: coordinates.latitude, longitude: coordinates.longitude });
-                }
-              }}
+              onMapClick={handleMapClick}
+              onMarkerClick={handleMarkerClick}
             />
           )}
         </View>
@@ -246,10 +245,11 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     projectLocation,
     handleResetToCurrentDeviceLocation,
     handleSaveLocation,
+    handleMapClick,
+    handlePOIClick,
+    handleMarkerClick,
     googleMarkers,
     appleMarkers,
-    ref,
-    setSelectedLocation,
     router,
   ]);
 

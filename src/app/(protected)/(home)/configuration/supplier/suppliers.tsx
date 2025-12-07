@@ -1,4 +1,4 @@
-// screens/ListVendors.tsx
+// screens/suppliers.tsx
 
 import { ActionButton } from '@/src/components/ActionButton';
 import { Text, TextInput, View } from '@/src/components/Themed';
@@ -6,7 +6,7 @@ import { useColors } from '@/src/context/ColorsContext';
 import {
   useAddRowCallback,
   useAllRows,
-  VendorData,
+  SupplierData,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
@@ -15,14 +15,14 @@ import { FlatList, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableVendor from '@/src/components/SwipeableVendor';
+import SwipeableSupplier from '@/src/components/SwipeableSupplier';
 
-const VendorsScreen = () => {
+const SuppliersScreen = () => {
   const router = useRouter();
-  const addVendorToStore = useAddRowCallback('vendors');
-  const allVendors = useAllRows('vendors');
+  const addSupplierToStore = useAddRowCallback('suppliers');
+  const allSuppliers = useAllRows('suppliers');
   const [showAdd, setShowAdd] = useState(false);
-  const [vendor, setVendor] = useState<VendorData>({
+  const [supplier, setSupplier] = useState<SupplierData>({
     id: '',
     name: '',
     address: '',
@@ -36,22 +36,22 @@ const VendorsScreen = () => {
 
   const colors = useColors();
 
-  const handleInputChange = (name: keyof VendorData, value: string) => {
-    setVendor((prevVendor) => ({
-      ...prevVendor,
+  const handleInputChange = (name: keyof SupplierData, value: string) => {
+    setSupplier((prevSupplier) => ({
+      ...prevSupplier,
       [name]: value,
     }));
   };
 
   const handleSave = useCallback(() => {
-    const result = addVendorToStore(vendor);
+    const result = addSupplierToStore(supplier);
 
     if (result && result.status !== 'Success') {
-      console.error('Failed to add vendor:', result ? result.msg : 'Unknown error');
+      console.error('Failed to add supplier:', result ? result.msg : 'Unknown error');
     }
 
     // Clear the input fields
-    setVendor({
+    setSupplier({
       id: '',
       name: '',
       address: '',
@@ -62,7 +62,7 @@ const VendorsScreen = () => {
       businessPhone: '',
       notes: '',
     });
-  }, [addVendorToStore, vendor]);
+  }, [addSupplierToStore, supplier]);
 
   const renderHeaderRight = () => (
     <Pressable
@@ -82,7 +82,7 @@ const VendorsScreen = () => {
         <Stack.Screen
           options={{
             headerShown: true,
-            title: 'Vendors/Merchants',
+            title: 'Suppliers/Contractors',
             headerRight: renderHeaderRight,
           }}
         />
@@ -92,33 +92,33 @@ const VendorsScreen = () => {
               <View style={{ padding: 10, borderRadius: 10, marginVertical: 10, marginHorizontal: 15 }}>
                 <TextInput
                   style={[styles.input, { backgroundColor: colors.neutral200 }]}
-                  placeholder="Vendor/Merchant Name"
-                  value={vendor.name}
+                  placeholder="Supplier/Contractor Name"
+                  value={supplier.name}
                   onChangeText={(text) => handleInputChange('name', text)}
                 />
                 <TextInput
                   style={[styles.input, { backgroundColor: colors.neutral200 }]}
                   placeholder="Address"
-                  value={vendor.address}
+                  value={supplier.address}
                   onChangeText={(text) => handleInputChange('address', text)}
                 />
                 <View style={{ flexDirection: 'row' }}>
                   <TextInput
                     style={[styles.input, { flex: 1, marginRight: 8, backgroundColor: colors.neutral200 }]}
                     placeholder="City"
-                    value={vendor.city}
+                    value={supplier.city}
                     onChangeText={(text) => handleInputChange('city', text)}
                   />
                   <TextInput
                     style={[styles.input, { width: 75, marginRight: 8, backgroundColor: colors.neutral200 }]}
                     placeholder="State"
-                    value={vendor.state}
+                    value={supplier.state}
                     onChangeText={(text) => handleInputChange('state', text)}
                   />
                   <TextInput
                     style={[styles.input, { width: 80, backgroundColor: colors.neutral200 }]}
                     placeholder="Zip"
-                    value={vendor.zip}
+                    value={supplier.zip}
                     keyboardType="number-pad"
                     onChangeText={(text) => handleInputChange('zip', text)}
                   />
@@ -128,13 +128,13 @@ const VendorsScreen = () => {
                     style={[styles.input, { flex: 1, marginRight: 8, backgroundColor: colors.neutral200 }]}
                     placeholder="Mobile Phone"
                     keyboardType="phone-pad"
-                    value={vendor.mobilePhone}
+                    value={supplier.mobilePhone}
                     onChangeText={(text) => handleInputChange('mobilePhone', text)}
                   />
                   <TextInput
                     style={[styles.input, { flex: 1, backgroundColor: colors.neutral200 }]}
                     placeholder="Business Phone"
-                    value={vendor.businessPhone}
+                    value={supplier.businessPhone}
                     keyboardType="phone-pad"
                     onChangeText={(text) => handleInputChange('businessPhone', text)}
                   />
@@ -142,14 +142,14 @@ const VendorsScreen = () => {
                 <TextInput
                   style={[styles.input, { backgroundColor: colors.neutral200 }]}
                   placeholder="Notes"
-                  value={vendor.notes}
+                  value={supplier.notes}
                   onChangeText={(text) => handleInputChange('notes', text)}
                 />
 
                 <ActionButton
                   onPress={handleSave}
-                  type={vendor.name ? 'action' : 'disabled'}
-                  title="Add Vendor"
+                  type={supplier.name ? 'action' : 'disabled'}
+                  title="Add Supplier"
                 />
               </View>
             </View>
@@ -157,9 +157,9 @@ const VendorsScreen = () => {
 
           <FlatList
             style={{ borderTopColor: colors.border }}
-            data={allVendors}
+            data={allSuppliers}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => <SwipeableVendor vendor={item} />}
+            renderItem={({ item }) => <SwipeableSupplier supplier={item} />}
             ListEmptyComponent={() => (
               <View
                 style={{
@@ -167,7 +167,7 @@ const VendorsScreen = () => {
                   alignItems: 'center',
                 }}
               >
-                <Text txtSize="title" text="No vendors found." />
+                <Text txtSize="title" text="No suppliers found." />
                 <Text text="Use the '+' in the upper right to add one." />
               </View>
             )}
@@ -183,12 +183,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  vendorItem: {
+  supplierItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: 10,
   },
-  vendorInfo: {
+  supplierInfo: {
     flex: 1,
   },
   headerButton: {
@@ -205,4 +205,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default VendorsScreen;
+export default SuppliersScreen;

@@ -186,16 +186,16 @@ const EditReceiptDetailsPage = () => {
               <OptionPickerItem
                 containerStyle={styles.inputContainer}
                 optionLabel={receipt.vendor}
-                placeholder="Vendor"
-                label="Vendor"
+                placeholder="Vendor/Merchant"
+                label="Vendor/Merchant"
                 onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
                 onOptionLabelChange={handleVendorLabelChange}
               />
             ) : (
               <TextField
                 containerStyle={styles.inputContainer}
-                placeholder="Vendor"
-                label="Vendor"
+                placeholder="Vendor/Merchant"
+                label="Vendor/Merchant"
                 value={receipt.vendor}
                 onChangeText={(text): void => {
                   setReceipt((prevReceipt) => ({

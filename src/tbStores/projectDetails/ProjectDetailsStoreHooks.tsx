@@ -1,8 +1,5 @@
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
-import {
-  useWorkItemSpentSummary,
-  WorkItemSpentSummary,
-} from '@/src/context/WorkItemSpentSummaryContext';
+import { useWorkItemSpentSummary, WorkItemSpentSummary } from '@/src/context/WorkItemSpentSummaryContext';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { getStoreId, TABLES_SCHEMA } from './ProjectDetailsStore';
@@ -10,6 +7,7 @@ import { CrudResult } from '@/src/models/types';
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useEffect, useState } from 'react';
 import { useProjectValue } from '../listOfProjects/ListOfProjectsStore';
+import { deleteDatabaseSync } from 'expo-sqlite';
 
 const { useCell, useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
@@ -66,7 +64,7 @@ export type ClassifiedReceiptData = ReceiptData & { fullyClassified: boolean };
 
 export type InvoiceData = {
   id: string;
-  vendor: string;
+  supplier: string;
   description: string;
   amount: number;
   numLineItems: number;
@@ -359,8 +357,8 @@ export const useWorkItemSpentValue = (projectId: string, workItemId: string): nu
 /**
  * Hook that watches workItemCostEntries and updates the WorkItemSpentSummary context
  * This replaces the old useSetWorkItemSpentSummaryCallback hook
- * 
- * Note: 
+ *
+ * Note:
  * - The context's setWorkItemSpentAmount method checks if values have changed
  *   before updating state, preventing unnecessary re-renders.
  * - Work items with no cost entries will not be in the map, and will return 0
@@ -387,4 +385,27 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
       setWorkItemSpentAmount(projectId, workItemId, spentAmount);
     }
   }, [allWorkItemCostEntries, projectId, setWorkItemSpentAmount]);
+};
+
+/**
+ * Deletes the ProjectDetailsStore database for a given project.
+ * This should be called after a project is deleted from the project list.
+ *
+ * @param projectId - The ID of the project whose store should be deleted
+ */
+export const deleteProjectDetailsStore = (projectId: string): void => {
+  const storeId = getStoreId(projectId);
+  const databaseName = `${storeId}.db`;
+
+  try {
+    //******************************************************** */
+    //TODO need to figure out how to stop TinyBase from holding onto the database connection
+    // and then we need to close the connection before deleting the database.
+    //******************************************************** */
+    //deleteDatabaseSync(databaseName);
+    //console.log(`Successfully deleted ProjectDetailsStore database: ${databaseName}`);
+  } catch (error) {
+    //console.error(`Error deleting ProjectDetailsStore database ${databaseName}:`, error);
+    // Don't throw - we want deletion to continue even if database cleanup fails
+  }
 };
