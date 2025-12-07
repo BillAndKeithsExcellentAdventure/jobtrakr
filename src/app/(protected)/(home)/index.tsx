@@ -51,6 +51,7 @@ export default function ProjectHomeScreen() {
   const allProjectTemplates = useAllRows('templates');
 
   useEffect(() => {
+    if (allProjects.length === 0) return;
     // create an array of projectId that have been favorited
     const favoriteProjectIds = allProjects
       .filter((project) => project.id && project.favorite && project.favorite > 0)
@@ -59,7 +60,7 @@ export default function ProjectHomeScreen() {
   }, [allProjects, addActiveProjectIds]);
 
   useEffect(() => {
-    if (allProjects) {
+    if (allProjects.length > 0) {
       const listData: ProjectListEntryProps[] = allProjects.map((project) => {
         return {
           projectName: project.name ? project.name : 'unknown',
