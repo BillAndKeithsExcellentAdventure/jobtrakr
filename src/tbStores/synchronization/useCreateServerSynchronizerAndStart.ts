@@ -2,6 +2,7 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 import { createWsSynchronizer } from 'tinybase/synchronizers/synchronizer-ws-client/with-schemas';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { MergeableStore, OptionalSchemas } from 'tinybase/with-schemas';
+import { deleteServerStore } from './deleteServerStore';
 
 // TODO: Figure out how to get this from an env.
 const SYNC_SERVER_URL = 'wss://projecthoundserver.keith-m-bertram.workers.dev/'; //process.env.EXPO_PUBLIC_SYNC_SERVER_URL;
@@ -35,6 +36,28 @@ export const useCreateServerSynchronizerAndStart = <Schemas extends OptionalSche
       });
 
       return synchronizer;
+    },
+    [storeId],
+    async (synchronizer) => {
+      // Cleanup: stop sync, close websocket, request server deletion, and destroy synchronizer
+      console.log(`Cleaning up synchronizer for storeId: ${storeId}`);
+      try {
+        await synchronizer.stopSync();
+        
+        // Close the WebSocket connection
+        const ws = synchronizer.getWebSocket();
+        if (ws && ws.readyState !== WebSocket.CLOSED) {
+          ws.close();
+        }
+        
+        // Request server-side deletion of the store data
+        await deleteServerStore(storeId);
+        
+        await synchronizer.destroy();
+        console.log(`Successfully cleaned up synchronizer for: ${storeId}`);
+      } catch (error) {
+        console.error(`Error cleaning up synchronizer for ${storeId}:`, error);
+      }
     },
     [storeId],
   );
