@@ -1,3 +1,5 @@
+import { SYNC_SERVER_URL } from './syncConfig';
+
 /**
  * Sends a deletion request to the Cloudflare Durable Object server to remove
  * the stored data for a specific store.
@@ -12,8 +14,6 @@
  * @returns A promise that resolves when the deletion request completes
  */
 export const deleteServerStore = async (storeId: string): Promise<void> => {
-  const SYNC_SERVER_URL = 'wss://projecthoundserver.keith-m-bertram.workers.dev/';
-  
   try {
     // Convert WebSocket URL to HTTP(S) URL for the deletion request
     const httpUrl = SYNC_SERVER_URL.replace('wss://', 'https://').replace('ws://', 'http://');

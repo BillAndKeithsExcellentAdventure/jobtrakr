@@ -3,13 +3,7 @@ import { createWsSynchronizer } from 'tinybase/synchronizers/synchronizer-ws-cli
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { MergeableStore, OptionalSchemas } from 'tinybase/with-schemas';
 import { deleteServerStore } from './deleteServerStore';
-
-// TODO: Figure out how to get this from an env.
-const SYNC_SERVER_URL = 'wss://projecthoundserver.keith-m-bertram.workers.dev/'; //process.env.EXPO_PUBLIC_SYNC_SERVER_URL;
-
-if (!SYNC_SERVER_URL) {
-  throw new Error('Please set EXPO_PUBLIC_SYNC_SERVER_URL in .env to the URL of the sync server');
-}
+import { SYNC_SERVER_URL } from './syncConfig';
 
 export const useCreateServerSynchronizerAndStart = <Schemas extends OptionalSchemas>(
   storeId: string,
@@ -44,8 +38,9 @@ export const useCreateServerSynchronizerAndStart = <Schemas extends OptionalSche
       try {
         await synchronizer.stopSync();
         
-        // Close the WebSocket connection
-        const ws = synchronizer.getWebSocket();
+        // Close the WebSocket connection if it exists (WsSynchronizer specific)
+        // Type assertion is safe here because we know this is a WsSynchronizer
+        const ws = (synchronizer as any).getWebSocket?.();
         if (ws && ws.readyState !== WebSocket.CLOSED) {
           ws.close();
         }
