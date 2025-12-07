@@ -98,10 +98,15 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   }, [deviceLocation]);
 
   const handleMapClick = useCallback((e: any) => {
-    const value = e as unknown as CoordinateLocation;
-    if (value.latitude && value.longitude) {
-      setSelectedLocation({ latitude: value.latitude, longitude: value.longitude });
+    //const value = e as unknown as CoordinateLocation;
+    //if (value.latitude && value.longitude) {
+    //  setSelectedLocation({ latitude: value.latitude, longitude: value.longitude });
+    //  console.log(JSON.stringify({ type: 'onMapClick', data: e }, null, 2));
+    //}
+    const { coordinates } = e;
+    if (coordinates && coordinates.latitude && coordinates.longitude) {
       console.log(JSON.stringify({ type: 'onMapClick', data: e }, null, 2));
+      setSelectedLocation({ latitude: coordinates.latitude, longitude: coordinates.longitude });
     }
   }, []);
 

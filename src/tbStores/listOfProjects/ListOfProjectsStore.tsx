@@ -38,13 +38,8 @@ const TABLES_SCHEMA = {
 type ProjectsSchema = typeof TABLES_SCHEMA.projects;
 type ProjectsCellId = keyof (typeof TABLES_SCHEMA)['projects'];
 
-const {
-  useCell,
-  useCreateMergeableStore,
-  useProvideStore,
-  useSetCellCallback,
-  useStore,
-} = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
+const { useCell, useCreateMergeableStore, useProvideStore, useSetCellCallback, useStore } =
+  UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
 export const useProjectListStoreId = () => {
   const { orgId } = useAuth();
@@ -133,8 +128,7 @@ export const useProject = (id: string): ProjectData | undefined => {
 
   return useMemo(() => {
     if (!store) return undefined;
-    const match = allProjects.find((p) => p.id === id);
-    return match;
+    return allProjects.find((p) => p.id === id);
   }, [store, id, allProjects]);
 };
 

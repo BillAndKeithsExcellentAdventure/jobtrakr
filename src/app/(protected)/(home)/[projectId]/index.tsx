@@ -282,8 +282,8 @@ const ProjectDetailsPage = () => {
           {
             text: 'Delete',
             onPress: () => {
-              // Navigate away first to prevent race condition with re-rendering
-              router.replace('/');
+              // Navigate back to Project List screen first
+              router.back();
               // Defer deletion until after navigation begins rendering
               requestAnimationFrame(() => {
                 const result = processDeleteProject(projectId);
