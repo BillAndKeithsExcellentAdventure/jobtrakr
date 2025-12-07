@@ -10,6 +10,7 @@ import { CrudResult } from '@/src/models/types';
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useEffect, useState } from 'react';
 import { useProjectValue } from '../listOfProjects/ListOfProjectsStore';
+import { deleteDatabaseSync } from 'expo-sqlite';
 
 const { useCell, useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
@@ -387,4 +388,23 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
       setWorkItemSpentAmount(projectId, workItemId, spentAmount);
     }
   }, [allWorkItemCostEntries, projectId, setWorkItemSpentAmount]);
+};
+
+/**
+ * Deletes the ProjectDetailsStore database for a given project.
+ * This should be called after a project is deleted from the project list.
+ * 
+ * @param projectId - The ID of the project whose store should be deleted
+ */
+export const deleteProjectDetailsStore = (projectId: string): void => {
+  const storeId = getStoreId(projectId);
+  const databaseName = `${storeId}.db`;
+  
+  try {
+    deleteDatabaseSync(databaseName);
+    console.log(`Successfully deleted ProjectDetailsStore database: ${databaseName}`);
+  } catch (error) {
+    console.error(`Error deleting ProjectDetailsStore database ${databaseName}:`, error);
+    // Don't throw - we want deletion to continue even if database cleanup fails
+  }
 };
