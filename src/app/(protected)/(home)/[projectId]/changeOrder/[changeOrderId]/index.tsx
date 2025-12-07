@@ -213,6 +213,13 @@ const DefineChangeOrderScreen = () => {
           (Date.now() + 48 * 60 * 60 * 1000 - Date.UTC(2000, 0, 1, 0, 0, 0, 0)) / 1000,
         );
 
+        // Generate the acceptance URL - points to a landing page instead of direct API
+        const acceptUrl = `https://staticwebpages.pages.dev/AcceptChangeOrder.html?projectId=${encodeURIComponent(
+          projectId,
+        )}&changeOrderId=${encodeURIComponent(
+          changeOrderId,
+        )}&expirationDate=${expirationDate}&email=${encodeURIComponent(projectData?.ownerEmail ?? '')}`;
+
         // Create HTML email body with inline styles for better email client compatibility
         const msgBody = `
 <!DOCTYPE html>
@@ -306,9 +313,9 @@ const DefineChangeOrderScreen = () => {
             toEmail: projectData?.ownerEmail ?? '',
             fromEmail: appSettings.email ?? '',
             fromName: appSettings.ownerName ?? '',
-            changeOrderId: changeOrder?.id,
-            projectId: projectData?.id,
-            expirationDate: expirationDate,
+            changeOrderId: changeOrder?.id ?? '',
+            projectId: projectId,
+            expirationDate: expirationDate.toString(),
             ownerEmail: projectData?.ownerEmail ?? '',
             subject: `${appSettings.companyName} : Please review and accept change order "${
               changeOrder?.title || 'unknown'
