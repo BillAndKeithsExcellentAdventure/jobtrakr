@@ -1,4 +1,4 @@
-// screens/ListSuppliers.tsx
+// screens/suppliers.tsx
 
 import { ActionButton } from '@/src/components/ActionButton';
 import { Text, TextInput, View } from '@/src/components/Themed';
