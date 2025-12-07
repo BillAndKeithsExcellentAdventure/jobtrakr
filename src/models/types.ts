@@ -78,6 +78,13 @@ export interface ReceiptItem {
 }
 
 export interface ReceiptSummary {
+  vendor: string;
+  receiptDate: number;
+  totalAmount: number;
+  totalTax: number;
+}
+
+export interface InvoiceSummary {
   supplier: string;
   receiptDate: number;
   totalAmount: number;
