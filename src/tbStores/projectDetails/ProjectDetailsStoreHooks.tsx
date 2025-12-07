@@ -7,6 +7,8 @@ import { CrudResult } from '@/src/models/types';
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useEffect, useState } from 'react';
 import { useProjectValue } from '../listOfProjects/ListOfProjectsStore';
+import { deleteDatabaseSync } from 'expo-sqlite';
+import { deleteServerStore } from '../synchronization/deleteServerStore';
 
 const { useCell, useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
@@ -387,18 +389,35 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
 };
 
 /**
- * Initiates cleanup for a ProjectDetailsStore when a project is deleted.
+ * Deletes the ProjectDetailsStore database and server data for a given project.
  * This function should be called after a project is deleted from the project list.
  * 
- * The actual cleanup (stopping sync, destroying persister, and deleting the database)
- * happens automatically when the ProjectDetailsStore component unmounts, which occurs
- * when the project is removed from the active projects list.
+ * This performs the actual database file deletion and server-side cleanup that should
+ * only happen when the user explicitly deletes a project, not when the ProjectDetailsStore
+ * component unmounts for other reasons (e.g., navigation, memory management).
+ * 
+ * Note: The persister and synchronizer cleanup (stopAutoSave, stopSync, destroy)
+ * happens automatically when the ProjectDetailsStore component unmounts via the
+ * destroy callbacks in the hooks.
  *
  * @param projectId - The ID of the project whose store should be deleted
  */
 export const deleteProjectDetailsStore = (projectId: string): void => {
   const storeId = getStoreId(projectId);
-  console.log(`Initiating cleanup for ProjectDetailsStore: ${storeId}`);
-  // Cleanup is handled automatically by the destroy callbacks in the hooks
-  // when the ProjectDetailsStore component unmounts
+  const databaseName = `${storeId}.db`;
+
+  try {
+    console.log(`Deleting ProjectDetailsStore database: ${databaseName}`);
+    deleteDatabaseSync(databaseName);
+    console.log(`Successfully deleted ProjectDetailsStore database: ${databaseName}`);
+  } catch (error) {
+    console.error(`Error deleting ProjectDetailsStore database ${databaseName}:`, error);
+    // Don't throw - we want deletion to continue even if database cleanup fails
+  }
+
+  // Request server-side deletion of the store data
+  // This is async but we don't await it - deletion should continue even if server request fails
+  deleteServerStore(storeId).catch((error) => {
+    console.error(`Failed to request server deletion for ${storeId}:`, error);
+  });
 };

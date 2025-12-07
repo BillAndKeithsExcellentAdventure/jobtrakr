@@ -5,42 +5,67 @@ This document describes the implementation for properly deleting project stores,
 ## Overview
 
 When a project is deleted from the application, we need to clean up:
-1. **Client-side**: Stop synchronization, destroy the persister, and delete the local SQLite database
+1. **Client-side**: Delete the local SQLite database and request server-side deletion
 2. **Server-side**: Delete the stored data from the Cloudflare Durable Object
+3. **Component lifecycle**: Properly handle unmount cleanup without deleting persisted data
+
+## Key Design Principle
+
+**Critical distinction**: Component unmounting ≠ Project deletion
+
+- `ProjectDetailsStore` components unmount for various reasons:
+  - Navigation away from a project view
+  - Memory management (removing inactive projects from `activeProjectIds`)
+  - App backgrounding or closing
+  - **AND** project deletion
+
+- Database and server data should **ONLY** be deleted when the user explicitly deletes a project
+- Database should **persist** across unmounts so data is available when the user returns
 
 ## Client-Side Implementation
 
-### Automatic Cleanup on Component Unmount
+### Component Unmount Cleanup (Automatic)
 
-The cleanup is implemented using TinyBase's destroy callbacks in the persister and synchronizer hooks:
+When `ProjectDetailsStore` unmounts for ANY reason, we clean up resources but preserve data:
 
 #### Persister Cleanup (`useCreateClientPersisterAndStart.ts`)
-- Stops auto-save
-- Destroys the persister
-- Deletes the SQLite database file using `deleteDatabaseSync()`
+- Stops auto-save to prevent writes during destruction
+- Destroys the persister to release resources
+- **Does NOT delete the SQLite database** (data persists)
 
 #### Synchronizer Cleanup (`useCreateServerSynchronizerAndStart.ts`)
-- Stops synchronization
+- Stops synchronization to prevent network activity
 - Closes the WebSocket connection
-- Sends a DELETE request to the server
 - Destroys the synchronizer
+- **Does NOT request server deletion** (data persists on server)
+
+### Explicit Project Deletion
+
+When the user explicitly deletes a project, `deleteProjectDetailsStore()` is called:
+
+#### Database Deletion (`ProjectDetailsStoreHooks.tsx`)
+- Deletes the SQLite database file using `deleteDatabaseSync()`
+- Requests server-side deletion via `deleteServerStore()`
+- This happens **in addition to** the automatic unmount cleanup
 
 ### Deletion Flow
 
 1. User deletes a project from the project list
-2. Project is removed from `activeProjectIds` in `ActiveProjectIdsContext`
-3. `ProjectDetailsStore` component unmounts for that project
-4. Unmount triggers the destroy callbacks in both hooks
-5. Cleanup happens automatically:
-   - Synchronizer: stops sync, closes WS, notifies server, destroys
-   - Persister: stops auto-save, destroys, deletes DB file
+2. `processDeleteProject(projectId)` - removes from project list store
+3. `removeActiveProjectId(projectId)` - triggers component unmount
+   - Unmount cleanup: stops sync/persist, closes connections, destroys resources
+   - **Database and server data remain intact**
+4. `deleteProjectDetailsStore(projectId)` - **explicitly called** to delete data
+   - Deletes SQLite database file
+   - Sends DELETE request to server
 
 ### Key Files Modified
 
-- `/src/tbStores/persistence/useCreateClientPersisterAndStart.ts` - Added destroy callback for persister cleanup
-- `/src/tbStores/synchronization/useCreateServerSynchronizerAndStart.ts` - Added destroy callback for synchronizer cleanup
-- `/src/tbStores/synchronization/deleteServerStore.ts` - New utility for server deletion request
-- `/src/tbStores/projectDetails/ProjectDetailsStoreHooks.tsx` - Updated `deleteProjectDetailsStore` documentation
+- `/src/tbStores/persistence/useCreateClientPersisterAndStart.ts` - Added destroy callback for persister cleanup (no DB deletion)
+- `/src/tbStores/synchronization/useCreateServerSynchronizerAndStart.ts` - Added destroy callback for synchronizer cleanup (no server deletion)
+- `/src/tbStores/synchronization/deleteServerStore.ts` - Utility for server deletion request
+- `/src/tbStores/synchronization/syncConfig.ts` - Shared server URL config
+- `/src/tbStores/projectDetails/ProjectDetailsStoreHooks.tsx` - Implemented `deleteProjectDetailsStore()` with DB and server deletion
 
 ## Server-Side Implementation
 
@@ -133,14 +158,30 @@ export class MyDurableObject extends WsServerDurableObject {
 
 To verify the implementation works correctly:
 
-1. **Create a test project** with some data
-2. **Delete the project** from the project list
-3. **Check the console logs** for cleanup messages:
-   - "Cleaning up synchronizer for storeId: ..."
-   - "Cleaning up persister for storeId: ..."
-   - "Successfully deleted database: ..."
-4. **Verify the SQLite database file is removed** from the device
-5. **Check server logs** to confirm DELETE request was received (if server-side is implemented)
+1. **Test Normal Navigation (Data Persists)**
+   - Create a test project with some data
+   - Navigate away from the project
+   - Check console: should see "Cleaning up synchronizer/persister" messages
+   - Navigate back to the project
+   - Verify: Data is still there (loaded from local DB)
+
+2. **Test Project Deletion (Data Removed)**
+   - Create a test project with some data
+   - Delete the project from the project list
+   - Check console logs for:
+     - "Cleaning up synchronizer for storeId: ..." (from unmount)
+     - "Cleaning up persister for storeId: ..." (from unmount)
+     - "Deleting ProjectDetailsStore database: ..." (from explicit delete)
+     - "Successfully deleted database: ..."
+     - "Sending deletion request to server for storeId: ..."
+   - Verify: SQLite database file is removed
+   - Verify: DELETE request sent to server (check network tab or server logs)
+
+3. **Test Offline Deletion**
+   - Disconnect from network
+   - Delete a project
+   - Verify: Local database is still deleted
+   - Verify: Server deletion request fails gracefully (logged, doesn't crash)
 
 ## Error Handling
 
@@ -152,10 +193,11 @@ Both client-side cleanup functions use try-catch blocks to ensure:
 
 ## Notes
 
-- The client-side implementation is complete and functional
-- The server-side DELETE handler requires implementation in the Cloudflare Worker
+- The client-side implementation correctly separates unmount cleanup from deletion
+- Database files persist between navigation/unmounts for offline access
+- Server-side DELETE handler requires implementation in the Cloudflare Worker
 - Server-side cleanup is optional but recommended for complete data removal
-- If the server doesn't implement DELETE handling, data may persist in Durable Objects but will eventually be cleaned up by Cloudflare's automatic garbage collection when the object is inactive
+- If the server doesn't implement DELETE handling, data may persist in Durable Objects
 
 ## Related Files
 

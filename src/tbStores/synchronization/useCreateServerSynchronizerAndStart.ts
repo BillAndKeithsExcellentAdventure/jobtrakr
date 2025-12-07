@@ -2,7 +2,6 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 import { createWsSynchronizer } from 'tinybase/synchronizers/synchronizer-ws-client/with-schemas';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { MergeableStore, OptionalSchemas } from 'tinybase/with-schemas';
-import { deleteServerStore } from './deleteServerStore';
 import { SYNC_SERVER_URL } from './syncConfig';
 
 export const useCreateServerSynchronizerAndStart = <Schemas extends OptionalSchemas>(
@@ -33,7 +32,11 @@ export const useCreateServerSynchronizerAndStart = <Schemas extends OptionalSche
     },
     [storeId],
     async (synchronizer) => {
-      // Cleanup: stop sync, close websocket, request server deletion, and destroy synchronizer
+      // Cleanup on unmount: stop sync, close websocket, and destroy synchronizer
+      // Note: We do NOT request server deletion here because the component may unmount
+      // for reasons other than project deletion (e.g., navigation, memory management).
+      // Server-side deletion should be triggered by deleteProjectDetailsStore() when
+      // the project is explicitly deleted by the user.
       console.log(`Cleaning up synchronizer for storeId: ${storeId}`);
       try {
         await synchronizer.stopSync();
@@ -46,9 +49,6 @@ export const useCreateServerSynchronizerAndStart = <Schemas extends OptionalSche
             ws.close();
           }
         }
-        
-        // Request server-side deletion of the store data
-        await deleteServerStore(storeId);
         
         await synchronizer.destroy();
         console.log(`Successfully cleaned up synchronizer for: ${storeId}`);

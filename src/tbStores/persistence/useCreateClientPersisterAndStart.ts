@@ -1,7 +1,6 @@
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { Content, MergeableStore, OptionalSchemas } from 'tinybase/with-schemas';
 import { createClientPersister } from './createClientPersister';
-import { deleteDatabaseSync } from 'expo-sqlite';
 
 export const useCreateClientPersisterAndStart = <Schemas extends OptionalSchemas>(
   storeId: string,
@@ -28,16 +27,16 @@ export const useCreateClientPersisterAndStart = <Schemas extends OptionalSchemas
     },
     [storeId, initialValues],
     async (persister) => {
-      // Cleanup: stop auto-save, destroy persister, and delete the database
+      // Cleanup on unmount: stop auto-save and destroy persister
+      // Note: We do NOT delete the database here because the component may unmount
+      // for reasons other than project deletion (e.g., navigation, memory management).
+      // Database deletion only happens in deleteProjectDetailsStore() when the project
+      // is explicitly deleted by the user.
       console.log(`Cleaning up persister for storeId: ${storeId}`);
       try {
         await persister.stopAutoSave();
         await persister.destroy();
-        
-        // Delete the SQLite database file
-        const databaseName = `${storeId}.db`;
-        deleteDatabaseSync(databaseName);
-        console.log(`Successfully deleted database: ${databaseName}`);
+        console.log(`Successfully cleaned up persister for: ${storeId}`);
       } catch (error) {
         console.error(`Error cleaning up persister for ${storeId}:`, error);
       }
