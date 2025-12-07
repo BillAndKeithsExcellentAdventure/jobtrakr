@@ -5,11 +5,12 @@ This document describes the implementation for properly deleting project stores,
 ## Overview
 
 When a project is deleted from the application, we need to clean up:
-1. **Client-side**: Delete the local SQLite database and request server-side deletion
-2. **Server-side**: Delete the stored data from the Cloudflare Durable Object
-3. **Component lifecycle**: Properly handle unmount cleanup without deleting persisted data
+1. **Multi-device sync**: Clear all tables in the store so the empty state syncs across all devices
+2. **Client-side**: Delete the local SQLite database
+3. **Server-side**: Delete the stored data from the Cloudflare Durable Object (optional)
+4. **Component lifecycle**: Properly handle unmount cleanup without deleting persisted data
 
-## Key Design Principle
+## Key Design Principles
 
 **Critical distinction**: Component unmounting ≠ Project deletion
 
@@ -21,6 +22,13 @@ When a project is deleted from the application, we need to clean up:
 
 - Database and server data should **ONLY** be deleted when the user explicitly deletes a project
 - Database should **persist** across unmounts so data is available when the user returns
+
+**Multi-device synchronization**: Using `store.delTables()` instead of just deleting the local database
+
+- If we only delete the local database, other devices won't know the project was deleted
+- By clearing all tables in the store (`store.delTables()`), the empty state syncs across devices
+- All connected devices will receive the empty state and know the project has no data
+- This prevents deleted projects from reappearing when syncing with other devices
 
 ## Client-Side Implementation
 
@@ -41,23 +49,33 @@ When `ProjectDetailsStore` unmounts for ANY reason, we clean up resources but pr
 
 ### Explicit Project Deletion
 
-When the user explicitly deletes a project, `deleteProjectDetailsStore()` is called:
+When the user explicitly deletes a project, a multi-step process ensures proper cleanup:
 
-#### Database Deletion (`ProjectDetailsStoreHooks.tsx`)
+#### Step 1: Clear All Tables (`useClearProjectDetailsStoreCallback`)
+- Calls `store.delTables()` to remove all data from all tables
+- This empty state is synchronized to all connected devices
+- Ensures other devices see the project as empty
+
+#### Step 2: Database Deletion (`deleteProjectDetailsStore`)
 - Deletes the SQLite database file using `deleteDatabaseSync()`
-- Requests server-side deletion via `deleteServerStore()`
+- Requests server-side deletion via `deleteServerStore()` (optional)
 - This happens **in addition to** the automatic unmount cleanup
 
 ### Deletion Flow
 
-1. User deletes a project from the project list
-2. `processDeleteProject(projectId)` - removes from project list store
-3. `removeActiveProjectId(projectId)` - triggers component unmount
+1. User confirms project deletion
+2. **`clearProjectDetailsStore()`** - clears all tables in the store
+   - Empty state syncs to all connected devices
+   - Prevents project from reappearing on other devices
+3. Small delay (500ms) to allow sync propagation
+4. Navigation back to project list
+5. `processDeleteProject(projectId)` - removes from project list store
+6. `removeActiveProjectId(projectId)` - triggers component unmount
    - Unmount cleanup: stops sync/persist, closes connections, destroys resources
-   - **Database and server data remain intact**
-4. `deleteProjectDetailsStore(projectId)` - **explicitly called** to delete data
+   - Database file still exists but is empty
+7. `deleteProjectDetailsStore(projectId)` - **explicitly called** to delete files
    - Deletes SQLite database file
-   - Sends DELETE request to server
+   - Sends DELETE request to server (optional)
 
 ### Key Files Modified
 
@@ -65,7 +83,8 @@ When the user explicitly deletes a project, `deleteProjectDetailsStore()` is cal
 - `/src/tbStores/synchronization/useCreateServerSynchronizerAndStart.ts` - Added destroy callback for synchronizer cleanup (no server deletion)
 - `/src/tbStores/synchronization/deleteServerStore.ts` - Utility for server deletion request
 - `/src/tbStores/synchronization/syncConfig.ts` - Shared server URL config
-- `/src/tbStores/projectDetails/ProjectDetailsStoreHooks.tsx` - Implemented `deleteProjectDetailsStore()` with DB and server deletion
+- `/src/tbStores/projectDetails/ProjectDetailsStoreHooks.tsx` - Added `useClearProjectDetailsStoreCallback()` hook and `deleteProjectDetailsStore()` function
+- `/src/app/(protected)/(home)/[projectId]/index.tsx` - Updated deletion handler to clear tables before deletion
 
 ## Server-Side Implementation
 
@@ -165,23 +184,39 @@ To verify the implementation works correctly:
    - Navigate back to the project
    - Verify: Data is still there (loaded from local DB)
 
-2. **Test Project Deletion (Data Removed)**
-   - Create a test project with some data
-   - Delete the project from the project list
-   - Check console logs for:
+2. **Test Project Deletion (Data Removed and Synced)**
+   - Create a test project with some data on Device A
+   - Ensure Device B is also synced with this project
+   - Delete the project from Device A
+   - Check console logs on Device A for:
+     - "Clearing all tables in ProjectDetailsStore for project: ..." (clearing tables)
+     - "Successfully cleared all tables for project: ..." (sync propagates)
      - "Cleaning up synchronizer for storeId: ..." (from unmount)
      - "Cleaning up persister for storeId: ..." (from unmount)
      - "Deleting ProjectDetailsStore database: ..." (from explicit delete)
      - "Successfully deleted database: ..."
      - "Sending deletion request to server for storeId: ..."
-   - Verify: SQLite database file is removed
+   - Verify on Device A: SQLite database file is removed
+   - Verify on Device B: Project data is cleared (all tables empty)
    - Verify: DELETE request sent to server (check network tab or server logs)
 
-3. **Test Offline Deletion**
+3. **Test Multi-Device Synchronization**
+   - Create a project on Device A with data
+   - Sync to Device B (should see the project with data)
+   - Delete the project on Device A
+   - Verify on Device A: Local database deleted
+   - Wait for sync on Device B
+   - Verify on Device B: Project shows as empty (tables cleared)
+   - This confirms the empty state synced correctly
+
+4. **Test Offline Deletion**
    - Disconnect from network
    - Delete a project
    - Verify: Local database is still deleted
    - Verify: Server deletion request fails gracefully (logged, doesn't crash)
+   - Reconnect to network
+   - Verify: Empty state syncs to other devices when reconnected
+
 
 ## Error Handling
 

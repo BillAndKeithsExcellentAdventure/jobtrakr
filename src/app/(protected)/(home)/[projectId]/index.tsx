@@ -17,6 +17,7 @@ import {
 import {
   useAllRows,
   useBidAmountUpdater,
+  useClearProjectDetailsStoreCallback,
   useCostUpdater,
   useDeleteRowCallback,
   useIsStoreAvailableCallback,
@@ -48,6 +49,7 @@ const ProjectDetailsPage = () => {
   const projectData = useProject(projectId);
   const processDeleteProject = useDeleteProjectCallback();
   const { removeActiveProjectId, addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
+  const clearProjectDetailsStore = useClearProjectDetailsStoreCallback(projectId);
   const allProjectCategories = useAllConfigRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
@@ -282,9 +284,16 @@ const ProjectDetailsPage = () => {
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Delete',
-            onPress: () => {
-              // Navigate back to Project List screen first
+            onPress: async () => {
+              // First, clear all tables in the store to sync the empty state across devices
+              await clearProjectDetailsStore();
+              
+              // Small delay to allow sync to propagate the empty state
+              await new Promise(resolve => setTimeout(resolve, 500));
+              
+              // Navigate back to Project List screen
               router.back();
+              
               // Defer deletion until after navigation begins rendering
               requestAnimationFrame(() => {
                 const result = processDeleteProject(projectId);

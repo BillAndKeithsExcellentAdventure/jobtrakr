@@ -389,6 +389,37 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
 };
 
 /**
+ * Hook that returns a callback to clear all tables in the ProjectDetailsStore.
+ * This is used during project deletion to sync the empty state across all devices.
+ * 
+ * By clearing all tables instead of just deleting the local database, the empty
+ * state will be synchronized across all connected devices via TinyBase's sync mechanism.
+ * 
+ * @param projectId - The ID of the project
+ * @returns A callback that clears all tables in the store
+ */
+export const useClearProjectDetailsStoreCallback = (projectId: string) => {
+  const store = useStore(getStoreId(projectId));
+  
+  return useCallback(async (): Promise<boolean> => {
+    if (!store) {
+      console.error('Store not found for project:', projectId);
+      return false;
+    }
+    
+    try {
+      console.log(`Clearing all tables in ProjectDetailsStore for project: ${projectId}`);
+      store.delTables();
+      console.log(`Successfully cleared all tables for project: ${projectId}`);
+      return true;
+    } catch (error) {
+      console.error(`Error clearing tables for project ${projectId}:`, error);
+      return false;
+    }
+  }, [store, projectId]);
+};
+
+/**
  * Deletes the ProjectDetailsStore database and server data for a given project.
  * This function should be called after a project is deleted from the project list.
  * 
@@ -399,6 +430,10 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
  * Note: The persister and synchronizer cleanup (stopAutoSave, stopSync, destroy)
  * happens automatically when the ProjectDetailsStore component unmounts via the
  * destroy callbacks in the hooks.
+ * 
+ * Important: Before calling this function, you should call the hook returned by
+ * useClearProjectDetailsStoreCallback() to clear all tables in the store. This ensures
+ * the empty state is synced across all devices.
  *
  * @param projectId - The ID of the project whose store should be deleted
  */
