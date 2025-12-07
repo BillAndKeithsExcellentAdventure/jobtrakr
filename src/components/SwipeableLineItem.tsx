@@ -2,21 +2,17 @@ import { SwipeableComponent } from '@/src/components/SwipeableComponent';
 import { Text, View } from '@/src/components/Themed';
 import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
+import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
-  WorkItemCostEntry,
   useDeleteRowCallback,
   useTableValue,
+  WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
 import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
-import {
-  useAllRows as useAllRowsConfiguration,
-  WorkCategoryCodeCompareAsNumber,
-  WorkItemDataCodeCompareAsNumber,
-} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 
 const RIGHT_ACTION_WIDTH = 80;
 const SWIPE_THRESHOLD_WIDTH = 50;
@@ -56,6 +52,7 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
   const amount = useTableValue(projectId, 'workItemCostEntries', lineItem.id, 'amount');
   const isValidWorkItemId = allWorkItems.find((item) => item.id === lineItem.workItemId) !== undefined;
 
+  const isInvoice = lineItem.documentationType === 'invoice';
   return (
     <SwipeableComponent
       key={lineItem.id}
@@ -65,17 +62,17 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
     >
       <View style={[styles.itemEntry, { borderColor: colors.border, borderBottomWidth: 1 }]}>
         <Pressable
-          onPress={() => {
-            const isInvoice = lineItem.documentationType === 'invoice';
-            router.push({
-              pathname: isInvoice
-                ? '/[projectId]/invoice/[invoiceId]/[lineItemId]'
-                : '/[projectId]/receipt/[receiptId]/[lineItemId]',
-              params: isInvoice
-                ? { projectId, invoiceId: lineItem.parentId, lineItemId: lineItem.id }
-                : { projectId, receiptId: lineItem.parentId, lineItemId: lineItem.id },
-            });
-          }}
+          onPress={() =>
+            isInvoice
+              ? router.push({
+                  pathname: '/[projectId]/invoice/[invoiceId]/[lineItemId]',
+                  params: { projectId, invoiceId: lineItem.parentId, lineItemId: lineItem.id },
+                })
+              : router.push({
+                  pathname: '/[projectId]/receipt/[receiptId]/[lineItemId]',
+                  params: { projectId, receiptId: lineItem.parentId, lineItemId: lineItem.id },
+                })
+          }
         >
           <View style={styles.itemInfo}>
             <Text style={styles.itemAmount} text={formatCurrency(amount, true, true)} />

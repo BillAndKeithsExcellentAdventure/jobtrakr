@@ -303,8 +303,8 @@ const AddReceiptPage = () => {
             <OptionPickerItem
               containerStyle={styles.inputContainer}
               optionLabel={projectReceipt.vendor}
-              label="Vendor"
-              placeholder="Vendor"
+              label="Vendor/Merchant"
+              placeholder="Vendor/Merchant"
               onOptionLabelChange={handleVendorChange}
               onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
             />
@@ -312,8 +312,8 @@ const AddReceiptPage = () => {
             <TextField
               containerStyle={styles.inputContainer}
               style={[styles.input, { borderColor: colors.transparent }]}
-              placeholder="Vendor"
-              label="Vendor"
+              placeholder="Vendor/Merchant"
+              label="Vendor/Merchant"
               value={projectReceipt.vendor}
               onChangeText={handleVendorChange}
             />

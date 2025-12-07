@@ -117,8 +117,8 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
                 <OptionPickerItem
                   containerStyle={styles.inputContainer}
                   optionLabel={editedSummary.supplier}
-                  label="Supplier"
-                  placeholder="Supplier"
+                  label="Supplier/Contractor"
+                  placeholder="Supplier/Contractor"
                   onOptionLabelChange={(supplier: string) =>
                     setEditedSummary((prev) => ({
                       ...prev,
@@ -131,8 +131,8 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
                 <TextField
                   containerStyle={styles.inputContainer}
                   style={[styles.input, { borderColor: colors.transparent }]}
-                  placeholder="Supplier"
-                  label="Supplier"
+                  placeholder="Supplier/Contractor"
+                  label="Supplier/Contractor"
                   value={editedSummary.supplier}
                   onChangeText={(supplier: string) =>
                     setEditedSummary((prev) => ({

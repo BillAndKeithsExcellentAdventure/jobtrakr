@@ -296,8 +296,8 @@ const AddInvoicePage = () => {
             <OptionPickerItem
               containerStyle={styles.inputContainer}
               optionLabel={projectInvoice.supplier}
-              label="Supplier"
-              placeholder="Supplier"
+              label="Supplier/Contractor"
+              placeholder="Supplier/Contractor"
               onOptionLabelChange={handleSupplierChange}
               onPickerButtonPress={() => setIsSupplierListPickerVisible(true)}
             />
@@ -305,8 +305,8 @@ const AddInvoicePage = () => {
             <TextField
               containerStyle={styles.inputContainer}
               style={[styles.input, { borderColor: colors.transparent }]}
-              placeholder="Supplier"
-              label="Supplier"
+              placeholder="Supplier/Contractor"
+              label="Supplier/Contractor"
               value={projectInvoice.supplier}
               onChangeText={handleSupplierChange}
             />

@@ -117,8 +117,8 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
                 <OptionPickerItem
                   containerStyle={styles.inputContainer}
                   optionLabel={editedSummary.vendor}
-                  label="Vendor"
-                  placeholder="Vendor"
+                  label="Vendor/Merchant"
+                  placeholder="Vendor/Merchant"
                   onOptionLabelChange={(vendor: string) =>
                     setEditedSummary((prev) => ({
                       ...prev,
@@ -131,8 +131,8 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
                 <TextField
                   containerStyle={styles.inputContainer}
                   style={[styles.input, { borderColor: colors.transparent }]}
-                  placeholder="Vendor"
-                  label="Vendor"
+                  placeholder="Vendor/Merchant"
+                  label="Vendor/Merchant"
                   value={editedSummary.vendor}
                   onChangeText={(vendor: string) =>
                     setEditedSummary((prev) => ({

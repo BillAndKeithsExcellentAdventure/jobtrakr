@@ -171,16 +171,16 @@ const EditInvoiceDetailsPage = () => {
             <OptionPickerItem
               containerStyle={styles.inputContainer}
               optionLabel={invoice.supplier}
-              placeholder="Supplier"
-              label="Supplier"
+              placeholder="Supplier/Contractor"
+              label="Supplier/Contractor"
               onOptionLabelChange={handleSupplierChange}
               onPickerButtonPress={() => setIsSupplierListPickerVisible(true)}
             />
           ) : (
             <TextField
               containerStyle={styles.inputContainer}
-              placeholder="Supplier"
-              label="Supplier"
+              placeholder="Supplier/Contractor"
+              label="Supplier/Contractor"
               value={invoice.supplier}
               onChangeText={handleSupplierChange}
             />

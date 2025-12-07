@@ -15,7 +15,7 @@ import { FlatList, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableVendor from '../../../../../components/SwipeableVendor';
+import SwipeableVendor from '@/src/components/SwipeableVendor';
 
 const VendorsScreen = () => {
   const router = useRouter();
@@ -82,7 +82,7 @@ const VendorsScreen = () => {
         <Stack.Screen
           options={{
             headerShown: true,
-            title: 'Vendors',
+            title: 'Vendors/Merchants',
             headerRight: renderHeaderRight,
           }}
         />
@@ -92,7 +92,7 @@ const VendorsScreen = () => {
               <View style={{ padding: 10, borderRadius: 10, marginVertical: 10, marginHorizontal: 15 }}>
                 <TextInput
                   style={[styles.input, { backgroundColor: colors.neutral200 }]}
-                  placeholder="Vendor Name"
+                  placeholder="Vendor/Merchant Name"
                   value={vendor.name}
                   onChangeText={(text) => handleInputChange('name', text)}
                 />
