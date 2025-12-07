@@ -146,10 +146,10 @@ ProjectHound is a mobile-first application designed to help contractors and cons
 
 ### Core Technologies
 
-- **React Native**: Cross-platform mobile development
-- **Expo SDK 54**: Simplified development and deployment
-- **TypeScript**: Type-safe development
-- **TinyBase 6**: Reactive data store with synchronization
+- **React Native 0.81.5**: Cross-platform mobile development
+- **Expo SDK ~54.0**: Simplified development and deployment
+- **TypeScript 5.9**: Type-safe development
+- **TinyBase 6.7+**: Reactive data store with synchronization
 
 ### Key Dependencies
 
