@@ -284,11 +284,13 @@ const ProjectDetailsPage = () => {
             onPress: () => {
               // Navigate away first to prevent race condition with re-rendering
               router.replace('/');
-              // Then delete the project and remove from active IDs
-              const result = processDeleteProject(projectId);
-              if (result.status === 'Success') {
-                removeActiveProjectId(projectId);
-              }
+              // Defer deletion until after navigation begins rendering
+              requestAnimationFrame(() => {
+                const result = processDeleteProject(projectId);
+                if (result.status === 'Success') {
+                  removeActiveProjectId(projectId);
+                }
+              });
             },
           },
         ]);
