@@ -1,0 +1,512 @@
+# Home Screens User Guide
+
+## Overview
+
+ProjectHound has two main home screens that serve as the primary navigation hubs:
+
+1. **Projects Home Screen** - Your main dashboard for viewing and managing all projects
+2. **Configuration Home Screen** - The central location for managing categories, templates, vendors, and suppliers
+
+This guide explains how to use both home screens and their associated features.
+
+## Projects Home Screen
+
+The Projects Home Screen is the main landing page when you open ProjectHound. It displays all your projects and provides quick access to project details, notes, photos, receipts, invoices, and change orders.
+
+### Accessing the Projects Home Screen
+
+- The Projects Home Screen appears automatically after signing in
+- To return to it from any screen, tap the back button until you reach the home screen
+
+### Screen Layout
+
+**When you have no projects yet:**
+- A welcome message appears: "Welcome to Project Hound!"
+- You'll see options to either import default cost codes or set up your own configuration
+- Two buttons are available:
+  - **Import Defaults** - Loads pre-configured cost codes for basic home building
+  - **Go To Configuration** - Takes you to the Configuration screen to set up custom codes
+
+**When you have projects:**
+- Projects are displayed in a scrollable grid layout
+- Each project card shows:
+  - Project thumbnail image (if set)
+  - Project name
+  - Owner name
+  - Location
+  - Start date and planned finish date
+  - Bid price and amount spent
+  - Owner contact information (address, phone, email)
+  - Favorite indicator (heart icon)
+
+### Quick Actions on Projects
+
+Each project card has a button bar at the bottom with six quick action buttons:
+
+1. **Like (Heart Icon)** 
+   - Tap to mark/unmark a project as a favorite
+   - Favorited projects are automatically tracked for quick access
+   - The heart icon fills in when a project is favorited
+
+2. **Notes**
+   - Opens the project notes screen
+   - Create task-based to-do items for the project
+   - Mark notes as completed
+
+3. **Photos**
+   - Opens the project photo gallery
+   - View, capture, and manage project photos and videos
+   - Set project thumbnails
+   - Export and share media
+
+4. **Receipts**
+   - Opens the receipts screen
+   - Track expenses with receipt images
+   - Use AI to extract line items from receipts
+   - Associate costs with specific work items
+
+5. **Invoices**
+   - Opens the invoices screen
+   - Manage vendor invoices
+   - Track invoice line items
+   - Link invoices to project costs
+
+6. **Changes**
+   - Opens the change orders screen
+   - Create and manage project change orders
+   - Generate professional change order documents
+   - Track approval status
+
+### Opening a Project
+
+To view full project details:
+- Tap anywhere on a project card (outside the action buttons)
+- This opens the detailed project view with complete budget tracking and work item breakdowns
+
+### Main Menu (Top-Right)
+
+Tap the **menu icon** (three horizontal lines) in the top-right corner to access:
+
+#### Always Available:
+- **Company Settings** - Edit company name, address, logo, and contact information
+- **Configuration** - Navigate to the Configuration Home Screen
+- **Logout** - Sign out of the application
+
+#### When Projects Exist:
+- **Add Project** - Create a new project (only appears after initial configuration is complete)
+
+#### For Organization Admins:
+- **Manage Team** - Invite team members and manage user roles (only visible to organization administrators)
+
+## Add Project
+
+Create a new project with predefined templates and work items.
+
+### Accessing Add Project
+
+1. From the Projects Home Screen, tap the **menu icon** (three lines) in the top-right
+2. Select **Add Project**
+
+Note: This option only appears after you've set up at least one work category in Configuration.
+
+### Project Information Fields
+
+**Required Fields:**
+- **Project Name** - The name of the project
+- **Project Template** - Select which template to use for seeding work items
+
+**Optional Fields:**
+- **Location** - Street address or description
+- **Owner Name** - Client or property owner name
+- **Owner Contact Information:**
+  - Address and Address 2
+  - City, State, Zip
+  - Phone number
+  - Email address
+- **Bid Price** - The quoted or estimated project cost
+- **Start Date** - When the project begins
+- **Planned Finish Date** - Expected completion date (defaults to 9 months from start)
+- **Project Status** - Active, On-hold, or Completed
+
+### Project Templates
+
+Templates define which work items are included in a project. When you select a template:
+- All associated work items are automatically added to the project
+- Each work item includes the cost code, description, and bid amount
+- You can modify these after project creation
+
+### Creating the Project
+
+1. Fill in the project name (required)
+2. Select a template from the dropdown (required)
+3. Fill in any additional information you want to track
+4. Tap **Create Project** at the bottom
+5. The new project appears on the Projects Home Screen
+
+## Configuration Home Screen
+
+The Configuration Home Screen is your central hub for managing the building blocks of your project tracking system: categories, work items, templates, vendors, and suppliers.
+
+### Accessing Configuration
+
+**From the Projects Home Screen:**
+1. Tap the **menu icon** (three lines) in the top-right
+2. Select **Configuration**
+
+**From the welcome screen (first time setup):**
+- Tap **Go To Configuration** button
+
+### Screen Layout
+
+The Configuration screen displays:
+- App version number at the top
+- Four main configuration sections (detailed below)
+- A menu icon in the top-right for import/export operations
+
+### Configuration Sections
+
+#### 1. Categories
+
+**Purpose:** Define the major work categories for tracking project costs (e.g., Foundation, Framing, Electrical, Plumbing).
+
+**What you can do:**
+- View all work categories
+- Add new categories with custom codes and names
+- Edit existing categories
+- Add work items under each category
+- Import default categories for home building projects
+
+**Accessing:** Tap **Categories** → "Manage work categories"
+
+#### 2. Project Templates
+
+**Purpose:** Create reusable templates that define which work items are included in different types of projects.
+
+**What you can do:**
+- View all project templates
+- Create new templates
+- Add/remove work items from templates
+- Edit template names and descriptions
+- Use templates when creating new projects
+
+**Accessing:** Tap **Project Templates** → "Define Project-specific Work Items"
+
+#### 3. Vendors/Merchants
+
+**Purpose:** Maintain a list of vendors where you purchase materials (e.g., hardware stores, lumber yards, material suppliers).
+
+**What you can do:**
+- Add new vendors with contact information
+- Edit vendor details (name, address, phone, notes)
+- Import vendors from CSV files
+- Export vendors to CSV files
+- Associate vendors with receipts
+
+**Accessing:** Tap **Vendors/Merchants** → "Add and Edit Vendors/Merchants"
+
+#### 4. Suppliers/Contractors
+
+**Purpose:** Maintain a list of suppliers and subcontractors who provide services (e.g., electricians, plumbers, HVAC contractors).
+
+**What you can do:**
+- Add new suppliers with contact information
+- Edit supplier details (name, address, phone, notes)
+- Import suppliers from CSV files
+- Export suppliers to CSV files
+- Associate suppliers with invoices
+
+**Accessing:** Tap **Suppliers/Contractors** → "Add and Edit Suppliers/Contractors"
+
+### Configuration Menu (Top-Right)
+
+Tap the **menu icon** (three horizontal lines) in the top-right to access data management tools:
+
+#### When Configuration Data Exists:
+- **Export Configuration Data** - Export all categories, work items, and templates to a JSON file
+- **Export Vendors** - Export all vendor data to a CSV file (only appears when vendors exist)
+- **Import Vendors** - Import vendors from a CSV file
+- **Export Suppliers** - Export all supplier data to a CSV file (only appears when suppliers exist)
+- **Import Suppliers** - Import suppliers from a CSV file
+
+#### When No Configuration Data Exists:
+- **Import Configuration Data** - Import categories, work items, and templates from a JSON file
+
+See the [Vendor and Supplier CSV Import/Export documentation](VENDOR_SUPPLIER_CSV_IMPORT_EXPORT.md) for detailed information on CSV import/export.
+
+### Initial Setup Workflow
+
+When using ProjectHound for the first time:
+
+1. **Set Up Categories:**
+   - Choose to import defaults or create your own
+   - If importing defaults, select from predefined category sets (e.g., "Basic Home Building")
+   - If creating custom, add categories one by one with codes and names
+
+2. **Add Work Items to Categories:**
+   - For each category, add specific work items (e.g., under "Foundation": Footings, Concrete, Rebar)
+   - Assign each work item a unique code and name
+   - These work items will be used for cost tracking
+
+3. **Create Project Templates:**
+   - Create at least one template (e.g., "Standard Home", "Remodel", "Commercial Build")
+   - Add the work items that apply to each type of project
+   - Templates speed up project creation by pre-selecting work items
+
+4. **Add Vendors and Suppliers (Optional):**
+   - Add frequently used vendors and suppliers
+   - This makes it faster to assign costs to receipts and invoices
+
+## Company Settings
+
+Manage your company information that appears on change orders and other generated documents.
+
+### Accessing Company Settings
+
+1. From the Projects Home Screen, tap the **menu icon** (three lines)
+2. Select **Company Settings**
+
+### Available Settings
+
+**Company Information:**
+- **Company Name** - Your business name
+- **Address** - Street address (multi-line)
+- **City** - City name
+- **State** - State abbreviation
+- **Zip** - ZIP/Postal code
+- **Phone** - Business phone number
+- **Email** - Business email address
+- **Website** - Company website URL
+
+**Branding:**
+- **Company Logo** - Upload a logo image from your device
+  - Tap the image area to select a photo
+  - Image is automatically resized to 200px height
+  - Logo appears on generated change order documents
+
+### Saving Changes
+
+1. Make your changes to any fields
+2. Tap **Save** at the bottom
+3. Settings are immediately applied
+4. You're returned to the previous screen
+
+### Auto-Save Note
+
+Company Settings uses the auto-save system - if you tap the back button, your changes are automatically saved before navigating away.
+
+## Team Management (Organization Admins Only)
+
+Invite team members to collaborate on projects and manage user roles within your organization.
+
+### Accessing Team Management
+
+**Prerequisites:**
+- You must be an organization administrator
+- The feature only appears if you have admin permissions
+
+**To access:**
+1. From the Projects Home Screen, tap the **menu icon** (three lines)
+2. Select **Manage Team**
+
+### Inviting Users
+
+**To invite a new team member:**
+1. Enter the user's email address in the email field
+2. Tap **Send Invite**
+3. The user receives an email invitation
+4. They can sign up and join your organization
+
+**Invitation Status:**
+- Success: "Invitation sent successfully"
+- Already exists: "User is already a member"
+- Error: Displays specific error message
+
+### Managing Existing Members
+
+The screen displays a list of all current organization members, showing:
+- User name
+- Email address
+- Current role (Member or Admin)
+- Role management buttons
+
+### Changing Member Roles
+
+**To promote a member to admin:**
+1. Find the member in the list
+2. Tap **Make Admin** button next to their name
+3. Confirm the action
+4. The member's role updates to "org:admin"
+5. They gain access to admin features like Team Management
+
+**To remove admin privileges:**
+1. Find the admin in the list
+2. Tap **Remove Admin** button
+3. Confirm the action
+4. The user's role reverts to regular member ("org:member")
+
+**Important Notes:**
+- You cannot remove your own admin status if you're the last admin
+- At least one admin must remain in the organization
+- Role changes take effect immediately
+
+### Member Removal
+
+**To remove a member from the organization:**
+1. Find the member in the list
+2. Tap **Remove** button next to their name
+3. Confirm the removal
+4. The member is immediately removed from the organization
+5. They lose access to all organization projects and data
+
+**Restrictions:**
+- You cannot remove yourself from the organization
+- You cannot remove the organization owner
+
+## Navigation Patterns
+
+### Common Navigation Flows
+
+**From Projects to Configuration:**
+1. Projects Home → Menu → Configuration
+2. Make configuration changes
+3. Back button → Returns to Projects Home
+
+**Adding a Project:**
+1. Projects Home → Menu → Add Project
+2. Fill in project details
+3. Tap Create Project → Returns to Projects Home with new project visible
+
+**Managing Data:**
+1. Projects Home → Menu → Configuration
+2. Configuration Home → Menu → Export/Import options
+3. Select desired operation
+4. Complete the export/import
+5. Back to Configuration Home
+
+### Back Button Behavior
+
+The back button in the top-left corner:
+- Saves any pending changes (auto-save)
+- Returns to the previous screen
+- Follows the navigation history
+
+### Bottom Tab Navigation
+
+When viewing projects, you may see tabs at the bottom for:
+- Projects (home)
+- Other views (depending on app configuration)
+
+## Loading States
+
+### First Time Load
+
+When opening the app for the first time:
+1. "Loading..." appears briefly
+2. If no configuration exists: Welcome screen with import/setup options
+3. If configuration exists: Projects Home Screen loads
+
+### Configuration Check
+
+The app verifies minimum configuration requirements:
+- At least one work category must exist
+- At least one project template must exist
+- If requirements aren't met, the welcome screen appears
+
+### Data Synchronization
+
+The app automatically synchronizes data:
+- Real-time sync across multiple devices
+- Offline changes sync when connection returns
+- Loading indicator appears during heavy sync operations
+
+## Tips and Best Practices
+
+### Getting Started
+1. Start with importing default categories if you're building homes
+2. Review and customize the imported categories to match your needs
+3. Create 2-3 project templates for your common project types
+4. Add your most-used vendors and suppliers before creating projects
+
+### Project Organization
+1. Use favorites (heart icon) for active projects you check frequently
+2. Set project thumbnails from the Photos screen to make projects easier to identify
+3. Keep owner contact information complete for easy reference
+
+### Configuration Management
+1. Export your configuration after initial setup as a backup
+2. Use templates to maintain consistency across similar projects
+3. Regularly review and clean up unused work items and categories
+
+### Team Collaboration
+1. Invite team members early so they can access project data
+2. Give admin role to trusted team leads who need to manage users
+3. Keep the member list current by removing users who leave
+
+### Data Management
+1. Export vendors and suppliers periodically as backup
+2. Use CSV import to bulk-add vendors/suppliers from other systems
+3. Export configuration data before making major changes
+
+## Troubleshooting
+
+### "No Projects Found" Message
+
+**Cause:** No minimum configuration exists yet
+
+**Solution:**
+1. Tap **Import Defaults** to use pre-configured categories, OR
+2. Tap **Go To Configuration** to set up custom categories and templates
+
+### Add Project Not Available
+
+**Cause:** Configuration requirements not met
+
+**Solution:**
+1. Navigate to Configuration
+2. Add at least one work category
+3. Create at least one project template
+4. Return to Projects Home - Add Project will now appear
+
+### Can't See Manage Team Option
+
+**Cause:** You're not an organization admin
+
+**Solution:**
+- Ask your organization administrator to promote you to admin role
+- This option is only visible to users with admin permissions
+
+### Configuration Menu Options Not Showing
+
+**Cause:** Menu options are contextual based on existing data
+
+**Solution:**
+- Export options only appear when data exists to export
+- Add some data first (categories, vendors, suppliers)
+- The export options will then appear
+
+### Changes Not Saving
+
+**Cause:** Navigation before blur/save completes
+
+**Note:** The app uses auto-save - changes save automatically when you:
+- Tap outside a field
+- Press the back button
+- Navigate to another screen
+
+If changes seem lost, ensure you tap outside input fields before navigating.
+
+## Related Documentation
+
+- [Vendor and Supplier CSV Import/Export](VENDOR_SUPPLIER_CSV_IMPORT_EXPORT.md) - Detailed CSV format and import/export procedures
+- [Auto-Save Implementation](AUTO_SAVE_IMPLEMENTATION.md) - Technical details on how auto-save works
+- [README](../README.md) - Full application overview and technical stack
+
+## Summary
+
+The home screens in ProjectHound serve as your command center:
+- **Projects Home** manages all your projects with quick access to details, notes, media, receipts, invoices, and changes
+- **Configuration Home** manages the foundational data (categories, templates, vendors, suppliers)
+- **Company Settings** maintains your business information for documents
+- **Team Management** handles user access and permissions
+
+Master these screens to efficiently manage your construction projects from start to finish.
