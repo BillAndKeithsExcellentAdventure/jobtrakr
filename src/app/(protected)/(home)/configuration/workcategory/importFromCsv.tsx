@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { ScrollView, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { parseWorkItemsCsvText } from '@/src/utils/csvUtils';
-import { useAddRowCallback } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  useAddRowCallback,
+  useCreateTemplateWithAllWorkItemsCallback,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { WorkCategoryDefinition } from '@/src/models/types';
 import { useRouter, Stack } from 'expo-router';
 import { Text, View } from '@/src/components/Themed';
@@ -14,6 +17,7 @@ export default function ImportFromCsvScreen() {
   const addWorkCategory = useAddRowCallback('categories');
   const addWorkItem = useAddRowCallback('workItems');
   const router = useRouter();
+  const createTemplateWithAllWorkItems = useCreateTemplateWithAllWorkItemsCallback();
 
   const handleSelectFile = async () => {
     try {
@@ -73,6 +77,7 @@ export default function ImportFromCsvScreen() {
         }
       }
 
+      createTemplateWithAllWorkItems();
       Alert.alert('Success', 'Work items imported successfully');
       setWorkCategories([]);
     } catch (error) {

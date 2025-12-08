@@ -3,7 +3,10 @@ import { TextField } from '@/src/components/TextField';
 import { Text, View } from '@/src/components/Themed';
 import { SeedProjectWorkItems } from '@/src/constants/seedWorkItems';
 import { useColors } from '@/src/context/ColorsContext';
-import { useAddRowCallback } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  useAddRowCallback,
+  useCreateTemplateWithAllWorkItemsCallback,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
@@ -19,6 +22,8 @@ const SeedWorkItemSelectorPage = () => {
   const addWorkCategory = useAddRowCallback('categories');
   const addWorkItem = useAddRowCallback('workItems');
   const [selectedProjectType, setSelectedProjectType] = useState<string>('None');
+  const createTemplateWithAllWorkItems = useCreateTemplateWithAllWorkItemsCallback();
+
   const projectTypes = useMemo(() => {
     const types: ProjectTypesPickerEntry[] = [];
     types.push({ projectType: 'None', description: 'No Project Type' });
@@ -70,8 +75,7 @@ const SeedWorkItemSelectorPage = () => {
               }
             }
           }
-
-          // Go back to the categories list screen
+          createTemplateWithAllWorkItems();
           router.back();
         },
       },

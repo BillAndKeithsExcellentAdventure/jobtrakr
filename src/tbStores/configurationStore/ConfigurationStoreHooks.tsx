@@ -447,3 +447,41 @@ export function useCleanOrphanedWorkItemsCallback() {
     }
   }, [store]);
 }
+
+// create a hook to create a new template with all work item passing
+// in only the name and description for the template
+export function useCreateTemplateWithAllWorkItemsCallback() {
+  const store = useStore(useStoreId());
+  const addRow = useAddRowCallback('templates');
+  return useCallback(
+    (name = 'All Work Items', description = 'This template includes all work items'): CrudResult => {
+      if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
+
+      // Create the new template
+      const templateResult = addRow({
+        name,
+        description,
+      } as ProjectTemplateData);
+
+      if (templateResult.status !== 'Success') {
+        return { status: 'Error', id: '0', msg: 'Failed to create template' };
+      }
+
+      const newTemplateId = templateResult.id;
+
+      // Get all work items
+      const workItemsTable = store.getTable('workItems') || {};
+      const allWorkItemIds = Object.keys(workItemsTable);
+
+      // Create the TemplateWorkItemData entry
+      store.setRow('templateWorkItems', newTemplateId, {
+        id: newTemplateId,
+        templateId: newTemplateId,
+        workItemIds: allWorkItemIds.join(','),
+      } as TemplateWorkItemData);
+
+      return { status: 'Success', id: newTemplateId, msg: '' };
+    },
+    [store, addRow],
+  );
+}
