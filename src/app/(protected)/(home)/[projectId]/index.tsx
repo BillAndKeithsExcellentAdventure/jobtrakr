@@ -9,35 +9,30 @@ import {
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import {
-  useDeleteProjectCallback,
-  useProject,
-  useProjectListStoreId,
-} from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { useDeleteProjectCallback, useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   useAllRows,
   useBidAmountUpdater,
+  useClearProjectDetailsStoreCallback,
   useCostUpdater,
   useDeleteRowCallback,
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
   useWorkItemSpentUpdater,
   useWorkItemsWithoutCosts,
-  deleteProjectDetailsStore,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { FontAwesome5, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { FlashList } from '@shopify/flash-list';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
-import { useAuth } from '@clerk/clerk-expo';
 
 const ITEM_HEIGHT = 45;
 
@@ -48,6 +43,7 @@ const ProjectDetailsPage = () => {
   const projectData = useProject(projectId);
   const processDeleteProject = useDeleteProjectCallback();
   const { removeActiveProjectId, addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
+  const clearProjectDetailsStore = useClearProjectDetailsStoreCallback(projectId);
   const allProjectCategories = useAllConfigRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
@@ -282,16 +278,16 @@ const ProjectDetailsPage = () => {
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Delete',
-            onPress: () => {
-              // Navigate back to Project List screen first
+            onPress: async () => {
+              // Navigate back to Project List screen
               router.back();
+
               // Defer deletion until after navigation begins rendering
-              requestAnimationFrame(() => {
+              requestAnimationFrame(async () => {
                 const result = processDeleteProject(projectId);
                 if (result.status === 'Success') {
                   removeActiveProjectId(projectId);
-                  // Delete the project details store database
-                  deleteProjectDetailsStore(projectId);
+                  await clearProjectDetailsStore();
                 }
               });
             },

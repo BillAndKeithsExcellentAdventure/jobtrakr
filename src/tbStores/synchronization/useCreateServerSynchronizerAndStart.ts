@@ -2,13 +2,7 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 import { createWsSynchronizer } from 'tinybase/synchronizers/synchronizer-ws-client/with-schemas';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { MergeableStore, OptionalSchemas } from 'tinybase/with-schemas';
-
-// TODO: Figure out how to get this from an env.
-const SYNC_SERVER_URL = 'wss://projecthoundserver.keith-m-bertram.workers.dev/'; //process.env.EXPO_PUBLIC_SYNC_SERVER_URL;
-
-if (!SYNC_SERVER_URL) {
-  throw new Error('Please set EXPO_PUBLIC_SYNC_SERVER_URL in .env to the URL of the sync server');
-}
+import { SYNC_SERVER_URL } from './syncConfig';
 
 export const useCreateServerSynchronizerAndStart = <Schemas extends OptionalSchemas>(
   storeId: string,
@@ -35,6 +29,32 @@ export const useCreateServerSynchronizerAndStart = <Schemas extends OptionalSche
       });
 
       return synchronizer;
+    },
+    [storeId],
+    async (synchronizer) => {
+      // Cleanup on unmount: stop sync, close websocket, and destroy synchronizer
+      // Note: We do NOT request server deletion here because the component may unmount
+      // for reasons other than project deletion (e.g., navigation, memory management).
+      // Server-side deletion should be triggered by deleteProjectDetailsStore() when
+      // the project is explicitly deleted by the user.
+      console.log(`Cleaning up synchronizer for storeId: ${storeId}`);
+      try {
+        await synchronizer.stopSync();
+        
+        // Close the WebSocket connection if it exists (WsSynchronizer specific)
+        // Use type-safe check for the getWebSocket method
+        if ('getWebSocket' in synchronizer && typeof synchronizer.getWebSocket === 'function') {
+          const ws = synchronizer.getWebSocket();
+          if (ws && ws.readyState !== WebSocket.CLOSED) {
+            ws.close();
+          }
+        }
+        
+        await synchronizer.destroy();
+        console.log(`Successfully cleaned up synchronizer for: ${storeId}`);
+      } catch (error) {
+        console.error(`Error cleaning up synchronizer for ${storeId}:`, error);
+      }
     },
     [storeId],
   );

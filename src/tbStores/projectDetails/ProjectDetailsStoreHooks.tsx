@@ -1,5 +1,5 @@
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
-import { useWorkItemSpentSummary, WorkItemSpentSummary } from '@/src/context/WorkItemSpentSummaryContext';
+import { useWorkItemSpentSummary } from '@/src/context/WorkItemSpentSummaryContext';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { getStoreId, TABLES_SCHEMA } from './ProjectDetailsStore';
@@ -7,7 +7,6 @@ import { CrudResult } from '@/src/models/types';
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useEffect, useState } from 'react';
 import { useProjectValue } from '../listOfProjects/ListOfProjectsStore';
-import { deleteDatabaseSync } from 'expo-sqlite';
 
 const { useCell, useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
@@ -388,24 +387,36 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
 };
 
 /**
- * Deletes the ProjectDetailsStore database for a given project.
- * This should be called after a project is deleted from the project list.
- *
- * @param projectId - The ID of the project whose store should be deleted
+ * Hook that returns a callback to clear all tables in the ProjectDetailsStore.
+ * This is used during project deletion to sync the empty state across all devices.
+ * 
+ * By clearing all tables instead of deleting the local database or server data,
+ * the empty state will be synchronized across all connected devices via TinyBase's
+ * sync mechanism. This approach:
+ * - Preserves the local database structure for reuse
+ * - Syncs the deletion across all devices
+ * - Allows TinyBase to manage cleanup naturally
+ * 
+ * @param projectId - The ID of the project
+ * @returns A callback that clears all tables in the store
  */
-export const deleteProjectDetailsStore = (projectId: string): void => {
-  const storeId = getStoreId(projectId);
-  const databaseName = `${storeId}.db`;
-
-  try {
-    //******************************************************** */
-    //TODO need to figure out how to stop TinyBase from holding onto the database connection
-    // and then we need to close the connection before deleting the database.
-    //******************************************************** */
-    //deleteDatabaseSync(databaseName);
-    //console.log(`Successfully deleted ProjectDetailsStore database: ${databaseName}`);
-  } catch (error) {
-    //console.error(`Error deleting ProjectDetailsStore database ${databaseName}:`, error);
-    // Don't throw - we want deletion to continue even if database cleanup fails
-  }
+export const useClearProjectDetailsStoreCallback = (projectId: string) => {
+  const store = useStore(getStoreId(projectId));
+  
+  return useCallback(async (): Promise<boolean> => {
+    if (!store) {
+      console.error('Store not found for project:', projectId);
+      return false;
+    }
+    
+    try {
+      console.log(`Clearing all tables in ProjectDetailsStore for project: ${projectId}`);
+      store.delTables();
+      console.log(`Successfully cleared all tables for project: ${projectId}`);
+      return true;
+    } catch (error) {
+      console.error(`Error clearing tables for project ${projectId}:`, error);
+      return false;
+    }
+  }, [store, projectId]);
 };
