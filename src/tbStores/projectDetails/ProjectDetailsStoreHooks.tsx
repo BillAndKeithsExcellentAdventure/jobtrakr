@@ -7,8 +7,6 @@ import { CrudResult } from '@/src/models/types';
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useEffect, useState } from 'react';
 import { useProjectValue } from '../listOfProjects/ListOfProjectsStore';
-import { deleteDatabaseSync } from 'expo-sqlite';
-import { deleteServerStore } from '../synchronization/deleteServerStore';
 
 const { useCell, useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
@@ -392,8 +390,12 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
  * Hook that returns a callback to clear all tables in the ProjectDetailsStore.
  * This is used during project deletion to sync the empty state across all devices.
  * 
- * By clearing all tables instead of just deleting the local database, the empty
- * state will be synchronized across all connected devices via TinyBase's sync mechanism.
+ * By clearing all tables instead of deleting the local database or server data,
+ * the empty state will be synchronized across all connected devices via TinyBase's
+ * sync mechanism. This approach:
+ * - Preserves the local database structure for reuse
+ * - Syncs the deletion across all devices
+ * - Allows TinyBase to manage cleanup naturally
  * 
  * @param projectId - The ID of the project
  * @returns A callback that clears all tables in the store
@@ -417,42 +419,4 @@ export const useClearProjectDetailsStoreCallback = (projectId: string) => {
       return false;
     }
   }, [store, projectId]);
-};
-
-/**
- * Deletes the ProjectDetailsStore database and server data for a given project.
- * This function should be called after a project is deleted from the project list.
- * 
- * This performs the actual database file deletion and server-side cleanup that should
- * only happen when the user explicitly deletes a project, not when the ProjectDetailsStore
- * component unmounts for other reasons (e.g., navigation, memory management).
- * 
- * Note: The persister and synchronizer cleanup (stopAutoSave, stopSync, destroy)
- * happens automatically when the ProjectDetailsStore component unmounts via the
- * destroy callbacks in the hooks.
- * 
- * Important: Before calling this function, you should call the hook returned by
- * useClearProjectDetailsStoreCallback() to clear all tables in the store. This ensures
- * the empty state is synced across all devices.
- *
- * @param projectId - The ID of the project whose store should be deleted
- */
-export const deleteProjectDetailsStore = (projectId: string): void => {
-  const storeId = getStoreId(projectId);
-  const databaseName = `${storeId}.db`;
-
-  try {
-    console.log(`Deleting ProjectDetailsStore database: ${databaseName}`);
-    deleteDatabaseSync(databaseName);
-    console.log(`Successfully deleted ProjectDetailsStore database: ${databaseName}`);
-  } catch (error) {
-    console.error(`Error deleting ProjectDetailsStore database ${databaseName}:`, error);
-    // Don't throw - we want deletion to continue even if database cleanup fails
-  }
-
-  // Request server-side deletion of the store data
-  // This is async but we don't await it - deletion should continue even if server request fails
-  deleteServerStore(storeId).catch((error) => {
-    console.error(`Failed to request server deletion for ${storeId}:`, error);
-  });
 };

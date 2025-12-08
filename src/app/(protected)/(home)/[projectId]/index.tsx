@@ -24,7 +24,6 @@ import {
   useSeedWorkItemsIfNecessary,
   useWorkItemSpentUpdater,
   useWorkItemsWithoutCosts,
-  deleteProjectDetailsStore,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { FontAwesome5, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
@@ -299,8 +298,6 @@ const ProjectDetailsPage = () => {
                 const result = processDeleteProject(projectId);
                 if (result.status === 'Success') {
                   removeActiveProjectId(projectId);
-                  // Delete the project details store database
-                  deleteProjectDetailsStore(projectId);
                 }
               });
             },
