@@ -1,15 +1,15 @@
-import { SYNC_SERVER_URL } from './syncConfig';
+import { SYNC_SERVER_URL } from '@/src/constants/app-constants';
 
 /**
  * Sends a deletion request to the Cloudflare Durable Object server to remove
  * the stored data for a specific store.
- * 
+ *
  * This function attempts to signal the server to delete the persistent data
  * associated with a project store. The server should handle this by clearing
  * the Durable Object storage for the given storeId.
- * 
+ *
  * Note: This requires server-side implementation to handle the DELETE request.
- * 
+ *
  * @param storeId - The ID of the store to delete on the server
  * @returns A promise that resolves when the deletion request completes
  */
@@ -19,16 +19,16 @@ export const deleteServerStore = async (storeId: string): Promise<void> => {
     const httpUrl = SYNC_SERVER_URL.replace('wss://', 'https://').replace('ws://', 'http://');
     // Use URL constructor for proper path construction
     const deleteUrl = new URL(storeId, httpUrl).href;
-    
+
     console.log(`Sending deletion request to server for storeId: ${storeId}`);
-    
+
     const response = await fetch(deleteUrl, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
     });
-    
+
     if (response.ok) {
       console.log(`Successfully requested deletion of server store: ${storeId}`);
     } else {

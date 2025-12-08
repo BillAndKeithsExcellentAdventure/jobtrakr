@@ -2,7 +2,7 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 import { createWsSynchronizer } from 'tinybase/synchronizers/synchronizer-ws-client/with-schemas';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { MergeableStore, OptionalSchemas } from 'tinybase/with-schemas';
-import { SYNC_SERVER_URL } from './syncConfig';
+import { SYNC_SERVER_URL } from '@/src/constants/app-constants';
 
 export const useCreateServerSynchronizerAndStart = <Schemas extends OptionalSchemas>(
   storeId: string,
@@ -40,7 +40,7 @@ export const useCreateServerSynchronizerAndStart = <Schemas extends OptionalSche
       console.log(`Cleaning up synchronizer for storeId: ${storeId}`);
       try {
         await synchronizer.stopSync();
-        
+
         // Close the WebSocket connection if it exists (WsSynchronizer specific)
         // Use type-safe check for the getWebSocket method
         if ('getWebSocket' in synchronizer && typeof synchronizer.getWebSocket === 'function') {
@@ -49,7 +49,7 @@ export const useCreateServerSynchronizerAndStart = <Schemas extends OptionalSche
             ws.close();
           }
         }
-        
+
         await synchronizer.destroy();
         console.log(`Successfully cleaned up synchronizer for: ${storeId}`);
       } catch (error) {

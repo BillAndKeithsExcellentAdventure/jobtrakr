@@ -1,27 +1,25 @@
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, View } from '@/src/components/Themed';
-import { useAuth } from '@clerk/clerk-expo';
-import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/formatters';
 import { ActionButton } from '@/src/components/ActionButton';
-import { useColors } from '@/src/context/ColorsContext';
 import { AiLineItem } from '@/src/components/AiLineItem';
-import { ReceiptItem, ReceiptItemFromAI, ReceiptSummary } from '@/src/models/types';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import CostItemPickerModal from '@/src/components/CostItemPickerModal';
 import { OptionEntry } from '@/src/components/OptionList';
 import { ReceiptSummaryEditModal } from '@/src/components/ReceiptSummaryEditModal';
+import { Text, View } from '@/src/components/Themed';
+import { API_BASE_URL } from '@/src/constants/app-constants';
+import { useColors } from '@/src/context/ColorsContext';
+import { ReceiptItem, ReceiptItemFromAI, ReceiptSummary } from '@/src/models/types';
 import {
   useAddRowCallback,
-  useAllRows,
-  useDeleteRowCallback,
   useTypedRow,
   useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { forEach } from 'jszip';
+import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/formatters';
+import { useAuth } from '@clerk/clerk-expo';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const processAIProcessing = async (
   token: string,
@@ -39,32 +37,26 @@ const processAIProcessing = async (
     };
     console.log(' token:', token);
     console.log(' receiptImageData:', receiptImageData);
-    const response = await fetch(
-      'https://projecthoundbackend.keith-m-bertram.workers.dev/getReceiptIntelligence',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(receiptImageData),
+    const response = await fetch(`${API_BASE_URL}/getReceiptIntelligence`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
-    );
+      body: JSON.stringify(receiptImageData),
+    });
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error('Error response:', errorBody);
-      throw new Error(`HTTP error! status: ${response.status}. Response: ${errorBody}`);
+      console.error(`HTTP error! status: ${response.status}. Response: ${errorBody}`);
     }
 
     const data = await response.json();
-    console.log(' response.ok?:', response.ok);
     console.log(' response:', JSON.stringify(data));
 
     return data;
   } catch (error) {
     console.error('Error processing receipt:', error);
-    throw error;
   }
 };
 

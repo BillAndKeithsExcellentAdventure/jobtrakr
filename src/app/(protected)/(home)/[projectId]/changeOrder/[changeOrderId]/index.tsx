@@ -8,9 +8,10 @@ import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import SwipeableChangeOrderItem from '@/src/components/SwipeableChangeOrderItem';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
+import { API_BASE_URL } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
-import { useProject, useProjectListStoreId } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   ChangeOrder,
   ChangeOrderItem,
@@ -23,9 +24,7 @@ import { loadTemplateHtmlAssetFileToString } from '@/src/utils/htmlFileGenerator
 import { ChangeOrderData, renderChangeOrderTemplate } from '@/src/utils/renderChangeOrderTemplate';
 import { useAuth } from '@clerk/clerk-expo';
 import { AntDesign, Entypo, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
-import * as FileSystem from 'expo-file-system/legacy';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import * as Sharing from 'expo-sharing';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Keyboard, StyleSheet, TouchableOpacity } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
@@ -51,24 +50,17 @@ const generateAndSendPdf = async (
   token: string,
 ): Promise<string | null> => {
   try {
-    // TODO: Save the backend URI in a config file
-
-    console.log('generateAndSendPdf params.projectId:', params.projectId);
-    // RESTful API call to generate and send PDF
-    const response = await fetch(
-      'https://projecthoundbackend.keith-m-bertram.workers.dev/sendChangeOrderEmail',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(params),
+    const response = await fetch(`${API_BASE_URL}/sendChangeOrderEmail`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
-    );
+      body: JSON.stringify(params),
+    });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      console.error(`HTTP error! status: ${response.status}`);
     }
 
     return await response.text();

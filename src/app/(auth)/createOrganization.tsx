@@ -1,5 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { Text, TextInput, View } from '@/src/components/Themed';
+import { API_BASE_URL } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { getOrganizationSlug } from '@/src/utils/organization';
 import { useAuth, useClerk, useOrganizationList, useSignUp } from '@clerk/clerk-expo';
@@ -42,17 +43,14 @@ export default function CreateOrganization() {
         isDev: !!isDevDeployment,
       };
       console.log(' token:', token);
-      const response = await fetch(
-        'https://projecthoundbackend.keith-m-bertram.workers.dev/addOrganization',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(organizationData),
+      const response = await fetch(`${API_BASE_URL}/addOrganization`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify(organizationData),
+      });
 
       if (!response.ok) {
         const errorBody = await response.text();

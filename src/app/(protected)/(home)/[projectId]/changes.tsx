@@ -3,51 +3,47 @@ import { useColors } from '@/src/context/ColorsContext';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ActionButton } from '@/src/components/ActionButton';
 import SwipeableChangeOrder from '@/src/components/SwipeableChangeOrder';
+import { API_BASE_URL } from '@/src/constants/app-constants';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import {
   useAllRows,
   useIsStoreAvailableCallback,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useAuth } from '@clerk/clerk-expo';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { FlatList, StyleSheet } from 'react-native';
-import { ActionButton } from '@/src/components/ActionButton';
-import { useProjectListStoreId, useProjectValue } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
-import { useAuth } from '@clerk/clerk-expo';
 
 const getChangeOrderStatuses = async (projectId: string, token: string): Promise<string | null> => {
   try {
-    // TODO: Save the backend URI in a config file
     console.log('getChangeOrderStatuses projectId:', projectId);
-    // RESTful API call to generate and send PDF
-    const response = await fetch(
-      'https://projecthoundbackend.keith-m-bertram.workers.dev/GetChangeOrderStatuses',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ projectId: projectId }),
+    const response = await fetch(`${API_BASE_URL}/GetChangeOrderStatuses`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
-    );
+      body: JSON.stringify({ projectId: projectId }),
+    });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      console.error(`HTTP error! status: ${response.status}`);
     }
 
     return await response.text();
   } catch (error) {
     console.error('Error fetching change order statuses:', error);
     throw new Error('Failed to fetch change order statuses. Please try again.');
+  } finally {
+    console.log('Completed getChangeOrderStatuses call');
   }
 };
 
 interface ChangeOrderStatus {
   change_order_id: string;
   approved: number;
-  // Add other properties if needed
 }
 
 interface ChangeOrderStatusResponse {
