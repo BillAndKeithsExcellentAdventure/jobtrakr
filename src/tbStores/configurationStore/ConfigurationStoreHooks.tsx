@@ -178,20 +178,30 @@ export function useUpdateRowCallback<K extends CONFIGURATION_TABLES>(tableId: K)
 export function useDeleteRowCallback<K extends CONFIGURATION_TABLES>(tableId: K) {
   const store = useStore(useStoreId());
   return useCallback(
-    (id: string): CrudResult => {
+    // allowDelete indicates whether to hard delete or just mark as hidden - allowDelete is only
+    // applicable when there are not projects in the list of projects store
+    (id: string, allowDelete = false): CrudResult => {
       if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
 
       // if deleting a category, mark the category as hidden and then mark any workItems that reference this categoryId as hidden
       if (tableId === 'categories') {
         const category = store.getRow('categories', id);
         if (category) {
-          store.setRow('categories', id, { ...category, hidden: true });
-        }
+          if (!allowDelete) {
+            store.setRow('categories', id, { ...category, hidden: true });
+          } else {
+            store.delRow('categories', id);
+          }
 
-        const workItemsTable = store.getTable('workItems') || {};
-        for (const [workItemId, workItem] of Object.entries(workItemsTable)) {
-          if (workItem.categoryId === id) {
-            store.setRow('workItems', workItemId, { ...workItem, hidden: true });
+          const workItemsTable = store.getTable('workItems') || {};
+          for (const [workItemId, workItem] of Object.entries(workItemsTable)) {
+            if (workItem.categoryId === id) {
+              if (!allowDelete) {
+                store.setRow('workItems', workItemId, { ...workItem, hidden: true });
+              } else {
+                store.delRow('workItems', workItemId);
+              }
+            }
 
             // remove the workItemId from any TemplateWorkItemData entries
             const templateWorkItemsTable = store.getTable('templateWorkItems') || {};
@@ -213,7 +223,11 @@ export function useDeleteRowCallback<K extends CONFIGURATION_TABLES>(tableId: K)
       if (tableId === 'workItems') {
         const workItem = store.getRow('workItems', id);
         if (workItem) {
-          store.setRow('workItems', id, { ...workItem, hidden: true });
+          if (!allowDelete) {
+            store.setRow('workItems', id, { ...workItem, hidden: true });
+          } else {
+            store.delRow('workItems', id);
+          }
 
           // remove the workItemId from any TemplateWorkItemData entries
           const templateWorkItemsTable = store.getTable('templateWorkItems') || {};

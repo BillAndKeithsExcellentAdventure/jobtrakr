@@ -22,7 +22,15 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => {
   );
 });
 
-const SwipeableCategoryItem = ({ item, category }: { item: WorkItemData; category: WorkCategoryData }) => {
+const SwipeableCategoryItem = ({
+  item,
+  category,
+  allowDelete,
+}: {
+  item: WorkItemData;
+  category: WorkCategoryData;
+  allowDelete: boolean;
+}) => {
   const router = useRouter();
   const processDelete = useDeleteRowCallback('workItems');
   const colors = useColors();
@@ -32,11 +40,11 @@ const SwipeableCategoryItem = ({ item, category }: { item: WorkItemData; categor
       Alert.alert(
         'Delete Work Item',
         'Are you sure you want to delete this item?',
-        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete(itemId) }],
+        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete(itemId, allowDelete) }],
         { cancelable: true },
       );
     },
-    [processDelete],
+    [processDelete, allowDelete],
   );
 
   const renderRightActions = useCallback(() => {

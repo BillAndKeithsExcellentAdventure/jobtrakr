@@ -14,7 +14,13 @@ import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 const RIGHT_ACTION_WIDTH = 80;
 const SWIPE_THRESHOLD_WIDTH = 50;
-const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
+const SwipeableCategory = ({
+  category,
+  allowDelete,
+}: {
+  category: WorkCategoryData;
+  allowDelete: boolean;
+}) => {
   const processDelete = useDeleteRowCallback('categories');
   const router = useRouter();
   const colors = useColors();
@@ -24,11 +30,11 @@ const SwipeableCategory = ({ category }: { category: WorkCategoryData }) => {
       Alert.alert(
         'Delete Work Category',
         'Are you sure you want to delete this category?',
-        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete(itemId) }],
+        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete(itemId, allowDelete) }],
         { cancelable: true },
       );
     },
-    [processDelete],
+    [processDelete, allowDelete],
   );
 
   const RightAction = () => {

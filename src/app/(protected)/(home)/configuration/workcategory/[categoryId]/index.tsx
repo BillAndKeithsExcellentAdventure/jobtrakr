@@ -16,6 +16,7 @@ import {
   WorkItemData,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
+import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 
 const ShowWorkCategory = () => {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
@@ -35,6 +36,11 @@ const ShowWorkCategory = () => {
   const [showAdd, setShowAdd] = useState(false);
   const router = useRouter();
   const colors = useColors();
+  const allProjects = useAllProjects();
+
+  const allowDelete = useMemo(() => {
+    allProjects.length === 0;
+  }, [allProjects.length]);
 
   const visibleWorkItems = useMemo(() => allWorkItems.filter((w) => !w.hidden), [allWorkItems]);
 
@@ -158,7 +164,9 @@ const ShowWorkCategory = () => {
                   data={categorySpecificItems}
                   showsVerticalScrollIndicator={false}
                   keyExtractor={(item) => item.id}
-                  renderItem={({ item }) => <SwipeableCategoryItem item={item} category={category} />}
+                  renderItem={({ item }) => (
+                    <SwipeableCategoryItem item={item} category={category} allowDelete={allowDelete} />
+                  )}
                 />
               ) : (
                 <View style={{ alignItems: 'center', margin: 20 }}>

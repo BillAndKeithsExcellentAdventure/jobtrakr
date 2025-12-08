@@ -2,6 +2,7 @@ import { ActionButton } from '@/src/components/ActionButton';
 import SwipeableCategory from '@/src/components/SwipeableCategory';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   useAddRowCallback,
   useAllRows,
@@ -22,6 +23,11 @@ const ListWorkCategories = () => {
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllRows('workItems');
   const removeWorkItemCallback = useDeleteRowCallback('workItems');
+  const allProjects = useAllProjects();
+
+  const allowDelete = useMemo(() => {
+    allProjects.length === 0;
+  }, [allProjects.length]);
 
   const visibleCategories = useMemo(() => allCategories.filter((c) => !c.hidden), [allCategories]);
 
@@ -155,21 +161,27 @@ const ListWorkCategories = () => {
               <FlatList
                 data={visibleCategories}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => <SwipeableCategory category={item} />}
+                renderItem={({ item }) => <SwipeableCategory category={item} allowDelete={allowDelete} />}
                 ListEmptyComponent={() => (
                   <View
                     style={{
-                      padding: 20,
+                      padding: 10,
                       alignItems: 'center',
                     }}
                   >
                     <Text txtSize="title" text="No work categories found." />
                     <Text text="Use the '+' in the upper right to add one." />
                     <ActionButton
-                      style={{ zIndex: 1, marginTop: 10 }}
+                      style={{ zIndex: 1, marginTop: 10, width: '95%' }}
+                      onPress={() => router.push(`/configuration/workcategory/importFromCsv/`)}
+                      type="action"
+                      title="Or, import from a CSV file..."
+                    />
+                    <ActionButton
+                      style={{ zIndex: 1, marginTop: 10, width: '95%' }}
                       onPress={() => router.push(`/configuration/workcategory/seedCategoriesSelection/`)}
                       type="action"
-                      title="Or, use one of our sets of Work Categories..."
+                      title="Or, choose one of our defaults..."
                     />
                   </View>
                 )}
