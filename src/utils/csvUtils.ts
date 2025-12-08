@@ -1,5 +1,8 @@
 import { VendorData, SupplierData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 
+// Shared headers for vendor and supplier CSV format (excluding id)
+const ENTITY_CSV_HEADERS = ['name', 'address', 'city', 'state', 'zip', 'mobilePhone', 'businessPhone', 'notes'];
+
 /**
  * Converts an array of vendors to CSV format (excluding id field)
  */
@@ -8,15 +11,12 @@ export function vendorsToCsv(vendors: VendorData[]): string {
     return '';
   }
 
-  // Define headers (excluding id)
-  const headers = ['name', 'address', 'city', 'state', 'zip', 'mobilePhone', 'businessPhone', 'notes'];
-  
   // Create CSV header row
-  const headerRow = headers.join(',');
+  const headerRow = ENTITY_CSV_HEADERS.join(',');
   
   // Create CSV data rows
   const dataRows = vendors.map((vendor) => {
-    return headers
+    return ENTITY_CSV_HEADERS
       .map((header) => {
         const value = vendor[header as keyof VendorData] || '';
         // Escape quotes and wrap in quotes if contains comma, quote, or newline
@@ -40,15 +40,12 @@ export function suppliersToCsv(suppliers: SupplierData[]): string {
     return '';
   }
 
-  // Define headers (excluding id)
-  const headers = ['name', 'address', 'city', 'state', 'zip', 'mobilePhone', 'businessPhone', 'notes'];
-  
   // Create CSV header row
-  const headerRow = headers.join(',');
+  const headerRow = ENTITY_CSV_HEADERS.join(',');
   
   // Create CSV data rows
   const dataRows = suppliers.map((supplier) => {
-    return headers
+    return ENTITY_CSV_HEADERS
       .map((header) => {
         const value = supplier[header as keyof SupplierData] || '';
         // Escape quotes and wrap in quotes if contains comma, quote, or newline
@@ -83,11 +80,12 @@ export function csvToVendors(csvText: string): Omit<VendorData, 'id'>[] {
 
   for (let i = 1; i < lines.length; i++) {
     const values = parseCsvLine(lines[i]);
-    const vendor: any = {};
+    const vendor: Record<string, string> = {};
 
     for (let j = 0; j < headers.length; j++) {
       const header = headers[j].trim();
-      const value = values[j] ? values[j].trim() : '';
+      // Handle missing columns gracefully
+      const value = j < values.length ? values[j].trim() : '';
       vendor[header] = value;
     }
 
@@ -116,11 +114,12 @@ export function csvToSuppliers(csvText: string): Omit<SupplierData, 'id'>[] {
 
   for (let i = 1; i < lines.length; i++) {
     const values = parseCsvLine(lines[i]);
-    const supplier: any = {};
+    const supplier: Record<string, string> = {};
 
     for (let j = 0; j < headers.length; j++) {
       const header = headers[j].trim();
-      const value = values[j] ? values[j].trim() : '';
+      // Handle missing columns gracefully
+      const value = j < values.length ? values[j].trim() : '';
       supplier[header] = value;
     }
 

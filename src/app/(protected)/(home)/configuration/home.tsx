@@ -224,9 +224,12 @@ const Home = () => {
 
                   for (const vendor of importedVendors) {
                     // Find existing vendor with matching name and address
-                    const existing = allVendors.find(
-                      (v) => v.name === vendor.name && v.address === vendor.address,
-                    );
+                    // Ensure both name and address have meaningful values for matching
+                    const existing = allVendors.find((v) => {
+                      const nameMatch = v.name && vendor.name && v.name === vendor.name;
+                      const addressMatch = v.address && vendor.address && v.address === vendor.address;
+                      return nameMatch && addressMatch;
+                    });
 
                     if (existing) {
                       // Update existing vendor
@@ -311,9 +314,12 @@ const Home = () => {
 
                   for (const supplier of importedSuppliers) {
                     // Find existing supplier with matching name and address
-                    const existing = allSuppliers.find(
-                      (s) => s.name === supplier.name && s.address === supplier.address,
-                    );
+                    // Ensure both name and address have meaningful values for matching
+                    const existing = allSuppliers.find((s) => {
+                      const nameMatch = s.name && supplier.name && s.name === supplier.name;
+                      const addressMatch = s.address && supplier.address && s.address === supplier.address;
+                      return nameMatch && addressMatch;
+                    });
 
                     if (existing) {
                       // Update existing supplier
