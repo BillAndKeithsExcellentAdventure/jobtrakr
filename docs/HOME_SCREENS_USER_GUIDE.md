@@ -21,7 +21,7 @@ The Projects Home Screen is the main landing page when you open ProjectHound. It
 ### Screen Layout
 
 **When you have no projects yet:**
-- A welcome message appears: "Welcome to Project Hound!"
+- A welcome message appears: "Welcome to ProjectHound!"
 - You'll see options to either import default cost codes or set up your own configuration
 - Two buttons are available:
   - **Import Defaults** - Loads pre-configured cost codes for basic home building
@@ -360,7 +360,7 @@ The screen displays a list of all current organization members, showing:
 
 **Restrictions:**
 - You cannot remove yourself from the organization
-- You cannot remove the organization owner
+- Organization owners (the person who created the organization) cannot be removed
 
 ## Navigation Patterns
 
@@ -408,7 +408,7 @@ When opening the app for the first time:
 ### Configuration Check
 
 The app verifies minimum configuration requirements:
-- At least one work category must exist
+- At least one work category must exist with work items added to it
 - At least one project template must exist
 - If requirements aren't met, the welcome screen appears
 
