@@ -9,11 +9,7 @@ import {
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import {
-  useDeleteProjectCallback,
-  useProject,
-  useProjectListStoreId,
-} from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { useDeleteProjectCallback, useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   useAllRows,
   useBidAmountUpdater,
@@ -30,14 +26,13 @@ import { FontAwesome5, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { FlashList } from '@shopify/flash-list';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
-import { useAuth } from '@clerk/clerk-expo';
 
 const ITEM_HEIGHT = 45;
 
@@ -284,20 +279,15 @@ const ProjectDetailsPage = () => {
           {
             text: 'Delete',
             onPress: async () => {
-              // First, clear all tables in the store to sync the empty state across devices
-              await clearProjectDetailsStore();
-              
-              // Small delay to allow sync to propagate the empty state
-              await new Promise(resolve => setTimeout(resolve, 500));
-              
               // Navigate back to Project List screen
               router.back();
-              
+
               // Defer deletion until after navigation begins rendering
-              requestAnimationFrame(() => {
+              requestAnimationFrame(async () => {
                 const result = processDeleteProject(projectId);
                 if (result.status === 'Success') {
                   removeActiveProjectId(projectId);
+                  await clearProjectDetailsStore();
                 }
               });
             },

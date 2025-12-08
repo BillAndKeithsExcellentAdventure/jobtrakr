@@ -168,11 +168,13 @@ const Home = () => {
               },
             },
             {
+              /*
               icon: <FontAwesome5 name="broom" size={28} color={colors.iconColor} />,
               label: 'Work Item Cleanup',
               onPress: (e: GestureResponderEvent, actionContext?: any) => {
                 handleMenuItemPress('CleanWorkItems');
               },
+            */
             },
           ]
         : [
