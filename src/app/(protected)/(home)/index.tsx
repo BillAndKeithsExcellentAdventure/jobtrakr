@@ -8,7 +8,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, GestureResponderEvent, Platform, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, GestureResponderEvent, Linking, Platform, StyleSheet } from 'react-native';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -94,7 +94,9 @@ export default function ProjectHomeScreen() {
   };
 
   const minConfigMet: boolean = useMemo(
-    () => allCategories && allCategories.length > 0 && allProjectTemplates && allProjectTemplates.length > 0,
+    () =>
+      allCategories &&
+      allCategories.length > 0 /* && allProjectTemplates && allProjectTemplates.length > 0 */,
     [allCategories, allProjectTemplates],
   );
 
@@ -327,10 +329,10 @@ export default function ProjectHomeScreen() {
 
   if (!isReady) {
     return (
-      <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container, { marginTop: 20 }]}>
         <ActivityIndicator size="large" color={colors.iconColor} />
         <Text txtSize="title" style={{ marginTop: 16 }}>
-          Loading...
+          Initializing...
         </Text>
       </SafeAreaView>
     );
@@ -339,7 +341,7 @@ export default function ProjectHomeScreen() {
   // wait a little longer if we still haven't loaded up cost codes and project templates
   if (isLoading) {
     return (
-      <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container, { marginTop: 20 }]}>
         <ActivityIndicator size="large" color={colors.iconColor} />
         <Text txtSize="title" style={{ marginTop: 16 }}>
           Loading configuration...
@@ -371,23 +373,40 @@ export default function ProjectHomeScreen() {
               </>
             ) : (
               <>
-                <Text text="Welcome to Project Hound!" txtSize="xl" style={{ marginBottom: 10 }} />
+                <View style={{ alignItems: 'center', marginVertical: 20 }}>
+                  <Text text="Welcome to" txtSize="title" />
+                  <Text text="ProjectHound!" txtSize="xl" />
+                </View>
                 <Text
                   text="Before we can start helping you manage project costs we must know what cost items you want to track. 
-                We have provided some defaults specifically for basic home building that you can import using the 'Import Defaults' button below, or you can press the 'Go To Configuration' button to set up your own. If you want to get more information on how to set up your cost codes and project templates please visit our support site."
+                You can import your own work items, choose one we provide, or manually create your own within this application.
+                If you want to get more information on how to set up your cost codes please visit our support site."
                 />
 
                 <ActionButton
-                  title="Import Defaults"
+                  style={{ zIndex: 1, marginTop: 10, width: '95%', maxWidth: 400 }}
+                  onPress={() => Linking.openURL('https://projecthoundinfo.pages.dev/setup')}
                   type="action"
-                  onPress={() => router.push(`/configuration/workcategory/seedCategoriesSelection/`)}
-                  style={{ marginTop: 20, marginBottom: 10 }}
+                  title="Open Support Site"
                 />
+                <ActionButton
+                  style={{ zIndex: 1, marginTop: 10, width: '95%', maxWidth: 400 }}
+                  onPress={() => router.push(`/configuration/workcategory/importFromCsv/`)}
+                  type="action"
+                  title="Import from a CSV file..."
+                />
+                <ActionButton
+                  style={{ zIndex: 1, marginTop: 10, width: '95%', maxWidth: 400 }}
+                  onPress={() => router.push(`/configuration/workcategory/seedCategoriesSelection/`)}
+                  type="action"
+                  title="Choose one of our defaults..."
+                />
+
                 <ActionButton
                   title="Go To Configuration"
                   type="action"
                   onPress={() => router.push('/configuration/home')}
-                  style={{ marginTop: 10, marginBottom: 10 }}
+                  style={{ marginTop: 10, marginBottom: 10, width: '95%', maxWidth: 400 }}
                 />
               </>
             )}
@@ -409,7 +428,6 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
     width: '100%',
   },
   twoColListContainer: {
