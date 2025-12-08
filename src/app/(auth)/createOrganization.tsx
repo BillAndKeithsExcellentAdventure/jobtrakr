@@ -7,7 +7,7 @@ import { useAuth, useClerk, useOrganizationList, useSignUp } from '@clerk/clerk-
 import { Redirect, Stack, useRouter } from 'expo-router';
 import * as React from 'react';
 import { useEffect } from 'react';
-import { Alert } from 'react-native';
+import { ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CreateOrganization() {
@@ -17,6 +17,7 @@ export default function CreateOrganization() {
   const router = useRouter();
   const [organizationName, setOrganizationName] = React.useState('');
   const [organizationExists, setOrganizationExists] = React.useState(false);
+  const [isCreating, setIsCreating] = React.useState(false);
   const auth = useAuth();
   const { setActive } = useOrganizationList();
 
@@ -63,7 +64,7 @@ export default function CreateOrganization() {
             },
           },
         ]);
-        return;
+        return null;
       }
 
       const data = await response.json();
@@ -74,6 +75,7 @@ export default function CreateOrganization() {
       return data;
     } catch (error) {
       console.error('Error creating organization:', error);
+      return null;
     }
   };
 
@@ -81,41 +83,59 @@ export default function CreateOrganization() {
   const onCreateOrganizationPress = async () => {
     if (!isLoaded) return;
 
-    try {
-      //console.log('onCreateOrganizationPress-Auth:', auth);
-      //console.log('onCreateOrganizationPress-Clerk:', clerk);
-      if (clerk && clerk.session) {
-        const token = await auth.getToken();
-        if (token && auth.userId) {
-          // Determine deployment type. Use NODE_ENV when available, fall back to React Native __DEV__.
-          const isDev =
-            (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
-            (global as any).__DEV__ === true;
+    setIsCreating(true);
 
-          await createOrganization(
-            token,
-            auth.userId,
-            organizationName,
-            getOrganizationSlug(organizationName),
-            isDev,
-          );
-          console.log('Organization created successfully');
+    // Delay to ensure UI updates before heavy processing
+    requestAnimationFrame(async () => {
+      try {
+        //console.log('onCreateOrganizationPress-Auth:', auth);
+        //console.log('onCreateOrganizationPress-Clerk:', clerk);
+        if (clerk && clerk.session) {
+          const token = await auth.getToken();
+          if (token && auth.userId) {
+            // Determine deployment type. Use NODE_ENV when available, fall back to React Native __DEV__.
+            const isDev =
+              (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+              (global as any).__DEV__ === true;
+
+            const result = await createOrganization(
+              token,
+              auth.userId,
+              organizationName,
+              getOrganizationSlug(organizationName),
+              isDev,
+            );
+
+            if (result && result.id) {
+              Alert.alert('Success', `Organization "${organizationName}" created successfully!`, [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    console.log('Organization created successfully');
+                    router.replace('/');
+                  },
+                },
+              ]);
+            } else {
+              Alert.alert('Error', 'Failed to create organization. Please try again.', [{ text: 'OK' }]);
+            }
+          }
         }
-      }
-      router.replace('/');
-    } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      Alert.alert('Error', `Error during create organization:: ${err}`, [
-        {
-          text: 'Report Error',
-          onPress: () => {
-            console.error('Error during create organization:', err);
-            console.error(JSON.stringify(err, null, 2));
+      } catch (err) {
+        // See https://clerk.com/docs/custom-flows/error-handling for more info on error handling
+        Alert.alert('Error', `Error during create organization:: ${err}`, [
+          {
+            text: 'Report Error',
+            onPress: () => {
+              console.error('Error during create organization:', err);
+              console.error(JSON.stringify(err, null, 2));
+            },
           },
-        },
-      ]);
-    }
+        ]);
+      } finally {
+        setIsCreating(false);
+      }
+    });
   };
 
   if (organizationExists) {
@@ -141,12 +161,21 @@ export default function CreateOrganization() {
           placeholderTextColor={colors.text}
           placeholder="Enter Organization name"
           onChangeText={(orgName) => setOrganizationName(orgName)}
+          editable={!isCreating}
         />
-        <ActionButton
-          type={organizationName ? 'action' : 'disabled'}
-          onPress={onCreateOrganizationPress}
-          title="Create Organization"
-        />
+
+        {isCreating ? (
+          <View style={{ padding: 20, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={colors.text} />
+            <Text text="Creating Organization..." style={{ marginTop: 10 }} />
+          </View>
+        ) : (
+          <ActionButton
+            type={organizationName ? 'action' : 'disabled'}
+            onPress={onCreateOrganizationPress}
+            title="Create Organization"
+          />
+        )}
       </View>
     </SafeAreaView>
   );
