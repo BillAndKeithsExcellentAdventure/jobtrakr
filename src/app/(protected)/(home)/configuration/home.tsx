@@ -16,7 +16,12 @@ import {
   useAllRows,
   WorkCategoryCodeCompareAsNumber,
   useCleanOrphanedWorkItemsCallback,
+  useAddRowCallback,
+  useUpdateRowCallback,
+  VendorData,
+  SupplierData,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { vendorsToCsv, suppliersToCsv, csvToVendors, csvToSuppliers } from '@/src/utils/csvUtils';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import * as DocumentPicker from 'expo-document-picker';
@@ -29,9 +34,15 @@ const Home = () => {
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllRows('workItems');
   const allProjectTemplates = useAllRows('templates');
+  const allVendors = useAllRows('vendors');
+  const allSuppliers = useAllRows('suppliers');
   const cleanupOrphanedWorkItems = useCleanOrphanedWorkItemsCallback();
   const exportConfiguration = useExportStoreDataCallback();
   const importConfiguration = useImportJsonConfigurationDataCallback();
+  const addVendorToStore = useAddRowCallback('vendors');
+  const updateVendor = useUpdateRowCallback('vendors');
+  const addSupplierToStore = useAddRowCallback('suppliers');
+  const updateSupplier = useUpdateRowCallback('suppliers');
   const hasConfigurationData: boolean = useMemo(
     () =>
       (allCategories && allCategories.length > 0) ||
@@ -39,6 +50,9 @@ const Home = () => {
       (allWorkItems && allWorkItems.length > 0),
     [allCategories, allWorkItems, allProjectTemplates],
   );
+
+  const hasVendorData: boolean = useMemo(() => allVendors && allVendors.length > 0, [allVendors]);
+  const hasSupplierData: boolean = useMemo(() => allSuppliers && allSuppliers.length > 0, [allSuppliers]);
 
   const headerRightComponent = useMemo(() => {
     return {
@@ -151,9 +165,193 @@ const Home = () => {
           ],
         );
         return;
+      } else if (menuItem === 'ExportVendors') {
+        Alert.alert('Export Vendors', 'Would you like to export all vendors to a CSV file?', [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Export',
+            onPress: async () => {
+              try {
+                const csvData = vendorsToCsv(allVendors);
+                const outputPath = `${FileSystem.documentDirectory}vendors.csv`;
+                await FileSystem.writeAsStringAsync(outputPath, csvData, {
+                  encoding: FileSystem.EncodingType.UTF8,
+                });
+                const isAvailable = await Sharing.isAvailableAsync();
+                if (isAvailable) {
+                  await Sharing.shareAsync(outputPath, {
+                    mimeType: 'text/csv',
+                    dialogTitle: 'Share Vendors CSV',
+                    UTI: 'public.comma-separated-values-text',
+                  });
+                }
+              } catch (err) {
+                console.error('Error exporting vendors:', err);
+                Alert.alert('Error', 'Failed to export vendors');
+              }
+            },
+          },
+        ]);
+        return;
+      } else if (menuItem === 'ImportVendors') {
+        Alert.alert('Import Vendors', 'Would you like to import vendors from a CSV file?', [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Import',
+            onPress: async () => {
+              try {
+                const result = await DocumentPicker.getDocumentAsync({
+                  type: ['text/csv', 'text/comma-separated-values', '*/*'],
+                  copyToCacheDirectory: true,
+                  multiple: false,
+                });
+
+                if (!result.canceled && result.assets?.length > 0) {
+                  const file = result.assets[0];
+                  const fileText = await FileSystem.readAsStringAsync(file.uri, {
+                    encoding: FileSystem.EncodingType.UTF8,
+                  });
+                  const importedVendors = csvToVendors(fileText);
+                  
+                  let addedCount = 0;
+                  let updatedCount = 0;
+
+                  for (const vendor of importedVendors) {
+                    // Find existing vendor with matching name and address
+                    const existing = allVendors.find(
+                      (v) => v.name === vendor.name && v.address === vendor.address,
+                    );
+
+                    if (existing) {
+                      // Update existing vendor
+                      updateVendor(existing.id, vendor);
+                      updatedCount++;
+                    } else {
+                      // Add new vendor
+                      addVendorToStore(vendor as VendorData);
+                      addedCount++;
+                    }
+                  }
+
+                  Alert.alert(
+                    'Import Complete',
+                    `Vendors imported successfully.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
+                  );
+                }
+              } catch (error) {
+                console.error('Error importing vendors:', error);
+                Alert.alert('Error', 'Failed to import vendors');
+              }
+            },
+          },
+        ]);
+        return;
+      } else if (menuItem === 'ExportSuppliers') {
+        Alert.alert('Export Suppliers', 'Would you like to export all suppliers to a CSV file?', [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Export',
+            onPress: async () => {
+              try {
+                const csvData = suppliersToCsv(allSuppliers);
+                const outputPath = `${FileSystem.documentDirectory}suppliers.csv`;
+                await FileSystem.writeAsStringAsync(outputPath, csvData, {
+                  encoding: FileSystem.EncodingType.UTF8,
+                });
+                const isAvailable = await Sharing.isAvailableAsync();
+                if (isAvailable) {
+                  await Sharing.shareAsync(outputPath, {
+                    mimeType: 'text/csv',
+                    dialogTitle: 'Share Suppliers CSV',
+                    UTI: 'public.comma-separated-values-text',
+                  });
+                }
+              } catch (err) {
+                console.error('Error exporting suppliers:', err);
+                Alert.alert('Error', 'Failed to export suppliers');
+              }
+            },
+          },
+        ]);
+        return;
+      } else if (menuItem === 'ImportSuppliers') {
+        Alert.alert('Import Suppliers', 'Would you like to import suppliers from a CSV file?', [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Import',
+            onPress: async () => {
+              try {
+                const result = await DocumentPicker.getDocumentAsync({
+                  type: ['text/csv', 'text/comma-separated-values', '*/*'],
+                  copyToCacheDirectory: true,
+                  multiple: false,
+                });
+
+                if (!result.canceled && result.assets?.length > 0) {
+                  const file = result.assets[0];
+                  const fileText = await FileSystem.readAsStringAsync(file.uri, {
+                    encoding: FileSystem.EncodingType.UTF8,
+                  });
+                  const importedSuppliers = csvToSuppliers(fileText);
+                  
+                  let addedCount = 0;
+                  let updatedCount = 0;
+
+                  for (const supplier of importedSuppliers) {
+                    // Find existing supplier with matching name and address
+                    const existing = allSuppliers.find(
+                      (s) => s.name === supplier.name && s.address === supplier.address,
+                    );
+
+                    if (existing) {
+                      // Update existing supplier
+                      updateSupplier(existing.id, supplier);
+                      updatedCount++;
+                    } else {
+                      // Add new supplier
+                      addSupplierToStore(supplier as SupplierData);
+                      addedCount++;
+                    }
+                  }
+
+                  Alert.alert(
+                    'Import Complete',
+                    `Suppliers imported successfully.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
+                  );
+                }
+              } catch (error) {
+                console.error('Error importing suppliers:', error);
+                Alert.alert('Error', 'Failed to import suppliers');
+              }
+            },
+          },
+        ]);
+        return;
       }
     },
-    [exportConfiguration, importConfiguration],
+    [
+      exportConfiguration,
+      importConfiguration,
+      allVendors,
+      allSuppliers,
+      addVendorToStore,
+      updateVendor,
+      addSupplierToStore,
+      updateSupplier,
+      cleanupOrphanedWorkItems,
+    ],
   );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(() => {
@@ -186,9 +384,45 @@ const Home = () => {
               },
             },
           ]),
+      ...(hasVendorData
+        ? [
+            {
+              icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
+              label: 'Export Vendors',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('ExportVendors');
+              },
+            },
+          ]
+        : []),
+      {
+        icon: <MaterialCommunityIcons name="import" size={28} color={colors.iconColor} />,
+        label: 'Import Vendors',
+        onPress: (e: GestureResponderEvent, actionContext?: any) => {
+          handleMenuItemPress('ImportVendors');
+        },
+      },
+      ...(hasSupplierData
+        ? [
+            {
+              icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
+              label: 'Export Suppliers',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('ExportSuppliers');
+              },
+            },
+          ]
+        : []),
+      {
+        icon: <MaterialCommunityIcons name="import" size={28} color={colors.iconColor} />,
+        label: 'Import Suppliers',
+        onPress: (e: GestureResponderEvent, actionContext?: any) => {
+          handleMenuItemPress('ImportSuppliers');
+        },
+      },
     ];
     return menuButtons;
-  }, [colors, handleMenuItemPress, hasConfigurationData]);
+  }, [colors, handleMenuItemPress, hasConfigurationData, hasVendorData, hasSupplierData]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
