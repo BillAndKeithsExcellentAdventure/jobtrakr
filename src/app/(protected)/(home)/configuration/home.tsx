@@ -218,7 +218,7 @@ const Home = () => {
                     encoding: FileSystem.EncodingType.UTF8,
                   });
                   const importedVendors = csvToVendors(fileText);
-                  
+
                   let addedCount = 0;
                   let updatedCount = 0;
 
@@ -308,7 +308,7 @@ const Home = () => {
                     encoding: FileSystem.EncodingType.UTF8,
                   });
                   const importedSuppliers = csvToSuppliers(fileText);
-                  
+
                   let addedCount = 0;
                   let updatedCount = 0;
 
@@ -370,15 +370,6 @@ const Home = () => {
               onPress: (e: GestureResponderEvent, actionContext?: any) => {
                 handleMenuItemPress('Export');
               },
-            },
-            {
-              /*
-              icon: <FontAwesome5 name="broom" size={28} color={colors.iconColor} />,
-              label: 'Work Item Cleanup',
-              onPress: (e: GestureResponderEvent, actionContext?: any) => {
-                handleMenuItemPress('CleanWorkItems');
-              },
-            */
             },
           ]
         : [

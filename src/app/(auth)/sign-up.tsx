@@ -42,37 +42,6 @@ export default function SignUpScreen() {
     }
   };
 
-  /*--------------
-  const createOrganization = async (token: string, userId: string, name: string, slug: string) => {
-    try {
-      const organizationData = {
-        name: name,
-        created_by: userId,
-        slug: slug,
-        max_allowed_memberships: 5,
-      };
-      const response = await fetch('https://api.clerk.com/v1/organizations', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(organizationData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Error creating organization:', error);
-      throw error;
-    }
-  };
-  --------------*/
-
   // Handle submission of verification form
   const onVerifyPress = async () => {
     if (!isLoaded) return;

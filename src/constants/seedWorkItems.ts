@@ -1,26 +1,11 @@
-export interface WorkItemDefinition {
-  name: string;
-  code: number;
-}
-
-export interface WorkCategoryDefinition {
-  name: string;
-  code: number;
-  workItems: WorkItemDefinition[];
-}
-
-export interface ProjectTypeWorkItemDefinition {
-  projectType: string;
-  description: string;
-  categories: WorkCategoryDefinition[];
-}
+import { ProjectTypeWorkItemDefinition } from '../models/types';
 
 export type SeedProjectWorkItemsType = ProjectTypeWorkItemDefinition[];
 
 export const SeedProjectWorkItems: SeedProjectWorkItemsType = [
   {
     projectType: 'Residential Construction',
-    description: 'Work items related to residential construction projects',
+    description: 'Cost items related to residential construction projects',
     categories: [
       {
         name: 'Pre-Construction',

@@ -1,0 +1,159 @@
+categoryName,categoryCode,workItemName,workItemCode
+"Pre-Construction",10,,
+,,"Blueprints",5
+,,"Plot Plan, Stake Out, Pinning",10
+,,"Zoning Permit",15
+,,"Building Permit",20
+,,"Water Tap Fee",21
+,,"Port-O-Let",25
+,,"Temporary Electric",30
+,,"Clearing",35
+,,"Design Fee",40
+
+"Site Work",20,,
+,,"Foundation Excavation",5
+,,"Trench Footers",6
+,,"Footer Labor",10
+,,"Footer Concrete",15
+,,"Pump Truck - Footer",20
+,,"Drain Tile Material",25
+,,"Footer Gravel Material",30
+,,"Footer Gravel - Slinger",35
+,,"Foundation Wall Labor",40
+,,"Block Material",41
+,,"Block Labor",42
+,,"Under Slab Insulation Material",43
+,,"Foundation Wall Concrete",45
+,,"Pump Truck - Wall",46
+,,"Waterproof Foundation",50
+,,"Gravel To Top Off Footer",55
+,,"Plumbing Underground",60
+,,"Backfill Foundation",65
+,,"Haul Excess Dirt",70
+,,"Garage/Porch/Temp Drive Gravel",75
+,,"Basement & Garage Slab Labor",80
+,,"Basement & Garage Slab Concrete",85
+,,"Basement & Garage Slab Rebar/Plastic",90
+,,"Pump Truck - Slabs",95
+
+"Framing & Rough-in",30,,
+,,"Framing Labor",5
+,,"Framing Material",10
+,,"Truss Material",15
+,,"Framing Material Pickups",20
+,,"Dumpsters",25
+,,"Shingle Labor",30
+,,"Shingle Material",35
+,,"Metal Roof Material",40
+,,"Metal Roof Labor",45
+,,"Window Install Material & Labor",50
+,,"Front Door Material",55
+,,"Exterior Door Material",60
+,,"Exterior Door Labor",65
+,,"HVAC Rough",70
+,,"Fireplace Install",75
+,,"Plumbing Rough",80
+,,"Sewer & Water Tap Fee",85
+,,"Sewer & Water Install",90
+,,"Sewer/Water Gravel Material",95
+,,"Electric Trench & Sump Line",100
+,,"Frame Punch Material",105
+,,"Electric Rough",110
+,,"Low Voltage Rough",115
+,,"AIP",120
+,,"Insulation",125
+
+"Exterior",40,,
+,,"Exterior Trim Labor",5
+,,"Exterior Trim Material",10
+,,"Paint Exterior Labor",15
+,,"Paint Exterior Material",20
+,,"Install Garage Doors",25
+,,"Garage Door Opener Material",30
+,,"Garage Door Opener Labor",35
+,,"Install Brick Flashing",40
+,,"Brick Labor",45
+,,"Brick Material",50
+,,"Stone Labor",55
+,,"Stone Labor",60
+,,"Clean Brick",65
+,,"Deck Labor",70
+,,"Deck Material",75
+,,"Deck Rails",80
+,,"Gutters",85
+,,"Exterior Concrete Labor",90
+,,"Exterior Concrete Gravel",95
+,,"Exterior Concrete",100
+,,"Exterior Concrete Rebar",105
+,,"Boulder Labor",110
+,,"Boulders Material",115
+,,"Final Grade",120
+,,"Install Landscaping",125
+,,"Install Irrigation System",130
+,,"Install Landscape Lighting",135
+,,"Install Sod",140
+,,"Install Fence",145
+,,"Mailbox",150
+,,"Install Phantom Screens",155
+,,"Pressure Wash Exterior Concrete",160
+
+"Interior Install",50,,
+,,"Drywall Material",5
+,,"Hang Drywall Labor",10
+,,"Finish Drywall Labor",15
+,,"Prime Walls Labor",20
+,,"Prime Walls Material",25
+,,"Attic Blow",30
+,,"Master Shower Tile Labor",35
+,,"Master Shower Tile Material",40
+,,"Guest Showers Tile Labor",45
+,,"Guest Shower Tile Material",50
+,,"Tile Floors Labor",55
+,,"Tile Floors Material",60
+,,"Shower Doors",65
+,,"Interior Trim Labor",70
+,,"Interior Trim/Doors Material",75
+,,"Vanity Material",80
+,,"Cabinet Material",85
+,,"Interior Trim Extra's Material",90
+,,"Interior Rails",95
+,,"HVAC Final",100
+,,"Electric Final",105
+,,"Electric Final Materials",110
+
+"Interior Final",60,,
+,,"Spray Interior Trim/Doors Labor",5
+,,"Spray Interior Trim/Doors Material",10
+,,"Drywall Touch Up",15
+,,"Roll Walls Labor",20
+,,"Roll Walls Material",25
+,,"Flooring Labor",30
+,,"Flooring Material",35
+,,"Countertops",40
+,,"Interior Trim Final Labor",45
+,,"Interior Trim Final Materials",50
+,,"Cabinet Hardware",55
+,,"Backsplash Labor",60
+,,"Backsplash Material",65
+,,"Plumbing Final",70
+,,"Plumbing Final Material",75
+,,"Mirrors",80
+,,"Shelves",85
+,,"Basement Drape Insulation",90
+,,"Carpet Prep Labor",95
+,,"Carpet Install",100
+,,"Carpet Material",105
+,,"Appliances",110
+,,"Initial Construction Clean",115
+,,"Punchout Labor",120
+,,"Punchout Materials",125
+,,"Pressure Wash Basement",130
+,,"Final Construction Clean",135
+
+"Overhead",70,,
+,,"Tools",5
+,,"Service",10
+
+"Income",80,,
+,,"Bank Draw",5
+,,"Change Order",10

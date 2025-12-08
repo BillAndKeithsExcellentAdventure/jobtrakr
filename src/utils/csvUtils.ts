@@ -1,7 +1,17 @@
 import { VendorData, SupplierData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { WorkCategoryDefinition } from '../models/types';
 
 // Shared headers for vendor and supplier CSV format (excluding id)
-const ENTITY_CSV_HEADERS = ['name', 'address', 'city', 'state', 'zip', 'mobilePhone', 'businessPhone', 'notes'];
+const ENTITY_CSV_HEADERS = [
+  'name',
+  'address',
+  'city',
+  'state',
+  'zip',
+  'mobilePhone',
+  'businessPhone',
+  'notes',
+];
 
 /**
  * Converts an array of vendors to CSV format (excluding id field)
@@ -13,22 +23,20 @@ export function vendorsToCsv(vendors: VendorData[]): string {
 
   // Create CSV header row
   const headerRow = ENTITY_CSV_HEADERS.join(',');
-  
+
   // Create CSV data rows
   const dataRows = vendors.map((vendor) => {
-    return ENTITY_CSV_HEADERS
-      .map((header) => {
-        const value = vendor[header as keyof VendorData] || '';
-        // Escape quotes and wrap in quotes if contains comma, quote, or newline
-        const stringValue = String(value);
-        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-          return `"${stringValue.replace(/"/g, '""')}"`;
-        }
-        return stringValue;
-      })
-      .join(',');
+    return ENTITY_CSV_HEADERS.map((header) => {
+      const value = vendor[header as keyof VendorData] || '';
+      // Escape quotes and wrap in quotes if contains comma, quote, or newline
+      const stringValue = String(value);
+      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    }).join(',');
   });
-  
+
   return [headerRow, ...dataRows].join('\n');
 }
 
@@ -42,22 +50,20 @@ export function suppliersToCsv(suppliers: SupplierData[]): string {
 
   // Create CSV header row
   const headerRow = ENTITY_CSV_HEADERS.join(',');
-  
+
   // Create CSV data rows
   const dataRows = suppliers.map((supplier) => {
-    return ENTITY_CSV_HEADERS
-      .map((header) => {
-        const value = supplier[header as keyof SupplierData] || '';
-        // Escape quotes and wrap in quotes if contains comma, quote, or newline
-        const stringValue = String(value);
-        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-          return `"${stringValue.replace(/"/g, '""')}"`;
-        }
-        return stringValue;
-      })
-      .join(',');
+    return ENTITY_CSV_HEADERS.map((header) => {
+      const value = supplier[header as keyof SupplierData] || '';
+      // Escape quotes and wrap in quotes if contains comma, quote, or newline
+      const stringValue = String(value);
+      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    }).join(',');
   });
-  
+
   return [headerRow, ...dataRows].join('\n');
 }
 
@@ -163,4 +169,65 @@ function parseCsvLine(line: string): string[] {
   result.push(current);
 
   return result;
+}
+
+function parseWorkItemCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        // Escaped quote
+        current += '"';
+        i++; // skip next char
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  result.push(current);
+  return result.map((s) => s.trim());
+}
+
+export function parseWorkItemsCsvText(csvText: string): WorkCategoryDefinition[] {
+  // Split into lines and remove empty lines
+  const lines = csvText.split(/\r?\n/).filter((line) => line.trim() !== '');
+
+  // Skip header
+  const dataLines = lines.slice(1);
+
+  const categories: WorkCategoryDefinition[] = [];
+  let currentCategory: WorkCategoryDefinition | null = null;
+
+  // Parse each line
+  for (const line of dataLines) {
+    const [categoryName, categoryCode, workItemName, workItemCode] = parseWorkItemCsvLine(line);
+
+    // New category row
+    if (categoryName && categoryCode) {
+      currentCategory = {
+        name: categoryName,
+        code: Number(categoryCode),
+        workItems: [],
+      };
+      categories.push(currentCategory);
+    } else if (currentCategory && workItemName && workItemCode) {
+      // Work item row
+      currentCategory.workItems.push({
+        name: workItemName,
+        code: Number(workItemCode),
+      });
+    }
+  }
+  return categories;
 }

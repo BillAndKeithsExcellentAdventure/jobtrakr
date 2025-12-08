@@ -1,4 +1,4 @@
-#name,address,city,state,zip,mobilePhone,businessPhone,notes
+name,address,city,state,zip,mobilePhone,businessPhone,notes
 "Bob's Painting","144 Maple St","Seattle","WA","98103","555-1120","555-4499","Interior and exterior painting"
 "Stephen's Concrete","220 Riverside Ave","Tacoma","WA","98405","555-7721","555-3309","Driveways, patios, and foundations"
 "All American Roofing","780 Hilltop Rd","Portland","OR","97210","555-5400","555-8822","Licensed roofing contractor"

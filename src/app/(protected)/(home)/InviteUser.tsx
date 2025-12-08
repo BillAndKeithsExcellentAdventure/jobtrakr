@@ -14,7 +14,7 @@ export const InviteUser = () => {
   const { user } = useUser();
   const [email, setEmail] = useState('');
   const [members, setMembers] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [numAdmins, setNumAdmins] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string>('');
 
@@ -30,7 +30,7 @@ export const InviteUser = () => {
     const fetchMembers = async () => {
       if (!organization) return;
 
-      setIsLoading(true);
+      setIsProcessing(true);
       try {
         const response = await organization.getMemberships();
         setMembers(response.data);
@@ -45,7 +45,7 @@ export const InviteUser = () => {
         console.error('Error fetching members:', error);
         Alert.alert('Error', 'Failed to fetch organization members');
       } finally {
-        setIsLoading(false);
+        setIsProcessing(false);
       }
     };
 
@@ -62,21 +62,26 @@ export const InviteUser = () => {
       Alert.alert('No organization found');
       return;
     }
-
-    const result = await inviteUserToOrganization(organization, email);
-
-    if (result.status === 'success') {
-      Alert.alert('Success', result.message);
-      setEmail('');
-    } else {
-      Alert.alert('Error', result.message);
-    }
+    setIsProcessing(true);
+    requestAnimationFrame(async () => {
+      try {
+        const result = await inviteUserToOrganization(organization, email);
+        if (result.status === 'success') {
+          Alert.alert('Success', `Invitation Sent to ${email}`);
+          setEmail('');
+        } else {
+          Alert.alert('Error', `Error sending invitation: ${result.message}`);
+        }
+      } finally {
+        setIsProcessing(false);
+      }
+    });
   };
 
   const handleMakeAdmin = async (memberId: string) => {
     if (!organization) return;
 
-    setIsLoading(true);
+    setIsProcessing(true);
     try {
       console.log('Making member admin:', memberId);
       await organization.updateMember({ userId: memberId, role: 'org:admin' });
@@ -88,14 +93,14 @@ export const InviteUser = () => {
       console.error('Error updating member role:', error);
       Alert.alert('Error', 'Failed to update member role');
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
   const handleRemoveAdmin = async (memberId: string) => {
     if (!organization) return;
 
-    setIsLoading(true);
+    setIsProcessing(true);
     try {
       console.log('Removing admin role:', memberId);
       await organization.updateMember({ userId: memberId, role: 'org:member' });
@@ -107,7 +112,7 @@ export const InviteUser = () => {
       console.error('Error updating member role:', error);
       Alert.alert('Error', 'Failed to update member role');
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
@@ -123,7 +128,7 @@ export const InviteUser = () => {
         text: 'Remove',
         style: 'destructive',
         onPress: async () => {
-          setIsLoading(true);
+          setIsProcessing(true);
           try {
             await organization.removeMember(memberId);
             // Refresh members list
@@ -134,7 +139,7 @@ export const InviteUser = () => {
             console.error('Error removing member:', error);
             Alert.alert('Error', 'Failed to remove member');
           } finally {
-            setIsLoading(false);
+            setIsProcessing(false);
           }
         },
       },
@@ -150,9 +155,10 @@ export const InviteUser = () => {
         }}
       />
 
-      {isLoading ? (
+      {isProcessing ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.primary100} />
+          <Text style={{ marginTop: 10 }}>Authorization Server Processing...</Text>
         </View>
       ) : (
         <>

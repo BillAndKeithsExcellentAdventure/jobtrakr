@@ -96,3 +96,21 @@ export interface ProposedChangeOrderItem {
   amount: number;
   workItemEntry: OptionEntry;
 }
+
+// Definitions used when importing Work Items and Categories
+export interface WorkItemDefinition {
+  name: string;
+  code: number;
+}
+
+export interface WorkCategoryDefinition {
+  name: string;
+  code: number;
+  workItems: WorkItemDefinition[];
+}
+
+export interface ProjectTypeWorkItemDefinition {
+  projectType: string;
+  description: string;
+  categories: WorkCategoryDefinition[];
+}

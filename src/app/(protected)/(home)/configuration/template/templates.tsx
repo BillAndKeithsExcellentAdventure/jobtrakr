@@ -13,7 +13,7 @@ import { FlatList, Platform, StyleSheet, KeyboardAvoidingView } from 'react-nati
 import { Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SwipeableProjectTemplate from '../../../../../components/SwipeableProjectTemplate';
+import SwipeableProjectTemplate from '@/src/components/SwipeableProjectTemplate';
 
 const ListProjectTemplates = () => {
   const allProjectTemplates = useAllRows('templates');

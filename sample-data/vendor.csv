@@ -1,4 +1,4 @@
-#name,address,city,state,zip,mobilePhone,businessPhone,notes
+name,address,city,state,zip,mobilePhone,businessPhone,notes
 "HomePro Builders Supply","1020 Industrial Way","Seattle","WA","98108","555-4102","555-8841","Primary contractor supply partner"
 "BuildRight Depot","4550 Pacific Hwy","Tacoma","WA","98421","555-3381","555-9022","Bulk lumber and tools"
 "Contractor’s Choice Supply","7800 Harbor Ave","Everett","WA","98201","555-7320","555-6654","Preferred vendor for framing materials"
