@@ -77,9 +77,9 @@ const SetAppSettingScreen = () => {
 
       const dataUrl = base64Image ? `data:image/png;base64,${base64Image}` : '';
       // Save immediately when image is selected
-      const newSettings = { ...settings, companyLogo: dataUrl };
-      setSettings(newSettings);
-      setAppSettings(newSettings);
+      handleChange('companyLogo', dataUrl);
+      // Save to store immediately after state update
+      setTimeout(() => handleSave(), 0);
     }
   };
 
