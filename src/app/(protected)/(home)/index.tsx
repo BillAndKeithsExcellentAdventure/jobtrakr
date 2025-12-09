@@ -43,6 +43,8 @@ export default function ProjectHomeScreen() {
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
   const allProjectTemplates = useAllRows('templates');
 
+  const allVisibleCategories = useMemo(() => allCategories.filter((c) => !c.hidden), [allCategories]);
+
   useEffect(() => {
     if (allProjects.length === 0) return;
     // create an array of projectId that have been favorited
@@ -87,10 +89,10 @@ export default function ProjectHomeScreen() {
   };
 
   const minConfigMet: boolean = useMemo(
-    () =>
-      allCategories &&
-      allCategories.length > 0 /* && allProjectTemplates && allProjectTemplates.length > 0 */,
-    [allCategories, allProjectTemplates],
+    () => {
+      return allVisibleCategories && allVisibleCategories.length > 0;
+    } /* && allProjectTemplates && allProjectTemplates.length > 0 */,
+    [allVisibleCategories, allProjectTemplates],
   );
 
   useEffect(() => {
