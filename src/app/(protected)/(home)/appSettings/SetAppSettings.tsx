@@ -76,10 +76,10 @@ const SetAppSettingScreen = () => {
       const base64Image = await createBase64LogoImage(asset.uri, undefined, 200);
 
       const dataUrl = base64Image ? `data:image/png;base64,${base64Image}` : '';
-      // Save immediately when image is selected
-      handleChange('companyLogo', dataUrl);
-      // Save to store immediately after state update
-      setTimeout(() => handleSave(), 0);
+      // Update local state and save to store immediately
+      const updatedSettings = { ...settings, companyLogo: dataUrl };
+      setSettings(updatedSettings);
+      setAppSettings(updatedSettings);
     }
   };
 
