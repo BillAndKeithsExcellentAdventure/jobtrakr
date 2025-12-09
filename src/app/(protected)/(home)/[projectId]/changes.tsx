@@ -84,14 +84,10 @@ const ChangeOrdersScreen = () => {
   const allChangeOrders = useAllRows(projectId, 'changeOrders');
 
   // Check if required app settings are defined
-  const isAppSettingsComplete = appSettings.companyName && appSettings.ownerName && appSettings.email;
+  const isAppSettingsComplete = appSettings.companyName?.trim() && appSettings.ownerName?.trim() && appSettings.email?.trim();
   
   // Check if required project owner info is defined
-  const isProjectOwnerInfoComplete = currentProject?.ownerName && currentProject?.ownerEmail;
-
-  // Get the update function from your TinyBase store
-  // You'll need to import this from your ProjectDetailsStoreHooks
-  // const updateChangeOrder = useUpdateChangeOrder(projectId);
+  const isProjectOwnerInfoComplete = currentProject?.ownerName?.trim() && currentProject?.ownerEmail?.trim();
 
   useEffect(() => {
     // If app settings are not complete, navigate to SetAppSettings
@@ -161,7 +157,7 @@ const ChangeOrdersScreen = () => {
         {!projectIsReady ? (
           <Text>Loading...</Text>
         ) : !isAppSettingsComplete ? (
-          <View style={{ padding: 20, gap: 16, alignItems: 'center' }}>
+          <View style={styles.messageContainer}>
             <Text txtSize="sub-title" style={{ textAlign: 'center', color: colors.text }}>
               Company information (Company Name, Owner Name, and Email) is required to send change orders to customers.
             </Text>
@@ -170,7 +166,7 @@ const ChangeOrdersScreen = () => {
             </Text>
           </View>
         ) : !isProjectOwnerInfoComplete ? (
-          <View style={{ padding: 20, gap: 16, alignItems: 'center' }}>
+          <View style={styles.messageContainer}>
             <Text txtSize="sub-title" style={{ textAlign: 'center', color: colors.text }}>
               Project owner information (Owner Name and Owner Email) is required to send change orders.
             </Text>
@@ -256,5 +252,10 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start', // Align items at the top vertically
     alignItems: 'center', // Center horizontally
     width: '100%',
+  },
+  messageContainer: {
+    padding: 20,
+    gap: 16,
+    alignItems: 'center',
   },
 });
