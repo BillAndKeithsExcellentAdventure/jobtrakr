@@ -40,7 +40,7 @@ After submitting your sign-up information, you must verify your email address.
    - Once verified, your account is created and activated
    - You'll be redirected to create your organization
 
-**Note:** The verification code typically expires after a short period (usually 10-15 minutes). If your code expires, return to the sign-up screen and start the process again to receive a new verification code.
+**Note:** The verification code typically expires after a short period. If your code expires or you need a new one, you can return to the sign-up screen and begin the registration process again to receive a fresh verification code.
 
 ### Defining Your Organization
 
