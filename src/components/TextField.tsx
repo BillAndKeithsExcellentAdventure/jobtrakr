@@ -121,9 +121,7 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
   const disabled = TextInputProps.editable === false || status === 'disabled';
 
   // Store the current input value in a ref for stable access in callbacks
-  const inputValueRef = useRef<string>(
-    typeof TextInputProps.value === 'string' ? TextInputProps.value : '',
-  );
+  const inputValueRef = useRef<string>(typeof TextInputProps.value === 'string' ? TextInputProps.value : '');
   // Update the ref whenever value changes
   if (typeof TextInputProps.value === 'string') {
     inputValueRef.current = TextInputProps.value;
@@ -147,7 +145,7 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
     },
     styles.inputWrapperStyle,
     status === 'error' && { borderColor: colors.error },
-    TextInputProps.multiline && { minHeight: 112 },
+    TextInputProps.multiline && { minHeight: 60 },
     { paddingStart: LeftAccessory ? 4 : 0 },
     { paddingEnd: RightAccessory ? 4 : 0 },
     $inputWrapperStyleOverride,
@@ -263,7 +261,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 4,
     overflow: 'hidden',
-    height: 36,
     paddingEnd: 8,
   },
   inputStyle: {

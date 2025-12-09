@@ -170,6 +170,11 @@ const ProjectNotes = () => {
                     <SwipeableNote projectId={projectId} note={item} setNoteToEdit={handleSetNoteToEdit} />
                   </View>
                 )}
+                ListEmptyComponent={
+                  <Text txtSize="title" style={{ textAlign: 'center', marginTop: 20 }}>
+                    No notes defined.
+                  </Text>
+                }
               />
             </View>
           </>

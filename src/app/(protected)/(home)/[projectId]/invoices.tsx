@@ -232,30 +232,29 @@ const ProjectInvoicesPage = () => {
                 </View>
               )}
 
-              {allInvoices.length === 0 ? (
-                <View style={{ alignItems: 'center', margin: 40 }}>
-                  <Text txtSize="xl" text="No invoices found." />
+              <View style={{ flex: 1 }}>
+                <View
+                  style={{
+                    flex: 1,
+                    width: '100%',
+                    backgroundColor: colors.listBackground,
+                  }}
+                >
+                  <FlatList
+                    ref={listRef}
+                    data={classifiedInvoices}
+                    keyExtractor={(item, index) => item.id ?? index.toString()}
+                    renderItem={({ item }) => (
+                      <SwipeableInvoiceItem orgId={auth.orgId!!} projectId={projectId} item={item} />
+                    )}
+                    ListEmptyComponent={
+                      <View style={{ alignItems: 'center', margin: 20 }}>
+                        <Text txtSize="title" text="No invoices found." />
+                      </View>
+                    }
+                  />
                 </View>
-              ) : (
-                <View style={{ flex: 1 }}>
-                  <View
-                    style={{
-                      flex: 1,
-                      width: '100%',
-                      backgroundColor: colors.listBackground,
-                    }}
-                  >
-                    <FlatList
-                      ref={listRef}
-                      data={classifiedInvoices}
-                      keyExtractor={(item, index) => item.id ?? index.toString()}
-                      renderItem={({ item }) => (
-                        <SwipeableInvoiceItem orgId={auth.orgId!!} projectId={projectId} item={item} />
-                      )}
-                    />
-                  </View>
-                </View>
-              )}
+              </View>
             </View>
           </>
         )}

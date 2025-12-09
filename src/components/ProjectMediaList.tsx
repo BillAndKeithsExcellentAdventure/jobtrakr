@@ -194,8 +194,9 @@ export const ProjectMediaList = ({
       </View>
 
       {mediaItems.length === 0 ? (
-        <View style={{ alignItems: 'center' }}>
-          <Text>Use menu button to import photos.</Text>
+        <View style={{ alignItems: 'center', marginTop: 10 }}>
+          <Text txtSize="title">No Photos found.</Text>
+          <Text txtSize="standard">Use menu button to import photos.</Text>
         </View>
       ) : (
         <>

@@ -256,30 +256,29 @@ const ProjectReceiptsPage = () => {
                     />
                   </View>
 
-                  {allReceipts.length === 0 ? (
-                    <View style={{ alignItems: 'center', margin: 40 }}>
-                      <Text txtSize="xl" text="No receipts found." />
+                  <View style={{ flex: 1 }}>
+                    <View
+                      style={{
+                        flex: 1,
+                        width: '100%',
+                        backgroundColor: colors.listBackground,
+                      }}
+                    >
+                      <FlatList
+                        ref={listRef}
+                        data={classifiedReceipts}
+                        keyExtractor={(item, index) => item.id ?? index.toString()}
+                        renderItem={({ item }) => (
+                          <SwipeableReceiptItem orgId={auth.orgId!!} projectId={projectId} item={item} />
+                        )}
+                        ListEmptyComponent={
+                          <View style={{ alignItems: 'center', margin: 20 }}>
+                            <Text txtSize="title" text="No receipts found." />
+                          </View>
+                        }
+                      />
                     </View>
-                  ) : (
-                    <View style={{ flex: 1 }}>
-                      <View
-                        style={{
-                          flex: 1,
-                          width: '100%',
-                          backgroundColor: colors.listBackground,
-                        }}
-                      >
-                        <FlatList
-                          ref={listRef}
-                          data={classifiedReceipts}
-                          keyExtractor={(item, index) => item.id ?? index.toString()}
-                          renderItem={({ item }) => (
-                            <SwipeableReceiptItem orgId={auth.orgId!!} projectId={projectId} item={item} />
-                          )}
-                        />
-                      </View>
-                    </View>
-                  )}
+                  </View>
                 </KeyboardAvoidingView>
               </View>
             </>

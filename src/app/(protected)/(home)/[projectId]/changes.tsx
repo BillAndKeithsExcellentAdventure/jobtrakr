@@ -216,8 +216,21 @@ const ChangeOrdersScreen = () => {
                 title="Add Change Order"
               />
             </View>
+            <View
+              style={{
+                width: '100%',
+                alignItems: 'center',
+                borderBottomWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              <Text txtSize="title" style={{ marginVertical: 5 }}>
+                Project Change Orders
+              </Text>
+            </View>
+
             <FlatList
-              style={{ marginTop: 10, width: '100%', borderColor: colors.border, borderTopWidth: 1 }}
+              style={{ marginTop: 10, width: '100%', flex: 1 }}
               data={allChangeOrders}
               ListEmptyComponent={() => (
                 <View
