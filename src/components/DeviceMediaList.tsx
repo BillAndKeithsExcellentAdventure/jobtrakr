@@ -8,10 +8,8 @@ import * as MediaLibrary from 'expo-media-library';
 import { MediaAssetsHelper } from '@/src/utils/mediaAssetsHelper';
 import { MediaEntryData, useAddRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
-import { useRouter } from 'expo-router';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
-import { useColors } from '@/src/context/ColorsContext';
 
 export type AssetsItem = {
   _id: string;

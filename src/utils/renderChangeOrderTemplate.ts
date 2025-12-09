@@ -1,5 +1,5 @@
 import Mustache from 'mustache';
-import { formatCurrency, formatDate } from './formatters';
+import { formatCurrency } from './formatters';
 
 export interface ChangeItem {
   description: string;

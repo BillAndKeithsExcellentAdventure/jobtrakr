@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import {
   Text,
   TouchableOpacity,
@@ -6,8 +6,6 @@ import {
   Platform,
   ViewStyle,
   TextStyle,
-  Keyboard,
-  TextInput,
 } from 'react-native';
 import { useColorScheme } from './useColorScheme';
 import { useFocusManager } from '../hooks/useFocusManager';

@@ -6,7 +6,6 @@ import { Pressable } from 'react-native-gesture-handler';
 
 import { SwipeableComponent, SwipeableHandles } from '@/src/components/SwipeableComponent';
 import { Text, View } from '@/src/components/Themed';
-import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
 import {
   NoteData,

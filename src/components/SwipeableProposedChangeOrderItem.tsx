@@ -1,10 +1,8 @@
 import { Text, View } from '@/src/components/Themed';
-import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
 
 import { formatCurrency } from '@/src/utils/formatters';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';

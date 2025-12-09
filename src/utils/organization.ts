@@ -1,5 +1,3 @@
-import { useOrganization } from '@clerk/clerk-expo';
-
 export const inviteUserToOrganization = async (
   organization: any,
   emailAddress: string,

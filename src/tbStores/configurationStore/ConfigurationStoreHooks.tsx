@@ -1,4 +1,4 @@
-import { NoValuesSchema, Store, Value } from 'tinybase/with-schemas';
+import { NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { TABLES_SCHEMA, useStoreId } from './ConfigurationStore';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { useCallback, useEffect, useState } from 'react';

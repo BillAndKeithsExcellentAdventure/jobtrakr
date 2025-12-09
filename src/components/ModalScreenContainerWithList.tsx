@@ -7,8 +7,6 @@ import { KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const BUTTON_ROW_HEIGHT = 62;
-
 type ModalScreenContainerWithListProps = PropsWithChildren<{
   onSave: () => void;
   onCancel: () => void;
