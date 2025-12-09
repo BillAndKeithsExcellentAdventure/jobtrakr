@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { ActionButton } from '@/src/components/ActionButton';
-import { Text, TextInput, View } from '@/src/components/Themed';
+import React, { useState, useEffect, useCallback } from 'react';
+import { TextField } from '@/src/components/TextField';
+import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
+import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import {
   useSetAppSettingsCallback,
   useAppSettings,
   SettingsData,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
-import { Alert, Platform, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { Platform, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import * as ImagePicker from 'expo-image-picker';
@@ -53,6 +55,10 @@ const SetAppSettingScreen = () => {
     }));
   };
 
+  const handleSave = useCallback(() => {
+    setAppSettings(settings);
+  }, [settings, setAppSettings]);
+
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -70,19 +76,17 @@ const SetAppSettingScreen = () => {
       const base64Image = await createBase64LogoImage(asset.uri, undefined, 200);
 
       const dataUrl = base64Image ? `data:image/png;base64,${base64Image}` : '';
-      handleChange('companyLogo', dataUrl);
+      // Save immediately when image is selected
+      const newSettings = { ...settings, companyLogo: dataUrl };
+      setSettings(newSettings);
+      setAppSettings(newSettings);
     }
   };
 
-  const handleSave = () => {
-    const result = setAppSettings(settings);
-    if (result.status !== 'Success') {
-      Alert.alert('Error saving Company Data', `Please verify input and try again. ${result.msg}`);
-      return;
-    }
-
+  const handleBackPress = useAutoSaveNavigation(() => {
+    handleSave();
     router.back();
-  };
+  });
 
   return (
     <>
@@ -90,98 +94,96 @@ const SetAppSettingScreen = () => {
         options={{
           headerShown: true,
           title: 'Define Company Settings',
+          gestureEnabled: false,
+          headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
         }}
       />
       <KeyboardAwareScrollView
         bottomOffset={62}
-        style={[{ backgroundColor: colors.modalOverlayBackgroundColor, flex: 1, marginBottom: 62 }]}
+        style={[{ backgroundColor: colors.modalOverlayBackgroundColor, flex: 1 }]}
         contentContainerStyle={styles.modalContainer}
       >
         <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
-          <View style={{ marginBottom: 4, backgroundColor: colors.listBackground }}>
-            <Text style={{ marginBottom: 4, backgroundColor: colors.listBackground }}>Company Name</Text>
-            <TextInput
-              value={String(settings.companyName ?? '')}
-              onChangeText={(text) => handleChange('companyName', text)}
-              style={{ borderWidth: 1, padding: 4, backgroundColor: colors.background }}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-          <View style={{ marginBottom: 4, backgroundColor: colors.listBackground }}>
-            <Text style={{ marginBottom: 4, backgroundColor: colors.listBackground }}>Address</Text>
-            <TextInput
-              value={String(settings.address ?? '')}
-              onChangeText={(text) => handleChange('address', text)}
-              style={{ borderWidth: 1, padding: 4, backgroundColor: colors.background }}
-              multiline={true}
-              numberOfLines={2}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-          <View style={{ marginBottom: 4, backgroundColor: colors.listBackground }}>
-            <Text style={{ marginBottom: 4, backgroundColor: colors.listBackground }}>City</Text>
-            <TextInput
-              value={String(settings.city ?? '')}
-              onChangeText={(text) => handleChange('city', text)}
-              style={{ borderWidth: 1, padding: 4, backgroundColor: colors.background }}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
+          <TextField
+            label="Company Name"
+            placeholder="Company Name"
+            value={String(settings.companyName ?? '')}
+            onChangeText={(text) => handleChange('companyName', text)}
+            onBlur={handleSave}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <TextField
+            label="Address"
+            placeholder="Address"
+            value={String(settings.address ?? '')}
+            onChangeText={(text) => handleChange('address', text)}
+            onBlur={handleSave}
+            multiline={true}
+            numberOfLines={2}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <TextField
+            label="City"
+            placeholder="City"
+            value={String(settings.city ?? '')}
+            onChangeText={(text) => handleChange('city', text)}
+            onBlur={handleSave}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
           <View style={{ flexDirection: 'row', backgroundColor: colors.listBackground, gap: 8 }}>
             <View style={{ marginBottom: 4, backgroundColor: colors.listBackground, flex: 1 }}>
-              <Text style={{ marginBottom: 4, backgroundColor: colors.listBackground }}>State</Text>
-              <TextInput
+              <TextField
+                label="State"
+                placeholder="State"
                 value={String(settings.state ?? '')}
                 onChangeText={(text) => handleChange('state', text)}
-                style={{ borderWidth: 1, padding: 4, backgroundColor: colors.background }}
+                onBlur={handleSave}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
             </View>
             <View style={{ marginBottom: 4, width: 120, backgroundColor: colors.listBackground }}>
-              <Text style={{ marginBottom: 4, backgroundColor: colors.listBackground }}>Zip</Text>
-              <TextInput
+              <TextField
+                label="Zip"
+                placeholder="Zip"
                 value={String(settings.zip ?? '')}
                 onChangeText={(text) => handleChange('zip', text)}
-                style={{ borderWidth: 1, padding: 4, backgroundColor: colors.background }}
+                onBlur={handleSave}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
             </View>
           </View>
-          <View style={{ marginBottom: 4, backgroundColor: colors.listBackground }}>
-            <Text style={{ marginBottom: 4, backgroundColor: colors.listBackground }}>Owner/Contact</Text>
-            <TextInput
-              value={String(settings.ownerName ?? '')}
-              onChangeText={(text) => handleChange('ownerName', text)}
-              style={{ borderWidth: 1, padding: 4, backgroundColor: colors.background }}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-          <View style={{ marginBottom: 4, backgroundColor: colors.listBackground }}>
-            <Text style={{ marginBottom: 4, backgroundColor: colors.listBackground }}>Phone</Text>
-            <TextInput
-              value={String(settings.phone ?? '')}
-              onChangeText={(text) => handleChange('phone', text)}
-              style={{ borderWidth: 1, padding: 4, backgroundColor: colors.background }}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-          <View style={{ marginBottom: 4, backgroundColor: colors.listBackground }}>
-            <Text style={{ marginBottom: 4, backgroundColor: colors.listBackground }}>Email</Text>
-            <TextInput
-              value={String(settings.email ?? '')}
-              onChangeText={(text) => handleChange('email', text)}
-              style={{ borderWidth: 1, padding: 4, backgroundColor: colors.background }}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
+          <TextField
+            label="Owner/Contact"
+            placeholder="Owner/Contact"
+            value={String(settings.ownerName ?? '')}
+            onChangeText={(text) => handleChange('ownerName', text)}
+            onBlur={handleSave}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <TextField
+            label="Phone"
+            placeholder="Phone"
+            value={String(settings.phone ?? '')}
+            onChangeText={(text) => handleChange('phone', text)}
+            onBlur={handleSave}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <TextField
+            label="Email"
+            placeholder="Email"
+            value={String(settings.email ?? '')}
+            onChangeText={(text) => handleChange('email', text)}
+            onBlur={handleSave}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
           <View style={{ flexDirection: 'row', marginBottom: 4, backgroundColor: colors.listBackground }}>
             <TouchableOpacity
               style={[
@@ -200,17 +202,6 @@ const SetAppSettingScreen = () => {
                 style={{ width: 80, height: 80, resizeMode: 'contain' }}
               />
             )}
-          </View>
-          <View style={styles.saveButtonRow}>
-            <ActionButton style={styles.saveButton} onPress={handleSave} type="ok" title="Save" />
-            <ActionButton
-              style={styles.cancelButton}
-              onPress={() => {
-                router.back();
-              }}
-              type={'cancel'}
-              title="Cancel"
-            />
           </View>
         </View>
       </KeyboardAwareScrollView>
@@ -233,19 +224,6 @@ const styles = StyleSheet.create({
   modalContainer: {
     maxWidth: 460,
     width: '100%',
-  },
-  saveButtonRow: {
-    marginTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  saveButton: {
-    flex: 1,
-    marginRight: 5,
-  },
-  cancelButton: {
-    flex: 1,
-    marginLeft: 5,
   },
 });
 
