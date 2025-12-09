@@ -15,6 +15,8 @@ import {
 import { useAuth } from '@clerk/clerk-expo';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { FlatList, StyleSheet } from 'react-native';
+import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 
 const getChangeOrderStatuses = async (projectId: string, token: string): Promise<string | null> => {
   try {
@@ -57,6 +59,8 @@ const ChangeOrdersScreen = () => {
   const router = useRouter();
   const updateChangeOrder = useUpdateRowCallback(projectId, 'changeOrders');
   const auth = useAuth();
+  const appSettings = useAppSettings();
+  const currentProject = useProject(projectId);
 
   useEffect(() => {
     if (projectId) {
@@ -79,9 +83,22 @@ const ChangeOrdersScreen = () => {
 
   const allChangeOrders = useAllRows(projectId, 'changeOrders');
 
+  // Check if required app settings are defined
+  const isAppSettingsComplete = appSettings.companyName && appSettings.ownerName && appSettings.email;
+  
+  // Check if required project owner info is defined
+  const isProjectOwnerInfoComplete = currentProject?.ownerName && currentProject?.ownerEmail;
+
   // Get the update function from your TinyBase store
   // You'll need to import this from your ProjectDetailsStoreHooks
   // const updateChangeOrder = useUpdateChangeOrder(projectId);
+
+  useEffect(() => {
+    // If app settings are not complete, navigate to SetAppSettings
+    if (projectIsReady && !isAppSettingsComplete) {
+      router.push('/appSettings/SetAppSettings');
+    }
+  }, [projectIsReady, isAppSettingsComplete, router]);
 
   useEffect(() => {
     const fetchStatuses = async () => {
@@ -143,6 +160,38 @@ const ChangeOrdersScreen = () => {
       <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
         {!projectIsReady ? (
           <Text>Loading...</Text>
+        ) : !isAppSettingsComplete ? (
+          <View style={{ padding: 20, gap: 16, alignItems: 'center' }}>
+            <Text txtSize="sub-title" style={{ textAlign: 'center', color: colors.text }}>
+              Company information (Company Name, Owner Name, and Email) is required to send change orders to customers.
+            </Text>
+            <Text style={{ textAlign: 'center', color: colors.text }}>
+              You will be redirected to the Settings screen to complete this information.
+            </Text>
+          </View>
+        ) : !isProjectOwnerInfoComplete ? (
+          <View style={{ padding: 20, gap: 16, alignItems: 'center' }}>
+            <Text txtSize="sub-title" style={{ textAlign: 'center', color: colors.text }}>
+              Project owner information (Owner Name and Owner Email) is required to send change orders.
+            </Text>
+            <Text style={{ textAlign: 'center', color: colors.text }}>
+              Please update the project information to include the owner's name and email.
+            </Text>
+            <ActionButton
+              style={{ minWidth: 200 }}
+              onPress={() =>
+                router.push({
+                  pathname: '/[projectId]/edit',
+                  params: {
+                    projectId,
+                    projectName,
+                  },
+                })
+              }
+              type={'action'}
+              title="Edit Project Info"
+            />
+          </View>
         ) : (
           <>
             <View
