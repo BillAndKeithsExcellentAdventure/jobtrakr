@@ -28,7 +28,7 @@ After submitting your sign-up information, you must verify your email address.
 **Email Verification Process:**
 
 1. **Check your email**
-   - Look for an email from ProjectHound/Clerk with a verification code
+   - Look for an email from ProjectHound (powered by Clerk) with a verification code
    - If you don't see it quickly, check your spam or junk mail folder
 
 2. **Enter the verification code**
@@ -40,7 +40,7 @@ After submitting your sign-up information, you must verify your email address.
    - Once verified, your account is created and activated
    - You'll be redirected to create your organization
 
-**Note:** The verification code expires after a certain time. If your code expires, you can request a new one.
+**Note:** The verification code typically expires after a short period (usually 10-15 minutes). If your code expires, return to the sign-up screen and start the process again to receive a new verification code.
 
 ### Defining Your Organization
 
