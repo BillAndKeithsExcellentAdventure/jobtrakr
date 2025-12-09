@@ -39,7 +39,7 @@ const ShowWorkCategory = () => {
   const allProjects = useAllProjects();
 
   const allowDelete = useMemo(() => {
-    allProjects.length === 0;
+    return allProjects.length === 0;
   }, [allProjects.length]);
 
   const visibleWorkItems = useMemo(() => allWorkItems.filter((w) => !w.hidden), [allWorkItems]);

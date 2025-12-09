@@ -26,7 +26,7 @@ const ListWorkCategories = () => {
   const allProjects = useAllProjects();
 
   const allowDelete = useMemo(() => {
-    allProjects.length === 0;
+    return allProjects.length === 0;
   }, [allProjects.length]);
 
   const visibleCategories = useMemo(() => allCategories.filter((c) => !c.hidden), [allCategories]);
