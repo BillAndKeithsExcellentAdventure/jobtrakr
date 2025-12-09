@@ -84,8 +84,9 @@ const ChangeOrdersScreen = () => {
   const allChangeOrders = useAllRows(projectId, 'changeOrders');
 
   // Check if required app settings are defined
-  const isAppSettingsComplete = appSettings.companyName?.trim() && appSettings.ownerName?.trim() && appSettings.email?.trim();
-  
+  const isAppSettingsComplete =
+    appSettings.companyName?.trim() && appSettings.ownerName?.trim() && appSettings.email?.trim();
+
   // Check if required project owner info is defined
   const isProjectOwnerInfoComplete = currentProject?.ownerName?.trim() && currentProject?.ownerEmail?.trim();
 
@@ -152,7 +153,8 @@ const ChangeOrdersScreen = () => {
         ) : !isAppSettingsComplete ? (
           <View style={styles.messageContainer}>
             <Text txtSize="sub-title" style={{ textAlign: 'center', color: colors.text }}>
-              Company information (Company Name, Owner Name, and Email) is required to send change orders to customers.
+              Before creating change orders, the name and email of your company's owner or primary contact are
+              required.
             </Text>
             <Text style={{ textAlign: 'center', color: colors.text }}>
               Please complete the company settings to continue.
@@ -167,7 +169,8 @@ const ChangeOrdersScreen = () => {
         ) : !isProjectOwnerInfoComplete ? (
           <View style={styles.messageContainer}>
             <Text txtSize="sub-title" style={{ textAlign: 'center', color: colors.text }}>
-              Project owner information (Owner Name and Owner Email) is required to send change orders.
+              Before creating change orders, the name and email of the project's owner or primary contact are
+              required.
             </Text>
             <Text style={{ textAlign: 'center', color: colors.text }}>
               Please update the project information to include the owner's name and email.
