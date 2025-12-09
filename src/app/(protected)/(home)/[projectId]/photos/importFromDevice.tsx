@@ -4,12 +4,10 @@ import { Text, View } from '@/src/components/Themed';
 
 import { VideoPlayerModal } from '@/src/components/VideoPlayerModal';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
-import { useColors } from '@/src/context/ColorsContext';
 import {
   useAllRows,
   useIsStoreAvailableCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { useAddImageCallback } from '@/src/utils/images';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';

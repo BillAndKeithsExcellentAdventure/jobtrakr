@@ -2,10 +2,9 @@ import { View, Text } from '@/src/components/Themed';
 import { InvoiceData } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
 import React from 'react';
-import { TouchableWithoutFeedback, Image, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import Base64Image from './Base64Image';
-import * as FileSystem from 'expo-file-system/legacy';
 import { useColors } from '../context/ColorsContext';
 
 interface InvoiceSummaryProps {

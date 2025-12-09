@@ -6,7 +6,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import React, { useCallback, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
-import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable } from 'react-native-gesture-handler';
 import * as Sharing from 'expo-sharing';
 import { Alert, GestureResponderEvent, Platform } from 'react-native';

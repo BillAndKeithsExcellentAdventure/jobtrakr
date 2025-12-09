@@ -1,13 +1,11 @@
 import { ActionButton } from '@/src/components/ActionButton';
-import { Text, View } from '@/src/components/Themed';
+import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { Stack } from 'expo-router';
 import React, { PropsWithChildren } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const BUTTON_ROW_HEIGHT = 62;
 
 type ModalScreenContainerWithListProps = PropsWithChildren<{
   onSave: () => void;

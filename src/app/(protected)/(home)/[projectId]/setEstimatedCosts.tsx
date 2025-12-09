@@ -20,7 +20,7 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
 import { FontAwesome6 } from '@expo/vector-icons';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';

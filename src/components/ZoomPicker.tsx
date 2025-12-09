@@ -2,8 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { Modal, Button, TouchableOpacity, Platform, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { OptionEntry } from './OptionList';
-import { useColors } from '@/src/context/ColorsContext';
-import { useColorScheme } from './useColorScheme';
 import { Text, View } from '@/src/components/Themed';
 
 const ZoomPicker = ({

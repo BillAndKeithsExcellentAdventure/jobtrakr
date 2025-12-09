@@ -23,13 +23,6 @@ import { useAuth, useClerk } from '@clerk/clerk-expo';
 import { AntDesign } from '@expo/vector-icons';
 import { ActionButton } from '@/src/components/ActionButton';
 
-function MaterialDesignTabBarIcon(props: {
-  name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
-  color: string;
-}) {
-  return <MaterialCommunityIcons size={28} style={{ marginBottom: -3 }} {...props} />;
-}
-
 function isEntry(obj: any): obj is ProjectListEntryProps {
   return typeof obj.projectName === 'string' && typeof obj.projectId === 'string';
 }

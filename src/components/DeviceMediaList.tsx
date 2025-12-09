@@ -11,7 +11,6 @@ import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { useRouter } from 'expo-router';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
-import { useColors } from '@/src/context/ColorsContext';
 
 export type AssetsItem = {
   _id: string;
