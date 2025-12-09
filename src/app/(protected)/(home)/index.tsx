@@ -380,7 +380,7 @@ export default function ProjectHomeScreen() {
 
                 <ActionButton
                   style={{ zIndex: 1, marginTop: 10, width: '95%', maxWidth: 400 }}
-                  onPress={() => Linking.openURL('https://projecthoundinfo.pages.dev/setup')}
+                  onPress={() => Linking.openURL('https://docs.projecthound.biz/setup')}
                   type="action"
                   title="Open Support Site"
                 />
