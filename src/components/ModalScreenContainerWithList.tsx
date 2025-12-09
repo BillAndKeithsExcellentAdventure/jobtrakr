@@ -1,5 +1,5 @@
 import { ActionButton } from '@/src/components/ActionButton';
-import { Text, View } from '@/src/components/Themed';
+import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { Stack } from 'expo-router';
 import React, { PropsWithChildren } from 'react';
