@@ -7,7 +7,7 @@ import {
   useAllRows,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Ionicons } from '@expo/vector-icons'; // Right caret icon
-import { Stack, useRouter } from 'expo-router';
+import { Stack } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { FlatList, Platform, StyleSheet, KeyboardAvoidingView } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
@@ -25,7 +25,6 @@ const ListProjectTemplates = () => {
     description: '',
   });
 
-  const router = useRouter();
   const colors = useColors();
 
   const handleInputChange = (name: keyof ProjectTemplateData, value: string) => {
@@ -84,7 +83,7 @@ const ListProjectTemplates = () => {
                       onChangeText={(text) => handleInputChange('name', text)}
                     />
                     <TextInput
-                      style={[styles.input, { backgroundColor: colors.neutral200, marginLeft: 5 }]}
+                      style={[styles.input, { backgroundColor: colors.neutral200 }]}
                       placeholder="Description"
                       value={projectTemplate.description}
                       onChangeText={(text) => handleInputChange('description', text)}
