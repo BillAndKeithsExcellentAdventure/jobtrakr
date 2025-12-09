@@ -1,5 +1,83 @@
 # Home Screens User Guide
 
+## Getting Started with ProjectHound
+
+Before you can use ProjectHound, you need to create an account and set up your organization. This section guides you through the initial setup process.
+
+### Signing Up with Clerk
+
+ProjectHound uses Clerk for secure authentication and user management.
+
+**To create a new account:**
+
+1. **Navigate to the Sign Up screen**
+   - Open ProjectHound and tap **Sign up** on the login screen
+
+2. **Enter your information**
+   - **Email Address** - Your business or personal email
+   - **Password** - A secure password for your account
+
+3. **Submit your registration**
+   - Tap **Continue** to create your account
+   - Clerk will send a verification email to your email address
+
+### Receiving and Entering a Verification Code
+
+After submitting your sign-up information, you must verify your email address.
+
+**Email Verification Process:**
+
+1. **Check your email**
+   - Look for an email from ProjectHound (powered by Clerk) with a verification code
+   - If you don't see it quickly, check your spam or junk mail folder
+
+2. **Enter the verification code**
+   - You'll be automatically taken to the verification screen
+   - Enter the 6-digit code from the email
+   - Tap **Verify**
+
+3. **Verification Complete**
+   - Once verified, your account is created and activated
+   - You'll be redirected to create your organization
+
+**Note:** The verification code typically expires after a short period. If your code expires or you need a new one, you can return to the sign-up screen and begin the registration process again to receive a fresh verification code.
+
+### Defining Your Organization
+
+After email verification, you must create an organization. An organization is your company or workspace where all projects and data are stored.
+
+**Creating an Organization:**
+
+1. **Enter Organization Information**
+   - You'll see the "Create Organization" screen automatically
+   - **Organization Name** - Enter your company or business name
+     - This name will be used throughout the application
+     - Examples: "Smith Construction", "ABC Builders", "Joe's Contracting"
+
+2. **Create the Organization**
+   - Tap **Create Organization**
+   - The system creates your organization and sets you as the administrator
+   - You'll see a success message when complete
+
+3. **Automatic Setup**
+   - You're automatically set as an organization administrator
+   - You gain access to all admin features, including team management
+   - You're redirected to the Projects Home Screen to begin setup
+
+**Important Notes:**
+- Organization names should be unique and descriptive
+- You are the owner and first administrator of the organization
+- Only organization administrators can invite other users and manage team roles
+
+### Next Steps After Organization Creation
+
+Once your organization is created:
+
+1. **Set up your configuration** - Define categories, work items, and templates
+2. **Configure company settings** - Add your company logo, address, and contact information
+3. **Invite team members** - Add other users to collaborate on projects (admins only)
+4. **Create your first project** - Start tracking work and costs
+
 ## Overview
 
 ProjectHound has two main home screens that serve as the primary navigation hubs:
@@ -310,16 +388,42 @@ Invite team members to collaborate on projects and manage user roles within your
 
 ### Inviting Users
 
-**To invite a new team member:**
-1. Enter the user's email address in the email field
-2. Tap **Send Invite**
-3. The user receives an email invitation
-4. They can sign up and join your organization
+Organization administrators can invite other users to join the team and collaborate on projects.
 
-**Invitation Status:**
-- Success: "Invitation sent successfully"
-- Already exists: "User is already a member"
-- Error: Displays specific error message
+**To invite a new team member:**
+
+1. **Enter the email address**
+   - Type the user's email address in the email field
+   - Ensure the email is correct before sending
+
+2. **Send the invitation**
+   - Tap **Send Invitation**
+   - An invitation email is sent to the user
+   - The invitation includes a link to join your organization
+
+3. **Invitation Status Messages:**
+   - **Success:** "Invitation sent successfully" - The email was sent
+   - **Already exists:** "User is already a member" - This person is already in your organization
+   - **Error:** Displays specific error message if something went wrong
+
+**What Happens After Sending an Invitation:**
+
+The invited user receives an email with instructions to join your organization. They must:
+
+1. **Click the invitation link** in the email
+2. **Sign up for ProjectHound** (if they don't have an account):
+   - Enter their email address and create a password
+   - Receive and enter a verification code (sent to their email)
+   - Check spam/junk folder if the code doesn't arrive quickly
+3. **Join the organization** - After verification, they automatically join your organization
+4. **Access organization data** - They can now view and work on organization projects
+
+**Important Notes:**
+- Invited users start as regular members (not administrators)
+- You can promote members to administrators after they join
+- Invitations are sent via email through the Clerk authentication system
+- Users must verify their email before accessing the organization
+- If a user already has a ProjectHound account, they still need to accept the invitation to join your organization
 
 ### Managing Existing Members
 
