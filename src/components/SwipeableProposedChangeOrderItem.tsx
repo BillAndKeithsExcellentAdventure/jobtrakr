@@ -1,4 +1,5 @@
 import { Text, View } from '@/src/components/Themed';
+import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
 
 import { formatCurrency } from '@/src/utils/formatters';

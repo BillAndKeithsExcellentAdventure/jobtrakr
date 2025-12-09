@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { CameraType, CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
 import React, { useEffect, useRef, useState } from 'react';
-import { Modal, Platform, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image, Modal, Platform, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, View } from '@/src/components/Themed';
 import ZoomPicker from '@/src/components/ZoomPicker';
 import { ActionButton } from '@/src/components/ActionButton';
