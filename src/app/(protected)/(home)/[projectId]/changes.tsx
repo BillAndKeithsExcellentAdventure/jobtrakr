@@ -90,13 +90,6 @@ const ChangeOrdersScreen = () => {
   const isProjectOwnerInfoComplete = currentProject?.ownerName?.trim() && currentProject?.ownerEmail?.trim();
 
   useEffect(() => {
-    // If app settings are not complete, navigate to SetAppSettings
-    if (projectIsReady && !isAppSettingsComplete) {
-      router.push('/appSettings/SetAppSettings');
-    }
-  }, [projectIsReady, isAppSettingsComplete, router]);
-
-  useEffect(() => {
     const fetchStatuses = async () => {
       try {
         const token = (await auth.getToken()) ?? '';
@@ -162,8 +155,14 @@ const ChangeOrdersScreen = () => {
               Company information (Company Name, Owner Name, and Email) is required to send change orders to customers.
             </Text>
             <Text style={{ textAlign: 'center', color: colors.text }}>
-              You will be redirected to the Settings screen to complete this information.
+              Please complete the company settings to continue.
             </Text>
+            <ActionButton
+              style={{ minWidth: 200 }}
+              onPress={() => router.push('/appSettings/SetAppSettings')}
+              type={'action'}
+              title="Edit Company Settings"
+            />
           </View>
         ) : !isProjectOwnerInfoComplete ? (
           <View style={styles.messageContainer}>
