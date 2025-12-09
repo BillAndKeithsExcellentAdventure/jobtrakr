@@ -140,6 +140,39 @@ import { SomeType } from '@/src/models/types';
 
 ### Component Patterns
 
+#### Themed Components
+
+**Always prefer themed components** from `src/components/Themed.tsx`:
+
+```typescript
+import { Text, View, TextInput } from '@/src/components/Themed';
+```
+
+**DO**:
+
+```typescript
+// Use themed components for automatic color adaptation
+<View style={styles.container}>
+  <Text txtSize="title">Hello World</Text>
+  <Text txtSize="sub-title">Subtitle</Text>
+  <TextInput placeholder="Enter text" />
+</View>
+```
+
+**DON'T**:
+
+```typescript
+// Don't import directly from react-native unless absolutely necessary
+import { View, Text, TextInput } from 'react-native';
+```
+
+Themed components automatically:
+
+- Apply appropriate colors from `ColorsContext`
+- Support light/dark mode switching
+- Provide consistent styling across the app
+- Include helpful props like `txtSize` for Text components
+
 #### Input Components
 
 All input components should:
