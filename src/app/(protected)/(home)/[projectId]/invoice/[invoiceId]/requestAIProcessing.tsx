@@ -409,6 +409,10 @@ const RequestAIProcessingPage = () => {
     }
   }, [someCostItemsSpecified, allCostItemsSpecified, saveInvoiceProcessing]);
 
+  const handleCancel = useCallback(() => {
+    router.back();
+  }, []);
+
   return (
     <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen options={{ title: 'Process Invoice Image', headerShown: false, gestureEnabled: false }} />
@@ -417,9 +421,9 @@ const RequestAIProcessingPage = () => {
           Invoice Photo Processing
         </Text>
         {fetchingData ? (
-          <View style={{ width: '100%', gap: 20 }}>
+          <View style={{ width: '100%', gap: 20, padding: 10, alignItems: 'center' }}>
             <ActivityIndicator size="large" />
-            <Text txtSize="title">
+            <Text txtSize="sub-title">
               Working on extracting data from invoice image, this shouldn't take long.
             </Text>
           </View>
@@ -494,6 +498,7 @@ const RequestAIProcessingPage = () => {
                   onPress={handleSelectCostItem}
                 />
                 <ActionButton title={'Save'} type={'ok'} onPress={handleSaveInvoiceCostItems} />
+                <ActionButton title={'Cancel'} type={'cancel'} onPress={handleCancel} />
               </>
             ) : (
               <>

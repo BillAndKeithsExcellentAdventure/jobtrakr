@@ -35,8 +35,8 @@ const processAIProcessing = async (
       userId: userId,
       organizationId: organizationId,
     };
-    console.log(' token:', token);
-    console.log(' receiptImageData:', receiptImageData);
+    //console.log(' token:', token);
+    //console.log(' receiptImageData:', receiptImageData);
     const response = await fetch(`${API_BASE_URL}/getReceiptIntelligence`, {
       method: 'POST',
       headers: {
@@ -52,7 +52,7 @@ const processAIProcessing = async (
     }
 
     const data = await response.json();
-    console.log(' response:', JSON.stringify(data));
+    //console.log(' response:', JSON.stringify(data));
 
     return data;
   } catch (error) {
@@ -408,6 +408,10 @@ const RequestAIProcessingPage = () => {
     }
   }, [someCostItemsSpecified, allCostItemsSpecified, saveReceiptProcessing]);
 
+  const handleCancel = useCallback(() => {
+    router.back();
+  }, []);
+
   return (
     <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen options={{ title: 'Process Receipt Image', headerShown: false, gestureEnabled: false }} />
@@ -416,9 +420,9 @@ const RequestAIProcessingPage = () => {
           Receipt Photo Processing
         </Text>
         {fetchingData ? (
-          <View style={{ width: '100%', gap: 20 }}>
+          <View style={{ width: '100%', gap: 20, padding: 10, alignItems: 'center' }}>
             <ActivityIndicator size="large" />
-            <Text txtSize="title">
+            <Text txtSize="sub-title">
               Working on extracting data from receipt image, this shouldn't take long.
             </Text>
           </View>
@@ -493,6 +497,7 @@ const RequestAIProcessingPage = () => {
                   onPress={handleSelectCostItem}
                 />
                 <ActionButton title={'Save'} type={'ok'} onPress={handleSaveReceiptCostItems} />
+                <ActionButton title={'Cancel'} type={'cancel'} onPress={handleCancel} />
               </>
             ) : (
               <>

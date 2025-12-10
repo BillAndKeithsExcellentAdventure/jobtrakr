@@ -257,7 +257,7 @@ const ProjectReceiptsPage = () => {
                     />
                   </View>
 
-                  <View style={{ flex: 1 }}>
+                  <View style={{ flex: 1, paddingHorizontal: 5 }}>
                     <View
                       style={{
                         flex: 1,
