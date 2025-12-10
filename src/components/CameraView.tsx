@@ -212,7 +212,7 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={false} statusBarTranslucent={false}>
+    <Modal visible={visible} animationType="slide" transparent={false}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
           <Text txtSize="screen-header">{projectName}</Text>

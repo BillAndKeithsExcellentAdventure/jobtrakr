@@ -18,7 +18,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
+import { Alert, FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ReceiptDetailsPage = () => {
@@ -81,7 +81,7 @@ const ReceiptDetailsPage = () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
     if (permissionResult.granted === false) {
-      alert("You've refused to allow this app to access your camera!");
+      Alert.alert('Info', "You've refused to allow this app to access your camera!");
       return;
     }
 
@@ -94,7 +94,7 @@ const ReceiptDetailsPage = () => {
       // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
       const imageAddResult = await addReceiptImage(asset.uri, projectId, 'photo', 'receipt');
       if (imageAddResult.status !== 'Success') {
-        alert(`Unable to add receipt image: ${JSON.stringify(imageAddResult)}`);
+        Alert.alert('Error', `Unable to add receipt image: ${JSON.stringify(imageAddResult)}`);
         return;
       }
 
@@ -110,7 +110,7 @@ const ReceiptDetailsPage = () => {
 
       const response = updateReceipt(updatedReceipt.id, updatedReceipt);
       if (response?.status !== 'Success') {
-        alert(`Unable to add receipt image - ${JSON.stringify(response)}`);
+        Alert.alert('Error', `Unable to add receipt image - ${JSON.stringify(response)}`);
       }
     }
   }, [projectId, addReceiptImage, updateReceipt, receipt]);
@@ -142,7 +142,8 @@ const ReceiptDetailsPage = () => {
             if (result.result.status === 'Success') {
               imageFileExist = true;
             } else {
-              alert(
+              Alert.alert(
+                'Error',
                 `Error retrieving receipt image: ${result.result.msg}. This may be due to no internet connectivity. Please try again later.`,
               );
             }

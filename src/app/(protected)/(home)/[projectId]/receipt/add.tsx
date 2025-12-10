@@ -151,6 +151,8 @@ const AddReceiptPage = () => {
         if (addLineItemResult.status !== 'Success') {
           Alert.alert('Error', 'Unable to add line item for receipt.');
           console.log('Error adding line item for receipt:', addLineItemResult);
+          router.back();
+          return;
         }
       }
     }

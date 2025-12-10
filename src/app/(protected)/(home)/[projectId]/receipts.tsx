@@ -20,7 +20,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, TextInput } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, TextInput } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { KeyboardAvoidingView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -98,7 +98,7 @@ const ProjectReceiptsPage = () => {
         // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
         const imageAddResult = await addReceiptImage(assetUri, projectId, 'photo', 'receipt');
         if (imageAddResult.status !== 'Success') {
-          alert(`Unable to add receipt image: ${JSON.stringify(imageAddResult)}`);
+          Alert.alert('Error', `Unable to add receipt image: ${JSON.stringify(imageAddResult)}`);
           return;
         }
 
@@ -126,7 +126,8 @@ const ProjectReceiptsPage = () => {
           newReceipt.id = response.id;
           console.log('Project receipt successfully added:', newReceipt.imageId);
         } else {
-          alert(
+          Alert.alert(
+            'Error',
             `Unable to insert Project receipt: ${JSON.stringify(newReceipt.imageId)} - ${JSON.stringify(
               response,
             )}`,

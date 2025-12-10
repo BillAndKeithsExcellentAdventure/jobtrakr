@@ -5,7 +5,7 @@ import { useColors } from '@/src/context/ColorsContext';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 
 import SwipeableInvoiceItem from '@/src/components/SwipeableInvoiceItem';
@@ -91,7 +91,7 @@ const ProjectInvoicesPage = () => {
         // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
         const imageAddResult = await addInvoiceImage(assetUri, projectId, 'photo', 'invoice');
         if (imageAddResult.status !== 'Success') {
-          alert(`Unable to add invoice image: ${JSON.stringify(imageAddResult)}`);
+          Alert.alert('Error', `Unable to add invoice image: ${JSON.stringify(imageAddResult)}`);
           return;
         }
 
@@ -120,7 +120,8 @@ const ProjectInvoicesPage = () => {
           newInvoice.id = response.id;
           console.log('Project invoice successfully added:', newInvoice.imageId);
         } else {
-          alert(
+          Alert.alert(
+            'Error',
             `Unable to insert Project invoice: ${JSON.stringify(newInvoice.imageId)} - ${JSON.stringify(
               response,
             )}`,
@@ -137,7 +138,7 @@ const ProjectInvoicesPage = () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
     if (permissionResult.granted === false) {
-      alert("You've refused to allow this app to access your camera!");
+      Alert.alert('Info', "You've refused to allow this app to access your camera!");
       return;
     }
 
