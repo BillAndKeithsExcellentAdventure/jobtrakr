@@ -178,6 +178,7 @@ const SetAppSettingScreen = () => {
           <TextField
             label="Email"
             placeholder="Email"
+            keyboardType="email-address"
             value={String(settings.email ?? '')}
             onChangeText={(text) => handleChange('email', text)}
             onBlur={handleSave}
