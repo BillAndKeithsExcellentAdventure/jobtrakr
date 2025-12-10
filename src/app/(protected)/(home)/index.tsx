@@ -373,11 +373,17 @@ export default function ProjectHomeScreen() {
                   <Text text="ProjectHound!" txtSize="xl" />
                 </View>
                 <Text
-                  text="Before we can start helping you manage project costs we must know what cost items you want to track. 
-                You can import your own work items, choose one we provide, or manually create your own within this application.
-                If you want to get more information on how to set up your cost codes please visit our support site."
+                  style={{ marginBottom: 10 }}
+                  text="Before we can start helping you manage project costs we must know what cost items you want to track."
                 />
-
+                <Text
+                  style={{ marginBottom: 10 }}
+                  text="You can import your own work items, choose one we provide, or manually create your own within this application."
+                />
+                <Text
+                  style={{ marginBottom: 10 }}
+                  text="If you want to get more information on how to set up your cost items please visit our support site."
+                />
                 <ActionButton
                   style={{ zIndex: 1, marginTop: 10, width: '95%', maxWidth: 400 }}
                   onPress={() => Linking.openURL('https://docs.projecthound.biz/setup')}
