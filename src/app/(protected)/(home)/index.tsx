@@ -223,6 +223,8 @@ export default function ProjectHomeScreen() {
         router.push('/appSettings/SetAppSettings');
       } else if (item === 'Invite') {
         router.push({ pathname: '/(protected)/(home)/InviteUser' });
+      } else if (item === 'About') {
+        router.push({ pathname: '/(protected)/(home)/about' });
       } else if (item === 'Logout') {
         signOut();
         router.replace('/sign-in');
@@ -278,6 +280,13 @@ export default function ProjectHomeScreen() {
             } as ActionButtonProps,
           ]
         : []),
+      {
+        icon: <AntDesign name="infocircle" size={28} color={colors.iconColor} />,
+        label: 'About',
+        onPress: (e, actionContext) => {
+          handleMenuItemPress('About', actionContext);
+        },
+      },
       {
         icon: <Entypo name="log-out" size={28} color={colors.iconColor} />,
         label: 'Logout',
