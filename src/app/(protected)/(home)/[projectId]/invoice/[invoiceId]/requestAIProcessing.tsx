@@ -411,22 +411,24 @@ const RequestAIProcessingPage = () => {
   }, [someCostItemsSpecified, allCostItemsSpecified, saveInvoiceProcessing]);
 
   const handleBackPress = useCallback(() => {
+    if (fetchingData) return;
+
     Alert.alert(
       'Leave Without Saving?',
       'Are you sure you want to leave this page without saving your changes?',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'No, Stay', style: 'cancel' },
         {
-          text: 'Leave',
+          text: 'Yes, Leave',
           style: 'destructive',
           onPress: () => router.back(),
         },
       ],
     );
-  }, [router]);
+  }, [router, fetchingData]);
 
   return (
-    <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={{ flex: 1 }}>
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
         options={{
           title: 'Process Invoice Image',
