@@ -3,6 +3,7 @@ import { AiLineItem } from '@/src/components/AiLineItem';
 import CostItemPickerModal from '@/src/components/CostItemPickerModal';
 import { OptionEntry } from '@/src/components/OptionList';
 import { ReceiptSummaryEditModal } from '@/src/components/ReceiptSummaryEditModal';
+import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { Text, View } from '@/src/components/Themed';
 import { API_BASE_URL } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
@@ -408,17 +409,32 @@ const RequestAIProcessingPage = () => {
     }
   }, [someCostItemsSpecified, allCostItemsSpecified, saveReceiptProcessing]);
 
-  const handleCancel = useCallback(() => {
-    router.back();
+  const handleBackPress = useCallback(() => {
+    Alert.alert(
+      'Leave Without Saving?',
+      'Are you sure you want to leave this page without saving your changes?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Leave',
+          style: 'destructive',
+          onPress: () => router.back(),
+        },
+      ],
+    );
   }, []);
 
   return (
     <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: 'Process Receipt Image', headerShown: false, gestureEnabled: false }} />
+      <Stack.Screen
+        options={{
+          title: 'Process Receipt Image',
+          headerShown: true,
+          gestureEnabled: false,
+          headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
+        }}
+      />
       <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
-        <Text txtSize="title" style={{ marginBottom: 10 }}>
-          Receipt Photo Processing
-        </Text>
         {fetchingData ? (
           <View style={{ width: '100%', gap: 20, padding: 10, alignItems: 'center' }}>
             <ActivityIndicator size="large" />
@@ -497,7 +513,6 @@ const RequestAIProcessingPage = () => {
                   onPress={handleSelectCostItem}
                 />
                 <ActionButton title={'Save'} type={'ok'} onPress={handleSaveReceiptCostItems} />
-                <ActionButton title={'Cancel'} type={'cancel'} onPress={handleCancel} />
               </>
             ) : (
               <>
