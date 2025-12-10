@@ -7,11 +7,10 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { useColors } from '@/src/context/ColorsContext';
 import * as Application from 'expo-application';
 import * as WebBrowser from 'expo-web-browser';
-import { LegalModal } from 'react-native-legal';
+import { ReactNativeLegal } from 'react-native-legal';
 
 export default function AboutScreen() {
   const colors = useColors();
-  const [legalModalVisible, setLegalModalVisible] = React.useState(false);
 
   const appName = 'ProjectHound';
   const appVersion = Application.nativeApplicationVersion || '1.0.4';
@@ -21,7 +20,7 @@ export default function AboutScreen() {
   };
 
   const handleOpenLicenses = () => {
-    setLegalModalVisible(true);
+    ReactNativeLegal.launchLicenseListScreen('Open Source Software Licenses');
   };
 
   return (
@@ -60,8 +59,6 @@ export default function AboutScreen() {
           />
         </View>
       </ScrollView>
-
-      <LegalModal visible={legalModalVisible} onDismiss={() => setLegalModalVisible(false)} />
     </SafeAreaView>
   );
 }
@@ -96,3 +93,4 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
 });
+

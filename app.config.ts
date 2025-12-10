@@ -159,6 +159,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-web-browser',
     'expo-asset',
     'expo-build-properties',
+    'react-native-legal',
   ],
   experiments: {
     typedRoutes: true,
