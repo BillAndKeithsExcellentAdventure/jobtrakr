@@ -5,7 +5,6 @@ import { Stack, useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
 import React, { useCallback, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Constants from 'expo-constants';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable } from 'react-native-gesture-handler';
 import * as Sharing from 'expo-sharing';
@@ -30,7 +29,6 @@ const Home = () => {
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const router = useRouter();
   const colors = useColors();
-  const appVersion = Constants?.expoConfig?.version ?? 'unknown';
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllRows('workItems');
   const allProjectTemplates = useAllRows('templates');
@@ -431,14 +429,6 @@ const Home = () => {
         }}
       />
 
-      <View style={{ alignItems: 'center', paddingTop: 10, backgroundColor: colors.listBackground }}>
-        <Text txtSize="title" text="Project Hound" style={{ marginBottom: 5 }} />
-        <Text
-          txtSize="standard"
-          text={`version ${appVersion}`}
-          style={{ marginBottom: 10, backgroundColor: colors.listBackground }}
-        />
-      </View>
       <View style={{ flex: 1, width: '100%', paddingHorizontal: 10, backgroundColor: colors.listBackground }}>
         <ConfigurationEntry
           label="Categories"
