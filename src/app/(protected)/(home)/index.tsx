@@ -22,6 +22,7 @@ import {
 import { useAuth, useClerk } from '@clerk/clerk-expo';
 import { AntDesign } from '@expo/vector-icons';
 import { ActionButton } from '@/src/components/ActionButton';
+import { DOCS_URL } from '@/src/constants/app-constants';
 
 function isEntry(obj: any): obj is ProjectListEntryProps {
   return typeof obj.projectName === 'string' && typeof obj.projectId === 'string';
@@ -388,7 +389,7 @@ export default function ProjectHomeScreen() {
                 />
                 <ActionButton
                   style={{ zIndex: 1, marginTop: 10, width: '95%', maxWidth: 400 }}
-                  onPress={() => Linking.openURL('https://docs.projecthound.biz/setup')}
+                  onPress={() => Linking.openURL(`${DOCS_URL}/setup`)}
                   type="action"
                   title="Open Support Site"
                 />
