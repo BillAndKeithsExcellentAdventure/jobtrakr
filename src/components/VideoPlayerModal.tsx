@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEventListener } from 'expo';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { View } from '@/src/components/Themed';
 import { useCallback, useEffect, useState } from 'react';
-import { Dimensions, Modal, Pressable, SafeAreaView, StyleSheet } from 'react-native';
+import { Dimensions, Modal, Pressable, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface VideoPlayerModalProps {
   isVisible: boolean;
@@ -21,15 +21,12 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
   useEffect(() => {
     console.log(`VideoPlayerModal useEffect isVisible: ${isVisible}`);
     console.log(`VideoPlayerModal uri: ${videoUri}`);
-    player.seekBy(0);
-    player.play();
-    setIsPlaying(true);
-
-    return () => {
-      console.log(`VideoPlayerModal cleanup isVisible: ${isVisible}`);
-      player.pause();
-    };
-  }, []);
+    if (isVisible && videoUri) {
+      player.seekBy(0);
+      player.play();
+      setIsPlaying(true);
+    }
+  }, [isVisible, videoUri]);
 
   useEffect(() => {
     if (!isVisible) {
