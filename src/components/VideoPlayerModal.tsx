@@ -52,10 +52,10 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
     if (player) {
       console.log(`handlePlayPause ${isPlaying}`);
       if (isPlaying) {
-        await player.pause();
+        player.pause();
         setIsPlaying(false);
       } else {
-        await player.play();
+        player.play();
         setIsPlaying(true);
       }
     }
