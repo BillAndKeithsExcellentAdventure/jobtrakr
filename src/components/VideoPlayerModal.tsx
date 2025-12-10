@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEvent, useEventListener } from 'expo';
+import { useEventListener } from 'expo';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { View } from '@/src/components/Themed';
 import { useCallback, useEffect, useState } from 'react';
@@ -13,13 +13,10 @@ interface VideoPlayerModalProps {
 
 export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, videoUri, onClose }) => {
   const [isPlaying, setIsPlaying] = useState(true);
-  const [position, setPosition] = useState(0);
-  const [playerStatus, setPlayerStatus] = useState('');
-  const [playerError, setPlayerError] = useState('');
+  const [showControls, setShowControls] = useState(true);
   const player = useVideoPlayer(videoUri, (player) => {
     player.loop = true;
   });
-  const { status, error } = useEvent(player, 'statusChange', { status: player.status });
 
   useEffect(() => {
     console.log(`VideoPlayerModal useEffect isVisible: ${isVisible}`);
@@ -30,48 +27,45 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
 
     return () => {
       console.log(`VideoPlayerModal cleanup isVisible: ${isVisible}`);
+      player.pause();
     };
   }, []);
 
   useEffect(() => {
     if (!isVisible) {
+      player.pause();
       setIsPlaying(false);
     }
   }, [isVisible]);
 
-  const formatTime = (timeInMillis: number) => {
-    const totalSeconds = Math.floor(timeInMillis / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  //   const handlePlaybackStatusUpdate = (status: string) => {
-  //     if (status.isLoaded) {
-  //       setStatus(status);
-  //       setDuration(status.durationMillis || 0);
-  //       setPosition(status.positionMillis || 0);
-  //       setIsPlaying(status.isPlaying);
-  //     }
-  //   };
+  const handleClose = useCallback(() => {
+    player.pause();
+    setIsPlaying(false);
+    onClose();
+  }, [player, onClose]);
 
   const handlePlayPause = useCallback(async () => {
     if (player) {
       console.log(`handlePlayPause ${isPlaying}`);
       if (isPlaying) {
         await player.pause();
-        setIsPlaying(true);
+        setIsPlaying(false);
       } else {
         await player.play();
-        setIsPlaying(false);
+        setIsPlaying(true);
       }
     }
   }, [isPlaying, player]);
 
+  const handleVideoPress = useCallback(() => {
+    setShowControls((prev) => !prev);
+  }, []);
+
   useEventListener(player, 'statusChange', ({ status, error }) => {
-    setPlayerStatus(status);
-    setPlayerError(error?.message || '');
     console.log('Player status changed: ', status);
+    if (error) {
+      console.error('Video player error:', error.message);
+    }
   });
 
   useEventListener(player, 'sourceChange', () => {
@@ -81,24 +75,26 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
   });
 
   return (
-    <Modal visible={isVisible} transparent={true} animationType="fade">
+    <Modal visible={isVisible} transparent={true} animationType="fade" onRequestClose={handleClose}>
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Pressable
-            onPress={() => {
-              onClose();
-              player.pause();
-              setIsPlaying(false);
-            }}
-            style={styles.closeButton}
-          >
-            <Ionicons name="close" size={28} color="white" />
+        {/* Close button - top right */}
+        {showControls && (
+          <Pressable onPress={handleClose} style={styles.closeButton} hitSlop={8}>
+            <Ionicons name="close-circle" size={40} color="white" />
           </Pressable>
-        </View>
+        )}
 
-        <View style={styles.videoContainer}>
+        {/* Video container */}
+        <Pressable style={styles.videoContainer} onPress={handleVideoPress}>
           <VideoView style={styles.video} player={player} allowsFullscreen />
-        </View>
+        </Pressable>
+
+        {/* Play/Pause button - bottom center */}
+        {showControls && (
+          <Pressable onPress={handlePlayPause} style={styles.playPauseButton} hitSlop={8}>
+            <Ionicons name={isPlaying ? 'pause-circle' : 'play-circle'} size={64} color="white" />
+          </Pressable>
+        )}
       </SafeAreaView>
     </Modal>
   );
@@ -109,20 +105,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'black',
   },
-  header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 60,
-    zIndex: 10,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-  },
   closeButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
     padding: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
   },
   videoContainer: {
     flex: 1,
@@ -131,14 +121,14 @@ const styles = StyleSheet.create({
   },
   video: {
     width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height - 120,
+    height: Dimensions.get('window').height,
   },
-  playButton: {
+  playPauseButton: {
+    position: 'absolute',
+    bottom: 40,
     alignSelf: 'center',
-    padding: 10,
-  },
-  timeText: {
-    color: 'white',
-    fontSize: 12,
+    padding: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 32,
   },
 });
