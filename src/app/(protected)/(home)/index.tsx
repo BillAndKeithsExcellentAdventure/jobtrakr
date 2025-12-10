@@ -280,7 +280,7 @@ export default function ProjectHomeScreen() {
           ]
         : []),
       {
-        icon: <AntDesign name="infocirlce" size={28} color={colors.iconColor} />,
+        icon: <AntDesign name="infocircle" size={28} color={colors.iconColor} />,
         label: 'About',
         onPress: (e, actionContext) => {
           handleMenuItemPress('About', actionContext);
