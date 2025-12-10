@@ -422,6 +422,7 @@ const RequestAIProcessingPage = () => {
         },
       ],
     );
+    // router is from outer scope and stable across renders
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
