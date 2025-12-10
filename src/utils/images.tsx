@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import { FailedToUploadData, useAddItemCallback } from '@/src/tbStores/UploadSyncStore';
+import { API_BASE_URL } from '../constants/app-constants';
 
 type ImageResult = { status: 'Success' | 'Error'; id: string; uri?: string | undefined; msg: string };
 
@@ -17,23 +18,21 @@ interface ImageDetails {
   deviceTypes: string;
 }
 
-const BACKEND_BASE_URL = 'https://projecthoundbackend.keith-m-bertram.workers.dev';
-
 export type mediaType = 'photo' | 'video';
 export type resourceType = 'receipt' | 'invoice' | 'photo';
 
 const getAddImageEndPointUrl = (resourceType: resourceType, mediaType: mediaType) => {
   switch (resourceType) {
     case 'receipt':
-      return `${BACKEND_BASE_URL}/addReceipt`;
+      return `${API_BASE_URL}/addReceipt`;
     case 'invoice':
-      return `${BACKEND_BASE_URL}/addInvoice`;
+      return `${API_BASE_URL}/addInvoice`;
     case 'photo': {
       if (mediaType === 'video') {
-        return `${BACKEND_BASE_URL}/addVideo`;
+        return `${API_BASE_URL}/addVideo`;
       }
 
-      return `${BACKEND_BASE_URL}/addPhoto`;
+      return `${API_BASE_URL}/addPhoto`;
     }
     default:
       throw new Error('Invalid resource type');
@@ -43,11 +42,11 @@ const getAddImageEndPointUrl = (resourceType: resourceType, mediaType: mediaType
 const getFetchImageEndPointUrl = (resourceType: resourceType) => {
   switch (resourceType) {
     case 'receipt':
-      return `${BACKEND_BASE_URL}/fetchReceipt`;
+      return `${API_BASE_URL}/fetchReceipt`;
     case 'invoice':
-      return `${BACKEND_BASE_URL}/fetchInvoice`;
+      return `${API_BASE_URL}/fetchInvoice`;
     case 'photo':
-      return `${BACKEND_BASE_URL}/fetchPhoto`;
+      return `${API_BASE_URL}/fetchPhoto`;
     default:
       throw new Error('Invalid resource type');
   }
@@ -137,35 +136,26 @@ const uploadImage = async (
   localImageUrl: string,
 ): Promise<ImageResult> => {
   try {
-    // Create FormData instance
     const formData = new FormData();
 
-    // Add the text fields
     formData.append('id', details.id);
     formData.append('userId', details.userId);
     formData.append('organizationId', details.orgId);
     formData.append('projectId', details.projectId);
     formData.append('longitude', details.longitude.toString());
-    formData.append('longitude', details.latitude.toString());
+    formData.append('latitude', details.latitude.toString()); // fixed duplicate key
     formData.append('deviceTypes', details.deviceTypes);
 
-    // Add the image file
     const uri = Platform.OS === 'ios' ? localImageUrl.replace('file://', '') : localImageUrl;
     const filename = localImageUrl.split('/').pop() || 'image.jpg';
-    //    const match = /\.(\w+)$/.exec(filename);
-    //    let type = match ? `image/${match[1]}` : 'image/jpeg';
-    //    if (type === 'image/jpg') {
-    //      type = 'image/jpeg'; // Normalize jpg to jpeg
-    //    }
 
     let type = '';
     if (mediaType === 'video') {
-      type = 'video/mp4'; // Ensure video type is set correctly
+      type = 'video/mp4';
     } else if (mediaType === 'photo') {
-      type = 'image/jpeg'; // Ensure photo type is set correctly
+      type = 'image/jpeg';
     }
 
-    console.log('Uploading image type:', type);
     formData.append('image', {
       uri,
       name: filename,
@@ -175,27 +165,47 @@ const uploadImage = async (
     const endPointUrl = getAddImageEndPointUrl(resourceType, mediaType);
     console.log('Uploading image to:', endPointUrl);
 
+    // Do not set multipart Content-Type header here — fetch will set the boundary
     const response = await fetch(endPointUrl, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data',
-      },
+      } as any,
       body: formData,
     });
 
     if (!response.ok) {
-      const errorBody = await response.text();
-      console.error('Error response:', errorBody);
-      throw new Error(`HTTP error! status: ${response.status}. Response: ${errorBody}`);
+      let errorBody = '';
+      try {
+        errorBody = await response.text();
+      } catch {
+        // ignore
+      }
+      console.error('Upload failed. HTTP:', response.status, 'Body:', errorBody);
+      return {
+        status: 'Error',
+        id: details.id,
+        msg: `Upload failed. HTTP ${response.status}. ${errorBody || 'No response body.'}`,
+      };
     }
 
-    const data = await response.json();
+    // Attempt to parse JSON but tolerate empty body
+    let data: any = null;
+    try {
+      data = await response.json();
+    } catch {
+      // no JSON — acceptable
+    }
+
     console.log('Image uploaded successfully:', data);
     return { status: 'Success', id: details.id, uri: localImageUrl, msg: 'Successfully uploaded image' };
   } catch (error) {
     console.error('Error uploading image:', error);
-    throw error;
+    return {
+      status: 'Error',
+      id: details.id,
+      msg: `Error uploading image: ${(error as Error)?.message ?? String(error)}`,
+    };
   }
 };
 
