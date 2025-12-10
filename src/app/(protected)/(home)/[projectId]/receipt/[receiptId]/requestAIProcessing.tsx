@@ -422,9 +422,7 @@ const RequestAIProcessingPage = () => {
         },
       ],
     );
-    // router is from outer scope and stable across renders
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [router]);
 
   return (
     <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={{ flex: 1 }}>
