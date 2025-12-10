@@ -8,6 +8,7 @@ import { useColors } from '@/src/context/ColorsContext';
 import * as Application from 'expo-application';
 import * as WebBrowser from 'expo-web-browser';
 import { ReactNativeLegal } from 'react-native-legal';
+import { DOCS_URL } from '@/src/constants/app-constants';
 
 export default function AboutScreen() {
   const colors = useColors();
@@ -16,7 +17,7 @@ export default function AboutScreen() {
   const appVersion = Application.nativeApplicationVersion || '1.0.4';
 
   const handleOpenDocs = async () => {
-    await WebBrowser.openBrowserAsync('https://docs.projecthound.biz');
+    await WebBrowser.openBrowserAsync(`${DOCS_URL}/home`);
   };
 
   const handleOpenLicenses = () => {

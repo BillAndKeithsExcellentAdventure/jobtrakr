@@ -7,8 +7,9 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Stack, useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, GestureResponderEvent, Linking, Platform, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, GestureResponderEvent, Platform, StyleSheet } from 'react-native';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -398,7 +399,11 @@ export default function ProjectHomeScreen() {
                 />
                 <ActionButton
                   style={{ zIndex: 1, marginTop: 10, width: '95%', maxWidth: 400 }}
-                  onPress={() => Linking.openURL(`${DOCS_URL}/setup`)}
+                  onPress={async () =>
+                    await WebBrowser.openBrowserAsync(
+                      `${DOCS_URL}/configuration/vendors-suppliers/index.html`,
+                    )
+                  } //Linking.openURL(`${DOCS_URL}/setup`)}
                   type="action"
                   title="Open Support Site"
                 />
