@@ -46,15 +46,15 @@ export default function AboutScreen() {
 
         <View style={styles.buttonContainer}>
           <ActionButton
-            title="View OSS Licenses"
-            type="action"
-            onPress={handleOpenLicenses}
-            style={styles.button}
-          />
-          <ActionButton
             title="Open Help Documentation"
             type="action"
             onPress={handleOpenDocs}
+            style={styles.button}
+          />
+          <ActionButton
+            title="View OSS Licenses"
+            type="action"
+            onPress={handleOpenLicenses}
             style={styles.button}
           />
         </View>
