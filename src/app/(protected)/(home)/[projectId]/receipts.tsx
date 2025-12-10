@@ -261,7 +261,6 @@ const ProjectReceiptsPage = () => {
                       style={{
                         flex: 1,
                         width: '100%',
-                        backgroundColor: colors.listBackground,
                       }}
                     >
                       <FlatList

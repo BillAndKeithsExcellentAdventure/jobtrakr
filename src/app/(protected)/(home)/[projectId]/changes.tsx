@@ -152,12 +152,12 @@ const ChangeOrdersScreen = () => {
           <Text>Loading...</Text>
         ) : !isAppSettingsComplete ? (
           <View style={styles.messageContainer}>
-            <Text txtSize="sub-title" style={{ textAlign: 'center', color: colors.text }}>
+            <Text txtSize="sub-title" style={{ color: colors.text }}>
               Before creating change orders, the name and email of your company's owner or primary contact are
               required.
             </Text>
-            <Text style={{ textAlign: 'center', color: colors.text }}>
-              Please complete the company settings to continue.
+            <Text txtSize="sub-title" style={{ color: colors.text }}>
+              Please make sure the required data are defined in the company settings to continue.
             </Text>
             <ActionButton
               style={{ minWidth: 200 }}
@@ -168,12 +168,12 @@ const ChangeOrdersScreen = () => {
           </View>
         ) : !isProjectOwnerInfoComplete ? (
           <View style={styles.messageContainer}>
-            <Text txtSize="sub-title" style={{ textAlign: 'center', color: colors.text }}>
+            <Text txtSize="sub-title" style={{ color: colors.text }}>
               Before creating change orders, the name and email of the project's owner or primary contact are
               required.
             </Text>
-            <Text style={{ textAlign: 'center', color: colors.text }}>
-              Please update the project information to include the owner's name and email.
+            <Text txtSize="sub-title" style={{ color: colors.text }}>
+              Please make sure the required data are defined in the project info to continue.
             </Text>
             <ActionButton
               style={{ minWidth: 200 }}
