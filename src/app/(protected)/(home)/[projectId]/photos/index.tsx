@@ -196,7 +196,6 @@ const ProjectPhotosPage = () => {
           projectName={projectName}
           onMediaCaptured={handlePhotoCaptured}
           onClose={() => setIsCameraVisible(false)}
-          showPreview={false}
         ></ProjectCameraView>
       )}
     </SafeAreaView>
@@ -218,7 +217,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 10,
   },
-
 });
 
 export default ProjectPhotosPage;

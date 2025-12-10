@@ -295,12 +295,14 @@ export default function ProjectHomeScreen() {
           style={{
             minWidth: 30,
             minHeight: 30,
+            alignItems: 'center',
             flexDirection: 'row',
             backgroundColor: 'transparent',
             marginRight: Platform.OS === 'android' ? 16 : 0,
           }}
         >
           <Pressable
+            style={{ alignItems: 'center' }}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             onPress={() => {
               setHeaderMenuModalVisible(!headerMenuModalVisible);

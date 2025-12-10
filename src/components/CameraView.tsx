@@ -2,18 +2,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { CameraType, CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
 import React, { useEffect, useRef, useState } from 'react';
-import { Image, Modal, Platform, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image, Modal, Platform, StyleSheet } from 'react-native';
 import { Text, View } from '@/src/components/Themed';
 import ZoomPicker from '@/src/components/ZoomPicker';
 import { ActionButton } from '@/src/components/ActionButton';
 import { useColors } from '@/src/context/ColorsContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable } from 'react-native-gesture-handler';
+import * as Haptics from 'expo-haptics';
 
 interface ProjectCameraViewProps {
   visible: boolean;
   projectName: string;
   onMediaCaptured: (asset: MediaLibrary.Asset) => void;
   onClose: () => void;
-  showPreview?: boolean; // Add new prop with default true
   showVideo?: boolean; // Add new prop
 }
 
@@ -22,7 +24,6 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   projectName,
   onMediaCaptured,
   onClose,
-  showPreview = true, // Set default value
   showVideo = true, // Add default value
 }) => {
   // Move ALL hooks to the top, before any conditional logic
@@ -37,6 +38,7 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   const [recordingTime, setRecordingTime] = useState(0);
   const cameraRef = useRef<CameraView>(null);
   const colors = useColors();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -96,15 +98,10 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
     if (!cameraRef.current) return;
 
     try {
-      const photo = await cameraRef.current.takePictureAsync({ exif: true });
+      const photo = await cameraRef.current.takePictureAsync({ exif: true, shutterSound: true });
       if (photo) {
-        if (showPreview) {
-          setPreviewUri(photo.uri);
-        } else {
-          // Direct save without preview
-          const asset = await MediaLibrary.createAssetAsync(photo.uri);
-          onMediaCaptured(asset);
-        }
+        const asset = await MediaLibrary.createAssetAsync(photo.uri);
+        onMediaCaptured(asset);
       }
     } catch (error) {
       console.error('Error taking picture:', error);
@@ -115,6 +112,10 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
     if (!cameraRef.current) return;
 
     console.log('Starting recording...');
+
+    // Haptic feedback for video recording start
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
     setIsRecording(true);
     try {
       console.log('Before recordAsync...');
@@ -142,7 +143,10 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
     if (!cameraRef.current) return;
     console.log('Stopping recording...');
 
-    await cameraRef.current.stopRecording();
+    // Haptic feedback for video recording stop
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    cameraRef.current.stopRecording();
     console.log('After Stopping recording...');
 
     if (videoPromise) {
@@ -185,6 +189,9 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   };
 
   const processCameraAction = async () => {
+    // Haptic feedback when button is pressed
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
     if (cameraModeSwitch === false) {
       await takePicture();
     } else {
@@ -205,97 +212,101 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true}>
-      <SafeAreaView style={styles.container}>
+    <Modal visible={visible} animationType="slide" transparent={false} statusBarTranslucent={false}>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
           <Text txtSize="screen-header">{projectName}</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+          <Pressable onPress={onClose} style={styles.closeButton}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text text="Close" txtSize="screen-header" style={{ marginRight: 5 }} />
               <Ionicons name="close" size={28} color={colors.iconColor} />
             </View>
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {previewUri ? (
           <View style={styles.previewContainer}>
             <Image source={{ uri: previewUri }} style={styles.preview} />
             <View style={styles.previewButtons}>
-              <TouchableOpacity style={styles.previewButton} onPress={handleCancelPreview}>
+              <Pressable style={styles.previewButton} onPress={handleCancelPreview}>
                 <Ionicons name="close-circle" size={40} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.previewButton} onPress={handleSavePreview}>
+              </Pressable>
+              <Pressable style={styles.previewButton} onPress={handleSavePreview}>
                 <Ionicons name="checkmark-circle" size={40} color="#4CAF50" />
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
         ) : (
-          <CameraView
-            ref={cameraRef}
-            style={styles.camera}
-            facing={type}
-            zoom={zoom}
-            mode={cameraModeSwitch ? 'video' : 'picture'}
-          >
-            {Platform.OS === 'android' && (
+          <>
+            <CameraView
+              ref={cameraRef}
+              style={styles.camera}
+              facing={type}
+              zoom={zoom}
+              mode={cameraModeSwitch ? 'video' : 'picture'}
+            />
+
+            {/* Absolute overlay for controls — CameraView must not have children */}
+            <View pointerEvents="box-none" style={styles.overlayContainer}>
               <View style={styles.zoomContainer}>
                 <ZoomPicker value={zoom} onZoomChange={(zoomFactor: number) => setZoom(zoomFactor)} />
               </View>
-            )}
-            <View style={[styles.buttonContainer]}>
-              <TouchableOpacity style={[styles.button, { marginTop: 10 }]} onPress={toggleCameraType}>
-                <Ionicons name="camera-reverse" size={30} color="white" />
-              </TouchableOpacity>
 
-              <View style={[styles.captureContainer, { backgroundColor: 'transparent' }]}>
-                {isRecording && <Text style={styles.timerText}>{formatTime(recordingTime)}</Text>}
-                <TouchableOpacity
-                  style={[
-                    styles.button,
-                    styles.captureButton,
-                    isRecording && styles.recording,
-                    { marginTop: 10 },
-                  ]}
-                  onPress={processCameraAction}
-                >
-                  {cameraModeSwitch === true ? (
-                    <Ionicons name={isRecording ? 'stop-circle' : 'videocam'} size={30} color="white" />
-                  ) : (
-                    <Ionicons name="camera" size={36} color="white" />
-                  )}
-                </TouchableOpacity>
-              </View>
+              <View style={[styles.buttonContainer]}>
+                <Pressable style={[styles.button, { marginTop: 10 }]} onPress={toggleCameraType}>
+                  <Ionicons name="camera-reverse" size={30} color="white" />
+                </Pressable>
 
-              {showVideo && (
-                <View
-                  style={{ flexDirection: 'column', alignItems: 'center', backgroundColor: 'transparent' }}
-                >
-                  <TouchableOpacity
+                <View style={[styles.captureContainer, { backgroundColor: 'transparent' }]}>
+                  {isRecording && <Text style={styles.timerText}>{formatTime(recordingTime)}</Text>}
+                  <Pressable
                     style={[
-                      styles.cameraModeButton,
-                      { marginTop: 10, width: 70 },
-                      !cameraModeSwitch && { backgroundColor: '#007AFF' },
+                      styles.button,
+                      styles.captureButton,
+                      isRecording && styles.recording,
+                      { marginTop: 10 },
                     ]}
-                    onPress={onSetPictureMode}
+                    onPress={processCameraAction}
                   >
-                    <Text style={styles.buttonText}>Picture</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.cameraModeButton,
-                      { marginTop: 10, width: 70 },
-                      cameraModeSwitch && { backgroundColor: '#007AFF' },
-                    ]}
-                    onPress={onSetVideoMode}
-                  >
-                    <Text style={styles.buttonText}>Video</Text>
-                  </TouchableOpacity>
+                    {cameraModeSwitch === true ? (
+                      <Ionicons name={isRecording ? 'stop-circle' : 'videocam'} size={30} color="white" />
+                    ) : (
+                      <Ionicons name="camera" size={36} color="white" />
+                    )}
+                  </Pressable>
                 </View>
-              )}
+
+                {showVideo && (
+                  <View
+                    style={{ flexDirection: 'column', alignItems: 'center', backgroundColor: 'transparent' }}
+                  >
+                    <Pressable
+                      style={[
+                        styles.cameraModeButton,
+                        { marginTop: 10, width: 70 },
+                        !cameraModeSwitch && { backgroundColor: '#007AFF' },
+                      ]}
+                      onPress={onSetPictureMode}
+                    >
+                      <Text style={styles.buttonText}>Picture</Text>
+                    </Pressable>
+                    <Pressable
+                      style={[
+                        styles.cameraModeButton,
+                        { marginTop: 10, width: 70 },
+                        cameraModeSwitch && { backgroundColor: '#007AFF' },
+                      ]}
+                      onPress={onSetVideoMode}
+                    >
+                      <Text style={styles.buttonText}>Video</Text>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
             </View>
-          </CameraView>
+          </>
         )}
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 };
@@ -397,5 +408,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     padding: 5,
     borderRadius: 5,
+  },
+  overlayContainer: {
+    position: 'absolute',
+    top: 130,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    zIndex: 10,
   },
 });
