@@ -18,22 +18,29 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
     player.loop = true;
   });
 
+  useEventListener(player, 'statusChange', ({ status, error }) => {
+    console.log('Player status changed: ', status);
+    if (error) {
+      console.error('Video player error:', error.message);
+    }
+  });
+
+  useEventListener(player, 'sourceChange', () => {
+    console.log('Video metadata loaded, starting playback...');
+    player.play();
+    setIsPlaying(true);
+  });
+
   useEffect(() => {
-    console.log(`VideoPlayerModal useEffect isVisible: ${isVisible}`);
-    console.log(`VideoPlayerModal uri: ${videoUri}`);
-    if (isVisible && videoUri) {
+    if (isVisible) {
       player.seekBy(0);
       player.play();
       setIsPlaying(true);
-    }
-  }, [isVisible, videoUri]);
-
-  useEffect(() => {
-    if (!isVisible) {
+    } else {
       player.pause();
       setIsPlaying(false);
     }
-  }, [isVisible]);
+  }, [isVisible, player]);
 
   const handleClose = useCallback(() => {
     player.pause();
@@ -57,19 +64,6 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
   const handleVideoPress = useCallback(() => {
     setShowControls((prev) => !prev);
   }, []);
-
-  useEventListener(player, 'statusChange', ({ status, error }) => {
-    console.log('Player status changed: ', status);
-    if (error) {
-      console.error('Video player error:', error.message);
-    }
-  });
-
-  useEventListener(player, 'sourceChange', () => {
-    console.log('Video metadata loaded, starting playback...');
-    player.play();
-    setIsPlaying(true);
-  });
 
   return (
     <Modal visible={isVisible} transparent={true} animationType="fade" onRequestClose={handleClose}>
