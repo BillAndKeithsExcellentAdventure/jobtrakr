@@ -17,11 +17,12 @@ import {
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, TextInput } from 'react-native';
-import { FlatList } from 'react-native-gesture-handler';
+import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { KeyboardAvoidingView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -241,20 +242,35 @@ const ProjectReceiptsPage = () => {
 
                 <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding" keyboardVerticalOffset={100}>
                   <View style={{ backgroundColor: colors.listBackground, padding: 5 }}>
-                    <TextInput
-                      style={[
-                        styles.filterInput,
-                        {
-                          borderColor: colors.border,
-                          backgroundColor: colors.background,
-                          color: colors.text,
-                        },
-                      ]}
-                      placeholder="Filter by vendor..."
-                      placeholderTextColor={colors.border}
-                      value={vendorFilter}
-                      onChangeText={setVendorFilter}
-                    />
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        borderWidth: 1,
+                        borderRadius: 8,
+                        borderColor: colors.border,
+                        paddingLeft: 10,
+                        paddingRight: 5,
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <TextInput
+                        style={[
+                          styles.filterInput,
+                          {
+                            backgroundColor: colors.background,
+                            color: colors.text,
+                          },
+                        ]}
+                        placeholder="Filter by vendor..."
+                        placeholderTextColor={colors.textPlaceholder}
+                        value={vendorFilter}
+                        onChangeText={setVendorFilter}
+                      />
+                      <Pressable onPress={() => setVendorFilter('')}>
+                        <MaterialIcons name="clear" size={24} color={colors.iconColor} />
+                      </Pressable>
+                    </View>
                   </View>
 
                   <View style={{ flex: 1, paddingHorizontal: 5 }}>
@@ -320,9 +336,6 @@ export const styles = StyleSheet.create({
   },
   filterInput: {
     height: 40,
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
     fontSize: 16,
   },
 });
