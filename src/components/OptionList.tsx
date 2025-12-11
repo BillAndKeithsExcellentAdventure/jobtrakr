@@ -3,6 +3,7 @@ import { useColors } from '@/src/context/ColorsContext';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Platform, Pressable, StyleProp, StyleSheet, TextInput, TextStyle } from 'react-native';
 import { ActionButton } from './ActionButton';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 // Define types for the props
 export interface OptionEntry {
@@ -81,22 +82,38 @@ export default function OptionList({
       <View style={{ flex: 1 }}>
         {enableSearch && (
           <View style={[styles.searchContainer, { borderBottomColor: colors.border }]}>
-            <TextInput
-              style={[
-                styles.searchInput,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              placeholder={searchPlaceholder}
-              placeholderTextColor={colors.textPlaceholder}
-              value={searchText}
-              onChangeText={setSearchText}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                borderWidth: 1,
+                borderRadius: 8,
+                paddingLeft: 10,
+                paddingRight: 5,
+                borderColor: colors.border,
+                justifyContent: 'space-between',
+              }}
+            >
+              <TextInput
+                style={[
+                  styles.searchInput,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    color: colors.text,
+                  },
+                ]}
+                placeholder={searchPlaceholder}
+                placeholderTextColor={colors.textPlaceholder}
+                value={searchText}
+                onChangeText={setSearchText}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <Pressable onPress={() => setSearchText('')}>
+                <MaterialIcons name="clear" size={24} color={colors.iconColor} />
+              </Pressable>
+            </View>
           </View>
         )}
         <FlatList
@@ -170,12 +187,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderBottomWidth: 1,
+    gap: 8,
   },
   searchInput: {
     height: 40,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
     fontSize: 16,
   },
   emptyContainer: {
