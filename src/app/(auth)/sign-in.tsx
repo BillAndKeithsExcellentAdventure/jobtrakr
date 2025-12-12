@@ -216,7 +216,7 @@ function SignInForm() {
             }}
             type="action"
             title="Cancel Reset"
-            style={{ marginTop: 10 }}
+            style={styles.cancelButton}
           />
         )}
         {!showResetCode && (
@@ -250,6 +250,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     backgroundColor: 'transparent',
+  },
+  cancelButton: {
+    marginTop: 10,
   },
   link: {
     color: '#007AFF',
