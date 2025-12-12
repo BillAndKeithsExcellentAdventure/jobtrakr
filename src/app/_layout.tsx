@@ -11,12 +11,13 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as TinyBaseProvider } from 'tinybase/ui-react';
+import { Text, View } from '@/src/components/Themed';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -44,6 +45,28 @@ if (!CLERK_PUBLISHABLE_KEY) {
       },
     },
   ]);
+}
+
+function ClerkLoadingWrapper({
+  children,
+  colorScheme,
+}: {
+  children: React.ReactNode;
+  colorScheme: 'light' | 'dark';
+}) {
+  const { isLoaded } = useAuth();
+  const colors = colorScheme === 'dark' ? Colors.dark : Colors.light;
+
+  if (!isLoaded) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.tint} />
+        <Text txtSize="sub-title">Loading login provider...</Text>
+      </View>
+    );
+  }
+
+  return <>{children}</>;
 }
 
 export default function RootLayout() {
@@ -76,8 +99,8 @@ function RootLayoutNav() {
     <ClerkProvider tokenCache={tokenCache} publishableKey={CLERK_PUBLISHABLE_KEY}>
       <StatusBar style="auto" />
       <TinyBaseProvider>
-        <ClerkLoadingWrapper colorScheme={colorScheme}>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <ClerkLoadingWrapper colorScheme={colorScheme ?? 'light'}>
             <KeyboardProvider>
               <ColorsProvider>
                 <FocusManagerProvider>
@@ -102,32 +125,11 @@ function RootLayoutNav() {
                 </FocusManagerProvider>
               </ColorsProvider>
             </KeyboardProvider>
-          </ThemeProvider>
-        </ClerkLoadingWrapper>
+          </ClerkLoadingWrapper>
+        </ThemeProvider>
       </TinyBaseProvider>
     </ClerkProvider>
   );
-}
-
-function ClerkLoadingWrapper({
-  children,
-  colorScheme,
-}: {
-  children: React.ReactNode;
-  colorScheme: 'light' | 'dark';
-}) {
-  const { isLoaded } = useAuth();
-  const colors = colorScheme === 'dark' ? Colors.dark : Colors.light;
-
-  if (!isLoaded) {
-    return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.tint} />
-      </View>
-    );
-  }
-
-  return <>{children}</>;
 }
 
 const styles = StyleSheet.create({
