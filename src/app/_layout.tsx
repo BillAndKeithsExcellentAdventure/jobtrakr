@@ -1,4 +1,5 @@
 import { useColorScheme } from '@/src/components/useColorScheme';
+import { Colors } from '@/src/constants/Colors';
 import { ColorsProvider } from '@/src/context/ColorsContext';
 import { FocusManagerProvider } from '@/src/hooks/useFocusManager';
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
@@ -75,7 +76,7 @@ function RootLayoutNav() {
     <ClerkProvider tokenCache={tokenCache} publishableKey={CLERK_PUBLISHABLE_KEY}>
       <StatusBar style="auto" />
       <TinyBaseProvider>
-        <ClerkLoadingWrapper>
+        <ClerkLoadingWrapper colorScheme={colorScheme}>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <KeyboardProvider>
               <ColorsProvider>
@@ -108,19 +109,20 @@ function RootLayoutNav() {
   );
 }
 
-function ClerkLoadingWrapper({ children }: { children: React.ReactNode }) {
+function ClerkLoadingWrapper({
+  children,
+  colorScheme,
+}: {
+  children: React.ReactNode;
+  colorScheme: 'light' | 'dark';
+}) {
   const { isLoaded } = useAuth();
-  const colorScheme = useColorScheme();
+  const colors = colorScheme === 'dark' ? Colors.dark : Colors.light;
 
   if (!isLoaded) {
     return (
-      <View
-        style={[
-          styles.loadingContainer,
-          { backgroundColor: colorScheme === 'dark' ? '#000000' : '#ffffff' },
-        ]}
-      >
-        <ActivityIndicator size="large" color={colorScheme === 'dark' ? '#ffffff' : '#007AFF'} />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.tint} />
       </View>
     );
   }
