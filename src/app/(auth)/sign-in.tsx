@@ -4,8 +4,9 @@ import { useColors } from '@/src/context/ColorsContext';
 import { isClerkAPIResponseError, SignedIn, SignedOut, useAuth, useSignIn } from '@clerk/clerk-expo';
 import { Link, Redirect, Stack, useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Page() {
   const { orgId } = useAuth();
@@ -28,6 +29,7 @@ function SignInForm() {
   const [password, setPassword] = React.useState('');
   const [resetCode, setResetCode] = React.useState('');
   const [showResetCode, setShowResetCode] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const onForgotPasswordPress = useCallback(async () => {
     if (!isLoaded) {
@@ -191,14 +193,27 @@ function SignInForm() {
           placeholderTextColor={colors.text}
           onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
         />
-        <TextInput
-          style={{ ...styles.input, color: colors.text }}
-          value={password}
-          placeholder={showResetCode ? 'New Password' : 'Password'}
-          placeholderTextColor={colors.text}
-          secureTextEntry={true}
-          onChangeText={(password) => setPassword(password)}
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={{ ...styles.passwordInput, color: colors.text }}
+            value={password}
+            placeholder={showResetCode ? 'New Password' : 'Password'}
+            placeholderTextColor={colors.text}
+            secureTextEntry={!showPassword}
+            onChangeText={(password) => setPassword(password)}
+          />
+          <TouchableOpacity
+            onPress={() => setShowPassword(!showPassword)}
+            style={styles.eyeIcon}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons
+              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+              size={24}
+              color={colors.text}
+            />
+          </TouchableOpacity>
+        </View>
         {showResetCode && (
           <TextInput
             style={{ ...styles.input, color: colors.text }}
@@ -270,5 +285,25 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingLeft: 10,
     borderRadius: 4,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 40,
+    borderWidth: 1,
+    marginBottom: 10,
+    borderRadius: 4,
+    backgroundColor: 'transparent',
+  },
+  passwordInput: {
+    flex: 1,
+    height: 40,
+    paddingLeft: 10,
+    paddingRight: 10,
+  },
+  eyeIcon: {
+    padding: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
