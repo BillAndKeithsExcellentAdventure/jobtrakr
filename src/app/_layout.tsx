@@ -108,13 +108,13 @@ function RootLayoutNav() {
                     <GestureHandlerRootView>
                       <Stack screenOptions={{ headerShown: false }}>
                         <Stack.Screen
-                          name="(auth)"
+                          name="/(auth)/sign-in"
                           options={{
                             animation: 'none',
                           }}
                         />
                         <Stack.Screen
-                          name="(protected)"
+                          name="/(protected)/(home)/index"
                           options={{
                             animation: 'none',
                           }}

@@ -67,7 +67,7 @@ export default function SignUpScreen() {
 
   // Handle submission of verification form
   const onVerifyPress = async () => {
-    setIsLoading(true);
+    setIsProcessing(true);
 
     try {
       // Use the code the user provided to attempt verification
@@ -211,6 +211,7 @@ export default function SignUpScreen() {
           value={emailAddress}
           placeholderTextColor={colors.text}
           keyboardType="email-address"
+          autoCorrect={false}
           placeholder="Email"
           onChangeText={(email) => setEmailAddress(email)}
           editable={!isProcessing && isLoaded}
@@ -219,7 +220,7 @@ export default function SignUpScreen() {
           style={{ ...styles.input, backgroundColor: colors.neutral200 }}
           value={password}
           placeholderTextColor={colors.text}
-          placeholder="Password"
+          placeholder="Password (min. 8 characters)"
           secureTextEntry={true}
           onChangeText={(password) => setPassword(password)}
           editable={!isProcessing && isLoaded}

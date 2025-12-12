@@ -227,18 +227,15 @@ export default function ProjectHomeScreen() {
       } else if (item === 'About') {
         router.push({ pathname: '/(protected)/(home)/about' });
       } else if (item === 'Logout') {
-        signOut();
-        router.replace('/sign-in');
+        await signOut();
       }
     },
     [router, signOut],
   );
 
   const handleSignOut = useCallback(async () => {
-    await signOut(() => {
-      router.replace('/sign-in');
-    });
-  }, [signOut, router]);
+    await signOut();
+  }, [signOut]);
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(() => {
     const showInvite = orgId && orgRole.includes('admin');
@@ -292,7 +289,7 @@ export default function ProjectHomeScreen() {
         icon: <Entypo name="log-out" size={28} color={colors.iconColor} />,
         label: 'Logout',
         onPress: async (e, actionContext) => {
-          handleSignOut();
+          handleMenuItemPress('Logout', actionContext);
         },
       },
     ];

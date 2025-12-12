@@ -186,6 +186,7 @@ function SignInForm() {
           autoCapitalize="none"
           value={emailAddress}
           placeholder="Email"
+          spellCheck={false}
           keyboardType="email-address"
           placeholderTextColor={colors.text}
           onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
