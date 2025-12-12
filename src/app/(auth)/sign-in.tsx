@@ -70,7 +70,10 @@ function SignInForm() {
     } catch (error: any) {
       console.error('Error initiating password reset:', error);
       if (isClerkAPIResponseError(error)) {
-        Alert.alert('Error', error.errors[0].longMessage || 'Failed to send reset password email. Please try again.');
+        Alert.alert(
+          'Error',
+          error.errors[0].longMessage || 'Failed to send reset password email. Please try again.',
+        );
       } else {
         Alert.alert('Error', 'Failed to send reset password email. Please try again.');
       }
@@ -144,9 +147,11 @@ function SignInForm() {
         Alert.alert('Sign-In Incomplete', 'Please check your credentials and try again.');
       }
     } catch (err: any) {
-      console.error('Sign-in error:', err);
       if (isClerkAPIResponseError(err)) {
-        const errorMessage = err.errors[0].longMessage || err.errors[0].message || 'Login failed. Please check your email and password.';
+        const errorMessage =
+          err.errors[0].longMessage ||
+          err.errors[0].message ||
+          'Login failed. Please check your email and password.';
         Alert.alert('Login Failed', errorMessage, [
           {
             text: 'OK',
