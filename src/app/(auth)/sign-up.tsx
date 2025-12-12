@@ -1,12 +1,13 @@
 import { Text, TextInput, View } from '@/src/components/Themed';
 import * as React from 'react';
-import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { ActionButton } from '@/src/components/ActionButton';
 import { useColors } from '@/src/context/ColorsContext';
 import { isClerkAPIResponseError, useAuth, useSignUp } from '@clerk/clerk-expo';
 import { Link, Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function SignUpScreen() {
   const colors = useColors();
@@ -18,6 +19,7 @@ export default function SignUpScreen() {
   const [code, setCode] = React.useState('');
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [isClerkReady, setIsClerkReady] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
   const auth = useAuth();
 
   React.useEffect(() => {
@@ -216,15 +218,28 @@ export default function SignUpScreen() {
           onChangeText={(email) => setEmailAddress(email)}
           editable={!isProcessing && isLoaded}
         />
-        <TextInput
-          style={{ ...styles.input, backgroundColor: colors.neutral200 }}
-          value={password}
-          placeholderTextColor={colors.text}
-          placeholder="Password (min. 8 characters)"
-          secureTextEntry={true}
-          onChangeText={(password) => setPassword(password)}
-          editable={!isProcessing && isLoaded}
-        />
+        <View style={[styles.passwordContainer, { borderColor: colors.neutral400, backgroundColor: colors.neutral200 }]}>
+          <TextInput
+            style={{ ...styles.passwordInput, color: colors.text }}
+            value={password}
+            placeholderTextColor={colors.text}
+            placeholder="Password (min. 8 characters)"
+            secureTextEntry={!showPassword}
+            onChangeText={(password) => setPassword(password)}
+            editable={!isProcessing && isLoaded}
+          />
+          <TouchableOpacity
+            onPress={() => setShowPassword(!showPassword)}
+            style={styles.eyeIcon}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons
+              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+              size={24}
+              color={colors.text}
+            />
+          </TouchableOpacity>
+        </View>
         {isProcessing ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.tint} />
@@ -272,6 +287,25 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingLeft: 10,
     borderRadius: 4,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 40,
+    borderWidth: 1,
+    marginBottom: 10,
+    borderRadius: 4,
+  },
+  passwordInput: {
+    flex: 1,
+    height: 40,
+    paddingLeft: 10,
+    paddingRight: 10,
+  },
+  eyeIcon: {
+    padding: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingContainer: {
     alignItems: 'center',
