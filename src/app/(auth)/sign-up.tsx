@@ -218,7 +218,12 @@ export default function SignUpScreen() {
           onChangeText={(email) => setEmailAddress(email)}
           editable={!isProcessing && isLoaded}
         />
-        <View style={[styles.passwordContainer, { borderColor: colors.neutral400, backgroundColor: colors.neutral200 }]}>
+        <View
+          style={[
+            styles.passwordContainer,
+            { borderColor: colors.neutral400, backgroundColor: colors.neutral200 },
+          ]}
+        >
           <TextInput
             style={{ ...styles.passwordInput, color: colors.text }}
             value={password}
@@ -233,11 +238,7 @@ export default function SignUpScreen() {
             style={styles.eyeIcon}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons
-              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-              size={24}
-              color={colors.text}
-            />
+            <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
         {isProcessing ? (
@@ -251,7 +252,7 @@ export default function SignUpScreen() {
           </View>
         ) : (
           <ActionButton
-            type={emailAddress && password ? 'action' : 'disabled'}
+            type={emailAddress && password.length > 7 ? 'action' : 'disabled'}
             onPress={onSignUpPress}
             title="Continue"
           />

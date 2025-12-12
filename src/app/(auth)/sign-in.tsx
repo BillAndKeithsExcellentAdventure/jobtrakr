@@ -193,11 +193,16 @@ function SignInForm() {
           placeholderTextColor={colors.text}
           onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
         />
-        <View style={[styles.passwordContainer, { borderColor: colors.neutral400, backgroundColor: colors.neutral200 }]}>
+        <View
+          style={[
+            styles.passwordContainer,
+            { borderColor: colors.neutral400, backgroundColor: colors.neutral200 },
+          ]}
+        >
           <TextInput
             style={{ ...styles.passwordInput, color: colors.text }}
             value={password}
-            placeholder={showResetCode ? 'New Password' : 'Password'}
+            placeholder={showResetCode ? 'New Password (min 8 chars)' : 'Password'}
             placeholderTextColor={colors.text}
             secureTextEntry={!showPassword}
             onChangeText={(password) => setPassword(password)}
@@ -207,11 +212,7 @@ function SignInForm() {
             style={styles.eyeIcon}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons
-              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-              size={24}
-              color={colors.text}
-            />
+            <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
         {showResetCode && (
@@ -225,7 +226,11 @@ function SignInForm() {
         )}
         <ActionButton
           onPress={showResetCode ? onResetPress : onSignInPress}
-          type={emailAddress && password ? 'action' : 'disabled'}
+          type={
+            emailAddress && password.length > 7 && (showResetCode ? resetCode.length > 5 : true)
+              ? 'action'
+              : 'disabled'
+          }
           title={showResetCode ? 'Reset Password' : 'Sign In'}
         />
         {showResetCode && (
