@@ -31,7 +31,7 @@ function SignInForm() {
 
   const onForgotPasswordPress = useCallback(async () => {
     if (!isLoaded) {
-      Alert.alert('Warning', `Waiting for Clerk to load. Env is set to ${process.env.NODE_ENV}`, [
+      Alert.alert('Please Wait', 'The authentication service is loading. Please try again in a moment.', [
         {
           text: 'OK',
           onPress: () => {},
@@ -79,7 +79,7 @@ function SignInForm() {
 
   const onResetPress = useCallback(async () => {
     if (!isLoaded) {
-      Alert.alert('Warning', `Waiting for Clerk to load. Env is set to ${process.env.NODE_ENV}`, [
+      Alert.alert('Please Wait', 'The authentication service is loading. Please try again in a moment.', [
         {
           text: 'OK',
           onPress: () => {},
@@ -223,7 +223,7 @@ function SignInForm() {
           <View style={styles.forgotPasswordContainer}>
             <Text
               text="Forgot password?"
-              style={{ color: '#007AFF', backgroundColor: 'transparent' }}
+              style={[styles.link, { backgroundColor: 'transparent' }]}
               onPress={onForgotPasswordPress}
             />
           </View>
