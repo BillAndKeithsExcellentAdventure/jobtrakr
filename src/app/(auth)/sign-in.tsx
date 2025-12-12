@@ -29,11 +29,59 @@ function SignInForm() {
   const [resetCode, setResetCode] = React.useState('');
   const [showResetCode, setShowResetCode] = React.useState(false);
 
+  const onForgotPasswordPress = useCallback(async () => {
+    if (!isLoaded) {
+      Alert.alert('Please Wait', 'The authentication service is loading. Please try again in a moment.', [
+        {
+          text: 'OK',
+          onPress: () => {},
+        },
+      ]);
+      return;
+    }
+
+    if (!emailAddress) {
+      Alert.alert('Email Required', 'Please enter your email address to reset your password.');
+      return;
+    }
+
+    try {
+      // First create the reset password attempt
+      const resetAttempt = await signIn.create({
+        strategy: 'reset_password_email_code',
+        identifier: emailAddress,
+      });
+
+      if (resetAttempt.status === 'needs_first_factor') {
+        Alert.alert(
+          'Reset Password Email Sent',
+          'Please check your email for the reset code. Enter the code and your new password below.',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                setPassword(''); // Clear the password field
+                setShowResetCode(true); // Show the reset code input
+              },
+            },
+          ],
+        );
+      }
+    } catch (error: any) {
+      console.error('Error initiating password reset:', error);
+      if (isClerkAPIResponseError(error)) {
+        Alert.alert('Error', error.errors[0].longMessage || 'Failed to send reset password email. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to send reset password email. Please try again.');
+      }
+    }
+  }, [isLoaded, signIn, emailAddress]);
+
   const onResetPress = useCallback(async () => {
     if (!isLoaded) {
-      Alert.alert('Warning', `Waiting for Clerk to load. Env is set to ${process.env.NODE_ENV}`, [
+      Alert.alert('Please Wait', 'The authentication service is loading. Please try again in a moment.', [
         {
-          text: 'Close App',
+          text: 'OK',
           onPress: () => {},
         },
       ]);
@@ -49,7 +97,6 @@ function SignInForm() {
 
       // If sign-in process is complete, set the created session as active
       // and redirect the user
-
       if (signInAttempt.status === 'complete') {
         await setActive({ session: signInAttempt.createdSessionId });
         router.replace('/');
@@ -57,44 +104,14 @@ function SignInForm() {
         // If the status isn't complete, check why. User might need to
         // complete further steps.
         console.error(JSON.stringify(signInAttempt, null, 2));
+        Alert.alert('Password Reset Incomplete', 'Please check the code and try again.');
       }
     } catch (err: any) {
       if (isClerkAPIResponseError(err)) {
-        Alert.alert('Log-in Error', err.errors[0].longMessage, [
+        Alert.alert('Password Reset Error', err.errors[0].longMessage, [
           {
-            text: 'Retry',
+            text: 'OK',
             onPress: () => {},
-          },
-          {
-            text: 'Reset Password',
-            onPress: async () => {
-              try {
-                // First create the reset password attempt - use the correct strategy
-                const resetAttempt = await signIn.create({
-                  strategy: 'reset_password_email_code',
-                  identifier: emailAddress,
-                });
-
-                if (resetAttempt.status === 'needs_first_factor') {
-                  Alert.alert(
-                    'Reset Password Email Sent',
-                    'Please check your email for the reset code. Enter the code and your new password below.',
-                    [
-                      {
-                        text: 'OK',
-                        onPress: () => {
-                          setPassword(''); // Clear the password field
-                          setShowResetCode(true); // Show the reset code input
-                        },
-                      },
-                    ],
-                  );
-                }
-              } catch (error) {
-                console.error('Error initiating password reset:', error);
-                Alert.alert('Error', 'Failed to send reset password email. Please try again.');
-              }
-            },
           },
         ]);
       } else {
@@ -102,7 +119,7 @@ function SignInForm() {
         Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       }
     }
-  }, [isLoaded, signIn, resetCode, password, setActive, router, emailAddress]);
+  }, [isLoaded, signIn, resetCode, password, setActive, router]);
 
   // Handle the submission of the sign-in form
   const onSignInPress = useCallback(async () => {
@@ -117,7 +134,6 @@ function SignInForm() {
 
       // If sign-in process is complete, set the created session as active
       // and redirect the user
-
       if (signInAttempt.status === 'complete') {
         await setActive({ session: signInAttempt.createdSessionId });
         router.replace('/');
@@ -125,49 +141,21 @@ function SignInForm() {
         // If the status isn't complete, check why. User might need to
         // complete further steps.
         console.error(JSON.stringify(signInAttempt, null, 2));
+        Alert.alert('Sign-In Incomplete', 'Please check your credentials and try again.');
       }
     } catch (err: any) {
+      console.error('Sign-in error:', err);
       if (isClerkAPIResponseError(err)) {
-        Alert.alert('Log-in Error', err.errors[0].longMessage, [
+        const errorMessage = err.errors[0].longMessage || err.errors[0].message || 'Login failed. Please check your email and password.';
+        Alert.alert('Login Failed', errorMessage, [
           {
-            text: 'Retry',
+            text: 'OK',
             onPress: () => {},
-          },
-          {
-            text: 'Reset Password',
-            onPress: async () => {
-              try {
-                // First create the reset password attempt - use the correct strategy
-                const resetAttempt = await signIn.create({
-                  strategy: 'reset_password_email_code',
-                  identifier: emailAddress,
-                });
-
-                if (resetAttempt.status === 'needs_first_factor') {
-                  Alert.alert(
-                    'Reset Password Email Sent',
-                    'Please check your email for the reset code. Enter the code and your new password below.',
-                    [
-                      {
-                        text: 'OK',
-                        onPress: () => {
-                          setPassword(''); // Clear the password field
-                          setShowResetCode(true); // Show the reset code input
-                        },
-                      },
-                    ],
-                  );
-                }
-              } catch (error) {
-                console.error('Error initiating password reset:', error);
-                Alert.alert('Error', 'Failed to send reset password email. Please try again.');
-              }
-            },
           },
         ]);
       } else {
         // Handle non-Clerk API errors
-        Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+        Alert.alert('Login Failed', 'An unexpected error occurred. Please try again.');
       }
     }
   }, [isLoaded, signIn, emailAddress, password, setActive, router]);
@@ -217,8 +205,25 @@ function SignInForm() {
         <ActionButton
           onPress={showResetCode ? onResetPress : onSignInPress}
           type={emailAddress && password ? 'action' : 'disabled'}
-          title="Sign-in"
+          title={showResetCode ? 'Reset Password' : 'Sign In'}
         />
+        {showResetCode && (
+          <ActionButton
+            onPress={() => {
+              setShowResetCode(false);
+              setResetCode('');
+              setPassword('');
+            }}
+            type="action"
+            title="Cancel Reset"
+            style={styles.cancelButton}
+          />
+        )}
+        {!showResetCode && (
+          <View style={styles.forgotPasswordContainer}>
+            <Text text="Forgot password?" style={styles.link} onPress={onForgotPasswordPress} />
+          </View>
+        )}
         <View style={styles.footer}>
           <Text text="Don't have an account?" style={{ backgroundColor: 'transparent', marginRight: 20 }} />
           <Link href="/sign-up">
@@ -241,8 +246,17 @@ const styles = StyleSheet.create({
     marginTop: 20,
     backgroundColor: 'transparent',
   },
+  forgotPasswordContainer: {
+    alignItems: 'center',
+    marginTop: 10,
+    backgroundColor: 'transparent',
+  },
+  cancelButton: {
+    marginTop: 10,
+  },
   link: {
     color: '#007AFF',
+    backgroundColor: 'transparent',
   },
   input: {
     height: 40,
