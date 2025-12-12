@@ -1,7 +1,7 @@
 import { useColorScheme } from '@/src/components/useColorScheme';
 import { ColorsProvider } from '@/src/context/ColorsContext';
 import { FocusManagerProvider } from '@/src/hooks/useFocusManager';
-import { ClerkLoaded, ClerkProvider } from '@clerk/clerk-expo';
+import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
@@ -10,7 +10,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { Alert } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
@@ -75,7 +75,7 @@ function RootLayoutNav() {
     <ClerkProvider tokenCache={tokenCache} publishableKey={CLERK_PUBLISHABLE_KEY}>
       <StatusBar style="auto" />
       <TinyBaseProvider>
-        <ClerkLoaded>
+        <ClerkLoadingWrapper>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <KeyboardProvider>
               <ColorsProvider>
@@ -102,8 +102,36 @@ function RootLayoutNav() {
               </ColorsProvider>
             </KeyboardProvider>
           </ThemeProvider>
-        </ClerkLoaded>
+        </ClerkLoadingWrapper>
       </TinyBaseProvider>
     </ClerkProvider>
   );
 }
+
+function ClerkLoadingWrapper({ children }: { children: React.ReactNode }) {
+  const { isLoaded } = useAuth();
+  const colorScheme = useColorScheme();
+
+  if (!isLoaded) {
+    return (
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: colorScheme === 'dark' ? '#000000' : '#ffffff' },
+        ]}
+      >
+        <ActivityIndicator size="large" color={colorScheme === 'dark' ? '#ffffff' : '#007AFF'} />
+      </View>
+    );
+  }
+
+  return <>{children}</>;
+}
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
