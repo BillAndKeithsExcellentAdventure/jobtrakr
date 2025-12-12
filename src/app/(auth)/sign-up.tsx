@@ -21,11 +21,6 @@ export default function SignUpScreen() {
 
   // Handle submission of sign-up form
   const onSignUpPress = async () => {
-    if (!isLoaded) {
-      Alert.alert('Please Wait', 'The authentication service is loading. Please try again in a moment.');
-      return;
-    }
-
     setIsLoading(true);
 
     // Start sign-up process using email and password provided
@@ -62,11 +57,6 @@ export default function SignUpScreen() {
 
   // Handle submission of verification form
   const onVerifyPress = async () => {
-    if (!isLoaded) {
-      Alert.alert('Please Wait', 'The authentication service is loading. Please try again in a moment.');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -125,11 +115,6 @@ export default function SignUpScreen() {
 
   // Handle resending verification code
   const onResendCodePress = async () => {
-    if (!isLoaded) {
-      Alert.alert('Please Wait', 'The authentication service is loading. Please try again in a moment.');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -180,11 +165,16 @@ export default function SignUpScreen() {
             value={code}
             placeholder="Enter your verification code"
             onChangeText={(code) => setCode(code)}
-            editable={!isLoading}
+            editable={!isLoading && isLoaded}
           />
-          {isLoading ? (
+          {!isLoaded || isLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={colors.tint} />
+              <Text
+                txtSize="standard"
+                style={{ marginTop: 10, backgroundColor: 'transparent' }}
+                text="Authentication service is loading..."
+              />
             </View>
           ) : (
             <>
@@ -225,7 +215,7 @@ export default function SignUpScreen() {
           keyboardType="email-address"
           placeholder="Email"
           onChangeText={(email) => setEmailAddress(email)}
-          editable={!isLoading}
+          editable={!isLoading && isLoaded}
         />
         <TextInput
           style={{ ...styles.input, backgroundColor: colors.neutral200 }}
@@ -234,11 +224,16 @@ export default function SignUpScreen() {
           placeholder="Password"
           secureTextEntry={true}
           onChangeText={(password) => setPassword(password)}
-          editable={!isLoading}
+          editable={!isLoading && isLoaded}
         />
-        {isLoading ? (
+        {!isLoaded || isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.tint} />
+            <Text
+              txtSize="standard"
+              style={{ marginTop: 10, backgroundColor: 'transparent' }}
+              text="Authentication service is loading..."
+            />
           </View>
         ) : (
           <ActionButton
