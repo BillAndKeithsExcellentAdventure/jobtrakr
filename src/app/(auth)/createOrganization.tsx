@@ -107,15 +107,9 @@ export default function CreateOrganization() {
             );
 
             if (result && result.id) {
-              Alert.alert('Success', `Organization "${organizationName}" created successfully!`, [
-                {
-                  text: 'OK',
-                  onPress: () => {
-                    console.log('Organization created successfully');
-                    router.replace('/');
-                  },
-                },
-              ]);
+              // when organization is created successfully the userAuth is updated
+              // triggering the tree to re-render and redirect to home
+              return;
             } else {
               Alert.alert('Error', 'Failed to create organization. Please try again.', [{ text: 'OK' }]);
             }
