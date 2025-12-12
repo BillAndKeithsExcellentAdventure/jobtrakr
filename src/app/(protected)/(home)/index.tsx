@@ -227,15 +227,18 @@ export default function ProjectHomeScreen() {
       } else if (item === 'About') {
         router.push({ pathname: '/(protected)/(home)/about' });
       } else if (item === 'Logout') {
-        await signOut();
+        signOut();
+        router.replace('/sign-in');
       }
     },
     [router, signOut],
   );
 
   const handleSignOut = useCallback(async () => {
-    await signOut();
-  }, [signOut]);
+    await signOut(() => {
+      router.replace('/sign-in');
+    });
+  }, [signOut, router]);
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(() => {
     const showInvite = orgId && orgRole.includes('admin');
