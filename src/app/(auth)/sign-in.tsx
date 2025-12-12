@@ -221,11 +221,7 @@ function SignInForm() {
         )}
         {!showResetCode && (
           <View style={styles.forgotPasswordContainer}>
-            <Text
-              text="Forgot password?"
-              style={[styles.link, { backgroundColor: 'transparent' }]}
-              onPress={onForgotPasswordPress}
-            />
+            <Text text="Forgot password?" style={styles.link} onPress={onForgotPasswordPress} />
           </View>
         )}
         <View style={styles.footer}>
@@ -257,6 +253,7 @@ const styles = StyleSheet.create({
   },
   link: {
     color: '#007AFF',
+    backgroundColor: 'transparent',
   },
   input: {
     height: 40,
