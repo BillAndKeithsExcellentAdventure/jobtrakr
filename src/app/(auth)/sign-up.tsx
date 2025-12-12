@@ -1,10 +1,10 @@
 import { Text, TextInput, View } from '@/src/components/Themed';
 import * as React from 'react';
-import { StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
 
 import { ActionButton } from '@/src/components/ActionButton';
 import { useColors } from '@/src/context/ColorsContext';
-import { useAuth, useSignUp } from '@clerk/clerk-expo';
+import { isClerkAPIResponseError, useAuth, useSignUp } from '@clerk/clerk-expo';
 import { Link, Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -16,11 +16,12 @@ export default function SignUpScreen() {
   const [password, setPassword] = React.useState('');
   const [pendingVerification, setPendingVerification] = React.useState(false);
   const [code, setCode] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(false);
   const auth = useAuth();
 
   // Handle submission of sign-up form
   const onSignUpPress = async () => {
-    if (!isLoaded) return;
+    setIsLoading(true);
 
     // Start sign-up process using email and password provided
     try {
@@ -38,13 +39,25 @@ export default function SignUpScreen() {
     } catch (err) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
-      console.error(JSON.stringify(err, null, 2));
+      console.error('Sign-up error:', JSON.stringify(err, null, 2));
+      
+      if (isClerkAPIResponseError(err)) {
+        const errorMessage =
+          err.errors[0].longMessage ||
+          err.errors[0].message ||
+          'Sign-up failed. Please check your email and password.';
+        Alert.alert('Sign-Up Failed', errorMessage);
+      } else {
+        Alert.alert('Sign-Up Failed', 'An unexpected error occurred. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Handle submission of verification form
   const onVerifyPress = async () => {
-    if (!isLoaded) return;
+    setIsLoading(true);
 
     try {
       // Use the code the user provided to attempt verification
@@ -74,13 +87,56 @@ export default function SignUpScreen() {
       } else {
         // If the status is not complete, check why. User may need to
         // complete further steps.
-        console.error(JSON.stringify(signUpAttempt, null, 2));
+        console.error('Verification incomplete:', JSON.stringify(signUpAttempt, null, 2));
+        Alert.alert(
+          'Verification Incomplete',
+          'Please check the verification code and try again.',
+        );
       }
     } catch (err) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
       console.error('Error during verification:', err);
       console.error(JSON.stringify(err, null, 2));
+      
+      if (isClerkAPIResponseError(err)) {
+        const errorMessage =
+          err.errors[0].longMessage ||
+          err.errors[0].message ||
+          'Verification failed. Please check the code and try again.';
+        Alert.alert('Verification Failed', errorMessage);
+      } else {
+        Alert.alert('Verification Failed', 'An unexpected error occurred. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle resending verification code
+  const onResendCodePress = async () => {
+    setIsLoading(true);
+
+    try {
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      Alert.alert(
+        'Code Sent',
+        'A new verification code has been sent to your email. Please check your inbox and junk mail folder.',
+      );
+    } catch (err) {
+      console.error('Error resending code:', err);
+      
+      if (isClerkAPIResponseError(err)) {
+        const errorMessage =
+          err.errors[0].longMessage ||
+          err.errors[0].message ||
+          'Failed to resend verification code. Please try again.';
+        Alert.alert('Resend Failed', errorMessage);
+      } else {
+        Alert.alert('Resend Failed', 'An unexpected error occurred. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -109,8 +165,28 @@ export default function SignUpScreen() {
             value={code}
             placeholder="Enter your verification code"
             onChangeText={(code) => setCode(code)}
+            editable={!isLoading && isLoaded}
           />
-          <ActionButton type={code ? 'action' : 'disabled'} onPress={onVerifyPress} title="Verify" />
+          {!isLoaded || isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.tint} />
+              <Text
+                txtSize="standard"
+                style={{ marginTop: 10, backgroundColor: 'transparent' }}
+                text="Authentication service is loading..."
+              />
+            </View>
+          ) : (
+            <>
+              <ActionButton type={code ? 'action' : 'disabled'} onPress={onVerifyPress} title="Verify" />
+              <ActionButton
+                type="action"
+                onPress={onResendCodePress}
+                title="Resend Code"
+                style={styles.resendButton}
+              />
+            </>
+          )}
         </View>
       </SafeAreaView>
     );
@@ -139,6 +215,7 @@ export default function SignUpScreen() {
           keyboardType="email-address"
           placeholder="Email"
           onChangeText={(email) => setEmailAddress(email)}
+          editable={!isLoading && isLoaded}
         />
         <TextInput
           style={{ ...styles.input, backgroundColor: colors.neutral200 }}
@@ -147,12 +224,24 @@ export default function SignUpScreen() {
           placeholder="Password"
           secureTextEntry={true}
           onChangeText={(password) => setPassword(password)}
+          editable={!isLoading && isLoaded}
         />
-        <ActionButton
-          type={emailAddress && password ? 'action' : 'disabled'}
-          onPress={onSignUpPress}
-          title="Continue"
-        />
+        {!isLoaded || isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.tint} />
+            <Text
+              txtSize="standard"
+              style={{ marginTop: 10, backgroundColor: 'transparent' }}
+              text="Authentication service is loading..."
+            />
+          </View>
+        ) : (
+          <ActionButton
+            type={emailAddress && password ? 'action' : 'disabled'}
+            onPress={onSignUpPress}
+            title="Continue"
+          />
+        )}
         <View style={styles.footer}>
           <Text text="Already have an account?" style={{ backgroundColor: 'transparent', marginRight: 20 }} />
           <Link href="/sign-in">
@@ -184,5 +273,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingLeft: 10,
     borderRadius: 4,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: 'transparent',
+  },
+  resendButton: {
+    marginTop: 10,
   },
 });
