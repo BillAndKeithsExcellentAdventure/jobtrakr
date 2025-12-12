@@ -193,7 +193,7 @@ function SignInForm() {
           placeholderTextColor={colors.text}
           onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
         />
-        <View style={styles.passwordContainer}>
+        <View style={[styles.passwordContainer, { borderColor: colors.neutral400, backgroundColor: colors.neutral200 }]}>
           <TextInput
             style={{ ...styles.passwordInput, color: colors.text }}
             value={password}
@@ -293,7 +293,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 10,
     borderRadius: 4,
-    backgroundColor: 'transparent',
   },
   passwordInput: {
     flex: 1,

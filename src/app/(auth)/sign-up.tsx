@@ -218,9 +218,9 @@ export default function SignUpScreen() {
           onChangeText={(email) => setEmailAddress(email)}
           editable={!isProcessing && isLoaded}
         />
-        <View style={styles.passwordContainer}>
+        <View style={[styles.passwordContainer, { borderColor: colors.neutral400, backgroundColor: colors.neutral200 }]}>
           <TextInput
-            style={{ ...styles.passwordInput, backgroundColor: colors.neutral200 }}
+            style={{ ...styles.passwordInput, color: colors.text }}
             value={password}
             placeholderTextColor={colors.text}
             placeholder="Password (min. 8 characters)"
@@ -295,7 +295,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 10,
     borderRadius: 4,
-    backgroundColor: 'transparent',
   },
   passwordInput: {
     flex: 1,
