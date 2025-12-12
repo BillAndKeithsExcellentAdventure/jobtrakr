@@ -16,22 +16,32 @@ export default function SignUpScreen() {
   const [password, setPassword] = React.useState('');
   const [pendingVerification, setPendingVerification] = React.useState(false);
   const [code, setCode] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isProcessing, setIsProcessing] = React.useState(false);
+  const [isClerkReady, setIsClerkReady] = React.useState(false);
   const auth = useAuth();
+
+  React.useEffect(() => {
+    if (!signUp || !isLoaded || setActive == null) {
+      setIsClerkReady(false);
+      return;
+    } else {
+      setIsClerkReady(true);
+    }
+  }, [signUp, isLoaded, setActive]);
 
   // Handle submission of sign-up form
   const onSignUpPress = async () => {
-    setIsLoading(true);
+    setIsProcessing(true);
 
     // Start sign-up process using email and password provided
     try {
-      await signUp.create({
+      await signUp!.create({
         emailAddress,
         password,
       });
 
       // Send user an email with verification code
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      await signUp!.prepareEmailAddressVerification({ strategy: 'email_code' });
 
       // Set 'pendingVerification' to true to display second form
       // and capture OTP code
@@ -40,7 +50,7 @@ export default function SignUpScreen() {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
       console.error('Sign-up error:', JSON.stringify(err, null, 2));
-      
+
       if (isClerkAPIResponseError(err)) {
         const errorMessage =
           err.errors[0].longMessage ||
@@ -51,7 +61,7 @@ export default function SignUpScreen() {
         Alert.alert('Sign-Up Failed', 'An unexpected error occurred. Please try again.');
       }
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
@@ -61,7 +71,7 @@ export default function SignUpScreen() {
 
     try {
       // Use the code the user provided to attempt verification
-      const signUpAttempt = await signUp.attemptEmailAddressVerification({
+      const signUpAttempt = await signUp!.attemptEmailAddressVerification({
         code,
       });
 
@@ -69,36 +79,24 @@ export default function SignUpScreen() {
 
       // If verification was completed, set the session to active
       // and redirect the user
-      if (signUpAttempt.status === 'complete') {
+      if (signUpAttempt.status === 'complete' && setActive != null) {
         await setActive({ session: signUpAttempt.createdSessionId });
         console.log('Sign-up verification completed successfully');
         console.log('  Ready to useAuth');
         console.log('Auth:', auth);
-        /*-------- I can't understand why this is necessary here. It seems to work without it. -------
-        if (auth) {
-          const token = await auth.getToken();
-          if (token && auth.userId) {
-            await createOrganization(token, auth.userId, 'BKEA', 'bkea-organization');
-            console.log('Organization created successfully');
-          }
-        }
-        ---------------------*/
         router.replace('/');
       } else {
         // If the status is not complete, check why. User may need to
         // complete further steps.
         console.error('Verification incomplete:', JSON.stringify(signUpAttempt, null, 2));
-        Alert.alert(
-          'Verification Incomplete',
-          'Please check the verification code and try again.',
-        );
+        Alert.alert('Verification Incomplete', 'Please check the verification code and try again.');
       }
     } catch (err) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
       console.error('Error during verification:', err);
       console.error(JSON.stringify(err, null, 2));
-      
+
       if (isClerkAPIResponseError(err)) {
         const errorMessage =
           err.errors[0].longMessage ||
@@ -109,23 +107,23 @@ export default function SignUpScreen() {
         Alert.alert('Verification Failed', 'An unexpected error occurred. Please try again.');
       }
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
   // Handle resending verification code
   const onResendCodePress = async () => {
-    setIsLoading(true);
+    setIsProcessing(true);
 
     try {
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      await signUp!.prepareEmailAddressVerification({ strategy: 'email_code' });
       Alert.alert(
         'Code Sent',
         'A new verification code has been sent to your email. Please check your inbox and junk mail folder.',
       );
     } catch (err) {
       console.error('Error resending code:', err);
-      
+
       if (isClerkAPIResponseError(err)) {
         const errorMessage =
           err.errors[0].longMessage ||
@@ -136,9 +134,22 @@ export default function SignUpScreen() {
         Alert.alert('Resend Failed', 'An unexpected error occurred. Please try again.');
       }
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
   };
+
+  if (!isClerkReady) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
+        <ActivityIndicator size="large" color={colors.tint} />
+        <Text
+          txtSize="standard"
+          style={{ marginTop: 10, backgroundColor: 'transparent' }}
+          text="Authentication service is loading..."
+        />
+      </View>
+    );
+  }
 
   if (pendingVerification) {
     return (
@@ -165,28 +176,15 @@ export default function SignUpScreen() {
             value={code}
             placeholder="Enter your verification code"
             onChangeText={(code) => setCode(code)}
-            editable={!isLoading && isLoaded}
+            editable={!isProcessing && isLoaded}
           />
-          {!isLoaded || isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.tint} />
-              <Text
-                txtSize="standard"
-                style={{ marginTop: 10, backgroundColor: 'transparent' }}
-                text="Authentication service is loading..."
-              />
-            </View>
-          ) : (
-            <>
-              <ActionButton type={code ? 'action' : 'disabled'} onPress={onVerifyPress} title="Verify" />
-              <ActionButton
-                type="action"
-                onPress={onResendCodePress}
-                title="Resend Code"
-                style={styles.resendButton}
-              />
-            </>
-          )}
+          <ActionButton type={code ? 'action' : 'disabled'} onPress={onVerifyPress} title="Verify" />
+          <ActionButton
+            type="action"
+            onPress={onResendCodePress}
+            title="Resend Code"
+            style={styles.resendButton}
+          />
         </View>
       </SafeAreaView>
     );
@@ -215,7 +213,7 @@ export default function SignUpScreen() {
           keyboardType="email-address"
           placeholder="Email"
           onChangeText={(email) => setEmailAddress(email)}
-          editable={!isLoading && isLoaded}
+          editable={!isProcessing && isLoaded}
         />
         <TextInput
           style={{ ...styles.input, backgroundColor: colors.neutral200 }}
@@ -224,15 +222,15 @@ export default function SignUpScreen() {
           placeholder="Password"
           secureTextEntry={true}
           onChangeText={(password) => setPassword(password)}
-          editable={!isLoading && isLoaded}
+          editable={!isProcessing && isLoaded}
         />
-        {!isLoaded || isLoading ? (
+        {isProcessing ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.tint} />
             <Text
               txtSize="standard"
               style={{ marginTop: 10, backgroundColor: 'transparent' }}
-              text="Authentication service is loading..."
+              text="Authentication service is processing..."
             />
           </View>
         ) : (
