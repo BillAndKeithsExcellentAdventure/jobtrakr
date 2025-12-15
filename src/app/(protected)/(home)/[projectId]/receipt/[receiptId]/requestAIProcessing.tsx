@@ -16,19 +16,21 @@ import {
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/formatters';
+import { createApiWithRetry } from '@/src/utils/apiWithTokenRefresh';
 import { useAuth } from '@clerk/clerk-expo';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vec-icons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const processAIProcessing = async (
-  token: string,
   imageId: string,
   projectId: string,
   userId: string,
   organizationId: string,
+  getToken: () => string | null,
+  refreshToken: () => Promise<string | null>,
 ) => {
   try {
     const receiptImageData = {
@@ -37,12 +39,12 @@ const processAIProcessing = async (
       userId: userId,
       organizationId: organizationId,
     };
-    //console.log(' token:', token);
     //console.log(' receiptImageData:', receiptImageData);
-    const response = await fetch(`${API_BASE_URL}/getReceiptIntelligence`, {
+    
+    const apiFetch = createApiWithRetry(getToken, refreshToken);
+    const response = await apiFetch(`${API_BASE_URL}/getReceiptIntelligence`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(receiptImageData),
@@ -70,7 +72,7 @@ const RequestAIProcessingPage = () => {
   }>();
   const auth = useAuth();
   const { userId, orgId } = auth;
-  const { token } = useAuthToken();
+  const { token, refreshToken } = useAuthToken();
   const [fetchingData, setFetchingData] = useState(true);
   const [showCostItemPicker, setShowCostItemPicker] = useState(false);
   const [receiptSummary, setReceiptSummary] = useState<ReceiptSummary>();
@@ -172,12 +174,14 @@ const RequestAIProcessingPage = () => {
   }
 
   async function fetchAIResult() {
-    if (!token) {
-      console.error('No token available');
-      return;
-    }
-
-    const result = await processAIProcessing(token, imageId, projectId, userId!, orgId!);
+    const result = await processAIProcessing(
+      imageId,
+      projectId,
+      userId!,
+      orgId!,
+      () => token,
+      refreshToken,
+    );
     if (result.status === 'Success') {
       const summary = {
         vendor: replaceNonPrintable(result.response.MerchantName.value),

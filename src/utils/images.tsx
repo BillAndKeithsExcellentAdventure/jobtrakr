@@ -6,6 +6,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { FailedToUploadData, useAddItemCallback } from '@/src/tbStores/UploadSyncStore';
 import { API_BASE_URL } from '../constants/app-constants';
 import { useAuthToken } from '../context/AuthTokenContext';
+import { createApiWithRetry } from './apiWithTokenRefresh';
 
 type ImageResult = { status: 'Success' | 'Error'; id: string; uri?: string | undefined; msg: string };
 
@@ -55,7 +56,8 @@ const getFetchImageEndPointUrl = (resourceType: resourceType) => {
 
 const downloadImage = async (
   details: ImageDetails,
-  token: string,
+  getToken: () => string | null,
+  refreshToken: () => Promise<string | null>,
   resourceType: resourceType,
   localUri: string,
 ): Promise<ImageResult> => {
@@ -70,11 +72,11 @@ const downloadImage = async (
     const endPointUrl = `${getFetchImageEndPointUrl(resourceType)}?${params}`;
     console.log('Downloading image from:', endPointUrl);
 
-    // Make the API call
-    const response = await fetch(endPointUrl, {
+    // Make the API call with token refresh
+    const apiFetch = createApiWithRetry(getToken, refreshToken);
+    const response = await apiFetch(endPointUrl, {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${token}`,
         'Content-Type': 'image/jpeg',
       },
     });
@@ -131,7 +133,8 @@ function arrayBufferToBase64(buffer: Uint8Array): string {
 
 const uploadImage = async (
   details: ImageDetails,
-  token: string,
+  getToken: () => string | null,
+  refreshToken: () => Promise<string | null>,
   mediaType: mediaType,
   resourceType: resourceType,
   localImageUrl: string,
@@ -166,11 +169,12 @@ const uploadImage = async (
     const endPointUrl = getAddImageEndPointUrl(resourceType, mediaType);
     console.log('Uploading image to:', endPointUrl);
 
-    // Do not set multipart Content-Type header here — fetch will set the boundary
-    const response = await fetch(endPointUrl, {
+    // Make the API call with token refresh
+    const apiFetch = createApiWithRetry(getToken, refreshToken);
+    const response = await apiFetch(endPointUrl, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${token}`,
+        // Do not set multipart Content-Type header here — fetch will set the boundary
       } as any,
       body: formData,
     });
@@ -216,16 +220,17 @@ export const deleteMedia = async (
   projectId: string,
   imageIds: string[],
   imageType: string,
-  token: string,
+  getToken: () => string | null,
+  refreshToken: () => Promise<string | null>,
 ) => {
   try {
     const endPointUrl = `${API_BASE_URL}/deleteMedia`;
 
-    // Do not set multipart Content-Type header here — fetch will set the boundary
-    const response = await fetch(endPointUrl, {
+    // Make the API call with token refresh
+    const apiFetch = createApiWithRetry(getToken, refreshToken);
+    const response = await apiFetch(endPointUrl, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       } as any,
       body: JSON.stringify({
@@ -344,7 +349,7 @@ const copyToLocalFolder = async (
 export const useAddImageCallback = () => {
   const auth = useAuth();
   const { userId, orgId } = auth;
-  const { token } = useAuthToken();
+  const { token, refreshToken } = useAuthToken();
   const addFailedToUploadRecord = useAddItemCallback();
 
   return useCallback(
@@ -363,10 +368,6 @@ export const useAddImageCallback = () => {
 
       if (!userId || !orgId) {
         return { status: 'Error', id: id, msg: 'User ID or Organization ID not available' };
-      }
-
-      if (!token) {
-        return { status: 'Error', id: id, msg: 'Auth token is not available.' };
       }
 
       // TODO: Get Lat/Long from imageUri or device location.
@@ -388,8 +389,15 @@ export const useAddImageCallback = () => {
         return copyLocalResult;
       }
 
-      // Upload to backend
-      const uploadResult = await uploadImage(details, token, mediaType, resourceType, copyLocalResult.uri!);
+      // Upload to backend with token refresh
+      const uploadResult = await uploadImage(
+        details,
+        () => token,
+        refreshToken,
+        mediaType,
+        resourceType,
+        copyLocalResult.uri!,
+      );
       if (uploadResult.status !== 'Success') {
         const data: FailedToUploadData = {
           id: id,
@@ -412,14 +420,14 @@ export const useAddImageCallback = () => {
 
       return uploadResult;
     },
-    [userId, orgId, token, addFailedToUploadRecord, auth],
+    [userId, orgId, token, refreshToken, addFailedToUploadRecord, auth],
   );
 };
 
 export const useGetImageCallback = () => {
   const auth = useAuth();
   const { userId, orgId } = auth;
-  const { token } = useAuthToken();
+  const { token, refreshToken } = useAuthToken();
 
   return useCallback(
     async (
@@ -437,10 +445,6 @@ export const useGetImageCallback = () => {
           localUri: '',
           result: { status: 'Error', id: itemId, msg: 'User ID or Organization ID not available' },
         };
-      }
-
-      if (!token) {
-        return { localUri: '', result: { status: 'Error', id: itemId, msg: 'Auth token is not available.' } };
       }
 
       // First see if this image is found locally. If found return the local version.
@@ -466,7 +470,7 @@ export const useGetImageCallback = () => {
           deviceTypes: deviceType,
         };
 
-        const downloadResult = await downloadImage(details, token, resourceType, imageUri);
+        const downloadResult = await downloadImage(details, () => token, refreshToken, resourceType, imageUri);
 
         return {
           localUri: imageUri,
@@ -484,6 +488,6 @@ export const useGetImageCallback = () => {
         };
       }
     },
-    [userId, orgId, token, auth],
+    [userId, orgId, token, refreshToken, auth],
   );
 };

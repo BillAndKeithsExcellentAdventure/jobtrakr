@@ -4,6 +4,7 @@ import { API_BASE_URL } from '@/src/constants/app-constants';
 import { useAuthToken } from '@/src/context/AuthTokenContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { getOrganizationSlug } from '@/src/utils/organization';
+import { createApiWithRetry } from '@/src/utils/apiWithTokenRefresh';
 import { useAuth, useClerk, useOrganizationList, useSignUp } from '@clerk/clerk-expo';
 import { Redirect, Stack, useRouter } from 'expo-router';
 import * as React from 'react';
@@ -20,7 +21,7 @@ export default function CreateOrganization() {
   const [organizationExists, setOrganizationExists] = React.useState(false);
   const [isCreating, setIsCreating] = React.useState(false);
   const auth = useAuth();
-  const { token } = useAuthToken();
+  const { token, refreshToken } = useAuthToken();
   const { setActive } = useOrganizationList();
 
   useEffect(() => {
@@ -32,11 +33,12 @@ export default function CreateOrganization() {
   }, [auth]);
 
   const createOrganization = async (
-    token: string,
     userId: string,
     name: string,
     slug: string,
-    isDevDeployment?: boolean,
+    isDevDeployment: boolean | undefined,
+    getToken: () => string | null,
+    refreshToken: () => Promise<string | null>,
   ) => {
     try {
       const organizationData = {
@@ -45,11 +47,11 @@ export default function CreateOrganization() {
         slug: slug,
         isDev: !!isDevDeployment,
       };
-      console.log(' token:', token);
-      const response = await fetch(`${API_BASE_URL}/addOrganization`, {
+      
+      const apiFetch = createApiWithRetry(getToken, refreshToken);
+      const response = await apiFetch(`${API_BASE_URL}/addOrganization`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(organizationData),
@@ -100,11 +102,12 @@ export default function CreateOrganization() {
               (global as any).__DEV__ === true;
 
             const result = await createOrganization(
-              token,
               auth.userId,
               organizationName,
               getOrganizationSlug(organizationName),
               isDev,
+              () => token,
+              refreshToken,
             );
 
             if (result && result.id) {
