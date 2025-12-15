@@ -18,7 +18,7 @@ import {
 import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/formatters';
 import { createApiWithRetry } from '@/src/utils/apiWithTokenRefresh';
 import { useAuth } from '@clerk/clerk-expo';
-import { Ionicons, MaterialIcons } from '@expo/vec-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
@@ -40,7 +40,7 @@ const processAIProcessing = async (
       organizationId: organizationId,
     };
     //console.log(' receiptImageData:', receiptImageData);
-    
+
     const apiFetch = createApiWithRetry(getToken, refreshToken);
     const response = await apiFetch(`${API_BASE_URL}/getReceiptIntelligence`, {
       method: 'POST',
@@ -174,14 +174,7 @@ const RequestAIProcessingPage = () => {
   }
 
   async function fetchAIResult() {
-    const result = await processAIProcessing(
-      imageId,
-      projectId,
-      userId!,
-      orgId!,
-      () => token,
-      refreshToken,
-    );
+    const result = await processAIProcessing(imageId, projectId, userId!, orgId!, () => token, refreshToken);
     if (result.status === 'Success') {
       const summary = {
         vendor: replaceNonPrintable(result.response.MerchantName.value),
