@@ -56,7 +56,7 @@ export const useUploadQueue = () => {
       return;
     }
 
-    // Capture the initial list of failed uploads
+    // Capture the initial list of failed uploads on first valid run
     if (initialFailedUploadsRef.current.length === 0) {
       initialFailedUploadsRef.current = [...failedUploads];
     }
@@ -131,7 +131,9 @@ export const useUploadQueue = () => {
 
     // Run asynchronously to avoid blocking
     processUploads();
-  }, [userId, orgId, token, refreshToken, isTokenLoading, store, failedUploads.length]);
+  }, [userId, orgId, token, refreshToken, isTokenLoading, store, failedUploads]);
+  // Note: failedUploads is included to trigger when data becomes available, but
+  // hasProcessedRef.current prevents re-runs after the first successful processing.
 
   return {
     isProcessing,
