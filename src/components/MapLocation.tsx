@@ -242,7 +242,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     cameraPosition,
     deviceLocation,
     selectedLocation,
-    projectLocation,
     handleResetToCurrentDeviceLocation,
     handleSaveLocation,
     handleMapClick,

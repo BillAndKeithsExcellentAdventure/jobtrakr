@@ -75,7 +75,7 @@ const SwipeableNote = React.memo(
           },
         },
       ]);
-    }, [removeNote]);
+    }, [removeNote, note.id]);
 
     const toggleCompleted = useCallback(() => {
       const noteToUpdate = { ...note };
@@ -87,7 +87,7 @@ const SwipeableNote = React.memo(
     const onEdit = useCallback(() => {
       setNoteToEdit(note.id);
       swipeableRef.current?.close();
-    }, [updateNote, note]);
+    }, [setNoteToEdit, note.id]);
 
     const renderRightActions = useCallback(
       () => (

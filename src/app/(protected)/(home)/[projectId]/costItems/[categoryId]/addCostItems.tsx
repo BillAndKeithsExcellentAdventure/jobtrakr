@@ -51,7 +51,7 @@ const AddCostWorkItemsScreen: React.FC = () => {
               isSelected: selectedWorkItemIds.includes(item.id),
             } as ItemData),
         ),
-    [allWorkItemSummaries, allWorkItems, selectedWorkItemIds, categoryId],
+    [allWorkItems, selectedWorkItemIds, workItemIdsInCategory],
   );
 
   const toggleItemSelectedState = useCallback((itemId: string) => {
@@ -77,7 +77,7 @@ const AddCostWorkItemsScreen: React.FC = () => {
       });
     }
     router.back();
-  }, [router, selectedWorkItemIds, addWorkItemSummary]);
+  }, [selectedWorkItemIds, addWorkItemSummary]);
 
   return (
     <View style={{ flex: 1, width: '100%' }}>

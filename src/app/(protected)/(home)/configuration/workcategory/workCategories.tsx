@@ -107,7 +107,7 @@ const ListWorkCategories = () => {
         console.log('Error adding category:', status.msg);
       }
     }
-  }, [category]);
+  }, [category, addWorkCategory]);
 
   return (
     <>

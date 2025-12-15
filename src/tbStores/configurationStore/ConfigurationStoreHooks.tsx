@@ -308,9 +308,9 @@ export const useTemplateWorkItemData = (templateId: string) => {
   }, [fetchTemplateWorkItemData]);
 
   // Function to handle table data change
-  const handleTableChange = () => {
+  const handleTableChange = useCallback(() => {
     setTemplateWorkItemData(fetchTemplateWorkItemData());
-  };
+  }, [fetchTemplateWorkItemData]);
 
   useEffect(() => {
     if (!store) {
@@ -321,7 +321,7 @@ export const useTemplateWorkItemData = (templateId: string) => {
     return () => {
       store.delListener(listenerId);
     };
-  }, [store]);
+  }, [store, handleTableChange]);
 
   useEffect(() => {
     if (templateWorkItemData) {

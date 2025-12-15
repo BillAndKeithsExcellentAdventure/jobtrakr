@@ -107,10 +107,10 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
       return labelTextRef.current;
     }, []);
 
-    const handleOnBlur = () => {
+    const handleOnBlur = useCallback(() => {
       //console.log('OptionPickerItem handleOnBlur called');
       onOptionLabelChange?.(labelText ?? '');
-    };
+    }, [onOptionLabelChange, labelText]);
 
     useImperativeHandle(ref, () => ({
       blur: () => {

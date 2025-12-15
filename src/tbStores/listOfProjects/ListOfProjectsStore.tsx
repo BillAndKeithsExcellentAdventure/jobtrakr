@@ -80,9 +80,9 @@ export const useAllProjects = () => {
   }, [fetchAllProjects]);
 
   // Function to handle table data change
-  const handleTableChange = () => {
+  const handleTableChange = useCallback(() => {
     setAllProjects(fetchAllProjects());
-  };
+  }, [fetchAllProjects]);
 
   useEffect(() => {
     if (!store) {

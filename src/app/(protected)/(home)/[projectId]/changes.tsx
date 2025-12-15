@@ -149,7 +149,7 @@ const ChangeOrdersScreen = () => {
     if (allChangeOrders && allChangeOrders.length > 0) {
       fetchStatuses();
     }
-  }, [auth, projectId, allChangeOrders]);
+  }, [auth, projectId, allChangeOrders, token, refreshToken, updateChangeOrder]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

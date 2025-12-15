@@ -38,7 +38,7 @@ const EditProjectTemplate = () => {
       // Go back to the categories list screen
       router.back();
     }
-  }, [applyTemplateUpdates, description, newDescription, newName, router, templateId]);
+  }, [applyTemplateUpdates, newDescription, newName, router, templateId]);
 
   const handleBackPress = useAutoSaveNavigation(() => {
     handleSave();

@@ -138,7 +138,7 @@ const ProjectDetailsPage = () => {
     );
 
     return Array.from(usedCategoryIds);
-  }, [unusedWorkItems, allWorkItemSummaries, workItemMap, categoryMap]);
+  }, [unusedWorkItems]);
 
   const unusedCategoriesString = useMemo(() => unusedCategories.join(','), [unusedCategories]);
 
@@ -330,10 +330,10 @@ const ProjectDetailsPage = () => {
       processDeleteProject,
       removeActiveProjectId,
       ExportCostItems,
-      allActualCostItems,
-      allReceiptItems,
       unusedCategoriesString,
       workItemsWithoutCosts,
+      clearProjectDetailsStore,
+      removeWorkItemSummary,
     ],
   );
 

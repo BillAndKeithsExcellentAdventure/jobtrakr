@@ -134,7 +134,7 @@ const AddCostCategoryWorkItemsScreen: React.FC = () => {
       });
     }
     router.back();
-  }, [router, selectedWorkItemIds, addWorkItemSummary]);
+  }, [selectedWorkItemIds, addWorkItemSummary]);
 
   return (
     <View style={{ flex: 1, width: '100%' }}>

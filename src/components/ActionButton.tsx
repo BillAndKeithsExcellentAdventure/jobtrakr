@@ -47,7 +47,7 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
     setTimeout(() => {
       onPress();
     }, 0);
-  }, [onPress, type, triggerBlurOnPress]);
+  }, [onPress, type, triggerBlurOnPress, focusManager]);
 
   const getButtonStyles = (buttonType: ActionButtonProps['type'], platform: string): ButtonSettings => {
     switch (buttonType) {

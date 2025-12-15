@@ -72,7 +72,7 @@ const AddProjectScreen = () => {
       availableOptions.sort((a, b) => a.label.localeCompare(b.label));
       setTemplateOptions([{ label: 'None', value: '' }, ...availableOptions]);
     }
-  }, [allProjectTemplates]);
+  }, [allProjectTemplates, allTemplateWorkItems]);
 
   useEffect(() => {
     setCanAddProject(project.name.length > 0 && undefined !== pickedTemplate);

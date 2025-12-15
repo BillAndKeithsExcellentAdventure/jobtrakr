@@ -31,7 +31,7 @@ export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = React.memo(({ ima
     });
 
     return Gesture.Simultaneous(pinchGesture, panGesture);
-  }, []);
+  }, [scale, offsetX, offsetY]);
 
   // Memoized animated style
   const animatedStyle = useAnimatedStyle(() => ({

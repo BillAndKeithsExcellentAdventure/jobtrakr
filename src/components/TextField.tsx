@@ -187,7 +187,7 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
         focusManager.unregisterField(fieldId);
       };
     }
-  }, [fieldId, focusManager, disabled, TextInputProps.onBlur, getValueFromInput]);
+  }, [fieldId, focusManager, disabled, getValueFromInput, TextInputProps]);
 
   function focusInput() {
     if (disabled) return;

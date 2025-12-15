@@ -73,7 +73,7 @@ const SetLocationViaMap = () => {
         router.back();
       }
     },
-    [currentProject, projectId, updateProject, router],
+    [projectId, updateProject, router],
   );
 
   return (

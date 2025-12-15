@@ -79,9 +79,9 @@ export const useAllFailedToUpload = () => {
   }, [fetchAllFailedToUploadItems]);
 
   // Function to handle table data change
-  const handleTableChange = () => {
+  const handleTableChange = useCallback(() => {
     setAllItems(fetchAllFailedToUploadItems());
-  };
+  }, [fetchAllFailedToUploadItems]);
 
   useEffect(() => {
     if (!store) {
@@ -92,7 +92,7 @@ export const useAllFailedToUpload = () => {
     return () => {
       store.delListener(listenerId);
     };
-  }, [store]);
+  }, [store, handleTableChange]);
 
   return allItems;
 };

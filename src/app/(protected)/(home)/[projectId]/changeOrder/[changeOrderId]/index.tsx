@@ -336,7 +336,7 @@ const DefineChangeOrderScreen = () => {
         Alert.alert('Error', errorMessage);
       }
     }
-  }, [changeOrderData, changeOrder, appSettings, projectData, auth, projectId, changeOrderId]);
+  }, [changeOrderData, changeOrder, appSettings, projectData, auth, projectId, changeOrderId, token, refreshToken]);
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [

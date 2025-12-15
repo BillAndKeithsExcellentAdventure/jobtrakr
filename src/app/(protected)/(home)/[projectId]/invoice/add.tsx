@@ -28,7 +28,7 @@ import { Alert, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 const AddInvoicePage = () => {
-  const defaultDate = new Date();
+  const defaultDate = useMemo(() => new Date(), []);
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const addInvoice = useAddRowCallback(projectId, 'invoices');
   const [isSupplierListPickerVisible, setIsSupplierListPickerVisible] = useState<boolean>(false);
@@ -134,7 +134,7 @@ const AddInvoicePage = () => {
     }
     console.log('Project invoice successfully added:', projectInvoice);
     router.back();
-  }, [projectInvoice, canAddInvoice]);
+  }, [projectInvoice, canAddInvoice, addInvoice, addLineItem, applyToSingleCostCode, pickedSubCategoryOption, router]);
 
   const handleCaptureImage = useCallback(async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
@@ -167,7 +167,7 @@ const AddInvoicePage = () => {
         }));
       }
     }
-  }, []);
+  }, [addPhotoImage, projectId]);
 
   const [applyToSingleCostCode, setApplyToSingleCostCode] = useState(false);
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
