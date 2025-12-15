@@ -209,6 +209,64 @@ const uploadImage = async (
   }
 };
 
+export const deleteMedia = async (
+  userId: string,
+  organizationId: string,
+  projectId: string,
+  imageIds: string[],
+  token: string,
+) => {
+  try {
+    const endPointUrl = `${API_BASE_URL}/deleteMedia`;
+
+    // Do not set multipart Content-Type header here — fetch will set the boundary
+    const response = await fetch(endPointUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      } as any,
+      body: JSON.stringify({
+        userId: userId,
+        organizationId: organizationId,
+        projectId: projectId,
+        imageIds: imageIds,
+      }),
+    });
+
+    if (!response.ok) {
+      let errorBody = '';
+      try {
+        errorBody = await response.text();
+      } catch {
+        // ignore
+      }
+      console.error('Delete media failed. HTTP:', response.status, 'Body:', errorBody);
+      return {
+        success: false,
+        msg: `Delete media failed. HTTP ${response.status}. ${errorBody || 'No response body.'}`,
+      };
+    }
+
+    // Attempt to parse JSON but tolerate empty body
+    let data: any = null;
+    try {
+      data = await response.json();
+    } catch {
+      // no JSON — acceptable
+    }
+
+    console.log('Image deleted successfully:', data);
+    return { success: true, msg: 'Successfully deleted image' };
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    return {
+      success: false,
+      msg: `Error deleting image: ${(error as Error)?.message ?? String(error)}`,
+    };
+  }
+};
+
 const getLocalMediaFolder = (orgId: string, projectId: string, resourceType: resourceType): string => {
   return `${FileSystem.documentDirectory}/images/${orgId}/${projectId}/${resourceType}`;
 };

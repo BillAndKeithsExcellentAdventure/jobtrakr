@@ -8,13 +8,13 @@ import Base64Image from '@/src/components/Base64Image';
 import { formatDate } from '@/src/utils/formatters';
 import { MediaEntryData, useDeleteRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useRouter } from 'expo-router';
-import { buildLocalMediaUri, useGetImageCallback } from '@/src/utils/images';
+import { buildLocalMediaUri, deleteMedia, useGetImageCallback } from '@/src/utils/images';
 import { useColors } from '@/src/context/ColorsContext';
 import { useColorScheme } from './useColorScheme';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useAuth } from '@clerk/clerk-expo';
 import { mediaType } from '@/src/utils/images';
-import { useProjectValue } from '../tbStores/listOfProjects/ListOfProjectsStore';
+import { useProject, useProjectValue } from '../tbStores/listOfProjects/ListOfProjectsStore';
 
 export interface MediaEntryDisplayData extends MediaEntryData {
   isSelected: boolean;
@@ -42,7 +42,8 @@ export const ProjectMediaList = ({
   const colorScheme = useColorScheme();
   const colors = useColors();
   const getImage = useGetImageCallback();
-  const { orgId } = useAuth();
+  const auth = useAuth(); // Move useAuth to component level
+  const { orgId, userId } = auth; // Destructure for easier access
 
   useEffect(() => {
     // Initialize selectableProjectMedia whenever allProjectMedia changes
@@ -60,7 +61,7 @@ export const ProjectMediaList = ({
         setThumbnail(asset.thumbnail);
       }
     }
-  }, [mediaItems]);
+  }, [mediaItems, setThumbnail]);
 
   const onSelectAll = useCallback(() => {
     const hasSelectedItems = mediaItems.some((media) => media.isSelected);
@@ -135,19 +136,32 @@ export const ProjectMediaList = ({
   );
 
   const onRemove = useCallback(async () => {
-    const selectedIds = mediaItems.filter((media) => media.isSelected).map((media) => media.id);
+    const selectedIds = mediaItems
+      .filter((media) => media.isSelected)
+      .map((media) => ({ id: media.id, imageId: media.imageId }));
     Alert.alert('Remove Photos', 'Are you sure you want to remove these photos from this project?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Remove',
-        onPress: () => {
-          for (const uId of selectedIds) {
-            removePhotoData(uId);
+        onPress: async () => {
+          const token = await auth.getToken();
+          if (userId && orgId && token) {
+            const selectedImageIds = selectedIds
+              .map((item) => item.imageId)
+              .filter((id): id is string => !!id);
+            const status = await deleteMedia(userId, orgId, projectId, selectedImageIds, token);
+            if (status.success) {
+              for (const uId of selectedIds) {
+                removePhotoData(uId.id);
+              }
+            } else {
+              Alert.alert('Error', status.msg);
+            }
           }
         },
       },
     ]);
-  }, [removePhotoData, mediaItems]);
+  }, [removePhotoData, mediaItems, auth, userId, orgId, projectId]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: MediaEntryDisplayData; index: number }) => {
@@ -176,7 +190,7 @@ export const ProjectMediaList = ({
         </View>
       );
     },
-    [handleSelection, handleImageLongPress],
+    [handleSelection, handleImageLongPress, colors],
   );
 
   return (
