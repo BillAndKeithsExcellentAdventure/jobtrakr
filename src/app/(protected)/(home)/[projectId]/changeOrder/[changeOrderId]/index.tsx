@@ -48,13 +48,14 @@ interface SendPdfParams {
 const generateAndSendPdf = async (
   params: SendPdfParams,
   changeOrderId: string,
-  token: string,
+  getToken: () => string | null,
+  refreshToken: () => Promise<void>,
 ): Promise<string | null> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/sendChangeOrderEmail`, {
+    const apiFetch = createApiWithRetry(getToken, refreshToken);
+    const response = await apiFetch(`${API_BASE_URL}/sendChangeOrderEmail`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(params),
@@ -85,7 +86,7 @@ const DefineChangeOrderScreen = () => {
   const appSettings = useAppSettings();
   const projectData = useProject(projectId);
   const auth = useAuth();
-  const { token } = useAuthToken();
+  const { token, refreshToken } = useAuthToken();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [showAddItemModal, setShowAddItemModal] = useState<boolean>(false);
   const [newChangeOrderItem, setNewChangeOrderItem] = useState<ChangeOrderItem>({
@@ -319,7 +320,8 @@ const DefineChangeOrderScreen = () => {
             }"`,
           },
           changeOrder?.id || 'unknown',
-          token,
+          () => token,
+          refreshToken,
         );
 
         if (pdfFilePath) {

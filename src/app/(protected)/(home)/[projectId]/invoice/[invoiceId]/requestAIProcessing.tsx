@@ -16,6 +16,7 @@ import {
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/formatters';
+import { createApiWithRetry } from '@/src/utils/apiWithTokenRefresh';
 import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
@@ -24,11 +25,12 @@ import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TouchableOpa
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const processAIProcessing = async (
-  token: string,
   imageId: string,
   projectId: string,
   userId: string,
   organizationId: string,
+  getToken: () => string | null,
+  refreshToken: () => Promise<void>,
 ) => {
   try {
     const invoiceImageData = {
@@ -37,12 +39,12 @@ const processAIProcessing = async (
       userId: userId,
       organizationId: organizationId,
     };
-    console.log(' token:', token);
     console.log(' invoiceImageData:', invoiceImageData);
-    const response = await fetch(`${API_BASE_URL}/getInvoiceIntelligence`, {
+    
+    const apiFetch = createApiWithRetry(getToken, refreshToken);
+    const response = await apiFetch(`${API_BASE_URL}/getInvoiceIntelligence`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(invoiceImageData),
@@ -71,7 +73,7 @@ const RequestAIProcessingPage = () => {
   }>();
   const auth = useAuth();
   const { userId, orgId } = auth;
-  const { token } = useAuthToken();
+  const { token, refreshToken } = useAuthToken();
   const [fetchingData, setFetchingData] = useState(true);
   const [showCostItemPicker, setShowCostItemPicker] = useState(false);
   const [invoiceSummary, setInvoiceSummary] = useState<InvoiceSummary>();
@@ -173,12 +175,14 @@ const RequestAIProcessingPage = () => {
   }
 
   async function fetchAIResult() {
-    if (!token) {
-      console.error('No token available');
-      return;
-    }
-
-    const result = await processAIProcessing(token, imageId, projectId, userId!, orgId!);
+    const result = await processAIProcessing(
+      imageId,
+      projectId,
+      userId!,
+      orgId!,
+      () => token,
+      refreshToken,
+    );
     if (result.status === 'Success') {
       const summary = {
         supplier: replaceNonPrintable(result.response.MerchantName.value),

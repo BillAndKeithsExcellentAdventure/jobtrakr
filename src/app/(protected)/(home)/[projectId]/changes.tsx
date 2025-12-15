@@ -13,19 +13,25 @@ import {
   useIsStoreAvailableCallback,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { createApiWithRetry } from '@/src/utils/apiWithTokenRefresh';
 import { useAuth } from '@clerk/clerk-expo';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { FlatList, StyleSheet } from 'react-native';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 
-const getChangeOrderStatuses = async (projectId: string, token: string): Promise<string | null> => {
+const getChangeOrderStatuses = async (
+  projectId: string,
+  getToken: () => string | null,
+  refreshToken: () => Promise<void>,
+): Promise<string | null> => {
   try {
     console.log('getChangeOrderStatuses projectId:', projectId);
-    const response = await fetch(`${API_BASE_URL}/GetChangeOrderStatuses`, {
+    
+    const apiFetch = createApiWithRetry(getToken, refreshToken);
+    const response = await apiFetch(`${API_BASE_URL}/GetChangeOrderStatuses`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ projectId: projectId }),
@@ -60,7 +66,7 @@ const ChangeOrdersScreen = () => {
   const router = useRouter();
   const updateChangeOrder = useUpdateRowCallback(projectId, 'changeOrders');
   const auth = useAuth();
-  const { token } = useAuthToken();
+  const { token, refreshToken } = useAuthToken();
   const appSettings = useAppSettings();
   const currentProject = useProject(projectId);
 
@@ -95,11 +101,11 @@ const ChangeOrdersScreen = () => {
   useEffect(() => {
     const fetchStatuses = async () => {
       try {
-        if (!token) {
-          console.log('No token available');
-          return;
-        }
-        const changeOrderStatusString = await getChangeOrderStatuses(projectId, token);
+        const changeOrderStatusString = await getChangeOrderStatuses(
+          projectId,
+          () => token,
+          refreshToken,
+        );
         console.log('Change Order Statuses:', changeOrderStatusString);
 
         if (!changeOrderStatusString) {
