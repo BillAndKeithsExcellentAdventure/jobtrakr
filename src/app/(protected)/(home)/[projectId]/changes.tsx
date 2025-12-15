@@ -23,7 +23,7 @@ import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 const getChangeOrderStatuses = async (
   projectId: string,
   getToken: () => string | null,
-  refreshToken: () => Promise<void>,
+  refreshToken: () => Promise<string | null>,
 ): Promise<string | null> => {
   try {
     console.log('getChangeOrderStatuses projectId:', projectId);

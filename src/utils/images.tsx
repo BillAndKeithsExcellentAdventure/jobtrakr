@@ -57,7 +57,7 @@ const getFetchImageEndPointUrl = (resourceType: resourceType) => {
 const downloadImage = async (
   details: ImageDetails,
   getToken: () => string | null,
-  refreshToken: () => Promise<void>,
+  refreshToken: () => Promise<string | null>,
   resourceType: resourceType,
   localUri: string,
 ): Promise<ImageResult> => {
@@ -134,7 +134,7 @@ function arrayBufferToBase64(buffer: Uint8Array): string {
 const uploadImage = async (
   details: ImageDetails,
   getToken: () => string | null,
-  refreshToken: () => Promise<void>,
+  refreshToken: () => Promise<string | null>,
   mediaType: mediaType,
   resourceType: resourceType,
   localImageUrl: string,
@@ -221,7 +221,7 @@ export const deleteMedia = async (
   imageIds: string[],
   imageType: string,
   getToken: () => string | null,
-  refreshToken: () => Promise<void>,
+  refreshToken: () => Promise<string | null>,
 ) => {
   try {
     const endPointUrl = `${API_BASE_URL}/deleteMedia`;

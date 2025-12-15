@@ -49,7 +49,7 @@ const generateAndSendPdf = async (
   params: SendPdfParams,
   changeOrderId: string,
   getToken: () => string | null,
-  refreshToken: () => Promise<void>,
+  refreshToken: () => Promise<string | null>,
 ): Promise<string | null> => {
   try {
     const apiFetch = createApiWithRetry(getToken, refreshToken);

@@ -10,7 +10,7 @@
  * @param url - The URL to fetch
  * @param options - Fetch options (headers, method, body, etc.)
  * @param token - The current authentication token
- * @param refreshToken - Function to refresh the authentication token
+ * @param refreshToken - Function to refresh the authentication token (returns the new token)
  * @returns The fetch Response object
  * 
  * @example
@@ -32,7 +32,7 @@ export async function fetchWithTokenRefresh(
   url: string,
   options: RequestInit,
   token: string | null,
-  refreshToken: () => Promise<void>,
+  refreshToken: () => Promise<string | null>,
 ): Promise<Response> {
   // Add authorization header if token is available
   const headers = {
@@ -53,17 +53,23 @@ export async function fetchWithTokenRefresh(
     console.log(`Received ${response.status} error, attempting to refresh token...`);
 
     try {
-      // Refresh the token
-      await refreshToken();
+      // Refresh the token and get the new token value
+      const newToken = await refreshToken();
 
-      // Note: After refreshToken() completes, the token in the context will be updated,
-      // but we don't have access to the new token value here. We need to get it from
-      // the context again. This function should be called with the updated token.
-      // For now, we'll log that a refresh was attempted.
-      console.log('Token refresh completed, but retry requires updated token from context');
+      // Update headers with the new token
+      const retryHeaders = {
+        ...options.headers,
+        ...(newToken ? { Authorization: `Bearer ${newToken}` } : {}),
+      };
 
-      // We cannot automatically retry here because we don't have access to the refreshed token
-      // The caller needs to handle this by checking the response status and retrying if needed
+      const retryOptions = {
+        ...options,
+        headers: retryHeaders,
+      };
+
+      // Retry the request with the new token
+      response = await fetch(url, retryOptions);
+      console.log('Token refresh and retry completed');
     } catch (error) {
       console.error('Failed to refresh token:', error);
     }
@@ -77,7 +83,7 @@ export async function fetchWithTokenRefresh(
  * This version allows the caller to automatically retry with a refreshed token.
  * 
  * @param getToken - Function to get the current token
- * @param refreshToken - Function to refresh the token
+ * @param refreshToken - Function to refresh the token (returns the new token value)
  * @returns A function that makes API calls with automatic retry on auth errors
  * 
  * @example
@@ -94,7 +100,7 @@ export async function fetchWithTokenRefresh(
  */
 export function createApiWithRetry(
   getToken: () => string | null,
-  refreshToken: () => Promise<void>,
+  refreshToken: () => Promise<string | null>,
 ): (url: string, options: RequestInit) => Promise<Response> {
   return async (url: string, options: RequestInit): Promise<Response> => {
     const makeRequest = async (currentToken: string | null): Promise<Response> => {
@@ -119,8 +125,8 @@ export function createApiWithRetry(
       console.log(`Received ${response.status} error, attempting to refresh token and retry...`);
 
       try {
-        // Refresh the token
-        await refreshToken();
+        // Refresh the token and get the new token value
+        const newToken = await refreshToken();
 
         // Add a header to prevent infinite retry loops
         const retryOptions = {
@@ -131,8 +137,8 @@ export function createApiWithRetry(
           },
         };
 
-        // Retry with the refreshed token
-        response = await makeRequest(getToken());
+        // Retry with the refreshed token (use the returned value, not getToken())
+        response = await makeRequest(newToken);
         console.log('Retry after token refresh completed');
       } catch (error) {
         console.error('Failed to refresh token:', error);

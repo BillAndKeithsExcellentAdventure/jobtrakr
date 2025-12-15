@@ -38,7 +38,7 @@ export default function CreateOrganization() {
     slug: string,
     isDevDeployment: boolean | undefined,
     getToken: () => string | null,
-    refreshToken: () => Promise<void>,
+    refreshToken: () => Promise<string | null>,
   ) => {
     try {
       const organizationData = {

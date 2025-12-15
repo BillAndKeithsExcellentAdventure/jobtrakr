@@ -30,7 +30,7 @@ const processAIProcessing = async (
   userId: string,
   organizationId: string,
   getToken: () => string | null,
-  refreshToken: () => Promise<void>,
+  refreshToken: () => Promise<string | null>,
 ) => {
   try {
     const receiptImageData = {

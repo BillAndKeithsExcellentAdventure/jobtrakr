@@ -5,7 +5,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useCa
 type AuthTokenContextType = {
   token: string | null;
   isLoading: boolean;
-  refreshToken: () => Promise<void>;
+  refreshToken: () => Promise<string | null>;
 };
 
 // Create the context with an initial undefined value
@@ -26,18 +26,21 @@ export const AuthTokenProvider: React.FC<AuthTokenProviderProps> = ({ children }
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const fetchToken = useCallback(async () => {
+  const fetchToken = useCallback(async (): Promise<string | null> => {
     try {
       setIsLoading(true);
       if (auth.userId && auth.isSignedIn) {
         const newToken = await auth.getToken();
         setToken(newToken ?? null);
+        return newToken ?? null;
       } else {
         setToken(null);
+        return null;
       }
     } catch (error) {
       console.error('Error fetching auth token:', error);
       setToken(null);
+      return null;
     } finally {
       setIsLoading(false);
     }
@@ -48,8 +51,8 @@ export const AuthTokenProvider: React.FC<AuthTokenProviderProps> = ({ children }
     fetchToken();
   }, [fetchToken]);
 
-  const refreshToken = useCallback(async () => {
-    await fetchToken();
+  const refreshToken = useCallback(async (): Promise<string | null> => {
+    return await fetchToken();
   }, [fetchToken]);
 
   return (
