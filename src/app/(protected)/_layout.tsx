@@ -4,6 +4,7 @@ import { ActiveProjectIdsProvider } from '@/src/context/ActiveProjectIdsContext'
 import { WorkItemSpentSummaryProvider } from '@/src/context/WorkItemSpentSummaryContext';
 import AuthorizedStoresProvider from '@/src/components/AuthorizedStoresProvider';
 import ActiveProjectDetailsStoreProvider from '@/src/components/ActiveProjectDetailsStoreProvider';
+import UploadQueueProcessor from '@/src/components/UploadQueueProcessor';
 
 export const unstable_settings = {
   initialRouteName: '(home)', // anchor
@@ -23,6 +24,7 @@ export default function ProtectedLayout() {
   return (
     <>
       <AuthorizedStoresProvider />
+      <UploadQueueProcessor />
       <ActiveProjectIdsProvider>
         <WorkItemSpentSummaryProvider>
           <ActiveProjectDetailsStoreProvider>
