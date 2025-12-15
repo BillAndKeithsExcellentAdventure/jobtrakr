@@ -214,6 +214,7 @@ export const deleteMedia = async (
   organizationId: string,
   projectId: string,
   imageIds: string[],
+  imageType: string,
   token: string,
 ) => {
   try {
@@ -231,6 +232,7 @@ export const deleteMedia = async (
         organizationId: organizationId,
         projectId: projectId,
         imageIds: imageIds,
+        imageType: imageType,
       }),
     });
 

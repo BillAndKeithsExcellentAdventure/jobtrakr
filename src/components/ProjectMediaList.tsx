@@ -149,7 +149,14 @@ export const ProjectMediaList = ({
             const selectedImageIds = selectedIds
               .map((item) => item.imageId)
               .filter((id): id is string => !!id);
-            const status = await deleteMedia(userId, orgId, projectId, selectedImageIds, token);
+            const status = await deleteMedia(
+              userId,
+              orgId,
+              projectId,
+              selectedImageIds,
+              'photo/video',
+              token,
+            );
             if (status.success) {
               for (const uId of selectedIds) {
                 removePhotoData(uId.id);
