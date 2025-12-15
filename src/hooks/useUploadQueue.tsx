@@ -158,6 +158,7 @@ export const useUploadQueue = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
   const hasProcessedRef = useRef(false);
+  const initialFailedUploadsRef = useRef<any[]>([]);
 
   useEffect(() => {
     // Only process once per app session
@@ -170,9 +171,19 @@ export const useUploadQueue = () => {
       return;
     }
 
+    // Wait for store to be ready
+    if (!store) {
+      return;
+    }
+
     // Check if there are any failed uploads to process
     if (failedUploads.length === 0) {
       return;
+    }
+
+    // Capture the initial list of failed uploads
+    if (initialFailedUploadsRef.current.length === 0) {
+      initialFailedUploadsRef.current = [...failedUploads];
     }
 
     // Mark as processing to prevent duplicate runs
@@ -181,12 +192,13 @@ export const useUploadQueue = () => {
     // Process uploads asynchronously without blocking UI
     const processUploads = async () => {
       setIsProcessing(true);
-      console.log(`Starting upload queue processing. ${failedUploads.length} items to process.`);
+      const itemsToProcess = initialFailedUploadsRef.current;
+      console.log(`Starting upload queue processing. ${itemsToProcess.length} items to process.`);
 
       let successCount = 0;
       let failCount = 0;
 
-      for (const item of failedUploads) {
+      for (const item of itemsToProcess) {
         try {
           // Create ImageDetails from failed upload data
           const details: ImageDetails = {
@@ -233,14 +245,14 @@ export const useUploadQueue = () => {
       }
 
       console.log(
-        `Upload queue processing complete. Success: ${successCount}, Failed: ${failCount}, Total: ${failedUploads.length}`,
+        `Upload queue processing complete. Success: ${successCount}, Failed: ${failCount}, Total: ${itemsToProcess.length}`,
       );
       setIsProcessing(false);
     };
 
     // Run asynchronously to avoid blocking
     processUploads();
-  }, [userId, orgId, token, refreshToken, isTokenLoading, failedUploads, store]);
+  }, [userId, orgId, token, refreshToken, isTokenLoading, store, failedUploads.length]);
 
   return {
     isProcessing,
