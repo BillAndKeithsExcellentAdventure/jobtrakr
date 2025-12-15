@@ -15,6 +15,7 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { useRouter } from 'expo-router';
+import { deleteMedia } from '../utils/images';
 
 export const ITEM_HEIGHT = 100;
 const RIGHT_ACTION_WIDTH = 100;
@@ -27,7 +28,19 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => (
 ));
 
 const SwipeableInvoiceItem = React.memo(
-  ({ orgId, projectId, item }: { orgId: string; projectId: string; item: ClassifiedInvoiceData }) => {
+  ({
+    orgId,
+    projectId,
+    item,
+    jwtToken,
+    userId,
+  }: {
+    orgId: string;
+    projectId: string;
+    item: ClassifiedInvoiceData;
+    jwtToken: string;
+    userId: string;
+  }) => {
     const router = useRouter();
     const colors = useColors();
     const deleteInvoice = useDeleteRowCallback(projectId, 'invoices');
@@ -61,6 +74,13 @@ const SwipeableInvoiceItem = React.memo(
           // now delete the invoice itself
           console.log('Deleting invoice with id:', id);
           deleteInvoice(id);
+
+          if (item.imageId && userId && jwtToken) {
+            // we also need to delete the associated receipt photo from storage
+            (async () => {
+              deleteMedia(userId, orgId, projectId, [item.imageId], 'invoice', jwtToken);
+            })();
+          }
         }
       },
       [deleteInvoice, deleteInvoiceLineItem, allInvoiceItems],

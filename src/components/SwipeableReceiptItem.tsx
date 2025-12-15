@@ -15,6 +15,8 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { useRouter } from 'expo-router';
+import { deleteMedia } from '../utils/images';
+import { useAuth } from '@clerk/clerk-expo';
 
 export const ITEM_HEIGHT = 100;
 const RIGHT_ACTION_WIDTH = 100;
@@ -27,7 +29,19 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => (
 ));
 
 const SwipeableReceiptItem = React.memo(
-  ({ orgId, projectId, item }: { orgId: string; projectId: string; item: ClassifiedReceiptData }) => {
+  ({
+    orgId,
+    projectId,
+    item,
+    jwtToken,
+    userId,
+  }: {
+    orgId: string;
+    projectId: string;
+    item: ClassifiedReceiptData;
+    jwtToken: string;
+    userId: string;
+  }) => {
     const router = useRouter();
     const colors = useColors();
     const deleteReceipt = useDeleteRowCallback(projectId, 'receipts');
@@ -60,9 +74,25 @@ const SwipeableReceiptItem = React.memo(
           // now delete the receipt itself
           console.log('Deleting receipt with id:', id);
           deleteReceipt(id);
+
+          if (item.imageId && userId && jwtToken) {
+            // we also need to delete the associated receipt photo from storage
+            (async () => {
+              deleteMedia(userId, orgId, projectId, [item.imageId], 'receipt', jwtToken);
+            })();
+          }
         }
       },
-      [deleteReceipt, deleteReceiptLineItem, allReceiptItems],
+      [
+        deleteReceipt,
+        deleteReceiptLineItem,
+        allReceiptItems,
+        item.imageId,
+        userId,
+        jwtToken,
+        orgId,
+        projectId,
+      ],
     );
 
     const handleDelete = useCallback(() => {

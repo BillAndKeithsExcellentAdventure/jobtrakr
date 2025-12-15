@@ -36,6 +36,8 @@ const ProjectInvoicesPage = () => {
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
+  const [jwtToken, setJwtToken] = useState<string>('');
+  const auth = useAuth();
 
   useEffect(() => {
     if (projectId) {
@@ -44,11 +46,20 @@ const ProjectInvoicesPage = () => {
   }, [projectId, addActiveProjectIds]);
 
   useEffect(() => {
+    const fetchToken = async () => {
+      if (auth.userId) {
+        const token = await auth.getToken();
+        setJwtToken(token ?? '');
+      }
+    };
+    fetchToken();
+  }, [auth]);
+
+  useEffect(() => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
   }, [projectId, activeProjectIds, isStoreReady]);
   useSeedWorkItemsIfNecessary(projectId);
 
-  const auth = useAuth();
   const allInvoices = useAllRows(projectId, 'invoices', RecentInvoiceDateCompare);
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const addInvoiceImage = useAddImageCallback();
@@ -245,7 +256,13 @@ const ProjectInvoicesPage = () => {
                     data={classifiedInvoices}
                     keyExtractor={(item, index) => item.id ?? index.toString()}
                     renderItem={({ item }) => (
-                      <SwipeableInvoiceItem orgId={auth.orgId!!} projectId={projectId} item={item} />
+                      <SwipeableInvoiceItem
+                        orgId={auth.orgId!!}
+                        projectId={projectId}
+                        item={item}
+                        jwtToken={jwtToken}
+                        userId={auth.userId!!}
+                      />
                     )}
                     ListEmptyComponent={
                       <View style={{ alignItems: 'center', margin: 20 }}>

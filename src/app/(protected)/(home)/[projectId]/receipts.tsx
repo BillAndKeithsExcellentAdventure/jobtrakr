@@ -20,7 +20,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, TextInput } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { KeyboardAvoidingView, KeyboardToolbar } from 'react-native-keyboard-controller';
@@ -40,6 +40,8 @@ const ProjectReceiptsPage = () => {
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
+  const [jwtToken, setJwtToken] = useState<string>('');
+  const auth = useAuth();
 
   useEffect(() => {
     if (projectId) {
@@ -48,11 +50,20 @@ const ProjectReceiptsPage = () => {
   }, [projectId, addActiveProjectIds]);
 
   useEffect(() => {
+    const fetchToken = async () => {
+      if (auth.userId) {
+        const token = await auth.getToken();
+        setJwtToken(token ?? '');
+      }
+    };
+    fetchToken();
+  }, [auth]);
+
+  useEffect(() => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
   }, [projectId, activeProjectIds, isStoreReady]);
   useSeedWorkItemsIfNecessary(projectId);
 
-  const auth = useAuth();
   const allReceipts = useAllRows(projectId, 'receipts', RecentReceiptDateCompare);
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const addReceiptImage = useAddImageCallback();
@@ -285,7 +296,13 @@ const ProjectReceiptsPage = () => {
                         data={classifiedReceipts}
                         keyExtractor={(item, index) => item.id ?? index.toString()}
                         renderItem={({ item }) => (
-                          <SwipeableReceiptItem orgId={auth.orgId!!} projectId={projectId} item={item} />
+                          <SwipeableReceiptItem
+                            orgId={auth.orgId!!}
+                            projectId={projectId}
+                            item={item}
+                            jwtToken={jwtToken}
+                            userId={auth.userId!!}
+                          />
                         )}
                         ListEmptyComponent={
                           <View style={{ alignItems: 'center', margin: 20 }}>
