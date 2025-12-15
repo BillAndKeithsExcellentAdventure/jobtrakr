@@ -1,7 +1,7 @@
 import { useUploadQueue } from '../hooks/useUploadQueue';
 
 /**
- * Component that handles background upload processing for failed uploads.
+ * Component that handles foreground upload processing for failed uploads.
  * This runs once when the app starts after authentication.
  * It processes all failed uploads without blocking the UI.
  */

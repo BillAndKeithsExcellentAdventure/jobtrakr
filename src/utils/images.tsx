@@ -8,9 +8,9 @@ import { API_BASE_URL } from '../constants/app-constants';
 import { useAuthToken } from '../context/AuthTokenContext';
 import { createApiWithRetry } from './apiWithTokenRefresh';
 
-type ImageResult = { status: 'Success' | 'Error'; id: string; uri?: string | undefined; msg: string };
+export type ImageResult = { status: 'Success' | 'Error'; id: string; uri?: string | undefined; msg: string };
 
-interface ImageDetails {
+export interface ImageDetails {
   id: string;
   userId: string;
   orgId: string;
@@ -23,7 +23,7 @@ interface ImageDetails {
 export type mediaType = 'photo' | 'video';
 export type resourceType = 'receipt' | 'invoice' | 'photo';
 
-const getAddImageEndPointUrl = (resourceType: resourceType, mediaType: mediaType) => {
+export const getAddImageEndPointUrl = (resourceType: resourceType, mediaType: mediaType) => {
   switch (resourceType) {
     case 'receipt':
       return `${API_BASE_URL}/addReceipt`;
@@ -131,7 +131,7 @@ function arrayBufferToBase64(buffer: Uint8Array): string {
   return global.btoa(binary);
 }
 
-const uploadImage = async (
+export const uploadImage = async (
   details: ImageDetails,
   token: string | null,
   refreshToken: () => Promise<string | null>,
