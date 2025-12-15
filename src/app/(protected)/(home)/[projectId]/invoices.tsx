@@ -1,6 +1,7 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
+import { useAuthToken } from '@/src/context/AuthTokenContext';
 import { useColors } from '@/src/context/ColorsContext';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -36,7 +37,7 @@ const ProjectInvoicesPage = () => {
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
-  const [jwtToken, setJwtToken] = useState<string>('');
+  const { token: jwtToken } = useAuthToken();
   const auth = useAuth();
 
   useEffect(() => {
@@ -44,16 +45,6 @@ const ProjectInvoicesPage = () => {
       addActiveProjectIds([projectId]);
     }
   }, [projectId, addActiveProjectIds]);
-
-  useEffect(() => {
-    const fetchToken = async () => {
-      if (auth.userId) {
-        const token = await auth.getToken();
-        setJwtToken(token ?? '');
-      }
-    };
-    fetchToken();
-  }, [auth]);
 
   useEffect(() => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
@@ -260,7 +251,7 @@ const ProjectInvoicesPage = () => {
                         orgId={auth.orgId!!}
                         projectId={projectId}
                         item={item}
-                        jwtToken={jwtToken}
+                        jwtToken={jwtToken ?? ''}
                         userId={auth.userId!!}
                       />
                     )}

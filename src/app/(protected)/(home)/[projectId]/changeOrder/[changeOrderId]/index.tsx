@@ -9,6 +9,7 @@ import SwipeableChangeOrderItem from '@/src/components/SwipeableChangeOrderItem'
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { API_BASE_URL } from '@/src/constants/app-constants';
+import { useAuthToken } from '@/src/context/AuthTokenContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
@@ -84,6 +85,7 @@ const DefineChangeOrderScreen = () => {
   const appSettings = useAppSettings();
   const projectData = useProject(projectId);
   const auth = useAuth();
+  const { token } = useAuthToken();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [showAddItemModal, setShowAddItemModal] = useState<boolean>(false);
   const [newChangeOrderItem, setNewChangeOrderItem] = useState<ChangeOrderItem>({
@@ -198,7 +200,10 @@ const DefineChangeOrderScreen = () => {
           return;
         }
 
-        const token = (await auth.getToken()) ?? '';
+        if (!token) {
+          Alert.alert('Error', 'Authentication token not available.');
+          return;
+        }
 
         // Calculate hash and expiration (48 hours from now in seconds since Jan 1, 2000)
         const expirationDate = Math.floor(

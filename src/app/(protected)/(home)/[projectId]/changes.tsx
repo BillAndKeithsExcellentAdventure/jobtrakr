@@ -1,4 +1,5 @@
 import { Text, View } from '@/src/components/Themed';
+import { useAuthToken } from '@/src/context/AuthTokenContext';
 import { useColors } from '@/src/context/ColorsContext';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -59,6 +60,7 @@ const ChangeOrdersScreen = () => {
   const router = useRouter();
   const updateChangeOrder = useUpdateRowCallback(projectId, 'changeOrders');
   const auth = useAuth();
+  const { token } = useAuthToken();
   const appSettings = useAppSettings();
   const currentProject = useProject(projectId);
 
@@ -93,7 +95,10 @@ const ChangeOrdersScreen = () => {
   useEffect(() => {
     const fetchStatuses = async () => {
       try {
-        const token = (await auth.getToken()) ?? '';
+        if (!token) {
+          console.log('No token available');
+          return;
+        }
         const changeOrderStatusString = await getChangeOrderStatuses(projectId, token);
         console.log('Change Order Statuses:', changeOrderStatusString);
 

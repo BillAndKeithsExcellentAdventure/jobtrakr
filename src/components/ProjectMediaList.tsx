@@ -10,6 +10,7 @@ import { MediaEntryData, useDeleteRowCallback } from '@/src/tbStores/projectDeta
 import { useRouter } from 'expo-router';
 import { buildLocalMediaUri, deleteMedia, useGetImageCallback } from '@/src/utils/images';
 import { useColors } from '@/src/context/ColorsContext';
+import { useAuthToken } from '@/src/context/AuthTokenContext';
 import { useColorScheme } from './useColorScheme';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useAuth } from '@clerk/clerk-expo';
@@ -42,8 +43,9 @@ export const ProjectMediaList = ({
   const colorScheme = useColorScheme();
   const colors = useColors();
   const getImage = useGetImageCallback();
-  const auth = useAuth(); // Move useAuth to component level
-  const { orgId, userId } = auth; // Destructure for easier access
+  const auth = useAuth();
+  const { orgId, userId } = auth;
+  const { token } = useAuthToken();
 
   useEffect(() => {
     // Initialize selectableProjectMedia whenever allProjectMedia changes
@@ -144,7 +146,6 @@ export const ProjectMediaList = ({
       {
         text: 'Remove',
         onPress: async () => {
-          const token = await auth.getToken();
           if (userId && orgId && token) {
             const selectedImageIds = selectedIds
               .map((item) => item.imageId)
@@ -168,7 +169,7 @@ export const ProjectMediaList = ({
         },
       },
     ]);
-  }, [removePhotoData, mediaItems, auth, userId, orgId, projectId]);
+  }, [removePhotoData, mediaItems, auth, userId, orgId, projectId, token]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: MediaEntryDisplayData; index: number }) => {

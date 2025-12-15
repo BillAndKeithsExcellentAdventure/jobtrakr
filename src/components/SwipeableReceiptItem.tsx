@@ -16,7 +16,6 @@ import {
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { useRouter } from 'expo-router';
 import { deleteMedia } from '../utils/images';
-import { useAuth } from '@clerk/clerk-expo';
 
 export const ITEM_HEIGHT = 100;
 const RIGHT_ACTION_WIDTH = 100;
