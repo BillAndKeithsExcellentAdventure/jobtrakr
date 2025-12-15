@@ -83,8 +83,8 @@ export const useUploadQueue = () => {
           // - deviceTypes: This is metadata that doesn't affect the upload success
           const details: ImageDetails = {
             id: item.itemId,
-            userId: userId,
-            orgId: orgId,
+            userId,
+            orgId,
             projectId: item.projectId,
             longitude: 0,
             latitude: 0,
@@ -108,9 +108,7 @@ export const useUploadQueue = () => {
             successCount++;
 
             // Remove from failed uploads table
-            if (store) {
-              store.delRow('failedToUpload', item.id);
-            }
+            store.delRow('failedToUpload', item.id);
           } else {
             console.warn(`Failed to upload item ${item.itemId}: ${result.msg}`);
             failCount++;
