@@ -33,7 +33,7 @@ export const useUploadQueue = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
   const hasProcessedRef = useRef(false);
-  const initialFailedUploadsRef = useRef<any[]>([]);
+  const initialFailedUploadsRef = useRef<typeof failedUploads>([]);
 
   useEffect(() => {
     // Only process once per app session
@@ -78,8 +78,9 @@ export const useUploadQueue = () => {
           // Create ImageDetails from failed upload data
           // Note: Using default values for longitude/latitude/deviceTypes since these are
           // not stored in FailedToUploadData. The original upload likely used real values,
-          // but for retry purposes, these defaults are acceptable as the backend doesn't
-          // require them for the retry operation.
+          // but for retry purposes, these defaults are acceptable because:
+          // - longitude/latitude: The backend doesn't require them for the actual upload operation
+          // - deviceTypes: This is metadata that doesn't affect the upload success
           const details: ImageDetails = {
             id: item.itemId,
             userId: userId,
@@ -130,10 +131,11 @@ export const useUploadQueue = () => {
     };
 
     // Run asynchronously to avoid blocking
-    processUploads();
-  }, [userId, orgId, token, refreshToken, isTokenLoading, store, failedUploads]);
-  // Note: failedUploads is included to trigger when data becomes available, but
-  // hasProcessedRef.current prevents re-runs after the first successful processing.
+    void processUploads();
+  }, [userId, orgId, token, refreshToken, isTokenLoading, store, failedUploads.length]);
+  // Note: failedUploads.length is used instead of failedUploads to avoid unnecessary re-runs
+  // when the array reference changes. hasProcessedRef.current prevents re-runs after the first
+  // successful processing.
 
   return {
     isProcessing,
