@@ -2,6 +2,7 @@ import { ActionButton } from '@/src/components/ActionButton';
 import SwipeableReceiptItem from '@/src/components/SwipeableReceiptItem';
 import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
+import { useAuthToken } from '@/src/context/AuthTokenContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
@@ -40,7 +41,7 @@ const ProjectReceiptsPage = () => {
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
-  const [jwtToken, setJwtToken] = useState<string>('');
+  const { token: jwtToken } = useAuthToken();
   const auth = useAuth();
 
   useEffect(() => {
@@ -48,16 +49,6 @@ const ProjectReceiptsPage = () => {
       addActiveProjectIds([projectId]);
     }
   }, [projectId, addActiveProjectIds]);
-
-  useEffect(() => {
-    const fetchToken = async () => {
-      if (auth.userId) {
-        const token = await auth.getToken();
-        setJwtToken(token ?? '');
-      }
-    };
-    fetchToken();
-  }, [auth]);
 
   useEffect(() => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
@@ -300,7 +291,7 @@ const ProjectReceiptsPage = () => {
                             orgId={auth.orgId!!}
                             projectId={projectId}
                             item={item}
-                            jwtToken={jwtToken}
+                            jwtToken={jwtToken ?? ''}
                             userId={auth.userId!!}
                           />
                         )}

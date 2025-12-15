@@ -1,6 +1,7 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { API_BASE_URL } from '@/src/constants/app-constants';
+import { useAuthToken } from '@/src/context/AuthTokenContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { getOrganizationSlug } from '@/src/utils/organization';
 import { useAuth, useClerk, useOrganizationList, useSignUp } from '@clerk/clerk-expo';
@@ -19,6 +20,7 @@ export default function CreateOrganization() {
   const [organizationExists, setOrganizationExists] = React.useState(false);
   const [isCreating, setIsCreating] = React.useState(false);
   const auth = useAuth();
+  const { token } = useAuthToken();
   const { setActive } = useOrganizationList();
 
   useEffect(() => {
@@ -91,7 +93,6 @@ export default function CreateOrganization() {
         //console.log('onCreateOrganizationPress-Auth:', auth);
         //console.log('onCreateOrganizationPress-Clerk:', clerk);
         if (clerk && clerk.session) {
-          const token = await auth.getToken();
           if (token && auth.userId) {
             // Determine deployment type. Use NODE_ENV when available, fall back to React Native __DEV__.
             const isDev =

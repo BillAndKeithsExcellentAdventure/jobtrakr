@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import { FailedToUploadData, useAddItemCallback } from '@/src/tbStores/UploadSyncStore';
 import { API_BASE_URL } from '../constants/app-constants';
+import { useAuthToken } from '../context/AuthTokenContext';
 
 type ImageResult = { status: 'Success' | 'Error'; id: string; uri?: string | undefined; msg: string };
 
@@ -343,6 +344,7 @@ const copyToLocalFolder = async (
 export const useAddImageCallback = () => {
   const auth = useAuth();
   const { userId, orgId } = auth;
+  const { token } = useAuthToken();
   const addFailedToUploadRecord = useAddItemCallback();
 
   return useCallback(
@@ -363,7 +365,6 @@ export const useAddImageCallback = () => {
         return { status: 'Error', id: id, msg: 'User ID or Organization ID not available' };
       }
 
-      const token = await auth.getToken();
       if (!token) {
         return { status: 'Error', id: id, msg: 'Auth token is not available.' };
       }
@@ -411,13 +412,14 @@ export const useAddImageCallback = () => {
 
       return uploadResult;
     },
-    [userId, orgId, addFailedToUploadRecord, auth],
+    [userId, orgId, token, addFailedToUploadRecord, auth],
   );
 };
 
 export const useGetImageCallback = () => {
   const auth = useAuth();
   const { userId, orgId } = auth;
+  const { token } = useAuthToken();
 
   return useCallback(
     async (
@@ -437,7 +439,6 @@ export const useGetImageCallback = () => {
         };
       }
 
-      const token = await auth.getToken();
       if (!token) {
         return { localUri: '', result: { status: 'Error', id: itemId, msg: 'Auth token is not available.' } };
       }
@@ -483,6 +484,6 @@ export const useGetImageCallback = () => {
         };
       }
     },
-    [userId, orgId, auth],
+    [userId, orgId, token, auth],
   );
 };

@@ -6,6 +6,7 @@ import { ReceiptSummaryEditModal } from '@/src/components/ReceiptSummaryEditModa
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { Text, View } from '@/src/components/Themed';
 import { API_BASE_URL } from '@/src/constants/app-constants';
+import { useAuthToken } from '@/src/context/AuthTokenContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { ReceiptItem, ReceiptItemFromAI, ReceiptSummary } from '@/src/models/types';
 import {
@@ -69,6 +70,7 @@ const RequestAIProcessingPage = () => {
   }>();
   const auth = useAuth();
   const { userId, orgId } = auth;
+  const { token } = useAuthToken();
   const [fetchingData, setFetchingData] = useState(true);
   const [showCostItemPicker, setShowCostItemPicker] = useState(false);
   const [receiptSummary, setReceiptSummary] = useState<ReceiptSummary>();
@@ -170,7 +172,6 @@ const RequestAIProcessingPage = () => {
   }
 
   async function fetchAIResult() {
-    const token = await auth.getToken();
     if (!token) {
       console.error('No token available');
       return;
