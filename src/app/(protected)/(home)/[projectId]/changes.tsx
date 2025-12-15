@@ -22,13 +22,13 @@ import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 
 const getChangeOrderStatuses = async (
   projectId: string,
-  getToken: () => string | null,
+  token: string | null,
   refreshToken: () => Promise<string | null>,
 ): Promise<string | null> => {
   try {
     console.log('getChangeOrderStatuses projectId:', projectId);
-    
-    const apiFetch = createApiWithRetry(getToken, refreshToken);
+
+    const apiFetch = createApiWithRetry(token, refreshToken);
     const response = await apiFetch(`${API_BASE_URL}/GetChangeOrderStatuses`, {
       method: 'POST',
       headers: {
@@ -101,11 +101,7 @@ const ChangeOrdersScreen = () => {
   useEffect(() => {
     const fetchStatuses = async () => {
       try {
-        const changeOrderStatusString = await getChangeOrderStatuses(
-          projectId,
-          () => token,
-          refreshToken,
-        );
+        const changeOrderStatusString = await getChangeOrderStatuses(projectId, token, refreshToken);
         console.log('Change Order Statuses:', changeOrderStatusString);
 
         if (!changeOrderStatusString) {

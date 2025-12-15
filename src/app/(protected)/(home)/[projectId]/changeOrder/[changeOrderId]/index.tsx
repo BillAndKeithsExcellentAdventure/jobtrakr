@@ -20,6 +20,7 @@ import {
   useAllRows,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { createApiWithRetry } from '@/src/utils/apiWithTokenRefresh';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { loadTemplateHtmlAssetFileToString } from '@/src/utils/htmlFileGenerator';
 import { ChangeOrderData, renderChangeOrderTemplate } from '@/src/utils/renderChangeOrderTemplate';
@@ -48,11 +49,11 @@ interface SendPdfParams {
 const generateAndSendPdf = async (
   params: SendPdfParams,
   changeOrderId: string,
-  getToken: () => string | null,
+  token: string | null,
   refreshToken: () => Promise<string | null>,
 ): Promise<string | null> => {
   try {
-    const apiFetch = createApiWithRetry(getToken, refreshToken);
+    const apiFetch = createApiWithRetry(token, refreshToken);
     const response = await apiFetch(`${API_BASE_URL}/sendChangeOrderEmail`, {
       method: 'POST',
       headers: {
@@ -320,7 +321,7 @@ const DefineChangeOrderScreen = () => {
             }"`,
           },
           changeOrder?.id || 'unknown',
-          () => token,
+          token,
           refreshToken,
         );
 

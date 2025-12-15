@@ -45,7 +45,7 @@ export const ProjectMediaList = ({
   const getImage = useGetImageCallback();
   const auth = useAuth();
   const { orgId, userId } = auth;
-  const { token } = useAuthToken();
+  const { token, refreshToken } = useAuthToken();
 
   useEffect(() => {
     // Initialize selectableProjectMedia whenever allProjectMedia changes
@@ -157,6 +157,7 @@ export const ProjectMediaList = ({
               selectedImageIds,
               'photo/video',
               token,
+              refreshToken,
             );
             if (status.success) {
               for (const uId of selectedIds) {

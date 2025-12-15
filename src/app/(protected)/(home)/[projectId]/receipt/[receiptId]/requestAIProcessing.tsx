@@ -29,7 +29,7 @@ const processAIProcessing = async (
   projectId: string,
   userId: string,
   organizationId: string,
-  getToken: () => string | null,
+  token: string | null,
   refreshToken: () => Promise<string | null>,
 ) => {
   try {
@@ -41,7 +41,7 @@ const processAIProcessing = async (
     };
     //console.log(' receiptImageData:', receiptImageData);
 
-    const apiFetch = createApiWithRetry(getToken, refreshToken);
+    const apiFetch = createApiWithRetry(token, refreshToken);
     const response = await apiFetch(`${API_BASE_URL}/getReceiptIntelligence`, {
       method: 'POST',
       headers: {
@@ -174,7 +174,7 @@ const RequestAIProcessingPage = () => {
   }
 
   async function fetchAIResult() {
-    const result = await processAIProcessing(imageId, projectId, userId!, orgId!, () => token, refreshToken);
+    const result = await processAIProcessing(imageId, projectId, userId!, orgId!, token, refreshToken);
     if (result.status === 'Success') {
       const summary = {
         vendor: replaceNonPrintable(result.response.MerchantName.value),

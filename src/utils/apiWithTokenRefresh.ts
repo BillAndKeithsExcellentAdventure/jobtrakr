@@ -6,13 +6,13 @@
 
 /**
  * Makes an API call with automatic token refresh on 401/403 errors.
- * 
+ *
  * @param url - The URL to fetch
  * @param options - Fetch options (headers, method, body, etc.)
  * @param token - The current authentication token
  * @param refreshToken - Function to refresh the authentication token (returns the new token)
  * @returns The fetch Response object
- * 
+ *
  * @example
  * ```typescript
  * const { token, refreshToken } = useAuthToken();
@@ -81,16 +81,16 @@ export async function fetchWithTokenRefresh(
 /**
  * A higher-order function that returns an API caller with automatic token refresh.
  * This version allows the caller to automatically retry with a refreshed token.
- * 
+ *
  * @param getToken - Function to get the current token
  * @param refreshToken - Function to refresh the token (returns the new token value)
  * @returns A function that makes API calls with automatic retry on auth errors
- * 
+ *
  * @example
  * ```typescript
  * const { token, refreshToken } = useAuthToken();
- * const apiFetch = createApiWithRetry(() => token, refreshToken);
- * 
+ * const apiFetch = createApiWithRetry(token, refreshToken);
+ *
  * const response = await apiFetch(`${API_BASE_URL}/endpoint`, {
  *   method: 'POST',
  *   headers: { 'Content-Type': 'application/json' },
@@ -99,7 +99,7 @@ export async function fetchWithTokenRefresh(
  * ```
  */
 export function createApiWithRetry(
-  getToken: () => string | null,
+  token: string | null,
   refreshToken: () => Promise<string | null>,
 ): (url: string, options: RequestInit) => Promise<Response> {
   return async (url: string, options: RequestInit): Promise<Response> => {
@@ -118,10 +118,14 @@ export function createApiWithRetry(
     };
 
     // Make the initial request
-    let response = await makeRequest(getToken());
+    let response = await makeRequest(token);
 
     // If we get a 401 or 403, try refreshing the token and retry once
-    if ((response.status === 401 || response.status === 403) && !options.headers?.['X-Retry-After-Refresh']) {
+    const hasRetryHeader =
+      typeof options.headers === 'object' &&
+      options.headers !== null &&
+      'X-Retry-After-Refresh' in options.headers;
+    if ((response.status === 401 || response.status === 403) && !hasRetryHeader) {
       console.log(`Received ${response.status} error, attempting to refresh token and retry...`);
 
       try {

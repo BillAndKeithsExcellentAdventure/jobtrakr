@@ -56,7 +56,7 @@ const getFetchImageEndPointUrl = (resourceType: resourceType) => {
 
 const downloadImage = async (
   details: ImageDetails,
-  getToken: () => string | null,
+  token: string | null,
   refreshToken: () => Promise<string | null>,
   resourceType: resourceType,
   localUri: string,
@@ -73,7 +73,7 @@ const downloadImage = async (
     console.log('Downloading image from:', endPointUrl);
 
     // Make the API call with token refresh
-    const apiFetch = createApiWithRetry(getToken, refreshToken);
+    const apiFetch = createApiWithRetry(token, refreshToken);
     const response = await apiFetch(endPointUrl, {
       method: 'GET',
       headers: {
@@ -133,7 +133,7 @@ function arrayBufferToBase64(buffer: Uint8Array): string {
 
 const uploadImage = async (
   details: ImageDetails,
-  getToken: () => string | null,
+  token: string | null,
   refreshToken: () => Promise<string | null>,
   mediaType: mediaType,
   resourceType: resourceType,
@@ -170,7 +170,7 @@ const uploadImage = async (
     console.log('Uploading image to:', endPointUrl);
 
     // Make the API call with token refresh
-    const apiFetch = createApiWithRetry(getToken, refreshToken);
+    const apiFetch = createApiWithRetry(token, refreshToken);
     const response = await apiFetch(endPointUrl, {
       method: 'POST',
       headers: {
@@ -220,14 +220,14 @@ export const deleteMedia = async (
   projectId: string,
   imageIds: string[],
   imageType: string,
-  getToken: () => string | null,
+  token: string | null,
   refreshToken: () => Promise<string | null>,
 ) => {
   try {
     const endPointUrl = `${API_BASE_URL}/deleteMedia`;
 
     // Make the API call with token refresh
-    const apiFetch = createApiWithRetry(getToken, refreshToken);
+    const apiFetch = createApiWithRetry(token, refreshToken);
     const response = await apiFetch(endPointUrl, {
       method: 'POST',
       headers: {
@@ -392,7 +392,7 @@ export const useAddImageCallback = () => {
       // Upload to backend with token refresh
       const uploadResult = await uploadImage(
         details,
-        () => token,
+        token,
         refreshToken,
         mediaType,
         resourceType,
@@ -470,7 +470,7 @@ export const useGetImageCallback = () => {
           deviceTypes: deviceType,
         };
 
-        const downloadResult = await downloadImage(details, () => token, refreshToken, resourceType, imageUri);
+        const downloadResult = await downloadImage(details, token, refreshToken, resourceType, imageUri);
 
         return {
           localUri: imageUri,

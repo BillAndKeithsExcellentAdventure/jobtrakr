@@ -37,7 +37,7 @@ export default function CreateOrganization() {
     name: string,
     slug: string,
     isDevDeployment: boolean | undefined,
-    getToken: () => string | null,
+    token: string | null,
     refreshToken: () => Promise<string | null>,
   ) => {
     try {
@@ -48,7 +48,7 @@ export default function CreateOrganization() {
         isDev: !!isDevDeployment,
       };
       
-      const apiFetch = createApiWithRetry(getToken, refreshToken);
+      const apiFetch = createApiWithRetry(token, refreshToken);
       const response = await apiFetch(`${API_BASE_URL}/addOrganization`, {
         method: 'POST',
         headers: {
@@ -106,7 +106,7 @@ export default function CreateOrganization() {
               organizationName,
               getOrganizationSlug(organizationName),
               isDev,
-              () => token,
+              token,
               refreshToken,
             );
 

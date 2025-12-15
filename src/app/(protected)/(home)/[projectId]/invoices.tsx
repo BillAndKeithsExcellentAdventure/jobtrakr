@@ -37,7 +37,7 @@ const ProjectInvoicesPage = () => {
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
-  const { token: jwtToken } = useAuthToken();
+  const { token, refreshToken } = useAuthToken();
   const auth = useAuth();
 
   useEffect(() => {
@@ -251,8 +251,9 @@ const ProjectInvoicesPage = () => {
                         orgId={auth.orgId!!}
                         projectId={projectId}
                         item={item}
-                        jwtToken={jwtToken ?? ''}
                         userId={auth.userId!!}
+                        token={token ?? ''}
+                        refreshToken={refreshToken}
                       />
                     )}
                     ListEmptyComponent={
