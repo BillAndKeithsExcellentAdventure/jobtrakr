@@ -174,7 +174,7 @@ const RequestAIProcessingPage = () => {
     setFetchingData(false);
   }
 
-  async function fetchAIResult() {
+  const fetchAIResult = useCallback(async () => {
     const result = await processAIProcessing(imageId, projectId, userId!, orgId!, token, refreshToken);
     if (result.status === 'Success') {
       const summary = {
@@ -203,12 +203,12 @@ const RequestAIProcessingPage = () => {
     }
 
     setFetchingData(false);
-  }
+  }, [imageId, projectId, userId, orgId, token, refreshToken]);
 
   useEffect(() => {
     //fetchSimulatedAIResult(); // Uncomment for testing with simulated data
     fetchAIResult();
-  }, []);
+  }, [fetchAIResult]);
 
   // Initial setup with all items taxable
   useEffect(() => {
@@ -423,7 +423,7 @@ const RequestAIProcessingPage = () => {
         },
       ],
     );
-  }, [router, fetchingData]);
+  }, [fetchingData]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

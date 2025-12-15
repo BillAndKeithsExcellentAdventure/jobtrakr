@@ -71,7 +71,7 @@ const CostSummaryItem = React.memo(({ item, sectionCode, projectId }: Props) => 
   const renderRightActions = useMemo(() => {
     if (item.bidAmount > 0 || item.spentAmount > 0) return undefined;
     return () => <RightAction onDelete={handleDelete} />;
-  }, [handleDelete, item.id, item.bidAmount, item.spentAmount]);
+  }, [handleDelete, item.bidAmount, item.spentAmount]);
 
   return (
     <SwipeableComponent

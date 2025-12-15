@@ -54,7 +54,7 @@ const ListProjectTemplates = () => {
       // Clear the input fields
       setProjectTemplate({ id: '', name: '', description: '' });
     }
-  }, [allProjectTemplates, projectTemplate]);
+  }, [projectTemplate, addProjectTemplate]);
 
   return (
     <>

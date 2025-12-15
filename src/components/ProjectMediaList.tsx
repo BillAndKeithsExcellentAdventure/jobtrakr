@@ -170,7 +170,7 @@ export const ProjectMediaList = ({
         },
       },
     ]);
-  }, [removePhotoData, mediaItems, auth, userId, orgId, projectId, token]);
+  }, [removePhotoData, mediaItems, userId, orgId, projectId, token, refreshToken]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: MediaEntryDisplayData; index: number }) => {

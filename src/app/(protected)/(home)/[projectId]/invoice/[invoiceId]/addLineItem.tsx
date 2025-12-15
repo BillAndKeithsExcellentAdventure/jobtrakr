@@ -97,7 +97,7 @@ const AddInvoiceLineItemPage = () => {
       return;
     }
     router.back();
-  }, [itemizedEntry, pickedSubCategoryOption]);
+  }, [itemizedEntry, pickedSubCategoryOption, addLineItem, router]);
 
   return (
     <View style={{ flex: 1, width: '100%' }}>

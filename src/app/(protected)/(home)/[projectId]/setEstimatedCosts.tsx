@@ -116,14 +116,14 @@ const SetEstimatedCostsPage = () => {
       setPickedCategoryOption(selectedCategory);
       setCurrentItemIndex(0);
     },
-    [allWorkCategories],
+    [],
   );
 
   useEffect(() => {
     if (pickedCategoryOption) {
       setCurrentCategory(allWorkCategories.find((c) => c.id === pickedCategoryOption.value));
     }
-  }, [pickedCategoryOption]);
+  }, [pickedCategoryOption, allWorkCategories]);
 
   const handleCategoryOptionChange = (option: OptionEntry) => {
     if (option) {

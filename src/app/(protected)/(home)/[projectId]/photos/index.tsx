@@ -37,7 +37,7 @@ const ProjectPhotosPage = () => {
     if (projectId) {
       addActiveProjectIds([projectId]);
     }
-  }, [projectId]);
+  }, [projectId, addActiveProjectIds]);
 
   useEffect(() => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());

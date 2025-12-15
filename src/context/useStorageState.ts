@@ -52,7 +52,7 @@ export function useStorageState(key: string): UseStateHook<string> {
       setState(JSON.stringify(sessionUser));
       //});
     }
-  }, [key]);
+  }, [key, setState]);
 
   // Set
   const setValue = useCallback(
@@ -60,7 +60,7 @@ export function useStorageState(key: string): UseStateHook<string> {
       setState(value);
       setStorageItemAsync(key, value);
     },
-    [key],
+    [key, setState],
   );
 
   return [state, setValue];

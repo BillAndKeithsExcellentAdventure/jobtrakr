@@ -50,7 +50,7 @@ const CostItemPickerModal = ({
         setPickedCostItemOption(undefined);
       }
     },
-    [availableCategoriesOptions, projectWorkItems, allAvailableCostItemOptions],
+    [projectWorkItems, allAvailableCostItemOptions],
   );
 
   useEffect(() => {

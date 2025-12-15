@@ -85,7 +85,7 @@ const SwipeableInvoiceItem = React.memo(
           }
         }
       },
-      [deleteInvoice, deleteInvoiceLineItem, allInvoiceItems],
+      [deleteInvoice, deleteInvoiceLineItem, allInvoiceItems, item.imageId, userId, orgId, projectId, token, refreshToken],
     );
 
     const handleDelete = useCallback(() => {

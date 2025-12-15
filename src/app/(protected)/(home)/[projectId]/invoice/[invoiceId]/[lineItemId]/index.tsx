@@ -117,7 +117,7 @@ const EditLineItemPage = () => {
       return;
     }
     router.back();
-  }, [itemizedEntry, pickedSubCategoryOption]);
+  }, [itemizedEntry, pickedSubCategoryOption, updateLineItem]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

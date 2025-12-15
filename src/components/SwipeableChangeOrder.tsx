@@ -69,7 +69,7 @@ const SwipeableChangeOrder = React.memo(({ item, projectId }: Props) => {
       ],
       { cancelable: true },
     );
-  }, [removeChangeOrder, item.id]);
+  }, [removeChangeOrder, item.id, changeOrderItems, deleteLineItem]);
 
   // use useMemo instead of useCallback to avoid swipeable showing a blank area
   const renderRightActions = useMemo(() => {

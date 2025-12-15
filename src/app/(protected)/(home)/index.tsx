@@ -86,15 +86,15 @@ export default function ProjectHomeScreen() {
     }
   }, [allProjects]);
 
-  const onLikePressed = (projId: string) => {
+  const onLikePressed = useCallback((projId: string) => {
     toggleFavorite(projId);
-  };
+  }, [toggleFavorite]);
 
   const minConfigMet: boolean = useMemo(
     () => {
       return allVisibleCategories && allVisibleCategories.length > 0;
     } /* && allProjectTemplates && allProjectTemplates.length > 0 */,
-    [allVisibleCategories, allProjectTemplates],
+    [allVisibleCategories],
   );
 
   useEffect(() => {
@@ -294,7 +294,7 @@ export default function ProjectHomeScreen() {
       },
     ];
     return menuButtons;
-  }, [colors, handleMenuItemPress, allCategories, orgId, orgRole, handleSignOut]);
+  }, [colors, handleMenuItemPress, allCategories, orgId, orgRole]);
 
   const headerRightComponent = useMemo(() => {
     return {
