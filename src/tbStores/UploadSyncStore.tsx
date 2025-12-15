@@ -6,8 +6,12 @@ import { TBStatus } from '@/src/models/types';
 import { useAuth } from '@clerk/clerk-expo';
 import { randomUUID } from 'expo-crypto';
 
+//export type mediaType = 'photo' | 'video';
+// export type resourceType = 'receipt' | 'invoice' | 'photo';
+
 export interface FailedToUploadData {
   id: string;
+  mediaType: string;
   resourceType: string;
   organizationId: string;
   projectId: string;
@@ -20,6 +24,7 @@ const STORE_ID_PREFIX = 'PHV1_FailedToUploadSyncStore';
 const TABLES_SCHEMA = {
   failedToUpload: {
     id: { type: 'string' },
+    mediaType: { type: 'string' },
     resourceType: { type: 'string' },
     organizationId: { type: 'string' },
     projectId: { type: 'string' },
@@ -54,6 +59,7 @@ export const useAllFailedToUpload = () => {
     if (table) {
       const items: FailedToUploadData[] = Object.entries(table).map(([id, row]) => ({
         id: id,
+        mediaType: row.mediaType ?? '',
         resourceType: row.resourceType ?? '',
         localUri: row.localUri ?? '',
         organizationId: row.organizationId ?? '',

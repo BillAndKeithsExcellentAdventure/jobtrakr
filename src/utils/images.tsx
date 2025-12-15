@@ -402,6 +402,7 @@ export const useAddImageCallback = () => {
         const data: FailedToUploadData = {
           id: id,
           resourceType: resourceType,
+          mediaType: mediaType,
           localUri: copyLocalResult.uri!,
           organizationId: orgId,
           projectId: projectId,
