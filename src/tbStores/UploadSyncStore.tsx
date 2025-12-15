@@ -29,12 +29,8 @@ const TABLES_SCHEMA = {
   },
 } as const;
 
-const {
-  useCreateMergeableStore,
-  useDelRowCallback,
-  useProvideStore,
-  useStore,
-} = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
+const { useCreateMergeableStore, useDelRowCallback, useProvideStore, useStore } =
+  UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
 const useStoreId = () => {
   const { userId } = useAuth();
@@ -96,7 +92,7 @@ export const useAllFailedToUpload = () => {
 };
 
 // Returns a callback that adds a new project to the store.
-export const useAddItemCallback = () => {
+export const useAddFailedToUploadMediaCallback = () => {
   let store = useStore(useStoreId());
 
   return useCallback(
@@ -119,7 +115,7 @@ export const useAddItemCallback = () => {
   );
 };
 
-// Returns a callback that deletes a project from the store.
+// Returns a callback that deletes an entry from the store.
 export const useDeleteFailedToUploadCallback = (id: string) =>
   useDelRowCallback('failedToUpload', id, useStoreId());
 

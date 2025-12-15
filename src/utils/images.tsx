@@ -3,7 +3,7 @@ import { randomUUID } from 'expo-crypto';
 import { useCallback } from 'react';
 import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
-import { FailedToUploadData, useAddItemCallback } from '@/src/tbStores/UploadSyncStore';
+import { FailedToUploadData, useAddFailedToUploadMediaCallback } from '@/src/tbStores/UploadSyncStore';
 import { API_BASE_URL } from '../constants/app-constants';
 import { useAuthToken } from '../context/AuthTokenContext';
 import { createApiWithRetry } from './apiWithTokenRefresh';
@@ -350,7 +350,7 @@ export const useAddImageCallback = () => {
   const auth = useAuth();
   const { userId, orgId } = auth;
   const { token, refreshToken } = useAuthToken();
-  const addFailedToUploadRecord = useAddItemCallback();
+  const addFailedToUploadRecord = useAddFailedToUploadMediaCallback();
 
   return useCallback(
     async (
