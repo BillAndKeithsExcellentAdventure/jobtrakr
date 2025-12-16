@@ -20,8 +20,8 @@ export interface FailedToUploadData {
   uploadDate: number;
 }
 
-const STORE_ID_PREFIX = 'PHV1_FailedToUploadSyncStore';
-const TABLES_SCHEMA = {
+export const STORE_ID_PREFIX = 'PHV1_FailedToUploadSyncStore';
+export const TABLES_SCHEMA = {
   failedToUpload: {
     id: { type: 'string' },
     mediaType: { type: 'string' },

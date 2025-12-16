@@ -3,6 +3,7 @@ import ConfigurationStore from '@/src/tbStores/configurationStore/ConfigurationS
 import ListOfProjectsStore from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { useAuth } from '@clerk/clerk-expo';
 import AppSettingsStore from '../tbStores/appSettingsStore/appSettingsStore';
+import FailedToUploadSyncStore from '../tbStores/UploadSyncStore';
 
 export const AuthorizedStoresProvider = () => {
   const { orgId } = useAuth();
@@ -14,6 +15,7 @@ export const AuthorizedStoresProvider = () => {
       <AppSettingsStore />
       <ConfigurationStore />
       <ListOfProjectsStore />
+      <FailedToUploadSyncStore />
     </>
   );
 };
