@@ -67,12 +67,9 @@ export const useAllFailedToUpload = () => {
         itemId: row.itemId ?? '',
         uploadDate: row.uploadDate ?? 0,
       }));
-
       console.log(`Fetched ${items.length} failed to upload items`);
       return [...items].sort((a, b) => (b.uploadDate ?? 0) - (a.uploadDate ?? 0));
     }
-
-    console.log('Fetched 0 failed to upload items');
     return [];
   }, [store]);
 
