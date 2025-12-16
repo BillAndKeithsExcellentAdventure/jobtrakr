@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { useAuth } from '@clerk/clerk-expo';
 import { useAuthToken } from '../context/AuthTokenContext';
+import { useNetwork } from '../context/NetworkContext';
 import { useAllFailedToUpload, STORE_ID_PREFIX, TABLES_SCHEMA } from '../tbStores/UploadSyncStore';
 import {
   mediaType,
@@ -24,10 +25,12 @@ const useStoreId = () => {
  * Hook to process failed uploads in a foreground queue.
  * This hook runs once every hour and processes all failed uploads sequentially.
  * It does not block the UI as processing happens asynchronously.
+ * Now includes network connectivity checks to avoid unnecessary upload attempts when offline.
  */
 export const useUploadQueue = () => {
   const { userId, orgId } = useAuth();
   const { token, refreshToken, isLoading: isTokenLoading } = useAuthToken();
+  const { isConnected, isInternetReachable } = useNetwork();
   const failedUploads = useAllFailedToUpload();
   const store = useStore(useStoreId());
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,6 +52,15 @@ export const useUploadQueue = () => {
     const processUploads = async () => {
       // Skip if already processing or no items to process
       if (isProcessing || failedUploads.length === 0) {
+        return;
+      }
+
+      // Skip if offline - don't attempt uploads when there's no connection
+      // This prevents battery drain from failed network calls and reduces log errors
+      if (!isConnected || isInternetReachable === false) {
+        console.log(
+          'Skipping upload queue processing: No network connection. Will retry when connectivity is restored.',
+        );
         return;
       }
 
@@ -129,9 +141,21 @@ export const useUploadQueue = () => {
         intervalRef.current = null;
       }
     };
-  }, [userId, orgId, token, refreshToken, isTokenLoading, store, failedUploads, isProcessing]);
+  }, [
+    userId,
+    orgId,
+    token,
+    refreshToken,
+    isTokenLoading,
+    store,
+    failedUploads,
+    isProcessing,
+    isConnected,
+    isInternetReachable,
+  ]);
   // Note: Including failedUploads and isProcessing in dependencies to ensure we have latest data
-  // when processing runs via interval
+  // when processing runs via interval. Including isConnected and isInternetReachable to automatically
+  // retry failed uploads when connectivity is restored.
 
   return {
     isProcessing,
