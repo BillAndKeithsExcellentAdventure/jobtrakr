@@ -22,7 +22,7 @@ const useStoreId = () => {
 
 /**
  * Hook to process failed uploads in a foreground queue.
- * This hook runs once when the component mounts and processes all failed uploads sequentially.
+ * This hook runs once every hour and processes all failed uploads sequentially.
  * It does not block the UI as processing happens asynchronously.
  */
 export const useUploadQueue = () => {
@@ -32,15 +32,9 @@ export const useUploadQueue = () => {
   const store = useStore(useStoreId());
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
-  const hasProcessedRef = useRef(false);
-  const initialFailedUploadsRef = useRef<typeof failedUploads>([]);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Only process once per app session
-    if (hasProcessedRef.current) {
-      return;
-    }
-
     // Wait for authentication to be ready
     if (!userId || !orgId || isTokenLoading) {
       return;
@@ -51,23 +45,15 @@ export const useUploadQueue = () => {
       return;
     }
 
-    // Check if there are any failed uploads to process
-    if (failedUploads.length === 0) {
-      return;
-    }
-
-    // Capture the initial list of failed uploads on first valid run
-    if (initialFailedUploadsRef.current.length === 0) {
-      initialFailedUploadsRef.current = [...failedUploads];
-    }
-
-    // Mark as processing to prevent duplicate runs
-    hasProcessedRef.current = true;
-
     // Process uploads asynchronously without blocking UI
     const processUploads = async () => {
+      // Skip if already processing or no items to process
+      if (isProcessing || failedUploads.length === 0) {
+        return;
+      }
+
       setIsProcessing(true);
-      const itemsToProcess = initialFailedUploadsRef.current;
+      const itemsToProcess = [...failedUploads];
       console.log(`Starting upload queue processing. ${itemsToProcess.length} items to process.`);
 
       let successCount = 0;
@@ -128,12 +114,24 @@ export const useUploadQueue = () => {
       setIsProcessing(false);
     };
 
-    // Run asynchronously to avoid blocking
+    // Run immediately on mount
     void processUploads();
-  }, [userId, orgId, token, refreshToken, isTokenLoading, store, failedUploads.length]);
-  // Note: failedUploads.length is used instead of failedUploads to avoid unnecessary re-runs
-  // when the array reference changes. hasProcessedRef.current prevents re-runs after the first
-  // successful processing.
+
+    // Set up interval to run every hour (3600000 milliseconds)
+    intervalRef.current = setInterval(() => {
+      void processUploads();
+    }, 3600000);
+
+    // Cleanup interval on unmount
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [userId, orgId, token, refreshToken, isTokenLoading, store, failedUploads, isProcessing]);
+  // Note: Including failedUploads and isProcessing in dependencies to ensure we have latest data
+  // when processing runs via interval
 
   return {
     isProcessing,
