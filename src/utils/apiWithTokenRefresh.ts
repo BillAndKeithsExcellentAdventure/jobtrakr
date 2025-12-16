@@ -5,6 +5,47 @@
  */
 
 /**
+ * Default timeout for network requests in milliseconds.
+ * Set to 15 seconds to fail fast when network is unavailable.
+ */
+const DEFAULT_TIMEOUT_MS = 15000;
+
+/**
+ * Creates a fetch request with a timeout.
+ * If the request takes longer than the timeout, it will be aborted and throw an error.
+ *
+ * @param url - The URL to fetch
+ * @param options - Fetch options
+ * @param timeoutMs - Timeout in milliseconds (default: 15000)
+ * @returns Promise that resolves to the fetch Response
+ * @throws Error if the request times out or network is unavailable
+ */
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit = {},
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    // Check if the error is due to abort (timeout)
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`Network request timed out after ${timeoutMs}ms. Please check your internet connection.`);
+    }
+    throw error;
+  }
+}
+
+/**
  * Makes an API call with automatic token refresh on 401/403 errors.
  *
  * @param url - The URL to fetch
@@ -45,8 +86,8 @@ export async function fetchWithTokenRefresh(
     headers,
   };
 
-  // Make the initial request
-  let response = await fetch(url, requestOptions);
+  // Make the initial request with timeout
+  let response = await fetchWithTimeout(url, requestOptions);
 
   // If we get a 401 or 403, try refreshing the token and retry once
   if (response.status === 401 || response.status === 403) {
@@ -68,7 +109,7 @@ export async function fetchWithTokenRefresh(
       };
 
       // Retry the request with the new token
-      response = await fetch(url, retryOptions);
+      response = await fetchWithTimeout(url, retryOptions);
       console.log('Token refresh and retry completed');
     } catch (error) {
       console.error('Failed to refresh token:', error);
@@ -114,7 +155,7 @@ export function createApiWithRetry(
         headers,
       };
 
-      return await fetch(url, requestOptions);
+      return await fetchWithTimeout(url, requestOptions);
     };
 
     // Make the initial request
