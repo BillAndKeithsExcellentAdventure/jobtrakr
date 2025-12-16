@@ -23,6 +23,15 @@ export interface ImageDetails {
 export type mediaType = 'photo' | 'video';
 export type resourceType = 'receipt' | 'invoice' | 'photo';
 
+/**
+ * Formats an error object into a string message for logging and display.
+ * @param error - The error object to format
+ * @returns Formatted error message string
+ */
+const formatErrorMessage = (error: unknown): string => {
+  return (error as Error)?.message ?? String(error);
+};
+
 export const getAddImageEndPointUrl = (resourceType: resourceType, mediaType: mediaType) => {
   switch (resourceType) {
     case 'receipt':
@@ -209,7 +218,7 @@ export const uploadImage = async (
     return {
       status: 'Error',
       id: details.id,
-      msg: `Error uploading image: ${(error as Error)?.message ?? String(error)}`,
+      msg: `Error uploading image: ${formatErrorMessage(error)}`,
     };
   }
 };
@@ -270,7 +279,7 @@ export const deleteMedia = async (
     console.error('Error deleting image:', error);
     return {
       success: false,
-      msg: `Error deleting image: ${(error as Error)?.message ?? String(error)}`,
+      msg: `Error deleting image: ${formatErrorMessage(error)}`,
     };
   }
 };
@@ -414,9 +423,12 @@ export const useAddImageCallback = () => {
           if (result.status !== 'Success') {
             return { status: 'Error', id: id, msg: `Failed to add failed upload record: ${result.msg}` };
           } else {
-            uploadResult.status = 'Success';
-            uploadResult.msg = `File saved but unable upload to server. Will try later.`;
-            uploadResult.id = id;
+            // Return a new success result indicating file will be retried
+            return {
+              status: 'Success',
+              id: id,
+              msg: 'File saved but unable upload to server. Will try later.',
+            };
           }
         }
 
@@ -440,18 +452,19 @@ export const useAddImageCallback = () => {
           uploadDate: Date.now(),
         };
         
+        const errorMsg = formatErrorMessage(error);
         const result = addFailedToUploadRecord(data);
         if (result.status === 'Success') {
           return {
             status: 'Success',
             id: id,
-            msg: `File saved but upload failed due to error: ${(error as Error)?.message ?? String(error)}. Will retry later.`,
+            msg: `File saved but upload failed due to error: ${errorMsg}. Will retry later.`,
           };
         } else {
           return {
             status: 'Error',
             id: id,
-            msg: `Upload failed and could not add to retry queue: ${(error as Error)?.message ?? String(error)}`,
+            msg: `Upload failed and could not add to retry queue: ${errorMsg}`,
           };
         }
       }
