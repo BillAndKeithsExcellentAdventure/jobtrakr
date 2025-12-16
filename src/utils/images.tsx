@@ -23,6 +23,15 @@ export interface ImageDetails {
 export type mediaType = 'photo' | 'video';
 export type resourceType = 'receipt' | 'invoice' | 'photo';
 
+/**
+ * Formats an error object into a string message for logging and display.
+ * @param error - The error object to format
+ * @returns Formatted error message string
+ */
+const formatErrorMessage = (error: unknown): string => {
+  return (error as Error)?.message ?? String(error);
+};
+
 export const getAddImageEndPointUrl = (resourceType: resourceType, mediaType: mediaType) => {
   switch (resourceType) {
     case 'receipt':
@@ -209,7 +218,7 @@ export const uploadImage = async (
     return {
       status: 'Error',
       id: details.id,
-      msg: `Error uploading image: ${(error as Error)?.message ?? String(error)}`,
+      msg: `Error uploading image: ${formatErrorMessage(error)}`,
     };
   }
 };
@@ -270,7 +279,7 @@ export const deleteMedia = async (
     console.error('Error deleting image:', error);
     return {
       success: false,
-      msg: `Error deleting image: ${(error as Error)?.message ?? String(error)}`,
+      msg: `Error deleting image: ${formatErrorMessage(error)}`,
     };
   }
 };
@@ -384,42 +393,81 @@ export const useAddImageCallback = () => {
         deviceTypes: deviceTypes,
       };
 
-      const copyLocalResult = await copyToLocalFolder(imageUri, details, mediaType, resourceType);
-      if (copyLocalResult.status !== 'Success' || !copyLocalResult.uri) {
-        return copyLocalResult;
-      }
+      try {
+        const copyLocalResult = await copyToLocalFolder(imageUri, details, mediaType, resourceType);
+        if (copyLocalResult.status !== 'Success' || !copyLocalResult.uri) {
+          return copyLocalResult;
+        }
 
-      // Upload to backend with token refresh
-      const uploadResult = await uploadImage(
-        details,
-        token,
-        refreshToken,
-        mediaType,
-        resourceType,
-        copyLocalResult.uri!,
-      );
-      if (uploadResult.status !== 'Success') {
+        // Upload to backend with token refresh
+        const uploadResult = await uploadImage(
+          details,
+          token,
+          refreshToken,
+          mediaType,
+          resourceType,
+          copyLocalResult.uri!,
+        );
+        if (uploadResult.status !== 'Success') {
+          const data: FailedToUploadData = {
+            id: id,
+            resourceType: resourceType,
+            mediaType: mediaType,
+            localUri: copyLocalResult.uri!,
+            organizationId: orgId,
+            projectId: projectId,
+            itemId: id,
+            uploadDate: Date.now(),
+          };
+          const result = addFailedToUploadRecord(data);
+          if (result.status !== 'Success') {
+            return { status: 'Error', id: id, msg: `Failed to add failed upload record: ${result.msg}` };
+          } else {
+            // Return a new success result indicating file will be retried
+            return {
+              status: 'Success',
+              id: id,
+              msg: 'File saved but unable upload to server. Will try later.',
+            };
+          }
+        }
+
+        return uploadResult;
+      } catch (error) {
+        // Catch any unexpected errors and ensure they get added to failedToUpload
+        console.error('Unexpected error in useAddImageCallback:', error);
+        
+        // Try to determine if file was copied locally
+        const localUri = buildLocalMediaUri(orgId, projectId, id, mediaType, resourceType);
+        
+        // Add to failed upload queue
         const data: FailedToUploadData = {
           id: id,
           resourceType: resourceType,
           mediaType: mediaType,
-          localUri: copyLocalResult.uri!,
+          localUri: localUri,
           organizationId: orgId,
           projectId: projectId,
           itemId: id,
           uploadDate: Date.now(),
         };
+        
+        const errorMsg = formatErrorMessage(error);
         const result = addFailedToUploadRecord(data);
-        if (result.status !== 'Success') {
-          return { status: 'Error', id: id, msg: `Failed to add failed upload record: ${result.msg}` };
+        if (result.status === 'Success') {
+          return {
+            status: 'Success',
+            id: id,
+            msg: `File saved but upload failed due to error: ${errorMsg}. Will retry later.`,
+          };
         } else {
-          uploadResult.status = 'Success';
-          uploadResult.msg = `File saved but unable upload to server. Will try later.`;
-          uploadResult.id = id;
+          return {
+            status: 'Error',
+            id: id,
+            msg: `Upload failed and could not add to retry queue: ${errorMsg}`,
+          };
         }
       }
-
-      return uploadResult;
     },
     [userId, orgId, token, refreshToken, addFailedToUploadRecord, auth],
   );
