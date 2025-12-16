@@ -4,6 +4,7 @@ import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useAuthToken } from '@/src/context/AuthTokenContext';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
 import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   ClassifiedReceiptData,
@@ -42,6 +43,7 @@ const ProjectReceiptsPage = () => {
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const { token, refreshToken } = useAuthToken();
+  const { isConnected, isInternetReachable } = useNetwork();
   const auth = useAuth();
 
   useEffect(() => {
@@ -209,8 +211,8 @@ const ProjectReceiptsPage = () => {
                     <ActionButton
                       style={{ flex: 1 }}
                       onPress={handleAddPhotoReceipt}
-                      type={'action'}
-                      title="Add Photo"
+                      type={!isConnected || isInternetReachable === false ? 'disabled' : 'action'}
+                      title={!isConnected || isInternetReachable === false ? 'Add Photo (Offline)' : 'Add Photo'}
                     />
                     <ActionButton
                       style={{ flex: 1 }}
