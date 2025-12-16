@@ -68,9 +68,11 @@ export const useAllFailedToUpload = () => {
         uploadDate: row.uploadDate ?? 0,
       }));
 
+      console.log(`Fetched ${items.length} failed to upload items`);
       return [...items].sort((a, b) => (b.uploadDate ?? 0) - (a.uploadDate ?? 0));
     }
 
+    console.log('Fetched 0 failed to upload items');
     return [];
   }, [store]);
 
@@ -105,7 +107,7 @@ export const useAddFailedToUploadMediaCallback = () => {
     (failedToUploadData: FailedToUploadData): { status: TBStatus; msg: string; id: string } => {
       const id = randomUUID();
       failedToUploadData.id = id;
-
+      console.log('Adding failed to upload media with ID:', id);
       if (store) {
         const storeCheck = store.setRow('failedToUpload', id, failedToUploadData);
         if (storeCheck) {

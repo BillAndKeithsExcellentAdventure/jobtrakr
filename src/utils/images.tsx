@@ -205,7 +205,7 @@ export const uploadImage = async (
     console.log('Image uploaded successfully:', data);
     return { status: 'Success', id: details.id, uri: localImageUrl, msg: 'Successfully uploaded image' };
   } catch (error) {
-    console.error('Error uploading image:', error);
+    console.log('Error uploading image:', error);
     return {
       status: 'Error',
       id: details.id,
