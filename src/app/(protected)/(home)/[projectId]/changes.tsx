@@ -1,5 +1,4 @@
 import { Text, View } from '@/src/components/Themed';
-import { useAuthToken } from '@/src/context/AuthTokenContext';
 import { useColors } from '@/src/context/ColorsContext';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,13 +21,12 @@ import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 
 const getChangeOrderStatuses = async (
   projectId: string,
-  token: string | null,
-  refreshToken: () => Promise<string | null>,
+  getToken: () => Promise<string | null>,
 ): Promise<string | null> => {
   try {
     console.log('getChangeOrderStatuses projectId:', projectId);
 
-    const apiFetch = createApiWithRetry(token, refreshToken);
+    const apiFetch = createApiWithRetry(getToken);
     const response = await apiFetch(`${API_BASE_URL}/GetChangeOrderStatuses`, {
       method: 'POST',
       headers: {
@@ -66,7 +64,6 @@ const ChangeOrdersScreen = () => {
   const router = useRouter();
   const updateChangeOrder = useUpdateRowCallback(projectId, 'changeOrders');
   const auth = useAuth();
-  const { token, refreshToken } = useAuthToken();
   const appSettings = useAppSettings();
   const currentProject = useProject(projectId);
 
@@ -101,7 +98,7 @@ const ChangeOrdersScreen = () => {
   useEffect(() => {
     const fetchStatuses = async () => {
       try {
-        const changeOrderStatusString = await getChangeOrderStatuses(projectId, token, refreshToken);
+        const changeOrderStatusString = await getChangeOrderStatuses(projectId, auth.getToken);
         console.log('Change Order Statuses:', changeOrderStatusString);
 
         if (!changeOrderStatusString) {
@@ -149,7 +146,7 @@ const ChangeOrdersScreen = () => {
     if (allChangeOrders && allChangeOrders.length > 0) {
       fetchStatuses();
     }
-  }, [auth, projectId, allChangeOrders, token, refreshToken, updateChangeOrder]);
+  }, [auth, projectId, allChangeOrders, updateChangeOrder]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

@@ -9,7 +9,6 @@ import SwipeableChangeOrderItem from '@/src/components/SwipeableChangeOrderItem'
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { API_BASE_URL } from '@/src/constants/app-constants';
-import { useAuthToken } from '@/src/context/AuthTokenContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
@@ -49,11 +48,10 @@ interface SendPdfParams {
 const generateAndSendPdf = async (
   params: SendPdfParams,
   changeOrderId: string,
-  token: string | null,
-  refreshToken: () => Promise<string | null>,
+  getToken: () => Promise<string | null>,
 ): Promise<string | null> => {
   try {
-    const apiFetch = createApiWithRetry(token, refreshToken);
+    const apiFetch = createApiWithRetry(getToken);
     const response = await apiFetch(`${API_BASE_URL}/sendChangeOrderEmail`, {
       method: 'POST',
       headers: {
@@ -87,7 +85,6 @@ const DefineChangeOrderScreen = () => {
   const appSettings = useAppSettings();
   const projectData = useProject(projectId);
   const auth = useAuth();
-  const { token, refreshToken } = useAuthToken();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [showAddItemModal, setShowAddItemModal] = useState<boolean>(false);
   const [newChangeOrderItem, setNewChangeOrderItem] = useState<ChangeOrderItem>({
@@ -199,11 +196,6 @@ const DefineChangeOrderScreen = () => {
         const userId = auth.userId;
         if (!userId) {
           Alert.alert('Error', 'User ID not found.');
-          return;
-        }
-
-        if (!token) {
-          Alert.alert('Error', 'Authentication token not available.');
           return;
         }
 
@@ -321,8 +313,7 @@ const DefineChangeOrderScreen = () => {
             }"`,
           },
           changeOrder?.id || 'unknown',
-          token,
-          refreshToken,
+          auth.getToken,
         );
 
         if (pdfFilePath) {
@@ -336,7 +327,7 @@ const DefineChangeOrderScreen = () => {
         Alert.alert('Error', errorMessage);
       }
     }
-  }, [changeOrderData, changeOrder, appSettings, projectData, auth, projectId, changeOrderId, token, refreshToken]);
+  }, [changeOrderData, changeOrder, appSettings, projectData, auth, projectId, changeOrderId]);
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [

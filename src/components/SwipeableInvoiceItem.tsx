@@ -33,15 +33,13 @@ const SwipeableInvoiceItem = React.memo(
     projectId,
     item,
     userId,
-    token,
-    refreshToken,
+    getToken,
   }: {
     orgId: string;
     projectId: string;
     item: ClassifiedInvoiceData;
     userId: string;
-    token: string;
-    refreshToken: () => Promise<string | null>;
+    getToken: () => Promise<string | null>;
   }) => {
     const router = useRouter();
     const colors = useColors();
@@ -77,15 +75,15 @@ const SwipeableInvoiceItem = React.memo(
           console.log('Deleting invoice with id:', id);
           deleteInvoice(id);
 
-          if (item.imageId && userId && token) {
+          if (item.imageId && userId && getToken) {
             // we also need to delete the associated receipt photo from storage
             (async () => {
-              deleteMedia(userId, orgId, projectId, [item.imageId], 'invoice', token, refreshToken);
+              deleteMedia(userId, orgId, projectId, [item.imageId], 'invoice', getToken);
             })();
           }
         }
       },
-      [deleteInvoice, deleteInvoiceLineItem, allInvoiceItems, item.imageId, userId, orgId, projectId, token, refreshToken],
+      [deleteInvoice, deleteInvoiceLineItem, allInvoiceItems, item.imageId, userId, orgId, projectId, getToken],
     );
 
     const handleDelete = useCallback(() => {

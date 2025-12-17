@@ -6,7 +6,6 @@ import { OptionEntry } from '@/src/components/OptionList';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { Text, View } from '@/src/components/Themed';
 import { API_BASE_URL } from '@/src/constants/app-constants';
-import { useAuthToken } from '@/src/context/AuthTokenContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { InvoiceSummary, ReceiptItem, ReceiptItemFromAI } from '@/src/models/types';
 import {
@@ -29,8 +28,7 @@ const processAIProcessing = async (
   projectId: string,
   userId: string,
   organizationId: string,
-  token: string | null,
-  refreshToken: () => Promise<string | null>,
+  getToken: () => Promise<string | null>,
 ) => {
   try {
     const invoiceImageData = {
@@ -41,7 +39,7 @@ const processAIProcessing = async (
     };
     console.log(' invoiceImageData:', invoiceImageData);
 
-    const apiFetch = createApiWithRetry(token, refreshToken);
+    const apiFetch = createApiWithRetry(getToken);
     const response = await apiFetch(`${API_BASE_URL}/getInvoiceIntelligence`, {
       method: 'POST',
       headers: {
@@ -73,7 +71,6 @@ const RequestAIProcessingPage = () => {
   }>();
   const auth = useAuth();
   const { userId, orgId } = auth;
-  const { token, refreshToken } = useAuthToken();
   const [fetchingData, setFetchingData] = useState(true);
   const [showCostItemPicker, setShowCostItemPicker] = useState(false);
   const [invoiceSummary, setInvoiceSummary] = useState<InvoiceSummary>();
@@ -175,7 +172,7 @@ const RequestAIProcessingPage = () => {
   }
 
   const fetchAIResult = useCallback(async () => {
-    const result = await processAIProcessing(imageId, projectId, userId!, orgId!, token, refreshToken);
+    const result = await processAIProcessing(imageId, projectId, userId!, orgId!, auth.getToken);
     if (result.status === 'Success') {
       const summary = {
         supplier: replaceNonPrintable(result.response.MerchantName.value),
@@ -203,7 +200,7 @@ const RequestAIProcessingPage = () => {
     }
 
     setFetchingData(false);
-  }, [imageId, projectId, userId, orgId, token, refreshToken]);
+  }, [imageId, projectId, userId, orgId, auth]);
 
   useEffect(() => {
     //fetchSimulatedAIResult(); // Uncomment for testing with simulated data

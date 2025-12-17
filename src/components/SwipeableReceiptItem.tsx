@@ -33,15 +33,13 @@ const SwipeableReceiptItem = React.memo(
     projectId,
     item,
     userId,
-    token,
-    refreshToken,
+    getToken,
   }: {
     orgId: string;
     projectId: string;
     item: ClassifiedReceiptData;
     userId: string;
-    token: string;
-    refreshToken: () => Promise<string | null>;
+    getToken: () => Promise<string | null>;
   }) => {
     const router = useRouter();
     const colors = useColors();
@@ -76,10 +74,10 @@ const SwipeableReceiptItem = React.memo(
           console.log('Deleting receipt with id:', id);
           deleteReceipt(id);
 
-          if (item.imageId && userId && token) {
+          if (item.imageId && userId && getToken) {
             // we also need to delete the associated receipt photo from storage
             (async () => {
-              deleteMedia(userId, orgId, projectId, [item.imageId], 'receipt', token, refreshToken);
+              deleteMedia(userId, orgId, projectId, [item.imageId], 'receipt', getToken);
             })();
           }
         }
@@ -90,8 +88,7 @@ const SwipeableReceiptItem = React.memo(
         allReceiptItems,
         item.imageId,
         userId,
-        token,
-        refreshToken,
+        getToken,
         orgId,
         projectId,
       ],

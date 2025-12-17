@@ -1,6 +1,5 @@
 import { useColorScheme } from '@/src/components/useColorScheme';
 import { Colors } from '@/src/constants/Colors';
-import { AuthTokenProvider } from '@/src/context/AuthTokenContext';
 import { ColorsProvider } from '@/src/context/ColorsContext';
 import { NetworkProvider } from '@/src/context/NetworkContext';
 import { FocusManagerProvider } from '@/src/hooks/useFocusManager';
@@ -103,34 +102,32 @@ function RootLayoutNav() {
       <TinyBaseProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <ClerkLoadingWrapper colorScheme={colorScheme ?? 'light'}>
-            <AuthTokenProvider>
-              <NetworkProvider>
-                <KeyboardProvider>
-                  <ColorsProvider>
-                    <FocusManagerProvider>
-                      <SafeAreaProvider>
-                        <GestureHandlerRootView>
-                          <Stack screenOptions={{ headerShown: false }}>
-                            <Stack.Screen
-                              name="(auth)"
-                              options={{
-                                animation: 'none',
-                              }}
-                            />
-                            <Stack.Screen
-                              name="(protected)"
-                              options={{
-                                animation: 'none',
-                              }}
-                            />
-                          </Stack>
-                        </GestureHandlerRootView>
-                      </SafeAreaProvider>
-                    </FocusManagerProvider>
-                  </ColorsProvider>
-                </KeyboardProvider>
-              </NetworkProvider>
-            </AuthTokenProvider>
+            <NetworkProvider>
+              <KeyboardProvider>
+                <ColorsProvider>
+                  <FocusManagerProvider>
+                    <SafeAreaProvider>
+                      <GestureHandlerRootView>
+                        <Stack screenOptions={{ headerShown: false }}>
+                          <Stack.Screen
+                            name="(auth)"
+                            options={{
+                              animation: 'none',
+                            }}
+                          />
+                          <Stack.Screen
+                            name="(protected)"
+                            options={{
+                              animation: 'none',
+                            }}
+                          />
+                        </Stack>
+                      </GestureHandlerRootView>
+                    </SafeAreaProvider>
+                  </FocusManagerProvider>
+                </ColorsProvider>
+              </KeyboardProvider>
+            </NetworkProvider>
           </ClerkLoadingWrapper>
         </ThemeProvider>
       </TinyBaseProvider>

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { useAuth } from '@clerk/clerk-expo';
-import { useAuthToken } from '../context/AuthTokenContext';
 import { useNetwork } from '../context/NetworkContext';
 import { useAllFailedToUpload, STORE_ID_PREFIX, TABLES_SCHEMA } from '../tbStores/UploadSyncStore';
 import {
@@ -28,8 +27,8 @@ const useStoreId = () => {
  * Now includes network connectivity checks to avoid unnecessary upload attempts when offline.
  */
 export const useUploadQueue = () => {
-  const { userId, orgId } = useAuth();
-  const { token, refreshToken, isLoading: isTokenLoading } = useAuthToken();
+  const auth = useAuth();
+  const { userId, orgId } = auth;
   const { isConnected, isInternetReachable } = useNetwork();
   const failedUploads = useAllFailedToUpload();
   const store = useStore(useStoreId());
@@ -39,7 +38,7 @@ export const useUploadQueue = () => {
 
   useEffect(() => {
     // Wait for authentication to be ready
-    if (!userId || !orgId || isTokenLoading) {
+    if (!userId || !orgId) {
       return;
     }
 
@@ -94,8 +93,7 @@ export const useUploadQueue = () => {
           // Attempt to upload
           const result = await uploadImage(
             details,
-            token,
-            refreshToken,
+            auth.getToken,
             item.mediaType as mediaType,
             item.resourceType as resourceType,
             item.localUri,
@@ -144,9 +142,7 @@ export const useUploadQueue = () => {
   }, [
     userId,
     orgId,
-    token,
-    refreshToken,
-    isTokenLoading,
+    auth,
     store,
     failedUploads,
     isProcessing,
