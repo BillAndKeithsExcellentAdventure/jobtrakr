@@ -249,8 +249,6 @@ const ProjectInvoicesPage = () => {
                         orgId={auth.orgId!!}
                         projectId={projectId}
                         item={item}
-                        userId={auth.userId!!}
-                        getToken={auth.getToken}
                       />
                     )}
                     ListEmptyComponent={

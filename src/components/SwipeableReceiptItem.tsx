@@ -15,6 +15,7 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@clerk/clerk-expo';
 import { deleteMedia } from '../utils/images';
 
 export const ITEM_HEIGHT = 100;
@@ -32,17 +33,14 @@ const SwipeableReceiptItem = React.memo(
     orgId,
     projectId,
     item,
-    userId,
-    getToken,
   }: {
     orgId: string;
     projectId: string;
     item: ClassifiedReceiptData;
-    userId: string;
-    getToken: () => Promise<string | null>;
   }) => {
     const router = useRouter();
     const colors = useColors();
+    const auth = useAuth();
     const deleteReceipt = useDeleteRowCallback(projectId, 'receipts');
     const deleteReceiptLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
     const allReceiptLineItems = useAllRows(projectId, 'workItemCostEntries');
@@ -74,10 +72,10 @@ const SwipeableReceiptItem = React.memo(
           console.log('Deleting receipt with id:', id);
           deleteReceipt(id);
 
-          if (item.imageId && userId && getToken) {
+          if (item.imageId && auth.userId && auth.getToken) {
             // we also need to delete the associated receipt photo from storage
             (async () => {
-              deleteMedia(userId, orgId, projectId, [item.imageId], 'receipt', getToken);
+              deleteMedia(auth.userId!, orgId, projectId, [item.imageId], 'receipt', auth.getToken);
             })();
           }
         }
@@ -87,8 +85,7 @@ const SwipeableReceiptItem = React.memo(
         deleteReceiptLineItem,
         allReceiptItems,
         item.imageId,
-        userId,
-        getToken,
+        auth,
         orgId,
         projectId,
       ],

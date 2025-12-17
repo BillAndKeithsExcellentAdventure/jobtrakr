@@ -287,13 +287,11 @@ const ProjectReceiptsPage = () => {
                         data={classifiedReceipts}
                         keyExtractor={(item, index) => item.id ?? index.toString()}
                         renderItem={({ item }) => (
-                          <SwipeableReceiptItem
-                            orgId={auth.orgId!!}
-                            projectId={projectId}
-                            item={item}
-                            userId={auth.userId!!}
-                            getToken={auth.getToken}
-                          />
+                        <SwipeableReceiptItem
+                          orgId={auth.orgId!!}
+                          projectId={projectId}
+                          item={item}
+                        />
                         )}
                         ListEmptyComponent={
                           <View style={{ alignItems: 'center', margin: 20 }}>
