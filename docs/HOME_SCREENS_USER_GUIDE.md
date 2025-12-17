@@ -178,7 +178,7 @@ Tap the **menu icon** (three horizontal lines) in the top-right corner to access
 
 ## Add Project
 
-Create a new project with predefined templates and work items.
+Create a new project with predefined templates and cost items.
 
 ### Accessing Add Project
 
@@ -191,7 +191,7 @@ Note: This option only appears after you've set up at least one cost category in
 
 **Required Fields:**
 - **Project Name** - The name of the project
-- **Project Template** - Select which template to use for seeding work items
+- **Project Template** - Select which template to use for seeding cost items
 
 **Optional Fields:**
 - **Location** - Street address or description
