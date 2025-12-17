@@ -19,7 +19,7 @@ import {
   useAllRows,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { createApiWithRetry } from '@/src/utils/apiWithTokenRefresh';
+import { createApiWithToken } from '@/src/utils/apiWithTokenRefresh';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { loadTemplateHtmlAssetFileToString } from '@/src/utils/htmlFileGenerator';
 import { ChangeOrderData, renderChangeOrderTemplate } from '@/src/utils/renderChangeOrderTemplate';
@@ -51,7 +51,7 @@ const generateAndSendPdf = async (
   getToken: () => Promise<string | null>,
 ): Promise<string | null> => {
   try {
-    const apiFetch = createApiWithRetry(getToken);
+    const apiFetch = createApiWithToken(getToken);
     const response = await apiFetch(`${API_BASE_URL}/sendChangeOrderEmail`, {
       method: 'POST',
       headers: {

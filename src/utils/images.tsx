@@ -6,7 +6,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { FailedToUploadData, useAddFailedToUploadMediaCallback } from '@/src/tbStores/UploadSyncStore';
 import { API_BASE_URL } from '../constants/app-constants';
 import { useNetwork } from '../context/NetworkContext';
-import { createApiWithRetry } from './apiWithTokenRefresh';
+import { createApiWithToken } from './apiWithTokenRefresh';
 
 export type ImageResult = { status: 'Success' | 'Error'; id: string; uri?: string | undefined; msg: string };
 
@@ -81,7 +81,7 @@ const downloadImage = async (
     console.log('Downloading image from:', endPointUrl);
 
     // Make the API call with token refresh
-    const apiFetch = createApiWithRetry(getToken);
+    const apiFetch = createApiWithToken(getToken);
     const response = await apiFetch(endPointUrl, {
       method: 'GET',
       headers: {
@@ -177,7 +177,7 @@ export const uploadImage = async (
     console.log('Uploading image to:', endPointUrl);
 
     // Make the API call with token refresh
-    const apiFetch = createApiWithRetry(getToken);
+    const apiFetch = createApiWithToken(getToken);
     const response = await apiFetch(endPointUrl, {
       method: 'POST',
       headers: {
@@ -233,7 +233,7 @@ export const deleteMedia = async (
     const endPointUrl = `${API_BASE_URL}/deleteMedia`;
 
     // Make the API call with token refresh
-    const apiFetch = createApiWithRetry(getToken);
+    const apiFetch = createApiWithToken(getToken);
     const response = await apiFetch(endPointUrl, {
       method: 'POST',
       headers: {

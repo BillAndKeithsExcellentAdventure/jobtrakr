@@ -12,7 +12,7 @@ import {
   useIsStoreAvailableCallback,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { createApiWithRetry } from '@/src/utils/apiWithTokenRefresh';
+import { createApiWithToken } from '@/src/utils/apiWithTokenRefresh';
 import { useAuth } from '@clerk/clerk-expo';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { FlatList, StyleSheet } from 'react-native';
@@ -26,7 +26,7 @@ const getChangeOrderStatuses = async (
   try {
     console.log('getChangeOrderStatuses projectId:', projectId);
 
-    const apiFetch = createApiWithRetry(getToken);
+    const apiFetch = createApiWithToken(getToken);
     const response = await apiFetch(`${API_BASE_URL}/GetChangeOrderStatuses`, {
       method: 'POST',
       headers: {

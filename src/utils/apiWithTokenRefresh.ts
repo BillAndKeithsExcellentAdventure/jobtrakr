@@ -120,16 +120,17 @@ export async function fetchWithTokenRefresh(
 }
 
 /**
- * A higher-order function that returns an API caller with automatic token refresh.
- * This version allows the caller to automatically retry with a refreshed token.
+ * A higher-order function that returns an API caller with automatic token handling.
+ * This function gets a fresh token for each request and automatically retries with
+ * a refreshed token on auth errors.
  *
  * @param getToken - Function to get the authentication token from Clerk
- * @returns A function that makes API calls with automatic retry on auth errors
+ * @returns A function that makes API calls with automatic token handling and retry on auth errors
  *
  * @example
  * ```typescript
  * const { getToken } = useAuth();
- * const apiFetch = createApiWithRetry(getToken);
+ * const apiFetch = createApiWithToken(getToken);
  *
  * const response = await apiFetch(`${API_BASE_URL}/endpoint`, {
  *   method: 'POST',
@@ -138,7 +139,7 @@ export async function fetchWithTokenRefresh(
  * });
  * ```
  */
-export function createApiWithRetry(
+export function createApiWithToken(
   getToken: () => Promise<string | null>,
 ): (url: string, options: RequestInit) => Promise<Response> {
   return async (url: string, options: RequestInit): Promise<Response> => {

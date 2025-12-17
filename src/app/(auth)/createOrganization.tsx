@@ -3,7 +3,7 @@ import { Text, TextInput, View } from '@/src/components/Themed';
 import { API_BASE_URL } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { getOrganizationSlug } from '@/src/utils/organization';
-import { createApiWithRetry } from '@/src/utils/apiWithTokenRefresh';
+import { createApiWithToken } from '@/src/utils/apiWithTokenRefresh';
 import { useAuth, useClerk, useOrganizationList, useSignUp } from '@clerk/clerk-expo';
 import { Redirect, Stack, useRouter } from 'expo-router';
 import * as React from 'react';
@@ -45,7 +45,7 @@ export default function CreateOrganization() {
         isDev: !!isDevDeployment,
       };
       
-      const apiFetch = createApiWithRetry(getToken);
+      const apiFetch = createApiWithToken(getToken);
       const response = await apiFetch(`${API_BASE_URL}/addOrganization`, {
         method: 'POST',
         headers: {
