@@ -8,7 +8,7 @@
  * Default timeout for network requests in milliseconds.
  * Set to 15 seconds to fail fast when network is unavailable.
  */
-const DEFAULT_TIMEOUT_MS = 15000;
+const DEFAULT_TIMEOUT_MS = 30000;
 
 /**
  * Creates a fetch request with a timeout.
@@ -16,7 +16,7 @@ const DEFAULT_TIMEOUT_MS = 15000;
  *
  * @param url - The URL to fetch
  * @param options - Fetch options
- * @param timeoutMs - Timeout in milliseconds (default: 15000)
+ * @param timeoutMs - Timeout in milliseconds (default: 30000)
  * @returns Promise that resolves to the fetch Response
  * @throws Error if the request times out or network is unavailable
  */
@@ -39,7 +39,9 @@ async function fetchWithTimeout(
     clearTimeout(timeoutId);
     // Check if the error is due to abort (timeout)
     if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(`Network request timed out after ${timeoutMs}ms. Please check your internet connection.`);
+      throw new Error(
+        `Network request timed out after ${timeoutMs}ms. Please check your internet connection.`,
+      );
     }
     throw error;
   }
@@ -85,38 +87,7 @@ export function createApiWithToken(
 
     // Get token and make the initial request
     const token = await getToken();
-    let response = await makeRequest(token);
-
-    // If we get a 401 or 403, try refreshing the token and retry once
-    const hasRetryHeader =
-      typeof options.headers === 'object' &&
-      options.headers !== null &&
-      'X-Retry-After-Refresh' in options.headers;
-    if ((response.status === 401 || response.status === 403) && !hasRetryHeader) {
-      console.log(`Received ${response.status} error, attempting to refresh token and retry...`);
-
-      try {
-        // Get a fresh token from Clerk
-        const newToken = await getToken();
-
-        // Add a header to prevent infinite retry loops
-        const retryOptions = {
-          ...options,
-          headers: {
-            ...options.headers,
-            'X-Retry-After-Refresh': 'true',
-          },
-        };
-
-        // Retry with the refreshed token
-        response = await makeRequest(newToken);
-        console.log('Retry after token refresh completed');
-      } catch (error) {
-        console.error('Failed to refresh token:', error);
-        // Return the original failed response
-      }
-    }
-
+    const response = await makeRequest(token);
     return response;
   };
 }

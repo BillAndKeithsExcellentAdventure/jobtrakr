@@ -41,7 +41,6 @@ const ProjectReceiptsPage = () => {
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
-  const { isConnected, isInternetReachable } = useNetwork();
   const auth = useAuth();
 
   useEffect(() => {
@@ -209,8 +208,8 @@ const ProjectReceiptsPage = () => {
                     <ActionButton
                       style={{ flex: 1 }}
                       onPress={handleAddPhotoReceipt}
-                      type={!isConnected || isInternetReachable === false ? 'disabled' : 'action'}
-                      title={!isConnected || isInternetReachable === false ? 'Add Photo (Offline)' : 'Add Photo'}
+                      type="action"
+                      title="Add Photo"
                     />
                     <ActionButton
                       style={{ flex: 1 }}
@@ -287,11 +286,7 @@ const ProjectReceiptsPage = () => {
                         data={classifiedReceipts}
                         keyExtractor={(item, index) => item.id ?? index.toString()}
                         renderItem={({ item }) => (
-                        <SwipeableReceiptItem
-                          orgId={auth.orgId!!}
-                          projectId={projectId}
-                          item={item}
-                        />
+                          <SwipeableReceiptItem orgId={auth.orgId!!} projectId={projectId} item={item} />
                         )}
                         ListEmptyComponent={
                           <View style={{ alignItems: 'center', margin: 20 }}>

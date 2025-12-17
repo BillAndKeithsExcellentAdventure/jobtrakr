@@ -199,6 +199,25 @@ const SetAppSettingScreen = () => {
             autoCapitalize="none"
             autoCorrect={false}
           />
+          <View style={{ flexDirection: 'row', marginBottom: 4, backgroundColor: colors.listBackground }}>
+            <TouchableOpacity
+              style={[
+                styles.button,
+                { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background },
+              ]}
+              onPress={pickImage}
+            >
+              <Text>Select</Text>
+              <Text>Company</Text>
+              <Text>Logo</Text>
+            </TouchableOpacity>
+            {settings.companyLogo && (
+              <Image
+                source={{ uri: settings.companyLogo }}
+                style={{ width: 80, height: 80, resizeMode: 'contain' }}
+              />
+            )}
+          </View>
           {isDevelopment && (
             <View
               style={{
@@ -219,25 +238,6 @@ const SetAppSettingScreen = () => {
               </Text>
             </View>
           )}
-          <View style={{ flexDirection: 'row', marginBottom: 4, backgroundColor: colors.listBackground }}>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background },
-              ]}
-              onPress={pickImage}
-            >
-              <Text>Select</Text>
-              <Text>Company</Text>
-              <Text>Logo</Text>
-            </TouchableOpacity>
-            {settings.companyLogo && (
-              <Image
-                source={{ uri: settings.companyLogo }}
-                style={{ width: 80, height: 80, resizeMode: 'contain' }}
-              />
-            )}
-          </View>
         </View>
       </KeyboardAwareScrollView>
       {Platform.OS === 'ios' && <KeyboardToolbar />}
