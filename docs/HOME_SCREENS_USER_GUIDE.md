@@ -73,7 +73,7 @@ After email verification, you must create an organization. An organization is yo
 
 Once your organization is created:
 
-1. **Set up your configuration** - Define categories, work items, and templates
+1. **Set up your configuration** - Define categories, cost items, and templates
 2. **Configure company settings** - Add your company logo, address, and contact information
 3. **Invite team members** - Add other users to collaborate on projects (admins only)
 4. **Create your first project** - Start tracking work and costs
@@ -141,7 +141,7 @@ Each project card has a button bar at the bottom with six quick action buttons:
    - Opens the receipts screen
    - Track expenses with receipt images
    - Use AI to extract line items from receipts
-   - Associate costs with specific work items
+   - Associate costs with specific cost items
 
 5. **Invoices**
    - Opens the invoices screen
@@ -159,7 +159,7 @@ Each project card has a button bar at the bottom with six quick action buttons:
 
 To view full project details:
 - Tap anywhere on a project card (outside the action buttons)
-- This opens the detailed project view with complete budget tracking and work item breakdowns
+- This opens the detailed project view with complete budget tracking and cost item breakdowns
 
 ### Main Menu (Top-Right)
 
@@ -178,20 +178,20 @@ Tap the **menu icon** (three horizontal lines) in the top-right corner to access
 
 ## Add Project
 
-Create a new project with predefined templates and work items.
+Create a new project with predefined templates and cost items.
 
 ### Accessing Add Project
 
 1. From the Projects Home Screen, tap the **menu icon** (three lines) in the top-right
 2. Select **Add Project**
 
-Note: This option only appears after you've set up at least one work category in Configuration.
+Note: This option only appears after you've set up at least one cost category in Configuration.
 
 ### Project Information Fields
 
 **Required Fields:**
 - **Project Name** - The name of the project
-- **Project Template** - Select which template to use for seeding work items
+- **Project Template** - Select which template to use for seeding cost items
 
 **Optional Fields:**
 - **Location** - Street address or description
@@ -208,9 +208,9 @@ Note: This option only appears after you've set up at least one work category in
 
 ### Project Templates
 
-Templates define which work items are included in a project. When you select a template:
-- All associated work items are automatically added to the project
-- Each work item includes the cost code, description, and bid amount
+Templates define which cost items are included in a project. When you select a template:
+- All associated cost items are automatically added to the project
+- Each cost item includes the cost code, description, and bid amount
 - You can modify these after project creation
 
 ### Creating the Project
@@ -223,7 +223,7 @@ Templates define which work items are included in a project. When you select a t
 
 ## Configuration Home Screen
 
-The Configuration Home Screen is your central hub for managing the building blocks of your project tracking system: categories, work items, templates, vendors, and suppliers.
+The Configuration Home Screen is your central hub for managing the building blocks of your project tracking system: categories, cost items, templates, vendors, and suppliers.
 
 ### Accessing Configuration
 
@@ -245,29 +245,29 @@ The Configuration screen displays:
 
 #### 1. Categories
 
-**Purpose:** Define the major work categories for tracking project costs (e.g., Foundation, Framing, Electrical, Plumbing).
+**Purpose:** Define the major cost categories for tracking project costs (e.g., Foundation, Framing, Electrical, Plumbing).
 
 **What you can do:**
-- View all work categories
+- View all cost categories
 - Add new categories with custom codes and names
 - Edit existing categories
-- Add work items under each category
+- Add cost items under each category
 - Import default categories for home building projects
 
-**Accessing:** Tap **Categories** → "Manage work categories"
+**Accessing:** Tap **Categories** → "Manage cost categories"
 
 #### 2. Project Templates
 
-**Purpose:** Create reusable templates that define which work items are included in different types of projects.
+**Purpose:** Create reusable templates that define which cost items are included in different types of projects.
 
 **What you can do:**
 - View all project templates
 - Create new templates
-- Add/remove work items from templates
+- Add/remove cost items from templates
 - Edit template names and descriptions
 - Use templates when creating new projects
 
-**Accessing:** Tap **Project Templates** → "Define Project-specific Work Items"
+**Accessing:** Tap **Project Templates** → "Define Project-specific Cost Items"
 
 #### 3. Vendors/Merchants
 
@@ -300,14 +300,14 @@ The Configuration screen displays:
 Tap the **menu icon** (three horizontal lines) in the top-right to access data management tools:
 
 #### When Configuration Data Exists:
-- **Export Configuration Data** - Export all categories, work items, and templates to a JSON file
+- **Export Configuration Data** - Export all categories, cost items, and templates to a JSON file
 - **Export Vendors** - Export all vendor data to a CSV file (only appears when vendors exist)
 - **Import Vendors** - Import vendors from a CSV file
 - **Export Suppliers** - Export all supplier data to a CSV file (only appears when suppliers exist)
 - **Import Suppliers** - Import suppliers from a CSV file
 
 #### When No Configuration Data Exists:
-- **Import Configuration Data** - Import categories, work items, and templates from a JSON file
+- **Import Configuration Data** - Import categories, cost items, and templates from a JSON file
 
 See the [Vendor and Supplier CSV Import/Export documentation](VENDOR_SUPPLIER_CSV_IMPORT_EXPORT.md) for detailed information on CSV import/export.
 
@@ -320,15 +320,15 @@ When using ProjectHound for the first time:
    - If importing defaults, select from predefined category sets (e.g., "Basic Home Building")
    - If creating custom, add categories one by one with codes and names
 
-2. **Add Work Items to Categories:**
-   - For each category, add specific work items (e.g., under "Foundation": Footings, Concrete, Rebar)
-   - Assign each work item a unique code and name
-   - These work items will be used for cost tracking
+2. **Add Cost Items to Categories:**
+   - For each category, add specific cost items (e.g., under "Foundation": Footings, Concrete, Rebar)
+   - Assign each cost item a unique code and name
+   - These cost items will be used for cost tracking
 
 3. **Create Project Templates:**
    - Create at least one template (e.g., "Standard Home", "Remodel", "Commercial Build")
-   - Add the work items that apply to each type of project
-   - Templates speed up project creation by pre-selecting work items
+   - Add the cost items that apply to each type of project
+   - Templates speed up project creation by pre-selecting cost items
 
 4. **Add Vendors and Suppliers (Optional):**
    - Add frequently used vendors and suppliers
@@ -512,7 +512,7 @@ When opening the app for the first time:
 ### Configuration Check
 
 The app verifies minimum configuration requirements:
-- At least one work category must exist with work items added to it
+- At least one cost category must exist with cost items added to it
 - At least one project template must exist
 - If requirements aren't met, the welcome screen appears
 
@@ -539,7 +539,7 @@ The app automatically synchronizes data:
 ### Configuration Management
 1. Export your configuration after initial setup as a backup
 2. Use templates to maintain consistency across similar projects
-3. Regularly review and clean up unused work items and categories
+3. Regularly review and clean up unused cost items and categories
 
 ### Team Collaboration
 1. Invite team members early so they can access project data
@@ -567,7 +567,7 @@ The app automatically synchronizes data:
 
 **Solution:**
 1. Navigate to Configuration
-2. Add at least one work category
+2. Add at least one cost category
 3. Create at least one project template
 4. Return to Projects Home - Add Project will now appear
 
