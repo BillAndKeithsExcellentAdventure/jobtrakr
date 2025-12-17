@@ -37,6 +37,12 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const debugForceOffline = isDevelopment && appSettings.debugForceOffline;
 
   useEffect(() => {
+    if (debugForceOffline) {
+      console.log('🔴 Debug offline mode is ENABLED - Network connectivity is being simulated as offline');
+    }
+  }, [debugForceOffline]);
+
+  useEffect(() => {
     // Subscribe to network state updates
     const unsubscribe = NetInfo.addEventListener((state: NetInfoState) => {
       console.log('Network state changed:', {
