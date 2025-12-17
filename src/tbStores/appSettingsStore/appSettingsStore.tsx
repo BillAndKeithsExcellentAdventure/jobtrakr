@@ -20,6 +20,7 @@ export const TABLES_SCHEMA = {
     phone: { type: 'string' },
     companyLogo: { type: 'string' },
     changeOrderTemplateFileName: { type: 'string' },
+    debugForceOffline: { type: 'boolean', default: false },
   },
 } as const;
 

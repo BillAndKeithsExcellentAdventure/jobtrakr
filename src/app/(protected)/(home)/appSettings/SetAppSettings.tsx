@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { TextField } from '@/src/components/TextField';
 import { Text, View } from '@/src/components/Themed';
+import { Switch } from '@/src/components/Switch';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
@@ -14,6 +15,7 @@ import { Stack, useRouter } from 'expo-router';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import { isDevelopmentBuild } from '@/src/utils/environment';
 
 async function createBase64LogoImage(
   uri: string,
@@ -43,6 +45,9 @@ const SetAppSettingScreen = () => {
   const setAppSettings = useSetAppSettingsCallback();
   const [settings, setSettings] = useState<SettingsData>(appSettings);
 
+  // Check if we're in a development build
+  const isDevelopment = isDevelopmentBuild();
+
   // Sync settings state when appSettings changes
   useEffect(() => {
     setSettings(appSettings);
@@ -54,6 +59,15 @@ const SetAppSettingScreen = () => {
       [key]: value,
     }));
   };
+
+  const handleDebugOfflineToggle = useCallback(
+    (value: boolean) => {
+      const updatedSettings = { ...settings, debugForceOffline: value };
+      setSettings(updatedSettings);
+      setAppSettings(updatedSettings);
+    },
+    [settings, setAppSettings],
+  );
 
   const handleSave = useCallback(() => {
     setAppSettings(settings);
@@ -185,6 +199,26 @@ const SetAppSettingScreen = () => {
             autoCapitalize="none"
             autoCorrect={false}
           />
+          {isDevelopment && (
+            <View
+              style={{
+                flexDirection: 'row',
+                marginBottom: 8,
+                marginTop: 8,
+                backgroundColor: colors.listBackground,
+                alignItems: 'center',
+              }}
+            >
+              <Switch
+                value={settings.debugForceOffline}
+                onValueChange={handleDebugOfflineToggle}
+                size="large"
+              />
+              <Text txtSize="standard" style={{ marginLeft: 10 }}>
+                Debug: Force Offline Mode
+              </Text>
+            </View>
+          )}
           <View style={{ flexDirection: 'row', marginBottom: 4, backgroundColor: colors.listBackground }}>
             <TouchableOpacity
               style={[
