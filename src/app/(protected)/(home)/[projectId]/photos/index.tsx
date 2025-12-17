@@ -7,6 +7,7 @@ import { Text, View } from '@/src/components/Themed';
 import { VideoPlayerModal } from '@/src/components/VideoPlayerModal';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
 import {
   MediaEntryData,
   RecentMediaEntryDateCompare,
@@ -27,6 +28,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const ProjectPhotosPage = () => {
   const router = useRouter();
   const colors = useColors();
+  const { isConnected, isInternetReachable } = useNetwork();
 
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const [projectIsReady, setProjectIsReady] = useState(false);
@@ -160,8 +162,12 @@ const ProjectPhotosPage = () => {
           <View style={styles.headerInfo}>
             <ActionButton
               style={{ alignSelf: 'stretch' }}
-              type={'action'}
-              title={'Take Picture / Video'}
+              type={!isConnected || isInternetReachable === false ? 'disabled' : 'action'}
+              title={
+                !isConnected || isInternetReachable === false
+                  ? 'Take Picture / Video (Offline)'
+                  : 'Take Picture / Video'
+              }
               onPress={() => setIsCameraVisible(true)}
             />
           </View>

@@ -8,6 +8,7 @@ import { Switch } from '@/src/components/Switch';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import {
   WorkItemDataCodeCompareAsNumber,
@@ -26,10 +27,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { useMemo } from 'react';
 
 const AddReceiptPage = () => {
   const defaultDate = useMemo(() => new Date(), []);
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
+  const { isConnected, isInternetReachable } = useNetwork();
   const addReceipt = useAddRowCallback(projectId, 'receipts');
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
@@ -361,8 +364,16 @@ const AddReceiptPage = () => {
             <ActionButton
               style={styles.saveButton}
               onPress={handleCaptureImage}
-              type={'action'}
-              title={projectReceipt.imageId ? 'Retake Picture' : 'Take Picture'}
+              type={!isConnected || isInternetReachable === false ? 'disabled' : 'action'}
+              title={
+                !isConnected || isInternetReachable === false
+                  ? projectReceipt.imageId
+                    ? 'Retake Picture (Offline)'
+                    : 'Take Picture (Offline)'
+                  : projectReceipt.imageId
+                    ? 'Retake Picture'
+                    : 'Take Picture'
+              }
             />
           </View>
 

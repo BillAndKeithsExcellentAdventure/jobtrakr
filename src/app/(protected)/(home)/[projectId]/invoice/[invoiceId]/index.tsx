@@ -2,6 +2,7 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { InvoiceSummary } from '@/src/components/InvoiceSummary';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
 import {
   InvoiceData,
   useAllRows,
@@ -25,6 +26,7 @@ import * as ImagePicker from 'expo-image-picker';
 const InvoiceDetailsPage = () => {
   const defaultDate = new Date();
   const { projectId, invoiceId } = useLocalSearchParams<{ projectId: string; invoiceId: string }>();
+  const { isConnected, isInternetReachable } = useNetwork();
   const allProjectInvoices = useAllRows(projectId, 'invoices');
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
   const addInvoiceImage = useAddImageCallback();

@@ -6,6 +6,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { FailedToUploadData, useAddFailedToUploadMediaCallback } from '@/src/tbStores/UploadSyncStore';
 import { API_BASE_URL } from '../constants/app-constants';
 import { useAuthToken } from '../context/AuthTokenContext';
+import { useNetwork } from '../context/NetworkContext';
 import { createApiWithRetry } from './apiWithTokenRefresh';
 
 export type ImageResult = { status: 'Success' | 'Error'; id: string; uri?: string | undefined; msg: string };
@@ -359,6 +360,7 @@ export const useAddImageCallback = () => {
   const auth = useAuth();
   const { userId, orgId } = auth;
   const { token, refreshToken } = useAuthToken();
+  const { isConnected, isInternetReachable } = useNetwork();
   const addFailedToUploadRecord = useAddFailedToUploadMediaCallback();
 
   return useCallback(
@@ -397,6 +399,33 @@ export const useAddImageCallback = () => {
         const copyLocalResult = await copyToLocalFolder(imageUri, details, mediaType, resourceType);
         if (copyLocalResult.status !== 'Success' || !copyLocalResult.uri) {
           return copyLocalResult;
+        }
+
+        // Check network connectivity before attempting upload
+        // If offline, queue the upload without attempting the network call
+        if (!isConnected || isInternetReachable === false) {
+          console.log(
+            'No network connection detected. Queuing upload without attempting network call to save battery.',
+          );
+          const data: FailedToUploadData = {
+            id: id,
+            resourceType: resourceType,
+            mediaType: mediaType,
+            localUri: copyLocalResult.uri!,
+            organizationId: orgId,
+            projectId: projectId,
+            itemId: id,
+            uploadDate: Date.now(),
+          };
+          const result = addFailedToUploadRecord(data);
+          if (result.status !== 'Success') {
+            return { status: 'Error', id: id, msg: `Failed to add upload to queue: ${result.msg}` };
+          }
+          return {
+            status: 'Success',
+            id: id,
+            msg: 'File saved. Will upload when internet connection is available.',
+          };
         }
 
         // Upload to backend with token refresh
@@ -469,7 +498,7 @@ export const useAddImageCallback = () => {
         }
       }
     },
-    [userId, orgId, token, refreshToken, addFailedToUploadRecord, auth],
+    [userId, orgId, token, refreshToken, addFailedToUploadRecord, auth, isConnected, isInternetReachable],
   );
 };
 
