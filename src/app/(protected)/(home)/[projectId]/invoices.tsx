@@ -1,7 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
-import { useAuthToken } from '@/src/context/AuthTokenContext';
 import { useColors } from '@/src/context/ColorsContext';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -37,7 +36,6 @@ const ProjectInvoicesPage = () => {
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
-  const { token, refreshToken } = useAuthToken();
   const auth = useAuth();
 
   useEffect(() => {
@@ -251,9 +249,6 @@ const ProjectInvoicesPage = () => {
                         orgId={auth.orgId!!}
                         projectId={projectId}
                         item={item}
-                        userId={auth.userId!!}
-                        token={token ?? ''}
-                        refreshToken={refreshToken}
                       />
                     )}
                     ListEmptyComponent={

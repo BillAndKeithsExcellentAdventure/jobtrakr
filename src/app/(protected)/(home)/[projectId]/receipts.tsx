@@ -2,7 +2,6 @@ import { ActionButton } from '@/src/components/ActionButton';
 import SwipeableReceiptItem from '@/src/components/SwipeableReceiptItem';
 import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
-import { useAuthToken } from '@/src/context/AuthTokenContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
@@ -42,7 +41,6 @@ const ProjectReceiptsPage = () => {
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
-  const { token, refreshToken } = useAuthToken();
   const { isConnected, isInternetReachable } = useNetwork();
   const auth = useAuth();
 
@@ -289,14 +287,11 @@ const ProjectReceiptsPage = () => {
                         data={classifiedReceipts}
                         keyExtractor={(item, index) => item.id ?? index.toString()}
                         renderItem={({ item }) => (
-                          <SwipeableReceiptItem
-                            orgId={auth.orgId!!}
-                            projectId={projectId}
-                            item={item}
-                            userId={auth.userId!!}
-                            token={token ?? ''}
-                            refreshToken={refreshToken}
-                          />
+                        <SwipeableReceiptItem
+                          orgId={auth.orgId!!}
+                          projectId={projectId}
+                          item={item}
+                        />
                         )}
                         ListEmptyComponent={
                           <View style={{ alignItems: 'center', margin: 20 }}>

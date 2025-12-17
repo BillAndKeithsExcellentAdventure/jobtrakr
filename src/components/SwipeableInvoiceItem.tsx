@@ -15,6 +15,7 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@clerk/clerk-expo';
 import { deleteMedia } from '../utils/images';
 
 export const ITEM_HEIGHT = 100;
@@ -32,19 +33,14 @@ const SwipeableInvoiceItem = React.memo(
     orgId,
     projectId,
     item,
-    userId,
-    token,
-    refreshToken,
   }: {
     orgId: string;
     projectId: string;
     item: ClassifiedInvoiceData;
-    userId: string;
-    token: string;
-    refreshToken: () => Promise<string | null>;
   }) => {
     const router = useRouter();
     const colors = useColors();
+    const auth = useAuth();
     const deleteInvoice = useDeleteRowCallback(projectId, 'invoices');
     const deleteInvoiceLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
     const allInvoiceLineItems = useAllRows(projectId, 'workItemCostEntries');
@@ -77,15 +73,15 @@ const SwipeableInvoiceItem = React.memo(
           console.log('Deleting invoice with id:', id);
           deleteInvoice(id);
 
-          if (item.imageId && userId && token) {
+          if (item.imageId && auth.userId && auth.getToken) {
             // we also need to delete the associated receipt photo from storage
             (async () => {
-              deleteMedia(userId, orgId, projectId, [item.imageId], 'invoice', token, refreshToken);
+              deleteMedia(auth.userId!, orgId, projectId, [item.imageId], 'invoice', auth.getToken);
             })();
           }
         }
       },
-      [deleteInvoice, deleteInvoiceLineItem, allInvoiceItems, item.imageId, userId, orgId, projectId, token, refreshToken],
+      [deleteInvoice, deleteInvoiceLineItem, allInvoiceItems, item.imageId, auth, orgId, projectId],
     );
 
     const handleDelete = useCallback(() => {

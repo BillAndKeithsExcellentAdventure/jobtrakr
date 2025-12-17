@@ -6,7 +6,6 @@ import { ReceiptSummaryEditModal } from '@/src/components/ReceiptSummaryEditModa
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { Text, View } from '@/src/components/Themed';
 import { API_BASE_URL } from '@/src/constants/app-constants';
-import { useAuthToken } from '@/src/context/AuthTokenContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { ReceiptItem, ReceiptItemFromAI, ReceiptSummary } from '@/src/models/types';
 import {
@@ -16,7 +15,7 @@ import {
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/formatters';
-import { createApiWithRetry } from '@/src/utils/apiWithTokenRefresh';
+import { createApiWithToken } from '@/src/utils/apiWithTokenRefresh';
 import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
@@ -29,8 +28,7 @@ const processAIProcessing = async (
   projectId: string,
   userId: string,
   organizationId: string,
-  token: string | null,
-  refreshToken: () => Promise<string | null>,
+  getToken: () => Promise<string | null>,
 ) => {
   try {
     const receiptImageData = {
@@ -41,7 +39,7 @@ const processAIProcessing = async (
     };
     //console.log(' receiptImageData:', receiptImageData);
 
-    const apiFetch = createApiWithRetry(token, refreshToken);
+    const apiFetch = createApiWithToken(getToken);
     const response = await apiFetch(`${API_BASE_URL}/getReceiptIntelligence`, {
       method: 'POST',
       headers: {
@@ -72,7 +70,6 @@ const RequestAIProcessingPage = () => {
   }>();
   const auth = useAuth();
   const { userId, orgId } = auth;
-  const { token, refreshToken } = useAuthToken();
   const [fetchingData, setFetchingData] = useState(true);
   const [showCostItemPicker, setShowCostItemPicker] = useState(false);
   const [receiptSummary, setReceiptSummary] = useState<ReceiptSummary>();
@@ -174,7 +171,7 @@ const RequestAIProcessingPage = () => {
   }
 
   const fetchAIResult = useCallback(async () => {
-    const result = await processAIProcessing(imageId, projectId, userId!, orgId!, token, refreshToken);
+    const result = await processAIProcessing(imageId, projectId, userId!, orgId!, auth.getToken);
     if (result.status === 'Success') {
       const summary = {
         vendor: replaceNonPrintable(result.response.MerchantName.value),
@@ -202,7 +199,7 @@ const RequestAIProcessingPage = () => {
     }
 
     setFetchingData(false);
-  }, [imageId, projectId, userId, orgId, token, refreshToken]);
+  }, [imageId, projectId, userId, orgId, auth]);
 
   useEffect(() => {
     //fetchSimulatedAIResult(); // Uncomment for testing with simulated data

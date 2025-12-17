@@ -1,10 +1,9 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { API_BASE_URL } from '@/src/constants/app-constants';
-import { useAuthToken } from '@/src/context/AuthTokenContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { getOrganizationSlug } from '@/src/utils/organization';
-import { createApiWithRetry } from '@/src/utils/apiWithTokenRefresh';
+import { createApiWithToken } from '@/src/utils/apiWithTokenRefresh';
 import { useAuth, useClerk, useOrganizationList, useSignUp } from '@clerk/clerk-expo';
 import { Redirect, Stack, useRouter } from 'expo-router';
 import * as React from 'react';
@@ -21,7 +20,6 @@ export default function CreateOrganization() {
   const [organizationExists, setOrganizationExists] = React.useState(false);
   const [isCreating, setIsCreating] = React.useState(false);
   const auth = useAuth();
-  const { token, refreshToken } = useAuthToken();
   const { setActive } = useOrganizationList();
 
   useEffect(() => {
@@ -37,8 +35,7 @@ export default function CreateOrganization() {
     name: string,
     slug: string,
     isDevDeployment: boolean | undefined,
-    token: string | null,
-    refreshToken: () => Promise<string | null>,
+    getToken: () => Promise<string | null>,
   ) => {
     try {
       const organizationData = {
@@ -48,7 +45,7 @@ export default function CreateOrganization() {
         isDev: !!isDevDeployment,
       };
       
-      const apiFetch = createApiWithRetry(token, refreshToken);
+      const apiFetch = createApiWithToken(getToken);
       const response = await apiFetch(`${API_BASE_URL}/addOrganization`, {
         method: 'POST',
         headers: {
@@ -95,7 +92,7 @@ export default function CreateOrganization() {
         //console.log('onCreateOrganizationPress-Auth:', auth);
         //console.log('onCreateOrganizationPress-Clerk:', clerk);
         if (clerk && clerk.session) {
-          if (token && auth.userId) {
+          if (auth.getToken && auth.userId) {
             // Determine deployment type. Use NODE_ENV when available, fall back to React Native __DEV__.
             const isDev =
               (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
@@ -106,8 +103,7 @@ export default function CreateOrganization() {
               organizationName,
               getOrganizationSlug(organizationName),
               isDev,
-              token,
-              refreshToken,
+              auth.getToken,
             );
 
             if (result && result.id) {

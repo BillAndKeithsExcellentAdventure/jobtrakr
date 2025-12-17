@@ -5,9 +5,8 @@ import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import { FailedToUploadData, useAddFailedToUploadMediaCallback } from '@/src/tbStores/UploadSyncStore';
 import { API_BASE_URL } from '../constants/app-constants';
-import { useAuthToken } from '../context/AuthTokenContext';
 import { useNetwork } from '../context/NetworkContext';
-import { createApiWithRetry } from './apiWithTokenRefresh';
+import { createApiWithToken } from './apiWithTokenRefresh';
 
 export type ImageResult = { status: 'Success' | 'Error'; id: string; uri?: string | undefined; msg: string };
 
@@ -66,8 +65,7 @@ const getFetchImageEndPointUrl = (resourceType: resourceType) => {
 
 const downloadImage = async (
   details: ImageDetails,
-  token: string | null,
-  refreshToken: () => Promise<string | null>,
+  getToken: () => Promise<string | null>,
   resourceType: resourceType,
   localUri: string,
 ): Promise<ImageResult> => {
@@ -83,7 +81,7 @@ const downloadImage = async (
     console.log('Downloading image from:', endPointUrl);
 
     // Make the API call with token refresh
-    const apiFetch = createApiWithRetry(token, refreshToken);
+    const apiFetch = createApiWithToken(getToken);
     const response = await apiFetch(endPointUrl, {
       method: 'GET',
       headers: {
@@ -143,8 +141,7 @@ function arrayBufferToBase64(buffer: Uint8Array): string {
 
 export const uploadImage = async (
   details: ImageDetails,
-  token: string | null,
-  refreshToken: () => Promise<string | null>,
+  getToken: () => Promise<string | null>,
   mediaType: mediaType,
   resourceType: resourceType,
   localImageUrl: string,
@@ -180,7 +177,7 @@ export const uploadImage = async (
     console.log('Uploading image to:', endPointUrl);
 
     // Make the API call with token refresh
-    const apiFetch = createApiWithRetry(token, refreshToken);
+    const apiFetch = createApiWithToken(getToken);
     const response = await apiFetch(endPointUrl, {
       method: 'POST',
       headers: {
@@ -230,14 +227,13 @@ export const deleteMedia = async (
   projectId: string,
   imageIds: string[],
   imageType: string,
-  token: string | null,
-  refreshToken: () => Promise<string | null>,
+  getToken: () => Promise<string | null>,
 ) => {
   try {
     const endPointUrl = `${API_BASE_URL}/deleteMedia`;
 
     // Make the API call with token refresh
-    const apiFetch = createApiWithRetry(token, refreshToken);
+    const apiFetch = createApiWithToken(getToken);
     const response = await apiFetch(endPointUrl, {
       method: 'POST',
       headers: {
@@ -359,7 +355,6 @@ const copyToLocalFolder = async (
 export const useAddImageCallback = () => {
   const auth = useAuth();
   const { userId, orgId } = auth;
-  const { token, refreshToken } = useAuthToken();
   const { isConnected, isInternetReachable } = useNetwork();
   const addFailedToUploadRecord = useAddFailedToUploadMediaCallback();
 
@@ -431,8 +426,7 @@ export const useAddImageCallback = () => {
         // Upload to backend with token refresh
         const uploadResult = await uploadImage(
           details,
-          token,
-          refreshToken,
+          auth.getToken,
           mediaType,
           resourceType,
           copyLocalResult.uri!,
@@ -498,14 +492,13 @@ export const useAddImageCallback = () => {
         }
       }
     },
-    [userId, orgId, token, refreshToken, addFailedToUploadRecord, auth, isConnected, isInternetReachable],
+    [userId, orgId, addFailedToUploadRecord, auth, isConnected, isInternetReachable],
   );
 };
 
 export const useGetImageCallback = () => {
   const auth = useAuth();
   const { userId, orgId } = auth;
-  const { token, refreshToken } = useAuthToken();
 
   return useCallback(
     async (
@@ -548,7 +541,7 @@ export const useGetImageCallback = () => {
           deviceTypes: deviceType,
         };
 
-        const downloadResult = await downloadImage(details, token, refreshToken, resourceType, imageUri);
+        const downloadResult = await downloadImage(details, auth.getToken, resourceType, imageUri);
 
         return {
           localUri: imageUri,
@@ -566,6 +559,6 @@ export const useGetImageCallback = () => {
         };
       }
     },
-    [userId, orgId, token, refreshToken, auth],
+    [userId, orgId, auth],
   );
 };
