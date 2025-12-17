@@ -9,6 +9,7 @@ import * as Application from 'expo-application';
 import * as WebBrowser from 'expo-web-browser';
 import { ReactNativeLegal } from 'react-native-legal';
 import { DOCS_URL } from '@/src/constants/app-constants';
+import { Image } from 'expo-image';
 
 export default function AboutScreen() {
   const colors = useColors();
@@ -37,6 +38,7 @@ export default function AboutScreen() {
         contentContainerStyle={[styles.content, { backgroundColor: colors.background }]}
       >
         <View style={styles.appInfoContainer}>
+          <Image source={require('@/assets/images/icon.png')} style={styles.appIcon} contentFit="contain" />
           <Text txtSize="xl" style={styles.appName}>
             {appName}
           </Text>
@@ -77,6 +79,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 40,
     backgroundColor: 'transparent',
+  },
+  appIcon: {
+    width: 100,
+    height: 100,
+    marginBottom: 20,
   },
   appName: {
     fontWeight: 'bold',
