@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { isDevelopmentBuild } from '@/src/utils/environment';
 
 interface NetworkContextType {
   isConnected: boolean;
@@ -33,8 +34,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const appSettings = useAppSettings();
 
   // Check if we're in a development build and debug offline mode is enabled
-  const isDevelopment = (global as any).__DEV__ === true;
-  const debugForceOffline = isDevelopment && appSettings.debugForceOffline;
+  const debugForceOffline = isDevelopmentBuild() && appSettings.debugForceOffline;
 
   useEffect(() => {
     if (debugForceOffline) {

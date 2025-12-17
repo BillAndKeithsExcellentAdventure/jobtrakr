@@ -15,6 +15,7 @@ import { Stack, useRouter } from 'expo-router';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import { isDevelopmentBuild } from '@/src/utils/environment';
 
 async function createBase64LogoImage(
   uri: string,
@@ -45,7 +46,7 @@ const SetAppSettingScreen = () => {
   const [settings, setSettings] = useState<SettingsData>(appSettings);
 
   // Check if we're in a development build
-  const isDevelopment = (global as any).__DEV__ === true;
+  const isDevelopment = isDevelopmentBuild();
 
   // Sync settings state when appSettings changes
   useEffect(() => {
