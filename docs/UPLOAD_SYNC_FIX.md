@@ -161,10 +161,24 @@ This can be adjusted in `src/utils/apiWithTokenRefresh.ts` if needed. Consider:
 
 ## Future Improvements
 
-Consider implementing:
-1. Network state detection using `@react-native-community/netinfo` for instant offline detection
-2. Exponential backoff for retry attempts
-3. User notification when uploads are queued
-4. Manual retry button in UI
-5. Progress indicator during upload
-6. Configurable timeout per operation type (e.g., longer for videos)
+The following improvements are prioritized based on user impact and implementation complexity:
+
+### High Priority
+
+1. **User notification when uploads are queued** - Users should receive clear feedback when files are queued vs uploaded immediately. This improves transparency and reduces confusion about upload status.
+
+2. **Upload progress indicator** - Show visual feedback during active uploads so users know the operation is in progress and can estimate completion time.
+
+### Medium Priority
+
+3. **Exponential backoff for retry attempts** - Implement smarter retry logic that increases delay between attempts (e.g., 1min, 5min, 15min, 1hr) to reduce server load and battery consumption while still ensuring uploads eventually succeed.
+
+4. **Manual retry button in UI** - Allow users to manually trigger upload retry for failed items instead of waiting for the hourly automatic retry.
+
+### Low Priority
+
+5. **Configurable timeout per operation type** - Different media types (photos vs videos) may need different timeout thresholds. Currently all uploads use 15s timeout.
+
+### Completed
+
+- ✅ **Network state detection using `@react-native-community/netinfo`** - Implemented via `NetworkContext`. See `docs/NETINFO_INTEGRATION.md` for details.
