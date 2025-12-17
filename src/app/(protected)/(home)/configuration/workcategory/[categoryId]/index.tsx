@@ -120,7 +120,7 @@ const ShowWorkCategory = () => {
           <View style={[styles.categoryItems, { backgroundColor: colors.listBackground }]}>
             <View style={styles.categoryListHeader}>
               <View style={{ alignItems: 'center', marginHorizontal: 5, flex: 1 }}>
-                <Text text="Work Items" txtSize="title" />
+                <Text text="Cost Items" txtSize="title" />
               </View>
               <TouchableOpacity style={{ padding: 4, paddingRight: 20 }} onPress={() => setShowAdd(!showAdd)}>
                 <Ionicons name={showAdd ? 'chevron-up-sharp' : 'add'} size={24} color={colors.iconColor} />
@@ -152,7 +152,7 @@ const ShowWorkCategory = () => {
                     style={{ paddingHorizontal: 10, zIndex: 1 }}
                     onPress={handleAddItem}
                     type={item.code && item.name ? 'action' : 'disabled'}
-                    title="Add Work Item"
+                    title="Add Cost Item"
                   />
                 </View>
               </View>

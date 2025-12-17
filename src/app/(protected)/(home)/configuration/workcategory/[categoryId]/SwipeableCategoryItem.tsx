@@ -38,7 +38,7 @@ const SwipeableCategoryItem = ({
   const handleDelete = useCallback(
     (itemId: string) => {
       Alert.alert(
-        'Delete Work Item',
+        'Delete Cost Item',
         'Are you sure you want to delete this item?',
         [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete(itemId, allowDelete) }],
         { cancelable: true },

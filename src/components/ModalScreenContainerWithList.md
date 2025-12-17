@@ -17,12 +17,12 @@ Use the regular `ModalScreenContainer` when:
 
 ## Key Differences
 
-| Feature | ModalScreenContainer | ModalScreenContainerWithList |
-|---------|---------------------|------------------------------|
-| Keyboard Handling | KeyboardAwareScrollView | KeyboardAvoidingView |
-| Best For | Forms with inputs | Forms with scrollable lists |
-| Scrolling | Managed by container | Managed by children |
-| Nested Lists | Can cause issues | Works well |
+| Feature           | ModalScreenContainer    | ModalScreenContainerWithList |
+| ----------------- | ----------------------- | ---------------------------- |
+| Keyboard Handling | KeyboardAwareScrollView | KeyboardAvoidingView         |
+| Best For          | Forms with inputs       | Forms with scrollable lists  |
+| Scrolling         | Managed by container    | Managed by children          |
+| Nested Lists      | Can cause issues        | Works well                   |
 
 ## Usage
 
@@ -31,7 +31,7 @@ import { ModalScreenContainerWithList } from '@/src/components/ModalScreenContai
 
 const MyModalScreen = () => {
   const [items, setItems] = useState([...]);
-  
+
   return (
     <View style={{ flex: 1, width: '100%' }}>
       <ModalScreenContainerWithList
@@ -41,7 +41,7 @@ const MyModalScreen = () => {
         saveButtonTitle="Add Selected"
       >
         <Text style={styles.modalTitle}>Select Items</Text>
-        
+
         {/* Your scrollable list */}
         <FlatList
           data={items}
@@ -58,14 +58,14 @@ const MyModalScreen = () => {
 
 Same as `ModalScreenContainer`:
 
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| onSave | () => void | Yes | - | Callback when save button is pressed |
-| onCancel | () => void | Yes | - | Callback when cancel button is pressed |
-| canSave | boolean | No | true | Whether the save button is enabled |
-| saveButtonTitle | string | No | 'Save' | Label for the save button |
-| cancelButtonTitle | string | No | 'Cancel' | Label for the cancel button |
-| children | ReactNode | Yes | - | Modal content (should include scrollable list) |
+| Prop              | Type       | Required | Default  | Description                                    |
+| ----------------- | ---------- | -------- | -------- | ---------------------------------------------- |
+| onSave            | () => void | Yes      | -        | Callback when save button is pressed           |
+| onCancel          | () => void | Yes      | -        | Callback when cancel button is pressed         |
+| canSave           | boolean    | No       | true     | Whether the save button is enabled             |
+| saveButtonTitle   | string     | No       | 'Save'   | Label for the save button                      |
+| cancelButtonTitle | string     | No       | 'Cancel' | Label for the cancel button                    |
+| children          | ReactNode  | Yes      | -        | Modal content (should include scrollable list) |
 
 ## Features
 
@@ -87,18 +87,16 @@ Same as `ModalScreenContainer`:
 ## Examples
 
 ### With FlatList
+
 ```tsx
 <ModalScreenContainerWithList onSave={handleSave} onCancel={handleCancel} canSave={canSave}>
-  <Text style={styles.modalTitle}>Add Work Items</Text>
-  <FlatList
-    data={items}
-    renderItem={({ item }) => <Item item={item} />}
-    keyExtractor={(item) => item.id}
-  />
+  <Text style={styles.modalTitle}>Add Cost Items</Text>
+  <FlatList data={items} renderItem={({ item }) => <Item item={item} />} keyExtractor={(item) => item.id} />
 </ModalScreenContainerWithList>
 ```
 
 ### With SectionList
+
 ```tsx
 <ModalScreenContainerWithList onSave={handleSave} onCancel={handleCancel} canSave={canSave}>
   <Text style={styles.modalTitle}>Add Cost Categories</Text>

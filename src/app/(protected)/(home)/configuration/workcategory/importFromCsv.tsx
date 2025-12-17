@@ -71,17 +71,17 @@ export default function ImportFromCsvScreen() {
           for (const workItem of workItems) {
             const itemResult = addWorkItem(workItem);
             if (itemResult.status !== 'Success') {
-              console.error(`Failed to add work item: ${workItem.name} ${itemResult.msg}`);
+              console.error(`Failed to add cost item: ${workItem.name} ${itemResult.msg}`);
             }
           }
         }
       }
 
       createTemplateWithAllWorkItems();
-      Alert.alert('Success', 'Work items imported successfully');
+      Alert.alert('Success', 'Cost items imported successfully');
       setWorkCategories([]);
     } catch (error) {
-      Alert.alert('Error', 'Failed to save work items');
+      Alert.alert('Error', 'Failed to save cost items');
     } finally {
       setLoading(false);
       router.back();
@@ -90,7 +90,7 @@ export default function ImportFromCsvScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Import Work Categories from CSV' }} />
+      <Stack.Screen options={{ title: 'Import Cost Categories from CSV' }} />
 
       <TouchableOpacity onPress={handleSelectFile} disabled={loading} style={styles.selectButton}>
         <Text style={styles.selectButtonText}>{loading ? 'Loading...' : 'Select CSV File'}</Text>
