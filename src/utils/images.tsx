@@ -419,6 +419,7 @@ export const useAddImageCallback = () => {
           return {
             status: 'Success',
             id: id,
+            uri: copyLocalResult.uri!,
             msg: 'File saved. Will upload when internet connection is available.',
           };
         }
@@ -459,10 +460,10 @@ export const useAddImageCallback = () => {
       } catch (error) {
         // Catch any unexpected errors and ensure they get added to failedToUpload
         console.error('Unexpected error in useAddImageCallback:', error);
-        
+
         // Try to determine if file was copied locally
         const localUri = buildLocalMediaUri(orgId, projectId, id, mediaType, resourceType);
-        
+
         // Add to failed upload queue
         const data: FailedToUploadData = {
           id: id,
@@ -474,7 +475,7 @@ export const useAddImageCallback = () => {
           itemId: id,
           uploadDate: Date.now(),
         };
-        
+
         const errorMsg = formatErrorMessage(error);
         const result = addFailedToUploadRecord(data);
         if (result.status === 'Success') {
