@@ -18,9 +18,9 @@ ProjectHound is a mobile-first application designed to help contractors and cons
   - Geographic location with map integration
   - Favorite projects for quick access
   
-- **Project Templates**: Create reusable project templates with predefined work items to speed up project setup
+- **Project Templates**: Create reusable project templates with predefined cost items to speed up project setup
 
-- **Work Items & Categories**: Organize project work into customizable categories and line items with:
+- **Cost Items & Categories**: Organize project costs into customizable categories and line items with:
   - Custom codes and titles
   - Bid amounts and spent tracking
   - Completion status
@@ -31,7 +31,7 @@ ProjectHound is a mobile-first application designed to help contractors and cons
 - **Receipt Tracking**: 
   - Capture receipt images using the device camera
   - AI-powered line item extraction from receipt images
-  - Associate receipt items with specific work items
+  - Associate receipt items with specific cost items
   - Track taxable vs non-taxable items with automatic tax proration
   - Vendor management and tracking
   - Receipt completion status
@@ -39,7 +39,7 @@ ProjectHound is a mobile-first application designed to help contractors and cons
 - **Invoice Management**:
   - Create and manage vendor invoices
   - Invoice number and date tracking
-  - Line item details with work item associations
+  - Line item details with cost item associations
   - Supplier information management
   - Invoice completion tracking
 
@@ -52,7 +52,7 @@ ProjectHound is a mobile-first application designed to help contractors and cons
 
 - **Cost Tracking**:
   - Real-time budget vs actual cost tracking
-  - Detailed cost breakdowns by work item
+  - Detailed cost breakdowns by cost item
   - Cost summaries and reports
   - Progress visualization with completion bars
 
@@ -219,7 +219,7 @@ The app supports multiple variants:
 
 ProjectHound uses a sophisticated data architecture with multiple specialized stores:
 
-1. **Configuration Store**: Global configuration including categories, work items, templates, vendors, and suppliers
+1. **Configuration Store**: Global configuration including categories, cost items, templates, vendors, and suppliers
 2. **Project List Store**: All projects for the organization
 3. **Project Details Store**: Per-project data including receipts, invoices, media, notes, and change orders
 4. **App Settings Store**: User preferences and application settings
