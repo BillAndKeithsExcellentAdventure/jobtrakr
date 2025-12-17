@@ -99,7 +99,7 @@ const ShowWorkCategory = () => {
         <Stack.Screen
           options={{
             headerShown: true,
-            title: 'Work Category',
+            title: 'Cost Category',
           }}
         />
 

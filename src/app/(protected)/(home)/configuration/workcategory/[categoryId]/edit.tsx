@@ -55,7 +55,7 @@ const EditWorkCategory = () => {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Edit Work Category',
+          title: 'Edit Cost Category',
         }}
       />
 

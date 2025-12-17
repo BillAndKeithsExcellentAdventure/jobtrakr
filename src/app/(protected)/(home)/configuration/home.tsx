@@ -432,12 +432,12 @@ const Home = () => {
       <View style={{ flex: 1, width: '100%', paddingHorizontal: 10, backgroundColor: colors.listBackground }}>
         <ConfigurationEntry
           label="Categories"
-          description="Manage work categories"
+          description="Manage cost categories"
           onPress={() => router.push('/configuration/workcategory/workCategories')}
         />
         <ConfigurationEntry
           label="Project Templates"
-          description="Define Project-specific Work Items"
+          description="Define Project-specific Cost Items"
           onPress={() => router.push('/configuration/template/templates')}
         />
         <ConfigurationEntry

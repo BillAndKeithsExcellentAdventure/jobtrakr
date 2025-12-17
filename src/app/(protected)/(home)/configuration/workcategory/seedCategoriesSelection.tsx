@@ -90,7 +90,7 @@ const SeedWorkItemSelectorPage = () => {
         canSave={!!selectedProjectType && selectedProjectType !== 'None'}
         saveButtonTitle="Save"
       >
-        <Text style={styles.modalTitle}>Choose Work Category Set</Text>
+        <Text style={styles.modalTitle}>Choose Cost Category Set</Text>
         <TextField
           label="Selected Project Type"
           style={[{ borderColor: colors.neutral200 }]}

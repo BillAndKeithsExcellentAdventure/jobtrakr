@@ -59,7 +59,7 @@ const ListWorkCategories = () => {
   const handleCleanup = useCallback(() => {
     Alert.alert(
       'Configuration Clean-up',
-      'Proceed with processing to find and clean up orphaned work items that are not associated with a work category?',
+      'Proceed with processing to find and clean up orphaned cost items that are not associated with a cost category?',
       [
         { text: 'Cancel' },
         {
@@ -114,7 +114,7 @@ const ListWorkCategories = () => {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Work Categories',
+          title: 'Cost Categories',
           headerRight: renderHeaderRight,
         }}
       />
@@ -152,7 +152,7 @@ const ListWorkCategories = () => {
                     style={{ zIndex: 1 }}
                     onPress={handleAddCategory}
                     type={category.code && category.name ? 'action' : 'disabled'}
-                    title="Add Work Category"
+                    title="Add Cost Category"
                   />
                 </View>
               </View>
@@ -169,7 +169,7 @@ const ListWorkCategories = () => {
                       alignItems: 'center',
                     }}
                   >
-                    <Text txtSize="title" text="No work categories found." />
+                    <Text txtSize="title" text="No cost categories found." />
                     <Text text="Use the '+' in the upper right to add one." />
                     <ActionButton
                       style={{ zIndex: 1, marginTop: 10, width: '95%' }}

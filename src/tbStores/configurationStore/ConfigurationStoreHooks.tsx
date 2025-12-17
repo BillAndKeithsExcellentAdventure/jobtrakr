@@ -454,7 +454,7 @@ export function useCreateTemplateWithAllWorkItemsCallback() {
   const store = useStore(useStoreId());
   const addRow = useAddRowCallback('templates');
   return useCallback(
-    (name = 'All Work Items', description = 'This template includes all work items'): CrudResult => {
+    (name = 'All Cost Items', description = 'This template includes all cost items'): CrudResult => {
       if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
 
       // Create the new template

@@ -85,7 +85,7 @@ interface WorkCategoryDefinition {
 
 ### Using the UI
 
-1. Navigate to Configuration → Work Categories
+1. Navigate to Configuration → Cost Categories
 2. Tap "Import from CSV"
 3. Select your CSV file using the file picker
 4. Preview the parsed categories and work items
@@ -96,10 +96,10 @@ interface WorkCategoryDefinition {
 
 For each category in the CSV:
 
-1. A new work category is created in the configuration store
+1. A new cost category is created in the configuration store
 2. The category receives a unique ID
-3. All associated work items are created
-4. Each work item is linked to its parent category via `categoryId`
+3. All associated cost items are created
+4. Each cost item is linked to its parent category via `categoryId`
 5. All items are set to `status: 'active'` by default
 
 ## Sample Data
