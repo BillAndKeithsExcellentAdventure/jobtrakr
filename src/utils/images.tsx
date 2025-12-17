@@ -6,7 +6,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { FailedToUploadData, useAddFailedToUploadMediaCallback } from '@/src/tbStores/UploadSyncStore';
 import { API_BASE_URL } from '../constants/app-constants';
 import { useNetwork } from '../context/NetworkContext';
-import { createApiWithToken } from './apiWithTokenRefresh';
+import { createApiWithToken } from './apiWithToken';
 
 export type ImageResult = { status: 'Success' | 'Error'; id: string; uri?: string | undefined; msg: string };
 

@@ -19,7 +19,7 @@ import {
   useAllRows,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { createApiWithToken } from '@/src/utils/apiWithTokenRefresh';
+import { createApiWithToken } from '@/src/utils/apiWithToken';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { loadTemplateHtmlAssetFileToString } from '@/src/utils/htmlFileGenerator';
 import { ChangeOrderData, renderChangeOrderTemplate } from '@/src/utils/renderChangeOrderTemplate';
