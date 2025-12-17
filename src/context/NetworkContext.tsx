@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
+import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 
 interface NetworkContextType {
   isConnected: boolean;
@@ -29,6 +30,11 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const [isConnected, setIsConnected] = useState<boolean>(true);
   const [isInternetReachable, setIsInternetReachable] = useState<boolean | null>(null);
   const [networkType, setNetworkType] = useState<string | null>(null);
+  const appSettings = useAppSettings();
+
+  // Check if we're in a development build and debug offline mode is enabled
+  const isDevelopment = (global as any).__DEV__ === true;
+  const debugForceOffline = isDevelopment && appSettings.debugForceOffline;
 
   useEffect(() => {
     // Subscribe to network state updates
@@ -64,8 +70,8 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   }, []);
 
   const value: NetworkContextType = {
-    isConnected,
-    isInternetReachable,
+    isConnected: debugForceOffline ? false : isConnected,
+    isInternetReachable: debugForceOffline ? false : isInternetReachable,
     networkType,
   };
 

@@ -22,6 +22,7 @@ export interface SettingsData {
   phone: string;
   companyLogo: string;
   changeOrderTemplateFileName: string;
+  debugForceOffline: boolean;
 }
 
 const INITIAL_SETTINGS: SettingsData = {
@@ -37,6 +38,7 @@ const INITIAL_SETTINGS: SettingsData = {
   phone: '',
   companyLogo: '',
   changeOrderTemplateFileName: '',
+  debugForceOffline: false,
 };
 
 // --- READ App Settings ---
