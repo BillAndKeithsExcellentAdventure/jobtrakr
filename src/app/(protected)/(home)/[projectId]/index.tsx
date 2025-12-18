@@ -1,4 +1,4 @@
-import { ActionButtonProps } from '@/src/components/ButtonBar';
+import { ActionButtonProps, ButtonBar } from '@/src/components/ButtonBar';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
@@ -9,7 +9,7 @@ import {
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useDeleteProjectCallback, useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { useDeleteProjectCallback, useProject, useToggleFavoriteCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   useAllRows,
   useBidAmountUpdater,
@@ -23,7 +23,9 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { FontAwesome5, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
+import Entypo from '@expo/vector-icons/Entypo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { FlashList } from '@shopify/flash-list';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -42,6 +44,7 @@ const ProjectDetailsPage = () => {
   const colors = useColors();
   const projectData = useProject(projectId);
   const processDeleteProject = useDeleteProjectCallback();
+  const toggleFavorite = useToggleFavoriteCallback();
   const { removeActiveProjectId, addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const clearProjectDetailsStore = useClearProjectDetailsStoreCallback(projectId);
   const allProjectCategories = useAllConfigRows('categories', WorkCategoryCodeCompareAsNumber);
@@ -54,6 +57,13 @@ const ProjectDetailsPage = () => {
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const workItemsWithoutCosts = useWorkItemsWithoutCosts(projectId);
+
+  const onLikePressed = useCallback(
+    (projId: string) => {
+      toggleFavorite(projId);
+    },
+    [toggleFavorite],
+  );
 
   useEffect(() => {
     if (projectId) {
@@ -401,6 +411,90 @@ const ProjectDetailsPage = () => {
     [colors, allWorkItemSummaries, handleMenuItemPress, unusedCategories, workItemsWithoutCosts],
   );
 
+  const projectActionButtons: ActionButtonProps[] = useMemo(
+    () => [
+      {
+        icon: <FontAwesome name="heart-o" size={24} color={colors.iconColor} />,
+        favoriteIcon: <FontAwesome name="heart" size={24} color={colors.iconColor} />,
+        label: 'Like',
+        onPress: (e, actionContext) => {
+          if (projectId) onLikePressed(projectId);
+        },
+      },
+      {
+        icon: <FontAwesome name="sticky-note-o" size={24} color={colors.iconColor} />,
+        label: 'Notes',
+        onPress: (e, actionContext) => {
+          if (projectId && projectData)
+            router.push({
+              pathname: '/[projectId]/notes',
+              params: {
+                projectId: projectId,
+                projectName: projectData.name,
+              },
+            });
+        },
+      },
+      {
+        icon: <FontAwesome name="photo" size={24} color={colors.iconColor} />,
+        label: 'Photos',
+        onPress: (e, actionContext) => {
+          if (projectId && projectData)
+            router.push({
+              pathname: '/[projectId]/photos',
+              params: {
+                projectId: projectId,
+                projectName: projectData.name,
+              },
+            });
+        },
+      },
+      {
+        icon: <Ionicons name="receipt-outline" size={24} color={colors.iconColor} />,
+        label: 'Receipts',
+        onPress: (e, actionContext) => {
+          if (projectId && projectData)
+            router.push({
+              pathname: '/[projectId]/receipts',
+              params: {
+                projectId: projectId,
+                projectName: projectData.name,
+              },
+            });
+        },
+      },
+      {
+        icon: <Entypo name="text-document" size={24} color={colors.iconColor} />,
+        label: 'Invoices',
+        onPress: (e, actionContext) => {
+          if (projectId && projectData)
+            router.push({
+              pathname: '/[projectId]/invoices',
+              params: {
+                projectId: projectId,
+                projectName: projectData.name,
+              },
+            });
+        },
+      },
+      {
+        icon: <MaterialCommunityIcons name="lightbulb-on-outline" size={24} color={colors.iconColor} />,
+        label: 'Changes',
+        onPress: (e, actionContext) => {
+          if (projectId && projectData)
+            router.push({
+              pathname: '/[projectId]/changes',
+              params: {
+                projectId: projectId,
+                projectName: projectData.name,
+              },
+            });
+        },
+      },
+    ],
+    [colors, onLikePressed, router, projectId, projectData],
+  );
+
   const renderItem = (item: CostSectionData, projectId: string) => {
     const showSection = (): void => {
       // use router to push to the cost items page
@@ -542,6 +636,19 @@ const ProjectDetailsPage = () => {
                 ListEmptyComponent={<Text>No data available</Text>}
               />
             </View>
+            {projectData && (
+              <View
+                style={[
+                  styles.buttonBarContainer,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.background,
+                  },
+                ]}
+              >
+                <ButtonBar buttons={projectActionButtons} actionContext={projectData} isFavorite={projectData.favorite && projectData.favorite > 0} />
+              </View>
+            )}
           </>
         )}
       </View>
@@ -573,6 +680,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingBottom: 5,
     borderBottomWidth: 1,
+  },
+  buttonBarContainer: {
+    borderRadius: 15,
+    borderWidth: 2,
+    marginHorizontal: 10,
+    marginBottom: 10,
+    padding: 5,
   },
 });
 
