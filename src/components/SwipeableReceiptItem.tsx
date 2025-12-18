@@ -16,7 +16,8 @@ import {
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
-import { deleteMedia } from '../utils/images';
+import { useDeleteMediaCallback, deleteLocalMediaFile } from '../utils/images';
+import { useAllFailedToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
 
 export const ITEM_HEIGHT = 100;
 const RIGHT_ACTION_WIDTH = 100;
@@ -44,6 +45,9 @@ const SwipeableReceiptItem = React.memo(
     const deleteReceipt = useDeleteRowCallback(projectId, 'receipts');
     const deleteReceiptLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
     const allReceiptLineItems = useAllRows(projectId, 'workItemCostEntries');
+    const deleteMediaCallback = useDeleteMediaCallback();
+    const failedUploads = useAllFailedToUpload();
+    const store = useUploadSyncStore();
     const textColor = item.fullyClassified ? colors.text : colors.errorText;
     const allReceiptItems = useMemo(
       () => allReceiptLineItems.filter((lineItem) => lineItem.parentId === item.id),
@@ -72,10 +76,26 @@ const SwipeableReceiptItem = React.memo(
           console.log('Deleting receipt with id:', id);
           deleteReceipt(id);
 
-          if (item.imageId && auth.userId && auth.getToken) {
-            // we also need to delete the associated receipt photo from storage
+          if (item.imageId) {
+            // Check if this image is in the failedToUpload queue
+            const uploadInQueue = failedUploads.find((upload) => upload.itemId === item.imageId);
+            if (uploadInQueue && store) {
+              // Remove from failedToUpload table since it never made it to the server
+              console.log(`Removing receipt image ${item.imageId} from failedToUpload queue`);
+              store.delRow('failedToUpload', uploadInQueue.id);
+            } else {
+              // Use the new hook to delete media (will queue if offline)
+              (async () => {
+                const result = await deleteMediaCallback(projectId, [item.imageId], 'receipt');
+                if (!result.success) {
+                  console.error('Failed to delete receipt media:', result.msg);
+                }
+              })();
+            }
+
+            // Delete the local media file (receipts are always photos)
             (async () => {
-              deleteMedia(auth.userId!, orgId, projectId, [item.imageId], 'receipt', auth.getToken);
+              await deleteLocalMediaFile(orgId, projectId, item.imageId, 'photo', 'receipt');
             })();
           }
         }
@@ -85,9 +105,11 @@ const SwipeableReceiptItem = React.memo(
         deleteReceiptLineItem,
         allReceiptItems,
         item.imageId,
-        auth,
-        orgId,
         projectId,
+        orgId,
+        deleteMediaCallback,
+        failedUploads,
+        store,
       ],
     );
 

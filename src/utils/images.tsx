@@ -3,7 +3,13 @@ import { randomUUID } from 'expo-crypto';
 import { useCallback } from 'react';
 import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
-import { FailedToUploadData, useAddFailedToUploadMediaCallback } from '@/src/tbStores/UploadSyncStore';
+import {
+  FailedToUploadData,
+  useAddFailedToUploadMediaCallback,
+  FailedToDeleteData,
+  useAddFailedToDeleteCallback,
+  useAllFailedToUpload,
+} from '@/src/tbStores/UploadSyncStore';
 import { API_BASE_URL } from '../constants/app-constants';
 import { useNetwork } from '../context/NetworkContext';
 import { createApiWithToken } from './apiWithToken';
@@ -281,6 +287,158 @@ export const deleteMedia = async (
   }
 };
 
+/**
+ * Helper function to create a FailedToDeleteData object.
+ * Note: The id field is initialized to empty string and will be replaced
+ * by the addFailedToDeleteRecord callback with a generated UUID.
+ */
+const createFailedToDeleteData = (
+  orgId: string,
+  projectId: string,
+  imageIds: string[],
+  imageType: string,
+): FailedToDeleteData => ({
+  id: '', // Will be replaced by the callback with a generated UUID
+  organizationId: orgId,
+  projectId: projectId,
+  imageIds: JSON.stringify(imageIds),
+  imageType: imageType,
+  deleteDate: Date.now(),
+});
+
+/**
+ * Hook that provides a callback to delete media with network-aware queuing.
+ * If the media is in the failedToUpload queue, it's removed from there without an API call.
+ * If offline, the delete request is queued for later processing.
+ * If online, the delete is executed immediately via the API.
+ */
+export const useDeleteMediaCallback = () => {
+  const auth = useAuth();
+  const { userId, orgId } = auth;
+  const { isConnected, isInternetReachable } = useNetwork();
+  const addFailedToDeleteRecord = useAddFailedToDeleteCallback();
+  const failedUploads = useAllFailedToUpload();
+
+  return useCallback(
+    async (
+      projectId: string,
+      imageIds: string[],
+      imageType: string,
+    ): Promise<{ success: boolean; msg: string }> => {
+      if (!userId || !orgId) {
+        return { success: false, msg: 'User ID or Organization ID not available' };
+      }
+
+      if (!auth.getToken) {
+        return { success: false, msg: 'Auth token getter not available' };
+      }
+
+      // First, check if any of these imageIds are in the failedToUpload table
+      // If they are, the caller should remove them from failedToUpload (since they
+      // were never uploaded to the server). We return the imageIds that need to be
+      // removed so the caller can handle the cleanup.
+      // Use Set for O(1) lookup performance
+      const imageIdsSet = new Set(imageIds);
+      const imagesInFailedUpload = failedUploads.filter((upload) => imageIdsSet.has(upload.itemId));
+
+      if (imagesInFailedUpload.length > 0) {
+        console.log(
+          `Found ${imagesInFailedUpload.length} images in failedToUpload queue. Caller should remove them.`,
+        );
+        // Return a special status indicating these images only need to be removed from the upload queue
+        // The caller is responsible for removing them from failedToUpload table
+        return {
+          success: true,
+          msg: 'Images are queued for upload and should be removed from failedToUpload (not uploaded to server yet)',
+        };
+      }
+
+      // Check network connectivity before attempting delete
+      if (!isConnected || isInternetReachable === false) {
+        console.log(
+          'No network connection detected. Queuing delete without attempting network call.',
+        );
+
+        const data = createFailedToDeleteData(orgId, projectId, imageIds, imageType);
+
+        const result = addFailedToDeleteRecord(data);
+        if (result.status === 'Success') {
+          return {
+            success: true,
+            msg: 'Delete operation queued. Will be processed when network is available.',
+          };
+        } else {
+          return {
+            success: false,
+            msg: `Failed to queue delete operation: ${result.msg}`,
+          };
+        }
+      }
+
+      // Network is available, attempt to delete immediately
+      try {
+        const deleteResult = await deleteMedia(
+          userId,
+          orgId,
+          projectId,
+          imageIds,
+          imageType,
+          auth.getToken,
+        );
+
+        // If the immediate delete fails, queue it for retry
+        if (!deleteResult.success) {
+          console.log('Delete failed, queuing for retry:', deleteResult.msg);
+
+          const data = createFailedToDeleteData(orgId, projectId, imageIds, imageType);
+
+          const result = addFailedToDeleteRecord(data);
+          if (result.status === 'Success') {
+            return {
+              success: true,
+              msg: 'Delete failed but queued for retry.',
+            };
+          } else {
+            return {
+              success: false,
+              msg: `Delete failed and could not queue for retry: ${result.msg}`,
+            };
+          }
+        }
+
+        return deleteResult;
+      } catch (error) {
+        console.error('Unexpected error in useDeleteMediaCallback:', error);
+
+        // Queue the delete for retry on unexpected errors
+        const data = createFailedToDeleteData(orgId, projectId, imageIds, imageType);
+
+        const result = addFailedToDeleteRecord(data);
+        if (result.status === 'Success') {
+          return {
+            success: true,
+            msg: `Delete encountered an error but queued for retry: ${formatErrorMessage(error)}`,
+          };
+        } else {
+          return {
+            success: false,
+            msg: `Delete failed with error and could not queue: ${formatErrorMessage(error)}`,
+          };
+        }
+      }
+    },
+    [
+      userId,
+      orgId,
+      auth,
+      isConnected,
+      isInternetReachable,
+      addFailedToDeleteRecord,
+      failedUploads,
+    ],
+  );
+};
+
 const getLocalMediaFolder = (orgId: string, projectId: string, resourceType: resourceType): string => {
   return `${FileSystem.documentDirectory}/images/${orgId}/${projectId}/${resourceType}`;
 };
@@ -306,6 +464,37 @@ export const buildLocalMediaUri = (
   }
 
   return getLocalImageUri(folder, imageId);
+};
+
+/**
+ * Deletes a local media file if it exists.
+ * @param orgId - Organization ID
+ * @param projectId - Project ID
+ * @param imageId - Image/video ID
+ * @param type - Media type ('photo' or 'video')
+ * @param resourceType - Resource type ('receipt', 'invoice', or 'photo')
+ */
+export const deleteLocalMediaFile = async (
+  orgId: string,
+  projectId: string,
+  imageId: string,
+  type: mediaType,
+  resourceType: resourceType,
+): Promise<void> => {
+  try {
+    const localUri = buildLocalMediaUri(orgId, projectId, imageId, type, resourceType);
+    const fileInfo = await FileSystem.getInfoAsync(localUri);
+    
+    if (fileInfo.exists) {
+      await FileSystem.deleteAsync(localUri, { idempotent: true });
+      console.log(`Deleted local media file: ${localUri}`);
+    } else {
+      console.log(`Local media file does not exist: ${localUri}`);
+    }
+  } catch (error) {
+    console.error(`Error deleting local media file for ${imageId}:`, error);
+    // Don't throw - we want deletion to continue even if file cleanup fails
+  }
 };
 
 const copyToLocalFolder = async (

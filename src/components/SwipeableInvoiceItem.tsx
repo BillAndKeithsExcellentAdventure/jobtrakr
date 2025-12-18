@@ -16,7 +16,8 @@ import {
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
-import { deleteMedia } from '../utils/images';
+import { useDeleteMediaCallback, deleteLocalMediaFile } from '../utils/images';
+import { useAllFailedToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
 
 export const ITEM_HEIGHT = 100;
 const RIGHT_ACTION_WIDTH = 100;
@@ -44,6 +45,9 @@ const SwipeableInvoiceItem = React.memo(
     const deleteInvoice = useDeleteRowCallback(projectId, 'invoices');
     const deleteInvoiceLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
     const allInvoiceLineItems = useAllRows(projectId, 'workItemCostEntries');
+    const deleteMediaCallback = useDeleteMediaCallback();
+    const failedUploads = useAllFailedToUpload();
+    const store = useUploadSyncStore();
     const textColor = item.fullyClassified ? colors.text : colors.errorText;
 
     const allInvoiceItems = useMemo(
@@ -73,15 +77,41 @@ const SwipeableInvoiceItem = React.memo(
           console.log('Deleting invoice with id:', id);
           deleteInvoice(id);
 
-          if (item.imageId && auth.userId && auth.getToken) {
-            // we also need to delete the associated receipt photo from storage
+          if (item.imageId) {
+            // Check if this image is in the failedToUpload queue
+            const uploadInQueue = failedUploads.find((upload) => upload.itemId === item.imageId);
+            if (uploadInQueue && store) {
+              // Remove from failedToUpload table since it never made it to the server
+              console.log(`Removing invoice image ${item.imageId} from failedToUpload queue`);
+              store.delRow('failedToUpload', uploadInQueue.id);
+            } else {
+              // Use the new hook to delete media (will queue if offline)
+              (async () => {
+                const result = await deleteMediaCallback(projectId, [item.imageId], 'invoice');
+                if (!result.success) {
+                  console.error('Failed to delete invoice media:', result.msg);
+                }
+              })();
+            }
+
+            // Delete the local media file (invoices are always photos)
             (async () => {
-              deleteMedia(auth.userId!, orgId, projectId, [item.imageId], 'invoice', auth.getToken);
+              await deleteLocalMediaFile(orgId, projectId, item.imageId, 'photo', 'invoice');
             })();
           }
         }
       },
-      [deleteInvoice, deleteInvoiceLineItem, allInvoiceItems, item.imageId, auth, orgId, projectId],
+      [
+        deleteInvoice,
+        deleteInvoiceLineItem,
+        allInvoiceItems,
+        item.imageId,
+        projectId,
+        orgId,
+        deleteMediaCallback,
+        failedUploads,
+        store,
+      ],
     );
 
     const handleDelete = useCallback(() => {
