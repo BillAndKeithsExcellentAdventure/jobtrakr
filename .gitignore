@@ -40,5 +40,9 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# jest
+coverage/
+
 # Remove from the project until we need it.
 src/components/SpeechToText.tsx
