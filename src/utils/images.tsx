@@ -337,9 +337,9 @@ export const useDeleteMediaCallback = () => {
       // If they are, the caller should remove them from failedToUpload (since they
       // were never uploaded to the server). We return the imageIds that need to be
       // removed so the caller can handle the cleanup.
-      const imagesInFailedUpload = failedUploads.filter((upload) =>
-        imageIds.includes(upload.itemId),
-      );
+      // Use Set for O(1) lookup performance
+      const imageIdsSet = new Set(imageIds);
+      const imagesInFailedUpload = failedUploads.filter((upload) => imageIdsSet.has(upload.itemId));
 
       if (imagesInFailedUpload.length > 0) {
         console.log(

@@ -120,7 +120,10 @@ export const useUploadQueue = () => {
           try {
             imageIds = JSON.parse(item.imageIds) as string[];
           } catch (parseError) {
-            console.error(`Failed to parse imageIds for delete item ${item.id}:`, parseError);
+            console.error(
+              `Failed to parse imageIds for delete item ${item.id} (data: ${item.imageIds}):`,
+              parseError,
+            );
             // Skip this item and continue with the next one
             failCount++;
             setProcessedCount(successCount + failCount);

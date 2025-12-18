@@ -167,9 +167,9 @@ export const ProjectMediaList = ({
           }
 
           // Get images that need to be deleted from server (not in queue)
-          const imagesToDeleteFromServer = selectedImageIds.filter(
-            (id) => !imagesInQueue.some((upload) => upload.itemId === id),
-          );
+          // Use Set for O(1) lookup performance
+          const imageQueueSet = new Set(imagesInQueue.map((upload) => upload.itemId));
+          const imagesToDeleteFromServer = selectedImageIds.filter((id) => !imageQueueSet.has(id));
 
           // If there are images to delete from server, use the delete callback
           if (imagesToDeleteFromServer.length > 0) {
