@@ -15,6 +15,7 @@ interface ButtonBarProps {
   actionContext: any;
   isFavorite?: boolean;
   vertical?: boolean;
+  standalone?: boolean;
 }
 
 export const ButtonBar: React.FC<ButtonBarProps> = ({
@@ -22,6 +23,7 @@ export const ButtonBar: React.FC<ButtonBarProps> = ({
   actionContext,
   isFavorite,
   vertical = false,
+  standalone = false,
 }) => {
   const colors = useColors();
 
@@ -31,6 +33,7 @@ export const ButtonBar: React.FC<ButtonBarProps> = ({
         styles.buttonBarContainer,
         !vertical && styles.buttonBarContainerHorizontal,
         !vertical && { borderTopColor: colors.border },
+        standalone && !vertical && styles.buttonBarContainerStandaloneHorizontal,
         vertical && styles.buttonBarContainerVertical,
       ]}
     >
@@ -61,6 +64,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     marginTop: 5,
   },
+  buttonBarContainerStandaloneHorizontal: {
+    flexDirection: 'row',
+    paddingTop: 0,
+    borderTopWidth: 0,
+    marginTop: 0,
+  },
+
   buttonBarContainerVertical: {
     flexDirection: 'column',
     justifyContent: 'space-evenly',

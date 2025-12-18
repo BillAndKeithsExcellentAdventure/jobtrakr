@@ -9,7 +9,11 @@ import {
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useDeleteProjectCallback, useProject, useToggleFavoriteCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import {
+  useDeleteProjectCallback,
+  useProject,
+  useToggleFavoriteCallback,
+} from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   useAllRows,
   useBidAmountUpdater,
@@ -414,14 +418,6 @@ const ProjectDetailsPage = () => {
   const projectActionButtons: ActionButtonProps[] = useMemo(
     () => [
       {
-        icon: <FontAwesome name="heart-o" size={24} color={colors.iconColor} />,
-        favoriteIcon: <FontAwesome name="heart" size={24} color={colors.iconColor} />,
-        label: 'Like',
-        onPress: (e, actionContext) => {
-          if (projectId) onLikePressed(projectId);
-        },
-      },
-      {
         icon: <FontAwesome name="sticky-note-o" size={24} color={colors.iconColor} />,
         label: 'Notes',
         onPress: (e, actionContext) => {
@@ -646,7 +642,7 @@ const ProjectDetailsPage = () => {
                   },
                 ]}
               >
-                <ButtonBar buttons={projectActionButtons} actionContext={projectData} isFavorite={projectData.favorite && projectData.favorite > 0} />
+                <ButtonBar buttons={projectActionButtons} actionContext={projectData} standalone={true} />
               </View>
             )}
           </>
