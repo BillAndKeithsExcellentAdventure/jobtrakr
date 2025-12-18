@@ -1,10 +1,11 @@
-# Project Store Deletion Implementation
+# Project Deletion Implementation
 
-This document describes the simplified implementation for properly deleting project stores using TinyBase's synchronization mechanism.
+This document describes the simplified implementation for deleting a project using TinyBase's synchronization mechanism.
 
 ## Overview
 
 When a project is deleted from the application, we use a simplified approach:
+
 1. **Clear all tables in the store** - Using `store.delTables()` to remove all data
 2. **Sync empty state** - The empty state syncs across all devices via TinyBase
 3. **Component lifecycle** - Properly handle unmount cleanup without deleting persisted data
@@ -14,6 +15,7 @@ When a project is deleted from the application, we use a simplified approach:
 ### Critical Distinction: Component Unmounting ≠ Project Deletion
 
 `ProjectDetailsStore` components unmount for various reasons:
+
 - Navigation away from a project view
 - Memory management (removing inactive projects from `activeProjectIds`)
 - App backgrounding or closing
@@ -24,11 +26,13 @@ When a project is deleted from the application, we use a simplified approach:
 ### Why `store.delTables()` Instead of Deleting Database/Server Data
 
 **Previous approaches had issues:**
+
 - Deleting local database only → Other devices don't know about deletion, project reappears
 - Deleting server data → Complex, requires server-side implementation
 - Deleting on every unmount → Data loss on navigation
 
 **Current approach benefits:**
+
 - ✅ `store.delTables()` clears all data from all tables
 - ✅ Empty state syncs to all connected devices via TinyBase
 - ✅ Simple, no server-side code changes needed
@@ -43,11 +47,13 @@ When a project is deleted from the application, we use a simplified approach:
 When `ProjectDetailsStore` unmounts for ANY reason, we clean up resources but preserve data:
 
 #### Persister Cleanup (`useCreateClientPersisterAndStart.ts`)
+
 - Stops auto-save to prevent writes during destruction
 - Destroys the persister to release resources
 - **Does NOT delete the SQLite database** (database structure persists)
 
 #### Synchronizer Cleanup (`useCreateServerSynchronizerAndStart.ts`)
+
 - Stops synchronization to prevent network activity
 - Closes the WebSocket connection
 - Destroys the synchronizer
@@ -58,6 +64,7 @@ When `ProjectDetailsStore` unmounts for ANY reason, we clean up resources but pr
 When the user explicitly deletes a project:
 
 #### Clear All Tables (`useClearProjectDetailsStoreCallback`)
+
 - Calls `store.delTables()` to remove all data from all tables
 - This empty state is synchronized to all connected devices
 - Ensures other devices see the project as empty
@@ -90,6 +97,7 @@ When the user explicitly deletes a project:
 To verify the implementation works correctly:
 
 ### 1. Test Normal Navigation (Data Persists)
+
 - Create a test project with some data
 - Navigate away from the project
 - Check console: should see "Cleaning up synchronizer/persister" messages
@@ -97,6 +105,7 @@ To verify the implementation works correctly:
 - **Verify**: Data is still there (loaded from local DB)
 
 ### 2. Test Project Deletion (Data Cleared and Synced)
+
 - Create a test project with some data on Device A
 - Ensure Device B is also synced with this project
 - Delete the project from Device A
@@ -110,6 +119,7 @@ To verify the implementation works correctly:
 - **Verify**: No additional server requests needed
 
 ### 3. Test Multi-Device Synchronization
+
 - Create a project on Device A with data
 - Sync to Device B (should see the project with data)
 - Delete the project on Device A (clears all tables)
@@ -118,6 +128,7 @@ To verify the implementation works correctly:
 - This confirms the empty state synced correctly
 
 ### 4. Test Offline Deletion
+
 - Disconnect from network
 - Delete a project
 - **Verify**: Tables are cleared locally
@@ -127,6 +138,7 @@ To verify the implementation works correctly:
 ## Error Handling
 
 The cleanup functions use try-catch blocks to ensure:
+
 - Errors don't prevent the deletion flow from completing
 - Errors are logged for debugging
 - The user experience is not disrupted by cleanup failures
