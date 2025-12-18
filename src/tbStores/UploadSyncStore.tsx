@@ -51,21 +51,25 @@ export const TABLES_SCHEMA = {
   },
 } as const;
 
-const { useCreateMergeableStore, useDelRowCallback, useProvideStore, useStore } =
+const { useCreateMergeableStore, useDelRowCallback, useProvideStore, useStore: useStoreInternal } =
   UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
-const useStoreId = () => {
+const useStoreIdInternal = () => {
   const { userId } = useAuth();
   const storeId = useMemo(() => `${STORE_ID_PREFIX}_${userId}`, [userId]);
   return storeId;
 };
 
+// Export for use in components
+export const useUploadSyncStoreId = useStoreIdInternal;
+export const useUploadSyncStore = () => useStoreInternal(useStoreIdInternal());
+
 /**
- * Returns all projects for the current store ID.
+ * Returns all failed upload items for the current store ID.
  */
 export const useAllFailedToUpload = () => {
   const [allItems, setAllItems] = useState<FailedToUploadData[]>([]);
-  let store = useStore(useStoreId());
+  let store = useStoreInternal(useStoreIdInternal());
 
   const fetchAllFailedToUploadItems = useCallback((): FailedToUploadData[] => {
     if (!store) {
@@ -113,9 +117,9 @@ export const useAllFailedToUpload = () => {
   return allItems;
 };
 
-// Returns a callback that adds a new project to the store.
+// Returns a callback that adds a new failed upload entry to the store.
 export const useAddFailedToUploadMediaCallback = () => {
-  let store = useStore(useStoreId());
+  let store = useStoreInternal(useStoreIdInternal());
 
   return useCallback(
     (failedToUploadData: FailedToUploadData): { status: TBStatus; msg: string; id: string } => {
@@ -139,14 +143,14 @@ export const useAddFailedToUploadMediaCallback = () => {
 
 // Returns a callback that deletes an entry from the store.
 export const useDeleteFailedToUploadCallback = (id: string) =>
-  useDelRowCallback('failedToUpload', id, useStoreId());
+  useDelRowCallback('failedToUpload', id, useStoreIdInternal());
 
 /**
  * Returns all failed delete operations for the current store ID.
  */
 export const useAllFailedToDelete = () => {
   const [allItems, setAllItems] = useState<FailedToDeleteData[]>([]);
-  let store = useStore(useStoreId());
+  let store = useStoreInternal(useStoreIdInternal());
 
   const fetchAllFailedToDeleteItems = useCallback((): FailedToDeleteData[] => {
     if (!store) {
@@ -194,7 +198,7 @@ export const useAllFailedToDelete = () => {
 
 // Returns a callback that adds a new failed delete operation to the store.
 export const useAddFailedToDeleteCallback = () => {
-  let store = useStore(useStoreId());
+  let store = useStoreInternal(useStoreIdInternal());
 
   return useCallback(
     (failedToDeleteData: FailedToDeleteData): { status: TBStatus; msg: string; id: string } => {
@@ -218,11 +222,11 @@ export const useAddFailedToDeleteCallback = () => {
 
 // Returns a callback that deletes a failed delete entry from the store.
 export const useDeleteFailedToDeleteCallback = (id: string) =>
-  useDelRowCallback('failedToDelete', id, useStoreId());
+  useDelRowCallback('failedToDelete', id, useStoreIdInternal());
 
-// Create, persist, and sync a store containing the IDs of the projects
+// Create, persist, and sync a store containing upload/delete sync data
 export default function FailedToUploadSyncStore() {
-  const storeId = useStoreId();
+  const storeId = useStoreIdInternal();
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
   useCreateClientPersisterAndStart(storeId, store);
 

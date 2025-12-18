@@ -289,6 +289,8 @@ export const deleteMedia = async (
 
 /**
  * Helper function to create a FailedToDeleteData object.
+ * Note: The id field is initialized to empty string and will be replaced
+ * by the addFailedToDeleteRecord callback with a generated UUID.
  */
 const createFailedToDeleteData = (
   orgId: string,
@@ -296,7 +298,7 @@ const createFailedToDeleteData = (
   imageIds: string[],
   imageType: string,
 ): FailedToDeleteData => ({
-  id: '', // will be set by the callback
+  id: '', // Will be replaced by the callback with a generated UUID
   organizationId: orgId,
   projectId: projectId,
   imageIds: JSON.stringify(imageIds),

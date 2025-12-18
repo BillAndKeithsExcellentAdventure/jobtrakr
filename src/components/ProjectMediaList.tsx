@@ -15,17 +15,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { useAuth } from '@clerk/clerk-expo';
 import { mediaType } from '@/src/utils/images';
 import { useProject, useProjectValue } from '../tbStores/listOfProjects/ListOfProjectsStore';
-import { useAllFailedToUpload } from '@/src/tbStores/UploadSyncStore';
-import * as UiReact from 'tinybase/ui-react/with-schemas';
-import { STORE_ID_PREFIX, TABLES_SCHEMA } from '@/src/tbStores/UploadSyncStore';
-import { NoValuesSchema } from 'tinybase/with-schemas';
-
-const { useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
-
-const useStoreId = () => {
-  const { userId } = useAuth();
-  return `${STORE_ID_PREFIX}_${userId}`;
-};
+import { useAllFailedToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
 
 export interface MediaEntryDisplayData extends MediaEntryData {
   isSelected: boolean;
@@ -55,7 +45,7 @@ export const ProjectMediaList = ({
   const getImage = useGetImageCallback();
   const deleteMediaCallback = useDeleteMediaCallback();
   const failedUploads = useAllFailedToUpload();
-  const store = useStore(useStoreId());
+  const store = useUploadSyncStore();
   const auth = useAuth();
   const { orgId, userId } = auth;
 

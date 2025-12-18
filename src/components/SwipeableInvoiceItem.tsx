@@ -17,17 +17,7 @@ import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { useDeleteMediaCallback } from '../utils/images';
-import { useAllFailedToUpload } from '@/src/tbStores/UploadSyncStore';
-import * as UiReact from 'tinybase/ui-react/with-schemas';
-import { STORE_ID_PREFIX, TABLES_SCHEMA } from '@/src/tbStores/UploadSyncStore';
-import { NoValuesSchema } from 'tinybase/with-schemas';
-
-const { useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
-
-const useStoreId = () => {
-  const { userId } = useAuth();
-  return `${STORE_ID_PREFIX}_${userId}`;
-};
+import { useAllFailedToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
 
 export const ITEM_HEIGHT = 100;
 const RIGHT_ACTION_WIDTH = 100;
@@ -57,7 +47,7 @@ const SwipeableInvoiceItem = React.memo(
     const allInvoiceLineItems = useAllRows(projectId, 'workItemCostEntries');
     const deleteMediaCallback = useDeleteMediaCallback();
     const failedUploads = useAllFailedToUpload();
-    const store = useStore(useStoreId());
+    const store = useUploadSyncStore();
     const textColor = item.fullyClassified ? colors.text : colors.errorText;
 
     const allInvoiceItems = useMemo(

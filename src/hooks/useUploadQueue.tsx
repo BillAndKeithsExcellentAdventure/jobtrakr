@@ -4,20 +4,10 @@ import { useNetwork } from '../context/NetworkContext';
 import {
   useAllFailedToUpload,
   useAllFailedToDelete,
-  STORE_ID_PREFIX,
-  TABLES_SCHEMA,
+  useUploadSyncStoreId,
+  useUploadSyncStore,
 } from '../tbStores/UploadSyncStore';
 import { mediaType, resourceType, ImageDetails, ImageResult, uploadImage, deleteMedia } from '../utils/images';
-import * as UiReact from 'tinybase/ui-react/with-schemas';
-import { NoValuesSchema } from 'tinybase/with-schemas';
-
-const { useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
-
-const useStoreId = () => {
-  const { userId } = useAuth();
-  const storeId = useMemo(() => `${STORE_ID_PREFIX}_${userId}`, [userId]);
-  return storeId;
-};
 
 /**
  * Hook to process failed uploads and deletes in a foreground queue.
@@ -31,7 +21,7 @@ export const useUploadQueue = () => {
   const { isConnected, isInternetReachable } = useNetwork();
   const failedUploads = useAllFailedToUpload();
   const failedDeletes = useAllFailedToDelete();
-  const store = useStore(useStoreId());
+  const store = useUploadSyncStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -126,7 +116,17 @@ export const useUploadQueue = () => {
       // Process deletes
       for (const item of deletesToProcess) {
         try {
-          const imageIds = JSON.parse(item.imageIds) as string[];
+          let imageIds: string[];
+          try {
+            imageIds = JSON.parse(item.imageIds) as string[];
+          } catch (parseError) {
+            console.error(`Failed to parse imageIds for delete item ${item.id}:`, parseError);
+            // Skip this item and continue with the next one
+            failCount++;
+            setProcessedCount(successCount + failCount);
+            continue;
+          }
+
           console.log(`Processing delete for ${imageIds.length} images (${item.imageType})`);
 
           // Attempt to delete
