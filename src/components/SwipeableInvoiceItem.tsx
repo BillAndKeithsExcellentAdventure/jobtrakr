@@ -16,7 +16,18 @@ import {
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
-import { deleteMedia } from '../utils/images';
+import { useDeleteMediaCallback } from '../utils/images';
+import { useAllFailedToUpload } from '@/src/tbStores/UploadSyncStore';
+import * as UiReact from 'tinybase/ui-react/with-schemas';
+import { STORE_ID_PREFIX, TABLES_SCHEMA } from '@/src/tbStores/UploadSyncStore';
+import { NoValuesSchema } from 'tinybase/with-schemas';
+
+const { useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
+
+const useStoreId = () => {
+  const { userId } = useAuth();
+  return `${STORE_ID_PREFIX}_${userId}`;
+};
 
 export const ITEM_HEIGHT = 100;
 const RIGHT_ACTION_WIDTH = 100;
@@ -44,6 +55,9 @@ const SwipeableInvoiceItem = React.memo(
     const deleteInvoice = useDeleteRowCallback(projectId, 'invoices');
     const deleteInvoiceLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
     const allInvoiceLineItems = useAllRows(projectId, 'workItemCostEntries');
+    const deleteMediaCallback = useDeleteMediaCallback();
+    const failedUploads = useAllFailedToUpload();
+    const store = useStore(useStoreId());
     const textColor = item.fullyClassified ? colors.text : colors.errorText;
 
     const allInvoiceItems = useMemo(
@@ -73,15 +87,35 @@ const SwipeableInvoiceItem = React.memo(
           console.log('Deleting invoice with id:', id);
           deleteInvoice(id);
 
-          if (item.imageId && auth.userId && auth.getToken) {
-            // we also need to delete the associated receipt photo from storage
-            (async () => {
-              deleteMedia(auth.userId!, orgId, projectId, [item.imageId], 'invoice', auth.getToken);
-            })();
+          if (item.imageId) {
+            // Check if this image is in the failedToUpload queue
+            const uploadInQueue = failedUploads.find((upload) => upload.itemId === item.imageId);
+            if (uploadInQueue && store) {
+              // Remove from failedToUpload table since it never made it to the server
+              console.log(`Removing invoice image ${item.imageId} from failedToUpload queue`);
+              store.delRow('failedToUpload', uploadInQueue.id);
+            } else {
+              // Use the new hook to delete media (will queue if offline)
+              (async () => {
+                const result = await deleteMediaCallback(projectId, [item.imageId], 'invoice');
+                if (!result.success) {
+                  console.error('Failed to delete invoice media:', result.msg);
+                }
+              })();
+            }
           }
         }
       },
-      [deleteInvoice, deleteInvoiceLineItem, allInvoiceItems, item.imageId, auth, orgId, projectId],
+      [
+        deleteInvoice,
+        deleteInvoiceLineItem,
+        allInvoiceItems,
+        item.imageId,
+        projectId,
+        deleteMediaCallback,
+        failedUploads,
+        store,
+      ],
     );
 
     const handleDelete = useCallback(() => {

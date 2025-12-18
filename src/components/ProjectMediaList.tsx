@@ -8,13 +8,24 @@ import Base64Image from '@/src/components/Base64Image';
 import { formatDate } from '@/src/utils/formatters';
 import { MediaEntryData, useDeleteRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useRouter } from 'expo-router';
-import { buildLocalMediaUri, deleteMedia, useGetImageCallback } from '@/src/utils/images';
+import { buildLocalMediaUri, useGetImageCallback, useDeleteMediaCallback } from '@/src/utils/images';
 import { useColors } from '@/src/context/ColorsContext';
 import { useColorScheme } from './useColorScheme';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useAuth } from '@clerk/clerk-expo';
 import { mediaType } from '@/src/utils/images';
 import { useProject, useProjectValue } from '../tbStores/listOfProjects/ListOfProjectsStore';
+import { useAllFailedToUpload } from '@/src/tbStores/UploadSyncStore';
+import * as UiReact from 'tinybase/ui-react/with-schemas';
+import { STORE_ID_PREFIX, TABLES_SCHEMA } from '@/src/tbStores/UploadSyncStore';
+import { NoValuesSchema } from 'tinybase/with-schemas';
+
+const { useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
+
+const useStoreId = () => {
+  const { userId } = useAuth();
+  return `${STORE_ID_PREFIX}_${userId}`;
+};
 
 export interface MediaEntryDisplayData extends MediaEntryData {
   isSelected: boolean;
@@ -42,6 +53,9 @@ export const ProjectMediaList = ({
   const colorScheme = useColorScheme();
   const colors = useColors();
   const getImage = useGetImageCallback();
+  const deleteMediaCallback = useDeleteMediaCallback();
+  const failedUploads = useAllFailedToUpload();
+  const store = useStore(useStoreId());
   const auth = useAuth();
   const { orgId, userId } = auth;
 
@@ -144,30 +158,45 @@ export const ProjectMediaList = ({
       {
         text: 'Remove',
         onPress: async () => {
-          if (userId && orgId && auth.getToken) {
-            const selectedImageIds = selectedIds
-              .map((item) => item.imageId)
-              .filter((id): id is string => !!id);
-            const status = await deleteMedia(
-              userId,
-              orgId,
-              projectId,
-              selectedImageIds,
-              'photo/video',
-              auth.getToken,
-            );
-            if (status.success) {
-              for (const uId of selectedIds) {
-                removePhotoData(uId.id);
-              }
-            } else {
+          const selectedImageIds = selectedIds
+            .map((item) => item.imageId)
+            .filter((id): id is string => !!id);
+
+          // Check which images are in the failedToUpload queue
+          const imagesInQueue = failedUploads.filter((upload) =>
+            selectedImageIds.includes(upload.itemId),
+          );
+
+          // Remove images from failedToUpload queue
+          if (imagesInQueue.length > 0 && store) {
+            console.log(`Removing ${imagesInQueue.length} images from failedToUpload queue`);
+            imagesInQueue.forEach((upload) => {
+              store.delRow('failedToUpload', upload.id);
+            });
+          }
+
+          // Get images that need to be deleted from server (not in queue)
+          const imagesToDeleteFromServer = selectedImageIds.filter(
+            (id) => !imagesInQueue.some((upload) => upload.itemId === id),
+          );
+
+          // If there are images to delete from server, use the delete callback
+          if (imagesToDeleteFromServer.length > 0) {
+            const status = await deleteMediaCallback(projectId, imagesToDeleteFromServer, 'photo/video');
+            if (!status.success) {
               Alert.alert('Error', status.msg);
+              return;
             }
+          }
+
+          // Remove from local store
+          for (const uId of selectedIds) {
+            removePhotoData(uId.id);
           }
         },
       },
     ]);
-  }, [removePhotoData, mediaItems, userId, orgId, projectId, auth]);
+  }, [removePhotoData, mediaItems, projectId, deleteMediaCallback, failedUploads, store]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: MediaEntryDisplayData; index: number }) => {
