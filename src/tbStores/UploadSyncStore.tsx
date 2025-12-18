@@ -20,6 +20,15 @@ export interface FailedToUploadData {
   uploadDate: number;
 }
 
+export interface FailedToDeleteData {
+  id: string;
+  organizationId: string;
+  projectId: string;
+  imageIds: string;
+  imageType: string;
+  deleteDate: number;
+}
+
 export const STORE_ID_PREFIX = 'PHV1_FailedToUploadSyncStore';
 export const TABLES_SCHEMA = {
   failedToUpload: {
@@ -31,6 +40,14 @@ export const TABLES_SCHEMA = {
     itemId: { type: 'string' },
     localUri: { type: 'string' },
     uploadDate: { type: 'number' },
+  },
+  failedToDelete: {
+    id: { type: 'string' },
+    organizationId: { type: 'string' },
+    projectId: { type: 'string' },
+    imageIds: { type: 'string' },
+    imageType: { type: 'string' },
+    deleteDate: { type: 'number' },
   },
 } as const;
 
@@ -123,6 +140,85 @@ export const useAddFailedToUploadMediaCallback = () => {
 // Returns a callback that deletes an entry from the store.
 export const useDeleteFailedToUploadCallback = (id: string) =>
   useDelRowCallback('failedToUpload', id, useStoreId());
+
+/**
+ * Returns all failed delete operations for the current store ID.
+ */
+export const useAllFailedToDelete = () => {
+  const [allItems, setAllItems] = useState<FailedToDeleteData[]>([]);
+  let store = useStore(useStoreId());
+
+  const fetchAllFailedToDeleteItems = useCallback((): FailedToDeleteData[] => {
+    if (!store) {
+      return []; // Return an empty array if the store is not available
+    }
+
+    const table = store.getTable('failedToDelete');
+    if (table) {
+      const items: FailedToDeleteData[] = Object.entries(table).map(([id, row]) => ({
+        id: id,
+        organizationId: row.organizationId ?? '',
+        projectId: row.projectId ?? '',
+        imageIds: row.imageIds ?? '',
+        imageType: row.imageType ?? '',
+        deleteDate: row.deleteDate ?? 0,
+      }));
+      console.log(`Fetched ${items.length} failed to delete items`);
+      return [...items].sort((a, b) => (b.deleteDate ?? 0) - (a.deleteDate ?? 0));
+    }
+    return [];
+  }, [store]);
+
+  useEffect(() => {
+    setAllItems(fetchAllFailedToDeleteItems());
+  }, [fetchAllFailedToDeleteItems]);
+
+  // Function to handle table data change
+  const handleTableChange = useCallback(() => {
+    setAllItems(fetchAllFailedToDeleteItems());
+  }, [fetchAllFailedToDeleteItems]);
+
+  useEffect(() => {
+    if (!store) {
+      return;
+    }
+    const listenerId = store.addTableListener('failedToDelete', handleTableChange);
+    // Cleanup: Remove the listener when the component unmounts
+    return () => {
+      store.delListener(listenerId);
+    };
+  }, [store, handleTableChange]);
+
+  return allItems;
+};
+
+// Returns a callback that adds a new failed delete operation to the store.
+export const useAddFailedToDeleteCallback = () => {
+  let store = useStore(useStoreId());
+
+  return useCallback(
+    (failedToDeleteData: FailedToDeleteData): { status: TBStatus; msg: string; id: string } => {
+      const id = randomUUID();
+      failedToDeleteData.id = id;
+      console.log('Adding failed to delete media with ID:', id);
+      if (store) {
+        const storeCheck = store.setRow('failedToDelete', id, failedToDeleteData);
+        if (storeCheck) {
+          return { status: 'Success', msg: '', id };
+        } else {
+          return { status: 'Error', msg: 'Unable to setRow', id: '0' };
+        }
+      } else {
+        return { status: 'Error', msg: 'Store not found', id: '0' };
+      }
+    },
+    [store],
+  );
+};
+
+// Returns a callback that deletes a failed delete entry from the store.
+export const useDeleteFailedToDeleteCallback = (id: string) =>
+  useDelRowCallback('failedToDelete', id, useStoreId());
 
 // Create, persist, and sync a store containing the IDs of the projects
 export default function FailedToUploadSyncStore() {

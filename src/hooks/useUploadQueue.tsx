@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { useAuth } from '@clerk/clerk-expo';
 import { useNetwork } from '../context/NetworkContext';
-import { useAllFailedToUpload, STORE_ID_PREFIX, TABLES_SCHEMA } from '../tbStores/UploadSyncStore';
 import {
-  mediaType,
-  resourceType,
-  ImageDetails,
-  ImageResult,
-  uploadImage,
-} from '../utils/images';
+  useAllFailedToUpload,
+  useAllFailedToDelete,
+  STORE_ID_PREFIX,
+  TABLES_SCHEMA,
+} from '../tbStores/UploadSyncStore';
+import { mediaType, resourceType, ImageDetails, ImageResult, uploadImage, deleteMedia } from '../utils/images';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { NoValuesSchema } from 'tinybase/with-schemas';
 
@@ -21,16 +20,17 @@ const useStoreId = () => {
 };
 
 /**
- * Hook to process failed uploads in a foreground queue.
- * This hook runs once every hour and processes all failed uploads sequentially.
+ * Hook to process failed uploads and deletes in a foreground queue.
+ * This hook runs once every hour and processes all failed operations sequentially.
  * It does not block the UI as processing happens asynchronously.
- * Now includes network connectivity checks to avoid unnecessary upload attempts when offline.
+ * Now includes network connectivity checks to avoid unnecessary attempts when offline.
  */
 export const useUploadQueue = () => {
   const auth = useAuth();
   const { userId, orgId } = auth;
   const { isConnected, isInternetReachable } = useNetwork();
   const failedUploads = useAllFailedToUpload();
+  const failedDeletes = useAllFailedToDelete();
   const store = useStore(useStoreId());
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
@@ -47,30 +47,35 @@ export const useUploadQueue = () => {
       return;
     }
 
-    // Process uploads asynchronously without blocking UI
-    const processUploads = async () => {
+    // Process uploads and deletes asynchronously without blocking UI
+    const processQueue = async () => {
       // Skip if already processing or no items to process
-      if (isProcessing || failedUploads.length === 0) {
+      if (isProcessing || (failedUploads.length === 0 && failedDeletes.length === 0)) {
         return;
       }
 
-      // Skip if offline - don't attempt uploads when there's no connection
+      // Skip if offline - don't attempt network operations when there's no connection
       // This prevents battery drain from failed network calls and reduces log errors
       if (!isConnected || isInternetReachable === false) {
         console.log(
-          'Skipping upload queue processing: No network connection. Will retry when connectivity is restored.',
+          'Skipping queue processing: No network connection. Will retry when connectivity is restored.',
         );
         return;
       }
 
       setIsProcessing(true);
-      const itemsToProcess = [...failedUploads];
-      console.log(`Starting upload queue processing. ${itemsToProcess.length} items to process.`);
+      const uploadsToProcess = [...failedUploads];
+      const deletesToProcess = [...failedDeletes];
+      const totalItems = uploadsToProcess.length + deletesToProcess.length;
+      console.log(
+        `Starting queue processing. ${uploadsToProcess.length} uploads, ${deletesToProcess.length} deletes (${totalItems} total).`,
+      );
 
       let successCount = 0;
       let failCount = 0;
 
-      for (const item of itemsToProcess) {
+      // Process uploads first
+      for (const item of uploadsToProcess) {
         try {
           // Create ImageDetails from failed upload data
           // Note: Using default values for longitude/latitude/deviceTypes since these are
@@ -118,18 +123,53 @@ export const useUploadQueue = () => {
         }
       }
 
+      // Process deletes
+      for (const item of deletesToProcess) {
+        try {
+          const imageIds = JSON.parse(item.imageIds) as string[];
+          console.log(`Processing delete for ${imageIds.length} images (${item.imageType})`);
+
+          // Attempt to delete
+          const result = await deleteMedia(
+            userId!,
+            item.organizationId,
+            item.projectId,
+            imageIds,
+            item.imageType,
+            auth.getToken,
+          );
+
+          if (result.success) {
+            console.log(`Successfully deleted images: ${imageIds.join(', ')}`);
+            successCount++;
+
+            // Remove from failed deletes table
+            store.delRow('failedToDelete', item.id);
+          } else {
+            console.warn(`Failed to delete images: ${result.msg}`);
+            failCount++;
+          }
+
+          setProcessedCount(successCount + failCount);
+        } catch (error) {
+          console.error(`Error processing delete for item ${item.id}:`, error);
+          failCount++;
+          setProcessedCount(successCount + failCount);
+        }
+      }
+
       console.log(
-        `Upload queue processing complete. Success: ${successCount}, Failed: ${failCount}, Total: ${itemsToProcess.length}`,
+        `Queue processing complete. Success: ${successCount}, Failed: ${failCount}, Total: ${totalItems}`,
       );
       setIsProcessing(false);
     };
 
     // Run immediately on mount
-    void processUploads();
+    void processQueue();
 
     // Set up interval to run every hour (3600000 milliseconds)
     intervalRef.current = setInterval(() => {
-      void processUploads();
+      void processQueue();
     }, 3600000);
 
     // Cleanup interval on unmount
@@ -145,17 +185,18 @@ export const useUploadQueue = () => {
     auth,
     store,
     failedUploads,
+    failedDeletes,
     isProcessing,
     isConnected,
     isInternetReachable,
   ]);
-  // Note: Including failedUploads and isProcessing in dependencies to ensure we have latest data
+  // Note: Including failedUploads, failedDeletes, and isProcessing in dependencies to ensure we have latest data
   // when processing runs via interval. Including isConnected and isInternetReachable to automatically
-  // retry failed uploads when connectivity is restored.
+  // retry failed operations when connectivity is restored.
 
   return {
     isProcessing,
-    totalItems: failedUploads.length,
+    totalItems: failedUploads.length + failedDeletes.length,
     processedCount,
   };
 };

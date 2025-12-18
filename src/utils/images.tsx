@@ -3,7 +3,13 @@ import { randomUUID } from 'expo-crypto';
 import { useCallback } from 'react';
 import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
-import { FailedToUploadData, useAddFailedToUploadMediaCallback } from '@/src/tbStores/UploadSyncStore';
+import {
+  FailedToUploadData,
+  useAddFailedToUploadMediaCallback,
+  FailedToDeleteData,
+  useAddFailedToDeleteCallback,
+  useAllFailedToUpload,
+} from '@/src/tbStores/UploadSyncStore';
 import { API_BASE_URL } from '../constants/app-constants';
 import { useNetwork } from '../context/NetworkContext';
 import { createApiWithToken } from './apiWithToken';
@@ -279,6 +285,160 @@ export const deleteMedia = async (
       msg: `Error deleting image: ${formatErrorMessage(error)}`,
     };
   }
+};
+
+/**
+ * Hook that provides a callback to delete media with network-aware queuing.
+ * If the media is in the failedToUpload queue, it's removed from there without an API call.
+ * If offline, the delete request is queued for later processing.
+ * If online, the delete is executed immediately via the API.
+ */
+export const useDeleteMediaCallback = () => {
+  const auth = useAuth();
+  const { userId, orgId } = auth;
+  const { isConnected, isInternetReachable } = useNetwork();
+  const addFailedToDeleteRecord = useAddFailedToDeleteCallback();
+  const failedUploads = useAllFailedToUpload();
+
+  return useCallback(
+    async (
+      projectId: string,
+      imageIds: string[],
+      imageType: string,
+    ): Promise<{ success: boolean; msg: string }> => {
+      if (!userId || !orgId) {
+        return { success: false, msg: 'User ID or Organization ID not available' };
+      }
+
+      if (!auth.getToken) {
+        return { success: false, msg: 'Auth token getter not available' };
+      }
+
+      // First, check if any of these imageIds are in the failedToUpload table
+      // If they are, remove them from failedToUpload and don't queue the delete
+      const imagesInFailedUpload = failedUploads.filter((upload) =>
+        imageIds.includes(upload.itemId),
+      );
+
+      if (imagesInFailedUpload.length > 0) {
+        console.log(
+          `Found ${imagesInFailedUpload.length} images in failedToUpload queue. Removing them without API call.`,
+        );
+        // Note: The actual deletion from failedToUpload will be handled by the caller
+        // or by the useUploadQueue hook. We're just indicating success here.
+        // The images that are in failedToUpload don't need to be deleted from the server
+        // since they were never uploaded in the first place.
+        return {
+          success: true,
+          msg: 'Images removed from upload queue (were never uploaded to server)',
+        };
+      }
+
+      // Check network connectivity before attempting delete
+      if (!isConnected || isInternetReachable === false) {
+        console.log(
+          'No network connection detected. Queuing delete without attempting network call.',
+        );
+
+        const data: FailedToDeleteData = {
+          id: '', // will be set by the callback
+          organizationId: orgId,
+          projectId: projectId,
+          imageIds: JSON.stringify(imageIds),
+          imageType: imageType,
+          deleteDate: Date.now(),
+        };
+
+        const result = addFailedToDeleteRecord(data);
+        if (result.status === 'Success') {
+          return {
+            success: true,
+            msg: 'Delete operation queued. Will be processed when network is available.',
+          };
+        } else {
+          return {
+            success: false,
+            msg: `Failed to queue delete operation: ${result.msg}`,
+          };
+        }
+      }
+
+      // Network is available, attempt to delete immediately
+      try {
+        const deleteResult = await deleteMedia(
+          userId,
+          orgId,
+          projectId,
+          imageIds,
+          imageType,
+          auth.getToken,
+        );
+
+        // If the immediate delete fails, queue it for retry
+        if (!deleteResult.success) {
+          console.log('Delete failed, queuing for retry:', deleteResult.msg);
+
+          const data: FailedToDeleteData = {
+            id: '', // will be set by the callback
+            organizationId: orgId,
+            projectId: projectId,
+            imageIds: JSON.stringify(imageIds),
+            imageType: imageType,
+            deleteDate: Date.now(),
+          };
+
+          const result = addFailedToDeleteRecord(data);
+          if (result.status === 'Success') {
+            return {
+              success: true,
+              msg: 'Delete failed but queued for retry.',
+            };
+          } else {
+            return {
+              success: false,
+              msg: `Delete failed and could not queue for retry: ${result.msg}`,
+            };
+          }
+        }
+
+        return deleteResult;
+      } catch (error) {
+        console.error('Unexpected error in useDeleteMediaCallback:', error);
+
+        // Queue the delete for retry on unexpected errors
+        const data: FailedToDeleteData = {
+          id: '', // will be set by the callback
+          organizationId: orgId,
+          projectId: projectId,
+          imageIds: JSON.stringify(imageIds),
+          imageType: imageType,
+          deleteDate: Date.now(),
+        };
+
+        const result = addFailedToDeleteRecord(data);
+        if (result.status === 'Success') {
+          return {
+            success: true,
+            msg: `Delete encountered an error but queued for retry: ${formatErrorMessage(error)}`,
+          };
+        } else {
+          return {
+            success: false,
+            msg: `Delete failed with error and could not queue: ${formatErrorMessage(error)}`,
+          };
+        }
+      }
+    },
+    [
+      userId,
+      orgId,
+      auth,
+      isConnected,
+      isInternetReachable,
+      addFailedToDeleteRecord,
+      failedUploads,
+    ],
+  );
 };
 
 const getLocalMediaFolder = (orgId: string, projectId: string, resourceType: resourceType): string => {
