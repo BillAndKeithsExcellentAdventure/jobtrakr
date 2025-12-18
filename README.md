@@ -202,9 +202,13 @@ npm run dev        # Start with development build
 npm run android    # Run on Android
 npm run ios        # Run on iOS
 npm run web        # Run on web
-npm test           # Run tests
+npm test           # Run tests once
+npm run test:watch # Run tests in watch mode
+npm run test:coverage # Run tests with coverage report
 npm run lint       # Run ESLint
 ```
+
+For detailed testing information, see [Testing Guide](docs/TESTING_GUIDE.md).
 
 ### Environment Configuration
 
