@@ -162,10 +162,11 @@ export const ProjectMediaList = ({
             .map((item) => item.imageId)
             .filter((id): id is string => !!id);
 
+          // Use Set for O(1) lookup performance
+          const selectedIdsSet = new Set(selectedImageIds);
+
           // Check which images are in the failedToUpload queue
-          const imagesInQueue = failedUploads.filter((upload) =>
-            selectedImageIds.includes(upload.itemId),
-          );
+          const imagesInQueue = failedUploads.filter((upload) => selectedIdsSet.has(upload.itemId));
 
           // Remove images from failedToUpload queue
           if (imagesInQueue.length > 0 && store) {

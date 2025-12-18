@@ -288,6 +288,23 @@ export const deleteMedia = async (
 };
 
 /**
+ * Helper function to create a FailedToDeleteData object.
+ */
+const createFailedToDeleteData = (
+  orgId: string,
+  projectId: string,
+  imageIds: string[],
+  imageType: string,
+): FailedToDeleteData => ({
+  id: '', // will be set by the callback
+  organizationId: orgId,
+  projectId: projectId,
+  imageIds: JSON.stringify(imageIds),
+  imageType: imageType,
+  deleteDate: Date.now(),
+});
+
+/**
  * Hook that provides a callback to delete media with network-aware queuing.
  * If the media is in the failedToUpload queue, it's removed from there without an API call.
  * If offline, the delete request is queued for later processing.
@@ -315,22 +332,22 @@ export const useDeleteMediaCallback = () => {
       }
 
       // First, check if any of these imageIds are in the failedToUpload table
-      // If they are, remove them from failedToUpload and don't queue the delete
+      // If they are, the caller should remove them from failedToUpload (since they
+      // were never uploaded to the server). We return the imageIds that need to be
+      // removed so the caller can handle the cleanup.
       const imagesInFailedUpload = failedUploads.filter((upload) =>
         imageIds.includes(upload.itemId),
       );
 
       if (imagesInFailedUpload.length > 0) {
         console.log(
-          `Found ${imagesInFailedUpload.length} images in failedToUpload queue. Removing them without API call.`,
+          `Found ${imagesInFailedUpload.length} images in failedToUpload queue. Caller should remove them.`,
         );
-        // Note: The actual deletion from failedToUpload will be handled by the caller
-        // or by the useUploadQueue hook. We're just indicating success here.
-        // The images that are in failedToUpload don't need to be deleted from the server
-        // since they were never uploaded in the first place.
+        // Return a special status indicating these images only need to be removed from the upload queue
+        // The caller is responsible for removing them from failedToUpload table
         return {
           success: true,
-          msg: 'Images removed from upload queue (were never uploaded to server)',
+          msg: 'Images are queued for upload and should be removed from failedToUpload (not uploaded to server yet)',
         };
       }
 
@@ -340,14 +357,7 @@ export const useDeleteMediaCallback = () => {
           'No network connection detected. Queuing delete without attempting network call.',
         );
 
-        const data: FailedToDeleteData = {
-          id: '', // will be set by the callback
-          organizationId: orgId,
-          projectId: projectId,
-          imageIds: JSON.stringify(imageIds),
-          imageType: imageType,
-          deleteDate: Date.now(),
-        };
+        const data = createFailedToDeleteData(orgId, projectId, imageIds, imageType);
 
         const result = addFailedToDeleteRecord(data);
         if (result.status === 'Success') {
@@ -378,14 +388,7 @@ export const useDeleteMediaCallback = () => {
         if (!deleteResult.success) {
           console.log('Delete failed, queuing for retry:', deleteResult.msg);
 
-          const data: FailedToDeleteData = {
-            id: '', // will be set by the callback
-            organizationId: orgId,
-            projectId: projectId,
-            imageIds: JSON.stringify(imageIds),
-            imageType: imageType,
-            deleteDate: Date.now(),
-          };
+          const data = createFailedToDeleteData(orgId, projectId, imageIds, imageType);
 
           const result = addFailedToDeleteRecord(data);
           if (result.status === 'Success') {
@@ -406,14 +409,7 @@ export const useDeleteMediaCallback = () => {
         console.error('Unexpected error in useDeleteMediaCallback:', error);
 
         // Queue the delete for retry on unexpected errors
-        const data: FailedToDeleteData = {
-          id: '', // will be set by the callback
-          organizationId: orgId,
-          projectId: projectId,
-          imageIds: JSON.stringify(imageIds),
-          imageType: imageType,
-          deleteDate: Date.now(),
-        };
+        const data = createFailedToDeleteData(orgId, projectId, imageIds, imageType);
 
         const result = addFailedToDeleteRecord(data);
         if (result.status === 'Success') {
