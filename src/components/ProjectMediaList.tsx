@@ -8,7 +8,7 @@ import Base64Image from '@/src/components/Base64Image';
 import { formatDate } from '@/src/utils/formatters';
 import { MediaEntryData, useDeleteRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useRouter } from 'expo-router';
-import { buildLocalMediaUri, useGetImageCallback, useDeleteMediaCallback } from '@/src/utils/images';
+import { buildLocalMediaUri, useGetImageCallback, useDeleteMediaCallback, deleteLocalMediaFile } from '@/src/utils/images';
 import { useColors } from '@/src/context/ColorsContext';
 import { useColorScheme } from './useColorScheme';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -142,7 +142,7 @@ export const ProjectMediaList = ({
   const onRemove = useCallback(async () => {
     const selectedIds = mediaItems
       .filter((media) => media.isSelected)
-      .map((media) => ({ id: media.id, imageId: media.imageId }));
+      .map((media) => ({ id: media.id, imageId: media.imageId, mediaType: media.mediaType }));
     Alert.alert('Remove Photos', 'Are you sure you want to remove these photos from this project?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -180,14 +180,19 @@ export const ProjectMediaList = ({
             }
           }
 
-          // Remove from local store
+          // Remove from local store and delete local files
           for (const uId of selectedIds) {
             removePhotoData(uId.id);
+            
+            // Delete the local media file
+            if (uId.imageId && orgId) {
+              await deleteLocalMediaFile(orgId, projectId, uId.imageId, uId.mediaType, 'photo');
+            }
           }
         },
       },
     ]);
-  }, [removePhotoData, mediaItems, projectId, deleteMediaCallback, failedUploads, store]);
+  }, [removePhotoData, mediaItems, projectId, orgId, deleteMediaCallback, failedUploads, store]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: MediaEntryDisplayData; index: number }) => {

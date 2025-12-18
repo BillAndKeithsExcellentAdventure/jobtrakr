@@ -16,7 +16,7 @@ import {
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
-import { useDeleteMediaCallback } from '../utils/images';
+import { useDeleteMediaCallback, deleteLocalMediaFile } from '../utils/images';
 import { useAllFailedToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
 
 export const ITEM_HEIGHT = 100;
@@ -93,6 +93,11 @@ const SwipeableInvoiceItem = React.memo(
                 }
               })();
             }
+
+            // Delete the local media file (invoices are always photos)
+            (async () => {
+              await deleteLocalMediaFile(orgId, projectId, item.imageId, 'photo', 'invoice');
+            })();
           }
         }
       },
@@ -102,6 +107,7 @@ const SwipeableInvoiceItem = React.memo(
         allInvoiceItems,
         item.imageId,
         projectId,
+        orgId,
         deleteMediaCallback,
         failedUploads,
         store,

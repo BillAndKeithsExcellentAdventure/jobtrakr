@@ -466,6 +466,37 @@ export const buildLocalMediaUri = (
   return getLocalImageUri(folder, imageId);
 };
 
+/**
+ * Deletes a local media file if it exists.
+ * @param orgId - Organization ID
+ * @param projectId - Project ID
+ * @param imageId - Image/video ID
+ * @param type - Media type ('photo' or 'video')
+ * @param resourceType - Resource type ('receipt', 'invoice', or 'photo')
+ */
+export const deleteLocalMediaFile = async (
+  orgId: string,
+  projectId: string,
+  imageId: string,
+  type: mediaType,
+  resourceType: resourceType,
+): Promise<void> => {
+  try {
+    const localUri = buildLocalMediaUri(orgId, projectId, imageId, type, resourceType);
+    const fileInfo = await FileSystem.getInfoAsync(localUri);
+    
+    if (fileInfo.exists) {
+      await FileSystem.deleteAsync(localUri, { idempotent: true });
+      console.log(`Deleted local media file: ${localUri}`);
+    } else {
+      console.log(`Local media file does not exist: ${localUri}`);
+    }
+  } catch (error) {
+    console.error(`Error deleting local media file for ${imageId}:`, error);
+    // Don't throw - we want deletion to continue even if file cleanup fails
+  }
+};
+
 const copyToLocalFolder = async (
   imageUri: string,
   details: ImageDetails,
