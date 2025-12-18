@@ -136,13 +136,39 @@ const handleBackPress = useAutoSaveNavigation(() => {
 
 ## Future Enhancements
 
-Potential improvements for the future:
+The following improvements are prioritized based on user impact and implementation complexity:
 
-1. **Debouncing**: Add optional debouncing to blur operations
-2. **Validation**: Integrate form validation before navigation
-3. **Dirty State Tracking**: Track which fields have unsaved changes
-4. **Custom Blur Behavior**: Allow fields to specify custom blur behavior
-5. **Focus Restoration**: Restore focus when returning to a screen
+### High Priority
+
+1. **Form Validation Integration** - Integrate form validation before allowing navigation. This prevents users from saving incomplete or invalid data and provides immediate feedback.
+   - **Impact**: High - Prevents data quality issues
+   - **Complexity**: Medium - Requires validation rules and UI feedback
+
+2. **Dirty State Tracking** - Track which fields have unsaved changes and warn users before navigation if data would be lost.
+   - **Impact**: High - Prevents accidental data loss
+   - **Complexity**: Medium - Requires state management for each field
+
+### Medium Priority
+
+3. **Custom Blur Behavior** - Allow fields to specify custom blur behavior (e.g., format values, trigger calculations, validate on blur).
+   - **Impact**: Medium - Enables richer field interactions
+   - **Complexity**: Low - Extends existing registration pattern
+
+### Low Priority
+
+4. **Debouncing** - Add optional debouncing to blur operations to reduce unnecessary saves during rapid navigation.
+   - **Impact**: Low - Minor performance improvement
+   - **Complexity**: Low - Simple timing logic
+
+5. **Focus Restoration** - Restore focus to the previously focused field when returning to a screen.
+   - **Impact**: Low - Convenience feature for power users
+   - **Complexity**: Medium - Requires focus state persistence
+
+### Notes
+
+- The current implementation already handles the core auto-save use case reliably
+- Validation and dirty state tracking provide the most value for data integrity
+- Focus restoration is nice-to-have but may conflict with expected mobile navigation patterns
 
 ## Testing Recommendations
 

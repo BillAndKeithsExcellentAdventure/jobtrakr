@@ -232,23 +232,44 @@ Consider adding tests for:
 
 ## Future Enhancements
 
-Potential improvements for the future:
+The following improvements are prioritized based on user impact and implementation complexity:
 
-1. **Network Type Awareness**:
-   - Skip large video uploads on cellular
-   - Only upload on WiFi based on user preference
+### High Priority
 
-2. **Upload Status Indicator**:
-   - Show number of queued uploads in UI
+1. **Upload Status Indicator**:
+   - Show number of queued uploads in the UI (e.g., badge on settings/upload screen)
    - Display upload progress when online
+   - **Impact**: High - Users need visibility into pending uploads
+   - **Complexity**: Medium - Requires UI changes and integration with UploadSyncStore
 
-3. **Retry Strategy**:
-   - Exponential backoff for failed uploads
+2. **Global Offline Mode Indicator**:
+   - Global banner or status indicator showing offline status across all screens
+   - Toast notification when connectivity is restored
+   - **Impact**: High - Improves user awareness of network status
+   - **Complexity**: Low - Can use existing NetworkContext state
+   - **Note**: Debug offline mode exists (see `docs/DEBUG_OFFLINE_MODE.md`) but production users need similar feedback
+
+### Medium Priority
+
+3. **Retry Strategy with Exponential Backoff**:
+   - Implement exponential backoff for failed uploads (e.g., 1min, 5min, 15min, 1hr)
    - Smarter retry scheduling based on network type
+   - **Impact**: Medium - Reduces server load and battery drain
+   - **Complexity**: Medium - Requires changes to `useUploadQueue` retry logic
 
-4. **Offline Mode Indicator**:
-   - Global banner showing offline status
-   - Toast notification when connectivity restored
+### Low Priority
+
+4. **Network Type Awareness**:
+   - Skip large video uploads on cellular data
+   - User preference for WiFi-only uploads
+   - **Impact**: Low-Medium - Helpful for users with limited data plans
+   - **Complexity**: Medium - Requires UI for preferences and logic to check file sizes
+   - **Note**: `networkType` is already available from NetworkContext but not currently used
+
+### Completed
+
+- ✅ **Basic offline detection and UI feedback** - Implemented with disabled buttons showing "(Offline)" status
+- ✅ **Automatic retry when connectivity restored** - Upload queue automatically processes when online
 
 ## References
 
