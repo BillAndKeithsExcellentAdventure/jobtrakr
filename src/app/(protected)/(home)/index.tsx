@@ -24,6 +24,8 @@ import { useAuth, useClerk } from '@clerk/clerk-expo';
 import { AntDesign } from '@expo/vector-icons';
 import { ActionButton } from '@/src/components/ActionButton';
 import { DOCS_URL } from '@/src/constants/app-constants';
+import { Image } from 'expo-image';
+import { useColorScheme } from '@/src/components/useColorScheme';
 
 function isEntry(obj: any): obj is ProjectListEntryProps {
   return typeof obj.projectName === 'string' && typeof obj.projectId === 'string';
@@ -40,6 +42,7 @@ export default function ProjectHomeScreen() {
   const router = useRouter();
   const { signOut } = useClerk();
   const colors = useColors();
+  const colorScheme = useColorScheme();
   const auth = useAuth();
   const { orgRole, orgId } = auth;
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
@@ -328,12 +331,18 @@ export default function ProjectHomeScreen() {
 
   // wait for up to a 2 seconds to allow tinybase to load and synch data.
   if (isLoading) {
+    const splashImage =
+      colorScheme === 'dark'
+        ? require('@/assets/images/splash-icon-dark.png')
+        : require('@/assets/images/splash-icon-light.png');
+
     return (
       <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container, { marginTop: 20 }]}>
         <ActivityIndicator size="large" color={colors.iconColor} />
         <Text txtSize="title" style={{ marginTop: 16 }}>
           Loading configuration...
         </Text>
+        <Image source={splashImage} style={styles.splashImage} contentFit="contain" />
       </SafeAreaView>
     );
   }
@@ -433,5 +442,10 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
+  },
+  splashImage: {
+    width: 200,
+    height: 200,
+    marginTop: 40,
   },
 });
