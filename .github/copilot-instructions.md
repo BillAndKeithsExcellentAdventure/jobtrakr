@@ -297,7 +297,6 @@ const project = store.getRow('projects', projectId);
 - **Formatters**: `src/utils/formatters.ts` - currency, dates, etc.
 - **Arrays**: `src/utils/array.ts` - array manipulation helpers
 - **Images**: `src/utils/images.tsx` - image processing
-- **ZIP**: `src/utils/zip.ts` - archive creation with splitting
 - **Sharing**: `src/utils/sharing.ts` - social media and file sharing
 
 ## Key Dependencies to Know
