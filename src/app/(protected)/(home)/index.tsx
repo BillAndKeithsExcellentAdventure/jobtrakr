@@ -86,29 +86,12 @@ export default function ProjectHomeScreen() {
     }
   }, [allProjects]);
 
-  const onLikePressed = useCallback((projId: string) => {
-    toggleFavorite(projId);
-  }, [toggleFavorite]);
-
-  const minConfigMet: boolean = useMemo(
-    () => {
-      return allVisibleCategories && allVisibleCategories.length > 0;
-    } /* && allProjectTemplates && allProjectTemplates.length > 0 */,
-    [allVisibleCategories],
+  const onLikePressed = useCallback(
+    (projId: string) => {
+      toggleFavorite(projId);
+    },
+    [toggleFavorite],
   );
-
-  useEffect(() => {
-    if (minConfigMet) {
-      setIsLoading(false);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [minConfigMet]);
 
   const projectActionButtons: ActionButtonProps[] = useMemo(
     () => [
@@ -323,27 +306,27 @@ export default function ProjectHomeScreen() {
     };
   }, [colors.iconColor, headerMenuModalVisible, setHeaderMenuModalVisible]);
 
-  // wait to give tiny base to get and sync any data
+  const minConfigMet: boolean = useMemo(
+    () => {
+      return allVisibleCategories && allVisibleCategories.length > 0;
+    } /* && allProjectTemplates && allProjectTemplates.length > 0 */,
+    [allVisibleCategories],
+  );
+
   useEffect(() => {
+    if (minConfigMet) {
+      setIsLoading(false);
+      return;
+    }
+
     const timer = setTimeout(() => {
-      setIsReady(true);
-    }, 500);
+      setIsLoading(false);
+    }, 2000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [minConfigMet]);
 
-  if (!isReady) {
-    return (
-      <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container, { marginTop: 20 }]}>
-        <ActivityIndicator size="large" color={colors.iconColor} />
-        <Text txtSize="title" style={{ marginTop: 16 }}>
-          Initializing...
-        </Text>
-      </SafeAreaView>
-    );
-  }
-
-  // wait a little longer if we still haven't loaded up cost codes and project templates
+  // wait for up to a 2 seconds to allow tinybase to load and synch data.
   if (isLoading) {
     return (
       <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container, { marginTop: 20 }]}>
