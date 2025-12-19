@@ -53,8 +53,8 @@ export default function ProjectHomeScreen() {
   const splashImage = useMemo(
     () =>
       colorScheme === 'dark'
-        ? require('@/assets/images/splash-icon-dark.png')
-        : require('@/assets/images/splash-icon-light.png'),
+        ? require('@/assets/images/splash-icon-light.png')
+        : require('@/assets/images/splash-icon-dark.png'),
     [colorScheme],
   );
 
@@ -340,13 +340,13 @@ export default function ProjectHomeScreen() {
   // wait for up to a 2 seconds to allow tinybase to load and synch data.
   if (isLoading) {
     return (
-      <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container, { marginTop: 20 }]}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.iconColor} />
         <Text txtSize="title" style={{ marginTop: 16 }}>
           Loading configuration...
         </Text>
         <Image source={splashImage} style={styles.splashImage} contentFit="contain" />
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -440,6 +440,11 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   twoColListContainer: {
     flex: 1,
     alignItems: 'center',
@@ -447,8 +452,8 @@ export const styles = StyleSheet.create({
     width: '100%',
   },
   splashImage: {
-    width: 200,
-    height: 200,
+    width: 300,
+    height: 300,
     marginTop: 40,
   },
 });

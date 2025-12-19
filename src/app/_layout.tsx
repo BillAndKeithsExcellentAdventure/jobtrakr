@@ -1,3 +1,4 @@
+import { Text, View } from '@/src/components/Themed';
 import { useColorScheme } from '@/src/components/useColorScheme';
 import { Colors } from '@/src/constants/Colors';
 import { ColorsProvider } from '@/src/context/ColorsContext';
@@ -8,17 +9,17 @@ import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
+import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as TinyBaseProvider } from 'tinybase/ui-react';
-import { Text, View } from '@/src/components/Themed';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -57,12 +58,20 @@ function ClerkLoadingWrapper({
 }) {
   const { isLoaded } = useAuth();
   const colors = colorScheme === 'dark' ? Colors.dark : Colors.light;
+  const splashImage = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? require('@/assets/images/splash-icon-light.png')
+        : require('@/assets/images/splash-icon-dark.png'),
+    [colorScheme],
+  );
 
   if (!isLoaded) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.tint} />
         <Text txtSize="sub-title">Loading login provider...</Text>
+        <Image source={splashImage} style={styles.splashImage} contentFit="contain" />
       </View>
     );
   }
@@ -140,5 +149,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  splashImage: {
+    width: 300,
+    height: 300,
+    marginTop: 40,
   },
 });
