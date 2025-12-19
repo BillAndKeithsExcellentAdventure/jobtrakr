@@ -1,6 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
-import ProjectCameraView from '@/src/components/CameraView';
+import { ProjectCameraView } from '@/src/components/CameraView';
 import { ProjectMediaList } from '@/src/components/ProjectMediaList';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { Text, View } from '@/src/components/Themed';
