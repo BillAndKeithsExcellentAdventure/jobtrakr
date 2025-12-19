@@ -79,7 +79,7 @@ export const DeviceMediaList = ({
               setLoadingNearest(true);
               const lat = currentProject?.latitude;
               const long = currentProject?.longitude;
-              if (lat != 0 && long != 0) {
+              if (lat !== 0 && long !== 0) {
                 const page = await mediaTools.current?.getAssetsNearLocationWithInfo(
                   long!,
                   lat!,
@@ -112,7 +112,7 @@ export const DeviceMediaList = ({
                 }
               }
               setLoadingNearest(false);
-            } catch (err) {
+            } catch {
               alert('An error while finding pictures.');
               setLoadingNearest(false);
             }

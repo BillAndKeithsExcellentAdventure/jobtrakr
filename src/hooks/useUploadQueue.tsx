@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@clerk/clerk-expo';
 import { useNetwork } from '../context/NetworkContext';
 import {
   useAllFailedToUpload,
   useAllFailedToDelete,
-  useUploadSyncStoreId,
   useUploadSyncStore,
 } from '../tbStores/UploadSyncStore';
-import { mediaType, resourceType, ImageDetails, ImageResult, uploadImage, deleteMedia } from '../utils/images';
+import { mediaType, resourceType, ImageDetails, uploadImage, deleteMedia } from '../utils/images';
 
 /**
  * Hook to process failed uploads and deletes in a foreground queue.

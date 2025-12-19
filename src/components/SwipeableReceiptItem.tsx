@@ -15,7 +15,6 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { useRouter } from 'expo-router';
-import { useAuth } from '@clerk/clerk-expo';
 import { useDeleteMediaCallback, deleteLocalMediaFile } from '../utils/images';
 import { useAllFailedToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
 
@@ -37,7 +36,6 @@ const SwipeableReceiptItem = React.memo<{
 }>(({ orgId, projectId, item }) => {
     const router = useRouter();
     const colors = useColors();
-    const auth = useAuth();
     const deleteReceipt = useDeleteRowCallback(projectId, 'receipts');
     const deleteReceiptLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
     const allReceiptLineItems = useAllRows(projectId, 'workItemCostEntries');

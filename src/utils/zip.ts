@@ -159,6 +159,4 @@ export const CreateMediaZip = async (
     console.error('Error creating zip file:', error);
     throw error;
   }
-
-  return [];
 };

@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { CameraType, CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
 import React, { useEffect, useRef, useState } from 'react';
-import { Image, Modal, Platform, StyleSheet } from 'react-native';
+import { Image, Modal, StyleSheet } from 'react-native';
 import { Text, View } from '@/src/components/Themed';
 import ZoomPicker from '@/src/components/ZoomPicker';
 import { ActionButton } from '@/src/components/ActionButton';
@@ -167,25 +167,8 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
     }
   };
 
-  const handlePhotoCaptured = async (asset: MediaLibrary.Asset) => {
-    if (!previewUri) return;
-
-    try {
-      const asset = await MediaLibrary.createAssetAsync(previewUri);
-      asset.creationTime = Date.now();
-      onMediaCaptured(asset);
-      setPreviewUri(null);
-    } catch (error) {
-      console.error('Error saving picture:', error);
-    }
-  };
-
   const handleCancelPreview = () => {
     setPreviewUri(null);
-  };
-
-  const handleZoom = (zoomLevel: number) => {
-    setZoom(zoomLevel);
   };
 
   const processCameraAction = async () => {
