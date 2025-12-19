@@ -3,7 +3,6 @@ import SwipeableReceiptItem from '@/src/components/SwipeableReceiptItem';
 import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
-import { useNetwork } from '@/src/context/NetworkContext';
 import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   ClassifiedReceiptData,
@@ -21,7 +20,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, TextInput } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { KeyboardAvoidingView, KeyboardToolbar } from 'react-native-keyboard-controller';
