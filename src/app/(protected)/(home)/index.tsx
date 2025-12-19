@@ -50,6 +50,14 @@ export default function ProjectHomeScreen() {
 
   const allVisibleCategories = useMemo(() => allCategories.filter((c) => !c.hidden), [allCategories]);
 
+  const splashImage = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? require('@/assets/images/splash-icon-dark.png')
+        : require('@/assets/images/splash-icon-light.png'),
+    [colorScheme],
+  );
+
   useEffect(() => {
     if (allProjects.length === 0) return;
     // create an array of projectId that have been favorited
@@ -331,11 +339,6 @@ export default function ProjectHomeScreen() {
 
   // wait for up to a 2 seconds to allow tinybase to load and synch data.
   if (isLoading) {
-    const splashImage =
-      colorScheme === 'dark'
-        ? require('@/assets/images/splash-icon-dark.png')
-        : require('@/assets/images/splash-icon-light.png');
-
     return (
       <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container, { marginTop: 20 }]}>
         <ActivityIndicator size="large" color={colors.iconColor} />
