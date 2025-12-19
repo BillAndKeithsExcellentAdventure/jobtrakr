@@ -24,6 +24,8 @@ import { useAuth, useClerk } from '@clerk/clerk-expo';
 import { AntDesign } from '@expo/vector-icons';
 import { ActionButton } from '@/src/components/ActionButton';
 import { DOCS_URL } from '@/src/constants/app-constants';
+import { Image } from 'expo-image';
+import { useColorScheme } from '@/src/components/useColorScheme';
 
 function isEntry(obj: any): obj is ProjectListEntryProps {
   return typeof obj.projectName === 'string' && typeof obj.projectId === 'string';
@@ -40,12 +42,21 @@ export default function ProjectHomeScreen() {
   const router = useRouter();
   const { signOut } = useClerk();
   const colors = useColors();
+  const colorScheme = useColorScheme();
   const auth = useAuth();
   const { orgRole, orgId } = auth;
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
   const allProjectTemplates = useAllRows('templates');
 
   const allVisibleCategories = useMemo(() => allCategories.filter((c) => !c.hidden), [allCategories]);
+
+  const splashImage = useMemo(
+    () =>
+      colorScheme === 'dark'
+        ? require('@/assets/images/splash-icon-dark.png')
+        : require('@/assets/images/splash-icon-light.png'),
+    [colorScheme],
+  );
 
   useEffect(() => {
     if (allProjects.length === 0) return;
@@ -334,6 +345,7 @@ export default function ProjectHomeScreen() {
         <Text txtSize="title" style={{ marginTop: 16 }}>
           Loading configuration...
         </Text>
+        <Image source={splashImage} style={styles.splashImage} contentFit="contain" />
       </SafeAreaView>
     );
   }
@@ -433,5 +445,10 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
+  },
+  splashImage: {
+    width: 200,
+    height: 200,
+    marginTop: 40,
   },
 });
