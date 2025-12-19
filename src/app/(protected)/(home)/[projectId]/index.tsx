@@ -1,4 +1,5 @@
 import { ActionButtonProps, ButtonBar } from '@/src/components/ButtonBar';
+import { DeleteProjectConfirmationModal } from '@/src/components/DeleteProjectConfirmationModal';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
@@ -54,6 +55,7 @@ const ProjectDetailsPage = () => {
   const allProjectCategories = useAllConfigRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
+  const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] = useState<boolean>(false);
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
   const allReceiptItems = useAllRows(projectId, 'receipts');
@@ -262,6 +264,22 @@ const ProjectDetailsPage = () => {
     }
   }, [projectId, projectData, allWorkItems, categoryMap, allWorkItemSummaries, allActualCostItems]);
 
+  const handleConfirmDelete = useCallback(async () => {
+    if (!projectId) return;
+
+    // Navigate back to Project List screen
+    router.back();
+
+    // Defer deletion until after navigation begins rendering
+    requestAnimationFrame(async () => {
+      const result = processDeleteProject(projectId);
+      if (result.status === 'Success') {
+        removeActiveProjectId(projectId);
+        await clearProjectDetailsStore();
+      }
+    });
+  }, [projectId, router, processDeleteProject, removeActiveProjectId, clearProjectDetailsStore]);
+
   const handleMenuItemPress = useCallback(
     (menuItem: string, actionContext: any) => {
       setHeaderMenuModalVisible(false);
@@ -292,18 +310,9 @@ const ProjectDetailsPage = () => {
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Delete',
-            onPress: async () => {
-              // Navigate back to Project List screen
-              router.back();
-
-              // Defer deletion until after navigation begins rendering
-              requestAnimationFrame(async () => {
-                const result = processDeleteProject(projectId);
-                if (result.status === 'Success') {
-                  removeActiveProjectId(projectId);
-                  await clearProjectDetailsStore();
-                }
-              });
+            onPress: () => {
+              // Show the confirmation modal with text verification
+              setDeleteConfirmationModalVisible(true);
             },
           },
         ]);
@@ -653,6 +662,14 @@ const ProjectDetailsPage = () => {
           modalVisible={headerMenuModalVisible}
           setModalVisible={setHeaderMenuModalVisible}
           buttons={rightHeaderMenuButtons}
+        />
+      )}
+      {deleteConfirmationModalVisible && projectData && (
+        <DeleteProjectConfirmationModal
+          isVisible={deleteConfirmationModalVisible}
+          onClose={() => setDeleteConfirmationModalVisible(false)}
+          onConfirmDelete={handleConfirmDelete}
+          projectName={projectData.name}
         />
       )}
     </SafeAreaView>
