@@ -54,8 +54,8 @@ export const DeleteProjectConfirmationModal: React.FC<DeleteProjectConfirmationM
 
             <View style={styles.form}>
               <Text style={styles.warningText}>
-                Since we cannot undo a project deletion, please type the word "delete" in the field below to
-                further verify that this project should be deleted.
+                Since we cannot undo a project deletion, please type the word &quot;delete&quot; in the field
+                below to further verify that this project should be deleted.
               </Text>
 
               <Text txtSize="formLabel" style={styles.projectNameLabel}>
