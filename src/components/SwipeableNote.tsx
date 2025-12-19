@@ -17,18 +17,12 @@ export const ITEM_HEIGHT = 100;
 const RIGHT_ACTION_WIDTH = 100;
 const SWIPE_THRESHOLD_WIDTH = 50;
 
-const RightAction = React.memo(
-  ({
-    isCompleted,
-    onToggleComplete,
-    onEdit,
-    onDelete,
-  }: {
-    isCompleted: boolean;
-    onDelete: () => void;
-    onEdit: () => void;
-    onToggleComplete: () => void;
-  }) => (
+const RightAction = React.memo<{
+  isCompleted: boolean;
+  onDelete: () => void;
+  onEdit: () => void;
+  onToggleComplete: () => void;
+}>(({ isCompleted, onToggleComplete, onEdit, onDelete }) => (
     <View
       style={{
         flexDirection: 'row',
@@ -47,17 +41,13 @@ const RightAction = React.memo(
     </View>
   ),
 );
+RightAction.displayName = 'RightAction';
 
-const SwipeableNote = React.memo(
-  ({
-    projectId,
-    note,
-    setNoteToEdit,
-  }: {
-    projectId: string;
-    note: NoteData;
-    setNoteToEdit: (id: string) => void;
-  }) => {
+const SwipeableNote = React.memo<{
+  projectId: string;
+  note: NoteData;
+  setNoteToEdit: (id: string) => void;
+}>(({ projectId, note, setNoteToEdit }) => {
     const removeNote = useDeleteRowCallback(projectId, 'notes');
     const updateNote = useUpdateRowCallback(projectId, 'notes');
     const colors = useColors();
@@ -135,6 +125,7 @@ const SwipeableNote = React.memo(
     );
   },
 );
+SwipeableNote.displayName = 'SwipeableNote';
 
 const styles = StyleSheet.create({
   itemInfo: {

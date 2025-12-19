@@ -24,10 +24,9 @@ import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState , useMemo } from 'react';
 import { Alert, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { useMemo } from 'react';
 
 const AddInvoicePage = () => {
   const defaultDate = useMemo(() => new Date(), []);

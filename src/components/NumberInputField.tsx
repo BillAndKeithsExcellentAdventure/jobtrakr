@@ -250,6 +250,7 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
     );
   },
 );
+NumberInputField.displayName = 'NumberInputField';
 
 const styles = StyleSheet.create({
   container: {

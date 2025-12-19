@@ -1,7 +1,12 @@
 import { useEffect, useCallback, useReducer } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import { SessionUser } from './AuthSessionContext';
+
+type SessionUser = {
+  userId: number;
+  name: string;
+  email: string;
+};
 
 type UseStateHook<T> = [[boolean, T | null], (value: T | null) => void];
 

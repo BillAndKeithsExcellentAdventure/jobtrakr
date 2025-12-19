@@ -157,7 +157,7 @@ const ChangeOrdersScreen = () => {
         ) : !isAppSettingsComplete ? (
           <View style={styles.messageContainer}>
             <Text txtSize="sub-title" style={{ color: colors.text }}>
-              Before creating change orders, the name and email of your company's owner or primary contact are
+              Before creating change orders, the name and email of your company&apos;s owner or primary contact are
               required.
             </Text>
             <Text txtSize="sub-title" style={{ color: colors.text }}>
@@ -173,7 +173,7 @@ const ChangeOrdersScreen = () => {
         ) : !isProjectOwnerInfoComplete ? (
           <View style={styles.messageContainer}>
             <Text txtSize="sub-title" style={{ color: colors.text }}>
-              Before creating change orders, the name and email of the project's owner or primary contact are
+              Before creating change orders, the name and email of the project&apos;s owner or primary contact are
               required.
             </Text>
             <Text txtSize="sub-title" style={{ color: colors.text }}>

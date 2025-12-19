@@ -78,24 +78,24 @@ const ListWorkCategories = () => {
     );
   }, [orphanedWorkItemIds, removeWorkItemCallback]);
 
-  const renderHeaderRight = useMemo(
-    () => () =>
-      (
-        <View
-          style={{ flexDirection: 'row', gap: 10, alignContent: 'flex-end', backgroundColor: 'transparent' }}
-        >
-          {orphanedWorkItemIds.length > 0 && (
-            <Pressable onPress={handleCleanup} hitSlop={10} style={styles.headerButton}>
-              <MaterialCommunityIcons name="broom" size={24} color={colors.iconColor} />
-            </Pressable>
-          )}
-          <Pressable onPress={() => setShowAdd(!showAdd)} hitSlop={10} style={styles.headerButton}>
-            <Ionicons name={showAdd ? 'chevron-up-sharp' : 'add'} size={24} color={colors.iconColor} />
+  const renderHeaderRight = useMemo(() => {
+    const RenderHeaderRightComponent = () => (
+      <View
+        style={{ flexDirection: 'row', gap: 10, alignContent: 'flex-end', backgroundColor: 'transparent' }}
+      >
+        {orphanedWorkItemIds.length > 0 && (
+          <Pressable onPress={handleCleanup} hitSlop={10} style={styles.headerButton}>
+            <MaterialCommunityIcons name="broom" size={24} color={colors.iconColor} />
           </Pressable>
-        </View>
-      ),
-    [orphanedWorkItemIds.length, showAdd, colors.iconColor, handleCleanup],
-  );
+        )}
+        <Pressable onPress={() => setShowAdd(!showAdd)} hitSlop={10} style={styles.headerButton}>
+          <Ionicons name={showAdd ? 'chevron-up-sharp' : 'add'} size={24} color={colors.iconColor} />
+        </Pressable>
+      </View>
+    );
+    RenderHeaderRightComponent.displayName = 'RenderHeaderRightComponent';
+    return RenderHeaderRightComponent;
+  }, [orphanedWorkItemIds.length, showAdd, colors.iconColor, handleCleanup]);
 
   const handleAddCategory = useCallback(() => {
     if (category.name && category.code) {

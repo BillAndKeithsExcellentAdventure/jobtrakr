@@ -198,6 +198,7 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
     );
   },
 );
+OptionPickerItem.displayName = 'OptionPickerItem';
 
 const styles = StyleSheet.create({
   optionPickerRow: {

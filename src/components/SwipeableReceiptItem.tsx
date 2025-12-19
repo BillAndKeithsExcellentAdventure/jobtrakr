@@ -28,17 +28,13 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => (
     <MaterialIcons name="delete" size={32} color="white" />
   </Pressable>
 ));
+RightAction.displayName = 'RightAction';
 
-const SwipeableReceiptItem = React.memo(
-  ({
-    orgId,
-    projectId,
-    item,
-  }: {
-    orgId: string;
-    projectId: string;
-    item: ClassifiedReceiptData;
-  }) => {
+const SwipeableReceiptItem = React.memo<{
+  orgId: string;
+  projectId: string;
+  item: ClassifiedReceiptData;
+}>(({ orgId, projectId, item }) => {
     const router = useRouter();
     const colors = useColors();
     const auth = useAuth();
@@ -177,6 +173,7 @@ const SwipeableReceiptItem = React.memo(
     );
   },
 );
+SwipeableReceiptItem.displayName = 'SwipeableReceiptItem';
 
 const styles = StyleSheet.create({
   itemEntry: {

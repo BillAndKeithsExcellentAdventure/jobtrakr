@@ -8,12 +8,11 @@ import Base64Image from '@/src/components/Base64Image';
 import { formatDate } from '@/src/utils/formatters';
 import { MediaEntryData, useDeleteRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useRouter } from 'expo-router';
-import { buildLocalMediaUri, useGetImageCallback, useDeleteMediaCallback, deleteLocalMediaFile } from '@/src/utils/images';
+import { buildLocalMediaUri, useGetImageCallback, useDeleteMediaCallback, deleteLocalMediaFile , mediaType } from '@/src/utils/images';
 import { useColors } from '@/src/context/ColorsContext';
 import { useColorScheme } from './useColorScheme';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useAuth } from '@clerk/clerk-expo';
-import { mediaType } from '@/src/utils/images';
 import { useProject, useProjectValue } from '../tbStores/listOfProjects/ListOfProjectsStore';
 import { useAllFailedToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
 

@@ -17,3 +17,4 @@ export const KeyboardSpacer = React.memo(({ height }: KeyboardSpacerProps) => {
 
   return <Animated.View style={animatedStyle} />;
 });
+KeyboardSpacer.displayName = 'KeyboardSpacer';
