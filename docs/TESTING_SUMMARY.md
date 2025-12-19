@@ -7,6 +7,7 @@ This PR adds a comprehensive testing infrastructure to the ProjectHound reposito
 ### 1. Testing Dependencies
 
 The following packages were installed:
+
 - **jest**: Testing framework
 - **jest-expo**: Expo-specific Jest preset
 - **@testing-library/react-native**: Testing utilities for React Native components
@@ -17,7 +18,9 @@ The following packages were installed:
 ### 2. Configuration Files
 
 #### jest.config.js
+
 Main Jest configuration file that:
+
 - Uses the `jest-expo` preset for Expo compatibility
 - Configures module name mapping for the `@/` path alias
 - Sets up ignore patterns for node_modules (except specific packages)
@@ -25,7 +28,9 @@ Main Jest configuration file that:
 - Specifies test file patterns
 
 #### jest.setup.js
+
 Global test setup file that:
+
 - Mocks all Expo modules (expo-router, expo-file-system, expo-sqlite, etc.)
 - Mocks React Native community modules (@react-native-community/netinfo)
 - Mocks authentication (Clerk)
@@ -34,8 +39,10 @@ Global test setup file that:
 
 ### 3. Mock Utilities
 
-#### __mocks__/apiMocks.ts
+#### **mocks**/apiMocks.ts
+
 Provides utilities for mocking API calls:
+
 - `mockApiSuccess(data)` - Mock successful API responses
 - `mockApiError(status, message)` - Mock API errors
 - `mockApiTimeout()` - Mock network timeouts
@@ -44,41 +51,52 @@ Provides utilities for mocking API calls:
 - `createMockGetToken(token, shouldFail)` - Mock Clerk authentication
 - `MockWebSocket` class - Mock WebSocket connections
 
-#### __mocks__/fileMock.js
+#### **mocks**/fileMock.js
+
 Simple mock for static file imports (images, etc.)
 
 ### 4. Example Tests
 
 The following test files were created as examples:
 
-#### __tests__/utils/formatters.test.ts (36 tests)
+#### **tests**/utils/formatters.test.ts (36 tests)
+
 Tests for date and currency formatting functions:
+
 - `formatDate()` - Various date format scenarios
 - `formatCurrency()` - Currency formatting with different options
 - `formatNumber()` - Number formatting with decimal places
 - `replaceNonPrintable()` - String sanitization
 
-#### __tests__/utils/array.test.ts (12 tests)
+#### **tests**/utils/array.test.ts (12 tests)
+
 Tests for array manipulation utilities:
+
 - `createItemsArray()` with 'include' action
 - `createItemsArray()` with 'exclude' action
 - Edge cases and error handling
 
-#### __tests__/utils/csvUtils.test.ts (13 tests)
+#### **tests**/utils/csvUtils.test.ts (13 tests)
+
 Tests for CSV import/export functions:
+
 - `vendorsToCsv()` - Converting vendors to CSV format
 - `suppliersToCsv()` - Converting suppliers to CSV format
 - CSV escaping for special characters
 
-#### __tests__/utils/apiWithToken.test.ts (8 tests)
+#### **tests**/utils/apiWithToken.test.ts (8 tests)
+
 Tests for authenticated API calls:
+
 - Token injection in requests
 - Header preservation
 - Error handling
 - Timeout handling
 
-#### __tests__/hooks/useFocusManager.test.tsx (12 tests)
+#### **tests**/hooks/useFocusManager.test.tsx (12 tests)
+
 Tests for the FocusManager custom hook:
+
 - Field registration and unregistration
 - Blurring all fields
 - Getting field values
@@ -87,7 +105,9 @@ Tests for the FocusManager custom hook:
 ### 5. Documentation
 
 #### docs/TESTING_GUIDE.md
+
 Comprehensive testing guide covering:
+
 - How to run tests
 - How to write new tests
 - How to mock API calls and external dependencies
@@ -98,6 +118,7 @@ Comprehensive testing guide covering:
 ### 6. Package.json Updates
 
 Added three test scripts:
+
 ```json
 "test": "jest",                    // Run tests once
 "test:watch": "jest --watchAll",   // Run tests in watch mode
@@ -157,6 +178,7 @@ npm test -- --testNamePattern="formatCurrency"
 5. Run tests to verify they pass
 
 Example:
+
 ```typescript
 import { myFunction } from '@/src/utils/myUtils';
 
@@ -179,7 +201,7 @@ import { mockApiSuccess, resetApiMocks } from '@/__mocks__/apiMocks';
 
 describe('my API test', () => {
   beforeEach(() => resetApiMocks());
-  
+
   it('should handle API response', async () => {
     mockApiSuccess({ data: 'success' });
     // Your test code here
@@ -211,4 +233,4 @@ This testing infrastructure provides:
 
 - [Jest Documentation](https://jestjs.io/)
 - [React Native Testing Library](https://callstack.github.io/react-native-testing-library/)
-- [Testing Guide](docs/TESTING_GUIDE.md) - Comprehensive guide in this repository
+- [Testing Guide](TESTING_GUIDE.md) - Comprehensive guide in this repository
