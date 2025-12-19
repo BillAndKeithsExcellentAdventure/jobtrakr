@@ -15,7 +15,6 @@ export default function CreateOrganization() {
   const clerk = useClerk();
   const colors = useColors();
   const { isLoaded } = useSignUp();
-  const router = useRouter();
   const [organizationName, setOrganizationName] = React.useState('');
   const [organizationExists, setOrganizationExists] = React.useState(false);
   const [isCreating, setIsCreating] = React.useState(false);

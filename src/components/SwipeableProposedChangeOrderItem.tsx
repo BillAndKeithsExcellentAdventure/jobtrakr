@@ -21,13 +21,14 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => {
     </Pressable>
   );
 });
+RightAction.displayName = 'RightAction';
 
 interface Props {
   item: ProposedChangeOrderItem;
   removeItem: (item: ProposedChangeOrderItem) => void;
 }
 
-const SwipeableProposedChangeOrderItem = React.memo(({ item, removeItem }: Props) => {
+const SwipeableProposedChangeOrderItem = React.memo<Props>(({ item, removeItem }) => {
   const colors = useColors();
 
   const handleDelete = useCallback(() => {
@@ -49,7 +50,9 @@ const SwipeableProposedChangeOrderItem = React.memo(({ item, removeItem }: Props
 
   // use useMemo instead of useCallback to avoid swipeable showing a blank area
   const renderRightActions = useMemo(() => {
-    return () => <RightAction onDelete={handleDelete} />;
+    const RenderRightActionsComponent = () => <RightAction onDelete={handleDelete} />;
+    RenderRightActionsComponent.displayName = 'RenderRightActionsComponent';
+    return RenderRightActionsComponent;
   }, [handleDelete]);
 
   return (
@@ -79,6 +82,7 @@ const SwipeableProposedChangeOrderItem = React.memo(({ item, removeItem }: Props
     </SwipeableComponent>
   );
 });
+SwipeableProposedChangeOrderItem.displayName = 'SwipeableProposedChangeOrderItem';
 
 const styles = StyleSheet.create({
   itemEntry: {

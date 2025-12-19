@@ -15,7 +15,6 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { useRouter } from 'expo-router';
-import { useAuth } from '@clerk/clerk-expo';
 import { useDeleteMediaCallback, deleteLocalMediaFile } from '../utils/images';
 import { useAllFailedToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
 
@@ -28,20 +27,15 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => (
     <MaterialIcons name="delete" size={32} color="white" />
   </Pressable>
 ));
+RightAction.displayName = 'RightAction';
 
-const SwipeableReceiptItem = React.memo(
-  ({
-    orgId,
-    projectId,
-    item,
-  }: {
-    orgId: string;
-    projectId: string;
-    item: ClassifiedReceiptData;
-  }) => {
+const SwipeableReceiptItem = React.memo<{
+  orgId: string;
+  projectId: string;
+  item: ClassifiedReceiptData;
+}>(({ orgId, projectId, item }) => {
     const router = useRouter();
     const colors = useColors();
-    const auth = useAuth();
     const deleteReceipt = useDeleteRowCallback(projectId, 'receipts');
     const deleteReceiptLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
     const allReceiptLineItems = useAllRows(projectId, 'workItemCostEntries');
@@ -177,6 +171,7 @@ const SwipeableReceiptItem = React.memo(
     );
   },
 );
+SwipeableReceiptItem.displayName = 'SwipeableReceiptItem';
 
 const styles = StyleSheet.create({
   itemEntry: {

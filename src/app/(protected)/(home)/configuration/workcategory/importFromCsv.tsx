@@ -33,7 +33,7 @@ export default function ImportFromCsvScreen() {
         const parsed = parseWorkItemsCsvText(fileContent);
         setWorkCategories(parsed);
       }
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to read CSV file');
     } finally {
       setLoading(false);
@@ -43,7 +43,11 @@ export default function ImportFromCsvScreen() {
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories((prev) => {
       const next = new Set(prev);
-      next.has(categoryId) ? next.delete(categoryId) : next.add(categoryId);
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
       return next;
     });
   };
@@ -80,7 +84,7 @@ export default function ImportFromCsvScreen() {
       createTemplateWithAllWorkItems();
       Alert.alert('Success', 'Cost items imported successfully');
       setWorkCategories([]);
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to save cost items');
     } finally {
       setLoading(false);

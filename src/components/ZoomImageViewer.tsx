@@ -79,6 +79,7 @@ export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = React.memo(({ ima
     </View>
   );
 });
+ZoomImageViewer.displayName = 'ZoomImageViewer';
 
 const styles = StyleSheet.create({
   container: {

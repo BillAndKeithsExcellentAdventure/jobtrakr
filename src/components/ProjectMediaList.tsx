@@ -8,13 +8,11 @@ import Base64Image from '@/src/components/Base64Image';
 import { formatDate } from '@/src/utils/formatters';
 import { MediaEntryData, useDeleteRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useRouter } from 'expo-router';
-import { buildLocalMediaUri, useGetImageCallback, useDeleteMediaCallback, deleteLocalMediaFile } from '@/src/utils/images';
+import { buildLocalMediaUri, useGetImageCallback, useDeleteMediaCallback, deleteLocalMediaFile, mediaType } from '@/src/utils/images';
 import { useColors } from '@/src/context/ColorsContext';
-import { useColorScheme } from './useColorScheme';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useAuth } from '@clerk/clerk-expo';
-import { mediaType } from '@/src/utils/images';
-import { useProject, useProjectValue } from '../tbStores/listOfProjects/ListOfProjectsStore';
+import { useProjectValue } from '../tbStores/listOfProjects/ListOfProjectsStore';
 import { useAllFailedToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
 
 export interface MediaEntryDisplayData extends MediaEntryData {
@@ -40,14 +38,13 @@ export const ProjectMediaList = ({
   const [, setThumbnail] = useProjectValue(projectId, 'thumbnail');
   const removePhotoData = useDeleteRowCallback(projectId, 'mediaEntries');
   const router = useRouter();
-  const colorScheme = useColorScheme();
   const colors = useColors();
   const getImage = useGetImageCallback();
   const deleteMediaCallback = useDeleteMediaCallback();
   const failedUploads = useAllFailedToUpload();
   const store = useUploadSyncStore();
   const auth = useAuth();
-  const { orgId, userId } = auth;
+  const { orgId } = auth;
 
   useEffect(() => {
     // Initialize selectableProjectMedia whenever allProjectMedia changes
@@ -75,10 +72,6 @@ export const ProjectMediaList = ({
         isSelected: !hasSelectedItems,
       })),
     );
-  }, [mediaItems]);
-
-  const getSelectedIds = useCallback(() => {
-    return mediaItems.filter((media) => media.isSelected).map((media) => media.id);
   }, [mediaItems]);
 
   const handleSelection = useCallback(async (id: string) => {

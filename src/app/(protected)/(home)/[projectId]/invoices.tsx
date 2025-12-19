@@ -246,7 +246,7 @@ const ProjectInvoicesPage = () => {
                     keyExtractor={(item, index) => item.id ?? index.toString()}
                     renderItem={({ item }) => (
                       <SwipeableInvoiceItem
-                        orgId={auth.orgId!!}
+                        orgId={auth.orgId!}
                         projectId={projectId}
                         item={item}
                       />

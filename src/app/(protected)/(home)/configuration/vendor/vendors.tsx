@@ -9,7 +9,7 @@ import {
   VendorData,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
+import { Stack } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { FlatList, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
@@ -18,7 +18,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableVendor from '@/src/components/SwipeableVendor';
 
 const VendorsScreen = () => {
-  const router = useRouter();
   const addVendorToStore = useAddRowCallback('vendors');
   const allVendors = useAllRows('vendors');
   const [showAdd, setShowAdd] = useState(false);

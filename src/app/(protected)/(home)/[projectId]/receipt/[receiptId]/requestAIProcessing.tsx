@@ -436,7 +436,7 @@ const RequestAIProcessingPage = () => {
           <View style={{ width: '100%', gap: 20, padding: 10, alignItems: 'center' }}>
             <ActivityIndicator size="large" />
             <Text txtSize="sub-title">
-              Working on extracting data from receipt image, this shouldn't take long.
+              Working on extracting data from receipt image, this shouldn&apos;t take long.
             </Text>
           </View>
         ) : (

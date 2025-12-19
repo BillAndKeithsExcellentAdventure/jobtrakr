@@ -67,7 +67,7 @@ const SetLocationViaMap = () => {
     (latitude: number, longitude: number) => {
       if (projectId && updateProject) {
         const result = updateProject(projectId, { latitude, longitude });
-        if (result.status != 'Success') {
+        if (result.status !== 'Success') {
           Alert.alert('Error updating project location', `Error updating project location - ${result.msg}`);
         }
         router.back();

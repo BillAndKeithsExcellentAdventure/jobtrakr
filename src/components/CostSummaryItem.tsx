@@ -23,6 +23,7 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => {
     </Pressable>
   );
 });
+RightAction.displayName = 'RightAction';
 
 interface Props {
   sectionCode: string;
@@ -42,7 +43,7 @@ const areEqual = (prevProps: Props, nextProps: Props) => {
   );
 };
 
-const CostSummaryItem = React.memo(({ item, sectionCode, projectId }: Props) => {
+const CostSummaryItem = React.memo<Props>(({ item, sectionCode, projectId }) => {
   const router = useRouter();
   const removeCostItemSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
   const colors = useColors();
@@ -70,7 +71,9 @@ const CostSummaryItem = React.memo(({ item, sectionCode, projectId }: Props) => 
   // use useMemo instead of useCallback to avoid swipeable showing a blank area
   const renderRightActions = useMemo(() => {
     if (item.bidAmount > 0 || item.spentAmount > 0) return undefined;
-    return () => <RightAction onDelete={handleDelete} />;
+    const RenderRightActionsComponent = () => <RightAction onDelete={handleDelete} />;
+    RenderRightActionsComponent.displayName = 'RenderRightActionsComponent';
+    return RenderRightActionsComponent;
   }, [handleDelete, item.bidAmount, item.spentAmount]);
 
   return (
@@ -122,6 +125,7 @@ const CostSummaryItem = React.memo(({ item, sectionCode, projectId }: Props) => 
     </SwipeableComponent>
   );
 }, areEqual);
+CostSummaryItem.displayName = 'CostSummaryItem';
 
 const styles = StyleSheet.create({
   itemEntry: {

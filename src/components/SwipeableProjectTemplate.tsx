@@ -22,6 +22,7 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => {
     </Pressable>
   );
 });
+RightAction.displayName = 'RightAction';
 
 const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: ProjectTemplateData }) => {
   const router = useRouter();

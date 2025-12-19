@@ -21,6 +21,7 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => {
     </Pressable>
   );
 });
+RightAction.displayName = 'RightAction';
 
 const SwipeableCategoryItem = ({
   item,

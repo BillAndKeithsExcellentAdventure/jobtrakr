@@ -1,5 +1,5 @@
 import { ConfigurationEntry } from '@/src/components/ConfigurationEntry';
-import { Text, View } from '@/src/components/Themed';
+import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { Stack, useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
