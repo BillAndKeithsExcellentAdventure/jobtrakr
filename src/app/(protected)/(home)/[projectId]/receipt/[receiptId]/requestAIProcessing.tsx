@@ -19,7 +19,7 @@ import { createApiWithToken } from '@/src/utils/apiWithToken';
 import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -48,17 +48,24 @@ const processAIProcessing = async (
       body: JSON.stringify(receiptImageData),
     });
 
+    const responseText = await response.text();
+
     if (!response.ok) {
-      const errorBody = await response.text();
-      console.error(`HTTP error! status: ${response.status}. Response: ${errorBody}`);
+      console.error(`HTTP error! status: ${response.status}. Response: ${responseText}`);
+      throw new Error('AI processing request failed');
     }
 
-    const data = await response.json();
-    //console.log(' response:', JSON.stringify(data));
-
-    return data;
+    try {
+      const data = responseText ? JSON.parse(responseText) : null;
+      //console.log(' response:', JSON.stringify(data));
+      return data;
+    } catch (parseError) {
+      console.error('Error parsing AI processing response:', parseError);
+      throw parseError;
+    }
   } catch (error) {
     console.error('Error processing receipt:', error);
+    throw error;
   }
 };
 
@@ -70,6 +77,7 @@ const RequestAIProcessingPage = () => {
   }>();
   const auth = useAuth();
   const { userId, orgId } = auth;
+  const hasFetched = useRef(false);
   const [fetchingData, setFetchingData] = useState(true);
   const [showCostItemPicker, setShowCostItemPicker] = useState(false);
   const [receiptSummary, setReceiptSummary] = useState<ReceiptSummary>();
@@ -171,8 +179,19 @@ const RequestAIProcessingPage = () => {
   }
 
   const fetchAIResult = useCallback(async () => {
-    const result = await processAIProcessing(imageId, projectId, userId!, orgId!, auth.getToken);
-    if (result.status === 'Success') {
+    try {
+      const result = await processAIProcessing(imageId, projectId, userId!, orgId!, auth.getToken);
+
+      if (!result || result.status !== 'Success' || !result.response) {
+        Alert.alert(
+          'Processing Failed',
+          'We could not extract data from this receipt. You can still add line items manually.',
+        );
+        setReceiptSummary(undefined);
+        setAiItems([]);
+        return;
+      }
+
       const summary = {
         vendor: replaceNonPrintable(result.response.MerchantName.value),
         receiptDate: Date.parse(result.response.TransactionDate.value),
@@ -180,10 +199,10 @@ const RequestAIProcessingPage = () => {
         totalTax: Number.parseFloat(result.response.TotalTax.value),
       };
 
-      if (result.response.Items.length > 0) {
+      if (Array.isArray(result.response.Items) && result.response.Items.length > 0) {
         const receiptItems = result.response.Items.map((i: any) => ({
           description: i.Description.value,
-          amount: i.TotalPrice.value,
+          amount: Number.parseFloat(i.TotalPrice.value),
         }));
         setAiItems(receiptItems);
       } else {
@@ -196,15 +215,32 @@ const RequestAIProcessingPage = () => {
       }
 
       setReceiptSummary(summary);
+    } catch (error) {
+      console.error('Error fetching AI result:', error);
+      Alert.alert(
+        'Processing Failed',
+        'We ran into a problem processing this receipt. You can still add line items manually.',
+      );
+      setReceiptSummary(undefined);
+      setAiItems([]);
+    } finally {
+      setFetchingData(false);
     }
-
-    setFetchingData(false);
-  }, [imageId, projectId, userId, orgId, auth]);
+  }, [imageId, projectId, userId, orgId, auth.getToken]);
 
   useEffect(() => {
+    // reset fetch flag when navigating to a different receipt image
+    hasFetched.current = false;
+    setFetchingData(true);
+  }, [imageId, projectId]);
+
+  useEffect(() => {
+    if (hasFetched.current) return;
+    if (!imageId || !projectId || !userId || !orgId) return;
+    hasFetched.current = true;
     //fetchSimulatedAIResult(); // Uncomment for testing with simulated data
     fetchAIResult();
-  }, [fetchAIResult]);
+  }, [fetchAIResult, imageId, projectId, userId, orgId]);
 
   // Initial setup with all items taxable
   useEffect(() => {
@@ -216,7 +252,7 @@ const RequestAIProcessingPage = () => {
   }, [aiItems, receiptSummary]);
 
   // Recalculate proratedTax values
-  const recalculateProratedTax = (items: ReceiptItem[], totalTax: number): ReceiptItem[] => {
+  const recalculateProratedTax = useCallback((items: ReceiptItem[], totalTax: number): ReceiptItem[] => {
     // Create map of indices for taxable items to preserve original positions
     const taxableItemIndices = items
       .map((item, index) => ({ index, item }))
@@ -250,24 +286,29 @@ const RequestAIProcessingPage = () => {
     result[smallestItemIndex].proratedTax = parseFloat(remainingTax.toFixed(2));
 
     return result;
-  };
+  }, []);
 
-  const toggleTaxable = (index: number) => {
-    const updatedItems = [...receiptItems];
-    updatedItems[index].taxable = !updatedItems[index].taxable;
-    if (receiptSummary) {
-      const recalculated = recalculateProratedTax(updatedItems, receiptSummary.totalTax);
-      setReceiptItems(recalculated);
-    }
-  };
+  const toggleTaxable = useCallback(
+    (index: number) => {
+      setReceiptItems((prev) => {
+        const updatedItems = prev.map((item, i) =>
+          i === index ? { ...item, taxable: !item.taxable } : item,
+        );
+        if (!receiptSummary) return updatedItems;
+        return recalculateProratedTax(updatedItems, receiptSummary.totalTax);
+      });
+    },
+    [receiptSummary, recalculateProratedTax],
+  );
 
-  const toggleSelection = (index: number) => {
-    const updatedItems = receiptItems.map((item, i) => ({
-      ...item,
-      isSelected: i === index ? !item.isSelected : item.isSelected,
-    }));
-    setReceiptItems(updatedItems);
-  };
+  const toggleSelection = useCallback((index: number) => {
+    setReceiptItems((prev) =>
+      prev.map((item, i) => ({
+        ...item,
+        isSelected: i === index ? !item.isSelected : item.isSelected,
+      })),
+    );
+  }, []);
 
   const onSelectAll = useCallback(() => {
     const hasSelectedItems = receiptItems.every((item) => item.isSelected);
