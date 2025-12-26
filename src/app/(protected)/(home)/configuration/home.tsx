@@ -2,7 +2,7 @@ import { ConfigurationEntry } from '@/src/components/ConfigurationEntry';
 import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { Stack, useRouter } from 'expo-router';
-import * as FileSystem from 'expo-file-system/legacy';
+import { Paths, File } from 'expo-file-system';
 import React, { useCallback, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -93,13 +93,11 @@ const Home = () => {
               try {
                 const jsonData = exportConfiguration();
                 const jsonText = JSON.stringify(jsonData);
-                const outputPath = `${FileSystem.documentDirectory}ProjectHoundConfig.json`;
-                await FileSystem.writeAsStringAsync(outputPath, jsonText, {
-                  encoding: FileSystem.EncodingType.UTF8,
-                });
+                const outputFile = new File(Paths.document, 'ProjectHoundConfig.json');
+                await outputFile.write(jsonText);
                 const isAvailable = await Sharing.isAvailableAsync();
                 if (isAvailable) {
-                  await Sharing.shareAsync(outputPath, {
+                  await Sharing.shareAsync(outputFile.uri, {
                     mimeType: 'application/json',
                     dialogTitle: 'Share Configuration Data',
                     UTI: 'public.json',
@@ -130,9 +128,8 @@ const Home = () => {
 
                 if (!result.canceled && result.assets?.length > 0) {
                   const file = result.assets[0];
-                  const fileText = await FileSystem.readAsStringAsync(file.uri, {
-                    encoding: FileSystem.EncodingType.UTF8,
-                  });
+                  const fileObj = new File(file.uri);
+                  const fileText = await fileObj.text();
                   const jsonData = JSON.parse(fileText);
                   importConfiguration(jsonData);
                   alert('Configuration Data Import Complete');
@@ -174,13 +171,11 @@ const Home = () => {
             onPress: async () => {
               try {
                 const csvData = vendorsToCsv(allVendors);
-                const outputPath = `${FileSystem.documentDirectory}vendors.csv`;
-                await FileSystem.writeAsStringAsync(outputPath, csvData, {
-                  encoding: FileSystem.EncodingType.UTF8,
-                });
+                const outputFile = new File(Paths.document, 'vendors.csv');
+                await outputFile.write(csvData);
                 const isAvailable = await Sharing.isAvailableAsync();
                 if (isAvailable) {
-                  await Sharing.shareAsync(outputPath, {
+                  await Sharing.shareAsync(outputFile.uri, {
                     mimeType: 'text/csv',
                     dialogTitle: 'Share Vendors CSV',
                     UTI: 'public.comma-separated-values-text',
@@ -212,9 +207,8 @@ const Home = () => {
 
                 if (!result.canceled && result.assets?.length > 0) {
                   const file = result.assets[0];
-                  const fileText = await FileSystem.readAsStringAsync(file.uri, {
-                    encoding: FileSystem.EncodingType.UTF8,
-                  });
+                  const fileObj = new File(file.uri);
+                  const fileText = await fileObj.text();
                   const importedVendors = csvToVendors(fileText);
 
                   let addedCount = 0;
@@ -264,13 +258,11 @@ const Home = () => {
             onPress: async () => {
               try {
                 const csvData = suppliersToCsv(allSuppliers);
-                const outputPath = `${FileSystem.documentDirectory}suppliers.csv`;
-                await FileSystem.writeAsStringAsync(outputPath, csvData, {
-                  encoding: FileSystem.EncodingType.UTF8,
-                });
+                const outputFile = new File(Paths.document, 'suppliers.csv');
+                await outputFile.write(csvData);
                 const isAvailable = await Sharing.isAvailableAsync();
                 if (isAvailable) {
-                  await Sharing.shareAsync(outputPath, {
+                  await Sharing.shareAsync(outputFile.uri, {
                     mimeType: 'text/csv',
                     dialogTitle: 'Share Suppliers CSV',
                     UTI: 'public.comma-separated-values-text',
@@ -302,9 +294,8 @@ const Home = () => {
 
                 if (!result.canceled && result.assets?.length > 0) {
                   const file = result.assets[0];
-                  const fileText = await FileSystem.readAsStringAsync(file.uri, {
-                    encoding: FileSystem.EncodingType.UTF8,
-                  });
+                  const fileObj = new File(file.uri);
+                  const fileText = await fileObj.text();
                   const importedSuppliers = csvToSuppliers(fileText);
 
                   let addedCount = 0;
