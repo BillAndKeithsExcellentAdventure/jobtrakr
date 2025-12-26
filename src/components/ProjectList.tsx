@@ -43,14 +43,12 @@ export function ProjectList({
 
   const colors = useColors();
 
-  if (Platform.OS === 'web') {
-    colors.listBackground = '#efefef';
-  }
+  const listBackground = Platform.OS === 'web' ? '#efefef' : colors.listBackground;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
+    <View style={[styles.container, { backgroundColor: listBackground }]}>
       <FlatList
-        style={[styles.flatList, { backgroundColor: colors.listBackground }]}
+        style={[styles.flatList, { backgroundColor: listBackground }]}
         data={data}
         showsVerticalScrollIndicator={showsVerticalScrollIndicator}
         keyExtractor={(item) => item.projectId}

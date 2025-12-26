@@ -76,7 +76,6 @@ const SwipeableChangeOrder = React.memo<Props>(({ item, projectId }) => {
   const renderRightActions = useMemo(() => {
     if (item.status !== 'draft') return undefined;
     const RenderRightActionsComponent = () => <RightAction onDelete={handleDelete} />;
-    RenderRightActionsComponent.displayName = 'RenderRightActionsComponent';
     return RenderRightActionsComponent;
   }, [handleDelete, item.status]);
 

@@ -155,8 +155,7 @@ export const DeviceMediaList = ({
 
   useEffect(() => {
     onLoadPhotosClicked(useProjectLocation);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [useProjectLocation]);
+  }, [useProjectLocation, onLoadPhotosClicked]);
 
   const handleLoadMore = useCallback(async () => {
     if (!mediaTools.current || !hasNextPage) return;
