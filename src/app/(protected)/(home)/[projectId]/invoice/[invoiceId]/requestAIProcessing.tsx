@@ -19,7 +19,7 @@ import { createApiWithToken } from '@/src/utils/apiWithToken';
 import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -71,6 +71,7 @@ const RequestAIProcessingPage = () => {
   }>();
   const auth = useAuth();
   const { userId, orgId } = auth;
+  const hasFetched = useRef(false);
   const [fetchingData, setFetchingData] = useState(true);
   const [showCostItemPicker, setShowCostItemPicker] = useState(false);
   const [invoiceSummary, setInvoiceSummary] = useState<InvoiceSummary>();
@@ -172,8 +173,19 @@ const RequestAIProcessingPage = () => {
   }
 
   const fetchAIResult = useCallback(async () => {
-    const result = await processAIProcessing(imageId, projectId, userId!, orgId!, auth.getToken);
-    if (result.status === 'Success') {
+    try {
+      const result = await processAIProcessing(imageId, projectId, userId!, orgId!, auth.getToken);
+
+      if (!result || result.status !== 'Success' || !result.response) {
+        Alert.alert(
+          'Processing Failed',
+          'We could not extract data from this invoice. You can still add line items manually.',
+        );
+        setInvoiceSummary(undefined);
+        setAiItems([]);
+        return;
+      }
+
       const summary = {
         supplier: replaceNonPrintable(result.response.MerchantName.value),
         receiptDate: Date.parse(result.response.TransactionDate.value),
@@ -181,10 +193,10 @@ const RequestAIProcessingPage = () => {
         totalTax: Number.parseFloat(result.response.TotalTax.value),
       };
 
-      if (result.response.Items.length > 0) {
+      if (Array.isArray(result.response.Items) && result.response.Items.length > 0) {
         const invoiceItems = result.response.Items.map((i: any) => ({
           description: i.Description.value,
-          amount: i.TotalPrice.value,
+          amount: Number.parseFloat(i.TotalPrice.value),
         }));
         setAiItems(invoiceItems);
       } else {
@@ -197,15 +209,32 @@ const RequestAIProcessingPage = () => {
       }
 
       setInvoiceSummary(summary);
+    } catch (error) {
+      console.error('Error fetching AI result:', error);
+      Alert.alert(
+        'Processing Failed',
+        'We ran into a problem processing this invoice. You can still add line items manually.',
+      );
+      setInvoiceSummary(undefined);
+      setAiItems([]);
+    } finally {
+      setFetchingData(false);
     }
-
-    setFetchingData(false);
-  }, [imageId, projectId, userId, orgId, auth]);
+  }, [imageId, projectId, userId, orgId, auth.getToken]);
 
   useEffect(() => {
+    // reset fetch flag when navigating to a different invoice image
+    hasFetched.current = false;
+    setFetchingData(true);
+  }, [imageId, projectId]);
+
+  useEffect(() => {
+    if (hasFetched.current) return;
+    if (!imageId || !projectId || !userId || !orgId) return;
+    hasFetched.current = true;
     //fetchSimulatedAIResult(); // Uncomment for testing with simulated data
     fetchAIResult();
-  }, [fetchAIResult]);
+  }, [fetchAIResult, imageId, projectId, userId, orgId]);
 
   // Initial setup with all items taxable
   useEffect(() => {
@@ -214,10 +243,10 @@ const RequestAIProcessingPage = () => {
       const withTax = recalculateProratedTax(initialized, invoiceSummary.totalTax);
       setInvoiceItems(withTax);
     }
-  }, [aiItems, invoiceSummary]);
+  }, [aiItems, invoiceSummary, recalculateProratedTax]);
 
   // Recalculate proratedTax values
-  const recalculateProratedTax = (items: ReceiptItem[], totalTax: number): ReceiptItem[] => {
+  const recalculateProratedTax = useCallback((items: ReceiptItem[], totalTax: number): ReceiptItem[] => {
     // Create map of indices for taxable items to preserve original positions
     const taxableItemIndices = items
       .map((item, index) => ({ index, item }))
@@ -251,24 +280,29 @@ const RequestAIProcessingPage = () => {
     result[smallestItemIndex].proratedTax = parseFloat(remainingTax.toFixed(2));
 
     return result;
-  };
+  }, []);
 
-  const toggleTaxable = (index: number) => {
-    const updatedItems = [...invoiceItems];
-    updatedItems[index].taxable = !updatedItems[index].taxable;
-    if (invoiceSummary) {
-      const recalculated = recalculateProratedTax(updatedItems, invoiceSummary.totalTax);
-      setInvoiceItems(recalculated);
-    }
-  };
+  const toggleTaxable = useCallback(
+    (index: number) => {
+      setInvoiceItems((prev) => {
+        const updatedItems = prev.map((item, i) =>
+          i === index ? { ...item, taxable: !item.taxable } : item,
+        );
+        if (!invoiceSummary) return updatedItems;
+        return recalculateProratedTax(updatedItems, invoiceSummary.totalTax);
+      });
+    },
+    [invoiceSummary, recalculateProratedTax],
+  );
 
-  const toggleSelection = (index: number) => {
-    const updatedItems = invoiceItems.map((item, i) => ({
-      ...item,
-      isSelected: i === index ? !item.isSelected : item.isSelected,
-    }));
-    setInvoiceItems(updatedItems);
-  };
+  const toggleSelection = useCallback((index: number) => {
+    setInvoiceItems((prev) =>
+      prev.map((item, i) => ({
+        ...item,
+        isSelected: i === index ? !item.isSelected : item.isSelected,
+      })),
+    );
+  }, []);
 
   const onSelectAll = useCallback(() => {
     const hasSelectedItems = invoiceItems.every((item) => item.isSelected);
