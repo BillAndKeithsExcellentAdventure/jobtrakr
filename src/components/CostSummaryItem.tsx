@@ -72,7 +72,6 @@ const CostSummaryItem = React.memo<Props>(({ item, sectionCode, projectId }) => 
   const renderRightActions = useMemo(() => {
     if (item.bidAmount > 0 || item.spentAmount > 0) return undefined;
     const RenderRightActionsComponent = () => <RightAction onDelete={handleDelete} />;
-    RenderRightActionsComponent.displayName = 'RenderRightActionsComponent';
     return RenderRightActionsComponent;
   }, [handleDelete, item.bidAmount, item.spentAmount]);
 

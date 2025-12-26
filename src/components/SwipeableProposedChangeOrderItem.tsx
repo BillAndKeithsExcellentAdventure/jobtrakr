@@ -51,7 +51,6 @@ const SwipeableProposedChangeOrderItem = React.memo<Props>(({ item, removeItem }
   // use useMemo instead of useCallback to avoid swipeable showing a blank area
   const renderRightActions = useMemo(() => {
     const RenderRightActionsComponent = () => <RightAction onDelete={handleDelete} />;
-    RenderRightActionsComponent.displayName = 'RenderRightActionsComponent';
     return RenderRightActionsComponent;
   }, [handleDelete]);
 

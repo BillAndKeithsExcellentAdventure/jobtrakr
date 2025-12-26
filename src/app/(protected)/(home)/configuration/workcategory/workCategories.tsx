@@ -93,7 +93,6 @@ const ListWorkCategories = () => {
         </Pressable>
       </View>
     );
-    RenderHeaderRightComponent.displayName = 'RenderHeaderRightComponent';
     return RenderHeaderRightComponent;
   }, [orphanedWorkItemIds.length, showAdd, colors.iconColor, handleCleanup]);
 

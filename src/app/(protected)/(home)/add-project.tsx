@@ -84,17 +84,19 @@ const AddProjectScreen = () => {
       return;
     }
 
+    let projectToAdd = project;
+
     if (pickedTemplate?.value) {
       const template = allProjectTemplates.find((t) => t.id === pickedTemplate?.value);
       if (template) {
         const templateWorkItems = allTemplateWorkItems.find((t) => t.templateId === template.id);
         if (templateWorkItems) {
-          project.seedWorkItems = templateWorkItems.workItemIds;
+          projectToAdd = { ...project, seedWorkItems: templateWorkItems.workItemIds };
         }
       }
     }
 
-    const result = addProject(project);
+    const result = addProject(projectToAdd);
     if (result.status !== 'Success') {
       Alert.alert(`Project creation failed for project ${project.name}: ${result.msg}`);
     } else {
