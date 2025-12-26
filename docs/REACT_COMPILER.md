@@ -15,6 +15,21 @@ The React Compiler has been enabled in this project with the following packages:
 
 ## Configuration
 
+### Expo Configuration
+
+The React Compiler is enabled in `app.config.ts` via the experiments flag:
+
+```typescript
+export default ({ config }: ConfigContext): ExpoConfig => ({
+  ...config,
+  experiments: {
+    typedRoutes: true,
+    reactCompiler: true,
+  },
+  // ... rest of config
+});
+```
+
 ### Babel Configuration
 
 The React Compiler is configured in `babel.config.js`:
