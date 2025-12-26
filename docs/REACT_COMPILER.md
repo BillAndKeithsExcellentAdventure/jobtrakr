@@ -82,17 +82,30 @@ The ESLint plugin will warn about incompatible patterns such as:
 - Breaking React's rules of hooks
 - Improper use of refs
 
-### Example Issue Found
+### Issues Found in Codebase
 
-The ESLint plugin detected this issue in the codebase:
+The ESLint plugin detected 8 React Compiler violations in the following files:
 
+- `src/app/(protected)/(home)/add-project.tsx`
+- `src/app/(protected)/(home)/configuration/workcategory/workCategories.tsx`
+- `src/components/CostSummaryItem.tsx`
+- `src/components/DeviceMediaList.tsx`
+- `src/components/ProjectList.tsx`
+- `src/components/SwipeableChangeOrder.tsx`
+- `src/components/SwipeableChangeOrderItem.tsx`
+- `src/components/SwipeableProposedChangeOrderItem.tsx`
+
+Example issue:
 ```
 src/app/(protected)/(home)/add-project.tsx
 92:11  error  Mutating a value returned from 'useState()', which should not be mutated. 
               Use the setter function to update instead  react-compiler/react-compiler
 ```
 
-This type of issue should be fixed to ensure the React Compiler can properly optimize the code.
+These issues should be addressed to ensure the React Compiler can properly optimize the code. The violations are mostly related to:
+- Mutating values returned from `useState()` 
+- Mutating variables that React considers immutable
+- Disabled ESLint rules in components
 
 ## Testing
 

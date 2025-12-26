@@ -6,8 +6,8 @@ module.exports = function (api) {
       [
         'babel-plugin-react-compiler',
         {
-          // Recommended options for production
-          // runtimeModule: 'react-compiler-runtime', // Optional: Use if you want to use the runtime module
+          // Configuration options can be added here if needed
+          // See: https://react.dev/learn/react-compiler#usage-with-babel
         },
       ],
     ],
