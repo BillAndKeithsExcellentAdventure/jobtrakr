@@ -2,7 +2,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { randomUUID } from 'expo-crypto';
 import { useCallback } from 'react';
 import { Platform } from 'react-native';
-import { Paths, File, Directory } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import {
   FailedToUploadData,
   useAddFailedToUploadMediaCallback,
@@ -111,12 +111,12 @@ const downloadImage = async (
 
     // Ensure directory exists
     const directory = localUri.substring(0, localUri.lastIndexOf('/'));
-    const dir = new Directory(directory);
-    dir.create({ intermediates: true });
+    await FileSystem.makeDirectoryAsync(directory, { intermediates: true });
 
     // Write the base64 data to file
-    const file = new File(localUri);
-    await file.write(base64Data, { encoding: 'base64' });
+    await FileSystem.writeAsStringAsync(localUri, base64Data, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
 
     console.log(`File downloaded and saved to ${localUri}`);
 
@@ -440,8 +440,7 @@ export const useDeleteMediaCallback = () => {
 };
 
 const getLocalMediaFolder = (orgId: string, projectId: string, resourceType: resourceType): string => {
-  const dir = new Directory(Paths.document, 'images', orgId, projectId, resourceType);
-  return dir.uri;
+  return `${FileSystem.documentDirectory}/images/${orgId}/${projectId}/${resourceType}`;
 };
 
 const getLocalImageUri = (folder: string, id: string): string => {
@@ -484,10 +483,10 @@ export const deleteLocalMediaFile = async (
 ): Promise<void> => {
   try {
     const localUri = buildLocalMediaUri(orgId, projectId, imageId, type, resourceType);
-    const file = new File(localUri);
+    const fileInfo = await FileSystem.getInfoAsync(localUri);
     
-    if (file.exists) {
-      file.delete();
+    if (fileInfo.exists) {
+      await FileSystem.deleteAsync(localUri, { idempotent: true });
       console.log(`Deleted local media file: ${localUri}`);
     } else {
       console.log(`Local media file does not exist: ${localUri}`);
@@ -515,13 +514,13 @@ const copyToLocalFolder = async (
 
   try {
     // Ensure directory exists
-    const dir = new Directory(destinationPath);
-    dir.create({ intermediates: true });
+    await FileSystem.makeDirectoryAsync(destinationPath, { intermediates: true });
 
     // Copy the file
-    const sourceFile = new File(imageUri);
-    const destFile = new File(destinationUri);
-    sourceFile.copy(destFile);
+    await FileSystem.copyAsync({
+      from: imageUri,
+      to: destinationUri,
+    });
 
     // Update imageUri to use the new location
     imageUri = destinationUri;
@@ -713,8 +712,8 @@ export const useGetImageCallback = () => {
       const path = getLocalMediaFolder(orgId, projectId, resourceType);
       const imageUri = getLocalImageUri(path, itemId);
       try {
-        const file = new File(imageUri);
-        if (file.exists) {
+        const fileInfo = await FileSystem.getInfoAsync(imageUri);
+        if (fileInfo.exists) {
           return {
             localUri: imageUri,
             result: { status: 'Success', id: itemId, msg: 'Found on this device.' },
