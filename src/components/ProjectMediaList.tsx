@@ -10,7 +10,7 @@ import { MediaEntryData, useDeleteRowCallback } from '@/src/tbStores/projectDeta
 import { useRouter } from 'expo-router';
 import { buildLocalMediaUri, useGetImageCallback, useDeleteMediaCallback, deleteLocalMediaFile, mediaType } from '@/src/utils/images';
 import { useColors } from '@/src/context/ColorsContext';
-import { File } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useAuth } from '@clerk/clerk-expo';
 import { useProjectValue } from '../tbStores/listOfProjects/ListOfProjectsStore';
 import { useAllFailedToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
@@ -105,20 +105,22 @@ export const ProjectMediaList = ({
         // if not, we need to call our backend and retrieve it before trying to display it.
         if (uri.startsWith('file://')) {
           // This is a local file. We need to check if it exists.
-          console.log('*** File URI:', uri);
+          const fileUri = uri.replace('file://', '');
+          console.log('*** File URI:', fileUri);
           // Check if the file exists
-          const file = new File(uri);
-          
-          if (!file.exists) {
-            // File does not exist, so we need to call our backend to retrieve it.
-            console.log('*** File does not exist. Need to retrieve from backend.');
-            // Call your backend API to retrieve the file and save it locally
-            // After retrieving the file, you can navigate to the image viewer
-            const result = await getImage(projectId, imageId, type);
-            if (result.result.status !== 'Success') {
-              console.error('*** Error retrieving image from backend:', result.result.msg);
+
+          await FileSystem.getInfoAsync(fileUri).then(async (fileInfo) => {
+            if (!fileInfo.exists) {
+              // File does not exist, so we need to call our backend to retrieve it.
+              console.log('*** File does not exist. Need to retrieve from backend.');
+              // Call your backend API to retrieve the file and save it locally
+              // After retrieving the file, you can navigate to the image viewer
+              const result = await getImage(projectId, imageId, type);
+              if (result.result.status !== 'Success') {
+                console.error('*** Error retrieving image from backend:', result.result.msg);
+              }
             }
-          }
+          });
 
           router.push({
             pathname: '/[projectId]/photos/showImage',

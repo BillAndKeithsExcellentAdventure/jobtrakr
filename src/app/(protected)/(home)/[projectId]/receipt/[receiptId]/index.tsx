@@ -15,7 +15,7 @@ import { formatCurrency } from '@/src/utils/formatters';
 import { buildLocalMediaUri, useAddImageCallback, useGetImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
-import { File } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -128,27 +128,29 @@ const ReceiptDetailsPage = () => {
 
       if (uri.startsWith('file://')) {
         // This is a local file. We need to check if it exists.
-        console.log('*** File URI:', uri);
+        const fileUri = uri.replace('file://', '');
+        console.log('*** File URI:', fileUri);
         // Check if the file exists
-        const file = new File(uri);
 
-        if (file.exists) {
-          imageFileExist = true;
-        } else {
-          // File does not exist, so we need to call our backend to retrieve it.
-          console.log('*** File does not exist. Need to retrieve from backend.');
-          // Call your backend API to retrieve the file and save it locally
-          // After retrieving the file, you can navigate to the image viewer
-          const result = await getImage(projectId, imageId, 'receipt');
-          if (result.result.status === 'Success') {
+        await FileSystem.getInfoAsync(fileUri).then(async (fileInfo) => {
+          if (fileInfo.exists) {
             imageFileExist = true;
           } else {
-            Alert.alert(
-              'Error',
-              `Error retrieving receipt image: ${result.result.msg}. This may be due to no internet connectivity. Please try again later.`,
-            );
+            // File does not exist, so we need to call our backend to retrieve it.
+            console.log('*** File does not exist. Need to retrieve from backend.');
+            // Call your backend API to retrieve the file and save it locally
+            // After retrieving the file, you can navigate to the image viewer
+            const result = await getImage(projectId, imageId, 'receipt');
+            if (result.result.status === 'Success') {
+              imageFileExist = true;
+            } else {
+              Alert.alert(
+                'Error',
+                `Error retrieving receipt image: ${result.result.msg}. This may be due to no internet connectivity. Please try again later.`,
+              );
+            }
           }
-        }
+        });
       }
 
       if (!imageFileExist) return;
