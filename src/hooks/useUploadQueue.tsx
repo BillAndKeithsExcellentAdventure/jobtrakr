@@ -1,11 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@clerk/clerk-expo';
 import { useNetwork } from '../context/NetworkContext';
-import {
-  useAllFailedToUpload,
-  useAllFailedToDelete,
-  useUploadSyncStore,
-} from '../tbStores/UploadSyncStore';
+import { useAllFailedToUpload, useAllFailedToDelete, useUploadSyncStore } from '../tbStores/UploadSyncStore';
 import { mediaType, resourceType, ImageDetails, uploadImage, deleteMedia } from '../utils/images';
 
 /**
@@ -100,6 +96,14 @@ export const useUploadQueue = () => {
             // Remove from failed uploads table
             store.delRow('failedToUpload', item.id);
           } else {
+            if (result.msg.startsWith('Local file does not exist')) {
+              // bad file path - do not queue for retry
+              // remove from failedToUpload table
+              console.warn(
+                `Local file does not exist for item ${item.itemId}. **** Removing from failed uploads.****`,
+              );
+              store.delRow('failedToUpload', item.id);
+            }
             console.warn(`Failed to upload item ${item.itemId}: ${result.msg}`);
             failCount++;
           }

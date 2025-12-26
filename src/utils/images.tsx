@@ -173,6 +173,16 @@ export const uploadImage = async (
       type = 'image/jpeg';
     }
 
+    const fileInfo = await FileSystem.getInfoAsync(uri);
+
+    if (!fileInfo.exists) {
+      return {
+        status: 'Error',
+        id: details.id,
+        msg: `Local file does not exist at path: ${uri}`,
+      };
+    }
+
     formData.append('image', {
       uri,
       name: filename,
@@ -355,9 +365,7 @@ export const useDeleteMediaCallback = () => {
 
       // Check network connectivity before attempting delete
       if (!isConnected || isInternetReachable === false) {
-        console.log(
-          'No network connection detected. Queuing delete without attempting network call.',
-        );
+        console.log('No network connection detected. Queuing delete without attempting network call.');
 
         const data = createFailedToDeleteData(orgId, projectId, imageIds, imageType);
 
@@ -377,14 +385,7 @@ export const useDeleteMediaCallback = () => {
 
       // Network is available, attempt to delete immediately
       try {
-        const deleteResult = await deleteMedia(
-          userId,
-          orgId,
-          projectId,
-          imageIds,
-          imageType,
-          auth.getToken,
-        );
+        const deleteResult = await deleteMedia(userId, orgId, projectId, imageIds, imageType, auth.getToken);
 
         // If the immediate delete fails, queue it for retry
         if (!deleteResult.success) {
@@ -427,15 +428,7 @@ export const useDeleteMediaCallback = () => {
         }
       }
     },
-    [
-      userId,
-      orgId,
-      auth,
-      isConnected,
-      isInternetReachable,
-      addFailedToDeleteRecord,
-      failedUploads,
-    ],
+    [userId, orgId, auth, isConnected, isInternetReachable, addFailedToDeleteRecord, failedUploads],
   );
 };
 
@@ -484,7 +477,7 @@ export const deleteLocalMediaFile = async (
   try {
     const localUri = buildLocalMediaUri(orgId, projectId, imageId, type, resourceType);
     const fileInfo = await FileSystem.getInfoAsync(localUri);
-    
+
     if (fileInfo.exists) {
       await FileSystem.deleteAsync(localUri, { idempotent: true });
       console.log(`Deleted local media file: ${localUri}`);
