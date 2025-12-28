@@ -5,7 +5,7 @@ import {
   useUpdateRowCallback,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -28,7 +28,7 @@ const EditWorkCategory = () => {
 
   const colors = useColors();
 
-  const handleBlur = () => {
+  const handleBlur = useCallback(() => {
     if (newName.length && newCode.length) {
       applyWorkCategoryUpdates(categoryId, {
         id: categoryId,
@@ -40,7 +40,7 @@ const EditWorkCategory = () => {
       if (newName.length === 0) setNewName(name);
       if (newCode.length === 0) setNewCode(code);
     }
-  };
+  }, [newName, newCode, categoryId, status, applyWorkCategoryUpdates, name, code]);
 
   if (!name || !code) {
     return (
