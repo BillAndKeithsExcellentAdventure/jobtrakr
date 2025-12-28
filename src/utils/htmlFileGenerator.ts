@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system/legacy';
+import { Paths, File } from 'expo-file-system';
 import { Asset } from 'expo-asset';
 
 type GetTokenString = (token: string) => string;
@@ -20,15 +20,12 @@ export async function createHtmlFile(
     return getTokenString(token.trim());
   });
 
-  console.log(replacedContent);
+  // console.log(replacedContent);
 
   // Write the replaced content to the output file
-  const outputPath = FileSystem.documentDirectory + outputFileName;
-  await FileSystem.writeAsStringAsync(outputPath, replacedContent, {
-    encoding: FileSystem.EncodingType.UTF8,
-  });
-
-  return outputPath;
+  const outputFile = new File(Paths.document, outputFileName);
+  outputFile.write(replacedContent);
+  return outputFile.uri;
 }
 
 export async function loadTemplateHtmlAssetFileToString(): Promise<string> {
@@ -37,6 +34,7 @@ export async function loadTemplateHtmlAssetFileToString(): Promise<string> {
   if (!asset.localUri) {
     throw new Error('Asset localUri is undefined. Check if the asset exists and is bundled correctly.');
   }
-  const content = await FileSystem.readAsStringAsync(asset.localUri);
+  const assetFile = new File(asset.localUri);
+  const content = await assetFile.text();
   return content;
 }

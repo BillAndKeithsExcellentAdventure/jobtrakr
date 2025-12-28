@@ -2,7 +2,8 @@ import { useAuth } from '@clerk/clerk-expo';
 import { randomUUID } from 'expo-crypto';
 import { useCallback } from 'react';
 import { Platform } from 'react-native';
-import * as FileSystem from 'expo-file-system/legacy';
+import { Paths, File, Directory } from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
 import {
   FailedToUploadData,
   useAddFailedToUploadMediaCallback,
@@ -111,12 +112,16 @@ const downloadImage = async (
 
     // Ensure directory exists
     const directory = localUri.substring(0, localUri.lastIndexOf('/'));
-    await FileSystem.makeDirectoryAsync(directory, { intermediates: true });
+    const dir = new Directory(directory);
+    if (dir.exists === false) {
+      console.log(`Directory does not exist. Creating: ${directory}`);
+      dir.create({ intermediates: true, idempotent: true });
+    }
 
     // Write the base64 data to file
-    await FileSystem.writeAsStringAsync(localUri, base64Data, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+    console.log('Writing image to local URI:', localUri);
+    const file = new File(localUri);
+    file.write(base64Data, { encoding: 'base64' });
 
     console.log(`File downloaded and saved to ${localUri}`);
 
@@ -160,7 +165,7 @@ export const uploadImage = async (
     formData.append('organizationId', details.orgId);
     formData.append('projectId', details.projectId);
     formData.append('longitude', details.longitude.toString());
-    formData.append('latitude', details.latitude.toString()); // fixed duplicate key
+    formData.append('latitude', details.latitude.toString());
     formData.append('deviceTypes', details.deviceTypes);
 
     const uri = Platform.OS === 'ios' ? localImageUrl.replace('file://', '') : localImageUrl;
@@ -173,9 +178,8 @@ export const uploadImage = async (
       type = 'image/jpeg';
     }
 
-    const fileInfo = await FileSystem.getInfoAsync(uri);
-
-    if (!fileInfo.exists) {
+    const file = new File(uri);
+    if (!file.exists) {
       return {
         status: 'Error',
         id: details.id,
@@ -433,7 +437,8 @@ export const useDeleteMediaCallback = () => {
 };
 
 const getLocalMediaFolder = (orgId: string, projectId: string, resourceType: resourceType): string => {
-  return `${FileSystem.documentDirectory}/images/${orgId}/${projectId}/${resourceType}`;
+  const dir = new Directory(Paths.document, 'images', orgId, projectId, resourceType);
+  return dir.uri;
 };
 
 const getLocalImageUri = (folder: string, id: string): string => {
@@ -476,10 +481,10 @@ export const deleteLocalMediaFile = async (
 ): Promise<void> => {
   try {
     const localUri = buildLocalMediaUri(orgId, projectId, imageId, type, resourceType);
-    const fileInfo = await FileSystem.getInfoAsync(localUri);
+    const file = new File(localUri);
 
-    if (fileInfo.exists) {
-      await FileSystem.deleteAsync(localUri, { idempotent: true });
+    if (file.exists) {
+      file.delete();
       console.log(`Deleted local media file: ${localUri}`);
     } else {
       console.log(`Local media file does not exist: ${localUri}`);
@@ -505,18 +510,49 @@ const copyToLocalFolder = async (
     destinationUri = getLocalImageUri(destinationPath, details.id);
   }
 
+  let localImageUri = imageUri;
+
   try {
+    // Request asset info to ensure we have permissions (especially on iOS)
+    const phUri = imageUri.startsWith('ph://') ? imageUri.replace('ph://', '') : undefined;
+    if (phUri) {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        return {
+          status: 'Error',
+          id: details.id,
+          msg: 'Media library permissions not granted',
+        };
+      } else {
+        //console.log('Media library permissions granted');
+      }
+
+      const asset = await MediaLibrary.getAssetInfoAsync(phUri);
+      if (asset.localUri) {
+        localImageUri = asset.localUri;
+        // console.log('Resolved ph:// URI to local URI:', localImageUri);
+      } else {
+        return {
+          status: 'Error',
+          id: details.id,
+          msg: 'Could not resolve ph:// URI to local URI',
+        };
+      }
+    }
+
     // Ensure directory exists
-    await FileSystem.makeDirectoryAsync(destinationPath, { intermediates: true });
+    const dir = new Directory(destinationPath);
+    if (dir.exists === false) {
+      // console.log(`Directory does not exist. Creating: ${destinationPath}`);
+      dir.create({ intermediates: true, idempotent: true });
+    }
 
     // Copy the file
-    await FileSystem.copyAsync({
-      from: imageUri,
-      to: destinationUri,
-    });
+    const sourceFile = new File(localImageUri);
+    const destFile = new File(destinationUri);
+    console.log(`Copying file from ${localImageUri} to ${destinationUri}`);
 
-    // Update imageUri to use the new location
-    imageUri = destinationUri;
+    sourceFile.copy(destFile);
 
     return {
       status: 'Success',
@@ -705,8 +741,8 @@ export const useGetImageCallback = () => {
       const path = getLocalMediaFolder(orgId, projectId, resourceType);
       const imageUri = getLocalImageUri(path, itemId);
       try {
-        const fileInfo = await FileSystem.getInfoAsync(imageUri);
-        if (fileInfo.exists) {
+        const file = new File(imageUri);
+        if (file.exists) {
           return {
             localUri: imageUri,
             result: { status: 'Success', id: itemId, msg: 'Found on this device.' },

@@ -190,6 +190,8 @@ export const DeviceMediaList = ({
 
   const importDeviceAssetToProject = useCallback(async () => {
     if (deviceMediaAssets) {
+      const addedAssetIds: string[] = [];
+
       for (const asset of deviceMediaAssets) {
         if (!hasSelectedDeviceAssets || asset.selected) {
           // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
@@ -211,20 +213,18 @@ export const DeviceMediaList = ({
               };
 
               addPhotoData(newPhoto);
+              addedAssetIds.push(asset.asset.id);
             }
           }
         }
       }
-      handleDeviceMediaClose();
+
+      // Remove successfully added assets from the device media list
+      setDeviceMediaAssets((prevAssets) =>
+        prevAssets.filter((asset) => !addedAssetIds.includes(asset.asset.id)),
+      );
     }
-  }, [
-    deviceMediaAssets,
-    projectId,
-    hasSelectedDeviceAssets,
-    addPhotoImage,
-    addPhotoData,
-    handleDeviceMediaClose,
-  ]);
+  }, [deviceMediaAssets, projectId, hasSelectedDeviceAssets, addPhotoImage, addPhotoData]);
 
   const handleDeviceAssetSelection = useCallback(async (assetId: string) => {
     setDeviceMediaAssets((prevAssets) =>
