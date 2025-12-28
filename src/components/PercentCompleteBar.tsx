@@ -81,7 +81,7 @@ const PercentCompleteBar: React.FC<PercentCompleteProps> = ({
         <Text style={[styles.insideText, { color: textColor }, textStyle]}>{`${Math.round(percent)}%`}</Text>
       )}
     </View>
-  ), [showPercentageText, labelPosition, percent, textColor, textStyle, height, backgroundColor, fillColor, widthInterpolated, renderLabel]);
+  ), [showPercentageText, labelPosition, percent, textColor, textStyle, height, backgroundColor, fillColor, widthInterpolated]);
 
   const isHorizontal = labelPosition === 'left' || labelPosition === 'right';
 
