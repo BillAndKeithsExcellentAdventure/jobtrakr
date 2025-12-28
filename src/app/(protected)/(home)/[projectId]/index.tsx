@@ -33,7 +33,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { FlashList } from '@shopify/flash-list';
-import * as FileSystem from 'expo-file-system/legacy';
+import { Paths, File } from 'expo-file-system';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -226,10 +226,10 @@ const ProjectDetailsPage = () => {
       const fileName = `${projectData.name.replace(/[^a-zA-Z0-9]/g, '_')}_costs_${
         new Date().toISOString().split('T')[0]
       }.csv`;
-      const filePath = `${FileSystem.cacheDirectory}${fileName}`;
+      const file = new File(Paths.cache, fileName);
 
       // Write the file
-      await FileSystem.writeAsStringAsync(filePath, fullContent);
+      file.write(fullContent);
 
       // Check if sharing is available
       const isSharingAvailable = await Sharing.isAvailableAsync();
@@ -244,7 +244,7 @@ const ProjectDetailsPage = () => {
             text: 'Share',
             onPress: async () => {
               try {
-                await Sharing.shareAsync(filePath, {
+                await Sharing.shareAsync(file.uri, {
                   mimeType: 'text/csv',
                   dialogTitle: 'Share Cost Items Export',
                 });
