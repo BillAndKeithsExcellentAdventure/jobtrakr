@@ -1,12 +1,13 @@
 import { useClerk, isClerkRuntimeError } from '@clerk/clerk-expo';
 import * as Linking from 'expo-linking';
+import React, { useCallback } from 'react';
 import { Text, TouchableOpacity } from 'react-native';
 
 export const SignOutButton = () => {
   // Use `useClerk()` to access the `signOut()` function
   const clerk = useClerk();
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     try {
       console.log('Signing out...');
       if (!clerk) {
@@ -28,7 +29,7 @@ export const SignOutButton = () => {
       console.error('Error signing out:', err);
       console.error(JSON.stringify(err, null, 2));
     }
-  };
+  }, [clerk]);
 
   return (
     <TouchableOpacity onPress={handleSignOut}>

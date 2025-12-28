@@ -1,5 +1,5 @@
 import { Text, View } from '@/src/components/Themed';
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { StyleSheet, Animated, StyleProp, TextStyle, ViewStyle } from 'react-native';
 import { formatCurrency } from '../utils/formatters';
 
@@ -55,7 +55,7 @@ const PercentCompleteBar: React.FC<PercentCompleteProps> = ({
     outputRange: ['0%', '100%'],
   });
 
-  const renderLabel = () => {
+  const renderLabel = useCallback(() => {
     const textStyle = labelPosition === 'inside' ? styles.insideText : styles.label;
     return showLabel && spent != null && total != null ? (
       <Text
@@ -63,9 +63,9 @@ const PercentCompleteBar: React.FC<PercentCompleteProps> = ({
         text={`Spent: ${formatCurrency(spent, true, false)} of ${formatCurrency(total, true, false)}`}
       />
     ) : null;
-  };
+  }, [labelPosition, showLabel, spent, total, labelColor, labelStyle]);
 
-  const renderBar = () => (
+  const renderBar = useCallback(() => (
     <View style={[styles.container, { height, backgroundColor }]}>
       <Animated.View
         style={[
@@ -81,7 +81,7 @@ const PercentCompleteBar: React.FC<PercentCompleteProps> = ({
         <Text style={[styles.insideText, { color: textColor }, textStyle]}>{`${Math.round(percent)}%`}</Text>
       )}
     </View>
-  );
+  ), [showPercentageText, labelPosition, percent, textColor, textStyle, height, backgroundColor, fillColor, widthInterpolated, renderLabel]);
 
   const isHorizontal = labelPosition === 'left' || labelPosition === 'right';
 

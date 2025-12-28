@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import { Animated, LayoutChangeEvent, StyleSheet, TouchableOpacity } from 'react-native';
 
 export interface SwitchProps {
@@ -28,11 +28,11 @@ export const Switch: FC<SwitchProps> = ({
     }).start();
   }, [value, animValue]);
 
-  const onLayout = (event: LayoutChangeEvent) => {
+  const onLayout = useCallback((event: LayoutChangeEvent) => {
     setContainerWidth(event.nativeEvent.layout.width);
-  };
+  }, []);
 
-  const toggleSwitch = () => {
+  const toggleSwitch = useCallback(() => {
     const newValue = !value;
     Animated.timing(animValue, {
       toValue: newValue ? 1 : 0,
@@ -40,7 +40,7 @@ export const Switch: FC<SwitchProps> = ({
       useNativeDriver: false,
     }).start();
     onValueChange(newValue);
-  };
+  }, [value, animValue, onValueChange]);
 
   const translateX = animValue.interpolate({
     inputRange: [0, 1],

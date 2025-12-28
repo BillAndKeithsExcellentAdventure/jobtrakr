@@ -59,19 +59,19 @@ const CostItemPickerModal = ({
     }
   }, [pickedCategoryOption, allAvailableCostItemOptions]);
 
-  const handleSubCategoryOptionChange = (option: OptionEntry) => {
+  const handleSubCategoryOptionChange = useCallback((option: OptionEntry) => {
     if (option) {
       handleCostItemChange(option);
     }
     setIsCostItemPickerVisible(false);
-  };
+  }, [handleCostItemChange]);
 
-  const handleCategoryOptionChange = (option: OptionEntry) => {
+  const handleCategoryOptionChange = useCallback((option: OptionEntry) => {
     if (option) {
       handleCategoryChange(option);
     }
     setIsCategoryPickerVisible(false);
-  };
+  }, [handleCategoryChange]);
 
   return (
     <Modal visible={isVisible} transparent={true} animationType="fade">

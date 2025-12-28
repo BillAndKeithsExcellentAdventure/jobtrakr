@@ -6,7 +6,7 @@ import {
   SupplierData,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -40,21 +40,21 @@ const EditSupplier = () => {
     setUpdatedSupplier({ ...supplierFromStore });
   }, [supplierFromStore]);
 
-  const handleInputChange = (name: keyof SupplierData, value: string) => {
+  const handleInputChange = useCallback((name: keyof SupplierData, value: string) => {
     setUpdatedSupplier((prevSupplier) => ({
       ...prevSupplier,
       [name]: value,
     }));
-  };
+  }, []);
 
-  const handleBlur = () => {
+  const handleBlur = useCallback(() => {
     if (!id) return;
     const supplierToSave: SupplierData = {
       ...updatedSupplier,
       name: updatedSupplier.name.length === 0 ? supplierFromStore?.name || '' : updatedSupplier.name,
     };
     applySupplierUpdates(id, supplierToSave);
-  };
+  }, [id, updatedSupplier, supplierFromStore?.name, applySupplierUpdates]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

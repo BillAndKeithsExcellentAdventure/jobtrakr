@@ -27,20 +27,20 @@ const ListProjectTemplates = () => {
 
   const colors = useColors();
 
-  const handleInputChange = (name: keyof ProjectTemplateData, value: string) => {
+  const handleInputChange = useCallback((name: keyof ProjectTemplateData, value: string) => {
     if (projectTemplate) {
       setProjectTemplate({
         ...projectTemplate,
         [name]: value,
       });
     }
-  };
+  }, [projectTemplate]);
 
-  const renderHeaderRight = () => (
+  const renderHeaderRight = useCallback(() => (
     <Pressable onPress={() => setShowAdd(!showAdd)} hitSlop={10} style={styles.headerButton}>
       <Ionicons name={showAdd ? 'chevron-up-sharp' : 'add'} size={24} color={colors.iconColor} />
     </Pressable>
-  );
+  ), [showAdd, colors.iconColor]);
 
   const handleAddProjectTemplate = useCallback(() => {
     if (projectTemplate.name && projectTemplate.description) {
