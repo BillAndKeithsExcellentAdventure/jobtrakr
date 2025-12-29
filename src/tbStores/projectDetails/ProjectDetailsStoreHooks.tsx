@@ -95,6 +95,7 @@ export interface MediaEntryData {
   mediaType: 'video' | 'photo';
   thumbnail: string;
   creationDate: number;
+  isPublic: boolean;
 }
 
 export interface NoteData {

@@ -1,12 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Text } from '@/src/components/Themed';
 import { ActionButton } from '@/src/components/ActionButton';
 import Base64Image from '@/src/components/Base64Image';
 import { formatDate } from '@/src/utils/formatters';
-import { MediaEntryData, useDeleteRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import {
+  MediaEntryData,
+  useDeleteRowCallback,
+  useUpdateRowCallback,
+} from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useRouter } from 'expo-router';
 import {
   buildLocalMediaUri,
@@ -43,6 +47,7 @@ export const ProjectMediaList = ({
   const [mediaItems, setMediaItems] = useState<MediaEntryDisplayData[]>([]);
   const [, setThumbnail] = useProjectValue(projectId, 'thumbnail');
   const removePhotoData = useDeleteRowCallback(projectId, 'mediaEntries');
+  const updateMediaEntry = useUpdateRowCallback(projectId, 'mediaEntries');
   const router = useRouter();
   const colors = useColors();
   const getImage = useGetImageCallback();
@@ -188,6 +193,19 @@ export const ProjectMediaList = ({
     ]);
   }, [removePhotoData, mediaItems, projectId, orgId, deleteMediaCallback, failedUploads, store]);
 
+  const onToggleAccess = useCallback(() => {
+    const selectedIds = mediaItems.filter((media) => media.isSelected).map((media) => media.id);
+    if (selectedIds.length === 0) return;
+
+    // Determine the new state - if any selected item is private, make all public, otherwise make all private
+    const hasAnyPrivate = mediaItems.some((media) => media.isSelected && !media.isPublic);
+    const newPublicState = hasAnyPrivate;
+
+    selectedIds.forEach((id) => {
+      updateMediaEntry(id, { isPublic: newPublicState });
+    });
+  }, [mediaItems, updateMediaEntry]);
+
   const renderItem = useCallback(
     ({ item, index }: { item: MediaEntryDisplayData; index: number }) => {
       const photoDate = formatDate(item.creationDate, undefined, true);
@@ -208,6 +226,11 @@ export const ProjectMediaList = ({
               {item.mediaType === 'video' && (
                 <View style={styles.playButtonOverlay}>
                   <Ionicons name="play" size={30} color="white" />
+                </View>
+              )}
+              {item.isPublic && (
+                <View style={[styles.publicIconOverlay, { backgroundColor: colors.overlay50 }]}>
+                  <MaterialIcons name="public" size={20} color={colors.text} />
                 </View>
               )}
             </View>
@@ -258,6 +281,9 @@ export const ProjectMediaList = ({
               <View style={styles.buttonRow}>
                 <View style={styles.buttonWrapper}>
                   <ActionButton title="Remove" onPress={onRemove} type="action" />
+                </View>
+                <View style={styles.buttonWrapper}>
+                  <ActionButton title="Toggle Access" onPress={onToggleAccess} type="action" />
                 </View>
                 {selectedCount === 1 && (
                   <View style={styles.buttonWrapper}>
@@ -337,6 +363,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     borderRadius: 25,
     padding: 10,
+  },
+  publicIconOverlay: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    borderRadius: 12,
+    padding: 2,
   },
   selectAllButton: {
     flexDirection: 'row',

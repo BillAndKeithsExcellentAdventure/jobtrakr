@@ -82,6 +82,7 @@ const ProjectPhotosPage = () => {
           mediaType: asset.mediaType === MediaLibrary.MediaType.photo ? 'photo' : 'video',
           thumbnail: thumbnail ?? '',
           creationDate: Date.now(),
+          isPublic: false,
         };
 
         addPhotoData(newPhoto);

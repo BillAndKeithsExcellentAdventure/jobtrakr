@@ -210,6 +210,7 @@ export const DeviceMediaList = ({
                 imageId: imageAddResult.id,
                 thumbnail: tn ?? '',
                 creationDate: Date.now(),
+                isPublic: false,
               };
 
               addPhotoData(newPhoto);
