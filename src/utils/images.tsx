@@ -100,7 +100,7 @@ const downloadImage = async (
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    console.log('Image download response:', JSON.stringify(response));
+    // console.log('Image download response:', JSON.stringify(response));
     // Get the image data as arrayBuffer
     const arrayBuffer = await response.arrayBuffer();
     console.log('Image download arrayBuffer.byteLength:', arrayBuffer.byteLength);
