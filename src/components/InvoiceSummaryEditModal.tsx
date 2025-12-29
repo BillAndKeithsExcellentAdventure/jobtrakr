@@ -74,13 +74,13 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
     }));
   }, []);
 
-  const handleSupplierOptionChange = (option: OptionEntry) => {
+  const handleSupplierOptionChange = useCallback((option: OptionEntry) => {
     setPickedSupplierOption(option);
     if (option) {
       handleSupplierChange(option.label);
     }
     setIsSupplierListPickerVisible(false);
-  };
+  }, [handleSupplierChange]);
 
   const handleSave = useCallback(() => {
     onSave(editedSummary);

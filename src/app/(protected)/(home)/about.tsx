@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
 import { Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,13 +17,13 @@ export default function AboutScreen() {
   const appName = 'ProjectHound';
   const appVersion = Application.nativeApplicationVersion || '1.0.4';
 
-  const handleOpenDocs = async () => {
+  const handleOpenDocs = useCallback(async () => {
     await WebBrowser.openBrowserAsync(`${DOCS_URL}/home`);
-  };
+  }, []);
 
-  const handleOpenLicenses = () => {
+  const handleOpenLicenses = useCallback(() => {
     ReactNativeLegal.launchLicenseListScreen('Open Source Software Licenses');
-  };
+  }, []);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>

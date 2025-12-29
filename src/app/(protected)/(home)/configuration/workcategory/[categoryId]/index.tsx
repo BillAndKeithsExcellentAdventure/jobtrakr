@@ -50,14 +50,14 @@ const ShowWorkCategory = () => {
     setCategorySpecificItems(fetchedWorkItems);
   }, [categoryId, visibleWorkItems]);
 
-  const handleInputChange = (name: keyof WorkItemData, value: string) => {
+  const handleInputChange = useCallback((name: keyof WorkItemData, value: string) => {
     if (item) {
       setItem({
         ...item,
         [name]: value,
       });
     }
-  };
+  }, [item]);
 
   const handleAddItem = useCallback(() => {
     if (item) {
@@ -78,12 +78,12 @@ const ShowWorkCategory = () => {
     }
   }, [categoryId, item, addWorkItem]);
 
-  const handleEditCategory = (id: string) => {
+  const handleEditCategory = useCallback((id: string) => {
     router.push({
       pathname: '/configuration/workcategory/[categoryId]/edit',
       params: { categoryId: id },
     });
-  };
+  }, [router]);
 
   if (!category) {
     return (

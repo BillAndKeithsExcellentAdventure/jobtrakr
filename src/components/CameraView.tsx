@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { CameraType, CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, Modal, StyleSheet } from 'react-native';
 import { Text, View } from '@/src/components/Themed';
 import ZoomPicker from '@/src/components/ZoomPicker';
@@ -154,7 +154,7 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
     }
   };
 
-  const handleSavePreview = async () => {
+  const handleSavePreview = useCallback(async () => {
     if (!previewUri) return;
 
     try {
@@ -165,11 +165,11 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
     } catch (error) {
       console.error('Error saving picture:', error);
     }
-  };
+  }, [previewUri, onMediaCaptured]);
 
-  const handleCancelPreview = () => {
+  const handleCancelPreview = useCallback(() => {
     setPreviewUri(null);
-  };
+  }, []);
 
   const processCameraAction = async () => {
     // Haptic feedback when button is pressed

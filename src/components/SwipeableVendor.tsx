@@ -6,7 +6,7 @@ import { useDeleteRowCallback, VendorData } from '@/src/tbStores/configurationSt
 
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
 import Reanimated from 'react-native-reanimated';
 
@@ -19,16 +19,16 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
   const processDelete = useDeleteRowCallback('vendors');
 
   const colors = useColors();
-  const handleDelete = (itemId: string) => {
+  const handleDelete = useCallback((itemId: string) => {
     Alert.alert(
       'Delete Vendor',
       'Are you sure you want to delete this vendor?',
       [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete(itemId) }],
       { cancelable: true },
     );
-  };
+  }, [processDelete]);
 
-  const RightAction = () => {
+  const RightAction = useCallback(() => {
     return (
       <Pressable
         style={styles.rightAction}
@@ -41,7 +41,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
         </Reanimated.View>
       </Pressable>
     );
-  };
+  }, [vendor.id, handleDelete]);
 
   return (
     <SwipeableComponent

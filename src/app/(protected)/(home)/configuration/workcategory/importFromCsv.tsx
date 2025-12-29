@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { parseWorkItemsCsvText } from '@/src/utils/csvUtils';
@@ -19,7 +19,7 @@ export default function ImportFromCsvScreen() {
   const router = useRouter();
   const createTemplateWithAllWorkItems = useCreateTemplateWithAllWorkItemsCallback();
 
-  const handleSelectFile = async () => {
+  const handleSelectFile = useCallback(async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: 'text/csv',
@@ -38,9 +38,9 @@ export default function ImportFromCsvScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const toggleCategory = (categoryId: string) => {
+  const toggleCategory = useCallback((categoryId: string) => {
     setExpandedCategories((prev) => {
       const next = new Set(prev);
       if (next.has(categoryId)) {
@@ -50,9 +50,9 @@ export default function ImportFromCsvScreen() {
       }
       return next;
     });
-  };
+  }, []);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     try {
       setLoading(true);
       for (const category of workCategories) {
@@ -90,7 +90,7 @@ export default function ImportFromCsvScreen() {
       setLoading(false);
       router.back();
     }
-  };
+  }, [workCategories, addWorkCategory, addWorkItem, createTemplateWithAllWorkItems, router]);
 
   return (
     <View style={styles.container}>

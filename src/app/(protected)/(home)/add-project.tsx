@@ -52,10 +52,10 @@ const AddProjectScreen = () => {
   const [templateOptions, setTemplateOptions] = useState<OptionEntry[]>([]);
   const [canAddProject, setCanAddProject] = useState(false);
   const { addActiveProjectIds } = useActiveProjectIds();
-  const handleTemplateOptionChange = (option: OptionEntry) => {
+  const handleTemplateOptionChange = useCallback((option: OptionEntry) => {
     setPickedTemplate(option);
     setIsTemplateListPickerVisible(false);
-  };
+  }, []);
 
   useEffect(() => {
     // Build template options from available templates that have work items

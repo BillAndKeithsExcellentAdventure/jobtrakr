@@ -74,13 +74,13 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
     }));
   }, []);
 
-  const handleVendorOptionChange = (option: OptionEntry) => {
+  const handleVendorOptionChange = useCallback((option: OptionEntry) => {
     setPickedVendorOption(option);
     if (option) {
       handleVendorChange(option.label);
     }
     setIsVendorListPickerVisible(false);
-  };
+  }, [handleVendorChange]);
 
   const handleSave = useCallback(() => {
     onSave(editedSummary);

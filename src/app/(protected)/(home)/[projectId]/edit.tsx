@@ -101,9 +101,9 @@ const EditProjectScreen = () => {
     setFinishDatePickerVisible(false);
   };
 
-  const handlePickGpsLocation = () => {
+  const handlePickGpsLocation = useCallback(() => {
     router.push({ pathname: '/[projectId]/SetLocationViaMap', params: { projectId, projectName } });
-  };
+  }, [router, projectId, projectName]);
 
   const handleSetCurrentGpsLocation = useCallback(async () => {
     if (currentLocation) {

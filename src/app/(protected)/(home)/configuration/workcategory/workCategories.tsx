@@ -47,14 +47,14 @@ const ListWorkCategories = () => {
   const router = useRouter();
   const colors = useColors();
 
-  const handleInputChange = (name: keyof WorkCategoryData, value: string) => {
+  const handleInputChange = useCallback((name: keyof WorkCategoryData, value: string) => {
     if (category) {
       setCategory({
         ...category,
         [name]: value,
       });
     }
-  };
+  }, [category]);
 
   const handleCleanup = useCallback(() => {
     Alert.alert(

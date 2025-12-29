@@ -8,7 +8,7 @@ import {
   useCreateTemplateWithAllWorkItemsCallback,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
 
@@ -35,7 +35,7 @@ const SeedWorkItemSelectorPage = () => {
 
   const colors = useColors();
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (!selectedProjectType || selectedProjectType === 'None') {
       return;
     }
@@ -80,7 +80,7 @@ const SeedWorkItemSelectorPage = () => {
         },
       },
     ]);
-  };
+  }, [selectedProjectType, addWorkCategory, addWorkItem, createTemplateWithAllWorkItems, router]);
 
   return (
     <View style={{ flex: 1, width: '100%' }}>

@@ -112,12 +112,12 @@ const ProjectTemplatesConfigurationScreen: React.FC = () => {
 
   const marginBottom = Platform.OS === 'android' ? 20 : 0;
 
-  const handleEditTemplate = (id: string) => {
+  const handleEditTemplate = useCallback((id: string) => {
     router.push({
       pathname: '/configuration/template/[templateId]/edit',
       params: { templateId: id },
     });
-  };
+  }, [router]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

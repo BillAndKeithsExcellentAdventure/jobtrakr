@@ -35,12 +35,12 @@ const VendorsScreen = () => {
 
   const colors = useColors();
 
-  const handleInputChange = (name: keyof VendorData, value: string) => {
+  const handleInputChange = useCallback((name: keyof VendorData, value: string) => {
     setVendor((prevVendor) => ({
       ...prevVendor,
       [name]: value,
     }));
-  };
+  }, []);
 
   const handleSave = useCallback(() => {
     const result = addVendorToStore(vendor);

@@ -6,7 +6,7 @@ import {
   useUpdateRowCallback,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -19,7 +19,7 @@ const EditWorkItem = () => {
   const status = useTableValue('workItems', itemId, 'status');
   const [newCode, setNewCode] = useState(code);
 
-  const handleBlur = () => {
+  const handleBlur = useCallback(() => {
     if (!itemId) return;
     if (newName.length && newCode.length) {
       applyWorkItemUpdates(itemId, {
@@ -33,7 +33,7 @@ const EditWorkItem = () => {
       if (newName.length === 0) setNewName(name);
       if (newCode.length === 0) setNewCode(code);
     }
-  };
+  }, [itemId, newName, newCode, categoryId, status, applyWorkItemUpdates, name, code]);
 
   if (!name || !code) {
     return (

@@ -177,7 +177,7 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
       } catch {}
     }, [inputValue]);
 
-    const handleInputChange = (text: string) => {
+    const handleInputChange = useCallback((text: string) => {
       if (readOnly) return; // Prevent changes if readOnly is true
       isEditingRef.current = true;
       // Remove any non-numeric characters except for the decimal point
@@ -191,7 +191,7 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
 
       // If the number is valid, update the input value
       setInputValue(sanitizedValue);
-    };
+    }, [readOnly, numDecimalPlaces]);
 
     const handleBlur = useCallback(() => {
       handleBlurInternal();
