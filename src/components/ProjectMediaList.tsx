@@ -1,29 +1,29 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { Text } from '@/src/components/Themed';
 import { ActionButton } from '@/src/components/ActionButton';
 import Base64Image from '@/src/components/Base64Image';
-import { formatDate } from '@/src/utils/formatters';
+import { Text } from '@/src/components/Themed';
+import { useColors } from '@/src/context/ColorsContext';
 import {
   MediaEntryData,
   useDeleteRowCallback,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { useRouter } from 'expo-router';
+import { useAllFailedToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
+import { formatDate } from '@/src/utils/formatters';
 import {
   buildLocalMediaUri,
-  useGetImageCallback,
-  useDeleteMediaCallback,
   deleteLocalMediaFile,
   mediaType,
+  useDeleteMediaCallback,
+  useGetImageCallback,
 } from '@/src/utils/images';
-import { useColors } from '@/src/context/ColorsContext';
-import { File } from 'expo-file-system';
 import { useAuth } from '@clerk/clerk-expo';
+import { Ionicons, Octicons } from '@expo/vector-icons';
+import { FlashList } from '@shopify/flash-list';
+import { File } from 'expo-file-system';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useProjectValue } from '../tbStores/listOfProjects/ListOfProjectsStore';
-import { useAllFailedToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
 
 export interface MediaEntryDisplayData extends MediaEntryData {
   isSelected: boolean;
@@ -198,10 +198,13 @@ export const ProjectMediaList = ({
     if (selectedIds.length === 0) return;
 
     // Determine the new state - if any selected item is private, make all public, otherwise make all private
-    const hasAnyPrivate = mediaItems.some((media) => media.isSelected && !media.isPublic);
-    const newPublicState = hasAnyPrivate;
+    //const hasAnyPrivate = mediaItems.some((media) => media.isSelected && !media.isPublic);
+    //const newPublicState = hasAnyPrivate;
 
     selectedIds.forEach((id) => {
+      const item = mediaItems.find((media) => media.id === id);
+      if (!item) return;
+      const newPublicState = !item.isPublic;
       updateMediaEntry(id, { isPublic: newPublicState });
     });
   }, [mediaItems, updateMediaEntry]);
@@ -229,8 +232,8 @@ export const ProjectMediaList = ({
                 </View>
               )}
               {item.isPublic && (
-                <View style={[styles.publicIconOverlay, { backgroundColor: colors.overlay50 }]}>
-                  <MaterialIcons name="public" size={20} color={colors.text} />
+                <View style={[styles.publicIconOverlay]}>
+                  <Octicons name="globe" size={20} color="white" />
                 </View>
               )}
             </View>
@@ -283,7 +286,12 @@ export const ProjectMediaList = ({
                   <ActionButton title="Remove" onPress={onRemove} type="action" />
                 </View>
                 <View style={styles.buttonWrapper}>
-                  <ActionButton title="Toggle Access" onPress={onToggleAccess} type="action" />
+                  <ActionButton
+                    textStyle={{ textAlign: 'center' }}
+                    title="Toggle Access"
+                    onPress={onToggleAccess}
+                    type="action"
+                  />
                 </View>
                 {selectedCount === 1 && (
                   <View style={styles.buttonWrapper}>
@@ -366,10 +374,11 @@ const styles = StyleSheet.create({
   },
   publicIconOverlay: {
     position: 'absolute',
-    top: 5,
-    right: 5,
+    top: 0,
+    right: 0,
     borderRadius: 12,
-    padding: 2,
+    padding: 5,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   selectAllButton: {
     flexDirection: 'row',

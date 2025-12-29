@@ -321,6 +321,142 @@ const createFailedToDeleteData = (
 });
 
 /**
+ * Helper function to create a FailedToDeleteData object for public/non-public operations.
+ * This reuses the FailedToDeleteData structure since it has the same shape needed for retries.
+ */
+const createFailedToPublicData = (
+  orgId: string,
+  projectId: string,
+  imageIds: string[],
+): FailedToDeleteData => ({
+  id: '',
+  organizationId: orgId,
+  projectId: projectId,
+  imageIds: JSON.stringify(imageIds),
+  imageType: 'photo',
+  deleteDate: Date.now(),
+});
+
+/**
+ * API call to make photos public.
+ * @param userId - User ID
+ * @param projectId - Project ID
+ * @param imageIds - Array of image IDs to make public
+ * @param getToken - Token getter function
+ */
+const makePhotosPublic = async (
+  userId: string,
+  projectId: string,
+  imageIds: string[],
+  getToken: () => Promise<string | null>,
+): Promise<{ success: boolean; msg: string; inserted?: string[]; failed?: string[] }> => {
+  try {
+    const endPointUrl = `${API_BASE_URL}/makePhotosPublic`;
+
+    const apiFetch = createApiWithToken(getToken);
+    const response = await apiFetch(endPointUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: userId,
+        projectId: projectId,
+        imageIds: imageIds,
+      }),
+    });
+
+    if (!response.ok) {
+      let errorBody = '';
+      try {
+        errorBody = await response.text();
+      } catch {
+        // ignore
+      }
+      console.error('Make photos public failed. HTTP:', response.status, 'Body:', errorBody);
+      return {
+        success: false,
+        msg: `Make photos public failed. HTTP ${response.status}. ${errorBody || 'No response body.'}`,
+      };
+    }
+
+    let data: any = null;
+    try {
+      data = await response.json();
+    } catch {
+      // acceptable if no JSON body
+    }
+
+    console.log('Photos made public successfully:', data);
+    return { success: true, msg: 'Successfully made photos public', inserted: data?.inserted };
+  } catch (error) {
+    console.error('Error making photos public:', error);
+    return {
+      success: false,
+      msg: `Error making photos public: ${formatErrorMessage(error)}`,
+    };
+  }
+};
+
+/**
+ * API call to make photos non-public.
+ * @param userId - User ID
+ * @param imageIds - Array of image IDs to make non-public
+ * @param getToken - Token getter function
+ */
+const makePhotosNonPublic = async (
+  userId: string,
+  imageIds: string[],
+  getToken: () => Promise<string | null>,
+): Promise<{ success: boolean; msg: string; deleted?: string[]; failed?: string[] }> => {
+  try {
+    const endPointUrl = `${API_BASE_URL}/makePhotosNonPublic`;
+
+    const apiFetch = createApiWithToken(getToken);
+    const response = await apiFetch(endPointUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: userId,
+        imageIds: imageIds,
+      }),
+    });
+
+    if (!response.ok) {
+      let errorBody = '';
+      try {
+        errorBody = await response.text();
+      } catch {
+        // ignore
+      }
+      console.error('Make photos non-public failed. HTTP:', response.status, 'Body:', errorBody);
+      return {
+        success: false,
+        msg: `Make photos non-public failed. HTTP ${response.status}. ${errorBody || 'No response body.'}`,
+      };
+    }
+
+    let data: any = null;
+    try {
+      data = await response.json();
+    } catch {
+      // acceptable if no JSON body
+    }
+
+    console.log('Photos made non-public successfully:', data);
+    return { success: true, msg: 'Successfully made photos non-public', deleted: data?.deleted };
+  } catch (error) {
+    console.error('Error making photos non-public:', error);
+    return {
+      success: false,
+      msg: `Error making photos non-public: ${formatErrorMessage(error)}`,
+    };
+  }
+};
+
+/**
  * Hook that provides a callback to delete media with network-aware queuing.
  * If the media is in the failedToUpload queue, it's removed from there without an API call.
  * If offline, the delete request is queued for later processing.
@@ -779,5 +915,103 @@ export const useGetImageCallback = () => {
       }
     },
     [userId, orgId, auth],
+  );
+};
+
+/**
+ * Hook that provides a callback to make photos public for Owner to view.
+ * If offline, the request will fail.
+ * If online, the request is executed immediately via the API.
+ */
+export const useMakePhotosPublicCallback = () => {
+  const auth = useAuth();
+  const { userId } = auth;
+  const { isConnected, isInternetReachable } = useNetwork();
+
+  return useCallback(
+    async (projectId: string, imageIds: string[]): Promise<{ success: boolean; msg: string }> => {
+      if (!userId) {
+        return { success: false, msg: 'User ID not available' };
+      }
+
+      if (!auth.getToken) {
+        return { success: false, msg: 'Auth token getter not available' };
+      }
+
+      if (!isConnected || isInternetReachable === false) {
+        return { success: false, msg: 'No network connection detected.' };
+      }
+
+      try {
+        const makePublicResult = await makePhotosPublic(userId, projectId, imageIds, auth.getToken);
+
+        if (!makePublicResult.success) {
+          console.log('Make non-public failed:', makePublicResult.msg);
+          return {
+            success: false,
+            msg: `Make non-public failed: ${makePublicResult.msg}`,
+          };
+        }
+
+        return makePublicResult;
+      } catch (error) {
+        console.error('Unexpected error in useMakePhotosPublicCallback:', error);
+
+        return {
+          success: false,
+          msg: `Make public failed with error: ${formatErrorMessage(error)}`,
+        };
+      }
+    },
+    [userId, auth, isConnected, isInternetReachable],
+  );
+};
+
+/**
+ * Hook that provides a callback to make photos non-public.
+ * If offline, the request will fail.
+ * If online, the request is executed immediately via the API.
+ */
+export const useMakePhotosNonPublicCallback = () => {
+  const auth = useAuth();
+  const { userId } = auth;
+  const { isConnected, isInternetReachable } = useNetwork();
+
+  return useCallback(
+    async (imageIds: string[]): Promise<{ success: boolean; msg: string }> => {
+      if (!userId) {
+        return { success: false, msg: 'User ID not available' };
+      }
+
+      if (!auth.getToken) {
+        return { success: false, msg: 'Auth token getter not available' };
+      }
+
+      if (!isConnected || isInternetReachable === false) {
+        return { success: false, msg: 'No network connection detected.' };
+      }
+
+      try {
+        const makeNonPublicResult = await makePhotosNonPublic(userId, imageIds, auth.getToken);
+
+        if (!makeNonPublicResult.success) {
+          console.log('Make non-public failed:', makeNonPublicResult.msg);
+          return {
+            success: false,
+            msg: `Make non-public failed: ${makeNonPublicResult.msg}`,
+          };
+        }
+
+        return makeNonPublicResult;
+      } catch (error) {
+        console.error('Unexpected error in useMakePhotosNonPublicCallback:', error);
+
+        return {
+          success: false,
+          msg: `Make non-public failed with error: ${formatErrorMessage(error)}`,
+        };
+      }
+    },
+    [userId, auth, isConnected, isInternetReachable],
   );
 };
