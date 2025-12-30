@@ -946,10 +946,10 @@ export const useMakePhotosPublicCallback = () => {
         const makePublicResult = await makePhotosPublic(userId, projectId, imageIds, auth.getToken);
 
         if (!makePublicResult.success) {
-          console.log('Make non-public failed:', makePublicResult.msg);
+          console.log('Make public failed:', makePublicResult.msg);
           return {
             success: false,
-            msg: `Make non-public failed: ${makePublicResult.msg}`,
+            msg: `Make public failed: ${makePublicResult.msg}`,
           };
         }
 
@@ -1013,5 +1013,132 @@ export const useMakePhotosNonPublicCallback = () => {
       }
     },
     [userId, auth, isConnected, isInternetReachable],
+  );
+};
+
+/**
+ * API call to grant a user access to view public photos in a specific project.
+ * @param userId - User ID granting access
+ * @param emailId - Email ID of the user being granted access
+ * @param projectId - Project ID
+ * @param projectName - Project name
+ * @param orgId - Organization ID
+ * @param getToken - Token getter function
+ */
+const grantPhotoAccess = async (
+  userId: string,
+  emailId: string,
+  projectId: string,
+  projectName: string,
+  orgId: string,
+  getToken: () => Promise<string | null>,
+): Promise<{ success: boolean; msg: string; data?: any }> => {
+  try {
+    const endPointUrl = `${API_BASE_URL}/grantPhotoAccess`;
+
+    const apiFetch = createApiWithToken(getToken);
+    const response = await apiFetch(endPointUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: userId,
+        emailId: emailId,
+        projectId: projectId,
+        projectName: projectName,
+        orgId: orgId,
+      }),
+    });
+
+    if (!response.ok) {
+      let errorBody = '';
+      try {
+        errorBody = await response.text();
+      } catch {
+        // ignore
+      }
+      console.error('Grant photo access failed. HTTP:', response.status, 'Body:', errorBody);
+      return {
+        success: false,
+        msg: `Grant photo access failed. HTTP ${response.status}. ${errorBody || 'No response body.'}`,
+      };
+    }
+
+    let data: any = null;
+    try {
+      data = await response.json();
+    } catch {
+      // acceptable if no JSON body
+    }
+
+    console.log('Photo access granted successfully:', data);
+    return { success: true, msg: 'Successfully granted photo access', data: data?.data };
+  } catch (error) {
+    console.error('Error granting photo access:', error);
+    return {
+      success: false,
+      msg: `Error granting photo access: ${formatErrorMessage(error)}`,
+    };
+  }
+};
+
+/**
+ * Hook that provides a callback to grant photo access to a user.
+ * If offline, the request will fail.
+ * If online, the request is executed immediately via the API.
+ */
+export const useGrantPhotoAccessCallback = () => {
+  const auth = useAuth();
+  const { userId, orgId } = auth;
+  const { isConnected, isInternetReachable } = useNetwork();
+
+  return useCallback(
+    async (
+      emailId: string,
+      projectId: string,
+      projectName: string,
+    ): Promise<{ success: boolean; msg: string; data?: any }> => {
+      if (!userId || !orgId) {
+        return { success: false, msg: 'User ID or Organization ID not available' };
+      }
+
+      if (!auth.getToken) {
+        return { success: false, msg: 'Auth token getter not available' };
+      }
+
+      if (!isConnected || isInternetReachable === false) {
+        return { success: false, msg: 'No network connection detected.' };
+      }
+
+      try {
+        const grantAccessResult = await grantPhotoAccess(
+          userId,
+          emailId,
+          projectId,
+          projectName,
+          orgId,
+          auth.getToken,
+        );
+
+        if (!grantAccessResult.success) {
+          console.log('Grant photo access failed:', grantAccessResult.msg);
+          return {
+            success: false,
+            msg: `Grant photo access failed: ${grantAccessResult.msg}`,
+          };
+        }
+
+        return grantAccessResult;
+      } catch (error) {
+        console.error('Unexpected error in useGrantPhotoAccessCallback:', error);
+
+        return {
+          success: false,
+          msg: `Grant photo access failed with error: ${formatErrorMessage(error)}`,
+        };
+      }
+    },
+    [userId, orgId, auth, isConnected, isInternetReachable],
   );
 };
