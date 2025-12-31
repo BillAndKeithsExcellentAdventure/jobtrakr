@@ -107,6 +107,9 @@ const ProjectPhotosPage = () => {
       if (item === 'AddPhotos') {
         setHeaderMenuModalVisible(false);
         router.push({ pathname: '/[projectId]/photos/importFromDevice', params: { projectId, projectName } });
+      } else if (item === 'ManageAccess') {
+        setHeaderMenuModalVisible(false);
+        router.push({ pathname: '/[projectId]/photos/manageAccess', params: { projectId, projectName } });
       }
     },
     [router, projectId, projectName, setHeaderMenuModalVisible],
@@ -119,6 +122,13 @@ const ProjectPhotosPage = () => {
         label: 'Import Photos',
         onPress: () => {
           handleMenuItemPress('AddPhotos');
+        },
+      },
+      {
+        icon: <Ionicons name="ribbon-outline" size={28} color={colors.iconColor} />,
+        label: 'Manage Photo Access',
+        onPress: () => {
+          handleMenuItemPress('ManageAccess');
         },
       },
     ],
