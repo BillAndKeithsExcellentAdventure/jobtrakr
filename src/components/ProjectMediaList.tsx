@@ -15,6 +15,7 @@ import {
   mediaType,
   useDeleteMediaCallback,
   useGetImageCallback,
+  useMakePhotosPublicCallback,
 } from '@/src/utils/images';
 import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons, Octicons } from '@expo/vector-icons';
@@ -24,6 +25,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useProjectValue } from '../tbStores/listOfProjects/ListOfProjectsStore';
+import { useNetwork } from '../context/NetworkContext';
 
 export interface MediaEntryDisplayData extends MediaEntryData {
   isSelected: boolean;
@@ -56,6 +58,8 @@ export const ProjectMediaList = ({
   const store = useUploadSyncStore();
   const auth = useAuth();
   const { orgId } = auth;
+  const setPublicStateForSelectedMedia = useMakePhotosPublicCallback();
+  const { isConnected, isInternetReachable } = useNetwork();
 
   useEffect(() => {
     // Initialize selectableProjectMedia whenever allProjectMedia changes
@@ -193,13 +197,20 @@ export const ProjectMediaList = ({
     ]);
   }, [removePhotoData, mediaItems, projectId, orgId, deleteMediaCallback, failedUploads, store]);
 
+  const updateMediaItemsOnServer = useCallback(async () => {
+    const publicImageIds = mediaItems
+      .filter((media) => media.isPublic)
+      .map((media) => media.imageId!)
+      .filter((imageId): imageId is string => !!imageId);
+
+    publicImageIds.length === 0
+      ? setPublicStateForSelectedMedia(projectId, [])
+      : setPublicStateForSelectedMedia(projectId, publicImageIds);
+  }, [mediaItems, projectId, setPublicStateForSelectedMedia]);
+
   const onToggleAccess = useCallback(() => {
     const selectedIds = mediaItems.filter((media) => media.isSelected).map((media) => media.id);
     if (selectedIds.length === 0) return;
-
-    // Determine the new state - if any selected item is private, make all public, otherwise make all private
-    //const hasAnyPrivate = mediaItems.some((media) => media.isSelected && !media.isPublic);
-    //const newPublicState = hasAnyPrivate;
 
     selectedIds.forEach((id) => {
       const item = mediaItems.find((media) => media.id === id);
@@ -207,7 +218,10 @@ export const ProjectMediaList = ({
       const newPublicState = !item.isPublic;
       updateMediaEntry(id, { isPublic: newPublicState });
     });
-  }, [mediaItems, updateMediaEntry]);
+
+    // Call updateMediaItemsOnServer after all entries have been updated
+    updateMediaItemsOnServer();
+  }, [mediaItems, updateMediaEntry, updateMediaItemsOnServer]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: MediaEntryDisplayData; index: number }) => {
@@ -285,14 +299,16 @@ export const ProjectMediaList = ({
                 <View style={styles.buttonWrapper}>
                   <ActionButton title="Remove" onPress={onRemove} type="action" />
                 </View>
-                <View style={styles.buttonWrapper}>
-                  <ActionButton
-                    textStyle={{ textAlign: 'center' }}
-                    title="Toggle Access"
-                    onPress={onToggleAccess}
-                    type="action"
-                  />
-                </View>
+                {isConnected && isInternetReachable && (
+                  <View style={styles.buttonWrapper}>
+                    <ActionButton
+                      textStyle={{ textAlign: 'center' }}
+                      title="Toggle Access"
+                      onPress={onToggleAccess}
+                      type="action"
+                    />
+                  </View>
+                )}
                 {selectedCount === 1 && (
                   <View style={styles.buttonWrapper}>
                     <ActionButton
