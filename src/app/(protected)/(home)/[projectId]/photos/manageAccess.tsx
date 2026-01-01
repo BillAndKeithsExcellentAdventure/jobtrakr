@@ -123,12 +123,17 @@ export default function ManageAccessScreen() {
               onPress={handleAddEmail}
               title="Add Email"
               type={newEmail.trim() ? 'action' : 'disabled'}
-              style={styles.addButton}
             />
           </View>
 
           <View style={styles.listSection}>
-            <Text txtSize="sub-title">Addresses with Photo Access</Text>
+            <Text txtSize="sub-title" style={{ fontWeight: '600' }}>
+              Addresses with Photo Access
+            </Text>
+            <Text txtSize="standard">
+              Addresses listed below can view and download photos associated with this project.
+            </Text>
+
             {emails.length > 0 ? (
               <FlashList
                 style={{ borderTopWidth: 1, borderTopColor: colors.border }}
@@ -168,9 +173,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-  },
-  addButton: {
-    marginTop: 8,
   },
   listSection: {
     flex: 1,
