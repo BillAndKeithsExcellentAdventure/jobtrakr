@@ -1023,6 +1023,8 @@ export const useMakePhotosNonPublicCallback = () => {
  * @param projectId - Project ID
  * @param projectName - Project name
  * @param orgId - Organization ID
+ * @param ownerName - Owner name from app settings
+ * @param ownerEmail - Owner email from app settings
  * @param getToken - Token getter function
  */
 const grantPhotoAccess = async (
@@ -1031,6 +1033,8 @@ const grantPhotoAccess = async (
   projectId: string,
   projectName: string,
   orgId: string,
+  ownerName: string,
+  ownerEmail: string,
   getToken: () => Promise<string | null>,
 ): Promise<{ success: boolean; msg: string; data?: any }> => {
   try {
@@ -1048,6 +1052,8 @@ const grantPhotoAccess = async (
         projectId: projectId,
         projectName: projectName,
         orgId: orgId,
+        ownerName: ownerName,
+        ownerEmail: ownerEmail,
       }),
     });
 
@@ -1098,6 +1104,8 @@ export const useGrantPhotoAccessCallback = () => {
       emailId: string,
       projectId: string,
       projectName: string,
+      ownerName: string,
+      ownerEmail: string,
     ): Promise<{ success: boolean; msg: string; data?: any }> => {
       if (!userId || !orgId) {
         return { success: false, msg: 'User ID or Organization ID not available' };
@@ -1118,6 +1126,8 @@ export const useGrantPhotoAccessCallback = () => {
           projectId,
           projectName,
           orgId,
+          ownerName,
+          ownerEmail,
           auth.getToken,
         );
 

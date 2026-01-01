@@ -3,13 +3,16 @@ import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { Feather, FontAwesome } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
-import { Stack } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Animated, { FadeOut } from 'react-native-reanimated';
+import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useGrantPhotoAccessCallback } from '@/src/utils/images';
 
 interface PhotoAccessEmail {
   id: string;
@@ -51,9 +54,17 @@ const SwipeableAddress = ({ item, onDelete }: { item: PhotoAccessEmail; onDelete
 };
 
 export default function ManageAccessScreen() {
+  const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const [emails, setEmails] = useState<PhotoAccessEmail[]>([]);
   const [newEmail, setNewEmail] = useState('');
   const colors = useColors();
+  const router = useRouter();
+  const appSettings = useAppSettings();
+  const grantPhotoAccess = useGrantPhotoAccessCallback();
+
+  // Check if required app settings are defined
+  const isAppSettingsComplete =
+    appSettings.companyName?.trim() && appSettings.ownerName?.trim() && appSettings.email?.trim();
 
   const fetchPhotoAccessEmails = async () => {
     // TODO: Implement API call when endpoint is available
@@ -62,18 +73,46 @@ export default function ManageAccessScreen() {
     // setEmails(data);
   };
 
-  const handleAddEmail = () => {
+  const handleAddEmail = async () => {
     if (!newEmail.trim()) {
       return;
     }
 
-    const newEntry: PhotoAccessEmail = {
-      id: Date.now().toString(),
-      email: newEmail.trim(),
-    };
+    if (!projectId || !projectName) {
+      Alert.alert('Error', 'Project information is missing.');
+      return;
+    }
 
-    setEmails([...emails, newEntry]);
-    setNewEmail('');
+    if (!appSettings.ownerName || !appSettings.email) {
+      Alert.alert('Error', 'Company owner name and email are required.');
+      return;
+    }
+
+    try {
+      const result = await grantPhotoAccess(
+        newEmail.trim(),
+        projectId,
+        projectName,
+        appSettings.ownerName,
+        appSettings.email,
+      );
+
+      if (result.success) {
+        const newEntry: PhotoAccessEmail = {
+          id: Date.now().toString(),
+          email: newEmail.trim(),
+        };
+
+        setEmails([...emails, newEntry]);
+        setNewEmail('');
+        Alert.alert('Success', `Photo access granted to ${newEmail.trim()}`);
+      } else {
+        Alert.alert('Error', result.msg || 'Failed to grant photo access');
+      }
+    } catch (error) {
+      console.error('Error granting photo access:', error);
+      Alert.alert('Error', 'An unexpected error occurred while granting photo access');
+    }
   };
 
   const handleDeleteEmail = (id: string) => {
@@ -97,59 +136,77 @@ export default function ManageAccessScreen() {
   };
 
   return (
-    <>
+    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
         options={{
           title: 'Manage Photo Access',
           headerBackTitle: 'Back',
         }}
       />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoidingView}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
-        <View style={styles.container}>
-          <View style={styles.inputSection}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Enter email address"
-              value={newEmail}
-              onChangeText={setNewEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <ActionButton
-              onPress={handleAddEmail}
-              title="Add Email"
-              type={newEmail.trim() ? 'action' : 'disabled'}
-            />
-          </View>
-
-          <View style={styles.listSection}>
-            <Text txtSize="sub-title" style={{ fontWeight: '600' }}>
-              Addresses with Photo Access
-            </Text>
-            <Text txtSize="standard">
-              Addresses listed below can view and download photos associated with this project.
-            </Text>
-
-            {emails.length > 0 ? (
-              <FlashList
-                style={{ borderTopWidth: 1, borderTopColor: colors.border }}
-                data={emails}
-                renderItem={({ item }) => <SwipeableAddress item={item} onDelete={handleDeleteEmail} />}
-                keyExtractor={(item) => item.id}
-              />
-            ) : (
-              <Text txtSize="sub-title" style={styles.emptyText}>
-                No email addresses have access yet.
-              </Text>
-            )}
-          </View>
+      {!isAppSettingsComplete ? (
+        <View style={styles.messageContainer}>
+          <Text txtSize="sub-title" style={{ color: colors.text }}>
+            Before granting photo access, the name and email of your company&apos;s owner or primary contact are
+            required.
+          </Text>
+          <Text txtSize="sub-title" style={{ color: colors.text }}>
+            Please make sure the required data are defined in the company settings to continue.
+          </Text>
+          <ActionButton
+            style={{ minWidth: 200 }}
+            onPress={() => router.push('/appSettings/SetAppSettings')}
+            type={'action'}
+            title="Edit Company Settings"
+          />
         </View>
-      </KeyboardAvoidingView>
-    </>
+      ) : (
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoidingView}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
+          <View style={styles.container}>
+            <View style={styles.inputSection}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter email address"
+                value={newEmail}
+                onChangeText={setNewEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              <ActionButton
+                onPress={handleAddEmail}
+                title="Add Email"
+                type={newEmail.trim() ? 'action' : 'disabled'}
+              />
+            </View>
+
+            <View style={styles.listSection}>
+              <Text txtSize="sub-title" style={{ fontWeight: '600' }}>
+                Addresses with Photo Access
+              </Text>
+              <Text txtSize="standard">
+                Addresses listed below can view and download photos associated with this project.
+              </Text>
+
+              {emails.length > 0 ? (
+                <FlashList
+                  style={{ borderTopWidth: 1, borderTopColor: colors.border }}
+                  data={emails}
+                  renderItem={({ item }) => <SwipeableAddress item={item} onDelete={handleDeleteEmail} />}
+                  keyExtractor={(item) => item.id}
+                />
+              ) : (
+                <Text txtSize="sub-title" style={styles.emptyText}>
+                  No email addresses have access yet.
+                </Text>
+              )}
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      )}
+    </SafeAreaView>
   );
 }
 
@@ -162,6 +219,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+  },
+
+  messageContainer: {
+    padding: 20,
+    gap: 16,
+    alignItems: 'center',
   },
 
   inputSection: {
