@@ -89,11 +89,16 @@ export default function ManageAccessScreen() {
     }
 
     try {
+      console.log(
+        `Granting photo access to: ${newEmail.trim()} from company: ${appSettings.companyName} name: ${
+          appSettings.ownerName
+        } email: ${appSettings.email}`,
+      );
       const result = await grantPhotoAccess(
         newEmail.trim(),
         projectId,
         projectName,
-        appSettings.ownerName,
+        appSettings.companyName,
         appSettings.email,
       );
 
@@ -146,8 +151,8 @@ export default function ManageAccessScreen() {
       {!isAppSettingsComplete ? (
         <View style={styles.messageContainer}>
           <Text txtSize="sub-title" style={{ color: colors.text }}>
-            Before granting photo access, the name and email of your company&apos;s owner or primary contact are
-            required.
+            Before granting photo access, the name and email of your company&apos;s owner or primary contact
+            are required.
           </Text>
           <Text txtSize="sub-title" style={{ color: colors.text }}>
             Please make sure the required data are defined in the company settings to continue.
