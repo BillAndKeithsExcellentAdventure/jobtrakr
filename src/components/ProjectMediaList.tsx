@@ -197,30 +197,43 @@ export const ProjectMediaList = ({
     ]);
   }, [removePhotoData, mediaItems, projectId, orgId, deleteMediaCallback, failedUploads, store]);
 
-  const updateMediaItemsOnServer = useCallback(async () => {
-    const publicImageIds = mediaItems
-      .filter((media) => media.isPublic)
-      .map((media) => media.imageId!)
-      .filter((imageId): imageId is string => !!imageId);
-
-    publicImageIds.length === 0
-      ? setPublicStateForSelectedMedia(projectId, [])
-      : setPublicStateForSelectedMedia(projectId, publicImageIds);
-  }, [mediaItems, projectId, setPublicStateForSelectedMedia]);
+  const updateMediaItemsOnServer = useCallback(
+    async (publicImageIds: string[]) => {
+      publicImageIds.length === 0
+        ? setPublicStateForSelectedMedia(projectId, [])
+        : setPublicStateForSelectedMedia(projectId, publicImageIds);
+    },
+    [projectId, setPublicStateForSelectedMedia],
+  );
 
   const onToggleAccess = useCallback(() => {
-    const selectedIds = mediaItems.filter((media) => media.isSelected).map((media) => media.id);
-    if (selectedIds.length === 0) return;
+    const selectedIds = new Set(mediaItems.filter((media) => media.isSelected).map((media) => media.id));
+    if (selectedIds.size === 0) return;
 
+    const publicImageIds: string[] = [];
+
+    // First, collect all non-selected public items
+    mediaItems.forEach((item) => {
+      if (!selectedIds.has(item.id) && item.isPublic && item.imageId) {
+        publicImageIds.push(item.imageId);
+      }
+    });
+
+    // Then, toggle selected items and add those that will become public
     selectedIds.forEach((id) => {
       const item = mediaItems.find((media) => media.id === id);
       if (!item) return;
       const newPublicState = !item.isPublic;
       updateMediaEntry(id, { isPublic: newPublicState });
+
+      // If the new public state is true, add to publicImageIds
+      if (newPublicState && item.imageId) {
+        publicImageIds.push(item.imageId);
+      }
     });
 
-    // Call updateMediaItemsOnServer after all entries have been updated
-    updateMediaItemsOnServer();
+    // Call updateMediaItemsOnServer with the calculated public image IDs
+    updateMediaItemsOnServer(publicImageIds);
   }, [mediaItems, updateMediaEntry, updateMediaItemsOnServer]);
 
   const renderItem = useCallback(
