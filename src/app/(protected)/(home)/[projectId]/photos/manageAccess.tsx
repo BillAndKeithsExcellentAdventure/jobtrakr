@@ -163,7 +163,7 @@ export default function ManageAccessScreen() {
       newEmail.trim(),
       projectId,
       projectName,
-      appSettings.ownerName,
+      appSettings.companyName,
       appSettings.email,
     );
     if (result.success) {

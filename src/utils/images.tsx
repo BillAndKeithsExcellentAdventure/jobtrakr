@@ -1145,8 +1145,8 @@ const grantPhotoAccess = async (
   projectId: string,
   projectName: string,
   orgId: string,
-  ownerName: string,
-  ownerEmail: string,
+  fromName: string,
+  fromEmail: string,
   getToken: () => Promise<string | null>,
   fromName?: string,
   fromEmail?: string,
@@ -1155,18 +1155,28 @@ const grantPhotoAccess = async (
     const endPointUrl = `${API_BASE_URL}/grantPhotoAccess`;
 
     const requestBody = {
-      fromName: fromName ?? '',
-      fromEmail: fromEmail ?? '',
       userId: userId,
       emailId: emailId,
       projectId: projectId,
       projectName: projectName,
       orgId: orgId,
+      fromName: fromName ?? '',
+      fromEmail: fromEmail ?? '',
     };
 
     console.log('Grant photo access request body:', requestBody);
 
     const apiFetch = createApiWithToken(getToken);
+    console.log(
+      'Granting photo access from ',
+      fromName,
+      ' <',
+      fromEmail,
+      '> to ',
+      emailId,
+      ' for project ',
+      projectName,
+    );
     const response = await apiFetch(endPointUrl, {
       method: 'POST',
       headers: {
