@@ -1148,8 +1148,6 @@ const grantPhotoAccess = async (
   fromName: string,
   fromEmail: string,
   getToken: () => Promise<string | null>,
-  fromName?: string,
-  fromEmail?: string,
 ): Promise<{ success: boolean; msg: string; data?: any }> => {
   try {
     const endPointUrl = `${API_BASE_URL}/grantPhotoAccess`;
@@ -1160,8 +1158,8 @@ const grantPhotoAccess = async (
       projectId: projectId,
       projectName: projectName,
       orgId: orgId,
-      fromName: fromName ?? '',
-      fromEmail: fromEmail ?? '',
+      fromName: fromName,
+      fromEmail: fromEmail,
     };
 
     console.log('Grant photo access request body:', requestBody);
