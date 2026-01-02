@@ -457,6 +457,118 @@ const makePhotosNonPublic = async (
 };
 
 /**
+ * API call to fetch email addresses with photo access for a project.
+ * @param projectId - Project ID
+ * @param getToken - Token getter function
+ */
+const fetchEmailsWithPhotoAccess = async (
+  projectId: string,
+  getToken: () => Promise<string | null>,
+): Promise<{ success: boolean; msg: string; emails?: string[] }> => {
+  try {
+    const params = new URLSearchParams({
+      projectId: projectId,
+    }).toString();
+
+    const endPointUrl = `${API_BASE_URL}/fetchEmailsWithPhotoAccess?${params}`;
+
+    const apiFetch = createApiWithToken(getToken);
+    const response = await apiFetch(endPointUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      let errorBody = '';
+      try {
+        errorBody = await response.text();
+      } catch {
+        // ignore
+      }
+      console.error('Fetch emails with photo access failed. HTTP:', response.status, 'Body:', errorBody);
+      return {
+        success: false,
+        msg: `Fetch emails failed. HTTP ${response.status}. ${errorBody || 'No response body.'}`,
+      };
+    }
+
+    let data: any = null;
+    try {
+      data = await response.json();
+    } catch {
+      // acceptable if no JSON body
+    }
+
+    console.log('Emails with photo access retrieved successfully:', data);
+    return { success: true, msg: 'Successfully retrieved emails', emails: data?.data || [] };
+  } catch (error) {
+    console.error('Error fetching emails with photo access:', error);
+    return {
+      success: false,
+      msg: `Error fetching emails: ${formatErrorMessage(error)}`,
+    };
+  }
+};
+
+/**
+ * API call to fetch public image IDs for a project.
+ * @param projectId - Project ID
+ * @param getToken - Token getter function
+ */
+const fetchProjectPublicImageIds = async (
+  projectId: string,
+  getToken: () => Promise<string | null>,
+): Promise<{ success: boolean; msg: string; imageIds?: string[] }> => {
+  try {
+    const params = new URLSearchParams({
+      projectId: projectId,
+    }).toString();
+
+    const endPointUrl = `${API_BASE_URL}/fetchProjectPublicImageIds?${params}`;
+
+    const apiFetch = createApiWithToken(getToken);
+    const response = await apiFetch(endPointUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      let errorBody = '';
+      try {
+        errorBody = await response.text();
+      } catch {
+        // ignore
+      }
+      console.error('Fetch public image IDs failed. HTTP:', response.status, 'Body:', errorBody);
+      return {
+        success: false,
+        msg: `Fetch public image IDs failed. HTTP ${response.status}. ${errorBody || 'No response body.'}`,
+      };
+    }
+
+    let data: any = null;
+    try {
+      data = await response.json();
+    } catch {
+      // acceptable if no JSON body
+    }
+
+    console.log('Public image IDs retrieved successfully:', data);
+    return { success: true, msg: 'Successfully retrieved public image IDs', imageIds: data?.data || [] };
+  } catch (error) {
+    console.error('Error fetching public image IDs:', error);
+    return {
+      success: false,
+      msg: `Error fetching public image IDs: ${formatErrorMessage(error)}`,
+    };
+  }
+};
+
+/**
  * Hook that provides a callback to delete media with network-aware queuing.
  * If the media is in the failedToUpload queue, it's removed from there without an API call.
  * If offline, the delete request is queued for later processing.
@@ -1040,6 +1152,18 @@ const grantPhotoAccess = async (
   try {
     const endPointUrl = `${API_BASE_URL}/grantPhotoAccess`;
 
+    const requestBody = {
+      userId: userId,
+      emailId: emailId,
+      projectId: projectId,
+      projectName: projectName,
+      orgId: orgId,
+      fromName: fromName,
+      fromEmail: fromEmail,
+    };
+
+    console.log('Grant photo access request body:', requestBody);
+
     const apiFetch = createApiWithToken(getToken);
     console.log(
       'Granting photo access from ',
@@ -1056,24 +1180,8 @@ const grantPhotoAccess = async (
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        userId: userId,
-        emailId: emailId,
-        projectId: projectId,
-        projectName: projectName,
-        orgId: orgId,
-        fromName: fromName,
-        fromEmail: fromEmail,
-      }),
+      body: JSON.stringify(requestBody),
     });
-
-    //  fromName: string;
-    //	fromEmail: string;
-    //	userId: string;
-    //	emailId: string;
-    //	projectId: string;
-    //	projectName: string;
-    //	orgId: string;
 
     if (!response.ok) {
       let errorBody = '';
@@ -1122,8 +1230,8 @@ export const useGrantPhotoAccessCallback = () => {
       emailId: string,
       projectId: string,
       projectName: string,
-      fromName: string,
-      fromEmail: string,
+      fromName?: string,
+      fromEmail?: string,
     ): Promise<{ success: boolean; msg: string; data?: any }> => {
       if (!userId || !orgId) {
         return { success: false, msg: 'User ID or Organization ID not available' };
@@ -1144,8 +1252,8 @@ export const useGrantPhotoAccessCallback = () => {
           projectId,
           projectName,
           orgId,
-          fromName,
-          fromEmail,
+          fromName ?? '',
+          fromEmail ?? '',
           auth.getToken,
         );
 
@@ -1168,5 +1276,199 @@ export const useGrantPhotoAccessCallback = () => {
       }
     },
     [userId, orgId, auth, isConnected, isInternetReachable],
+  );
+};
+/**
+ * Hook that provides a callback to fetch emails with photo access for a project.
+ * If offline, the request will fail.
+ * If online, the request is executed immediately via the API.
+ */
+export const useFetchEmailsWithPhotoAccessCallback = () => {
+  const auth = useAuth();
+  const { isConnected, isInternetReachable } = useNetwork();
+
+  return useCallback(
+    async (projectId: string): Promise<{ success: boolean; msg: string; emails?: string[] }> => {
+      if (!auth.getToken) {
+        return { success: false, msg: 'Auth token getter not available' };
+      }
+
+      if (!isConnected || isInternetReachable === false) {
+        return { success: false, msg: 'No network connection detected.' };
+      }
+
+      try {
+        const fetchResult = await fetchEmailsWithPhotoAccess(projectId, auth.getToken);
+
+        if (!fetchResult.success) {
+          console.log('Fetch emails with photo access failed:', fetchResult.msg);
+          return {
+            success: false,
+            msg: `Fetch emails failed: ${fetchResult.msg}`,
+          };
+        }
+
+        return fetchResult;
+      } catch (error) {
+        console.error('Unexpected error in useFetchEmailsWithPhotoAccessCallback:', error);
+
+        return {
+          success: false,
+          msg: `Fetch emails failed with error: ${formatErrorMessage(error)}`,
+        };
+      }
+    },
+    [auth, isConnected, isInternetReachable],
+  );
+};
+
+/**
+ * API call to revoke photo access for a project.
+ * @param userId - User ID
+ * @param projectId - Project ID
+ * @param getToken - Token getter function
+ */
+const revokePhotoAccess = async (
+  userId: string,
+  projectId: string,
+  getToken: () => Promise<string | null>,
+): Promise<{ success: boolean; msg: string }> => {
+  try {
+    const endPointUrl = `${API_BASE_URL}/revokePhotoAccess`;
+
+    const apiFetch = createApiWithToken(getToken);
+    const response = await apiFetch(endPointUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: userId,
+        projectId: projectId,
+      }),
+    });
+
+    if (!response.ok) {
+      let errorBody = '';
+      try {
+        errorBody = await response.text();
+      } catch {
+        // ignore
+      }
+      console.error('Revoke photo access failed. HTTP:', response.status, 'Body:', errorBody);
+      return {
+        success: false,
+        msg: `Revoke photo access failed. HTTP ${response.status}. ${errorBody || 'No response body.'}`,
+      };
+    }
+
+    let data: any = null;
+    try {
+      data = await response.json();
+    } catch {
+      // acceptable if no JSON body
+    }
+
+    console.log('Photo access revoked successfully:', data);
+    return { success: true, msg: 'Successfully revoked photo access' };
+  } catch (error) {
+    console.error('Error revoking photo access:', error);
+    return {
+      success: false,
+      msg: `Error revoking photo access: ${formatErrorMessage(error)}`,
+    };
+  }
+};
+
+/**
+ * Hook that provides a callback to revoke photo access for a project.
+ * If offline, the request will fail.
+ * If online, the request is executed immediately via the API.
+ */
+export const useRevokePhotoAccessCallback = () => {
+  const auth = useAuth();
+  const { userId } = auth;
+  const { isConnected, isInternetReachable } = useNetwork();
+
+  return useCallback(
+    async (projectId: string): Promise<{ success: boolean; msg: string }> => {
+      if (!userId) {
+        return { success: false, msg: 'User ID not available' };
+      }
+
+      if (!auth.getToken) {
+        return { success: false, msg: 'Auth token getter not available' };
+      }
+
+      if (!isConnected || isInternetReachable === false) {
+        return { success: false, msg: 'No network connection detected.' };
+      }
+
+      try {
+        const revokeResult = await revokePhotoAccess(userId, projectId, auth.getToken);
+
+        if (!revokeResult.success) {
+          console.log('Revoke photo access failed:', revokeResult.msg);
+          return {
+            success: false,
+            msg: `Revoke photo access failed: ${revokeResult.msg}`,
+          };
+        }
+
+        return revokeResult;
+      } catch (error) {
+        console.error('Unexpected error in useRevokePhotoAccessCallback:', error);
+
+        return {
+          success: false,
+          msg: `Revoke photo access failed with error: ${formatErrorMessage(error)}`,
+        };
+      }
+    },
+    [userId, auth, isConnected, isInternetReachable],
+  );
+};
+
+/**
+ * Hook that provides a callback to fetch public image IDs for a project.
+ * If offline, the request will fail.
+ * If online, the request is executed immediately via the API.
+ */
+export const useFetchPublicImageIdsCallback = () => {
+  const auth = useAuth();
+  const { isConnected, isInternetReachable } = useNetwork();
+
+  return useCallback(
+    async (projectId: string): Promise<{ success: boolean; msg: string; imageIds?: string[] }> => {
+      if (!auth.getToken) {
+        return { success: false, msg: 'Auth token getter not available' };
+      }
+
+      if (!isConnected || isInternetReachable === false) {
+        return { success: false, msg: 'No network connection detected.' };
+      }
+
+      try {
+        const fetchResult = await fetchProjectPublicImageIds(projectId, auth.getToken);
+
+        if (!fetchResult.success) {
+          console.log('Fetch public image IDs failed:', fetchResult.msg);
+          return {
+            success: false,
+            msg: `Fetch public image IDs failed: ${fetchResult.msg}`,
+          };
+        }
+
+        return fetchResult;
+      } catch (error) {
+        console.error('Unexpected error in useFetchPublicImageIdsCallback:', error);
+
+        return {
+          success: false,
+          msg: `Fetch public image IDs failed with error: ${formatErrorMessage(error)}`,
+        };
+      }
+    },
+    [auth, isConnected, isInternetReachable],
   );
 };
