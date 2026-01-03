@@ -27,7 +27,7 @@ const getChangeOrderStatuses = async (
     console.log('getChangeOrderStatuses projectId:', projectId);
 
     const apiFetch = createApiWithToken(getToken);
-    const response = await apiFetch(`${API_BASE_URL}/GetChangeOrderStatuses`, {
+    const response = await apiFetch(`${API_BASE_URL}/getChangeOrderStatuses`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -157,8 +157,8 @@ const ChangeOrdersScreen = () => {
         ) : !isAppSettingsComplete ? (
           <View style={styles.messageContainer}>
             <Text txtSize="sub-title" style={{ color: colors.text }}>
-              Before creating change orders, the name and email of your company&apos;s owner or primary contact are
-              required.
+              Before creating change orders, the name and email of your company&apos;s owner or primary
+              contact are required.
             </Text>
             <Text txtSize="sub-title" style={{ color: colors.text }}>
               Please make sure the required data are defined in the company settings to continue.
@@ -173,8 +173,8 @@ const ChangeOrdersScreen = () => {
         ) : !isProjectOwnerInfoComplete ? (
           <View style={styles.messageContainer}>
             <Text txtSize="sub-title" style={{ color: colors.text }}>
-              Before creating change orders, the name and email of the project&apos;s owner or primary contact are
-              required.
+              Before creating change orders, the name and email of the project&apos;s owner or primary contact
+              are required.
             </Text>
             <Text txtSize="sub-title" style={{ color: colors.text }}>
               Please make sure the required data are defined in the project info to continue.
