@@ -914,10 +914,11 @@ export const useAddImageCallback = () => {
           if (result.status !== 'Success') {
             return { status: 'Error', id: id, msg: `Failed to add failed upload record: ${result.msg}` };
           } else {
-            // Return a new success result indicating file will be retried
+            // Return a success with the local URI so callers can write to TinyBase immediately
             return {
               status: 'Success',
               id: id,
+              uri: copyLocalResult.uri!,
               msg: 'File saved but unable upload to server. Will try later.',
             };
           }

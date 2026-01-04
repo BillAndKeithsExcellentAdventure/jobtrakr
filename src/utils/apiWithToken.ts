@@ -6,7 +6,7 @@
 
 /**
  * Default timeout for network requests in milliseconds.
- * Set to 15 seconds to fail fast when network is unavailable.
+ * Set to 30 seconds to fail fast when network is unavailable.
  */
 const DEFAULT_TIMEOUT_MS = 30000;
 
