@@ -833,16 +833,20 @@ export const useAddImageCallback = () => {
       deviceTypes: string = '',
     ): Promise<ImageResult> => {
       const id = randomUUID();
+      console.log(
+        `[useAddImageCallback] START - ID: ${id}, mediaType: ${mediaType}, resourceType: ${resourceType}`,
+      );
 
       if (!auth) {
+        console.error('[useAddImageCallback] Auth not available');
         return { status: 'Error', id: id, msg: 'Auth not available' };
       }
 
       if (!userId || !orgId) {
+        console.error('[useAddImageCallback] Missing userId or orgId', { userId, orgId });
         return { status: 'Error', id: id, msg: 'User ID or Organization ID not available' };
       }
 
-      // TODO: Get Lat/Long from imageUri or device location.
       const latitude = 0;
       const longitude = 0;
 
@@ -857,17 +861,24 @@ export const useAddImageCallback = () => {
       };
 
       try {
+        console.log(`[useAddImageCallback] Copying file locally for image ${id}`);
         const copyLocalResult = await copyToLocalFolder(imageUri, details, mediaType, resourceType);
+        console.log(
+          `[useAddImageCallback] Copy result - status: ${copyLocalResult.status}, uri: ${copyLocalResult.uri}`,
+        );
+
         if (copyLocalResult.status !== 'Success' || !copyLocalResult.uri) {
-          console.error(`Failed to copy image file ${imageUri} locally:`, copyLocalResult.msg);
+          console.error(`[useAddImageCallback] Failed to copy image file:`, copyLocalResult.msg);
           return copyLocalResult;
         }
 
-        // Check network connectivity before attempting upload
-        // If offline, queue the upload without attempting the network call
+        console.log(
+          `[useAddImageCallback] Network status - isConnected: ${isConnected}, isInternetReachable: ${isInternetReachable}`,
+        );
+
         if (!isConnected || isInternetReachable === false) {
           console.log(
-            'No network connection detected. Queuing upload without attempting network call to save battery.',
+            `[useAddImageCallback] No network. Queuing upload for image ${id}, uri: ${copyLocalResult.uri}`,
           );
           const data: FailedToUploadData = {
             id: id,
@@ -880,9 +891,16 @@ export const useAddImageCallback = () => {
             uploadDate: Date.now(),
           };
           const result = addFailedToUploadRecord(data);
+          console.log(`[useAddImageCallback] addFailedToUploadRecord result:`, result);
+
           if (result.status !== 'Success') {
+            console.error(`[useAddImageCallback] Failed to add to failed upload queue:`, result.msg);
             return { status: 'Error', id: id, msg: `Failed to add upload to queue: ${result.msg}` };
           }
+
+          console.log(
+            `[useAddImageCallback] SUCCESS - Queued upload. Returning with uri: ${copyLocalResult.uri}`,
+          );
           return {
             status: 'Success',
             id: id,
@@ -891,7 +909,7 @@ export const useAddImageCallback = () => {
           };
         }
 
-        // Upload to backend with token refresh
+        console.log(`[useAddImageCallback] Network available. Uploading image ${id}`);
         const uploadResult = await uploadImage(
           details,
           auth.getToken,
@@ -899,7 +917,12 @@ export const useAddImageCallback = () => {
           resourceType,
           copyLocalResult.uri!,
         );
+        console.log(`[useAddImageCallback] Upload result:`, uploadResult);
+
         if (uploadResult.status !== 'Success') {
+          console.log(
+            `[useAddImageCallback] Upload failed. Adding to queue for image ${id}, uri: ${copyLocalResult.uri}`,
+          );
           const data: FailedToUploadData = {
             id: id,
             resourceType: resourceType,
@@ -911,10 +934,15 @@ export const useAddImageCallback = () => {
             uploadDate: Date.now(),
           };
           const result = addFailedToUploadRecord(data);
+          console.log(`[useAddImageCallback] addFailedToUploadRecord result for failed upload:`, result);
+
           if (result.status !== 'Success') {
+            console.error(`[useAddImageCallback] Failed to queue failed upload:`, result.msg);
             return { status: 'Error', id: id, msg: `Failed to add failed upload record: ${result.msg}` };
           } else {
-            // Return a success with the local URI so callers can write to TinyBase immediately
+            console.log(
+              `[useAddImageCallback] SUCCESS - Queued failed upload. Returning with uri: ${copyLocalResult.uri}`,
+            );
             return {
               status: 'Success',
               id: id,
@@ -924,15 +952,14 @@ export const useAddImageCallback = () => {
           }
         }
 
+        console.log(`[useAddImageCallback] Upload successful for image ${id}`);
         return uploadResult;
       } catch (error) {
-        // Catch any unexpected errors and ensure they get added to failedToUpload
-        console.error('Unexpected error in useAddImageCallback:', error);
+        console.error('[useAddImageCallback] Caught exception:', error);
 
-        // Try to determine if file was copied locally
         const localUri = buildLocalMediaUri(orgId, projectId, id, mediaType, resourceType);
+        console.log(`[useAddImageCallback] Exception path - built localUri: ${localUri}`);
 
-        // Add to failed upload queue
         const data: FailedToUploadData = {
           id: id,
           resourceType: resourceType,
@@ -946,7 +973,10 @@ export const useAddImageCallback = () => {
 
         const errorMsg = formatErrorMessage(error);
         const result = addFailedToUploadRecord(data);
+        console.log(`[useAddImageCallback] Exception path - addFailedToUploadRecord result:`, result);
+
         if (result.status === 'Success') {
+          console.log(`[useAddImageCallback] SUCCESS - Queued failed upload in exception handler`);
           return {
             status: 'Success',
             id: id,
