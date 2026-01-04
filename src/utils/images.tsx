@@ -859,6 +859,7 @@ export const useAddImageCallback = () => {
       try {
         const copyLocalResult = await copyToLocalFolder(imageUri, details, mediaType, resourceType);
         if (copyLocalResult.status !== 'Success' || !copyLocalResult.uri) {
+          console.error(`Failed to copy image file ${imageUri} locally:`, copyLocalResult.msg);
           return copyLocalResult;
         }
 

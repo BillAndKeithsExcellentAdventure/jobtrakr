@@ -26,7 +26,7 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   onClose,
   showVideo = true, // Add default value
 }) => {
-  // Move ALL hooks to the top, before any conditional logic
+  // ALL hooks must be called before any conditional returns
   const [type, setType] = useState('back' as CameraType);
   const [permission, requestPermission] = useCameraPermissions();
   const [micPermission, requestMicPermission] = useMicrophonePermissions();
@@ -58,37 +58,29 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
     };
   }, [isRecording]);
 
+  const handleSavePreview = useCallback(async () => {
+    if (!previewUri) return;
+
+    try {
+      const asset = await MediaLibrary.createAssetAsync(previewUri);
+      asset.creationTime = Date.now();
+      onMediaCaptured(asset);
+      setPreviewUri(null);
+    } catch (error) {
+      console.error('Error saving picture:', error);
+    }
+  }, [previewUri, onMediaCaptured]);
+
+  const handleCancelPreview = useCallback(() => {
+    setPreviewUri(null);
+  }, []);
+
+  // Helper functions defined after all hooks
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
-
-  // Now handle the permission checks
-  if (!permission || !micPermission) {
-    // Camera permissions are still loading.
-    return <View />;
-  }
-
-  if (!permission.granted) {
-    // Camera permissions are not granted yet.
-    return (
-      <View style={styles.container}>
-        <Text style={styles.message}>We need your permission to show the camera</Text>
-        <ActionButton type="action" onPress={requestPermission} title="Grant Permission" />
-      </View>
-    );
-  }
-
-  if (!micPermission.granted) {
-    // Camera permissions are not granted yet.
-    return (
-      <View style={styles.container}>
-        <Text style={styles.message}>We need your permission to show the camera</Text>
-        <ActionButton type="action" onPress={requestMicPermission} title="Grant Permission" />
-      </View>
-    );
-  }
 
   const toggleCameraType = () => {
     setType((current) => (current === 'back' ? 'front' : 'back'));
@@ -154,23 +146,6 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
     }
   };
 
-  const handleSavePreview = useCallback(async () => {
-    if (!previewUri) return;
-
-    try {
-      const asset = await MediaLibrary.createAssetAsync(previewUri);
-      asset.creationTime = Date.now();
-      onMediaCaptured(asset);
-      setPreviewUri(null);
-    } catch (error) {
-      console.error('Error saving picture:', error);
-    }
-  }, [previewUri, onMediaCaptured]);
-
-  const handleCancelPreview = useCallback(() => {
-    setPreviewUri(null);
-  }, []);
-
   const processCameraAction = async () => {
     // Haptic feedback when button is pressed
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -193,6 +168,32 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   const onSetVideoMode = () => {
     setCameraModeSwitch(true);
   };
+
+  // Handle permission checks AFTER all hooks have been called
+  if (!permission || !micPermission) {
+    // Camera permissions are still loading.
+    return <View />;
+  }
+
+  if (!permission.granted) {
+    // Camera permissions are not granted yet.
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>We need your permission to show the camera</Text>
+        <ActionButton type="action" onPress={requestPermission} title="Grant Permission" />
+      </View>
+    );
+  }
+
+  if (!micPermission.granted) {
+    // Camera permissions are not granted yet.
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>We need your permission to show the camera</Text>
+        <ActionButton type="action" onPress={requestMicPermission} title="Grant Permission" />
+      </View>
+    );
+  }
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false}>
