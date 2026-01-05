@@ -16,6 +16,7 @@ import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { isDevelopmentBuild } from '@/src/utils/environment';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 
 async function createBase64LogoImage(
   uri: string,
@@ -240,7 +241,7 @@ const SetAppSettingScreen = () => {
           )}
         </View>
       </KeyboardAwareScrollView>
-      {Platform.OS === 'ios' && <KeyboardToolbar />}
+      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </>
   );
 };

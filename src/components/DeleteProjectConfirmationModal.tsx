@@ -5,6 +5,7 @@ import { ActionButton } from './ActionButton';
 import { Text, TextInput } from './Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '../constants/app-constants';
 
 interface DeleteProjectConfirmationModalProps {
   isVisible: boolean;
@@ -84,7 +85,7 @@ export const DeleteProjectConfirmationModal: React.FC<DeleteProjectConfirmationM
           </View>
         </View>
       </SafeAreaView>
-      {Platform.OS === 'ios' && <KeyboardToolbar />}
+      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </Modal>
   );
 };

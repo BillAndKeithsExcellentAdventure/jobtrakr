@@ -17,6 +17,7 @@ import {
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 
 const ShowWorkCategory = () => {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
@@ -50,14 +51,17 @@ const ShowWorkCategory = () => {
     setCategorySpecificItems(fetchedWorkItems);
   }, [categoryId, visibleWorkItems]);
 
-  const handleInputChange = useCallback((name: keyof WorkItemData, value: string) => {
-    if (item) {
-      setItem({
-        ...item,
-        [name]: value,
-      });
-    }
-  }, [item]);
+  const handleInputChange = useCallback(
+    (name: keyof WorkItemData, value: string) => {
+      if (item) {
+        setItem({
+          ...item,
+          [name]: value,
+        });
+      }
+    },
+    [item],
+  );
 
   const handleAddItem = useCallback(() => {
     if (item) {
@@ -78,12 +82,15 @@ const ShowWorkCategory = () => {
     }
   }, [categoryId, item, addWorkItem]);
 
-  const handleEditCategory = useCallback((id: string) => {
-    router.push({
-      pathname: '/configuration/workcategory/[categoryId]/edit',
-      params: { categoryId: id },
-    });
-  }, [router]);
+  const handleEditCategory = useCallback(
+    (id: string) => {
+      router.push({
+        pathname: '/configuration/workcategory/[categoryId]/edit',
+        params: { categoryId: id },
+      });
+    },
+    [router],
+  );
 
   if (!category) {
     return (
@@ -186,7 +193,7 @@ const ShowWorkCategory = () => {
           </View>
         </View>
       </SafeAreaView>
-      {Platform.OS === 'ios' && <KeyboardToolbar />}
+      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </>
   );
 };

@@ -14,6 +14,7 @@ import { Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableProjectTemplate from '@/src/components/SwipeableProjectTemplate';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 
 const ListProjectTemplates = () => {
   const allProjectTemplates = useAllRows('templates');
@@ -27,20 +28,26 @@ const ListProjectTemplates = () => {
 
   const colors = useColors();
 
-  const handleInputChange = useCallback((name: keyof ProjectTemplateData, value: string) => {
-    if (projectTemplate) {
-      setProjectTemplate({
-        ...projectTemplate,
-        [name]: value,
-      });
-    }
-  }, [projectTemplate]);
+  const handleInputChange = useCallback(
+    (name: keyof ProjectTemplateData, value: string) => {
+      if (projectTemplate) {
+        setProjectTemplate({
+          ...projectTemplate,
+          [name]: value,
+        });
+      }
+    },
+    [projectTemplate],
+  );
 
-  const renderHeaderRight = useCallback(() => (
-    <Pressable onPress={() => setShowAdd(!showAdd)} hitSlop={10} style={styles.headerButton}>
-      <Ionicons name={showAdd ? 'chevron-up-sharp' : 'add'} size={24} color={colors.iconColor} />
-    </Pressable>
-  ), [showAdd, colors.iconColor]);
+  const renderHeaderRight = useCallback(
+    () => (
+      <Pressable onPress={() => setShowAdd(!showAdd)} hitSlop={10} style={styles.headerButton}>
+        <Ionicons name={showAdd ? 'chevron-up-sharp' : 'add'} size={24} color={colors.iconColor} />
+      </Pressable>
+    ),
+    [showAdd, colors.iconColor],
+  );
 
   const handleAddProjectTemplate = useCallback(() => {
     if (projectTemplate.name && projectTemplate.description) {
@@ -120,7 +127,7 @@ const ListProjectTemplates = () => {
           </View>
         </SafeAreaView>
       </KeyboardAvoidingView>
-      {Platform.OS === 'ios' && <KeyboardToolbar />}
+      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </>
   );
 };

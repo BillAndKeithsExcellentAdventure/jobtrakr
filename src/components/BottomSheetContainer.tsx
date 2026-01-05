@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, View } from './Themed';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '../constants/app-constants';
 
 type Props = PropsWithChildren<{
   isVisible: boolean;
@@ -72,7 +73,7 @@ export default function BottomSheetContainer({
           </View>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-      {Platform.OS === 'ios' && <KeyboardToolbar />}
+      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </Modal>
   );
 }

@@ -13,6 +13,7 @@ import OptionList, { OptionEntry } from './OptionList';
 import { OptionPickerItem } from './OptionPickerItem';
 import BottomSheetContainer from './BottomSheetContainer';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '../constants/app-constants';
 
 interface ReceiptSummaryEditModalProps {
   isVisible: boolean;
@@ -74,13 +75,16 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
     }));
   }, []);
 
-  const handleVendorOptionChange = useCallback((option: OptionEntry) => {
-    setPickedVendorOption(option);
-    if (option) {
-      handleVendorChange(option.label);
-    }
-    setIsVendorListPickerVisible(false);
-  }, [handleVendorChange]);
+  const handleVendorOptionChange = useCallback(
+    (option: OptionEntry) => {
+      setPickedVendorOption(option);
+      if (option) {
+        handleVendorChange(option.label);
+      }
+      setIsVendorListPickerVisible(false);
+    },
+    [handleVendorChange],
+  );
 
   const handleSave = useCallback(() => {
     onSave(editedSummary);
@@ -199,7 +203,7 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
           </BottomSheetContainer>
         )}
       </SafeAreaView>
-      {Platform.OS === 'ios' && <KeyboardToolbar />}
+      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </Modal>
   );
 };

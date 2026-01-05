@@ -6,6 +6,7 @@ import React, { PropsWithChildren } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '../constants/app-constants';
 
 type ModalScreenContainerWithListProps = PropsWithChildren<{
   onSave: () => void;
@@ -67,7 +68,7 @@ export const ModalScreenContainerWithList: React.FC<ModalScreenContainerWithList
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
-      {Platform.OS === 'ios' && <KeyboardToolbar />}
+      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </>
   );
 };

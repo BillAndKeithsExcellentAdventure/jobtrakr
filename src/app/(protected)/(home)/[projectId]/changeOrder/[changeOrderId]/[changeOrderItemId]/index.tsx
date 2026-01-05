@@ -20,6 +20,7 @@ import {
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 
 const EditChangeOrderItem = () => {
   const { projectId, changeOrderId, changeOrderItemId } = useLocalSearchParams<{
@@ -190,7 +191,7 @@ const EditChangeOrderItem = () => {
           handleCostItemOptionSelected={onCostItemOptionSelected}
         />
       )}
-      {Platform.OS === 'ios' && <KeyboardToolbar />}
+      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </>
   );
 };

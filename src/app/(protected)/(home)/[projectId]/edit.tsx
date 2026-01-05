@@ -1,6 +1,7 @@
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import { ProjectData } from '@/src/models/types';
@@ -328,7 +329,7 @@ const EditProjectScreen = () => {
         </View>
       </KeyboardAwareScrollView>
 
-      {Platform.OS === 'ios' && <KeyboardToolbar />}
+      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </>
   );
 };

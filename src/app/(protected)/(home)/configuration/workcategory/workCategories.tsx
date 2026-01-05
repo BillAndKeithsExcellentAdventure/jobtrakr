@@ -17,6 +17,7 @@ import { Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet } from 'rea
 import { Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 
 const ListWorkCategories = () => {
   const addWorkCategory = useAddRowCallback('categories');
@@ -47,14 +48,17 @@ const ListWorkCategories = () => {
   const router = useRouter();
   const colors = useColors();
 
-  const handleInputChange = useCallback((name: keyof WorkCategoryData, value: string) => {
-    if (category) {
-      setCategory({
-        ...category,
-        [name]: value,
-      });
-    }
-  }, [category]);
+  const handleInputChange = useCallback(
+    (name: keyof WorkCategoryData, value: string) => {
+      if (category) {
+        setCategory({
+          ...category,
+          [name]: value,
+        });
+      }
+    },
+    [category],
+  );
 
   const handleCleanup = useCallback(() => {
     Alert.alert(
@@ -190,7 +194,7 @@ const ListWorkCategories = () => {
           </View>
         </SafeAreaView>
       </KeyboardAvoidingView>
-      {Platform.OS === 'ios' && <KeyboardToolbar />}
+      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </>
   );
 };

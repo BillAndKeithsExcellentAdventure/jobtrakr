@@ -16,6 +16,7 @@ import { Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableSupplier from '@/src/components/SwipeableSupplier';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 
 const SuppliersScreen = () => {
   const addSupplierToStore = useAddRowCallback('suppliers');
@@ -173,7 +174,7 @@ const SuppliersScreen = () => {
           />
         </View>
       </SafeAreaView>
-      {Platform.OS === 'ios' && <KeyboardToolbar />}
+      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </>
   );
 };

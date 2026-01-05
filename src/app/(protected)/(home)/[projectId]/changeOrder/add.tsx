@@ -18,6 +18,7 @@ import { OptionEntry } from '@/src/components/OptionList';
 import { ProposedChangeOrderItem } from '@/src/models/types';
 import SwipeableProposedChangeOrderItem from '@/src/components/SwipeableProposedChangeOrderItem';
 import { ModalScreenContainerWithList } from '@/src/components/ModalScreenContainerWithList';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 
 export default function AddChangeOrder() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
@@ -318,7 +319,7 @@ export default function AddChangeOrder() {
             />
           )}
         </View>
-        {Platform.OS === 'ios' && <KeyboardToolbar />}
+        {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
       </Modal>
     </>
   );

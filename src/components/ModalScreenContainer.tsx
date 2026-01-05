@@ -6,6 +6,7 @@ import React, { PropsWithChildren } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '../constants/app-constants';
 
 const BUTTON_ROW_HEIGHT = 62;
 
@@ -62,7 +63,7 @@ export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
           </View>
         </KeyboardAwareScrollView>
       </SafeAreaView>
-      {Platform.OS === 'ios' && <KeyboardToolbar />}
+      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </>
   );
 };

@@ -1,6 +1,7 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import SwipeableReceiptItem from '@/src/components/SwipeableReceiptItem';
 import { Text, View } from '@/src/components/Themed';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
@@ -301,7 +302,7 @@ const ProjectReceiptsPage = () => {
           )}
         </View>
       </SafeAreaView>
-      <KeyboardToolbar />
+      <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />
     </>
   );
 };

@@ -6,13 +6,11 @@ import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { Text, View } from '@/src/components/Themed';
 import { useKeyboardGradualAnimation } from '@/src/components/useKeyboardGradualAnimation';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { ColorSchemeColors, useColors } from '@/src/context/ColorsContext';
 import { useFocusManager } from '@/src/hooks/useFocusManager';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
-import {
-  WorkCategoryData,
-  WorkItemData,
-} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { WorkCategoryData, WorkItemData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   useAllRows,
   useUpdateRowCallback,
@@ -111,13 +109,10 @@ const SetEstimatedCostsPage = () => {
     setItemEstimate(currentCostSummary ? currentCostSummary.bidAmount : 0);
   }, [currentCostSummary]);
 
-  const handleCategoryChange = useCallback(
-    (selectedCategory: OptionEntry) => {
-      setPickedCategoryOption(selectedCategory);
-      setCurrentItemIndex(0);
-    },
-    [],
-  );
+  const handleCategoryChange = useCallback((selectedCategory: OptionEntry) => {
+    setPickedCategoryOption(selectedCategory);
+    setCurrentItemIndex(0);
+  }, []);
 
   useEffect(() => {
     if (pickedCategoryOption) {
@@ -220,7 +215,7 @@ const SetEstimatedCostsPage = () => {
                       onPress={updateBidEstimate}
                       type={'ok'}
                       title="Save"
-                      triggerBlurOnPress={false}
+                      triggerBlurOnPress={true}
                     />
                     <ActionButton
                       style={styles.cancelButton}
@@ -250,7 +245,7 @@ const SetEstimatedCostsPage = () => {
                 }
               />
               <KeyboardSpacer height={height} />
-              {Platform.OS === 'ios' && <KeyboardToolbar />}
+              {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
             </>
           )}
         </View>
