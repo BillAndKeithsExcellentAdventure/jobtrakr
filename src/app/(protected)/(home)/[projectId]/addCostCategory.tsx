@@ -254,26 +254,30 @@ const renderItem = (
 ) => {
   const isSelected = item.isSelected;
   return (
-    <Pressable
-      style={[styles.item, { borderColor: colors.border }]}
-      onPress={() => toggleItemSelectedState(sectionId, item.id)}
-    >
-      <View
-        style={[
-          styles.roundButton,
-          {
-            borderColor: colors.iconColor,
-            borderWidth: 1,
-            backgroundColor: isSelected ? colors.iconColor : 'transparent',
-          },
-        ]}
-      />
-      <View style={{ marginLeft: 50 }}>
+    <View style={styles.item}>
+      <Pressable
+        style={[{ borderColor: colors.border }]}
+        onPress={() => toggleItemSelectedState(sectionId, item.id)}
+      >
+        <View
+          style={[
+            styles.roundButton,
+            {
+              borderColor: colors.iconColor,
+              borderWidth: 1,
+              backgroundColor: isSelected ? colors.iconColor : 'transparent',
+              marginRight: 50,
+            },
+          ]}
+        />
+      </Pressable>
+
+      <View>
         <Text style={styles.itemText}>
           {sectionCode}.{item.code} - {item.title}
         </Text>
       </View>
-    </Pressable>
+    </View>
   );
 };
 
