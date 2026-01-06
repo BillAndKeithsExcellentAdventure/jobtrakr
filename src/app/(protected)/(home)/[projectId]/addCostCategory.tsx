@@ -1,5 +1,5 @@
 import { ModalScreenContainerWithList } from '@/src/components/ModalScreenContainerWithList';
-import { Text, View } from '@/src/components/Themed';
+import { Text, TextInput, View } from '@/src/components/Themed';
 import { Colors } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
@@ -9,7 +9,7 @@ import {
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAddRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SectionList, StyleSheet } from 'react-native';
@@ -42,6 +42,7 @@ const AddCostCategoryWorkItemsScreen: React.FC = () => {
   const allWorkItems = useAllRows('workItems', WorkItemDataCodeCompareAsNumber);
   const [selectedWorkItemIds, setSelectedWorkItemIds] = useState<string[]>([]);
   const [sectionData, setSectionData] = useState<SectionData[]>([]);
+  const [searchText, setSearchText] = useState<string>('');
   const addWorkItemSummary = useAddRowCallback(projectId, 'workItemSummaries');
   const expandedSectionIdRef = useRef<string>('');
   const availableCategoryIds = useMemo(
@@ -136,6 +137,16 @@ const AddCostCategoryWorkItemsScreen: React.FC = () => {
     router.back();
   }, [selectedWorkItemIds, addWorkItemSummary]);
 
+  const filteredSectionData = useMemo(() => {
+    const searchLower = searchText.toLowerCase();
+    return sectionData
+      .map((section) => ({
+        ...section,
+        data: section.data.filter((item) => item.title.toLowerCase().includes(searchLower)),
+      }))
+      .filter((section) => section.data.length > 0);
+  }, [sectionData, searchText]);
+
   return (
     <View style={{ flex: 1, width: '100%' }}>
       <ModalScreenContainerWithList
@@ -145,10 +156,22 @@ const AddCostCategoryWorkItemsScreen: React.FC = () => {
         saveButtonTitle="Add Selected"
       >
         <Text style={styles.modalTitle}>Add Work Items</Text>
+        <View style={[styles.searchContainer, { borderColor: colors.border }]}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search for work items"
+            placeholderTextColor={colors.textPlaceholder}
+            value={searchText}
+            onChangeText={setSearchText}
+          />
+          <Pressable onPress={() => setSearchText('')} style={styles.clearButton}>
+            <MaterialIcons name="clear" size={24} color={colors.iconColor} />
+          </Pressable>
+        </View>
         <SectionList
           showsVerticalScrollIndicator={false}
           stickySectionHeadersEnabled={false}
-          sections={sectionData}
+          sections={filteredSectionData}
           renderItem={({ item, section }) =>
             section.isExpanded
               ? renderItem(item, section.id, section.code, toggleItemSelectedState, colors)
@@ -260,6 +283,27 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     textAlign: 'center',
+  },
+
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingLeft: 10,
+    paddingRight: 5,
+    justifyContent: 'space-between',
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+  },
+
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+  },
+  clearButton: {
+    padding: 8,
+    marginLeft: 8,
   },
   container: {
     flex: 1,

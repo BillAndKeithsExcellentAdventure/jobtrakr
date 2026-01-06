@@ -46,7 +46,7 @@ export const ModalScreenContainerWithList: React.FC<ModalScreenContainerWithList
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardAvoidingView}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+          keyboardVerticalOffset={Platform.OS !== 'ios' ? 0 : 40}
         >
           <View style={styles.container}>
             {children}
