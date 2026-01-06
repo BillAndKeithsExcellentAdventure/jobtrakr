@@ -155,11 +155,11 @@ const AddCostCategoryWorkItemsScreen: React.FC = () => {
         canSave={selectedWorkItemIds.length > 0}
         saveButtonTitle="Add Selected"
       >
-        <Text style={styles.modalTitle}>Add Work Items</Text>
+        <Text style={styles.modalTitle}>Add Cost Items</Text>
         <View style={[styles.searchContainer, { borderColor: colors.border }]}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search for work items"
+            placeholder="Search for cost items"
             placeholderTextColor={colors.textPlaceholder}
             value={searchText}
             onChangeText={setSearchText}

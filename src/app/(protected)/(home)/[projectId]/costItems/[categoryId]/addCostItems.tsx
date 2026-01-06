@@ -87,7 +87,7 @@ const AddCostWorkItemsScreen: React.FC = () => {
         canSave={selectedWorkItemIds.length > 0}
         saveButtonTitle="Add Selected"
       >
-        <Text style={styles.modalTitle}>Add Work Items</Text>
+        <Text style={styles.modalTitle}>Add Cost Items</Text>
         <FlatList
           showsVerticalScrollIndicator={false}
           data={availableItems}
@@ -157,7 +157,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
 });
 
 export default AddCostWorkItemsScreen;

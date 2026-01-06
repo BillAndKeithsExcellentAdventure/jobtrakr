@@ -184,7 +184,7 @@ const ShowWorkCategory = () => {
                         text="No items found for this category."
                         style={{ textAlign: 'center', marginBottom: 10 }}
                       />
-                      <Text text="To add an item, press '+' icon and then Add Work Item." />
+                      <Text text="To add an item, press '+' icon and then Add Cost Item." />
                     </>
                   )}
                 </View>
