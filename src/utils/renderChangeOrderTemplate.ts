@@ -13,6 +13,7 @@ export interface CompanyInfo {
   phone: string;
   email: string;
   contact: string;
+  logo: string; // URL or base64 string
 }
 
 export interface ClientInfo {

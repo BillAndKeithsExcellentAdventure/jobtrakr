@@ -45,6 +45,32 @@ export function formatNumber(amount?: number, numDecimalPlaces = 2): string {
   return `${amount.toFixed(numDecimalPlaces)}`;
 }
 
+export function formatPhoneNumber(value?: string): string {
+  if (!value) return '';
+
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+
+  const digits = (trimmed.match(/\d/g) ?? []).join('').slice(0, 10);
+  if (!digits) return '';
+
+  if (digits.length <= 3) {
+    return digits;
+  }
+
+  if (digits.length <= 7) {
+    const prefix = digits.slice(0, 3);
+    const line = digits.slice(3);
+    return line ? `${prefix}-${line}` : prefix;
+  }
+
+  const area = digits.slice(0, 3);
+  const prefix = digits.slice(3, 6);
+  const line = digits.slice(6);
+
+  return `(${area})${prefix}${line ? `-${line}` : ''}`;
+}
+
 export function replaceNonPrintable(str: string): string {
   return str.replace(/[^\x20-\x7E]/g, ' ');
 }

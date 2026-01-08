@@ -20,7 +20,7 @@ import {
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { createApiWithToken } from '@/src/utils/apiWithToken';
-import { formatCurrency, formatDate } from '@/src/utils/formatters';
+import { formatCurrency, formatDate, formatPhoneNumber } from '@/src/utils/formatters';
 import { loadTemplateHtmlAssetFileToString } from '@/src/utils/htmlFileGenerator';
 import { ChangeOrderData, renderChangeOrderTemplate } from '@/src/utils/renderChangeOrderTemplate';
 import { useAuth } from '@clerk/clerk-expo';
@@ -141,7 +141,7 @@ const DefineChangeOrderScreen = () => {
           appSettings.address2,
           `${appSettings.city}, ${appSettings.state} ${appSettings.zip}`,
         ],
-        phone: appSettings.phone,
+        phone: formatPhoneNumber(appSettings.phone),
         email: appSettings.email,
         contact: appSettings.ownerName,
         logo: appSettings.companyLogo ?? '',
@@ -155,7 +155,7 @@ const DefineChangeOrderScreen = () => {
             projectData?.ownerState ?? ''
           } ${projectData?.ownerZip ?? ''}`,
         ],
-        phone: projectData?.ownerPhone ?? '',
+        phone: formatPhoneNumber(projectData?.ownerPhone ?? ''),
         email: projectData?.ownerEmail ?? '',
       },
       project: projectData?.name ?? 'unknown',

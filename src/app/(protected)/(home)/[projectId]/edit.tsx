@@ -195,7 +195,6 @@ const EditProjectScreen = () => {
             onChangeText={(text) => setProject({ ...project, ownerAddress: text })}
             style={[styles.input, { maxHeight: 80, borderColor: colors.transparent }]}
             numberOfLines={2}
-            autoCapitalize="none"
             autoCorrect={false}
             onBlur={handleSubmit}
           />
@@ -206,7 +205,6 @@ const EditProjectScreen = () => {
             value={String(project.ownerCity ?? '')}
             onChangeText={(text) => setProject({ ...project, ownerCity: text })}
             style={[styles.input, { borderColor: colors.transparent }]}
-            autoCapitalize="none"
             autoCorrect={false}
             onBlur={handleSubmit}
           />
@@ -219,7 +217,6 @@ const EditProjectScreen = () => {
                 value={String(project.ownerState ?? '')}
                 onChangeText={(text) => setProject({ ...project, ownerState: text })}
                 style={[styles.input, { borderColor: colors.transparent }]}
-                autoCapitalize="none"
                 autoCorrect={false}
                 onBlur={handleSubmit}
               />
@@ -229,6 +226,7 @@ const EditProjectScreen = () => {
                 value={String(project.ownerZip ?? '')}
                 containerStyle={styles.inputContainer}
                 placeholder="Owner Zip"
+                keyboardType="numeric"
                 label="Zip"
                 onChangeText={(text) => setProject({ ...project, ownerZip: text })}
                 style={[styles.input, { borderColor: colors.transparent }]}
@@ -244,7 +242,7 @@ const EditProjectScreen = () => {
             value={String(project.ownerPhone ?? '')}
             placeholder="Owner Phone"
             label="Owner Phone"
-            keyboardType="numbers-and-punctuation"
+            keyboardType="phone-pad"
             onChangeText={(text) => setProject({ ...project, ownerPhone: text })}
             style={[styles.input, { borderColor: colors.transparent }]}
             autoCapitalize="none"

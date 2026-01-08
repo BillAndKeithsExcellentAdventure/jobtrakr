@@ -1,7 +1,13 @@
 /**
  * Tests for formatter utility functions
  */
-import { formatDate, formatCurrency, formatNumber, replaceNonPrintable } from '@/src/utils/formatters';
+import {
+  formatCurrency,
+  formatDate,
+  formatNumber,
+  formatPhoneNumber,
+  replaceNonPrintable,
+} from '@/src/utils/formatters';
 
 describe('formatters', () => {
   describe('formatDate', () => {
@@ -133,6 +139,53 @@ describe('formatters', () => {
     it('should handle negative numbers', () => {
       const result = formatNumber(-123.456, 2);
       expect(result).toBe('-123.46');
+    });
+  });
+
+  describe('formatPhoneNumber', () => {
+    it('formats a full 10-digit number', () => {
+      const result = formatPhoneNumber('1234567890');
+      expect(result).toBe('(123)456-7890');
+    });
+
+    it('strips non-digits and formats', () => {
+      const result = formatPhoneNumber('(123) 456-7890');
+      expect(result).toBe('(123)456-7890');
+    });
+
+    it('supports fewer than 3 digits without formatting', () => {
+      const result = formatPhoneNumber('12');
+      expect(result).toBe('12');
+    });
+
+    it('supports partial prefix', () => {
+      const result = formatPhoneNumber('1234');
+      expect(result).toBe('123-4');
+    });
+
+    it('supports partial line number', () => {
+      const result = formatPhoneNumber('1234567');
+      expect(result).toBe('123-4567');
+    });
+
+    it('shows area code formatting only when more than 7 digits', () => {
+      const result = formatPhoneNumber('12345678');
+      expect(result).toBe('(123)456-78');
+    });
+
+    it('returns empty string for empty input', () => {
+      const result = formatPhoneNumber('');
+      expect(result).toBe('');
+    });
+
+    it('truncates to 10 digits', () => {
+      const result = formatPhoneNumber('1234567890123');
+      expect(result).toBe('(123)456-7890');
+    });
+
+    it('trims whitespace before formatting', () => {
+      const result = formatPhoneNumber('  1234567890  ');
+      expect(result).toBe('(123)456-7890');
     });
   });
 

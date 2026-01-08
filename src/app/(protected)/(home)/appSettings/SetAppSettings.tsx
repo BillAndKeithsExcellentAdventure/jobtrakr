@@ -1,22 +1,22 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
+import { Switch } from '@/src/components/Switch';
 import { TextField } from '@/src/components/TextField';
 import { Text, View } from '@/src/components/Themed';
-import { Switch } from '@/src/components/Switch';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
-import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import {
-  useSetAppSettingsCallback,
-  useAppSettings,
   SettingsData,
+  useAppSettings,
+  useSetAppSettingsCallback,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
-import { Platform, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
-import * as ImagePicker from 'expo-image-picker';
-import * as ImageManipulator from 'expo-image-manipulator';
 import { isDevelopmentBuild } from '@/src/utils/environment';
-import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
+import * as ImageManipulator from 'expo-image-manipulator';
+import * as ImagePicker from 'expo-image-picker';
+import { Stack, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Image, Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 
 async function createBase64LogoImage(
   uri: string,
@@ -26,8 +26,8 @@ async function createBase64LogoImage(
   let thumbnailUrlInBase64: string | undefined = undefined;
 
   try {
-    const manipulationContext = await ImageManipulator.ImageManipulator.manipulate(uri);
-    await manipulationContext.resize({ width, height });
+    const manipulationContext = ImageManipulator.ImageManipulator.manipulate(uri);
+    manipulationContext.resize({ width, height });
     const imageResult = await (await manipulationContext.renderAsync()).saveAsync({ base64: true });
     //console.log(`Creating thumbnail ...Base64 Length: ${imageResult.base64?.length}`);
     thumbnailUrlInBase64 = imageResult.base64;
@@ -164,6 +164,7 @@ const SetAppSettingScreen = () => {
               <TextField
                 label="Zip"
                 placeholder="Zip"
+                keyboardType="numeric"
                 value={String(settings.zip ?? '')}
                 onChangeText={(text) => handleChange('zip', text)}
                 onBlur={handleSave}
@@ -184,6 +185,7 @@ const SetAppSettingScreen = () => {
           <TextField
             label="Phone"
             placeholder="Phone"
+            keyboardType="phone-pad"
             value={String(settings.phone ?? '')}
             onChangeText={(text) => handleChange('phone', text)}
             onBlur={handleSave}

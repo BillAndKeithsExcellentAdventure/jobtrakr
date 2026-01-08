@@ -143,7 +143,6 @@ const AddProjectScreen = () => {
             style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
             multiline={true}
             numberOfLines={2}
-            autoCapitalize="none"
             autoCorrect={false}
           />
         </View>
@@ -153,7 +152,6 @@ const AddProjectScreen = () => {
             value={String(project.ownerCity ?? '')}
             onChangeText={(text) => setProject({ ...project, ownerCity: text })}
             style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
-            autoCapitalize="none"
             autoCorrect={false}
           />
         </View>
@@ -164,7 +162,6 @@ const AddProjectScreen = () => {
               value={String(project.ownerState ?? '')}
               onChangeText={(text) => setProject({ ...project, ownerState: text })}
               style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
-              autoCapitalize="none"
               autoCorrect={false}
             />
           </View>
@@ -172,6 +169,7 @@ const AddProjectScreen = () => {
             <TextInput
               value={String(project.ownerZip ?? '')}
               placeholder="Owner Zip"
+              keyboardType="numeric"
               onChangeText={(text) => setProject({ ...project, ownerZip: text })}
               style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
               autoCapitalize="none"
@@ -184,7 +182,7 @@ const AddProjectScreen = () => {
           <TextInput
             value={String(project.ownerPhone ?? '')}
             placeholder="Owner Phone"
-            keyboardType="numbers-and-punctuation"
+            keyboardType="phone-pad"
             onChangeText={(text) => setProject({ ...project, ownerPhone: text })}
             style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
             autoCapitalize="none"
