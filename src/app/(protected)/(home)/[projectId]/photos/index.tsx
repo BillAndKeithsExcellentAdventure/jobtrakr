@@ -20,7 +20,7 @@ import { Entypo, Ionicons } from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { ActivityIndicator, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -59,54 +59,62 @@ const ProjectPhotosPage = () => {
 
   const allProjectMedia = useAllRows(projectId, 'mediaEntries', RecentMediaEntryDateCompare);
   const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
+  const [isPhotoUploading, setIsPhotoUploading] = useState(false);
 
   const handlePhotoCaptured = useCallback(
     async (asset: MediaLibrary.Asset) => {
+      setIsPhotoUploading(true);
       console.log(`[handlePhotoCaptured] START - asset.id: ${asset?.id}, projectId: ${projectId}`);
 
-      if (!asset) {
-        console.warn('[handlePhotoCaptured] No asset provided');
-        return;
-      }
-
-      console.log(`[handlePhotoCaptured] Calling addPhotoImage with uri: ${asset.uri}`);
-      const imageAddResult = await addPhotoImage(
-        asset.uri,
-        projectId,
-        asset.mediaType === MediaLibrary.MediaType.photo ? 'photo' : 'video',
-        'photo',
-      );
-      console.log('[handlePhotoCaptured] Image Add Result:', JSON.stringify(imageAddResult, null, 2));
-
-      if (imageAddResult.status === 'Success') {
-        console.log(`[handlePhotoCaptured] Status is Success. uri: ${imageAddResult.uri}`);
-
-        if (imageAddResult.uri) {
-          console.log(`[handlePhotoCaptured] URI is present. Creating thumbnail from: ${asset.uri}`);
-          const thumbnail = await createThumbnail(asset.uri);
-          console.log(`[handlePhotoCaptured] Thumbnail created: ${thumbnail ? 'yes' : 'no'}`);
-
-          const newPhoto: MediaEntryData = {
-            id: '',
-            assetId: asset.id,
-            deviceName: 'Device Name',
-            imageId: imageAddResult.id,
-            mediaType: asset.mediaType === MediaLibrary.MediaType.photo ? 'photo' : 'video',
-            thumbnail: thumbnail ?? '',
-            creationDate: Date.now(),
-            isPublic: false,
-          };
-
-          console.log(
-            `[handlePhotoCaptured] Adding to projectDetails store with imageId: ${imageAddResult.id}`,
-          );
-          addPhotoData(newPhoto);
-          console.log(`[handlePhotoCaptured] Successfully added to store`);
-        } else {
-          console.warn('[handlePhotoCaptured] Status is Success but uri is missing!');
+      try {
+        if (!asset) {
+          console.warn('[handlePhotoCaptured] No asset provided');
+          return;
         }
-      } else {
-        console.error('[handlePhotoCaptured] Status is not Success:', imageAddResult.msg);
+
+        console.log(`[handlePhotoCaptured] Calling addPhotoImage with uri: ${asset.uri}`);
+        const imageAddResult = await addPhotoImage(
+          asset.uri,
+          projectId,
+          asset.mediaType === MediaLibrary.MediaType.photo ? 'photo' : 'video',
+          'photo',
+        );
+        console.log('[handlePhotoCaptured] Image Add Result:', JSON.stringify(imageAddResult, null, 2));
+
+        if (imageAddResult.status === 'Success') {
+          console.log(`[handlePhotoCaptured] Status is Success. uri: ${imageAddResult.uri}`);
+
+          if (imageAddResult.uri) {
+            console.log(`[handlePhotoCaptured] URI is present. Creating thumbnail from: ${asset.uri}`);
+            const thumbnail = await createThumbnail(asset.uri);
+            console.log(`[handlePhotoCaptured] Thumbnail created: ${thumbnail ? 'yes' : 'no'}`);
+
+            const newPhoto: MediaEntryData = {
+              id: '',
+              assetId: asset.id,
+              deviceName: 'Device Name',
+              imageId: imageAddResult.id,
+              mediaType: asset.mediaType === MediaLibrary.MediaType.photo ? 'photo' : 'video',
+              thumbnail: thumbnail ?? '',
+              creationDate: Date.now(),
+              isPublic: false,
+            };
+
+            console.log(
+              `[handlePhotoCaptured] Adding to projectDetails store with imageId: ${imageAddResult.id}`,
+            );
+            addPhotoData(newPhoto);
+            console.log(`[handlePhotoCaptured] Successfully added to store`);
+          } else {
+            console.warn('[handlePhotoCaptured] Status is Success but uri is missing!');
+          }
+        } else {
+          console.error('[handlePhotoCaptured] Status is not Success:', imageAddResult.msg);
+        }
+      } catch (err) {
+        console.error('[handlePhotoCaptured] Error while handling captured media', err);
+      } finally {
+        setIsPhotoUploading(false);
       }
     },
     [projectId, addPhotoImage, addPhotoData],
@@ -197,6 +205,12 @@ const ProjectPhotosPage = () => {
               onPress={() => setIsCameraVisible(true)}
             />
           </View>
+          {isPhotoUploading && (
+            <View style={styles.uploadingContainer}>
+              <ActivityIndicator size="large" color={colors.iconColor} />
+              <Text style={styles.uploadingText}>Uploading photo...</Text>
+            </View>
+          )}
           <View style={styles.listsContainer}>
             <ProjectMediaList
               projectId={projectId}
@@ -248,6 +262,15 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     paddingHorizontal: 10,
+  },
+  uploadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  uploadingText: {
+    marginLeft: 8,
   },
 });
 

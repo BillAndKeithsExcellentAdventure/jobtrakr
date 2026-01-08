@@ -36,6 +36,24 @@ const AddReceiptPage = () => {
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
+  const [applyToSingleCostCode, setApplyToSingleCostCode] = useState(false);
+  const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
+  const { projectWorkItems, availableCategoriesOptions, allAvailableCostItemOptions } =
+    useProjectWorkItems(projectId);
+  const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
+  const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
+  const [isSubCategoryPickerVisible, setIsSubCategoryPickerVisible] = useState<boolean>(false);
+  const [pickedSubCategoryOption, setPickedSubCategoryOption] = useState<OptionEntry | undefined>(undefined);
+  const [subCategories, setSubCategories] = useState<OptionEntry[]>([]);
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [canAddReceipt, setCanAddReceipt] = useState(false);
+  const allVendors = useAllConfigurationRows('vendors');
+  const addPhotoImage = useAddImageCallback();
+  const router = useRouter();
+
+  const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
+    setPickedSubCategoryOption(selectedSubCategory);
+  }, []);
 
   const handleVendorOptionChange = (option: OptionEntry) => {
     setPickedOption(option);
@@ -45,7 +63,6 @@ const AddReceiptPage = () => {
     setIsVendorListPickerVisible(false);
   };
 
-  const router = useRouter();
   const [projectReceipt, setProjectReceipt] = useState<ReceiptData>({
     id: '',
     vendor: '',
@@ -59,11 +76,6 @@ const AddReceiptPage = () => {
     notes: '',
     markedComplete: false,
   });
-
-  const [datePickerVisible, setDatePickerVisible] = useState(false);
-  const [canAddReceipt, setCanAddReceipt] = useState(false);
-  const allVendors = useAllConfigurationRows('vendors');
-  const addPhotoImage = useAddImageCallback();
 
   useEffect(() => {
     if (allVendors && allVendors.length > 0) {
@@ -160,7 +172,15 @@ const AddReceiptPage = () => {
     }
     console.log('Project receipt successfully added:', projectReceipt);
     router.back();
-  }, [projectReceipt, canAddReceipt, addReceipt, addLineItem, applyToSingleCostCode, pickedSubCategoryOption, router]);
+  }, [
+    projectReceipt,
+    canAddReceipt,
+    addReceipt,
+    addLineItem,
+    applyToSingleCostCode,
+    pickedSubCategoryOption,
+    router,
+  ]);
 
   const handleCaptureImage = useCallback(async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
@@ -194,21 +214,6 @@ const AddReceiptPage = () => {
       }
     }
   }, [addPhotoImage, projectId]);
-
-  const [applyToSingleCostCode, setApplyToSingleCostCode] = useState(false);
-  const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
-  const { projectWorkItems, availableCategoriesOptions, allAvailableCostItemOptions } =
-    useProjectWorkItems(projectId);
-
-  const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
-  const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
-
-  const [isSubCategoryPickerVisible, setIsSubCategoryPickerVisible] = useState<boolean>(false);
-  const [pickedSubCategoryOption, setPickedSubCategoryOption] = useState<OptionEntry | undefined>(undefined);
-  const [subCategories, setSubCategories] = useState<OptionEntry[]>([]);
-  const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
-    setPickedSubCategoryOption(selectedSubCategory);
-  }, []);
 
   const handleCategoryChange = useCallback(
     (selectedCategory: OptionEntry) => {
@@ -370,8 +375,8 @@ const AddReceiptPage = () => {
                     ? 'Retake Picture (Offline)'
                     : 'Take Picture (Offline)'
                   : projectReceipt.imageId
-                    ? 'Retake Picture'
-                    : 'Take Picture'
+                  ? 'Retake Picture'
+                  : 'Take Picture'
               }
             />
           </View>
