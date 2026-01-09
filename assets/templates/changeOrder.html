@@ -22,8 +22,8 @@
       }
       .logo {
         width: auto;
-        height: 100px;
-        margin-left: 20px;
+        height: 80px;
+        margin-right: 20px;
       }
 
       h1 {
@@ -58,15 +58,15 @@
   <body>
     <header>
       <div class="company-info">
+        {{#company.logo}}
+        <img class="logo" src="{{company.logo}}" alt="Company Logo" />
+        {{/company.logo}}
         <div>
           <strong>{{company.name}}</strong><br />
           {{#company.address}} {{.}}<br />
           {{/company.address}} Phone: {{company.phone}}<br />
           Email: {{company.email}}
         </div>
-        {{#company.logo}}
-        <img class="logo" src="{{company.logo}}" alt="Company Logo" />
-        {{/company.logo}}
       </div>
 
       <div class="client-info">
