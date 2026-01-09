@@ -1,6 +1,6 @@
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ActionButton } from '@/src/components/ActionButton';
@@ -14,6 +14,7 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { createApiWithToken } from '@/src/utils/apiWithToken';
 import { useAuth } from '@clerk/clerk-expo';
+import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { FlatList, StyleSheet } from 'react-native';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
@@ -36,6 +37,9 @@ const getChangeOrderStatuses = async (
     });
 
     if (!response.ok) {
+      if (response.status === 404) {
+        return null; // No statuses found
+      }
       console.error(`HTTP error! status: ${response.status}`);
     }
 
@@ -95,58 +99,67 @@ const ChangeOrdersScreen = () => {
   // Check if required project owner info is defined
   const isProjectOwnerInfoComplete = currentProject?.ownerName?.trim() && currentProject?.ownerEmail?.trim();
 
-  useEffect(() => {
-    const fetchStatuses = async () => {
-      try {
-        const changeOrderStatusString = await getChangeOrderStatuses(projectId, auth.getToken);
-        console.log('Change Order Statuses:', changeOrderStatusString);
+  const fetchStatuses = useCallback(async () => {
+    try {
+      const changeOrderStatusString = await getChangeOrderStatuses(projectId, auth.getToken);
+      console.log('Change Order Statuses:', changeOrderStatusString);
 
-        if (!changeOrderStatusString) {
-          console.log('No status data received');
-          return;
-        }
-
-        const changeOrderStatusResponse: ChangeOrderStatusResponse = JSON.parse(changeOrderStatusString);
-        console.log('Parsed Change Order Statuses:', changeOrderStatusResponse);
-
-        // Create a map of change_order_id to status for quick lookup
-        const statusMap = new Map<string, 'draft' | 'approval-pending' | 'approved' | 'cancelled'>();
-
-        if (changeOrderStatusResponse.data && Array.isArray(changeOrderStatusResponse.data)) {
-          changeOrderStatusResponse.data.forEach((statusItem) => {
-            const status = statusItem.approved === 1 ? 'approved' : 'approval-pending';
-            statusMap.set(statusItem.change_order_id, status);
-          });
-        }
-
-        // Update all change orders with their status
-        const updatedChangeOrders = allChangeOrders?.map((changeOrder) => {
-          const changeOrderId = changeOrder.id;
-          if (!changeOrderId) return changeOrder;
-          const newStatus = statusMap.get(changeOrderId) || 'draft';
-          return { ...changeOrder, status: newStatus };
-        });
-
-        if (updatedChangeOrders) {
-          updatedChangeOrders.forEach((changeOrder) => {
-            const changeOrderId = changeOrder.id;
-            if (changeOrderId) {
-              const newStatus = changeOrder.status;
-              // Update the change order status in your TinyBase store
-              updateChangeOrder(changeOrderId, { status: newStatus });
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching change order statuses:', error);
+      if (!changeOrderStatusString) {
+        console.log('No status data received');
+        return;
       }
-    };
 
+      const changeOrderStatusResponse: ChangeOrderStatusResponse = JSON.parse(changeOrderStatusString);
+      console.log('Parsed Change Order Statuses:', changeOrderStatusResponse);
+
+      // Create a map of change_order_id to status for quick lookup
+      const statusMap = new Map<string, 'draft' | 'approval-pending' | 'approved' | 'cancelled'>();
+
+      if (changeOrderStatusResponse.data && Array.isArray(changeOrderStatusResponse.data)) {
+        changeOrderStatusResponse.data.forEach((statusItem) => {
+          const status = statusItem.approved === 1 ? 'approved' : 'approval-pending';
+          statusMap.set(statusItem.change_order_id, status);
+        });
+      }
+
+      // Update all change orders with their status
+      const updatedChangeOrders = allChangeOrders?.map((changeOrder) => {
+        const changeOrderId = changeOrder.id;
+        if (!changeOrderId) return changeOrder;
+        const newStatus = statusMap.get(changeOrderId) || 'draft';
+        return { ...changeOrder, status: newStatus };
+      });
+
+      if (updatedChangeOrders) {
+        updatedChangeOrders.forEach((changeOrder) => {
+          const changeOrderId = changeOrder.id;
+          if (changeOrderId) {
+            const newStatus = changeOrder.status;
+            // Update the change order status in your TinyBase store
+            updateChangeOrder(changeOrderId, { status: newStatus });
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching change order statuses:', error);
+    }
+  }, [auth, projectId, allChangeOrders, updateChangeOrder]);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Only fetch if we have change orders
+      if (allChangeOrders && allChangeOrders.length > 0) {
+        fetchStatuses();
+      }
+    }, [allChangeOrders, fetchStatuses]),
+  );
+
+  useEffect(() => {
     // Only fetch if we have change orders
     if (allChangeOrders && allChangeOrders.length > 0) {
       fetchStatuses();
     }
-  }, [auth, projectId, allChangeOrders, updateChangeOrder]);
+  }, [allChangeOrders, fetchStatuses]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

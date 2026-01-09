@@ -27,7 +27,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { AntDesign, Entypo, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Keyboard, StyleSheet, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Alert, Keyboard, StyleSheet, TouchableOpacity } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -87,6 +87,7 @@ const DefineChangeOrderScreen = () => {
   const auth = useAuth();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [showAddItemModal, setShowAddItemModal] = useState<boolean>(false);
+  const [isSendingChangeOrder, setIsSendingChangeOrder] = useState(false);
   const [newChangeOrderItem, setNewChangeOrderItem] = useState<ChangeOrderItem>({
     id: '',
     changeOrderId: changeOrderId,
@@ -191,28 +192,30 @@ const DefineChangeOrderScreen = () => {
     }
 
     const htmlOutput = renderChangeOrderTemplate(templateHTMLString, changeOrderData);
-    if (htmlOutput) {
-      try {
-        const userId = auth.userId;
-        if (!userId) {
-          Alert.alert('Error', 'User ID not found.');
-          return;
-        }
+    if (!htmlOutput) return;
 
-        // Calculate hash and expiration (48 hours from now in seconds since Jan 1, 2000)
-        const expirationDate = Math.floor(
-          (Date.now() + 48 * 60 * 60 * 1000 - Date.UTC(2000, 0, 1, 0, 0, 0, 0)) / 1000,
-        );
+    const userId = auth.userId;
+    if (!userId) {
+      Alert.alert('Error', 'User ID not found.');
+      return;
+    }
 
-        // Generate the acceptance URL - points to a landing page instead of direct API
-        const acceptUrl = `https://staticwebpages.pages.dev/AcceptChangeOrder.html?projectId=${encodeURIComponent(
-          projectId,
-        )}&changeOrderId=${encodeURIComponent(
-          changeOrderId,
-        )}&expirationDate=${expirationDate}&email=${encodeURIComponent(projectData?.ownerEmail ?? '')}`;
+    try {
+      setIsSendingChangeOrder(true);
+      // Calculate hash and expiration (48 hours from now in seconds since Jan 1, 2000)
+      const expirationDate = Math.floor(
+        (Date.now() + 48 * 60 * 60 * 1000 - Date.UTC(2000, 0, 1, 0, 0, 0, 0)) / 1000,
+      );
 
-        // Create HTML email body with inline styles for better email client compatibility
-        const msgBody = `
+      // Generate the acceptance URL - points to a landing page instead of direct API
+      const acceptUrl = `https://staticwebpages.pages.dev/AcceptChangeOrder.html?projectId=${encodeURIComponent(
+        projectId,
+      )}&changeOrderId=${encodeURIComponent(
+        changeOrderId,
+      )}&expirationDate=${expirationDate}&email=${encodeURIComponent(projectData?.ownerEmail ?? '')}`;
+
+      // Create HTML email body with inline styles for better email client compatibility
+      const msgBody = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -283,7 +286,7 @@ const DefineChangeOrderScreen = () => {
       Best regards,<br/>
       <strong>${appSettings.ownerName}</strong><br/>
       ${appSettings.companyName}<br/>
-      ${appSettings.phone ? `Phone: ${appSettings.phone}<br/>` : ''}
+      ${appSettings.phone ? `Phone: ${formatPhoneNumber(appSettings.phone)}<br/>` : ''}
       ${appSettings.email ? `Email: ${appSettings.email}` : ''}
     </p>
   </div>
@@ -295,37 +298,45 @@ const DefineChangeOrderScreen = () => {
 </html>
       `.trim();
 
-        // Generate and send PDF with HTML email body
-        const pdfFilePath = await generateAndSendPdf(
-          {
-            userId: userId,
-            htmlPdf: htmlOutput,
-            htmlBody: msgBody,
-            toEmail: projectData?.ownerEmail ?? '',
-            fromEmail: appSettings.email ?? '',
-            fromName: appSettings.ownerName ?? '',
-            changeOrderId: changeOrder?.id ?? '',
-            projectId: projectId,
-            expirationDate: expirationDate.toString(),
-            ownerEmail: projectData?.ownerEmail ?? '',
-            subject: `${appSettings.companyName} : Please review and accept change order "${
-              changeOrder?.title || 'unknown'
-            }"`,
-          },
-          changeOrder?.id || 'unknown',
-          auth.getToken,
-        );
+      // Generate and send PDF with HTML email body
+      const pdfFilePath = await generateAndSendPdf(
+        {
+          userId: userId,
+          htmlPdf: htmlOutput,
+          htmlBody: msgBody,
+          toEmail: projectData?.ownerEmail ?? '',
+          fromEmail: appSettings.email ?? '',
+          fromName: appSettings.ownerName ?? '',
+          changeOrderId: changeOrder?.id ?? '',
+          projectId: projectId,
+          expirationDate: expirationDate.toString(),
+          ownerEmail: projectData?.ownerEmail ?? '',
+          subject: `${appSettings.companyName} : Please review and accept change order "${
+            changeOrder?.title || 'unknown'
+          }"`,
+        },
+        changeOrder?.id || 'unknown',
+        auth.getToken,
+      );
 
-        if (pdfFilePath) {
-          Alert.alert('Success', 'Change order sent successfully!');
-        }
-      } catch (error) {
-        const errorMessage =
-          typeof error === 'object' && error !== null && 'message' in error
-            ? (error as { message?: string }).message
-            : 'Failed to send change order';
-        Alert.alert('Error', errorMessage);
+      if (pdfFilePath) {
+        Alert.alert('Success', 'Change order sent successfully!', [
+          {
+            text: 'OK',
+            onPress: () => {
+              router.back();
+            },
+          },
+        ]);
       }
+    } catch (error) {
+      const errorMessage =
+        typeof error === 'object' && error !== null && 'message' in error
+          ? (error as { message?: string }).message
+          : 'Failed to send change order';
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setIsSendingChangeOrder(false);
     }
   }, [changeOrderData, changeOrder, appSettings, projectData, auth, projectId, changeOrderId]);
 
@@ -454,7 +465,17 @@ const DefineChangeOrderScreen = () => {
           <View style={{ padding: 10, marginBottom: 10 }}>
             {changeOrder.status === 'draft' && (
               <View style={{ marginBottom: 10 }}>
-                <ActionButton title="Send for Approval" type="action" onPress={handleSendForApproval} />
+                <ActionButton
+                  title="Send for Approval"
+                  onPress={handleSendForApproval}
+                  type={isSendingChangeOrder ? 'disabled' : 'action'}
+                />
+                {isSendingChangeOrder && (
+                  <View style={styles.sendingRow}>
+                    <ActivityIndicator size="small" color={colors.iconColor} />
+                    <Text style={styles.sendingText}>Sending Change Order Email...</Text>
+                  </View>
+                )}
               </View>
             )}
             <View style={{ padding: 10, gap: 6, flexDirection: 'row', alignItems: 'center' }}>
@@ -653,6 +674,15 @@ const styles = StyleSheet.create({
     width: '100%',
     elevation: 5,
     gap: 8,
+  },
+  sendingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+  },
+  sendingText: {
+    marginLeft: 8,
   },
 });
 
