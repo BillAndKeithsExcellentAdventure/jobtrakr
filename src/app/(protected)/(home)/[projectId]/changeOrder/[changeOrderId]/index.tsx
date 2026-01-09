@@ -263,9 +263,6 @@ const DefineChangeOrderScreen = () => {
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>${appSettings.companyName}</h1>
-  </div>
   <div class="content">
     <p>Dear ${projectData?.ownerName ?? 'Client'},</p>
     
