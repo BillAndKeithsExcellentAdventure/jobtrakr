@@ -139,6 +139,7 @@ export default function AddChangeOrder() {
     setShowCostItemPicker(false);
   }, []);
 
+  const subTitle = `${itemLabel.length ? 'for ' + itemLabel : ''}`;
   return (
     <>
       <View style={{ flex: 1, width: '100%' }}>
@@ -182,7 +183,7 @@ export default function AddChangeOrder() {
               <Text text="Change Order Items" txtSize="sub-title" />
             </View>
             <ActionButton
-              style={styles.addButton}
+              style={[styles.addButton, { marginVertical: 5 }]}
               onPress={() => {
                 Keyboard.dismiss();
                 setShowAddItemModal(true);
@@ -314,6 +315,7 @@ export default function AddChangeOrder() {
             <CostItemPickerModal
               isVisible={showCostItemPicker}
               onClose={() => setShowCostItemPicker(false)}
+              subtitle={subTitle}
               projectId={projectId}
               handleCostItemOptionSelected={onCostItemOptionSelected}
             />

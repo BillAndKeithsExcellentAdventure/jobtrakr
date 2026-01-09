@@ -13,11 +13,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const CostItemPickerModal = ({
   projectId,
   isVisible,
+  subtitle = '',
   onClose,
   handleCostItemOptionSelected,
 }: {
   projectId: string;
   isVisible: boolean;
+  subtitle?: string;
   onClose: () => void;
   handleCostItemOptionSelected: (entry: OptionEntry | undefined) => void;
 }) => {
@@ -59,19 +61,25 @@ const CostItemPickerModal = ({
     }
   }, [pickedCategoryOption, allAvailableCostItemOptions]);
 
-  const handleSubCategoryOptionChange = useCallback((option: OptionEntry) => {
-    if (option) {
-      handleCostItemChange(option);
-    }
-    setIsCostItemPickerVisible(false);
-  }, [handleCostItemChange]);
+  const handleSubCategoryOptionChange = useCallback(
+    (option: OptionEntry) => {
+      if (option) {
+        handleCostItemChange(option);
+      }
+      setIsCostItemPickerVisible(false);
+    },
+    [handleCostItemChange],
+  );
 
-  const handleCategoryOptionChange = useCallback((option: OptionEntry) => {
-    if (option) {
-      handleCategoryChange(option);
-    }
-    setIsCategoryPickerVisible(false);
-  }, [handleCategoryChange]);
+  const handleCategoryOptionChange = useCallback(
+    (option: OptionEntry) => {
+      if (option) {
+        handleCategoryChange(option);
+      }
+      setIsCategoryPickerVisible(false);
+    },
+    [handleCategoryChange],
+  );
 
   return (
     <Modal visible={isVisible} transparent={true} animationType="fade">
@@ -79,7 +87,7 @@ const CostItemPickerModal = ({
         <View style={[styles.container, styles.modalBackground, { backgroundColor: colors.listBackground }]}>
           <View style={[styles.modalContainer]}>
             <Text txtSize="title" style={styles.modalTitle} text="Select Cost Item" />
-
+            {subtitle.length && <Text txtSize="sub-title" style={styles.modalTitle} text={subtitle} />}
             <View style={{ flex: 1, paddingBottom: 10 }}>
               <OptionPickerItem
                 containerStyle={styles.inputContainer}
@@ -100,7 +108,6 @@ const CostItemPickerModal = ({
                 }}
               />
             </View>
-
             <View style={styles.saveButtonRow}>
               <ActionButton
                 style={styles.saveButton}
