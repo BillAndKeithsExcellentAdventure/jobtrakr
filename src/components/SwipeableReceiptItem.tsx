@@ -34,143 +34,153 @@ const SwipeableReceiptItem = React.memo<{
   projectId: string;
   item: ClassifiedReceiptData;
 }>(({ orgId, projectId, item }) => {
-    const router = useRouter();
-    const colors = useColors();
-    const deleteReceipt = useDeleteRowCallback(projectId, 'receipts');
-    const deleteReceiptLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
-    const allReceiptLineItems = useAllRows(projectId, 'workItemCostEntries');
-    const deleteMediaCallback = useDeleteMediaCallback();
-    const failedUploads = useAllFailedToUpload();
-    const store = useUploadSyncStore();
-    const textColor = item.fullyClassified ? colors.text : colors.errorText;
-    const allReceiptItems = useMemo(
-      () => allReceiptLineItems.filter((lineItem) => lineItem.parentId === item.id),
-      [allReceiptLineItems, item.id],
-    );
+  const router = useRouter();
+  const colors = useColors();
+  const deleteReceipt = useDeleteRowCallback(projectId, 'receipts');
+  const deleteReceiptLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
+  const allReceiptLineItems = useAllRows(projectId, 'workItemCostEntries');
+  const deleteMediaCallback = useDeleteMediaCallback();
+  const failedUploads = useAllFailedToUpload();
+  const store = useUploadSyncStore();
+  const textColor = item.fullyClassified ? colors.text : colors.errorText;
+  const allReceiptItems = useMemo(
+    () => allReceiptLineItems.filter((lineItem) => lineItem.parentId === item.id),
+    [allReceiptLineItems, item.id],
+  );
 
-    const totalOfAllReceiptItems = useMemo(
-      () => allReceiptItems.reduce((acc, lineItem) => acc + lineItem.amount, 0),
-      [allReceiptItems],
-    );
+  const totalOfAllReceiptItems = useMemo(
+    () => allReceiptItems.reduce((acc, lineItem) => acc + lineItem.amount, 0),
+    [allReceiptItems],
+  );
 
-    const totalOfAllReceiptItemsFormatted = useMemo(
-      () => formatCurrency(totalOfAllReceiptItems, true, true),
-      [totalOfAllReceiptItems],
-    );
+  const totalOfAllReceiptItemsFormatted = useMemo(
+    () => formatCurrency(totalOfAllReceiptItems, true, true),
+    [totalOfAllReceiptItems],
+  );
 
-    const removeReceipt = useCallback(
-      (id: string | undefined) => {
-        if (id !== undefined) {
-          // before deleting receipt, we should delete all line items associated with it
-          allReceiptItems.forEach((lineItem) => {
-            console.log('Deleting receipt line item with id:', lineItem.id);
-            deleteReceiptLineItem(lineItem.id);
-          });
-          // now delete the receipt itself
-          console.log('Deleting receipt with id:', id);
-          deleteReceipt(id);
+  const removeReceipt = useCallback(
+    (id: string | undefined) => {
+      if (id !== undefined) {
+        // before deleting receipt, we should delete all line items associated with it
+        allReceiptItems.forEach((lineItem) => {
+          console.log('Deleting receipt line item with id:', lineItem.id);
+          deleteReceiptLineItem(lineItem.id);
+        });
+        // now delete the receipt itself
+        console.log('Deleting receipt with id:', id);
+        deleteReceipt(id);
 
-          if (item.imageId) {
-            // Check if this image is in the failedToUpload queue
-            const uploadInQueue = failedUploads.find((upload) => upload.itemId === item.imageId);
-            if (uploadInQueue && store) {
-              // Remove from failedToUpload table since it never made it to the server
-              console.log(`Removing receipt image ${item.imageId} from failedToUpload queue`);
-              store.delRow('failedToUpload', uploadInQueue.id);
-            } else {
-              // Use the new hook to delete media (will queue if offline)
-              (async () => {
-                const result = await deleteMediaCallback(projectId, [item.imageId], 'receipt');
-                if (!result.success) {
-                  console.error('Failed to delete receipt media:', result.msg);
-                }
-              })();
-            }
-
-            // Delete the local media file (receipts are always photos)
+        if (item.imageId) {
+          // Check if this image is in the failedToUpload queue
+          const uploadInQueue = failedUploads.find((upload) => upload.itemId === item.imageId);
+          if (uploadInQueue && store) {
+            // Remove from failedToUpload table since it never made it to the server
+            console.log(`Removing receipt image ${item.imageId} from failedToUpload queue`);
+            store.delRow('failedToUpload', uploadInQueue.id);
+          } else {
+            // Use the new hook to delete media (will queue if offline)
             (async () => {
-              await deleteLocalMediaFile(orgId, projectId, item.imageId, 'photo', 'receipt');
+              const result = await deleteMediaCallback(projectId, [item.imageId], 'receipt');
+              if (!result.success) {
+                console.error('Failed to delete receipt media:', result.msg);
+              }
             })();
           }
+
+          // Delete the local media file (receipts are always photos)
+          (async () => {
+            await deleteLocalMediaFile(orgId, projectId, item.imageId, 'photo', 'receipt');
+          })();
         }
-      },
-      [
-        deleteReceipt,
-        deleteReceiptLineItem,
-        allReceiptItems,
-        item.imageId,
-        projectId,
-        orgId,
-        deleteMediaCallback,
-        failedUploads,
-        store,
-      ],
+      }
+    },
+    [
+      deleteReceipt,
+      deleteReceiptLineItem,
+      allReceiptItems,
+      item.imageId,
+      projectId,
+      orgId,
+      deleteMediaCallback,
+      failedUploads,
+      store,
+    ],
+  );
+
+  const handleDelete = useCallback(() => {
+    Alert.alert(
+      'Delete Receipt',
+      'Are you sure you want to delete this receipt and any of its association line items?',
+      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeReceipt(item.id) }],
+      { cancelable: true },
     );
+  }, [item.id, removeReceipt]);
 
-    const handleDelete = useCallback(() => {
-      Alert.alert(
-        'Delete Receipt',
-        'Are you sure you want to delete this receipt and any of its association line items?',
-        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeReceipt(item.id) }],
-        { cancelable: true },
-      );
-    }, [item.id, removeReceipt]);
-
-    const renderRightActions = useCallback(() => <RightAction onDelete={handleDelete} />, [handleDelete]);
-    const photoDate = formatDate(item.pictureDate, undefined, true);
-    return (
-      <SwipeableComponent
-        key={item.id}
-        threshold={SWIPE_THRESHOLD_WIDTH}
-        actionWidth={RIGHT_ACTION_WIDTH}
-        renderRightActions={renderRightActions}
-      >
-        <View style={[styles.itemEntry, { borderColor: colors.border }]}>
-          <Pressable
-            onPress={() =>
-              router.push({
-                pathname: '/[projectId]/receipt/[receiptId]',
-                params: { projectId, receiptId: item.id },
-              })
-            }
-          >
-            <View style={styles.itemInfo}>
-              {item.amount === 0 && totalOfAllReceiptItems === 0 && item.imageId ? (
-                <>
-                  <View style={{ flex: 1, alignItems: 'center' }}>
-                    <Base64Image base64String={item.thumbnail} height={ITEM_HEIGHT - 20} width={150} />
-                    <View style={{ width: 150 }}>
-                      <Text style={styles.dateOverlay}>{photoDate}</Text>
+  const renderRightActions = useCallback(() => <RightAction onDelete={handleDelete} />, [handleDelete]);
+  const photoDate = formatDate(item.pictureDate, undefined, true);
+  return (
+    <SwipeableComponent
+      key={item.id}
+      threshold={SWIPE_THRESHOLD_WIDTH}
+      actionWidth={RIGHT_ACTION_WIDTH}
+      renderRightActions={renderRightActions}
+    >
+      <View style={[styles.itemEntry, { borderColor: colors.border }]}>
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: '/[projectId]/receipt/[receiptId]',
+              params: { projectId, receiptId: item.id },
+            })
+          }
+        >
+          <View style={styles.itemInfo}>
+            {item.amount === 0 && totalOfAllReceiptItems === 0 && item.imageId ? (
+              <>
+                <View
+                  style={{
+                    flex: 1,
+                    alignItems: item.description ? 'flex-start' : 'center',
+                    paddingLeft: item.description ? 10 : 0,
+                  }}
+                >
+                  <View style={{ flexDirection: 'row' }}>
+                    <View style={{ alignItems: 'center' }}>
+                      <Base64Image base64String={item.thumbnail} height={ITEM_HEIGHT - 20} width={150} />
+                      <View style={{ width: 150 }}>
+                        <Text style={styles.dateOverlay}>{photoDate}</Text>
+                      </View>
+                    </View>
+                    <View style={{ paddingLeft: 10, justifyContent: 'center' }}>
+                      {item.description && <Text text={`${item.description}`} />}
                     </View>
                   </View>
-                  <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
-                    <Feather name="chevrons-right" size={24} color={colors.iconColor} />
-                  </View>
-                </>
-              ) : (
-                <>
-                  <View style={{ flex: 1, justifyContent: 'center', paddingLeft: 10 }}>
-                    <Text style={{ color: textColor }}>
-                      Amount: {formatCurrency(item.amount, true, true)}
-                    </Text>
-                    <Text style={{ color: textColor }}>Vendor: {item.vendor}</Text>
-                    <Text style={{ color: textColor }}>
-                      # Items: {allReceiptItems.length} / ({totalOfAllReceiptItemsFormatted})
-                    </Text>
-                    <Text style={{ color: textColor }}>Date: {formatDate(item.receiptDate)}</Text>
-                  </View>
-                  <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
-                    <Feather name="chevrons-right" size={24} color={colors.iconColor} />
-                  </View>
-                </>
-              )}
-            </View>
-          </Pressable>
-        </View>
-      </SwipeableComponent>
-    );
-  },
-);
+                </View>
+                <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
+                  <Feather name="chevrons-right" size={24} color={colors.iconColor} />
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={{ flex: 1, justifyContent: 'center', paddingLeft: 10 }}>
+                  <Text style={{ color: textColor }}>Amount: {formatCurrency(item.amount, true, true)}</Text>
+                  <Text style={{ color: textColor }}>Vendor: {item.vendor}</Text>
+                  <Text style={{ color: textColor }}>
+                    # Items: {allReceiptItems.length} / ({totalOfAllReceiptItemsFormatted})
+                  </Text>
+                  <Text style={{ color: textColor }}>Date: {formatDate(item.receiptDate)}</Text>
+                </View>
+                <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
+                  <Feather name="chevrons-right" size={24} color={colors.iconColor} />
+                </View>
+              </>
+            )}
+          </View>
+        </Pressable>
+      </View>
+    </SwipeableComponent>
+  );
+});
 SwipeableReceiptItem.displayName = 'SwipeableReceiptItem';
 
 const styles = StyleSheet.create({

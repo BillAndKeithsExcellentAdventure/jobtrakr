@@ -33,25 +33,23 @@ export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({ item, onShowRece
                 borderColor: colors.border,
               }}
             >
-              <Text txtSize="sub-title">Add Image</Text>
+              <Text txtSize="sub-title" text="Add Image" />
             </View>
           </Pressable>
         )}
       </View>
       <View style={[{ flex: 1, alignItems: 'flex-start' }, !!!item.amount && { alignItems: 'center' }]}>
-        <Pressable onPress={() => onShowDetails(item)}>
-          {item.amount ? (
-            <View style={{ flex: 1, justifyContent: 'center' }}>
-              <Text>Amount: {formatCurrency(item.amount, true, true)}</Text>
-              <Text numberOfLines={1}>Vendor: {item.vendor}</Text>
-              {item.description && <Text numberOfLines={1}>Descr: {item.description}</Text>}
-            </View>
-          ) : (
-            <View style={{ flex: 1, justifyContent: 'center' }}>
-              <Text txtSize="sub-title">No details</Text>
-            </View>
-          )}
-        </Pressable>
+        {0 !== item.amount || item.description?.length > 0 ? (
+          <Pressable onPress={() => onShowDetails(item)} style={{ flex: 1, justifyContent: 'center' }}>
+            {item.amount > 0 && <Text text={`Amount: ${formatCurrency(item.amount, true, true)}`} />}
+            {item.vendor && <Text numberOfLines={1} text={`Vendor: ${item.vendor}`} />}
+            {item.description && <Text numberOfLines={1} text={`Descr: ${item.description}`} />}
+          </Pressable>
+        ) : (
+          <Pressable onPress={() => onShowDetails(item)} style={{ flex: 1, justifyContent: 'center' }}>
+            <Text txtSize="sub-title" text="Add details..." />
+          </Pressable>
+        )}
       </View>
     </View>
   );
@@ -66,5 +64,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
 });
