@@ -508,8 +508,6 @@ const ProjectDetailsPage = () => {
         params: {
           projectId,
           categoryId: item.categoryId,
-          bidAmount: formatCurrency(item.totalBidAmount, true, true),
-          amountSpent: formatCurrency(item.totalSpentAmount, true, true),
         },
       });
     };

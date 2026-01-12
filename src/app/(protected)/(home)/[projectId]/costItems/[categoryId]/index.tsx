@@ -21,17 +21,16 @@ import { CostItemData, CostItemDataCodeCompareAsNumber } from '@/src/models/type
 import CostSummaryItem from '@/src/components/CostSummaryItem';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
+import { formatCurrency } from '@/src/utils/formatters';
 
 const ITEM_HEIGHT = 45;
 
 const CategorySpecificCostItemsPage = () => {
   const router = useRouter();
 
-  const { projectId, categoryId, bidAmount, amountSpent } = useLocalSearchParams<{
+  const { projectId, categoryId } = useLocalSearchParams<{
     projectId: string;
     categoryId: string;
-    bidAmount: string;
-    amountSpent: string;
   }>();
   const colors = useColors();
   const [projectIsReady, setProjectIsReady] = useState(false);
@@ -83,6 +82,16 @@ const CategorySpecificCostItemsPage = () => {
 
     return costItems.sort(CostItemDataCodeCompareAsNumber);
   }, [allWorkItemSummaries, allWorkItems, allActualCostItems, categoryId]);
+
+  const bidAmount = useMemo(
+    () => costItemSummaries.reduce((sum, item) => sum + item.bidAmount, 0),
+    [costItemSummaries],
+  );
+
+  const amountSpent = useMemo(
+    () => costItemSummaries.reduce((sum, item) => sum + item.spentAmount, 0),
+    [costItemSummaries],
+  );
 
   // get a list of unused work items not represented in allWorkItemSummaries and in the current category
   const unusedWorkItemsIdsInCategory = useMemo(
@@ -201,8 +210,8 @@ const CategorySpecificCostItemsPage = () => {
                   width: '100%',
                 }}
               >
-                <Text text={`estimate: ${bidAmount}`} />
-                <Text text={`spent: ${amountSpent}`} />
+                <Text text={`estimate: ${formatCurrency(bidAmount, true, true)}`} />
+                <Text text={`spent: ${formatCurrency(amountSpent, true, true)}`} />
               </View>
             </View>
             <View style={{ flex: 1, paddingBottom: 5 }}>
