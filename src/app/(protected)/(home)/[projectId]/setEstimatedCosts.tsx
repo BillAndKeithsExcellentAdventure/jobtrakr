@@ -4,7 +4,7 @@ import { KeyboardSpacer } from '@/src/components/KeyboardSpacer';
 import { NumberInputField } from '@/src/components/NumberInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
-import { Text, View } from '@/src/components/Themed';
+import { Text, TextInput, View } from '@/src/components/Themed';
 import { useKeyboardGradualAnimation } from '@/src/components/useKeyboardGradualAnimation';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { ColorSchemeColors, useColors } from '@/src/context/ColorsContext';
@@ -64,6 +64,7 @@ const SetEstimatedCostsPage = () => {
   const [currentItemIndex, setCurrentItemIndex] = useState<number>(0);
   const [currentCategory, setCurrentCategory] = useState<WorkCategoryData | null>();
   const [itemEstimate, setItemEstimate] = useState(0);
+  const [itemNote, setItemNote] = useState('');
 
   const flatListRef = React.useRef<FlatList>(null);
 
@@ -107,6 +108,7 @@ const SetEstimatedCostsPage = () => {
 
   useEffect(() => {
     setItemEstimate(currentCostSummary ? currentCostSummary.bidAmount : 0);
+    setItemNote(currentCostSummary ? currentCostSummary.bidNote ?? '' : '');
   }, [currentCostSummary]);
 
   const handleCategoryChange = useCallback((selectedCategory: OptionEntry) => {
@@ -133,12 +135,15 @@ const SetEstimatedCostsPage = () => {
     // without waiting for blur. This solves the issue where NumberInputField only
     // calls onChange on blur events.
     const newValue = focusManager.getFieldValue<number>(ESTIMATE_FIELD_ID) ?? 0;
-    updateWorkItemCostSummary(currentCostSummary.id, { ...currentCostSummary, bidAmount: newValue });
+    updateWorkItemCostSummary(currentCostSummary.id, {
+      ...currentCostSummary,
+      bidAmount: newValue,
+      bidNote: itemNote,
+    });
     setTimeout(() => {
       setCurrentItemIndex((prev) => (prev < allAvailableCostItems.length - 1 ? prev + 1 : prev));
     }, 0);
-  }, [currentCostSummary, updateWorkItemCostSummary, focusManager, allAvailableCostItems]);
-
+  }, [currentCostSummary, updateWorkItemCostSummary, focusManager, allAvailableCostItems, itemNote]);
   const skipToNext = useCallback(() => {
     if (!currentCostSummary) return;
     setCurrentItemIndex((prev) => (prev < allAvailableCostItems.length - 1 ? prev + 1 : prev));
@@ -197,7 +202,11 @@ const SetEstimatedCostsPage = () => {
                       alignItems: 'center',
                     }}
                   >
-                    <Text text="Estimate" txtSize="standard" style={{ marginRight: 10 }} />
+                    <Text
+                      text="Est"
+                      txtSize="standard"
+                      style={{ width: 50, marginRight: 10, textAlign: 'right' }}
+                    />
                     <View style={{ flex: 1 }}>
                       <NumberInputField
                         focusManagerId={ESTIMATE_FIELD_ID}
@@ -208,6 +217,31 @@ const SetEstimatedCostsPage = () => {
                         itemId={currentCostSummary?.id}
                       />
                     </View>
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginTop: 5,
+                    }}
+                  >
+                    <Text
+                      text="Note"
+                      txtSize="standard"
+                      style={{ width: 50, marginRight: 10, textAlign: 'right' }}
+                    />
+                    <TextInput
+                      value={itemNote}
+                      onChangeText={setItemNote}
+                      placeholder="Add a note"
+                      style={{
+                        flex: 1,
+                        borderColor: colors.border,
+                        borderWidth: 1,
+                        borderRadius: 5,
+                        padding: 5,
+                      }}
+                    />
                   </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
                     <ActionButton

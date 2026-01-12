@@ -1,7 +1,8 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { NumberInputField } from '@/src/components/NumberInputField';
 import { Switch } from '@/src/components/Switch';
-import { Text, View } from '@/src/components/Themed';
+import { Text, TextInput, View } from '@/src/components/Themed';
+import { useColors } from '@/src/context/ColorsContext';
 import {
   useAllRows,
   useBidAmountUpdater,
@@ -25,10 +26,12 @@ const CostItemDetails = () => {
   }>();
   const [itemEstimate, setItemEstimate] = useState(0);
   const [itemComplete, setItemComplete] = useState(false);
+  const [itemNote, setItemNote] = useState('');
   const router = useRouter();
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const updateBidEstimate = useUpdateRowCallback(projectId, 'workItemSummaries');
   const deleteCostSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
+  const colors = useColors();
 
   useBidAmountUpdater(projectId);
 
@@ -46,6 +49,7 @@ const CostItemDetails = () => {
 
   useEffect(() => {
     setItemEstimate(workItemSummary ? workItemSummary.bidAmount : 0);
+    setItemNote(workItemSummary ? workItemSummary.bidNote || '' : '');
     setItemComplete(workItemSummary ? workItemSummary.complete : false);
   }, [workItemSummary]);
 
@@ -53,6 +57,14 @@ const CostItemDetails = () => {
     (value: number) => {
       if (workItemSummary) updateBidEstimate(workItemSummary.id, { bidAmount: value });
       setItemEstimate(value);
+    },
+    [workItemSummary, updateBidEstimate],
+  );
+
+  const handleNoteChanged = useCallback(
+    (value: string) => {
+      if (workItemSummary) updateBidEstimate(workItemSummary.id, { bidNote: value });
+      setItemNote(value);
     },
     [workItemSummary, updateBidEstimate],
   );
@@ -109,39 +121,41 @@ const CostItemDetails = () => {
                   alignItems: 'center',
                 }}
               >
-                <Text
-                  text="Estimate"
-                  txtSize="standard"
-                  style={{ textAlign: 'right', width: 90, marginRight: 10 }}
-                />
                 <View style={{ flex: 1 }}>
                   <NumberInputField
+                    label="Estimate"
                     value={itemEstimate}
                     onChange={handleEstimateChanged}
                     placeholder="Estimated Amount"
                   />
                 </View>
               </View>
-              <View
-                style={{
-                  marginTop: 10,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                }}
-              >
-                <Text
-                  text="Spent"
-                  txtSize="standard"
-                  style={{ textAlign: 'right', width: 90, marginRight: 10 }}
+              <View style={{ marginTop: 10 }}>
+                <Text text="Spent" txtSize="formLabel" />
+
+                <TextInput
+                  value={itemNote}
+                  onChangeText={handleNoteChanged}
+                  numberOfLines={2}
+                  placeholder="Add a note"
+                  style={{
+                    borderColor: colors.border,
+                    borderWidth: 1,
+                    borderRadius: 5,
+                    padding: 5,
+                    maxHeight: 70,
+                  }}
                 />
-                <View style={{ flex: 1 }}>
-                  <NumberInputField
-                    value={amountSpent}
-                    placeholder="Amount Spent"
-                    onChange={() => {}}
-                    readOnly
-                  />
-                </View>
+              </View>
+
+              <View style={{ marginTop: 10 }}>
+                <NumberInputField
+                  label="Spent"
+                  value={amountSpent}
+                  placeholder="Amount Spent"
+                  onChange={() => {}}
+                  readOnly
+                />
               </View>
               <View
                 style={{

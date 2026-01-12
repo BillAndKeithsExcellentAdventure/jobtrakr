@@ -15,6 +15,7 @@ export interface WorkItemSummaryData {
   workItemId: string;
   bidAmount: number;
   complete: boolean; // true if all cost items are accounted for
+  bidNote?: string;
 }
 
 // show the most recent date first
@@ -390,26 +391,26 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
 /**
  * Hook that returns a callback to clear all tables in the ProjectDetailsStore.
  * This is used during project deletion to sync the empty state across all devices.
- * 
+ *
  * By clearing all tables instead of deleting the local database or server data,
  * the empty state will be synchronized across all connected devices via TinyBase's
  * sync mechanism. This approach:
  * - Preserves the local database structure for reuse
  * - Syncs the deletion across all devices
  * - Allows TinyBase to manage cleanup naturally
- * 
+ *
  * @param projectId - The ID of the project
  * @returns A callback that clears all tables in the store
  */
 export const useClearProjectDetailsStoreCallback = (projectId: string) => {
   const store = useStore(getStoreId(projectId));
-  
+
   return useCallback(async (): Promise<boolean> => {
     if (!store) {
       console.error('Store not found for project:', projectId);
       return false;
     }
-    
+
     try {
       console.log(`Clearing all tables in ProjectDetailsStore for project: ${projectId}`);
       store.delTables();

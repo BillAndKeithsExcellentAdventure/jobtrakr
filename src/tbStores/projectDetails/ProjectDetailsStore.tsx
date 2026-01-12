@@ -12,6 +12,7 @@ export const TABLES_SCHEMA = {
     workItemId: { type: 'string' },
     bidAmount: { type: 'number' },
     complete: { type: 'boolean' },
+    bidNote: { type: 'string' },
   },
 
   receipts: {
