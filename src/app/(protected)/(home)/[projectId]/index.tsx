@@ -84,6 +84,12 @@ const ProjectDetailsPage = () => {
   useBidAmountUpdater(projectId);
   useWorkItemSpentUpdater(projectId);
 
+  const numWorkItemSummaries = useMemo(() => allWorkItemSummaries.length, [allWorkItemSummaries]);
+  const numCompletedWorkItemSummaries = useMemo(
+    () => allWorkItemSummaries.filter((wis) => wis.complete).length,
+    [allWorkItemSummaries],
+  );
+
   const workItemMap = useMemo(() => {
     return new Map(allWorkItems.map((w) => [w.id, w]));
   }, [allWorkItems]);
@@ -627,12 +633,14 @@ const ProjectDetailsPage = () => {
             <View style={styles.headerContainer}>
               <Text txtSize="title" text={projectData.name} />
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                <Text text={`start: ${formatDate(projectData.startDate)}`} />
                 <Text text={`estimate: ${formatCurrency(projectData.bidPrice, true)}`} />
+                <Text
+                  text={`remaining: ${formatCurrency(projectData.bidPrice - projectData.amountSpent, true)}`}
+                />
               </View>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                <Text text={`due: ${formatDate(projectData.plannedFinish)}`} />
                 <Text text={`spent: ${formatCurrency(projectData.amountSpent, true)}`} />
+                <Text text={`completed: ${numCompletedWorkItemSummaries} of ${numWorkItemSummaries}`} />
               </View>
             </View>
             <View style={{ flex: 1, paddingBottom: 5 }}>

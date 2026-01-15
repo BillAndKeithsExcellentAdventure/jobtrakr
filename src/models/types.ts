@@ -48,6 +48,7 @@ export interface CostItemData {
   title: string;
   bidAmount: number;
   spentAmount: number;
+  complete?: boolean;
 }
 
 export interface CostSectionData {

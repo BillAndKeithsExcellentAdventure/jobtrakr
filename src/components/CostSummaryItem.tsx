@@ -4,7 +4,7 @@ import { useColors } from '@/src/context/ColorsContext';
 
 import { useDeleteRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
-import { MaterialIcons, Feather } from '@expo/vector-icons';
+import { MaterialIcons, Feather, Ionicons, FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet } from 'react-native';
@@ -99,11 +99,21 @@ const CostSummaryItem = React.memo<Props>(({ item, sectionCode, projectId }) => 
           }}
         >
           <View style={styles.itemInfo}>
-            <Text
-              style={{ fontWeight: '700', marginLeft: 10, textOverflow: 'ellipsis', overflow: 'hidden' }}
-              text={`${sectionCode}.${item.code} ${item.title}`}
-              numberOfLines={1}
-            />
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 10,
+                width: '100%',
+              }}
+            >
+              {item.complete && <FontAwesome name="check" size={20} color="#4CAF50" />}
+              <Text
+                style={{ fontWeight: '700', marginLeft: 10, textOverflow: 'ellipsis', overflow: 'hidden' }}
+                text={`${sectionCode}.${item.code} ${item.title}`}
+                numberOfLines={1}
+              />
+            </View>
             <View
               style={{
                 flexDirection: 'row',

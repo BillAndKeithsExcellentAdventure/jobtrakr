@@ -23,8 +23,6 @@ import { ActionButtonProps } from '@/src/components/ButtonBar';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { formatCurrency } from '@/src/utils/formatters';
 
-const ITEM_HEIGHT = 45;
-
 const CategorySpecificCostItemsPage = () => {
   const router = useRouter();
 
@@ -76,12 +74,19 @@ const CategorySpecificCostItemsPage = () => {
         code: workItem.code,
         title: workItem.name,
         bidAmount: costItem.bidAmount,
+        complete: costItem.complete,
         spentAmount: spentAmount,
       });
     }
 
     return costItems.sort(CostItemDataCodeCompareAsNumber);
   }, [allWorkItemSummaries, allWorkItems, allActualCostItems, categoryId]);
+
+  const numberOfCostItems = useMemo(() => costItemSummaries.length, [costItemSummaries]);
+  const numberOfCompletedCostItems = useMemo(
+    () => costItemSummaries.filter((ci) => ci.complete).length,
+    [costItemSummaries],
+  );
 
   const bidAmount = useMemo(
     () => costItemSummaries.reduce((sum, item) => sum + item.bidAmount, 0),
@@ -211,7 +216,18 @@ const CategorySpecificCostItemsPage = () => {
                 }}
               >
                 <Text text={`estimate: ${formatCurrency(bidAmount, true, true)}`} />
+                <Text text={`remaining: ${formatCurrency(bidAmount - amountSpent, true, true)}`} />
+              </View>
+              <View
+                style={{
+                  marginTop: 5,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                }}
+              >
                 <Text text={`spent: ${formatCurrency(amountSpent, true, true)}`} />
+                <Text text={`completed: ${numberOfCompletedCostItems} of ${numberOfCostItems}`} />
               </View>
             </View>
             <View style={{ flex: 1, paddingBottom: 5 }}>
