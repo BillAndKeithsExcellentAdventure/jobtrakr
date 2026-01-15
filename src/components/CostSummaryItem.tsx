@@ -12,7 +12,7 @@ import { Pressable } from 'react-native-gesture-handler';
 import { SwipeableComponent } from '@/src/components/SwipeableComponent';
 import { CostItemData } from '../models/types';
 
-const ITEM_HEIGHT = 45;
+const ITEM_HEIGHT = 65;
 const RIGHT_ACTION_WIDTH = 80;
 const SWIPE_THRESHOLD_WIDTH = 50;
 
@@ -100,24 +100,45 @@ const CostSummaryItem = React.memo<Props>(({ item, sectionCode, projectId }) => 
         >
           <View style={styles.itemInfo}>
             <Text
-              style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
+              style={{ fontWeight: '700', marginLeft: 10, textOverflow: 'ellipsis', overflow: 'hidden' }}
               text={`${sectionCode}.${item.code} ${item.title}`}
               numberOfLines={1}
             />
-            <Text
-              style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
-              text={formatCurrency(item.bidAmount, false, true)}
-            />
-            <Text
-              style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
-              text={formatCurrency(item.spentAmount, false, true)}
-            />
-            <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
-              {item.bidAmount > 0 || item.spentAmount > 0 ? (
-                <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
-              ) : (
-                <Feather name="chevrons-right" size={24} color={colors.iconColor} />
-              )}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: 5,
+                width: '100%',
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  flex: 1,
+                }}
+              >
+                <Text
+                  style={{ flex: 1, textAlign: 'right', overflow: 'hidden' }}
+                  text={formatCurrency(item.bidAmount, false, true)}
+                />
+                <Text
+                  style={{ flex: 1, textAlign: 'right', overflow: 'hidden' }}
+                  text={formatCurrency(item.spentAmount, false, true)}
+                />
+                <Text
+                  style={{ flex: 1, textAlign: 'right', overflow: 'hidden' }}
+                  text={formatCurrency(item.bidAmount - item.spentAmount, false, true)}
+                />
+              </View>
+              <View style={{ paddingLeft: 5, alignItems: 'center', width: 32 }}>
+                {item.bidAmount > 0 || item.spentAmount > 0 ? (
+                  <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
+                ) : (
+                  <Feather name="chevrons-right" size={24} color={colors.iconColor} />
+                )}
+              </View>
             </View>
           </View>
         </Pressable>
@@ -130,17 +151,12 @@ CostSummaryItem.displayName = 'CostSummaryItem';
 const styles = StyleSheet.create({
   itemEntry: {
     width: '100%',
-    alignItems: 'center',
     justifyContent: 'center',
     height: ITEM_HEIGHT,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   itemInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     width: '100%',
-    paddingLeft: 10,
   },
   rightAction: {
     width: RIGHT_ACTION_WIDTH,

@@ -41,8 +41,6 @@ import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const ITEM_HEIGHT = 45;
-
 const ProjectDetailsPage = () => {
   const router = useRouter();
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
@@ -521,42 +519,65 @@ const ProjectDetailsPage = () => {
             backgroundColor: colors.listBackground,
             borderBottomWidth: 1,
             alignItems: 'center',
-            height: ITEM_HEIGHT,
           },
         ]}
       >
         <Pressable style={{ flex: 1 }} onPress={showSection}>
-          <View
-            style={{
-              flexDirection: 'row',
-              backgroundColor: colors.listBackground,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
+          <View>
             <Text
               numberOfLines={1}
-              style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden', color: colors.sectionFG }}
-              text={item.title}
+              style={{
+                flex: 1,
+                textOverflow: 'ellipsis',
+                overflow: 'hidden',
+                color: colors.sectionFG,
+                backgroundColor: colors.listBackground,
+                fontWeight: '700',
+                marginLeft: 10,
+              }}
+              text={`${item.code} ${item.title}`}
             />
-            <Text
-              style={{ width: 100, textAlign: 'right', color: colors.sectionFG }}
-              text={formatCurrency(item.totalBidAmount, false, true)}
-            />
-            <Text
-              style={{ width: 100, textAlign: 'right', color: colors.sectionFG }}
-              text={formatCurrency(item.totalSpentAmount, false, true)}
-            />
+
             <View
               style={{
-                width: 36,
-                paddingLeft: 5,
-                alignItems: 'center',
                 backgroundColor: colors.listBackground,
-                justifyContent: 'center',
+                flexDirection: 'row',
+                alignItems: 'center',
               }}
             >
-              <MaterialIcons name={'chevron-right'} size={24} color={colors.sectionFG} />
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: colors.listBackground,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 5,
+                }}
+              >
+                <Text
+                  style={{ flex: 1, textAlign: 'right', color: colors.sectionFG }}
+                  text={formatCurrency(item.totalBidAmount, false, true)}
+                />
+                <Text
+                  style={{ flex: 1, textAlign: 'right', color: colors.sectionFG }}
+                  text={formatCurrency(item.totalSpentAmount, false, true)}
+                />
+                <Text
+                  style={{ flex: 1, textAlign: 'right', color: colors.sectionFG }}
+                  text={formatCurrency(item.totalBidAmount - item.totalSpentAmount, false, true)}
+                />
+              </View>
+
+              <View
+                style={{
+                  paddingLeft: 5,
+                  alignItems: 'center',
+                  backgroundColor: colors.listBackground,
+                  justifyContent: 'center',
+                }}
+              >
+                <MaterialIcons name={'chevron-right'} size={24} color={colors.sectionFG} />
+              </View>
             </View>
           </View>
         </Pressable>
@@ -574,6 +595,7 @@ const ProjectDetailsPage = () => {
       <Stack.Screen
         options={{
           headerShown: true,
+          headerBackTitle: '',
           title: 'Project Overview',
           headerRight: () => (
             <View style={{ marginRight: 0 }}>
@@ -615,7 +637,7 @@ const ProjectDetailsPage = () => {
             </View>
             <View style={{ flex: 1, paddingBottom: 5 }}>
               <View style={{ marginBottom: 5, alignItems: 'center' }}>
-                <Text txtSize="title" text="Cost Item Summary" />
+                <Text txtSize="title" text="Cost Summary" />
               </View>
               <View
                 style={{
@@ -623,13 +645,14 @@ const ProjectDetailsPage = () => {
                   paddingLeft: 10,
                   paddingRight: 36,
                   paddingVertical: 5,
+                  gap: 5,
                   flexDirection: 'row',
                   backgroundColor: colors.sectionHeaderBG,
                 }}
               >
-                <Text style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }} text="Description" />
-                <Text style={{ width: 100, textAlign: 'right' }} text="Estimate $" />
-                <Text style={{ width: 100, textAlign: 'right' }} text="Spent $" />
+                <Text style={{ width: '33%', textAlign: 'right' }} text="Estimate $" />
+                <Text style={{ width: '33%', textAlign: 'right' }} text="Spent $" />
+                <Text style={{ width: '33%', textAlign: 'right' }} text="Remaining $" />
               </View>
               <FlashList
                 showsVerticalScrollIndicator={false}

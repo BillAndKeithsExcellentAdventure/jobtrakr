@@ -215,9 +215,6 @@ const CategorySpecificCostItemsPage = () => {
               </View>
             </View>
             <View style={{ flex: 1, paddingBottom: 5 }}>
-              <View style={{ marginVertical: 5, alignItems: 'center' }}>
-                <Text txtSize="title" text="Individual Cost Items" />
-              </View>
               <View
                 style={{
                   width: '100%',
@@ -225,12 +222,13 @@ const CategorySpecificCostItemsPage = () => {
                   paddingRight: 36,
                   paddingVertical: 5,
                   flexDirection: 'row',
+                  gap: 5,
                   backgroundColor: colors.sectionHeaderBG,
                 }}
               >
-                <Text style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }} text="Description" />
-                <Text style={{ width: 100, textAlign: 'right' }} text="Estimate $" />
-                <Text style={{ width: 100, textAlign: 'right' }} text="Spent $" />
+                <Text style={{ width: '33%', textAlign: 'right' }} text="Estimate $" />
+                <Text style={{ width: '33%', textAlign: 'right' }} text="Spent $" />
+                <Text style={{ width: '33%', textAlign: 'right' }} text="Remaining $" />
               </View>
               <FlatList
                 showsVerticalScrollIndicator={false}
