@@ -2,43 +2,45 @@
 
 ## Overview
 
-This document describes the implementation of deferred media processing in ProjectHound, which enables the app to queue media upload and delete operations when the device is offline and automatically process them when network connectivity is restored. This ensures a seamless user experience regardless of network conditions.
+This document describes the implementation of deferred media processing in ProjectHound, which enables the app to queue **all** media uploads for background processing and queue delete operations when the device is offline. This ensures a seamless user experience with instant responsiveness regardless of network conditions.
 
 The implementation consists of two main components:
-1. **Upload Sync System** - Handles failed uploads with timeout mechanisms and automatic retry
+1. **Upload Queue System** - Queues all media uploads for background processing to avoid making users wait
 2. **Deferred Delete System** - Queues delete operations for later processing when offline
 
 ## Problem Statement
 
 ### Upload Challenges
 
-When adding a receipt photo with cellular and WiFi disabled, the original implementation had several issues:
-1. The upload operation took a very long time to fail (60+ seconds)
-2. No entry was added to the `failedToUpload` table in `UploadSyncStore`
-3. The image was not automatically retried once connectivity was restored
+The original implementation had several issues:
+1. **Users had to wait** - When online, users waited for uploads to complete, which could be slow on poor networks (15-60+ seconds)
+2. **Inconsistent UX** - Different behavior when online (immediate upload with wait) vs offline (queued)
+3. **Complex code** - Network status checking created branching logic that was harder to maintain
 
 ### Delete Challenges
 
-When a user attempted to delete media (photos/videos) without network connectivity, the delete operation would fail immediately without any retry mechanism. Additionally, if an image was queued for upload (in the `failedToUpload` table) but never uploaded, deleting it would still attempt an API call to the server.
+When a user attempted to delete media (photos/videos) without network connectivity, the delete operation would fail immediately without any retry mechanism. Additionally, if an image was queued for upload (in the `mediaToUpload` table) but never uploaded, deleting it would still attempt an API call to the server.
 
 ## Architecture
 
 ### Upload Sync Store
 
-The `UploadSyncStore` provides two tables for managing deferred operations:
+The `UploadSyncStore` (now `MediaUploadSyncStore`) provides two tables for managing deferred operations:
 
-#### 1. `failedToUpload` Table
+#### 1. `mediaToUpload` Table
+
+This table queues **all** media uploads for background processing (not just failed ones).
 
 ```typescript
-failedToUpload: {
+mediaToUpload: {
   id: { type: 'string' },
+  mediaType: { type: 'string' },
+  resourceType: { type: 'string' },
   organizationId: { type: 'string' },
   projectId: { type: 'string' },
-  imageUri: { type: 'string' },
-  imageType: { type: 'string' },
-  resourceId: { type: 'string' },
-  resourceType: { type: 'string' },
-  errorDate: { type: 'number' },
+  itemId: { type: 'string' },
+  localUri: { type: 'string' },
+  uploadDate: { type: 'number' },
 }
 ```
 
@@ -57,57 +59,68 @@ failedToDelete: {
 
 ### Upload Implementation
 
-#### Timeout Mechanism
-
-**File**: `src/utils/apiWithTokenRefresh.ts`
-
-A `fetchWithTimeout` wrapper function was created that:
-- Implements a 15-second timeout for all network requests
-- Uses `AbortController` to cancel requests that exceed the timeout
-- Provides clear error messages when timeout occurs
-- Properly cleans up timeout handlers
-
-```typescript
-async function fetchWithTimeout(
-  url: string,
-  options: RequestInit = {},
-  timeoutMs: number = DEFAULT_TIMEOUT_MS, // 15000ms
-): Promise<Response>
-```
-
-All fetch calls in both `fetchWithTokenRefresh` and `createApiWithRetry` now use `fetchWithTimeout` instead of native `fetch`.
-
-**Benefits**:
-- Fast failure when network is unavailable (15 seconds instead of 60+)
-- Better user experience - app responds quickly
-- Clear error messages for debugging
-
-#### Error Handling
+#### Background Queue Strategy
 
 **File**: `src/utils/images.tsx`
 
-A comprehensive try-catch block was added around the entire upload logic in `useAddImageCallback`:
-- Wraps both `copyToLocalFolder` and `uploadImage` calls
-- Catches any unexpected exceptions
-- Ensures all failures result in a `failedToUpload` entry
+The `useAddImageCallback` hook now **always** queues uploads for background processing:
+- Removes network status checking - no more online/offline branching
+- All images are added to `mediaToUpload` queue immediately after local copy
+- Returns instantly to user with success message
+- Upload queue processor handles actual uploads in background
+
+```typescript
+// Always queue the upload for background processing
+const data: MediaToUploadData = {
+  id: id,
+  resourceType: resourceType,
+  mediaType: mediaType,
+  localUri: copyLocalResult.uri!,
+  organizationId: orgId,
+  projectId: projectId,
+  itemId: id,
+  uploadDate: Date.now(),
+};
+const result = addMediaToUploadRecord(data);
+return {
+  status: 'Success',
+  id: id,
+  uri: copyLocalResult.uri!,
+  msg: 'File saved. Upload will be processed in the background.',
+};
+```
+
+**Benefits**:
+- **Instant UI response** - Users never wait for uploads
+- **Consistent UX** - Same fast experience online or offline
+- **Simpler code** - Removed ~50 lines of conditional branching logic
+- **Better error handling** - All uploads go through same retry mechanism
+
+#### Error Handling
+
+A comprehensive try-catch block wraps the entire upload logic in `useAddImageCallback`:
+- Catches any unexpected exceptions during file copy
+- Ensures all errors still result in a `mediaToUpload` queue entry
 - Builds the local URI path even if copying failed
-- Returns success with a message indicating retry will happen later
+- Returns success with error message indicating retry will happen later
 
 ```typescript
 try {
-  // Copy and upload logic
+  // Copy file locally
+  const copyLocalResult = await copyToLocalFolder(...);
+  // Queue for background upload
+  addMediaToUploadRecord(data);
 } catch (error) {
-  // Add to failedToUpload queue even on unexpected errors
+  // Even on exception, queue for background upload
   const localUri = buildLocalMediaUri(orgId, projectId, id, mediaType, resourceType);
-  addFailedToUploadRecord(data);
-  return { status: 'Success', msg: 'Will retry later.' };
+  addMediaToUploadRecord(data);
+  return { status: 'Success', msg: 'File saved. Will retry later.' };
 }
 ```
 
 **Benefits**:
-- All upload failures are tracked in the failedToUpload table
-- Automatic retry mechanism works correctly
-- No silent failures
+- No silent failures - all uploads tracked in mediaToUpload table
+- Automatic retry for all failure scenarios
 - Better error logging for debugging
 
 ### Delete Implementation
@@ -118,7 +131,7 @@ try {
 
 This hook provides a network-aware delete callback that:
 
-1. **Checks `failedToUpload` table first**: If any of the images being deleted are in the upload queue (never uploaded to server), it returns success without making an API call
+1. **Checks `mediaToUpload` table first**: If any of the images being deleted are in the upload queue (never uploaded to server), it returns success without making an API call
 2. **Handles offline scenarios**: If the device is offline, the delete request is queued in the `failedToDelete` table
 3. **Handles API failures**: If the delete API call fails, the request is queued for retry
 4. **Handles online scenarios**: If online, attempts immediate deletion via API
@@ -127,13 +140,14 @@ This hook provides a network-aware delete callback that:
 
 **File**: `src/hooks/useUploadQueue.tsx`
 
-The upload queue processor was extended to also process delete operations:
+The upload queue processor handles background processing of uploads and deletes:
 
-- Imports `useAllFailedToDelete` and `deleteMedia`
-- Processes both `failedToUpload` and `failedToDelete` queues
+- Imports `useAllMediaToUpload` and `useAllFailedToDelete`
+- Processes both `mediaToUpload` and `failedToDelete` queues
 - Returns total count of both upload and delete items pending
-- Runs every hour when network is available
+- Runs automatically every hour when network is available
 - Processes uploads first, then deletes
+- Uses extended timeout (120 seconds) for queue processing
 
 #### Component Updates
 
@@ -141,7 +155,7 @@ Three components were updated to use the new delete hook:
 
 **SwipeableReceiptItem**
 - Uses `useDeleteMediaCallback` instead of direct `deleteMedia` call
-- Checks if image is in `failedToUpload` queue
+- Checks if image is in `mediaToUpload` queue
 - If in upload queue, removes it from queue without API call
 - Otherwise, uses the callback which handles network-aware deletion
 
@@ -151,47 +165,33 @@ Three components were updated to use the new delete hook:
 
 **ProjectMediaList**
 - Bulk delete operation with network awareness
-- Checks all selected images against `failedToUpload` queue
-- Removes queued images from `failedToUpload` table
+- Checks all selected images against `mediaToUpload` queue
+- Removes queued images from `mediaToUpload` table
 - Only calls API for images that were successfully uploaded
 
 ## Flow Diagrams
 
-### Upload Flow - Normal (With Network)
+### Upload Flow - All Scenarios (Online or Offline)
 
 ```
 User adds receipt photo
   ↓
 Image is copied to local storage
   ↓
-Image uploads to server within 15 seconds
+Entry is added to mediaToUpload table immediately
   ↓
-Success is returned to user
+User sees instant success: "File saved. Upload will be processed in the background."
+  ↓
+useUploadQueue hook processes queue every hour
+  ↓
+If network available: Upload to server
+  ↓
+On successful upload: Remove from mediaToUpload table
+  ↓
+On failed upload: Keep in queue for next retry
 ```
 
-### Upload Flow - Offline (No Network)
-
-```
-User adds receipt photo
-  ↓
-Image is copied to local storage
-  ↓
-Upload attempt fails after 15 seconds (timeout)
-  ↓
-Error is caught by error handling in uploadImage
-  ↓
-Entry is added to failedToUpload table
-  ↓
-User sees success message: "File saved but unable upload to server. Will try later."
-  ↓
-useUploadQueue hook automatically retries every hour
-  ↓
-When network is restored, image is uploaded successfully
-  ↓
-Entry is removed from failedToUpload table
-```
-
-### Upload Flow - Unexpected Error
+### Upload Flow - Exception Handling
 
 ```
 User adds receipt photo
@@ -200,7 +200,7 @@ If any unexpected exception occurs (e.g., file system error, memory issue)
   ↓
 Outer try-catch in useAddImageCallback catches it
   ↓
-Entry is added to failedToUpload table
+Entry is still added to mediaToUpload table
   ↓
 User sees success message with error details
   ↓
@@ -212,7 +212,7 @@ Automatic retry will occur via useUploadQueue
 ```
 User deletes media
   ↓
-useDeleteMediaCallback checks failedToUpload
+useDeleteMediaCallback checks mediaToUpload
   ↓
 Images NOT in upload queue
   ↓
@@ -229,7 +229,7 @@ Failure: Queue in failedToDelete
 ```
 User deletes media
   ↓
-useDeleteMediaCallback checks failedToUpload
+useDeleteMediaCallback checks mediaToUpload
   ↓
 Images NOT in upload queue
   ↓
@@ -247,11 +247,11 @@ Return success (queued)
 ```
 User deletes media
   ↓
-useDeleteMediaCallback checks failedToUpload
+useDeleteMediaCallback checks mediaToUpload
   ↓
 Images ARE in upload queue
   ↓
-Remove from failedToUpload queue
+Remove from mediaToUpload queue
   ↓
 Remove from local store
   ↓
@@ -261,27 +261,32 @@ Return success (no API call needed)
 ### Queue Processing
 
 ```
-Every hour (or when network restored)
+Every hour (automatically)
   ↓
 Check network status
   ↓
 If online:
   ↓
-  Process all failedToUpload items
+  Process all mediaToUpload items
   ↓
   Process all failedToDelete items
   ↓
   Remove successful operations from queues
+If offline:
+  ↓
+  Skip processing, retry next hour
 ```
 
 ## Benefits
 
 ### Upload Benefits
 
-- Fast failure when network is unavailable (15 seconds instead of 60+)
-- All upload failures are tracked and automatically retried
-- Better user experience with clear feedback
-- No silent failures
+- **Instant response** - Users never wait for uploads (immediate return)
+- **Consistent UX** - Same fast experience whether online or offline
+- **Simpler code** - Removed ~50 lines of network status branching logic
+- **All uploads tracked** - Every upload goes through queue with automatic retry
+- **Better error handling** - Centralized retry mechanism for all uploads
+- **No silent failures** - All uploads logged and tracked
 
 ### Delete Benefits
 
@@ -293,49 +298,67 @@ If online:
 
 ## Configuration
 
-The upload timeout duration is configurable:
+### Queue Processing Interval
+
+The upload queue processes automatically every hour:
 
 ```typescript
-const DEFAULT_TIMEOUT_MS = 15000; // 15 seconds
+// In useUploadQueue.tsx
+setInterval(() => {
+  void processQueue();
+}, 3600000); // 1 hour = 3600000ms
 ```
 
-This can be adjusted in `src/utils/apiWithTokenRefresh.ts` if needed. Consider:
-- **Shorter timeout (10s)**: Faster feedback, but may timeout on slow networks
-- **Longer timeout (30s)**: More lenient for slow networks, but slower feedback when offline
+### Upload Timeout for Queue Processing
 
-15 seconds is a good balance for most use cases.
+When the queue processor uploads files, it uses an extended timeout:
+
+```typescript
+const result = await uploadImage(
+  details,
+  auth.getToken,
+  item.mediaType,
+  item.resourceType,
+  item.localUri,
+  120000, // 120 seconds for background processing
+);
+```
+
+This longer timeout (120s vs normal 15s) ensures background uploads have time to complete on slow networks.
 
 ## Testing Recommendations
 
 ### Upload Tests
 
-#### Test Case 1: Offline Upload
-1. Enable Airplane Mode or disable both WiFi and Cellular
-2. Open the app and navigate to a project
-3. Add a new receipt with a photo
-4. **Expected Results**:
-   - Operation should complete in approximately 15-20 seconds (not 60+ seconds)
-   - User should see a success message mentioning retry
-   - Check app logs - should see timeout error message
-   - Entry should be added to `failedToUpload` table (can verify in app state)
+#### Test Case 1: Add Image (Any Network State)
+1. Open the app and navigate to a project
+2. Add a new receipt with a photo
+3. **Expected Results**:
+   - Operation completes instantly (< 1 second)
+   - User sees: "File saved. Upload will be processed in the background."
+   - Image appears in UI immediately
+   - Entry added to `mediaToUpload` table (can verify in app state)
+   - Works the same whether online or offline
 
-#### Test Case 2: Network Recovery for Uploads
-1. Perform Test Case 1 first
-2. Re-enable network connectivity (turn off Airplane Mode)
+#### Test Case 2: Background Upload Processing (Online)
+1. Add several images per Test Case 1
+2. Ensure network is connected
 3. Wait up to 1 hour OR trigger upload queue manually
 4. **Expected Results**:
-   - Image should upload to server automatically
-   - Entry should be removed from `failedToUpload` table
-   - Image should appear on other devices after sync
+   - Images upload to server in background
+   - Entries removed from `mediaToUpload` table after successful upload
+   - Images appear on other devices after sync
 
-#### Test Case 3: Slow Network
-1. Use network throttling (can use developer tools or network simulator)
-2. Set network to slow 3G or similar
-3. Add a receipt with a photo
-4. **Expected Results**:
-   - If upload completes within 15 seconds: normal success
-   - If upload exceeds 15 seconds: timeout, added to failedToUpload
-   - No hanging or frozen UI
+#### Test Case 3: Background Upload Processing (Offline Then Online)
+1. Disable network (airplane mode)
+2. Add several images per Test Case 1
+3. Verify entries in `mediaToUpload` table
+4. Re-enable network connectivity
+5. Wait up to 1 hour OR trigger upload queue manually
+6. **Expected Results**:
+   - Images upload to server when network restored
+   - Entries removed from `mediaToUpload` table
+   - Images appear on other devices after sync
 
 ### Delete Tests
 
@@ -353,20 +376,19 @@ This can be adjusted in `src/utils/apiWithTokenRefresh.ts` if needed. Consider:
 3. **Expected**: Delete API call happens immediately, item removed from local store
 
 #### Test Case 6: Delete Image in Upload Queue
-1. Disable network
-2. Add a receipt with photo (will be queued in `failedToUpload`)
-3. Delete the receipt
-4. **Expected**: 
+1. Add a receipt with photo (will be queued in `mediaToUpload`)
+2. Delete the receipt before queue processes
+3. **Expected**: 
    - Receipt and photo removed from local store
-   - Photo removed from `failedToUpload` queue
+   - Photo removed from `mediaToUpload` queue
    - No entry added to `failedToDelete` queue
    - No API call made
 
 #### Test Case 7: Bulk Delete with Mixed Items
-1. Have some photos uploaded and some queued
+1. Have some photos already uploaded and some still in queue
 2. Select both types and delete
 3. **Expected**:
-   - Queued photos removed from `failedToUpload`
+   - Queued photos removed from `mediaToUpload`
    - Uploaded photos deleted via API or queued if offline
    - All removed from local store
 
@@ -379,20 +401,19 @@ This can be adjusted in `src/utils/apiWithTokenRefresh.ts` if needed. Consider:
 ### Verification Points
 
 To verify the implementation is working:
-1. Check console logs for timeout messages
-2. Verify `failedToUpload` table contains entries after offline upload attempts
+1. Check console logs for queue processing messages
+2. Verify `mediaToUpload` table contains entries immediately after adding images
 3. Verify `failedToDelete` table contains entries after offline delete attempts
-4. Verify entries are removed after successful retry
-5. Confirm operations complete quickly (within 15-20 seconds) when offline
-6. Verify no silent failures - all failures should be logged
+4. Verify entries are removed after successful background processing
+5. Confirm add image operations complete instantly (< 1 second)
+6. Verify no silent failures - all uploads logged and tracked in queue
 
 ## Related Files
 
 ### Core Implementation
-- `src/tbStores/UploadSyncStore.tsx` - Table schemas and hooks for both tables
-- `src/utils/apiWithTokenRefresh.ts` - Timeout implementation
-- `src/utils/images.tsx` - `useAddImageCallback` and `useDeleteMediaCallback` hooks
-- `src/hooks/useUploadQueue.tsx` - Queue processing logic for both uploads and deletes
+- `src/tbStores/UploadSyncStore.tsx` - Table schemas and hooks (`MediaUploadSyncStore`, `mediaToUpload`, `failedToDelete`)
+- `src/utils/images.tsx` - `useAddImageCallback` (always queues) and `useDeleteMediaCallback` hooks
+- `src/hooks/useUploadQueue.tsx` - Background queue processing logic for both uploads and deletes
 
 ### Component Integration
 - `src/components/SwipeableReceiptItem.tsx` - Receipt deletion
@@ -430,6 +451,8 @@ The following improvements are prioritized based on user impact and implementati
 ### Completed
 
 - ✅ **Network state detection using `@react-native-community/netinfo`** - Implemented via `NetworkContext`. See `docs/NETINFO_INTEGRATION.md` for details.
-- ✅ **Timeout mechanism for uploads** - 15-second timeout implemented
+- ✅ **Always queue uploads** - All uploads queued for background processing regardless of network status
+- ✅ **Instant UI response** - Users never wait for uploads
 - ✅ **Deferred delete queue** - Full implementation with automatic retry
 - ✅ **Smart delete handling** - No API calls for images that never uploaded
+- ✅ **Renamed terminology** - `failedToUpload` → `mediaToUpload` to better reflect that all uploads are queued
