@@ -7,8 +7,8 @@ import * as MediaLibrary from 'expo-media-library';
 import {
   MediaToUploadData,
   useAddMediaToUploadCallback,
-  FailedToDeleteData,
-  useAddFailedToDeleteCallback,
+  ServerMediaToDeleteData,
+  useAddServerMediaToDeleteCallback,
   useAllMediaToUpload,
 } from '@/src/tbStores/UploadSyncStore';
 import { API_BASE_URL } from '../constants/app-constants';
@@ -304,16 +304,16 @@ export const deleteMedia = async (
 };
 
 /**
- * Helper function to create a FailedToDeleteData object.
+ * Helper function to create a ServerMediaToDeleteData object.
  * Note: The id field is initialized to empty string and will be replaced
- * by the addFailedToDeleteRecord callback with a generated UUID.
+ * by the addServerMediaToDeleteRecord callback with a generated UUID.
  */
-const createFailedToDeleteData = (
+const createServerMediaToDeleteData = (
   orgId: string,
   projectId: string,
   imageIds: string[],
   imageType: string,
-): FailedToDeleteData => ({
+): ServerMediaToDeleteData => ({
   id: '', // Will be replaced by the callback with a generated UUID
   organizationId: orgId,
   projectId: projectId,
@@ -323,14 +323,14 @@ const createFailedToDeleteData = (
 });
 
 /**
- * Helper function to create a FailedToDeleteData object for public/non-public operations.
- * This reuses the FailedToDeleteData structure since it has the same shape needed for retries.
+ * Helper function to create a ServerMediaToDeleteData object for public/non-public operations.
+ * This reuses the ServerMediaToDeleteData structure since it has the same shape needed for retries.
  */
 const createFailedToPublicData = (
   orgId: string,
   projectId: string,
   imageIds: string[],
-): FailedToDeleteData => ({
+): ServerMediaToDeleteData => ({
   id: '',
   organizationId: orgId,
   projectId: projectId,
@@ -571,16 +571,14 @@ const fetchProjectPublicImageIds = async (
 };
 
 /**
- * Hook that provides a callback to delete media with network-aware queuing.
+ * Hook that provides a callback to delete media with background queuing.
+ * All delete operations are queued for background processing to avoid making users wait.
  * If the media is in the mediaToUpload queue, it's removed from there without an API call.
- * If offline, the delete request is queued for later processing.
- * If online, the delete is executed immediately via the API.
  */
 export const useDeleteMediaCallback = () => {
   const auth = useAuth();
   const { userId, orgId } = auth;
-  const { isConnected, isInternetReachable } = useNetwork();
-  const addFailedToDeleteRecord = useAddFailedToDeleteCallback();
+  const addServerMediaToDeleteRecord = useAddServerMediaToDeleteCallback();
   const mediaToUpload = useAllMediaToUpload();
 
   return useCallback(
@@ -617,72 +615,26 @@ export const useDeleteMediaCallback = () => {
         };
       }
 
-      // Check network connectivity before attempting delete
-      if (!isConnected || isInternetReachable === false) {
-        console.log('No network connection detected. Queuing delete without attempting network call.');
+      // Always queue the delete for background processing to avoid making the user wait
+      console.log(
+        `Queuing delete for background processing - ${imageIds.length} images of type ${imageType}`,
+      );
+      const data = createServerMediaToDeleteData(orgId, projectId, imageIds, imageType);
 
-        const data = createFailedToDeleteData(orgId, projectId, imageIds, imageType);
-
-        const result = addFailedToDeleteRecord(data);
-        if (result.status === 'Success') {
-          return {
-            success: true,
-            msg: 'Delete operation queued. Will be processed when network is available.',
-          };
-        } else {
-          return {
-            success: false,
-            msg: `Failed to queue delete operation: ${result.msg}`,
-          };
-        }
-      }
-
-      // Network is available, attempt to delete immediately
-      try {
-        const deleteResult = await deleteMedia(userId, orgId, projectId, imageIds, imageType, auth.getToken);
-
-        // If the immediate delete fails, queue it for retry
-        if (!deleteResult.success) {
-          console.log('Delete failed, queuing for retry:', deleteResult.msg);
-
-          const data = createFailedToDeleteData(orgId, projectId, imageIds, imageType);
-
-          const result = addFailedToDeleteRecord(data);
-          if (result.status === 'Success') {
-            return {
-              success: true,
-              msg: 'Delete failed but queued for retry.',
-            };
-          } else {
-            return {
-              success: false,
-              msg: `Delete failed and could not queue for retry: ${result.msg}`,
-            };
-          }
-        }
-
-        return deleteResult;
-      } catch (error) {
-        console.error('Unexpected error in useDeleteMediaCallback:', error);
-
-        // Queue the delete for retry on unexpected errors
-        const data = createFailedToDeleteData(orgId, projectId, imageIds, imageType);
-
-        const result = addFailedToDeleteRecord(data);
-        if (result.status === 'Success') {
-          return {
-            success: true,
-            msg: `Delete encountered an error but queued for retry: ${formatErrorMessage(error)}`,
-          };
-        } else {
-          return {
-            success: false,
-            msg: `Delete failed with error and could not queue: ${formatErrorMessage(error)}`,
-          };
-        }
+      const result = addServerMediaToDeleteRecord(data);
+      if (result.status === 'Success') {
+        return {
+          success: true,
+          msg: 'Delete operation queued. Will be processed in the background.',
+        };
+      } else {
+        return {
+          success: false,
+          msg: `Failed to queue delete operation: ${result.msg}`,
+        };
       }
     },
-    [userId, orgId, auth, isConnected, isInternetReachable, addFailedToDeleteRecord, mediaToUpload],
+    [userId, orgId, auth, addServerMediaToDeleteRecord, mediaToUpload],
   );
 };
 

@@ -44,14 +44,16 @@ mediaToUpload: {
 }
 ```
 
-#### 2. `failedToDelete` Table
+#### 2. `serverMediaToDelete` Table
+
+This table queues **all** media delete operations for background processing (not just failed ones).
 
 ```typescript
-failedToDelete: {
+serverMediaToDelete: {
   id: { type: 'string' },
   organizationId: { type: 'string' },
   projectId: { type: 'string' },
-  imageIds: { type: 'string' },        // JSON string array
+  imageIds: { type: 'string' },
   imageType: { type: 'string' },
   deleteDate: { type: 'number' },
 }
@@ -129,12 +131,11 @@ try {
 
 **File**: `src/utils/images.tsx`
 
-This hook provides a network-aware delete callback that:
+This hook provides a callback that **always queues** delete operations for background processing:
 
 1. **Checks `mediaToUpload` table first**: If any of the images being deleted are in the upload queue (never uploaded to server), it returns success without making an API call
-2. **Handles offline scenarios**: If the device is offline, the delete request is queued in the `failedToDelete` table
-3. **Handles API failures**: If the delete API call fails, the request is queued for retry
-4. **Handles online scenarios**: If online, attempts immediate deletion via API
+2. **Always queues for background**: All delete operations are queued in the `serverMediaToDelete` table for background processing
+3. **No network checking**: Removes network status branching - consistent behavior online or offline
 
 #### Queue Processing: `useUploadQueue` Hook
 
@@ -142,8 +143,8 @@ This hook provides a network-aware delete callback that:
 
 The upload queue processor handles background processing of uploads and deletes:
 
-- Imports `useAllMediaToUpload` and `useAllFailedToDelete`
-- Processes both `mediaToUpload` and `failedToDelete` queues
+- Imports `useAllMediaToUpload` and `useAllServerMediaToDelete`
+- Processes both `mediaToUpload` and `serverMediaToDelete` queues
 - Returns total count of both upload and delete items pending
 - Runs automatically every hour when network is available
 - Processes uploads first, then deletes
@@ -207,7 +208,7 @@ User sees success message with error details
 Automatic retry will occur via useUploadQueue
 ```
 
-### Delete Flow - Online
+### Delete Flow - All Scenarios (Online or Offline)
 
 ```
 User deletes media
@@ -216,30 +217,17 @@ useDeleteMediaCallback checks mediaToUpload
   ↓
 Images NOT in upload queue
   ↓
-Network is available
+Entry is added to serverMediaToDelete table immediately
   ↓
-Call deleteMedia API
+User sees instant success: "Delete operation queued. Will be processed in the background."
   ↓
-Success: Remove from local store
-Failure: Queue in failedToDelete
-```
-
-### Delete Flow - Offline
-
-```
-User deletes media
+useUploadQueue hook processes queue every hour
   ↓
-useDeleteMediaCallback checks mediaToUpload
+If network available: Delete from server via API
   ↓
-Images NOT in upload queue
+On successful delete: Remove from serverMediaToDelete table
   ↓
-Network is NOT available
-  ↓
-Add to failedToDelete queue
-  ↓
-Remove from local store
-  ↓
-Return success (queued)
+On failed delete: Keep in queue for next retry
 ```
 
 ### Delete Flow - Image in Upload Queue
@@ -269,7 +257,7 @@ If online:
   ↓
   Process all mediaToUpload items
   ↓
-  Process all failedToDelete items
+  Process all serverMediaToDelete items
   ↓
   Remove successful operations from queues
 If offline:
@@ -290,11 +278,13 @@ If offline:
 
 ### Delete Benefits
 
-- **Offline resilience**: Users can delete media even when offline
+- **Instant response** - Users never wait for deletes (immediate return)
+- **Consistent UX** - Same fast experience whether online or offline
+- **Simpler code** - Removed network status branching logic
 - **No unnecessary API calls**: Images that never uploaded don't trigger delete API calls
-- **Automatic retry**: Failed deletes are automatically retried when network is available
+- **Automatic retry**: All deletes are automatically retried when network is available
 - **Consistent with upload pattern**: Uses the same queue-based approach as uploads
-- **Better UX**: Users see immediate feedback even when operations are queued
+- **Better UX**: Users see immediate feedback - all operations are queued
 
 ## Configuration
 
@@ -362,18 +352,20 @@ This longer timeout (120s vs normal 15s) ensures background uploads have time to
 
 ### Delete Tests
 
-#### Test Case 4: Delete with Network Disabled
-1. Disable network (airplane mode)
-2. Delete a receipt/invoice/photo
-3. **Expected**: Operation succeeds immediately, item added to `failedToDelete` queue
-4. Enable network
-5. Wait up to 1 hour or trigger queue manually
-6. **Expected**: Delete API call succeeds, item removed from queue
+#### Test Case 4: Delete Media (Any Network State)
+1. Delete a receipt/invoice/photo
+2. **Expected Results**:
+   - Operation completes instantly (< 1 second)
+   - User sees: "Delete operation queued. Will be processed in the background."
+   - Local file removed immediately
+   - Entry added to `serverMediaToDelete` table
+   - Works the same whether online or offline
 
-#### Test Case 5: Delete with Network Enabled
-1. Ensure network is connected
-2. Delete a receipt/invoice/photo
-3. **Expected**: Delete API call happens immediately, item removed from local store
+#### Test Case 5: Background Delete Processing (Online)
+1. Delete several items per Test Case 4
+2. Ensure network is connected
+3. Wait up to 1 hour OR trigger queue manually
+4. **Expected**: Deletes processed on server, entries removed from `serverMediaToDelete` table
 
 #### Test Case 6: Delete Image in Upload Queue
 1. Add a receipt with photo (will be queued in `mediaToUpload`)
@@ -381,7 +373,7 @@ This longer timeout (120s vs normal 15s) ensures background uploads have time to
 3. **Expected**: 
    - Receipt and photo removed from local store
    - Photo removed from `mediaToUpload` queue
-   - No entry added to `failedToDelete` queue
+   - No entry added to `serverMediaToDelete` queue
    - No API call made
 
 #### Test Case 7: Bulk Delete with Mixed Items
@@ -403,16 +395,17 @@ This longer timeout (120s vs normal 15s) ensures background uploads have time to
 To verify the implementation is working:
 1. Check console logs for queue processing messages
 2. Verify `mediaToUpload` table contains entries immediately after adding images
-3. Verify `failedToDelete` table contains entries after offline delete attempts
+3. Verify `serverMediaToDelete` table contains entries immediately after deleting items
 4. Verify entries are removed after successful background processing
 5. Confirm add image operations complete instantly (< 1 second)
-6. Verify no silent failures - all uploads logged and tracked in queue
+6. Confirm delete operations complete instantly (< 1 second)
+7. Verify no silent failures - all uploads and deletes logged and tracked in queues
 
 ## Related Files
 
 ### Core Implementation
-- `src/tbStores/UploadSyncStore.tsx` - Table schemas and hooks (`MediaUploadSyncStore`, `mediaToUpload`, `failedToDelete`)
-- `src/utils/images.tsx` - `useAddImageCallback` (always queues) and `useDeleteMediaCallback` hooks
+- `src/tbStores/UploadSyncStore.tsx` - Table schemas and hooks (`MediaUploadSyncStore`, `mediaToUpload`, `serverMediaToDelete`)
+- `src/utils/images.tsx` - `useAddImageCallback` (always queues) and `useDeleteMediaCallback` (always queues) hooks
 - `src/hooks/useUploadQueue.tsx` - Background queue processing logic for both uploads and deletes
 
 ### Component Integration
@@ -452,7 +445,8 @@ The following improvements are prioritized based on user impact and implementati
 
 - ✅ **Network state detection using `@react-native-community/netinfo`** - Implemented via `NetworkContext`. See `docs/NETINFO_INTEGRATION.md` for details.
 - ✅ **Always queue uploads** - All uploads queued for background processing regardless of network status
-- ✅ **Instant UI response** - Users never wait for uploads
+- ✅ **Always queue deletes** - All deletes queued for background processing regardless of network status
+- ✅ **Instant UI response** - Users never wait for uploads or deletes
 - ✅ **Deferred delete queue** - Full implementation with automatic retry
 - ✅ **Smart delete handling** - No API calls for images that never uploaded
-- ✅ **Renamed terminology** - `failedToUpload` → `mediaToUpload` to better reflect that all uploads are queued
+- ✅ **Renamed terminology** - `failedToUpload` → `mediaToUpload` and `failedToDelete` → `serverMediaToDelete` to better reflect that all operations are queued

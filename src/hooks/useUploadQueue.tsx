@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@clerk/clerk-expo';
 import { useNetwork } from '../context/NetworkContext';
-import { useAllMediaToUpload, useAllFailedToDelete, useUploadSyncStore } from '../tbStores/UploadSyncStore';
+import { useAllMediaToUpload, useAllServerMediaToDelete, useUploadSyncStore } from '../tbStores/UploadSyncStore';
 import { mediaType, resourceType, ImageDetails, uploadImage, deleteMedia } from '../utils/images';
 
 /**
@@ -15,7 +15,7 @@ export const useUploadQueue = () => {
   const { userId, orgId } = auth;
   const { isConnected, isInternetReachable } = useNetwork();
   const mediaToUpload = useAllMediaToUpload();
-  const failedDeletes = useAllFailedToDelete();
+  const serverMediaToDelete = useAllServerMediaToDelete();
   const store = useUploadSyncStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
@@ -35,7 +35,7 @@ export const useUploadQueue = () => {
     // Process uploads and deletes asynchronously without blocking UI
     const processQueue = async () => {
       // Skip if already processing or no items to process
-      if (isProcessing || (mediaToUpload.length === 0 && failedDeletes.length === 0)) {
+      if (isProcessing || (mediaToUpload.length === 0 && serverMediaToDelete.length === 0)) {
         return;
       }
 
@@ -50,7 +50,7 @@ export const useUploadQueue = () => {
 
       setIsProcessing(true);
       const uploadsToProcess = [...mediaToUpload];
-      const deletesToProcess = [...failedDeletes];
+      const deletesToProcess = [...serverMediaToDelete];
       const totalItems = uploadsToProcess.length + deletesToProcess.length;
       console.log(
         `Starting queue processing. ${uploadsToProcess.length} uploads, ${deletesToProcess.length} deletes (${totalItems} total).`,
@@ -151,8 +151,8 @@ export const useUploadQueue = () => {
             console.log(`Successfully deleted images: ${imageIds.join(', ')}`);
             successCount++;
 
-            // Remove from failed deletes table
-            store.delRow('failedToDelete', item.id);
+            // Remove from server media delete table
+            store.delRow('serverMediaToDelete', item.id);
           } else {
             console.warn(`Failed to delete images: ${result.msg}`);
             failCount++;
@@ -193,18 +193,18 @@ export const useUploadQueue = () => {
     auth,
     store,
     mediaToUpload,
-    failedDeletes,
+    serverMediaToDelete,
     isProcessing,
     isConnected,
     isInternetReachable,
   ]);
-  // Note: Including mediaToUpload, failedDeletes, and isProcessing in dependencies to ensure we have latest data
+  // Note: Including mediaToUpload, serverMediaToDelete, and isProcessing in dependencies to ensure we have latest data
   // when processing runs via interval. Including isConnected and isInternetReachable to automatically
-  // retry failed operations when connectivity is restored.
+  // retry operations when connectivity is restored.
 
   return {
     isProcessing,
-    totalItems: mediaToUpload.length + failedDeletes.length,
+    totalItems: mediaToUpload.length + serverMediaToDelete.length,
     processedCount,
   };
 };
