@@ -101,6 +101,11 @@ const CategorySpecificCostItemsPage = () => {
     [costItemSummaries],
   );
 
+  // create projectBalance by summing sectionData totalBalance
+  const balance = useMemo(() => {
+    return costItemSummaries.reduce((sum, item) => sum + item.balance, 0);
+  }, [costItemSummaries]);
+
   // get a list of unused work items not represented in allWorkItemSummaries and in the current category
   const unusedWorkItemsIdsInCategory = useMemo(
     () =>
@@ -218,8 +223,8 @@ const CategorySpecificCostItemsPage = () => {
                   width: '100%',
                 }}
               >
-                <Text text={`estimate: ${formatCurrency(bidAmount, true, true)}`} />
-                <Text text={`remaining: ${formatCurrency(bidAmount - amountSpent, true, true)}`} />
+                <Text text={`est: ${formatCurrency(bidAmount, true, true)}`} />
+                <Text text={`bal: ${formatCurrency(balance, true, true)}`} />
               </View>
               <View
                 style={{
@@ -230,7 +235,7 @@ const CategorySpecificCostItemsPage = () => {
                 }}
               >
                 <Text text={`spent: ${formatCurrency(amountSpent, true, true)}`} />
-                <Text text={`completed: ${numberOfCompletedCostItems} of ${numberOfCostItems}`} />
+                <Text text={`complete: ${numberOfCompletedCostItems} of ${numberOfCostItems}`} />
               </View>
             </View>
             <View style={{ flex: 1, paddingBottom: 5 }}>
@@ -247,7 +252,7 @@ const CategorySpecificCostItemsPage = () => {
               >
                 <Text style={{ width: '33%', textAlign: 'right' }} text="Estimate $" />
                 <Text style={{ width: '33%', textAlign: 'right' }} text="Spent $" />
-                <Text style={{ width: '33%', textAlign: 'right' }} text="Remaining $" />
+                <Text style={{ width: '33%', textAlign: 'right' }} text="Balance $" />
               </View>
               <FlatList
                 showsVerticalScrollIndicator={false}

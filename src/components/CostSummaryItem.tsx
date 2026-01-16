@@ -78,6 +78,20 @@ const CostSummaryItem = React.memo<Props>(({ item, sectionCode, projectId }) => 
     return RenderRightActionsComponent;
   }, [handleDelete, item.bidAmount, item.spentAmount]);
 
+  const balanceColor = useMemo(() => {
+    {
+      if (!item.complete) {
+        return colors?.text;
+      }
+
+      if (item.balance >= 0) {
+        return colors?.profitFg;
+      } else {
+        return colors?.lossFg;
+      }
+    }
+  }, [item.balance, colors]);
+
   return (
     <SwipeableComponent
       key={item.id}
@@ -109,9 +123,15 @@ const CostSummaryItem = React.memo<Props>(({ item, sectionCode, projectId }) => 
                 width: '100%',
               }}
             >
-              {item.complete && <FontAwesome name="check" size={20} color="#4CAF50" />}
+              {item.complete && <FontAwesome name="check" size={20} color={balanceColor} />}
               <Text
-                style={{ fontWeight: '700', marginLeft: 10, textOverflow: 'ellipsis', overflow: 'hidden' }}
+                style={{
+                  color: balanceColor,
+                  fontWeight: '700',
+                  marginLeft: 10,
+                  textOverflow: 'ellipsis',
+                  overflow: 'hidden',
+                }}
                 text={`${sectionCode}.${item.code} ${item.title}`}
                 numberOfLines={1}
               />
@@ -132,23 +152,23 @@ const CostSummaryItem = React.memo<Props>(({ item, sectionCode, projectId }) => 
                 }}
               >
                 <Text
-                  style={{ flex: 1, textAlign: 'right', overflow: 'hidden' }}
+                  style={{ color: balanceColor, flex: 1, textAlign: 'right', overflow: 'hidden' }}
                   text={formatCurrency(item.bidAmount, false, true)}
                 />
                 <Text
-                  style={{ flex: 1, textAlign: 'right', overflow: 'hidden' }}
+                  style={{ color: balanceColor, flex: 1, textAlign: 'right', overflow: 'hidden' }}
                   text={formatCurrency(item.spentAmount, false, true)}
                 />
                 <Text
-                  style={{ flex: 1, textAlign: 'right', overflow: 'hidden' }}
+                  style={{ color: balanceColor, flex: 1, textAlign: 'right', overflow: 'hidden' }}
                   text={formatCurrency(item.balance, false, true)}
                 />
               </View>
               <View style={{ paddingLeft: 5, alignItems: 'center', width: 32 }}>
                 {item.bidAmount > 0 || item.spentAmount > 0 ? (
-                  <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
+                  <MaterialIcons name="chevron-right" size={24} color={balanceColor} />
                 ) : (
-                  <Feather name="chevrons-right" size={24} color={colors.iconColor} />
+                  <Feather name="chevrons-right" size={24} color={balanceColor} />
                 )}
               </View>
             </View>

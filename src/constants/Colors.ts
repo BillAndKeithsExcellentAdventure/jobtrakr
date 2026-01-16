@@ -75,6 +75,8 @@ export const Colors = {
     buttonBlue: '#007bff',
     sectionHeaderBG: '#d0c9c1',
     sectionFG: '#00008c',
+    profitFg: '#0F9D58',
+    lossFg: '#D93025',
   },
   dark: {
     neutral900: '#FFFFFF',
@@ -144,5 +146,7 @@ export const Colors = {
     buttonBlue: '#007bff',
     sectionFG: '#74bbfb',
     sectionHeaderBG: '#424041',
+    profitFg: '#34D399',
+    lossFg: '#F87171',
   },
 };

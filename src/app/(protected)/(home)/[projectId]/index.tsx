@@ -149,6 +149,11 @@ const ProjectDetailsPage = () => {
     return sections.sort(CostSectionDataCodeCompareAsNumber);
   }, [allWorkItemSummaries, allActualCostItems, workItemMap, categoryMap]);
 
+  // create projectBalance by summing sectionData totalBalance
+  const projectBalance = useMemo(() => {
+    return sectionData.reduce((sum, section) => sum + section.totalBalance, 0);
+  }, [sectionData]);
+
   // get a list of unused work items not represented in allWorkItemSummaries
   const unusedWorkItems = useMemo(
     () => allWorkItems.filter((w) => !allWorkItemSummaries.some((i) => i.workItemId === w.id)),
@@ -639,14 +644,12 @@ const ProjectDetailsPage = () => {
             <View style={styles.headerContainer}>
               <Text txtSize="title" text={projectData.name} />
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                <Text text={`estimate: ${formatCurrency(projectData.bidPrice, true)}`} />
-                <Text
-                  text={`remaining: ${formatCurrency(projectData.bidPrice - projectData.amountSpent, true)}`}
-                />
+                <Text text={`est: ${formatCurrency(projectData.bidPrice, true)}`} />
+                <Text text={`bal: ${formatCurrency(projectBalance, true)}`} />
               </View>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
                 <Text text={`spent: ${formatCurrency(projectData.amountSpent, true)}`} />
-                <Text text={`completed: ${numCompletedWorkItemSummaries} of ${numWorkItemSummaries}`} />
+                <Text text={`complete: ${numCompletedWorkItemSummaries} of ${numWorkItemSummaries}`} />
               </View>
             </View>
             <View style={{ flex: 1, paddingBottom: 5 }}>
@@ -666,7 +669,7 @@ const ProjectDetailsPage = () => {
               >
                 <Text style={{ width: '33%', textAlign: 'right' }} text="Estimate $" />
                 <Text style={{ width: '33%', textAlign: 'right' }} text="Spent $" />
-                <Text style={{ width: '33%', textAlign: 'right' }} text="Remaining $" />
+                <Text style={{ width: '33%', textAlign: 'right' }} text="Balance $" />
               </View>
               <FlashList
                 showsVerticalScrollIndicator={false}

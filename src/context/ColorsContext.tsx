@@ -65,6 +65,8 @@ export type ColorSchemeColors = {
   sectionFG: string;
   percentBarBackground: string;
   percentCompleteBackground: string;
+  profitFg: string;
+  lossFg: string;
 };
 
 const ColorsContext = createContext<ColorSchemeColors | null>(null);
