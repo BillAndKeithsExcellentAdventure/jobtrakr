@@ -68,6 +68,8 @@ const CategorySpecificCostItemsPage = () => {
         .filter((i) => i.workItemId === workItem.id)
         .reduce((sum, item) => sum + item.amount, 0);
 
+      const balance = costItem.complete ? 0 : costItem.bidAmount - spentAmount;
+
       costItems.push({
         id: costItem.id,
         workItemId: workItem.id,
@@ -76,6 +78,7 @@ const CategorySpecificCostItemsPage = () => {
         bidAmount: costItem.bidAmount,
         complete: costItem.complete,
         spentAmount: spentAmount,
+        balance: balance,
       });
     }
 

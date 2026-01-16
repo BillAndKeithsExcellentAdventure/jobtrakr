@@ -40,7 +40,8 @@ const areEqual = (prevProps: Props, nextProps: Props) => {
     prevProps.item.title === nextProps.item.title &&
     prevProps.item.complete === nextProps.item.complete &&
     prevProps.item.bidAmount === nextProps.item.bidAmount &&
-    prevProps.item.spentAmount === nextProps.item.spentAmount
+    prevProps.item.spentAmount === nextProps.item.spentAmount &&
+    prevProps.item.balance === nextProps.item.balance
   );
 };
 
@@ -140,7 +141,7 @@ const CostSummaryItem = React.memo<Props>(({ item, sectionCode, projectId }) => 
                 />
                 <Text
                   style={{ flex: 1, textAlign: 'right', overflow: 'hidden' }}
-                  text={formatCurrency(item.bidAmount - item.spentAmount, false, true)}
+                  text={formatCurrency(item.balance, false, true)}
                 />
               </View>
               <View style={{ paddingLeft: 5, alignItems: 'center', width: 32 }}>
