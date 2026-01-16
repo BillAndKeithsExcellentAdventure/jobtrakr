@@ -22,6 +22,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { buildLocalMediaUri, useAddImageCallback, useGetImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
 
 const InvoiceDetailsPage = () => {
   const defaultDate = new Date();
@@ -115,6 +116,22 @@ const InvoiceDetailsPage = () => {
       const response = updateInvoice(updatedInvoice.id, updatedInvoice);
       if (response?.status !== 'Success') {
         alert(`Unable to add invoice image - ${JSON.stringify(response)}`);
+      }
+
+      // Delete the photo from the camera roll after successfully copying to app directory
+      if (asset.assetId) {
+        try {
+          const { status } = await MediaLibrary.requestPermissionsAsync();
+          if (status === 'granted') {
+            await MediaLibrary.deleteAssetsAsync([asset.assetId]);
+            console.log('Successfully deleted photo from camera roll:', asset.assetId);
+          } else {
+            console.log('Media library permissions not granted, photo remains in camera roll');
+          }
+        } catch (error) {
+          console.error('Error deleting photo from camera roll:', error);
+          // Don't alert user - the image is already saved to app directory
+        }
       }
     }
   }, [projectId, addInvoiceImage, updateInvoice, invoice]);

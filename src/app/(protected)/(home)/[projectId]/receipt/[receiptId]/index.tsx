@@ -17,6 +17,7 @@ import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
 import { File } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
@@ -113,6 +114,22 @@ const ReceiptDetailsPage = () => {
       const response = updateReceipt(updatedReceipt.id, updatedReceipt);
       if (response?.status !== 'Success') {
         Alert.alert('Error', `Unable to add receipt image - ${JSON.stringify(response)}`);
+      }
+
+      // Delete the photo from the camera roll after successfully copying to app directory
+      if (asset.assetId) {
+        try {
+          const { status } = await MediaLibrary.requestPermissionsAsync();
+          if (status === 'granted') {
+            await MediaLibrary.deleteAssetsAsync([asset.assetId]);
+            console.log('Successfully deleted photo from camera roll:', asset.assetId);
+          } else {
+            console.log('Media library permissions not granted, photo remains in camera roll');
+          }
+        } catch (error) {
+          console.error('Error deleting photo from camera roll:', error);
+          // Don't alert user - the image is already saved to app directory
+        }
       }
     }
   }, [projectId, addReceiptImage, updateReceipt, receipt]);
