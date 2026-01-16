@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import { CameraType, CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
-import * as MediaLibrary from 'expo-media-library';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, Modal, StyleSheet } from 'react-native';
 import { Text, View } from '@/src/components/Themed';
@@ -10,11 +9,22 @@ import { useColors } from '@/src/context/ColorsContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Pressable } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
+import { File, Directory } from 'expo-file-system';
+import { randomUUID } from 'expo-crypto';
+import { getLocalMediaFolder, resourceType } from '@/src/utils/images';
+import { useAuth } from '@clerk/clerk-expo';
+
+export interface CapturedMedia {
+  id: string;
+  uri: string;
+  mediaType: 'photo' | 'video';
+}
 
 interface ProjectCameraViewProps {
   visible: boolean;
   projectName: string;
-  onMediaCaptured: (asset: MediaLibrary.Asset) => void;
+  projectId: string;
+  onMediaCaptured: (media: CapturedMedia) => void;
   onClose: () => void;
   showVideo?: boolean; // Add new prop
 }
@@ -22,6 +32,7 @@ interface ProjectCameraViewProps {
 export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   visible,
   projectName,
+  projectId,
   onMediaCaptured,
   onClose,
   showVideo = true, // Add default value
@@ -39,6 +50,7 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   const cameraRef = useRef<CameraView>(null);
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { orgId } = useAuth();
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -58,18 +70,60 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
     };
   }, [isRecording]);
 
+  // Helper function to save media to local folder
+  const saveToLocalFolder = useCallback(
+    async (sourceUri: string, mediaType: 'photo' | 'video'): Promise<CapturedMedia | null> => {
+      if (!orgId || !projectId) {
+        console.error('Missing orgId or projectId');
+        return null;
+      }
+
+      try {
+        const id = randomUUID();
+        const resourceType: resourceType = 'photo'; // Always use 'photo' as resourceType for camera captures
+        const folder = getLocalMediaFolder(orgId, projectId, resourceType);
+
+        // Ensure directory exists
+        const dir = new Directory(folder);
+        if (!dir.exists) {
+          dir.create({ intermediates: true, idempotent: true });
+        }
+
+        // Determine file extension
+        const extension = mediaType === 'video' ? 'mp4' : 'jpeg';
+        const destinationUri = `${folder}/${id}.${extension}`;
+
+        // Copy the file from camera temp location to our app folder
+        const sourceFile = new File(sourceUri);
+        const destFile = new File(destinationUri);
+        sourceFile.copy(destFile);
+
+        return {
+          id,
+          uri: destinationUri,
+          mediaType,
+        };
+      } catch (error) {
+        console.error('Error saving media to local folder:', error);
+        return null;
+      }
+    },
+    [orgId, projectId],
+  );
+
   const handleSavePreview = useCallback(async () => {
     if (!previewUri) return;
 
     try {
-      const asset = await MediaLibrary.createAssetAsync(previewUri);
-      asset.creationTime = Date.now();
-      onMediaCaptured(asset);
-      setPreviewUri(null);
+      const media = await saveToLocalFolder(previewUri, 'photo');
+      if (media) {
+        onMediaCaptured(media);
+        setPreviewUri(null);
+      }
     } catch (error) {
       console.error('Error saving picture:', error);
     }
-  }, [previewUri, onMediaCaptured]);
+  }, [previewUri, onMediaCaptured, saveToLocalFolder]);
 
   const handleCancelPreview = useCallback(() => {
     setPreviewUri(null);
@@ -92,8 +146,10 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
     try {
       const photo = await cameraRef.current.takePictureAsync({ exif: true, shutterSound: true });
       if (photo) {
-        const asset = await MediaLibrary.createAssetAsync(photo.uri);
-        onMediaCaptured(asset);
+        const media = await saveToLocalFolder(photo.uri, 'photo');
+        if (media) {
+          onMediaCaptured(media);
+        }
       }
     } catch (error) {
       console.error('Error taking picture:', error);
@@ -119,9 +175,10 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
 
       console.log('After recordAsync...');
       if (v) {
-        const asset = await MediaLibrary.createAssetAsync(v.uri);
-        asset.creationTime = Date.now();
-        onMediaCaptured(asset);
+        const media = await saveToLocalFolder(v.uri, 'video');
+        if (media) {
+          onMediaCaptured(media);
+        }
       }
     } catch (error) {
       console.error('Error recording video:', error);

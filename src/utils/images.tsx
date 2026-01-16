@@ -684,7 +684,7 @@ export const useDeleteMediaCallback = () => {
   );
 };
 
-const getLocalMediaFolder = (orgId: string, projectId: string, resourceType: resourceType): string => {
+export const getLocalMediaFolder = (orgId: string, projectId: string, resourceType: resourceType): string => {
   const dir = new Directory(Paths.document, 'images', orgId, projectId, resourceType);
   return dir.uri;
 };
