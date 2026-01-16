@@ -7,7 +7,7 @@ import {
   useDeleteRowCallback,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { useAllFailedToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
+import { useAllMediaToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
 import { formatDate } from '@/src/utils/formatters';
 import {
   buildLocalMediaUri,
@@ -54,7 +54,7 @@ export const ProjectMediaList = ({
   const colors = useColors();
   const getImage = useGetImageCallback();
   const deleteMediaCallback = useDeleteMediaCallback();
-  const failedUploads = useAllFailedToUpload();
+  const mediaToUpload = useAllMediaToUpload();
   const store = useUploadSyncStore();
   const auth = useAuth();
   const { orgId } = auth;
@@ -158,14 +158,14 @@ export const ProjectMediaList = ({
           // Use Set for O(1) lookup performance
           const selectedIdsSet = new Set(selectedImageIds);
 
-          // Check which images are in the failedToUpload queue
-          const imagesInQueue = failedUploads.filter((upload) => selectedIdsSet.has(upload.itemId));
+          // Check which images are in the mediaToUpload queue
+          const imagesInQueue = mediaToUpload.filter((upload) => selectedIdsSet.has(upload.itemId));
 
-          // Remove images from failedToUpload queue
+          // Remove images from mediaToUpload queue
           if (imagesInQueue.length > 0 && store) {
-            console.log(`Removing ${imagesInQueue.length} images from failedToUpload queue`);
+            console.log(`Removing ${imagesInQueue.length} images from mediaToUpload queue`);
             imagesInQueue.forEach((upload) => {
-              store.delRow('failedToUpload', upload.id);
+              store.delRow('mediaToUpload', upload.id);
             });
           }
 

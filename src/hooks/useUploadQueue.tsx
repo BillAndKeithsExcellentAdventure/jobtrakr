@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@clerk/clerk-expo';
 import { useNetwork } from '../context/NetworkContext';
-import { useAllFailedToUpload, useAllFailedToDelete, useUploadSyncStore } from '../tbStores/UploadSyncStore';
+import { useAllMediaToUpload, useAllFailedToDelete, useUploadSyncStore } from '../tbStores/UploadSyncStore';
 import { mediaType, resourceType, ImageDetails, uploadImage, deleteMedia } from '../utils/images';
 
 /**
- * Hook to process failed uploads and deletes in a foreground queue.
- * This hook runs once every hour and processes all failed operations sequentially.
+ * Hook to process media uploads and deletes in a foreground queue.
+ * This hook runs once every hour and processes all queued operations sequentially.
  * It does not block the UI as processing happens asynchronously.
  * Now includes network connectivity checks to avoid unnecessary attempts when offline.
  */
@@ -14,7 +14,7 @@ export const useUploadQueue = () => {
   const auth = useAuth();
   const { userId, orgId } = auth;
   const { isConnected, isInternetReachable } = useNetwork();
-  const failedUploads = useAllFailedToUpload();
+  const mediaToUpload = useAllMediaToUpload();
   const failedDeletes = useAllFailedToDelete();
   const store = useUploadSyncStore();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -35,7 +35,7 @@ export const useUploadQueue = () => {
     // Process uploads and deletes asynchronously without blocking UI
     const processQueue = async () => {
       // Skip if already processing or no items to process
-      if (isProcessing || (failedUploads.length === 0 && failedDeletes.length === 0)) {
+      if (isProcessing || (mediaToUpload.length === 0 && failedDeletes.length === 0)) {
         return;
       }
 
@@ -49,7 +49,7 @@ export const useUploadQueue = () => {
       }
 
       setIsProcessing(true);
-      const uploadsToProcess = [...failedUploads];
+      const uploadsToProcess = [...mediaToUpload];
       const deletesToProcess = [...failedDeletes];
       const totalItems = uploadsToProcess.length + deletesToProcess.length;
       console.log(
@@ -62,9 +62,9 @@ export const useUploadQueue = () => {
       // Process uploads first
       for (const item of uploadsToProcess) {
         try {
-          // Create ImageDetails from failed upload data
+          // Create ImageDetails from media upload data
           // Note: Using default values for longitude/latitude/deviceTypes since these are
-          // not stored in FailedToUploadData. The original upload likely used real values,
+          // not stored in MediaToUploadData. The original upload likely used real values,
           // but for retry purposes, these defaults are acceptable because:
           // - longitude/latitude: The backend doesn't require them for the actual upload operation
           // - deviceTypes: This is metadata that doesn't affect the upload success
@@ -94,16 +94,16 @@ export const useUploadQueue = () => {
             console.log(`Successfully uploaded item ${item.itemId}`);
             successCount++;
 
-            // Remove from failed uploads table
-            store.delRow('failedToUpload', item.id);
+            // Remove from media upload table
+            store.delRow('mediaToUpload', item.id);
           } else {
             if (result.msg.startsWith('Local file does not exist')) {
               // bad file path - do not queue for retry
-              // remove from failedToUpload table
+              // remove from mediaToUpload table
               console.warn(
-                `Local file does not exist for item ${item.itemId}. **** Removing from failed uploads.****`,
+                `Local file does not exist for item ${item.itemId}. **** Removing from media upload queue.****`,
               );
-              store.delRow('failedToUpload', item.id);
+              store.delRow('mediaToUpload', item.id);
             }
             console.warn(`Failed to upload item ${item.itemId}: ${result.msg}`);
             failCount++;
@@ -192,19 +192,19 @@ export const useUploadQueue = () => {
     orgId,
     auth,
     store,
-    failedUploads,
+    mediaToUpload,
     failedDeletes,
     isProcessing,
     isConnected,
     isInternetReachable,
   ]);
-  // Note: Including failedUploads, failedDeletes, and isProcessing in dependencies to ensure we have latest data
+  // Note: Including mediaToUpload, failedDeletes, and isProcessing in dependencies to ensure we have latest data
   // when processing runs via interval. Including isConnected and isInternetReachable to automatically
   // retry failed operations when connectivity is restored.
 
   return {
     isProcessing,
-    totalItems: failedUploads.length + failedDeletes.length,
+    totalItems: mediaToUpload.length + failedDeletes.length,
     processedCount,
   };
 };

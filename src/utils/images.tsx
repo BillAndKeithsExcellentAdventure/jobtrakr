@@ -5,11 +5,11 @@ import { Platform } from 'react-native';
 import { Paths, File, Directory } from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import {
-  FailedToUploadData,
-  useAddFailedToUploadMediaCallback,
+  MediaToUploadData,
+  useAddMediaToUploadCallback,
   FailedToDeleteData,
   useAddFailedToDeleteCallback,
-  useAllFailedToUpload,
+  useAllMediaToUpload,
 } from '@/src/tbStores/UploadSyncStore';
 import { API_BASE_URL } from '../constants/app-constants';
 import { useNetwork } from '../context/NetworkContext';
@@ -572,7 +572,7 @@ const fetchProjectPublicImageIds = async (
 
 /**
  * Hook that provides a callback to delete media with network-aware queuing.
- * If the media is in the failedToUpload queue, it's removed from there without an API call.
+ * If the media is in the mediaToUpload queue, it's removed from there without an API call.
  * If offline, the delete request is queued for later processing.
  * If online, the delete is executed immediately via the API.
  */
@@ -581,7 +581,7 @@ export const useDeleteMediaCallback = () => {
   const { userId, orgId } = auth;
   const { isConnected, isInternetReachable } = useNetwork();
   const addFailedToDeleteRecord = useAddFailedToDeleteCallback();
-  const failedUploads = useAllFailedToUpload();
+  const mediaToUpload = useAllMediaToUpload();
 
   return useCallback(
     async (
@@ -597,23 +597,23 @@ export const useDeleteMediaCallback = () => {
         return { success: false, msg: 'Auth token getter not available' };
       }
 
-      // First, check if any of these imageIds are in the failedToUpload table
-      // If they are, the caller should remove them from failedToUpload (since they
+      // First, check if any of these imageIds are in the mediaToUpload table
+      // If they are, the caller should remove them from mediaToUpload (since they
       // were never uploaded to the server). We return the imageIds that need to be
       // removed so the caller can handle the cleanup.
       // Use Set for O(1) lookup performance
       const imageIdsSet = new Set(imageIds);
-      const imagesInFailedUpload = failedUploads.filter((upload) => imageIdsSet.has(upload.itemId));
+      const imagesInUploadQueue = mediaToUpload.filter((upload) => imageIdsSet.has(upload.itemId));
 
-      if (imagesInFailedUpload.length > 0) {
+      if (imagesInUploadQueue.length > 0) {
         console.log(
-          `Found ${imagesInFailedUpload.length} images in failedToUpload queue. Caller should remove them.`,
+          `Found ${imagesInUploadQueue.length} images in mediaToUpload queue. Caller should remove them.`,
         );
         // Return a special status indicating these images only need to be removed from the upload queue
-        // The caller is responsible for removing them from failedToUpload table
+        // The caller is responsible for removing them from mediaToUpload table
         return {
           success: true,
-          msg: 'Images are queued for upload and should be removed from failedToUpload (not uploaded to server yet)',
+          msg: 'Images are queued for upload and should be removed from mediaToUpload (not uploaded to server yet)',
         };
       }
 
@@ -682,7 +682,7 @@ export const useDeleteMediaCallback = () => {
         }
       }
     },
-    [userId, orgId, auth, isConnected, isInternetReachable, addFailedToDeleteRecord, failedUploads],
+    [userId, orgId, auth, isConnected, isInternetReachable, addFailedToDeleteRecord, mediaToUpload],
   );
 };
 
@@ -823,7 +823,7 @@ const copyToLocalFolder = async (
 export const useAddImageCallback = () => {
   const auth = useAuth();
   const { userId, orgId } = auth;
-  const addFailedToUploadRecord = useAddFailedToUploadMediaCallback();
+  const addMediaToUploadRecord = useAddMediaToUploadCallback();
 
   return useCallback(
     async (
@@ -877,7 +877,7 @@ export const useAddImageCallback = () => {
         console.log(
           `[useAddImageCallback] Queuing upload for background processing - image ${id}, uri: ${copyLocalResult.uri}`,
         );
-        const data: FailedToUploadData = {
+        const data: MediaToUploadData = {
           id: id,
           resourceType: resourceType,
           mediaType: mediaType,
@@ -887,8 +887,8 @@ export const useAddImageCallback = () => {
           itemId: id,
           uploadDate: Date.now(),
         };
-        const result = addFailedToUploadRecord(data);
-        console.log(`[useAddImageCallback] addFailedToUploadRecord result:`, result);
+        const result = addMediaToUploadRecord(data);
+        console.log(`[useAddImageCallback] addMediaToUploadRecord result:`, result);
 
         if (result.status !== 'Success') {
           console.error(`[useAddImageCallback] Failed to add to upload queue:`, result.msg);
@@ -910,7 +910,7 @@ export const useAddImageCallback = () => {
         const localUri = buildLocalMediaUri(orgId, projectId, id, mediaType, resourceType);
         console.log(`[useAddImageCallback] Exception path - built localUri: ${localUri}`);
 
-        const data: FailedToUploadData = {
+        const data: MediaToUploadData = {
           id: id,
           resourceType: resourceType,
           mediaType: mediaType,
@@ -922,11 +922,11 @@ export const useAddImageCallback = () => {
         };
 
         const errorMsg = formatErrorMessage(error);
-        const result = addFailedToUploadRecord(data);
-        console.log(`[useAddImageCallback] Exception path - addFailedToUploadRecord result:`, result);
+        const result = addMediaToUploadRecord(data);
+        console.log(`[useAddImageCallback] Exception path - addMediaToUploadRecord result:`, result);
 
         if (result.status === 'Success') {
-          console.log(`[useAddImageCallback] SUCCESS - Queued failed upload in exception handler`);
+          console.log(`[useAddImageCallback] SUCCESS - Queued upload in exception handler`);
           return {
             status: 'Success',
             id: id,
@@ -941,7 +941,7 @@ export const useAddImageCallback = () => {
         }
       }
     },
-    [userId, orgId, addFailedToUploadRecord, auth],
+    [userId, orgId, addMediaToUploadRecord, auth],
   );
 };
 

@@ -9,7 +9,7 @@ import { randomUUID } from 'expo-crypto';
 //export type mediaType = 'photo' | 'video';
 // export type resourceType = 'receipt' | 'invoice' | 'photo';
 
-export interface FailedToUploadData {
+export interface MediaToUploadData {
   id: string;
   mediaType: string;
   resourceType: string;
@@ -29,9 +29,9 @@ export interface FailedToDeleteData {
   deleteDate: number;
 }
 
-export const STORE_ID_PREFIX = 'PHV1_FailedToUploadSyncStore';
+export const STORE_ID_PREFIX = 'PHV1_MediaUploadSyncStore';
 export const TABLES_SCHEMA = {
-  failedToUpload: {
+  mediaToUpload: {
     id: { type: 'string' },
     mediaType: { type: 'string' },
     resourceType: { type: 'string' },
@@ -65,20 +65,20 @@ export const useUploadSyncStoreId = useStoreIdInternal;
 export const useUploadSyncStore = () => useStoreInternal(useStoreIdInternal());
 
 /**
- * Returns all failed upload items for the current store ID.
+ * Returns all media items queued for upload for the current store ID.
  */
-export const useAllFailedToUpload = () => {
-  const [allItems, setAllItems] = useState<FailedToUploadData[]>([]);
+export const useAllMediaToUpload = () => {
+  const [allItems, setAllItems] = useState<MediaToUploadData[]>([]);
   let store = useStoreInternal(useStoreIdInternal());
 
-  const fetchAllFailedToUploadItems = useCallback((): FailedToUploadData[] => {
+  const fetchAllMediaToUploadItems = useCallback((): MediaToUploadData[] => {
     if (!store) {
       return []; // Return an empty array if the store is not available
     }
 
-    const table = store.getTable('failedToUpload');
+    const table = store.getTable('mediaToUpload');
     if (table) {
-      const items: FailedToUploadData[] = Object.entries(table).map(([id, row]) => ({
+      const items: MediaToUploadData[] = Object.entries(table).map(([id, row]) => ({
         id: id,
         mediaType: row.mediaType ?? '',
         resourceType: row.resourceType ?? '',
@@ -88,26 +88,26 @@ export const useAllFailedToUpload = () => {
         itemId: row.itemId ?? '',
         uploadDate: row.uploadDate ?? 0,
       }));
-      console.log(`Fetched ${items.length} failed to upload items`);
+      console.log(`Fetched ${items.length} media items queued for upload`);
       return [...items].sort((a, b) => (b.uploadDate ?? 0) - (a.uploadDate ?? 0));
     }
     return [];
   }, [store]);
 
   useEffect(() => {
-    setAllItems(fetchAllFailedToUploadItems());
-  }, [fetchAllFailedToUploadItems]);
+    setAllItems(fetchAllMediaToUploadItems());
+  }, [fetchAllMediaToUploadItems]);
 
   // Function to handle table data change
   const handleTableChange = useCallback(() => {
-    setAllItems(fetchAllFailedToUploadItems());
-  }, [fetchAllFailedToUploadItems]);
+    setAllItems(fetchAllMediaToUploadItems());
+  }, [fetchAllMediaToUploadItems]);
 
   useEffect(() => {
     if (!store) {
       return;
     }
-    const listenerId = store.addTableListener('failedToUpload', handleTableChange);
+    const listenerId = store.addTableListener('mediaToUpload', handleTableChange);
     // Cleanup: Remove the listener when the component unmounts
     return () => {
       store.delListener(listenerId);
@@ -117,17 +117,17 @@ export const useAllFailedToUpload = () => {
   return allItems;
 };
 
-// Returns a callback that adds a new failed upload entry to the store.
-export const useAddFailedToUploadMediaCallback = () => {
+// Returns a callback that adds a new media upload entry to the store.
+export const useAddMediaToUploadCallback = () => {
   let store = useStoreInternal(useStoreIdInternal());
 
   return useCallback(
-    (failedToUploadData: FailedToUploadData): { status: TBStatus; msg: string; id: string } => {
+    (mediaToUploadData: MediaToUploadData): { status: TBStatus; msg: string; id: string } => {
       const id = randomUUID();
-      failedToUploadData.id = id;
-      console.log('Adding failed to upload media with ID:', id);
+      mediaToUploadData.id = id;
+      console.log('Adding media to upload queue with ID:', id);
       if (store) {
-        const storeCheck = store.setRow('failedToUpload', id, failedToUploadData);
+        const storeCheck = store.setRow('mediaToUpload', id, mediaToUploadData);
         if (storeCheck) {
           return { status: 'Success', msg: '', id };
         } else {
@@ -142,8 +142,8 @@ export const useAddFailedToUploadMediaCallback = () => {
 };
 
 // Returns a callback that deletes an entry from the store.
-export const useDeleteFailedToUploadCallback = (id: string) =>
-  useDelRowCallback('failedToUpload', id, useStoreIdInternal());
+export const useDeleteMediaToUploadCallback = (id: string) =>
+  useDelRowCallback('mediaToUpload', id, useStoreIdInternal());
 
 /**
  * Returns all failed delete operations for the current store ID.
@@ -225,7 +225,7 @@ export const useDeleteFailedToDeleteCallback = (id: string) =>
   useDelRowCallback('failedToDelete', id, useStoreIdInternal());
 
 // Create, persist, and sync a store containing upload/delete sync data
-export default function FailedToUploadSyncStore() {
+export default function MediaUploadSyncStore() {
   const storeId = useStoreIdInternal();
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
   useCreateClientPersisterAndStart(storeId, store);
