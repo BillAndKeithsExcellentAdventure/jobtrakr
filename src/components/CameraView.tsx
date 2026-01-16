@@ -119,6 +119,9 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
       if (media) {
         onMediaCaptured(media);
         setPreviewUri(null);
+      } else {
+        console.error('Failed to save preview: saveToLocalFolder returned null');
+        // Keep preview visible so user can try again
       }
     } catch (error) {
       console.error('Error saving picture:', error);
@@ -149,6 +152,8 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
         const media = await saveToLocalFolder(photo.uri, 'photo');
         if (media) {
           onMediaCaptured(media);
+        } else {
+          console.error('Failed to save photo: saveToLocalFolder returned null');
         }
       }
     } catch (error) {
@@ -178,6 +183,8 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
         const media = await saveToLocalFolder(v.uri, 'video');
         if (media) {
           onMediaCaptured(media);
+        } else {
+          console.error('Failed to save video: saveToLocalFolder returned null');
         }
       }
     } catch (error) {
