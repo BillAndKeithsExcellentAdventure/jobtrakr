@@ -20,6 +20,7 @@ import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, TextInput } from 'react-native';
@@ -95,7 +96,7 @@ const ProjectReceiptsPage = () => {
   const colors = useColors();
 
   const processReceiptImage = useCallback(
-    async (assetUri: string) => {
+    async (assetUri: string, assetId?: string | null) => {
       try {
         // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
         const imageAddResult = await addReceiptImage(assetUri, projectId, 'photo', 'receipt');
@@ -127,6 +128,22 @@ const ProjectReceiptsPage = () => {
         if (response?.status === 'Success') {
           newReceipt.id = response.id;
           console.log('Project receipt successfully added:', newReceipt.imageId);
+
+          // Delete the photo from the camera roll after successfully copying to app directory
+          if (assetId) {
+            try {
+              const { status } = await MediaLibrary.requestPermissionsAsync();
+              if (status === 'granted') {
+                await MediaLibrary.deleteAssetsAsync([assetId]);
+                console.log('Successfully deleted photo from camera roll:', assetId);
+              } else {
+                console.log('Media library permissions not granted, photo remains in camera roll');
+              }
+            } catch (error) {
+              console.error('Error deleting photo from camera roll:', error);
+              // Don't alert user - the image is already saved to app directory
+            }
+          }
         } else {
           Alert.alert(
             'Error',
@@ -158,7 +175,7 @@ const ProjectReceiptsPage = () => {
       setIsProcessingImage(true);
 
       // Use requestAnimationFrame to ensure React renders the ActivityIndicator before starting heavy operations
-      requestAnimationFrame(() => processReceiptImage(asset.uri));
+      requestAnimationFrame(() => processReceiptImage(asset.uri, asset.assetId));
     }
   }, [processReceiptImage]);
 

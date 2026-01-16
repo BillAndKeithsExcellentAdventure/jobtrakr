@@ -3,6 +3,7 @@ import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
 import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
@@ -86,7 +87,7 @@ const ProjectInvoicesPage = () => {
   const colors = useColors();
 
   const processInvoiceImage = useCallback(
-    async (assetUri: string) => {
+    async (assetUri: string, assetId?: string | null) => {
       try {
         // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
         const imageAddResult = await addInvoiceImage(assetUri, projectId, 'photo', 'invoice');
@@ -119,6 +120,22 @@ const ProjectInvoicesPage = () => {
         if (response?.status === 'Success') {
           newInvoice.id = response.id;
           console.log('Project invoice successfully added:', newInvoice.imageId);
+
+          // Delete the photo from the camera roll after successfully copying to app directory
+          if (assetId) {
+            try {
+              const { status } = await MediaLibrary.requestPermissionsAsync();
+              if (status === 'granted') {
+                await MediaLibrary.deleteAssetsAsync([assetId]);
+                console.log('Successfully deleted photo from camera roll:', assetId);
+              } else {
+                console.log('Media library permissions not granted, photo remains in camera roll');
+              }
+            } catch (error) {
+              console.error('Error deleting photo from camera roll:', error);
+              // Don't alert user - the image is already saved to app directory
+            }
+          }
         } else {
           Alert.alert(
             'Error',
@@ -151,7 +168,7 @@ const ProjectInvoicesPage = () => {
       setIsProcessingImage(true);
 
       // Use requestAnimationFrame to ensure React renders the ActivityIndicator before starting heavy operations
-      requestAnimationFrame(() => processInvoiceImage(asset.uri));
+      requestAnimationFrame(() => processInvoiceImage(asset.uri, asset.assetId));
     }
   }, [processInvoiceImage]);
 
