@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@clerk/clerk-expo';
 import { useNetwork } from '../context/NetworkContext';
-import { useAllMediaToUpload, useAllServerMediaToDelete, useUploadSyncStore } from '../tbStores/UploadSyncStore';
+import {
+  useAllMediaToUpload,
+  useAllServerMediaToDelete,
+  useUploadSyncStore,
+} from '../tbStores/UploadSyncStore';
 import { mediaType, resourceType, ImageDetails, uploadImage, deleteMedia } from '../utils/images';
 
 /**
@@ -19,7 +23,7 @@ export const useUploadQueue = () => {
   const store = useUploadSyncStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Wait for authentication to be ready

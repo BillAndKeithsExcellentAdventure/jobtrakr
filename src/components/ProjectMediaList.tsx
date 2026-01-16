@@ -195,7 +195,7 @@ export const ProjectMediaList = ({
         },
       },
     ]);
-  }, [removePhotoData, mediaItems, projectId, orgId, deleteMediaCallback, failedUploads, store]);
+  }, [removePhotoData, mediaItems, projectId, orgId, deleteMediaCallback, store, mediaToUpload]);
 
   const updateMediaItemsOnServer = useCallback(
     async (publicImageIds: string[]) => {

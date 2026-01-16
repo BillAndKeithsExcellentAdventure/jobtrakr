@@ -323,23 +323,6 @@ const createServerMediaToDeleteData = (
 });
 
 /**
- * Helper function to create a ServerMediaToDeleteData object for public/non-public operations.
- * This reuses the ServerMediaToDeleteData structure since it has the same shape needed for retries.
- */
-const createFailedToPublicData = (
-  orgId: string,
-  projectId: string,
-  imageIds: string[],
-): ServerMediaToDeleteData => ({
-  id: '',
-  organizationId: orgId,
-  projectId: projectId,
-  imageIds: JSON.stringify(imageIds),
-  imageType: 'photo',
-  deleteDate: Date.now(),
-});
-
-/**
  * API call to make photos public.
  * @param userId - User ID
  * @param projectId - Project ID
