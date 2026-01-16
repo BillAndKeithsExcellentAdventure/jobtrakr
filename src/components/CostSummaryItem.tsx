@@ -38,6 +38,7 @@ const areEqual = (prevProps: Props, nextProps: Props) => {
     prevProps.item.id === nextProps.item.id &&
     prevProps.item.code === nextProps.item.code &&
     prevProps.item.title === nextProps.item.title &&
+    prevProps.item.complete === nextProps.item.complete &&
     prevProps.item.bidAmount === nextProps.item.bidAmount &&
     prevProps.item.spentAmount === nextProps.item.spentAmount
   );
