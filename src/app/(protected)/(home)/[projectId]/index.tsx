@@ -120,10 +120,13 @@ const ProjectDetailsPage = () => {
           title: category.name,
           totalBidAmount: 0,
           totalSpentAmount: 0,
+          totalBalance: 0,
           data: [],
         };
         sections.push(section);
       }
+
+      const balance = costItem.complete ? 0 : costItem.bidAmount - spentAmount;
 
       section.data.push({
         id: costItem.id,
@@ -132,12 +135,15 @@ const ProjectDetailsPage = () => {
         title: workItem.name,
         bidAmount: costItem.bidAmount,
         spentAmount: spentAmount,
+        balance: balance,
+        complete: costItem.complete,
       });
     }
 
     sections.forEach((section) => {
       section.totalBidAmount = section.data.reduce((sum, item) => sum + item.bidAmount, 0);
       section.totalSpentAmount = section.data.reduce((sum, item) => sum + item.spentAmount, 0);
+      section.totalBalance = section.data.reduce((sum, item) => sum + item.balance, 0);
     });
 
     return sections.sort(CostSectionDataCodeCompareAsNumber);
@@ -570,7 +576,7 @@ const ProjectDetailsPage = () => {
                 />
                 <Text
                   style={{ flex: 1, textAlign: 'right', color: colors.sectionFG }}
-                  text={formatCurrency(item.totalBidAmount - item.totalSpentAmount, false, true)}
+                  text={formatCurrency(item.totalBalance, false, true)}
                 />
               </View>
 
