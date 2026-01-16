@@ -823,7 +823,6 @@ const copyToLocalFolder = async (
 export const useAddImageCallback = () => {
   const auth = useAuth();
   const { userId, orgId } = auth;
-  const { isConnected, isInternetReachable } = useNetwork();
   const addFailedToUploadRecord = useAddFailedToUploadMediaCallback();
 
   return useCallback(
@@ -874,88 +873,37 @@ export const useAddImageCallback = () => {
           return copyLocalResult;
         }
 
+        // Always queue the upload for background processing to avoid making the user wait
         console.log(
-          `[useAddImageCallback] Network status - isConnected: ${isConnected}, isInternetReachable: ${isInternetReachable}`,
+          `[useAddImageCallback] Queuing upload for background processing - image ${id}, uri: ${copyLocalResult.uri}`,
         );
+        const data: FailedToUploadData = {
+          id: id,
+          resourceType: resourceType,
+          mediaType: mediaType,
+          localUri: copyLocalResult.uri!,
+          organizationId: orgId,
+          projectId: projectId,
+          itemId: id,
+          uploadDate: Date.now(),
+        };
+        const result = addFailedToUploadRecord(data);
+        console.log(`[useAddImageCallback] addFailedToUploadRecord result:`, result);
 
-        if (!isConnected || isInternetReachable === false) {
-          console.log(
-            `[useAddImageCallback] No network. Queuing upload for image ${id}, uri: ${copyLocalResult.uri}`,
-          );
-          const data: FailedToUploadData = {
-            id: id,
-            resourceType: resourceType,
-            mediaType: mediaType,
-            localUri: copyLocalResult.uri!,
-            organizationId: orgId,
-            projectId: projectId,
-            itemId: id,
-            uploadDate: Date.now(),
-          };
-          const result = addFailedToUploadRecord(data);
-          console.log(`[useAddImageCallback] addFailedToUploadRecord result:`, result);
-
-          if (result.status !== 'Success') {
-            console.error(`[useAddImageCallback] Failed to add to failed upload queue:`, result.msg);
-            return { status: 'Error', id: id, msg: `Failed to add upload to queue: ${result.msg}` };
-          }
-
-          console.log(
-            `[useAddImageCallback] SUCCESS - Queued upload. Returning with uri: ${copyLocalResult.uri}`,
-          );
-          return {
-            status: 'Success',
-            id: id,
-            uri: copyLocalResult.uri!,
-            msg: 'File saved. Will upload when internet connection is available.',
-          };
+        if (result.status !== 'Success') {
+          console.error(`[useAddImageCallback] Failed to add to upload queue:`, result.msg);
+          return { status: 'Error', id: id, msg: `Failed to add upload to queue: ${result.msg}` };
         }
 
-        console.log(`[useAddImageCallback] Network available. Uploading image ${id}`);
-        const uploadResult = await uploadImage(
-          details,
-          auth.getToken,
-          mediaType,
-          resourceType,
-          copyLocalResult.uri!,
+        console.log(
+          `[useAddImageCallback] SUCCESS - Queued upload. Returning with uri: ${copyLocalResult.uri}`,
         );
-        console.log(`[useAddImageCallback] Upload result:`, uploadResult);
-
-        if (uploadResult.status !== 'Success') {
-          console.log(
-            `[useAddImageCallback] Upload failed. Adding to queue for image ${id}, uri: ${copyLocalResult.uri}`,
-          );
-          const data: FailedToUploadData = {
-            id: id,
-            resourceType: resourceType,
-            mediaType: mediaType,
-            localUri: copyLocalResult.uri!,
-            organizationId: orgId,
-            projectId: projectId,
-            itemId: id,
-            uploadDate: Date.now(),
-          };
-          const result = addFailedToUploadRecord(data);
-          console.log(`[useAddImageCallback] addFailedToUploadRecord result for failed upload:`, result);
-
-          if (result.status !== 'Success') {
-            console.error(`[useAddImageCallback] Failed to queue failed upload:`, result.msg);
-            return { status: 'Error', id: id, msg: `Failed to add failed upload record: ${result.msg}` };
-          } else {
-            console.log(
-              `[useAddImageCallback] SUCCESS - Queued failed upload. Returning with uri: ${copyLocalResult.uri}`,
-            );
-            return {
-              status: 'Success',
-              id: id,
-              uri: copyLocalResult.uri!,
-              msg: 'File saved but unable upload to server. Will try later.',
-            };
-          }
-        }
-
-        console.log(`[useAddImageCallback] Upload successful for image ${id}`);
-        return uploadResult;
+        return {
+          status: 'Success',
+          id: id,
+          uri: copyLocalResult.uri!,
+          msg: 'File saved. Upload will be processed in the background.',
+        };
       } catch (error) {
         console.error('[useAddImageCallback] Caught exception:', error);
 
@@ -993,7 +941,7 @@ export const useAddImageCallback = () => {
         }
       }
     },
-    [userId, orgId, addFailedToUploadRecord, auth, isConnected, isInternetReachable],
+    [userId, orgId, addFailedToUploadRecord, auth],
   );
 };
 
