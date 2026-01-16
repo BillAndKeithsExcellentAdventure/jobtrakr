@@ -114,9 +114,10 @@ const ReceiptDetailsPage = () => {
       const response = updateReceipt(updatedReceipt.id, updatedReceipt);
       if (response?.status !== 'Success') {
         Alert.alert('Error', `Unable to add receipt image - ${JSON.stringify(response)}`);
+        return;
       }
 
-      // Delete the photo from the camera roll after successfully copying to app directory
+      // Delete the photo from the camera roll after successfully copying to app directory and updating receipt
       if (asset.assetId) {
         try {
           const { status } = await MediaLibrary.requestPermissionsAsync();

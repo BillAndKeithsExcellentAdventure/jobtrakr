@@ -116,9 +116,10 @@ const InvoiceDetailsPage = () => {
       const response = updateInvoice(updatedInvoice.id, updatedInvoice);
       if (response?.status !== 'Success') {
         alert(`Unable to add invoice image - ${JSON.stringify(response)}`);
+        return;
       }
 
-      // Delete the photo from the camera roll after successfully copying to app directory
+      // Delete the photo from the camera roll after successfully copying to app directory and updating invoice
       if (asset.assetId) {
         try {
           const { status } = await MediaLibrary.requestPermissionsAsync();
