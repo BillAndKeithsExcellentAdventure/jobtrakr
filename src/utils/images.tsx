@@ -156,6 +156,7 @@ export const uploadImage = async (
   mediaType: mediaType,
   resourceType: resourceType,
   localImageUrl: string,
+  timeoutMs: number = 30000,
 ): Promise<ImageResult> => {
   try {
     const formData = new FormData();
@@ -197,7 +198,7 @@ export const uploadImage = async (
     console.log('Uploading image to:', endPointUrl);
 
     // Make the API call with token refresh
-    const apiFetch = createApiWithToken(getToken);
+    const apiFetch = createApiWithToken(getToken, timeoutMs);
     const response = await apiFetch(endPointUrl, {
       method: 'POST',
       headers: {
@@ -248,12 +249,13 @@ export const deleteMedia = async (
   imageIds: string[],
   imageType: string,
   getToken: () => Promise<string | null>,
+  timeoutMs: number = 30000,
 ) => {
   try {
     const endPointUrl = `${API_BASE_URL}/deleteMedia`;
 
     // Make the API call with token refresh
-    const apiFetch = createApiWithToken(getToken);
+    const apiFetch = createApiWithToken(getToken, timeoutMs);
     const response = await apiFetch(endPointUrl, {
       method: 'POST',
       headers: {
@@ -684,7 +686,7 @@ export const useDeleteMediaCallback = () => {
   );
 };
 
-const getLocalMediaFolder = (orgId: string, projectId: string, resourceType: resourceType): string => {
+export const getLocalMediaFolder = (orgId: string, projectId: string, resourceType: resourceType): string => {
   const dir = new Directory(Paths.document, 'images', orgId, projectId, resourceType);
   return dir.uri;
 };

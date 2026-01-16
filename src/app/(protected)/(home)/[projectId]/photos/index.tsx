@@ -1,6 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
-import { ProjectCameraView } from '@/src/components/CameraView';
+import { ProjectCameraView, CapturedMedia } from '@/src/components/CameraView';
 import { ProjectMediaList } from '@/src/components/ProjectMediaList';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { Text, View } from '@/src/components/Themed';
@@ -62,21 +62,21 @@ const ProjectPhotosPage = () => {
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
 
   const handlePhotoCaptured = useCallback(
-    async (asset: MediaLibrary.Asset) => {
+    async (media: CapturedMedia) => {
       setIsPhotoUploading(true);
-      console.log(`[handlePhotoCaptured] START - asset.id: ${asset?.id}, projectId: ${projectId}`);
+      console.log(`[handlePhotoCaptured] START - media.id: ${media?.id}, projectId: ${projectId}`);
 
       try {
-        if (!asset) {
-          console.warn('[handlePhotoCaptured] No asset provided');
+        if (!media) {
+          console.warn('[handlePhotoCaptured] No media provided');
           return;
         }
 
-        console.log(`[handlePhotoCaptured] Calling addPhotoImage with uri: ${asset.uri}`);
+        console.log(`[handlePhotoCaptured] Calling addPhotoImage with uri: ${media.uri}`);
         const imageAddResult = await addPhotoImage(
-          asset.uri,
+          media.uri,
           projectId,
-          asset.mediaType === MediaLibrary.MediaType.photo ? 'photo' : 'video',
+          media.mediaType,
           'photo',
         );
         console.log('[handlePhotoCaptured] Image Add Result:', JSON.stringify(imageAddResult, null, 2));
@@ -85,16 +85,16 @@ const ProjectPhotosPage = () => {
           console.log(`[handlePhotoCaptured] Status is Success. uri: ${imageAddResult.uri}`);
 
           if (imageAddResult.uri) {
-            console.log(`[handlePhotoCaptured] URI is present. Creating thumbnail from: ${asset.uri}`);
-            const thumbnail = await createThumbnail(asset.uri);
+            console.log(`[handlePhotoCaptured] URI is present. Creating thumbnail from: ${media.uri}`);
+            const thumbnail = await createThumbnail(media.uri);
             console.log(`[handlePhotoCaptured] Thumbnail created: ${thumbnail ? 'yes' : 'no'}`);
 
             const newPhoto: MediaEntryData = {
               id: '',
-              assetId: asset.id,
+              assetId: media.id,
               deviceName: 'Device Name',
               imageId: imageAddResult.id,
-              mediaType: asset.mediaType === MediaLibrary.MediaType.photo ? 'photo' : 'video',
+              mediaType: media.mediaType,
               thumbnail: thumbnail ?? '',
               creationDate: Date.now(),
               isPublic: false,
@@ -240,6 +240,7 @@ const ProjectPhotosPage = () => {
         <ProjectCameraView
           visible={isCameraVisible}
           projectName={projectName}
+          projectId={projectId}
           onMediaCaptured={handlePhotoCaptured}
           onClose={() => setIsCameraVisible(false)}
         ></ProjectCameraView>

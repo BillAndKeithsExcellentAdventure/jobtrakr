@@ -53,6 +53,7 @@ async function fetchWithTimeout(
  * a refreshed token on auth errors.
  *
  * @param getToken - Function to get the authentication token from Clerk
+ * @param timeoutMs - Optional custom timeout in milliseconds (default: 30000)
  * @returns A function that makes API calls with automatic token handling and retry on auth errors
  *
  * @example
@@ -69,6 +70,7 @@ async function fetchWithTimeout(
  */
 export function createApiWithToken(
   getToken: () => Promise<string | null>,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
 ): (url: string, options: RequestInit) => Promise<Response> {
   return async (url: string, options: RequestInit): Promise<Response> => {
     const makeRequest = async (token: string | null): Promise<Response> => {
@@ -82,7 +84,7 @@ export function createApiWithToken(
         headers,
       };
 
-      return await fetchWithTimeout(url, requestOptions);
+      return await fetchWithTimeout(url, requestOptions, timeoutMs);
     };
 
     // Get token and make the initial request
