@@ -80,13 +80,14 @@ export const useUploadQueue = () => {
 
           console.log(`Processing upload for item ${item.itemId} (${item.resourceType}/${item.mediaType})`);
 
-          // Attempt to upload
+          // Attempt to upload with extended timeout for queue processing (120 seconds)
           const result = await uploadImage(
             details,
             auth.getToken,
             item.mediaType as mediaType,
             item.resourceType as resourceType,
             item.localUri,
+            120000,
           );
 
           if (result.status === 'Success') {
@@ -135,7 +136,7 @@ export const useUploadQueue = () => {
 
           console.log(`Processing delete for ${imageIds.length} images (${item.imageType})`);
 
-          // Attempt to delete
+          // Attempt to delete with extended timeout for queue processing (120 seconds)
           const result = await deleteMedia(
             userId!,
             item.organizationId,
@@ -143,6 +144,7 @@ export const useUploadQueue = () => {
             imageIds,
             item.imageType,
             auth.getToken,
+            120000,
           );
 
           if (result.success) {
