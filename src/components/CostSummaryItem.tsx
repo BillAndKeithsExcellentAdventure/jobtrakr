@@ -84,7 +84,7 @@ const CostSummaryItem = React.memo<Props>(({ item, sectionCode, projectId }) => 
         return colors?.text;
       }
 
-      if (item.balance >= 0) {
+      if (item.spentAmount <= item.bidAmount) {
         return colors?.profitFg;
       } else {
         return colors?.lossFg;
