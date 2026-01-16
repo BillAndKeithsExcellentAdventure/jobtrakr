@@ -80,7 +80,9 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
 
       try {
         const id = randomUUID();
-        const resourceType: resourceType = 'photo'; // Always use 'photo' as resourceType for camera captures
+        // Always use 'photo' as resourceType for camera captures (both photos and videos)
+        // since they are project media, not receipts or invoices
+        const resourceType: resourceType = 'photo';
         const folder = getLocalMediaFolder(orgId, projectId, resourceType);
 
         // Ensure directory exists
