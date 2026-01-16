@@ -16,7 +16,7 @@ import {
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { useRouter } from 'expo-router';
 import { useDeleteMediaCallback, deleteLocalMediaFile } from '../utils/images';
-import { useAllFailedToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
+import { useAllMediaToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
 
 export const ITEM_HEIGHT = 100;
 const RIGHT_ACTION_WIDTH = 100;
@@ -40,7 +40,7 @@ const SwipeableInvoiceItem = React.memo<{
     const deleteInvoiceLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
     const allInvoiceLineItems = useAllRows(projectId, 'workItemCostEntries');
     const deleteMediaCallback = useDeleteMediaCallback();
-    const failedUploads = useAllFailedToUpload();
+    const mediaToUpload = useAllMediaToUpload();
     const store = useUploadSyncStore();
     const textColor = item.fullyClassified ? colors.text : colors.errorText;
 
@@ -72,12 +72,12 @@ const SwipeableInvoiceItem = React.memo<{
           deleteInvoice(id);
 
           if (item.imageId) {
-            // Check if this image is in the failedToUpload queue
-            const uploadInQueue = failedUploads.find((upload) => upload.itemId === item.imageId);
+            // Check if this image is in the mediaToUpload queue
+            const uploadInQueue = mediaToUpload.find((upload) => upload.itemId === item.imageId);
             if (uploadInQueue && store) {
-              // Remove from failedToUpload table since it never made it to the server
-              console.log(`Removing invoice image ${item.imageId} from failedToUpload queue`);
-              store.delRow('failedToUpload', uploadInQueue.id);
+              // Remove from mediaToUpload table since it never made it to the server
+              console.log(`Removing invoice image ${item.imageId} from mediaToUpload queue`);
+              store.delRow('mediaToUpload', uploadInQueue.id);
             } else {
               // Use the new hook to delete media (will queue if offline)
               (async () => {

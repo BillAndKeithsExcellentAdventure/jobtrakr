@@ -5,11 +5,11 @@ import { Platform } from 'react-native';
 import { Paths, File, Directory } from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import {
-  FailedToUploadData,
-  useAddFailedToUploadMediaCallback,
-  FailedToDeleteData,
-  useAddFailedToDeleteCallback,
-  useAllFailedToUpload,
+  MediaToUploadData,
+  useAddMediaToUploadCallback,
+  ServerMediaToDeleteData,
+  useAddServerMediaToDeleteCallback,
+  useAllMediaToUpload,
 } from '@/src/tbStores/UploadSyncStore';
 import { API_BASE_URL } from '../constants/app-constants';
 import { useNetwork } from '../context/NetworkContext';
@@ -304,38 +304,21 @@ export const deleteMedia = async (
 };
 
 /**
- * Helper function to create a FailedToDeleteData object.
+ * Helper function to create a ServerMediaToDeleteData object.
  * Note: The id field is initialized to empty string and will be replaced
- * by the addFailedToDeleteRecord callback with a generated UUID.
+ * by the addServerMediaToDeleteRecord callback with a generated UUID.
  */
-const createFailedToDeleteData = (
+const createServerMediaToDeleteData = (
   orgId: string,
   projectId: string,
   imageIds: string[],
   imageType: string,
-): FailedToDeleteData => ({
+): ServerMediaToDeleteData => ({
   id: '', // Will be replaced by the callback with a generated UUID
   organizationId: orgId,
   projectId: projectId,
   imageIds: JSON.stringify(imageIds),
   imageType: imageType,
-  deleteDate: Date.now(),
-});
-
-/**
- * Helper function to create a FailedToDeleteData object for public/non-public operations.
- * This reuses the FailedToDeleteData structure since it has the same shape needed for retries.
- */
-const createFailedToPublicData = (
-  orgId: string,
-  projectId: string,
-  imageIds: string[],
-): FailedToDeleteData => ({
-  id: '',
-  organizationId: orgId,
-  projectId: projectId,
-  imageIds: JSON.stringify(imageIds),
-  imageType: 'photo',
   deleteDate: Date.now(),
 });
 
@@ -571,17 +554,15 @@ const fetchProjectPublicImageIds = async (
 };
 
 /**
- * Hook that provides a callback to delete media with network-aware queuing.
- * If the media is in the failedToUpload queue, it's removed from there without an API call.
- * If offline, the delete request is queued for later processing.
- * If online, the delete is executed immediately via the API.
+ * Hook that provides a callback to delete media with background queuing.
+ * All delete operations are queued for background processing to avoid making users wait.
+ * If the media is in the mediaToUpload queue, it's removed from there without an API call.
  */
 export const useDeleteMediaCallback = () => {
   const auth = useAuth();
   const { userId, orgId } = auth;
-  const { isConnected, isInternetReachable } = useNetwork();
-  const addFailedToDeleteRecord = useAddFailedToDeleteCallback();
-  const failedUploads = useAllFailedToUpload();
+  const addServerMediaToDeleteRecord = useAddServerMediaToDeleteCallback();
+  const mediaToUpload = useAllMediaToUpload();
 
   return useCallback(
     async (
@@ -597,92 +578,46 @@ export const useDeleteMediaCallback = () => {
         return { success: false, msg: 'Auth token getter not available' };
       }
 
-      // First, check if any of these imageIds are in the failedToUpload table
-      // If they are, the caller should remove them from failedToUpload (since they
+      // First, check if any of these imageIds are in the mediaToUpload table
+      // If they are, the caller should remove them from mediaToUpload (since they
       // were never uploaded to the server). We return the imageIds that need to be
       // removed so the caller can handle the cleanup.
       // Use Set for O(1) lookup performance
       const imageIdsSet = new Set(imageIds);
-      const imagesInFailedUpload = failedUploads.filter((upload) => imageIdsSet.has(upload.itemId));
+      const imagesInUploadQueue = mediaToUpload.filter((upload) => imageIdsSet.has(upload.itemId));
 
-      if (imagesInFailedUpload.length > 0) {
+      if (imagesInUploadQueue.length > 0) {
         console.log(
-          `Found ${imagesInFailedUpload.length} images in failedToUpload queue. Caller should remove them.`,
+          `Found ${imagesInUploadQueue.length} images in mediaToUpload queue. Caller should remove them.`,
         );
         // Return a special status indicating these images only need to be removed from the upload queue
-        // The caller is responsible for removing them from failedToUpload table
+        // The caller is responsible for removing them from mediaToUpload table
         return {
           success: true,
-          msg: 'Images are queued for upload and should be removed from failedToUpload (not uploaded to server yet)',
+          msg: 'Images are queued for upload and should be removed from mediaToUpload (not uploaded to server yet)',
         };
       }
 
-      // Check network connectivity before attempting delete
-      if (!isConnected || isInternetReachable === false) {
-        console.log('No network connection detected. Queuing delete without attempting network call.');
+      // Always queue the delete for background processing to avoid making the user wait
+      console.log(
+        `Queuing delete for background processing - ${imageIds.length} images of type ${imageType}`,
+      );
+      const data = createServerMediaToDeleteData(orgId, projectId, imageIds, imageType);
 
-        const data = createFailedToDeleteData(orgId, projectId, imageIds, imageType);
-
-        const result = addFailedToDeleteRecord(data);
-        if (result.status === 'Success') {
-          return {
-            success: true,
-            msg: 'Delete operation queued. Will be processed when network is available.',
-          };
-        } else {
-          return {
-            success: false,
-            msg: `Failed to queue delete operation: ${result.msg}`,
-          };
-        }
-      }
-
-      // Network is available, attempt to delete immediately
-      try {
-        const deleteResult = await deleteMedia(userId, orgId, projectId, imageIds, imageType, auth.getToken);
-
-        // If the immediate delete fails, queue it for retry
-        if (!deleteResult.success) {
-          console.log('Delete failed, queuing for retry:', deleteResult.msg);
-
-          const data = createFailedToDeleteData(orgId, projectId, imageIds, imageType);
-
-          const result = addFailedToDeleteRecord(data);
-          if (result.status === 'Success') {
-            return {
-              success: true,
-              msg: 'Delete failed but queued for retry.',
-            };
-          } else {
-            return {
-              success: false,
-              msg: `Delete failed and could not queue for retry: ${result.msg}`,
-            };
-          }
-        }
-
-        return deleteResult;
-      } catch (error) {
-        console.error('Unexpected error in useDeleteMediaCallback:', error);
-
-        // Queue the delete for retry on unexpected errors
-        const data = createFailedToDeleteData(orgId, projectId, imageIds, imageType);
-
-        const result = addFailedToDeleteRecord(data);
-        if (result.status === 'Success') {
-          return {
-            success: true,
-            msg: `Delete encountered an error but queued for retry: ${formatErrorMessage(error)}`,
-          };
-        } else {
-          return {
-            success: false,
-            msg: `Delete failed with error and could not queue: ${formatErrorMessage(error)}`,
-          };
-        }
+      const result = addServerMediaToDeleteRecord(data);
+      if (result.status === 'Success') {
+        return {
+          success: true,
+          msg: 'Delete operation queued. Will be processed in the background.',
+        };
+      } else {
+        return {
+          success: false,
+          msg: `Failed to queue delete operation: ${result.msg}`,
+        };
       }
     },
-    [userId, orgId, auth, isConnected, isInternetReachable, addFailedToDeleteRecord, failedUploads],
+    [userId, orgId, auth, addServerMediaToDeleteRecord, mediaToUpload],
   );
 };
 
@@ -823,8 +758,7 @@ const copyToLocalFolder = async (
 export const useAddImageCallback = () => {
   const auth = useAuth();
   const { userId, orgId } = auth;
-  const { isConnected, isInternetReachable } = useNetwork();
-  const addFailedToUploadRecord = useAddFailedToUploadMediaCallback();
+  const addMediaToUploadRecord = useAddMediaToUploadCallback();
 
   return useCallback(
     async (
@@ -874,95 +808,44 @@ export const useAddImageCallback = () => {
           return copyLocalResult;
         }
 
+        // Always queue the upload for background processing to avoid making the user wait
         console.log(
-          `[useAddImageCallback] Network status - isConnected: ${isConnected}, isInternetReachable: ${isInternetReachable}`,
+          `[useAddImageCallback] Queuing upload for background processing - image ${id}, uri: ${copyLocalResult.uri}`,
         );
+        const data: MediaToUploadData = {
+          id: id,
+          resourceType: resourceType,
+          mediaType: mediaType,
+          localUri: copyLocalResult.uri!,
+          organizationId: orgId,
+          projectId: projectId,
+          itemId: id,
+          uploadDate: Date.now(),
+        };
+        const result = addMediaToUploadRecord(data);
+        console.log(`[useAddImageCallback] addMediaToUploadRecord result:`, result);
 
-        if (!isConnected || isInternetReachable === false) {
-          console.log(
-            `[useAddImageCallback] No network. Queuing upload for image ${id}, uri: ${copyLocalResult.uri}`,
-          );
-          const data: FailedToUploadData = {
-            id: id,
-            resourceType: resourceType,
-            mediaType: mediaType,
-            localUri: copyLocalResult.uri!,
-            organizationId: orgId,
-            projectId: projectId,
-            itemId: id,
-            uploadDate: Date.now(),
-          };
-          const result = addFailedToUploadRecord(data);
-          console.log(`[useAddImageCallback] addFailedToUploadRecord result:`, result);
-
-          if (result.status !== 'Success') {
-            console.error(`[useAddImageCallback] Failed to add to failed upload queue:`, result.msg);
-            return { status: 'Error', id: id, msg: `Failed to add upload to queue: ${result.msg}` };
-          }
-
-          console.log(
-            `[useAddImageCallback] SUCCESS - Queued upload. Returning with uri: ${copyLocalResult.uri}`,
-          );
-          return {
-            status: 'Success',
-            id: id,
-            uri: copyLocalResult.uri!,
-            msg: 'File saved. Will upload when internet connection is available.',
-          };
+        if (result.status !== 'Success') {
+          console.error(`[useAddImageCallback] Failed to add to upload queue:`, result.msg);
+          return { status: 'Error', id: id, msg: `Failed to add upload to queue: ${result.msg}` };
         }
 
-        console.log(`[useAddImageCallback] Network available. Uploading image ${id}`);
-        const uploadResult = await uploadImage(
-          details,
-          auth.getToken,
-          mediaType,
-          resourceType,
-          copyLocalResult.uri!,
+        console.log(
+          `[useAddImageCallback] SUCCESS - Queued upload. Returning with uri: ${copyLocalResult.uri}`,
         );
-        console.log(`[useAddImageCallback] Upload result:`, uploadResult);
-
-        if (uploadResult.status !== 'Success') {
-          console.log(
-            `[useAddImageCallback] Upload failed. Adding to queue for image ${id}, uri: ${copyLocalResult.uri}`,
-          );
-          const data: FailedToUploadData = {
-            id: id,
-            resourceType: resourceType,
-            mediaType: mediaType,
-            localUri: copyLocalResult.uri!,
-            organizationId: orgId,
-            projectId: projectId,
-            itemId: id,
-            uploadDate: Date.now(),
-          };
-          const result = addFailedToUploadRecord(data);
-          console.log(`[useAddImageCallback] addFailedToUploadRecord result for failed upload:`, result);
-
-          if (result.status !== 'Success') {
-            console.error(`[useAddImageCallback] Failed to queue failed upload:`, result.msg);
-            return { status: 'Error', id: id, msg: `Failed to add failed upload record: ${result.msg}` };
-          } else {
-            console.log(
-              `[useAddImageCallback] SUCCESS - Queued failed upload. Returning with uri: ${copyLocalResult.uri}`,
-            );
-            return {
-              status: 'Success',
-              id: id,
-              uri: copyLocalResult.uri!,
-              msg: 'File saved but unable upload to server. Will try later.',
-            };
-          }
-        }
-
-        console.log(`[useAddImageCallback] Upload successful for image ${id}`);
-        return uploadResult;
+        return {
+          status: 'Success',
+          id: id,
+          uri: copyLocalResult.uri!,
+          msg: 'File saved. Upload will be processed in the background.',
+        };
       } catch (error) {
         console.error('[useAddImageCallback] Caught exception:', error);
 
         const localUri = buildLocalMediaUri(orgId, projectId, id, mediaType, resourceType);
         console.log(`[useAddImageCallback] Exception path - built localUri: ${localUri}`);
 
-        const data: FailedToUploadData = {
+        const data: MediaToUploadData = {
           id: id,
           resourceType: resourceType,
           mediaType: mediaType,
@@ -974,11 +857,11 @@ export const useAddImageCallback = () => {
         };
 
         const errorMsg = formatErrorMessage(error);
-        const result = addFailedToUploadRecord(data);
-        console.log(`[useAddImageCallback] Exception path - addFailedToUploadRecord result:`, result);
+        const result = addMediaToUploadRecord(data);
+        console.log(`[useAddImageCallback] Exception path - addMediaToUploadRecord result:`, result);
 
         if (result.status === 'Success') {
-          console.log(`[useAddImageCallback] SUCCESS - Queued failed upload in exception handler`);
+          console.log(`[useAddImageCallback] SUCCESS - Queued upload in exception handler`);
           return {
             status: 'Success',
             id: id,
@@ -993,7 +876,7 @@ export const useAddImageCallback = () => {
         }
       }
     },
-    [userId, orgId, addFailedToUploadRecord, auth, isConnected, isInternetReachable],
+    [userId, orgId, addMediaToUploadRecord, auth],
   );
 };
 
