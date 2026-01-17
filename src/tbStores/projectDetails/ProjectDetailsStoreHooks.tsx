@@ -10,6 +10,12 @@ import { useProjectValue } from '../listOfProjects/ListOfProjectsStore';
 
 const { useCell, useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
+export interface ProjectCounters {
+  id: string;
+  nextReceiptNumber: number;
+  nextInvoiceNumber: number;
+}
+
 export interface WorkItemSummaryData {
   id: string;
   workItemId: string;
@@ -48,6 +54,7 @@ export function NoteCompletedCompare(a: NoteData, b: NoteData) {
 
 export type ReceiptData = {
   id: string;
+  accountingId: string;
   vendor: string;
   description: string;
   amount: number;
@@ -64,6 +71,7 @@ export type ClassifiedReceiptData = ReceiptData & { fullyClassified: boolean };
 
 export type InvoiceData = {
   id: string;
+  accountingId: string;
   supplier: string;
   description: string;
   amount: number;
@@ -123,6 +131,7 @@ export interface ChangeOrderItem {
 }
 
 export type WorkItemSummarySchema = typeof TABLES_SCHEMA.workItemSummaries;
+export type ProjectCountersSchema = typeof TABLES_SCHEMA.projectCounters;
 export type ReceiptsSchema = typeof TABLES_SCHEMA.receipts;
 export type InvoicesSchema = typeof TABLES_SCHEMA.invoices;
 export type WorkItemCostEntriesSchema = typeof TABLES_SCHEMA.workItemCostEntries;
@@ -132,6 +141,7 @@ export type ChangeOrderSchema = typeof TABLES_SCHEMA.notes;
 export type ChangeOrderItemSchema = typeof TABLES_SCHEMA.notes;
 
 export type SchemaMap = {
+  projectCounters: ProjectCountersSchema;
   workItemSummaries: WorkItemSummarySchema;
   workItemCostEntries: WorkItemCostEntriesSchema;
   receipts: ReceiptsSchema;
@@ -144,6 +154,7 @@ export type SchemaMap = {
 
 // Type mapping between table names and data types
 export type TableDataMap = {
+  projectCounters: ProjectCounters;
   workItemSummaries: WorkItemSummaryData;
   workItemCostEntries: WorkItemCostEntry;
   receipts: ReceiptData;
@@ -196,6 +207,98 @@ export const useAllRows = <K extends keyof TableDataMap>(
 
   if (!compareFn) return rows;
   return [...rows].sort(compareFn);
+};
+
+/**
+ * Generates an accounting ID in the format "prefix-abbreviation-count"
+ * @param prefix - "receipt" or "invoice"
+ * @param abbreviation - Project abbreviation
+ * @param count - Counter value
+ * @returns Formatted accounting ID
+ */
+export function generateAccountingId(
+  prefix: 'receipt' | 'invoice',
+  abbreviation: string,
+  count: number,
+): string {
+  return `${prefix}-${abbreviation}-${count}`;
+}
+
+/**
+ * Hook to get or initialize the project counters
+ */
+export const useProjectCounters = (projectId: string): ProjectCounters | undefined => {
+  const store = useStore(getStoreId(projectId));
+  const [counters, setCounters] = useState<ProjectCounters | undefined>(undefined);
+  
+  const fetchCounters = useCallback(() => {
+    if (!store) return undefined;
+    
+    const counterRow = store.getRow('projectCounters', 'counters');
+    if (counterRow) {
+      return { id: 'counters', ...counterRow } as ProjectCounters;
+    }
+    
+    // Initialize counters if they don't exist
+    const initialCounters: ProjectCounters = {
+      id: 'counters',
+      nextReceiptNumber: 1,
+      nextInvoiceNumber: 1,
+    };
+    store.setRow('projectCounters', 'counters', initialCounters);
+    return initialCounters;
+  }, [store]);
+
+  useEffect(() => {
+    setCounters(fetchCounters());
+  }, [fetchCounters]);
+
+  useEffect(() => {
+    if (!store) return;
+    const listenerId = store.addTableListener('projectCounters', () => setCounters(fetchCounters()));
+    return () => {
+      store.delListener(listenerId);
+    };
+  }, [store, fetchCounters]);
+
+  return counters;
+};
+
+/**
+ * Hook to increment and get the next receipt or invoice number
+ */
+export const useIncrementCounter = (projectId: string) => {
+  const store = useStore(getStoreId(projectId));
+  
+  return useCallback(
+    (type: 'receipt' | 'invoice'): number => {
+      if (!store) return 1;
+      
+      const counterRow = store.getRow('projectCounters', 'counters');
+      let nextNumber = 1;
+      
+      if (counterRow) {
+        if (type === 'receipt') {
+          nextNumber = (counterRow.nextReceiptNumber as number) || 1;
+          store.setCell('projectCounters', 'counters', 'nextReceiptNumber', nextNumber + 1);
+        } else {
+          nextNumber = (counterRow.nextInvoiceNumber as number) || 1;
+          store.setCell('projectCounters', 'counters', 'nextInvoiceNumber', nextNumber + 1);
+        }
+      } else {
+        // Initialize counters if they don't exist
+        const initialCounters: ProjectCounters = {
+          id: 'counters',
+          nextReceiptNumber: type === 'receipt' ? 2 : 1,
+          nextInvoiceNumber: type === 'invoice' ? 2 : 1,
+        };
+        store.setRow('projectCounters', 'counters', initialCounters);
+      }
+      
+      return nextNumber;
+    },
+    [store],
+  );
 };
 
 // --- ADD ROW ---

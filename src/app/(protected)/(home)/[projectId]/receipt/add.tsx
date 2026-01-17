@@ -18,10 +18,13 @@ import {
   ReceiptData,
   useAddRowCallback,
   WorkItemCostEntry,
+  useIncrementCounter,
+  generateAccountingId,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
+import { useProjectValue } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -34,6 +37,8 @@ const AddReceiptPage = () => {
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const { isConnected, isInternetReachable } = useNetwork();
   const addReceipt = useAddRowCallback(projectId, 'receipts');
+  const incrementCounter = useIncrementCounter(projectId);
+  const [projectAbbreviation] = useProjectValue(projectId, 'abbreviation');
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
@@ -66,6 +71,7 @@ const AddReceiptPage = () => {
 
   const [projectReceipt, setProjectReceipt] = useState<ReceiptData>({
     id: '',
+    accountingId: '',
     vendor: '',
     description: '',
     amount: 0,
@@ -145,8 +151,14 @@ const AddReceiptPage = () => {
   const handleAddReceipt = useCallback(async () => {
     if (!canAddReceipt) return;
 
+    // Generate accountingId
+    const receiptNumber = incrementCounter('receipt');
+    const abbreviation = (projectAbbreviation as string) || '';
+    const accountingId = generateAccountingId('receipt', abbreviation, receiptNumber);
+
     const receiptToAdd = {
       ...projectReceipt,
+      accountingId,
       markedComplete: applyToSingleCostCode && !!pickedSubCategoryOption,
     };
     const result = addReceipt(receiptToAdd);
@@ -181,6 +193,8 @@ const AddReceiptPage = () => {
     applyToSingleCostCode,
     pickedSubCategoryOption,
     router,
+    incrementCounter,
+    projectAbbreviation,
   ]);
 
   const handleCaptureImage = useCallback(async () => {
@@ -285,6 +299,7 @@ const AddReceiptPage = () => {
     // clear state of receipt data
     setProjectReceipt({
       id: '',
+      accountingId: '',
       vendor: '',
       description: '',
       amount: 0,
