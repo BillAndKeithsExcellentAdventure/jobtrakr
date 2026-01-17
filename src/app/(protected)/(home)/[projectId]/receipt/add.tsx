@@ -153,8 +153,13 @@ const AddReceiptPage = () => {
     if (!canAddReceipt) return;
 
     try {
-      // Validate abbreviation
-      const abbreviation = validateProjectAbbreviation(projectAbbreviation as string, projectId);
+      // Type-safe abbreviation validation
+      if (typeof projectAbbreviation !== 'string') {
+        throw new Error('Project abbreviation not found');
+      }
+      
+      // Validate abbreviation is not empty
+      const abbreviation = validateProjectAbbreviation(projectAbbreviation, projectId);
       
       // Generate accountingId
       const receiptNumber = incrementCounter('receipt');

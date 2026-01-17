@@ -10,6 +10,9 @@ import { useProjectValue } from '../listOfProjects/ListOfProjectsStore';
 
 const { useCell, useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
+// Constants
+const COUNTERS_ROW_ID = 'counters';
+
 export interface ProjectCounters {
   id: string;
   nextReceiptNumber: number;
@@ -239,14 +242,14 @@ function initializeCountersIfNeeded(
     return false;
   }
 
-  const counterRow = store.getRow('projectCounters', 'counters');
+  const counterRow = store.getRow('projectCounters', COUNTERS_ROW_ID);
   if (!counterRow) {
     const initialCounters: ProjectCounters = {
-      id: 'counters',
+      id: COUNTERS_ROW_ID,
       nextReceiptNumber: 1,
       nextInvoiceNumber: 1,
     };
-    const success = store.setRow('projectCounters', 'counters', initialCounters);
+    const success = store.setRow('projectCounters', COUNTERS_ROW_ID, initialCounters);
     if (success) {
       console.log(`Initialized counters for project ${projectId}`);
       return true;
@@ -260,34 +263,22 @@ function initializeCountersIfNeeded(
 
 /**
  * Hook to get or initialize the project counters
+ * Uses TinyBase's reactive hooks for automatic updates
  */
 export const useProjectCounters = (projectId: string): ProjectCounters | undefined => {
   const store = useStore(getStoreId(projectId));
-  const [counters, setCounters] = useState<ProjectCounters | undefined>(undefined);
   
-  const fetchCounters = useCallback(() => {
-    if (!store) return undefined;
-    
-    // Initialize if needed
-    initializeCountersIfNeeded(store, projectId);
-    
-    const counterRow = store.getRow('projectCounters', 'counters');
-    return counterRow ? ({ id: 'counters', ...counterRow } as ProjectCounters) : undefined;
+  // Ensure counters are initialized
+  useEffect(() => {
+    if (store) {
+      initializeCountersIfNeeded(store, projectId);
+    }
   }, [store, projectId]);
-
-  useEffect(() => {
-    setCounters(fetchCounters());
-  }, [fetchCounters]);
-
-  useEffect(() => {
-    if (!store) return;
-    const listenerId = store.addTableListener('projectCounters', () => setCounters(fetchCounters()));
-    return () => {
-      store.delListener(listenerId);
-    };
-  }, [store, fetchCounters]);
-
-  return counters;
+  
+  // Use TinyBase's reactive hooks to get the counter row
+  const counterRow = store?.getRow('projectCounters', COUNTERS_ROW_ID);
+  
+  return counterRow ? ({ id: COUNTERS_ROW_ID, ...counterRow } as ProjectCounters) : undefined;
 };
 
 /**
@@ -310,7 +301,7 @@ export const useIncrementCounter = (projectId: string) => {
         return 1;
       }
       
-      const counterRow = store.getRow('projectCounters', 'counters');
+      const counterRow = store.getRow('projectCounters', COUNTERS_ROW_ID);
       if (!counterRow) {
         console.error(`Counter row not found after initialization for project ${projectId}`);
         return 1;
@@ -320,7 +311,7 @@ export const useIncrementCounter = (projectId: string) => {
       const currentNumber = (counterRow[fieldName] as number) || 1;
       
       // Increment the counter for next time
-      store.setCell('projectCounters', 'counters', fieldName, currentNumber + 1);
+      store.setCell('projectCounters', COUNTERS_ROW_ID, fieldName, currentNumber + 1);
       
       return currentNumber;
     },
