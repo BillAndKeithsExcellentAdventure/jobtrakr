@@ -25,6 +25,7 @@ import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useProjectValue } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { validateProjectAbbreviation } from '@/src/utils/accountingUtils';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -127,47 +128,44 @@ const AddInvoicePage = () => {
   const handleAddInvoice = useCallback(async () => {
     if (!canAddInvoice) return;
 
-    // Get abbreviation and validate it
-    const abbreviation = (projectAbbreviation as string) || '';
-    
-    // If abbreviation is empty, try to generate it from project name
-    if (!abbreviation) {
-      console.error('Project abbreviation is missing for projectId:', projectId);
-      Alert.alert('Error', 'Unable to generate invoice ID. Project abbreviation is missing.');
-      return;
-    }
+    try {
+      // Validate abbreviation
+      const abbreviation = validateProjectAbbreviation(projectAbbreviation as string, projectId);
+      
+      // Generate accountingId
+      const invoiceNumber = incrementCounter('invoice');
+      const accountingId = generateAccountingId('invoice', abbreviation, invoiceNumber);
 
-    // Generate accountingId
-    const invoiceNumber = incrementCounter('invoice');
-    const accountingId = generateAccountingId('invoice', abbreviation, invoiceNumber);
-
-    const invoiceToAdd = {
-      ...projectInvoice,
-      accountingId,
-      markedComplete: applyToSingleCostCode && !!pickedSubCategoryOption,
-    };
-    const result = addInvoice(invoiceToAdd);
-    if (result.status !== 'Success') {
-      console.log('Add Project invoice failed:', invoiceToAdd);
-    } else {
-      if (applyToSingleCostCode && !!pickedSubCategoryOption) {
-        const newLineItem: WorkItemCostEntry = {
-          id: '',
-          label: projectInvoice.description,
-          workItemId: pickedSubCategoryOption.value,
-          amount: projectInvoice.amount,
-          parentId: result.id,
-          documentationType: 'invoice',
-        };
-        const addLineItemResult = addLineItem(newLineItem);
-        if (addLineItemResult.status !== 'Success') {
-          Alert.alert('Error', 'Unable to add line item for invoice.');
-          console.log('Error adding line item for invoice:', addLineItemResult);
+      const invoiceToAdd = {
+        ...projectInvoice,
+        accountingId,
+        markedComplete: applyToSingleCostCode && !!pickedSubCategoryOption,
+      };
+      const result = addInvoice(invoiceToAdd);
+      if (result.status !== 'Success') {
+        console.log('Add Project invoice failed:', invoiceToAdd);
+      } else {
+        if (applyToSingleCostCode && !!pickedSubCategoryOption) {
+          const newLineItem: WorkItemCostEntry = {
+            id: '',
+            label: projectInvoice.description,
+            workItemId: pickedSubCategoryOption.value,
+            amount: projectInvoice.amount,
+            parentId: result.id,
+            documentationType: 'invoice',
+          };
+          const addLineItemResult = addLineItem(newLineItem);
+          if (addLineItemResult.status !== 'Success') {
+            Alert.alert('Error', 'Unable to add line item for invoice.');
+            console.log('Error adding line item for invoice:', addLineItemResult);
+          }
         }
       }
+      console.log('Project invoice successfully added:', projectInvoice);
+      router.back();
+    } catch (error) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'An unexpected error occurred');
     }
-    console.log('Project invoice successfully added:', projectInvoice);
-    router.back();
   }, [
     projectInvoice,
     canAddInvoice,

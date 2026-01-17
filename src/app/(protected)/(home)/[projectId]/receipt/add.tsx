@@ -25,6 +25,7 @@ import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useProjectValue } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { validateProjectAbbreviation } from '@/src/utils/accountingUtils';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -151,49 +152,46 @@ const AddReceiptPage = () => {
   const handleAddReceipt = useCallback(async () => {
     if (!canAddReceipt) return;
 
-    // Get abbreviation and validate it
-    const abbreviation = (projectAbbreviation as string) || '';
-    
-    // If abbreviation is empty, try to generate it from project name
-    if (!abbreviation) {
-      console.error('Project abbreviation is missing for projectId:', projectId);
-      Alert.alert('Error', 'Unable to generate receipt ID. Project abbreviation is missing.');
-      return;
-    }
+    try {
+      // Validate abbreviation
+      const abbreviation = validateProjectAbbreviation(projectAbbreviation as string, projectId);
+      
+      // Generate accountingId
+      const receiptNumber = incrementCounter('receipt');
+      const accountingId = generateAccountingId('receipt', abbreviation, receiptNumber);
 
-    // Generate accountingId
-    const receiptNumber = incrementCounter('receipt');
-    const accountingId = generateAccountingId('receipt', abbreviation, receiptNumber);
-
-    const receiptToAdd = {
-      ...projectReceipt,
-      accountingId,
-      markedComplete: applyToSingleCostCode && !!pickedSubCategoryOption,
-    };
-    const result = addReceipt(receiptToAdd);
-    if (result.status !== 'Success') {
-      console.log('Add Project receipt failed:', receiptToAdd);
-    } else {
-      if (applyToSingleCostCode && !!pickedSubCategoryOption) {
-        const newLineItem: WorkItemCostEntry = {
-          id: '',
-          label: projectReceipt.description,
-          workItemId: pickedSubCategoryOption.value,
-          amount: projectReceipt.amount,
-          parentId: result.id,
-          documentationType: 'receipt',
-        };
-        const addLineItemResult = addLineItem(newLineItem);
-        if (addLineItemResult.status !== 'Success') {
-          Alert.alert('Error', 'Unable to add line item for receipt.');
-          console.log('Error adding line item for receipt:', addLineItemResult);
-          router.back();
-          return;
+      const receiptToAdd = {
+        ...projectReceipt,
+        accountingId,
+        markedComplete: applyToSingleCostCode && !!pickedSubCategoryOption,
+      };
+      const result = addReceipt(receiptToAdd);
+      if (result.status !== 'Success') {
+        console.log('Add Project receipt failed:', receiptToAdd);
+      } else {
+        if (applyToSingleCostCode && !!pickedSubCategoryOption) {
+          const newLineItem: WorkItemCostEntry = {
+            id: '',
+            label: projectReceipt.description,
+            workItemId: pickedSubCategoryOption.value,
+            amount: projectReceipt.amount,
+            parentId: result.id,
+            documentationType: 'receipt',
+          };
+          const addLineItemResult = addLineItem(newLineItem);
+          if (addLineItemResult.status !== 'Success') {
+            Alert.alert('Error', 'Unable to add line item for receipt.');
+            console.log('Error adding line item for receipt:', addLineItemResult);
+            router.back();
+            return;
+          }
         }
       }
+      console.log('Project receipt successfully added:', projectReceipt);
+      router.back();
+    } catch (error) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'An unexpected error occurred');
     }
-    console.log('Project receipt successfully added:', projectReceipt);
-    router.back();
   }, [
     projectReceipt,
     canAddReceipt,

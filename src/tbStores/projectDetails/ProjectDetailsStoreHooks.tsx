@@ -226,10 +226,19 @@ export function generateAccountingId(
 
 /**
  * Helper to initialize project counters if they don't exist
- * @param store - TinyBase store instance
+ * @param store - TinyBase store instance (typed as ReturnType of useStore)
  * @param projectId - Project ID (for logging)
+ * @returns true if initialization was successful or already exists
  */
-function initializeCountersIfNeeded(store: any, projectId: string): void {
+function initializeCountersIfNeeded(
+  store: ReturnType<typeof useStore>,
+  projectId: string,
+): boolean {
+  if (!store) {
+    console.error(`Cannot initialize counters: store not found for project ${projectId}`);
+    return false;
+  }
+
   const counterRow = store.getRow('projectCounters', 'counters');
   if (!counterRow) {
     const initialCounters: ProjectCounters = {
@@ -237,9 +246,16 @@ function initializeCountersIfNeeded(store: any, projectId: string): void {
       nextReceiptNumber: 1,
       nextInvoiceNumber: 1,
     };
-    store.setRow('projectCounters', 'counters', initialCounters);
-    console.log(`Initialized counters for project ${projectId}`);
+    const success = store.setRow('projectCounters', 'counters', initialCounters);
+    if (success) {
+      console.log(`Initialized counters for project ${projectId}`);
+      return true;
+    } else {
+      console.error(`Failed to initialize counters for project ${projectId}`);
+      return false;
+    }
   }
+  return true; // Already exists
 }
 
 /**
@@ -282,13 +298,23 @@ export const useIncrementCounter = (projectId: string) => {
   
   return useCallback(
     (type: 'receipt' | 'invoice'): number => {
-      if (!store) return 1;
+      if (!store) {
+        console.error(`Cannot increment counter: store not found for project ${projectId}`);
+        return 1;
+      }
       
       // Initialize if needed
-      initializeCountersIfNeeded(store, projectId);
+      const initialized = initializeCountersIfNeeded(store, projectId);
+      if (!initialized) {
+        console.error(`Failed to initialize counters for project ${projectId}`);
+        return 1;
+      }
       
       const counterRow = store.getRow('projectCounters', 'counters');
-      if (!counterRow) return 1; // Safety fallback
+      if (!counterRow) {
+        console.error(`Counter row not found after initialization for project ${projectId}`);
+        return 1;
+      }
       
       const fieldName = type === 'receipt' ? 'nextReceiptNumber' : 'nextInvoiceNumber';
       const currentNumber = (counterRow[fieldName] as number) || 1;
