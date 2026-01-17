@@ -7,6 +7,12 @@ import { useCreateServerSynchronizerAndStart } from '../synchronization/useCreat
 const STORE_ID_PREFIX = 'projectDetailsStore-';
 
 export const TABLES_SCHEMA = {
+  projectCounters: {
+    id: { type: 'string' },
+    nextReceiptNumber: { type: 'number' },
+    nextInvoiceNumber: { type: 'number' },
+  },
+
   workItemSummaries: {
     id: { type: 'string' },
     workItemId: { type: 'string' },
@@ -17,6 +23,7 @@ export const TABLES_SCHEMA = {
 
   receipts: {
     id: { type: 'string' },
+    accountingId: { type: 'string' },
     vendor: { type: 'string' },
     description: { type: 'string' },
     amount: { type: 'number' }, // Total Amount
@@ -31,6 +38,7 @@ export const TABLES_SCHEMA = {
 
   invoices: {
     id: { type: 'string' },
+    accountingId: { type: 'string' },
     vendor: { type: 'string' },
     description: { type: 'string' },
     amount: { type: 'number' }, // Total Amount

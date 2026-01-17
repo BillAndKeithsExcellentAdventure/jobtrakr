@@ -7,6 +7,7 @@ export type CrudResult = { status: 'Success' | 'Error'; id: string; msg: string 
 export interface ProjectData {
   id: string;
   name: string;
+  abbreviation: string;
   location: string;
   ownerName: string;
   startDate: number;

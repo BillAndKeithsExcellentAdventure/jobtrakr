@@ -18,10 +18,14 @@ import {
   ReceiptData,
   useAddRowCallback,
   WorkItemCostEntry,
+  useIncrementCounter,
+  generateAccountingId,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
+import { useProjectValue } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { validateProjectAbbreviation } from '@/src/utils/accountingUtils';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -34,6 +38,8 @@ const AddReceiptPage = () => {
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const { isConnected, isInternetReachable } = useNetwork();
   const addReceipt = useAddRowCallback(projectId, 'receipts');
+  const incrementCounter = useIncrementCounter(projectId);
+  const [projectAbbreviation] = useProjectValue(projectId, 'abbreviation');
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
@@ -66,6 +72,7 @@ const AddReceiptPage = () => {
 
   const [projectReceipt, setProjectReceipt] = useState<ReceiptData>({
     id: '',
+    accountingId: '',
     vendor: '',
     description: '',
     amount: 0,
@@ -145,34 +152,51 @@ const AddReceiptPage = () => {
   const handleAddReceipt = useCallback(async () => {
     if (!canAddReceipt) return;
 
-    const receiptToAdd = {
-      ...projectReceipt,
-      markedComplete: applyToSingleCostCode && !!pickedSubCategoryOption,
-    };
-    const result = addReceipt(receiptToAdd);
-    if (result.status !== 'Success') {
-      console.log('Add Project receipt failed:', receiptToAdd);
-    } else {
-      if (applyToSingleCostCode && !!pickedSubCategoryOption) {
-        const newLineItem: WorkItemCostEntry = {
-          id: '',
-          label: projectReceipt.description,
-          workItemId: pickedSubCategoryOption.value,
-          amount: projectReceipt.amount,
-          parentId: result.id,
-          documentationType: 'receipt',
-        };
-        const addLineItemResult = addLineItem(newLineItem);
-        if (addLineItemResult.status !== 'Success') {
-          Alert.alert('Error', 'Unable to add line item for receipt.');
-          console.log('Error adding line item for receipt:', addLineItemResult);
-          router.back();
-          return;
+    try {
+      // Type-safe abbreviation validation
+      if (typeof projectAbbreviation !== 'string') {
+        throw new Error('Project abbreviation not found');
+      }
+      
+      // Validate abbreviation is not empty
+      const abbreviation = validateProjectAbbreviation(projectAbbreviation, projectId);
+      
+      // Generate accountingId
+      const receiptNumber = incrementCounter('receipt');
+      const accountingId = generateAccountingId('receipt', abbreviation, receiptNumber);
+
+      const receiptToAdd = {
+        ...projectReceipt,
+        accountingId,
+        markedComplete: applyToSingleCostCode && !!pickedSubCategoryOption,
+      };
+      const result = addReceipt(receiptToAdd);
+      if (result.status !== 'Success') {
+        console.log('Add Project receipt failed:', receiptToAdd);
+      } else {
+        if (applyToSingleCostCode && !!pickedSubCategoryOption) {
+          const newLineItem: WorkItemCostEntry = {
+            id: '',
+            label: projectReceipt.description,
+            workItemId: pickedSubCategoryOption.value,
+            amount: projectReceipt.amount,
+            parentId: result.id,
+            documentationType: 'receipt',
+          };
+          const addLineItemResult = addLineItem(newLineItem);
+          if (addLineItemResult.status !== 'Success') {
+            Alert.alert('Error', 'Unable to add line item for receipt.');
+            console.log('Error adding line item for receipt:', addLineItemResult);
+            router.back();
+            return;
+          }
         }
       }
+      console.log('Project receipt successfully added:', projectReceipt);
+      router.back();
+    } catch (error) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'An unexpected error occurred');
     }
-    console.log('Project receipt successfully added:', projectReceipt);
-    router.back();
   }, [
     projectReceipt,
     canAddReceipt,
@@ -181,6 +205,9 @@ const AddReceiptPage = () => {
     applyToSingleCostCode,
     pickedSubCategoryOption,
     router,
+    incrementCounter,
+    projectAbbreviation,
+    projectId,
   ]);
 
   const handleCaptureImage = useCallback(async () => {
@@ -285,6 +312,7 @@ const AddReceiptPage = () => {
     // clear state of receipt data
     setProjectReceipt({
       id: '',
+      accountingId: '',
       vendor: '',
       description: '',
       amount: 0,

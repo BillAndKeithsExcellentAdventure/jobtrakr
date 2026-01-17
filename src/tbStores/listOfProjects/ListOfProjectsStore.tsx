@@ -8,10 +8,22 @@ import { useCreateClientPersisterAndStart } from '../persistence/useCreateClient
 import { useCreateServerSynchronizerAndStart } from '../synchronization/useCreateServerSynchronizerAndStart';
 
 const STORE_ID_PREFIX = 'PHV1_projectListStore';
+
+/**
+ * Generates a project abbreviation from the project name.
+ * Converts to uppercase and replaces non A-Z characters with underscores.
+ * @param name - The project name
+ * @returns The abbreviated project name
+ */
+export function generateAbbreviation(name: string): string {
+  return name.toUpperCase().replace(/[^A-Z]/g, '_');
+}
+
 const TABLES_SCHEMA = {
   projects: {
     id: { type: 'string' },
     name: { type: 'string' },
+    abbreviation: { type: 'string' },
     location: { type: 'string' },
     ownerName: { type: 'string' },
     ownerAddress: { type: 'string' },
@@ -106,6 +118,11 @@ export const useAddProjectCallback = () => {
     (projectData: ProjectData): { status: TBStatus; msg: string; id: string } => {
       const id = randomUUID();
       projectData.id = id;
+      
+      // Set abbreviation if not provided
+      if (!projectData.abbreviation) {
+        projectData.abbreviation = generateAbbreviation(projectData.name);
+      }
 
       if (store) {
         const storeCheck = store.setRow('projects', id, projectData);
@@ -182,6 +199,33 @@ export function useUpdateProjectCallback() {
     [store],
   );
 }
+
+/**
+ * Hook to ensure all existing projects have an abbreviation set.
+ * This is run once when the app loads to migrate existing data.
+ */
+export const useEnsureProjectAbbreviations = () => {
+  const store = useStore(useProjectListStoreId());
+  const allProjects = useAllProjects();
+
+  useEffect(() => {
+    if (!store || allProjects.length === 0) return;
+
+    let needsUpdate = false;
+    allProjects.forEach((project) => {
+      // If abbreviation is missing or empty, set it from the project name
+      if (!project.abbreviation || project.abbreviation === '') {
+        const abbreviation = generateAbbreviation(project.name);
+        store.setCell('projects', project.id, 'abbreviation', abbreviation);
+        needsUpdate = true;
+      }
+    });
+
+    if (needsUpdate) {
+      console.log('Updated project abbreviations for existing projects');
+    }
+  }, [store, allProjects]);
+};
 
 // Returns a callback that toggles the favorite status of a project.
 export const useToggleFavoriteCallback = () => {

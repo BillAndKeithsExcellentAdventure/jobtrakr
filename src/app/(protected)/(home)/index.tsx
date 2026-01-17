@@ -13,7 +13,7 @@ import { ActivityIndicator, Alert, GestureResponderEvent, Platform, StyleSheet }
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAllProjects, useToggleFavoriteCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { useAllProjects, useToggleFavoriteCallback, useEnsureProjectAbbreviations } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
 import {
@@ -35,6 +35,7 @@ export default function ProjectHomeScreen() {
   const allProjects = useAllProjects();
   const { addActiveProjectIds } = useActiveProjectIds();
   const toggleFavorite = useToggleFavoriteCallback();
+  useEnsureProjectAbbreviations(); // Ensure all projects have abbreviations
   const [projectListEntries, setProjectListEntries] = useState<ProjectListEntryProps[]>([]);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [isReady, setIsReady] = useState(false);
