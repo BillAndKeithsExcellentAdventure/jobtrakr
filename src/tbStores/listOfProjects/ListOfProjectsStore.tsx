@@ -200,6 +200,33 @@ export function useUpdateProjectCallback() {
   );
 }
 
+/**
+ * Hook to ensure all existing projects have an abbreviation set.
+ * This is run once when the app loads to migrate existing data.
+ */
+export const useEnsureProjectAbbreviations = () => {
+  const store = useStore(useProjectListStoreId());
+  const allProjects = useAllProjects();
+
+  useEffect(() => {
+    if (!store || allProjects.length === 0) return;
+
+    let needsUpdate = false;
+    allProjects.forEach((project) => {
+      // If abbreviation is missing or empty, set it from the project name
+      if (!project.abbreviation || project.abbreviation === '') {
+        const abbreviation = generateAbbreviation(project.name);
+        store.setCell('projects', project.id, 'abbreviation', abbreviation);
+        needsUpdate = true;
+      }
+    });
+
+    if (needsUpdate) {
+      console.log('Updated project abbreviations for existing projects');
+    }
+  }, [store, allProjects]);
+};
+
 // Returns a callback that toggles the favorite status of a project.
 export const useToggleFavoriteCallback = () => {
   let store = useStore(useProjectListStoreId());
