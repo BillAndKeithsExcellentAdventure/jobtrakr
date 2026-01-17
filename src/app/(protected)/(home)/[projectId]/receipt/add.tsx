@@ -151,9 +151,18 @@ const AddReceiptPage = () => {
   const handleAddReceipt = useCallback(async () => {
     if (!canAddReceipt) return;
 
+    // Get abbreviation and validate it
+    const abbreviation = (projectAbbreviation as string) || '';
+    
+    // If abbreviation is empty, try to generate it from project name
+    if (!abbreviation) {
+      console.error('Project abbreviation is missing for projectId:', projectId);
+      Alert.alert('Error', 'Unable to generate receipt ID. Project abbreviation is missing.');
+      return;
+    }
+
     // Generate accountingId
     const receiptNumber = incrementCounter('receipt');
-    const abbreviation = (projectAbbreviation as string) || '';
     const accountingId = generateAccountingId('receipt', abbreviation, receiptNumber);
 
     const receiptToAdd = {
@@ -195,6 +204,7 @@ const AddReceiptPage = () => {
     router,
     incrementCounter,
     projectAbbreviation,
+    projectId,
   ]);
 
   const handleCaptureImage = useCallback(async () => {

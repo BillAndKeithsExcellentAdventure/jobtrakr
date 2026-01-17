@@ -225,6 +225,24 @@ export function generateAccountingId(
 }
 
 /**
+ * Helper to initialize project counters if they don't exist
+ * @param store - TinyBase store instance
+ * @param projectId - Project ID (for logging)
+ */
+function initializeCountersIfNeeded(store: any, projectId: string): void {
+  const counterRow = store.getRow('projectCounters', 'counters');
+  if (!counterRow) {
+    const initialCounters: ProjectCounters = {
+      id: 'counters',
+      nextReceiptNumber: 1,
+      nextInvoiceNumber: 1,
+    };
+    store.setRow('projectCounters', 'counters', initialCounters);
+    console.log(`Initialized counters for project ${projectId}`);
+  }
+}
+
+/**
  * Hook to get or initialize the project counters
  */
 export const useProjectCounters = (projectId: string): ProjectCounters | undefined => {
@@ -234,20 +252,12 @@ export const useProjectCounters = (projectId: string): ProjectCounters | undefin
   const fetchCounters = useCallback(() => {
     if (!store) return undefined;
     
-    const counterRow = store.getRow('projectCounters', 'counters');
-    if (counterRow) {
-      return { id: 'counters', ...counterRow } as ProjectCounters;
-    }
+    // Initialize if needed
+    initializeCountersIfNeeded(store, projectId);
     
-    // Initialize counters if they don't exist
-    const initialCounters: ProjectCounters = {
-      id: 'counters',
-      nextReceiptNumber: 1,
-      nextInvoiceNumber: 1,
-    };
-    store.setRow('projectCounters', 'counters', initialCounters);
-    return initialCounters;
-  }, [store]);
+    const counterRow = store.getRow('projectCounters', 'counters');
+    return counterRow ? ({ id: 'counters', ...counterRow } as ProjectCounters) : undefined;
+  }, [store, projectId]);
 
   useEffect(() => {
     setCounters(fetchCounters());
@@ -274,30 +284,21 @@ export const useIncrementCounter = (projectId: string) => {
     (type: 'receipt' | 'invoice'): number => {
       if (!store) return 1;
       
+      // Initialize if needed
+      initializeCountersIfNeeded(store, projectId);
+      
       const counterRow = store.getRow('projectCounters', 'counters');
-      let nextNumber = 1;
+      if (!counterRow) return 1; // Safety fallback
       
-      if (counterRow) {
-        if (type === 'receipt') {
-          nextNumber = (counterRow.nextReceiptNumber as number) || 1;
-          store.setCell('projectCounters', 'counters', 'nextReceiptNumber', nextNumber + 1);
-        } else {
-          nextNumber = (counterRow.nextInvoiceNumber as number) || 1;
-          store.setCell('projectCounters', 'counters', 'nextInvoiceNumber', nextNumber + 1);
-        }
-      } else {
-        // Initialize counters if they don't exist
-        const initialCounters: ProjectCounters = {
-          id: 'counters',
-          nextReceiptNumber: type === 'receipt' ? 2 : 1,
-          nextInvoiceNumber: type === 'invoice' ? 2 : 1,
-        };
-        store.setRow('projectCounters', 'counters', initialCounters);
-      }
+      const fieldName = type === 'receipt' ? 'nextReceiptNumber' : 'nextInvoiceNumber';
+      const currentNumber = (counterRow[fieldName] as number) || 1;
       
-      return nextNumber;
+      // Increment the counter for next time
+      store.setCell('projectCounters', 'counters', fieldName, currentNumber + 1);
+      
+      return currentNumber;
     },
-    [store],
+    [store, projectId],
   );
 };
 

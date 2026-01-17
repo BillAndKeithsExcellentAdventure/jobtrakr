@@ -127,9 +127,18 @@ const AddInvoicePage = () => {
   const handleAddInvoice = useCallback(async () => {
     if (!canAddInvoice) return;
 
+    // Get abbreviation and validate it
+    const abbreviation = (projectAbbreviation as string) || '';
+    
+    // If abbreviation is empty, try to generate it from project name
+    if (!abbreviation) {
+      console.error('Project abbreviation is missing for projectId:', projectId);
+      Alert.alert('Error', 'Unable to generate invoice ID. Project abbreviation is missing.');
+      return;
+    }
+
     // Generate accountingId
     const invoiceNumber = incrementCounter('invoice');
-    const abbreviation = (projectAbbreviation as string) || '';
     const accountingId = generateAccountingId('invoice', abbreviation, invoiceNumber);
 
     const invoiceToAdd = {
@@ -169,6 +178,7 @@ const AddInvoicePage = () => {
     router,
     incrementCounter,
     projectAbbreviation,
+    projectId,
   ]);
 
   const handleCaptureImage = useCallback(async () => {
