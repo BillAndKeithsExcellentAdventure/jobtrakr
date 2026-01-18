@@ -2,7 +2,7 @@ import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton'
 import { Switch } from '@/src/components/Switch';
 import { TextField } from '@/src/components/TextField';
 import { Text, View } from '@/src/components/Themed';
-import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
+import { API_BASE_URL, IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import {
@@ -10,13 +10,16 @@ import {
   useAppSettings,
   useSetAppSettingsCallback,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { createApiWithToken } from '@/src/utils/apiWithToken';
 import { isDevelopmentBuild } from '@/src/utils/environment';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
+import * as WebBrowser from 'expo-web-browser';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Image, Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, Image, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
+import { useAuth } from '@clerk/clerk-expo';
 
 async function createBase64LogoImage(
   uri: string,
@@ -29,7 +32,6 @@ async function createBase64LogoImage(
     const manipulationContext = ImageManipulator.ImageManipulator.manipulate(uri);
     manipulationContext.resize({ width, height });
     const imageResult = await (await manipulationContext.renderAsync()).saveAsync({ base64: true });
-    //console.log(`Creating thumbnail ...Base64 Length: ${imageResult.base64?.length}`);
     thumbnailUrlInBase64 = imageResult.base64;
   } catch (error) {
     console.error(`Error creating thumbnail: ${error}`);
@@ -41,7 +43,7 @@ async function createBase64LogoImage(
 const SetAppSettingScreen = () => {
   const colors = useColors();
   const router = useRouter();
-
+  const auth = useAuth();
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
   const [settings, setSettings] = useState<SettingsData>(appSettings);
@@ -74,10 +76,49 @@ const SetAppSettingScreen = () => {
     setAppSettings(settings);
   }, [settings, setAppSettings]);
 
+  const connectToQuickBooks = useCallback(async () => {
+    try {
+      const apiFetch = createApiWithToken(auth.getToken);
+      const response = await apiFetch(
+        `${API_BASE_URL}/auth/qbo/connect?orgId=${auth.orgId}&userId=${auth.userId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      if (!response.ok) {
+        console.error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      console.log('QuickBooks connection response:', responseData);
+
+      // Check if success is true
+      if (responseData.success === true && responseData.authUrl) {
+        try {
+          // Open the authUrl in a browser
+          await WebBrowser.openBrowserAsync(responseData.authUrl);
+        } catch (browserError) {
+          console.error('Error opening browser:', browserError);
+          Alert.alert('Error', 'Failed to open QuickBooks authorization page. Please try again.');
+        }
+      } else {
+        Alert.alert('Error', responseData.msg || 'QuickBooks connection failed');
+      }
+    } catch (error) {
+      console.error('Error connecting to QuickBooks:', error);
+      Alert.alert('Error', 'Failed to connect to QuickBooks. Please try again.');
+    }
+  }, [auth]);
+
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      alert('Permission to access media library is required!');
+      Alert.alert('Permission Required', 'Permission to access media library is required!');
       return;
     }
 
@@ -220,6 +261,16 @@ const SetAppSettingScreen = () => {
                 style={{ width: 80, height: 80, resizeMode: 'contain' }}
               />
             )}
+
+            <TouchableOpacity
+              style={[
+                styles.button,
+                { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background },
+              ]}
+              onPress={connectToQuickBooks}
+            >
+              <Text>Connect to QuickBooks</Text>
+            </TouchableOpacity>
           </View>
           {isDevelopment && (
             <View
