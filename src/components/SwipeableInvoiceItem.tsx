@@ -34,144 +34,140 @@ const SwipeableInvoiceItem = React.memo<{
   projectId: string;
   item: ClassifiedInvoiceData;
 }>(({ orgId, projectId, item }) => {
-    const router = useRouter();
-    const colors = useColors();
-    const deleteInvoice = useDeleteRowCallback(projectId, 'invoices');
-    const deleteInvoiceLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
-    const allInvoiceLineItems = useAllRows(projectId, 'workItemCostEntries');
-    const deleteMediaCallback = useDeleteMediaCallback();
-    const mediaToUpload = useAllMediaToUpload();
-    const store = useUploadSyncStore();
-    const textColor = item.fullyClassified ? colors.text : colors.errorText;
+  const router = useRouter();
+  const colors = useColors();
+  const deleteInvoice = useDeleteRowCallback(projectId, 'invoices');
+  const deleteInvoiceLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
+  const allInvoiceLineItems = useAllRows(projectId, 'workItemCostEntries');
+  const deleteMediaCallback = useDeleteMediaCallback();
+  const mediaToUpload = useAllMediaToUpload();
+  const store = useUploadSyncStore();
+  const textColor = item.fullyClassified ? colors.text : colors.errorText;
 
-    const allInvoiceItems = useMemo(
-      () => allInvoiceLineItems.filter((lineItem) => lineItem.parentId === item.id),
-      [allInvoiceLineItems, item.id],
-    );
+  const allInvoiceItems = useMemo(
+    () => allInvoiceLineItems.filter((lineItem) => lineItem.parentId === item.id),
+    [allInvoiceLineItems, item.id],
+  );
 
-    const totalOfAllInvoiceItems = useMemo(
-      () => allInvoiceItems.reduce((acc, lineItem) => acc + lineItem.amount, 0),
-      [allInvoiceItems],
-    );
+  const totalOfAllInvoiceItems = useMemo(
+    () => allInvoiceItems.reduce((acc, lineItem) => acc + lineItem.amount, 0),
+    [allInvoiceItems],
+  );
 
-    const totalOfAllInvoiceItemsFormatted = useMemo(
-      () => formatCurrency(totalOfAllInvoiceItems, true, true),
-      [totalOfAllInvoiceItems],
-    );
+  const totalOfAllInvoiceItemsFormatted = useMemo(
+    () => formatCurrency(totalOfAllInvoiceItems, true, true),
+    [totalOfAllInvoiceItems],
+  );
 
-    const removeInvoice = useCallback(
-      (id: string | undefined) => {
-        if (id !== undefined) {
-          // before deleting invoice, we should delete all line items associated with it
-          allInvoiceItems.forEach((lineItem) => {
-            console.log('Deleting invoice line item with id:', lineItem.id);
-            deleteInvoiceLineItem(lineItem.id);
-          });
-          // now delete the invoice itself
-          console.log('Deleting invoice with id:', id);
-          deleteInvoice(id);
+  const removeInvoice = useCallback(
+    (id: string | undefined) => {
+      if (id !== undefined) {
+        // before deleting invoice, we should delete all line items associated with it
+        allInvoiceItems.forEach((lineItem) => {
+          console.log('Deleting invoice line item with id:', lineItem.id);
+          deleteInvoiceLineItem(lineItem.id);
+        });
+        // now delete the invoice itself
+        console.log('Deleting invoice with id:', id);
+        deleteInvoice(id);
 
-          if (item.imageId) {
-            // Check if this image is in the mediaToUpload queue
-            const uploadInQueue = mediaToUpload.find((upload) => upload.itemId === item.imageId);
-            if (uploadInQueue && store) {
-              // Remove from mediaToUpload table since it never made it to the server
-              console.log(`Removing invoice image ${item.imageId} from mediaToUpload queue`);
-              store.delRow('mediaToUpload', uploadInQueue.id);
-            } else {
-              // Use the new hook to delete media (will queue if offline)
-              (async () => {
-                const result = await deleteMediaCallback(projectId, [item.imageId], 'invoice');
-                if (!result.success) {
-                  console.error('Failed to delete invoice media:', result.msg);
-                }
-              })();
-            }
-
-            // Delete the local media file (invoices are always photos)
+        if (item.imageId) {
+          // Check if this image is in the mediaToUpload queue
+          const uploadInQueue = mediaToUpload.find((upload) => upload.itemId === item.imageId);
+          if (uploadInQueue && store) {
+            // Remove from mediaToUpload table since it never made it to the server
+            console.log(`Removing invoice image ${item.imageId} from mediaToUpload queue`);
+            store.delRow('mediaToUpload', uploadInQueue.id);
+          } else {
+            // Use the new hook to delete media (will queue if offline)
             (async () => {
-              await deleteLocalMediaFile(orgId, projectId, item.imageId, 'photo', 'invoice');
+              const result = await deleteMediaCallback(projectId, [item.imageId], 'invoice');
+              if (!result.success) {
+                console.error('Failed to delete invoice media:', result.msg);
+              }
             })();
           }
+
+          // Delete the local media file (invoices are always photos)
+          (async () => {
+            await deleteLocalMediaFile(orgId, projectId, item.imageId, 'photo', 'invoice');
+          })();
         }
-      },
-      [
-        deleteInvoice,
-        deleteInvoiceLineItem,
-        allInvoiceItems,
-        item.imageId,
-        projectId,
-        orgId,
-        deleteMediaCallback,
-        failedUploads,
-        store,
-      ],
-    );
+      }
+    },
+    [
+      deleteInvoice,
+      deleteInvoiceLineItem,
+      allInvoiceItems,
+      item.imageId,
+      projectId,
+      orgId,
+      deleteMediaCallback,
+      store,
+    ],
+  );
 
-    const handleDelete = useCallback(() => {
-      Alert.alert(
-        'Delete Invoice',
-        'Are you sure you want to delete this invoice and any of its association line items?',
-        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeInvoice(item.id) }],
-        { cancelable: true },
-      );
-    }, [item.id, removeInvoice]);
-
-    const renderRightActions = useCallback(() => <RightAction onDelete={handleDelete} />, [handleDelete]);
-    const photoDate = formatDate(item.pictureDate, undefined, true);
-    return (
-      <SwipeableComponent
-        key={item.id}
-        threshold={SWIPE_THRESHOLD_WIDTH}
-        actionWidth={RIGHT_ACTION_WIDTH}
-        renderRightActions={renderRightActions}
-      >
-        <View style={[styles.itemEntry, { borderColor: colors.border }]}>
-          <Pressable
-            onPress={() =>
-              router.push({
-                pathname: '/[projectId]/invoice/[invoiceId]',
-                params: { projectId, invoiceId: item.id },
-              })
-            }
-          >
-            <View style={styles.itemInfo}>
-              {item.amount === 0 && totalOfAllInvoiceItems === 0 && item.imageId ? (
-                <>
-                  <View style={{ flex: 1, alignItems: 'center' }}>
-                    <Base64Image base64String={item.thumbnail} height={ITEM_HEIGHT - 20} width={150} />
-                    <View style={{ width: 150 }}>
-                      <Text style={styles.dateOverlay}>{photoDate}</Text>
-                    </View>
-                  </View>
-                  <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
-                    <Feather name="chevrons-right" size={24} color={colors.iconColor} />
-                  </View>
-                </>
-              ) : (
-                <>
-                  <View style={{ flex: 1, justifyContent: 'center', paddingLeft: 10 }}>
-                    <Text style={{ color: textColor }}>
-                      Amount: {formatCurrency(item.amount, true, true)}
-                    </Text>
-                    <Text style={{ color: textColor }}>Supplier: {item.supplier}</Text>
-                    <Text style={{ color: textColor }}>
-                      # Items: {allInvoiceItems.length} / ({totalOfAllInvoiceItemsFormatted})
-                    </Text>
-                    <Text style={{ color: textColor }}>Date: {formatDate(item.invoiceDate)}</Text>
-                  </View>
-                  <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
-                    <Feather name="chevrons-right" size={24} color={colors.iconColor} />
-                  </View>
-                </>
-              )}
-            </View>
-          </Pressable>
-        </View>
-      </SwipeableComponent>
+  const handleDelete = useCallback(() => {
+    Alert.alert(
+      'Delete Invoice',
+      'Are you sure you want to delete this invoice and any of its association line items?',
+      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeInvoice(item.id) }],
+      { cancelable: true },
     );
-  },
-);
+  }, [item.id, removeInvoice]);
+
+  const renderRightActions = useCallback(() => <RightAction onDelete={handleDelete} />, [handleDelete]);
+  const photoDate = formatDate(item.pictureDate, undefined, true);
+  return (
+    <SwipeableComponent
+      key={item.id}
+      threshold={SWIPE_THRESHOLD_WIDTH}
+      actionWidth={RIGHT_ACTION_WIDTH}
+      renderRightActions={renderRightActions}
+    >
+      <View style={[styles.itemEntry, { borderColor: colors.border }]}>
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: '/[projectId]/invoice/[invoiceId]',
+              params: { projectId, invoiceId: item.id },
+            })
+          }
+        >
+          <View style={styles.itemInfo}>
+            {item.amount === 0 && totalOfAllInvoiceItems === 0 && item.imageId ? (
+              <>
+                <View style={{ flex: 1, alignItems: 'center' }}>
+                  <Base64Image base64String={item.thumbnail} height={ITEM_HEIGHT - 20} width={150} />
+                  <View style={{ width: 150 }}>
+                    <Text style={styles.dateOverlay}>{photoDate}</Text>
+                  </View>
+                </View>
+                <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
+                  <Feather name="chevrons-right" size={24} color={colors.iconColor} />
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={{ flex: 1, justifyContent: 'center', paddingLeft: 10 }}>
+                  <Text style={{ color: textColor }}>Amount: {formatCurrency(item.amount, true, true)}</Text>
+                  <Text style={{ color: textColor }}>Supplier: {item.supplier}</Text>
+                  <Text style={{ color: textColor }}>
+                    # Items: {allInvoiceItems.length} / ({totalOfAllInvoiceItemsFormatted})
+                  </Text>
+                  <Text style={{ color: textColor }}>Date: {formatDate(item.invoiceDate)}</Text>
+                </View>
+                <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
+                  <Feather name="chevrons-right" size={24} color={colors.iconColor} />
+                </View>
+              </>
+            )}
+          </View>
+        </Pressable>
+      </View>
+    </SwipeableComponent>
+  );
+});
 SwipeableInvoiceItem.displayName = 'SwipeableInvoiceItem';
 
 const styles = StyleSheet.create({

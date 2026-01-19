@@ -102,7 +102,6 @@ const SwipeableReceiptItem = React.memo<{
       projectId,
       orgId,
       deleteMediaCallback,
-      failedUploads,
       store,
     ],
   );
