@@ -17,19 +17,20 @@ export default function ProtectedLayout() {
   const { isLoaded, isSignedIn, userId } = useAuth();
   const { organization } = useOrganization();
 
-  useEffect(() => {
-    const setupPushNotifications = async (): Promise<void> => {
-      if (isSignedIn && userId && organization?.id) {
-        try {
-          await registerForPushNotifications(organization.id, userId, API_BASE_URL);
-        } catch (error) {
-          console.error('Failed to setup push notifications:', error);
-        }
-      }
-    };
+  // Requires an expo build in order to implement push notifications
+  // useEffect(() => {
+  //   const setupPushNotifications = async (): Promise<void> => {
+  //     if (isSignedIn && userId && organization?.id) {
+  //       try {
+  //         await registerForPushNotifications(organization.id, userId, API_BASE_URL);
+  //       } catch (error) {
+  //         console.error('Failed to setup push notifications:', error);
+  //       }
+  //     }
+  //   };
 
-    setupPushNotifications();
-  }, [isSignedIn, userId, organization?.id]);
+  //   setupPushNotifications();
+  // }, [isSignedIn, userId, organization?.id]);
 
   // Show loading state while auth is initializing
   if (!isLoaded) {
