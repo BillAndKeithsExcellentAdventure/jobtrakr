@@ -17,6 +17,7 @@ export const TABLES_SCHEMA = {
 
   receipts: {
     id: { type: 'string' },
+    accountingId: { type: 'string' },
     vendor: { type: 'string' },
     description: { type: 'string' },
     amount: { type: 'number' }, // Total Amount
@@ -31,6 +32,7 @@ export const TABLES_SCHEMA = {
 
   invoices: {
     id: { type: 'string' },
+    accountingId: { type: 'string' },
     vendor: { type: 'string' },
     description: { type: 'string' },
     amount: { type: 'number' }, // Total Amount

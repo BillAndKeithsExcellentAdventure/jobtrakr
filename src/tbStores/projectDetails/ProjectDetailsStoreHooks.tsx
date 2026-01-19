@@ -48,6 +48,7 @@ export function NoteCompletedCompare(a: NoteData, b: NoteData) {
 
 export type ReceiptData = {
   id: string;
+  accountingId: string;
   vendor: string;
   description: string;
   amount: number;
@@ -64,6 +65,7 @@ export type ClassifiedReceiptData = ReceiptData & { fullyClassified: boolean };
 
 export type InvoiceData = {
   id: string;
+  accountingId: string;
   supplier: string;
   description: string;
   amount: number;

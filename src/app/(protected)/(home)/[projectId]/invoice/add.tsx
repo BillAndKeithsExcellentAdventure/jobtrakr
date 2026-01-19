@@ -56,6 +56,7 @@ const AddInvoicePage = () => {
   const router = useRouter();
   const [projectInvoice, setProjectInvoice] = useState<InvoiceData>({
     id: '',
+    accountingId: '',
     supplier: '',
     description: '',
     amount: 0,
@@ -123,6 +124,7 @@ const AddInvoicePage = () => {
 
     const invoiceToAdd = {
       ...projectInvoice,
+      accountingId: '', // Will be populated by backend
       markedComplete: applyToSingleCostCode && !!pickedSubCategoryOption,
     };
     const result = addInvoice(invoiceToAdd);
@@ -263,6 +265,7 @@ const AddInvoicePage = () => {
     // clear state of invoice data
     setProjectInvoice({
       id: '',
+      accountingId: '',
       supplier: '',
       description: '',
       amount: 0,
