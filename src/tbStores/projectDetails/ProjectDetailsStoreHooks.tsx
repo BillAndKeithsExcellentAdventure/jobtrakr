@@ -10,15 +10,6 @@ import { useProjectValue } from '../listOfProjects/ListOfProjectsStore';
 
 const { useCell, useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
-// Constants
-const COUNTERS_ROW_ID = 'counters';
-
-export interface ProjectCounters {
-  id: string;
-  nextReceiptNumber: number;
-  nextInvoiceNumber: number;
-}
-
 export interface WorkItemSummaryData {
   id: string;
   workItemId: string;
@@ -134,7 +125,6 @@ export interface ChangeOrderItem {
 }
 
 export type WorkItemSummarySchema = typeof TABLES_SCHEMA.workItemSummaries;
-export type ProjectCountersSchema = typeof TABLES_SCHEMA.projectCounters;
 export type ReceiptsSchema = typeof TABLES_SCHEMA.receipts;
 export type InvoicesSchema = typeof TABLES_SCHEMA.invoices;
 export type WorkItemCostEntriesSchema = typeof TABLES_SCHEMA.workItemCostEntries;
@@ -144,7 +134,6 @@ export type ChangeOrderSchema = typeof TABLES_SCHEMA.notes;
 export type ChangeOrderItemSchema = typeof TABLES_SCHEMA.notes;
 
 export type SchemaMap = {
-  projectCounters: ProjectCountersSchema;
   workItemSummaries: WorkItemSummarySchema;
   workItemCostEntries: WorkItemCostEntriesSchema;
   receipts: ReceiptsSchema;
@@ -157,7 +146,6 @@ export type SchemaMap = {
 
 // Type mapping between table names and data types
 export type TableDataMap = {
-  projectCounters: ProjectCounters;
   workItemSummaries: WorkItemSummaryData;
   workItemCostEntries: WorkItemCostEntry;
   receipts: ReceiptData;
@@ -210,113 +198,6 @@ export const useAllRows = <K extends keyof TableDataMap>(
 
   if (!compareFn) return rows;
   return [...rows].sort(compareFn);
-};
-
-/**
- * Generates an accounting ID in the format "prefix-abbreviation-count"
- * @param prefix - "receipt" or "invoice"
- * @param abbreviation - Project abbreviation
- * @param count - Counter value
- * @returns Formatted accounting ID
- */
-export function generateAccountingId(
-  prefix: 'receipt' | 'invoice',
-  abbreviation: string,
-  count: number,
-): string {
-  return `${prefix}-${abbreviation}-${count}`;
-}
-
-/**
- * Helper to initialize project counters if they don't exist
- * @param store - TinyBase store instance (typed as ReturnType of useStore)
- * @param projectId - Project ID (for logging)
- * @returns true if initialization was successful or already exists
- */
-function initializeCountersIfNeeded(
-  store: ReturnType<typeof useStore>,
-  projectId: string,
-): boolean {
-  if (!store) {
-    console.error(`Cannot initialize counters: store not found for project ${projectId}`);
-    return false;
-  }
-
-  const counterRow = store.getRow('projectCounters', COUNTERS_ROW_ID);
-  if (!counterRow) {
-    const initialCounters: ProjectCounters = {
-      id: COUNTERS_ROW_ID,
-      nextReceiptNumber: 1,
-      nextInvoiceNumber: 1,
-    };
-    const success = store.setRow('projectCounters', COUNTERS_ROW_ID, initialCounters);
-    if (success) {
-      console.log(`Initialized counters for project ${projectId}`);
-      return true;
-    } else {
-      console.error(`Failed to initialize counters for project ${projectId}`);
-      return false;
-    }
-  }
-  return true; // Already exists
-}
-
-/**
- * Hook to get or initialize the project counters
- * Uses TinyBase's reactive hooks for automatic updates
- */
-export const useProjectCounters = (projectId: string): ProjectCounters | undefined => {
-  const store = useStore(getStoreId(projectId));
-  
-  // Ensure counters are initialized
-  useEffect(() => {
-    if (store) {
-      initializeCountersIfNeeded(store, projectId);
-    }
-  }, [store, projectId]);
-  
-  // Use TinyBase's reactive hooks to get the counter row
-  const counterRow = store?.getRow('projectCounters', COUNTERS_ROW_ID);
-  
-  return counterRow ? ({ id: COUNTERS_ROW_ID, ...counterRow } as ProjectCounters) : undefined;
-};
-
-/**
- * Hook to increment and get the next receipt or invoice number
- */
-export const useIncrementCounter = (projectId: string) => {
-  const store = useStore(getStoreId(projectId));
-  
-  return useCallback(
-    (type: 'receipt' | 'invoice'): number => {
-      if (!store) {
-        console.error(`Cannot increment counter: store not found for project ${projectId}`);
-        return 1;
-      }
-      
-      // Initialize if needed
-      const initialized = initializeCountersIfNeeded(store, projectId);
-      if (!initialized) {
-        console.error(`Failed to initialize counters for project ${projectId}`);
-        return 1;
-      }
-      
-      const counterRow = store.getRow('projectCounters', COUNTERS_ROW_ID);
-      if (!counterRow) {
-        console.error(`Counter row not found after initialization for project ${projectId}`);
-        return 1;
-      }
-      
-      const fieldName = type === 'receipt' ? 'nextReceiptNumber' : 'nextInvoiceNumber';
-      const currentNumber = (counterRow[fieldName] as number) || 1;
-      
-      // Increment the counter for next time
-      store.setCell('projectCounters', COUNTERS_ROW_ID, fieldName, currentNumber + 1);
-      
-      return currentNumber;
-    },
-    [store, projectId],
-  );
 };
 
 // --- ADD ROW ---

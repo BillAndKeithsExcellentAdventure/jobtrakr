@@ -18,14 +18,10 @@ import {
   InvoiceData,
   useAddRowCallback,
   WorkItemCostEntry,
-  useIncrementCounter,
-  generateAccountingId,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
-import { useProjectValue } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
-import { validateProjectAbbreviation } from '@/src/utils/accountingUtils';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -38,8 +34,6 @@ const AddInvoicePage = () => {
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const { isConnected, isInternetReachable } = useNetwork();
   const addInvoice = useAddRowCallback(projectId, 'invoices');
-  const incrementCounter = useIncrementCounter(projectId);
-  const [projectAbbreviation] = useProjectValue(projectId, 'abbreviation');
   const [isSupplierListPickerVisible, setIsSupplierListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const [suppliers, setSuppliers] = useState<OptionEntry[]>([]);
@@ -128,49 +122,33 @@ const AddInvoicePage = () => {
   const handleAddInvoice = useCallback(async () => {
     if (!canAddInvoice) return;
 
-    try {
-      // Type-safe abbreviation validation
-      if (typeof projectAbbreviation !== 'string') {
-        throw new Error('Project abbreviation not found');
-      }
-      
-      // Validate abbreviation is not empty
-      const abbreviation = validateProjectAbbreviation(projectAbbreviation, projectId);
-      
-      // Generate accountingId
-      const invoiceNumber = incrementCounter('invoice');
-      const accountingId = generateAccountingId('invoice', abbreviation, invoiceNumber);
-
-      const invoiceToAdd = {
-        ...projectInvoice,
-        accountingId,
-        markedComplete: applyToSingleCostCode && !!pickedSubCategoryOption,
-      };
-      const result = addInvoice(invoiceToAdd);
-      if (result.status !== 'Success') {
-        console.log('Add Project invoice failed:', invoiceToAdd);
-      } else {
-        if (applyToSingleCostCode && !!pickedSubCategoryOption) {
-          const newLineItem: WorkItemCostEntry = {
-            id: '',
-            label: projectInvoice.description,
-            workItemId: pickedSubCategoryOption.value,
-            amount: projectInvoice.amount,
-            parentId: result.id,
-            documentationType: 'invoice',
-          };
-          const addLineItemResult = addLineItem(newLineItem);
-          if (addLineItemResult.status !== 'Success') {
-            Alert.alert('Error', 'Unable to add line item for invoice.');
-            console.log('Error adding line item for invoice:', addLineItemResult);
-          }
+    const invoiceToAdd = {
+      ...projectInvoice,
+      accountingId: '', // Will be populated by backend
+      markedComplete: applyToSingleCostCode && !!pickedSubCategoryOption,
+    };
+    const result = addInvoice(invoiceToAdd);
+    if (result.status !== 'Success') {
+      console.log('Add Project invoice failed:', invoiceToAdd);
+    } else {
+      if (applyToSingleCostCode && !!pickedSubCategoryOption) {
+        const newLineItem: WorkItemCostEntry = {
+          id: '',
+          label: projectInvoice.description,
+          workItemId: pickedSubCategoryOption.value,
+          amount: projectInvoice.amount,
+          parentId: result.id,
+          documentationType: 'invoice',
+        };
+        const addLineItemResult = addLineItem(newLineItem);
+        if (addLineItemResult.status !== 'Success') {
+          Alert.alert('Error', 'Unable to add line item for invoice.');
+          console.log('Error adding line item for invoice:', addLineItemResult);
         }
       }
-      console.log('Project invoice successfully added:', projectInvoice);
-      router.back();
-    } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'An unexpected error occurred');
     }
+    console.log('Project invoice successfully added:', projectInvoice);
+    router.back();
   }, [
     projectInvoice,
     canAddInvoice,
@@ -179,9 +157,6 @@ const AddInvoicePage = () => {
     applyToSingleCostCode,
     pickedSubCategoryOption,
     router,
-    incrementCounter,
-    projectAbbreviation,
-    projectId,
   ]);
 
   const handleCaptureImage = useCallback(async () => {
