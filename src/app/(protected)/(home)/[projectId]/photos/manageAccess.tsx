@@ -137,22 +137,25 @@ export default function ManageAccessScreen() {
     syncPublicPhotos();
   }, [projectId, allProjectMedia, fetchProjectPublicImageIds, makePhotosPublic]);
 
-  const loadEmails = async (projectId: string) => {
-    if (!projectId) return;
+  const loadEmails = useCallback(
+    async (projectId: string) => {
+      if (!projectId) return;
 
-    const result = await fetchEmailsWithPhotoAccess(projectId);
-    if (result.success && result.emails) {
-      setEmails(result.emails);
-    } else {
-      console.error('Failed to fetch emails:', result.msg);
-      Alert.alert('Error', `Failed to load email addresses: ${result.msg}`);
-    }
-  };
+      const result = await fetchEmailsWithPhotoAccess(projectId);
+      if (result.success && result.emails) {
+        setEmails(result.emails);
+      } else {
+        console.error('Failed to fetch emails:', result.msg);
+        Alert.alert('Error', `Failed to load email addresses: ${result.msg}`);
+      }
+    },
+    [fetchEmailsWithPhotoAccess],
+  );
 
   useEffect(() => {
     loadEmails(projectId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]); // Only run when projectId changes
+     
+  }, [projectId, loadEmails]); // Only run when projectId changes
 
   const handleAddEmail = useCallback(async () => {
     if (!newEmail.trim() || !projectId || !projectName) {
@@ -173,7 +176,15 @@ export default function ManageAccessScreen() {
     } else {
       Alert.alert('Error', `Failed to grant access: ${result.msg}`);
     }
-  }, [newEmail, projectId, projectName, grantPhotoAccess]);
+  }, [
+    newEmail,
+    projectId,
+    projectName,
+    grantPhotoAccess,
+    appSettings.companyName,
+    appSettings.email,
+    loadEmails,
+  ]);
 
   const handleDeleteEmail = useCallback(
     async (email: string) => {
@@ -196,7 +207,7 @@ export default function ManageAccessScreen() {
         },
       ]);
     },
-    [projectId, revokePhotoAccess],
+    [projectId, revokePhotoAccess, loadEmails],
   );
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

@@ -6,22 +6,16 @@ interface ApiDefaultResponse {
   message?: string;
 }
 
-interface ApiDataResponse<T> {
-  success: boolean;
+interface ApiDataResponse<T> extends ApiDefaultResponse {
   data?: T;
-  message?: string;
 }
 
-interface ApiConnectionResponse {
-  success: boolean;
+interface ApiConnectionResponse extends ApiDefaultResponse {
   authUrl: string;
-  message?: string;
 }
 
-interface ApiIsConnectedResponse {
-  success: boolean;
+interface ApiIsConnectedResponse extends ApiDefaultResponse {
   isConnected: boolean;
-  message?: string;
 }
 
 type ApiResponse<T> = ApiDataResponse<T> | ApiConnectionResponse;
@@ -267,7 +261,7 @@ export async function payBill(
     body: JSON.stringify(payment),
   });
 
-  const data: ApiResponse<{ BillPayment: BillPayment }> = await response.json();
+  const data: ApiDataResponse<{ BillPayment: BillPayment }> = await response.json();
   if (!data.success) {
     throw new Error(data.message);
   }

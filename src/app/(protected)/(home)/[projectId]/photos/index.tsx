@@ -73,12 +73,7 @@ const ProjectPhotosPage = () => {
         }
 
         console.log(`[handlePhotoCaptured] Calling addPhotoImage with uri: ${media.uri}`);
-        const imageAddResult = await addPhotoImage(
-          media.uri,
-          projectId,
-          media.mediaType,
-          'photo',
-        );
+        const imageAddResult = await addPhotoImage(media.uri, projectId, media.mediaType, 'photo');
         console.log('[handlePhotoCaptured] Image Add Result:', JSON.stringify(imageAddResult, null, 2));
 
         if (imageAddResult.status === 'Success') {
@@ -120,7 +115,6 @@ const ProjectPhotosPage = () => {
     [projectId, addPhotoImage, addPhotoData],
   );
 
-  const [showDeviceAssets, setShowDeviceAssets] = useState<boolean>(false);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [isCameraVisible, setIsCameraVisible] = useState(false);
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
@@ -163,10 +157,6 @@ const ProjectPhotosPage = () => {
     ],
     [colors, handleMenuItemPress],
   );
-
-  const handleDeviceMediaClose = useCallback(() => {
-    setShowDeviceAssets(false);
-  }, []);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
@@ -215,7 +205,7 @@ const ProjectPhotosPage = () => {
             <ProjectMediaList
               projectId={projectId}
               projectName={projectName}
-              showInSingleColumn={showDeviceAssets}
+              showInSingleColumn={false}
               projectMediaItems={allProjectMedia}
               playVideo={playVideo}
             />

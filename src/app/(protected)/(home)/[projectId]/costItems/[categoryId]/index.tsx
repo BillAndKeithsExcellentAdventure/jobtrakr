@@ -138,7 +138,6 @@ const CategorySpecificCostItemsPage = () => {
                   params: {
                     projectId,
                     categoryId,
-                    categoryName: costItemsCategory?.name,
                     categoryCode: costItemsCategory?.code,
                     availableWorkItemIds: unusedWorkItemsInCategoryString,
                   },

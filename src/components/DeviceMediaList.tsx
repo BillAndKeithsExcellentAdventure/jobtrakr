@@ -181,13 +181,6 @@ export const DeviceMediaList = ({
     onStatusUpdate(filteredStatus);
   }, [allProjectMedia, onStatusUpdate, pagingCursor, hasNextPage]);
 
-  const handleDeviceMediaClose = useCallback(() => {
-    setDeviceMediaAssets([]);
-    setPagingCursor(undefined);
-    setHasNextPage(true);
-    onClose();
-  }, [onClose]);
-
   const importDeviceAssetToProject = useCallback(async () => {
     if (deviceMediaAssets) {
       const addedAssetIds: string[] = [];

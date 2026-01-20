@@ -65,23 +65,39 @@ const PercentCompleteBar: React.FC<PercentCompleteProps> = ({
     ) : null;
   }, [labelPosition, showLabel, spent, total, labelColor, labelStyle]);
 
-  const renderBar = useCallback(() => (
-    <View style={[styles.container, { height, backgroundColor }]}>
-      <Animated.View
-        style={[
-          styles.fill,
-          {
-            backgroundColor: fillColor,
-            width: widthInterpolated,
-          },
-        ]}
-      ></Animated.View>
-      {labelPosition === 'inside' && renderLabel()}
-      {showPercentageText && labelPosition !== 'inside' && (
-        <Text style={[styles.insideText, { color: textColor }, textStyle]}>{`${Math.round(percent)}%`}</Text>
-      )}
-    </View>
-  ), [showPercentageText, labelPosition, percent, textColor, textStyle, height, backgroundColor, fillColor, widthInterpolated]);
+  const renderBar = useCallback(
+    () => (
+      <View style={[styles.container, { height, backgroundColor }]}>
+        <Animated.View
+          style={[
+            styles.fill,
+            {
+              backgroundColor: fillColor,
+              width: widthInterpolated,
+            },
+          ]}
+        ></Animated.View>
+        {labelPosition === 'inside' && renderLabel()}
+        {showPercentageText && labelPosition !== 'inside' && (
+          <Text style={[styles.insideText, { color: textColor }, textStyle]}>{`${Math.round(
+            percent,
+          )}%`}</Text>
+        )}
+      </View>
+    ),
+    [
+      showPercentageText,
+      labelPosition,
+      percent,
+      textColor,
+      textStyle,
+      height,
+      backgroundColor,
+      fillColor,
+      widthInterpolated,
+      renderLabel,
+    ],
+  );
 
   const isHorizontal = labelPosition === 'left' || labelPosition === 'right';
 

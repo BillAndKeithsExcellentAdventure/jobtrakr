@@ -10,11 +10,7 @@ import {
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import {
-  useDeleteProjectCallback,
-  useProject,
-  useToggleFavoriteCallback,
-} from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { useDeleteProjectCallback, useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   useAllRows,
   useBidAmountUpdater,
@@ -26,14 +22,14 @@ import {
   useWorkItemSpentUpdater,
   useWorkItemsWithoutCosts,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { formatCurrency, formatDate } from '@/src/utils/formatters';
+import { formatCurrency } from '@/src/utils/formatters';
 import { FontAwesome5, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
 import Entypo from '@expo/vector-icons/Entypo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { FlashList } from '@shopify/flash-list';
-import { Paths, File } from 'expo-file-system';
+import { File, Paths } from 'expo-file-system';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -47,7 +43,6 @@ const ProjectDetailsPage = () => {
   const colors = useColors();
   const projectData = useProject(projectId);
   const processDeleteProject = useDeleteProjectCallback();
-  const toggleFavorite = useToggleFavoriteCallback();
   const { removeActiveProjectId, addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const clearProjectDetailsStore = useClearProjectDetailsStoreCallback(projectId);
   const allProjectCategories = useAllConfigRows('categories', WorkCategoryCodeCompareAsNumber);
@@ -56,18 +51,10 @@ const ProjectDetailsPage = () => {
   const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] = useState<boolean>(false);
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
-  const allReceiptItems = useAllRows(projectId, 'receipts');
   const removeWorkItemSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const workItemsWithoutCosts = useWorkItemsWithoutCosts(projectId);
-
-  const onLikePressed = useCallback(
-    (projId: string) => {
-      toggleFavorite(projId);
-    },
-    [toggleFavorite],
-  );
 
   useEffect(() => {
     if (projectId) {
@@ -362,16 +349,13 @@ const ProjectDetailsPage = () => {
       }
     },
     [
+      router,
       projectId,
       projectData,
-      router,
-      processDeleteProject,
-      removeActiveProjectId,
-      ExportCostItems,
       unusedCategoriesString,
       workItemsWithoutCosts,
-      clearProjectDetailsStore,
       removeWorkItemSummary,
+      ExportCostItems,
     ],
   );
 
@@ -512,7 +496,7 @@ const ProjectDetailsPage = () => {
         },
       },
     ],
-    [colors, onLikePressed, router, projectId, projectData],
+    [colors, router, projectId, projectData],
   );
 
   const renderItem = (item: CostSectionData, projectId: string) => {

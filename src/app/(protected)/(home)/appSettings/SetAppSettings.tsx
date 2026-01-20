@@ -92,7 +92,7 @@ const SetAppSettingScreen = () => {
     };
 
     checkConnection();
-  }, [auth.orgId, auth.userId, auth.getToken]);
+  }, [auth, setIsQBConnected, setIsCheckingQBConnection]);
 
   const handleChange = (key: keyof SettingsData, value: string) => {
     setSettings((prev) => ({

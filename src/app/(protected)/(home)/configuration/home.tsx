@@ -83,7 +83,7 @@ const Home = () => {
     };
 
     checkConnection();
-  }, [auth.orgId, auth.userId, auth.getToken]);
+  }, [auth.orgId, auth.userId, auth.getToken, auth]);
 
   const headerRightComponent = useMemo(() => {
     return {
@@ -387,6 +387,9 @@ const Home = () => {
       addSupplierToStore,
       updateSupplier,
       cleanupOrphanedWorkItems,
+      auth.orgId,
+      auth.userId,
+      auth.getToken,
     ],
   );
 

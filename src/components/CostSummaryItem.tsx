@@ -2,14 +2,14 @@ import { Text, View } from '@/src/components/Themed';
 import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
 
+import { SwipeableComponent } from '@/src/components/SwipeableComponent';
 import { useDeleteRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
-import { MaterialIcons, Feather, Ionicons, FontAwesome } from '@expo/vector-icons';
+import { Feather, FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-import { SwipeableComponent } from '@/src/components/SwipeableComponent';
 import { CostItemData } from '../models/types';
 
 const ITEM_HEIGHT = 65;
@@ -90,7 +90,7 @@ const CostSummaryItem = React.memo<Props>(({ item, sectionCode, projectId }) => 
         return colors?.lossFg;
       }
     }
-  }, [item.balance, colors]);
+  }, [colors, item.complete, item.spentAmount, item.bidAmount]);
 
   return (
     <SwipeableComponent
