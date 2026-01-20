@@ -3,7 +3,7 @@ import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { Stack, useRouter } from 'expo-router';
 import { Paths, File } from 'expo-file-system';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable } from 'react-native-gesture-handler';
@@ -24,6 +24,8 @@ import { vendorsToCsv, suppliersToCsv, csvToVendors, csvToSuppliers } from '@/sr
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import * as DocumentPicker from 'expo-document-picker';
+import { useAuth } from '@clerk/clerk-expo';
+import { fetchVendors, isQuickBooksConnected } from '@/src/utils/quickbooksAPI';
 
 const Home = () => {
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
@@ -41,6 +43,9 @@ const Home = () => {
   const updateVendor = useUpdateRowCallback('vendors');
   const addSupplierToStore = useAddRowCallback('suppliers');
   const updateSupplier = useUpdateRowCallback('suppliers');
+  const [isQBConnected, setIsQBConnected] = useState<boolean>(false);
+  const auth = useAuth();
+
   const hasConfigurationData: boolean = useMemo(
     () =>
       (allCategories && allCategories.length > 0) ||
@@ -51,6 +56,34 @@ const Home = () => {
 
   const hasVendorData: boolean = useMemo(() => allVendors && allVendors.length > 0, [allVendors]);
   const hasSupplierData: boolean = useMemo(() => allSuppliers && allSuppliers.length > 0, [allSuppliers]);
+
+  // Check QuickBooks connection status on mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      if (!auth.orgId || !auth.userId) {
+        console.warn('Org ID or User ID not available for QB connection check');
+        return;
+      }
+
+      try {
+        const token = await auth.getToken();
+        if (!token) {
+          console.warn('No auth token available');
+          setIsQBConnected(false);
+          return;
+        }
+
+        const connected = await isQuickBooksConnected(auth.orgId, auth.userId, auth.getToken);
+        setIsQBConnected(connected);
+      } catch (error) {
+        console.error('Error checking QuickBooks connection:', error);
+        // Don't mark as error, just show as disconnected
+        setIsQBConnected(false);
+      }
+    };
+
+    checkConnection();
+  }, [auth.orgId, auth.userId, auth.getToken]);
 
   const headerRightComponent = useMemo(() => {
     return {
@@ -338,6 +371,10 @@ const Home = () => {
           },
         ]);
         return;
+      } else if (menuItem === 'GetQBVendors') {
+        // quickbooks vendor import logic will go here
+        const qbVendors = await fetchVendors(auth.orgId!, auth.userId!, auth.getToken);
+        return;
       }
     },
     [
@@ -392,6 +429,17 @@ const Home = () => {
           handleMenuItemPress('ImportVendors');
         },
       },
+      ...(isQBConnected
+        ? [
+            {
+              icon: <MaterialCommunityIcons name="account-supervisor" size={28} color={colors.iconColor} />,
+              label: 'Get Vendors from QuickBooks',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('GetQBVendors');
+              },
+            },
+          ]
+        : []),
       ...(hasSupplierData
         ? [
             {
@@ -412,7 +460,7 @@ const Home = () => {
       },
     ];
     return menuButtons;
-  }, [colors, handleMenuItemPress, hasConfigurationData, hasVendorData, hasSupplierData]);
+  }, [colors, handleMenuItemPress, hasConfigurationData, hasVendorData, hasSupplierData, isQBConnected]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

@@ -2,7 +2,7 @@ import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton'
 import { Switch } from '@/src/components/Switch';
 import { TextField } from '@/src/components/TextField';
 import { Text, View } from '@/src/components/Themed';
-import { API_BASE_URL, IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import {
@@ -10,8 +10,12 @@ import {
   useAppSettings,
   useSetAppSettingsCallback,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
-import { createApiWithToken } from '@/src/utils/apiWithToken';
 import { isDevelopmentBuild } from '@/src/utils/environment';
+import {
+  isQuickBooksConnected,
+  connectToQuickBooks as qbConnect,
+  disconnectQuickBooks as qbDisconnect,
+} from '@/src/utils/quickbooksAPI';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import * as WebBrowser from 'expo-web-browser';
@@ -47,6 +51,8 @@ const SetAppSettingScreen = () => {
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
   const [settings, setSettings] = useState<SettingsData>(appSettings);
+  const [isQBConnected, setIsQBConnected] = useState<boolean>(false);
+  const [isCheckingQBConnection, setIsCheckingQBConnection] = useState<boolean>(true);
 
   // Check if we're in a development build
   const isDevelopment = isDevelopmentBuild();
@@ -55,6 +61,38 @@ const SetAppSettingScreen = () => {
   useEffect(() => {
     setSettings(appSettings);
   }, [appSettings]);
+
+  // Check QuickBooks connection status on mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      if (!auth.orgId || !auth.userId) {
+        console.warn('Org ID or User ID not available for QB connection check');
+        setIsCheckingQBConnection(false);
+        return;
+      }
+
+      try {
+        const token = await auth.getToken();
+        if (!token) {
+          console.warn('No auth token available');
+          setIsQBConnected(false);
+          setIsCheckingQBConnection(false);
+          return;
+        }
+
+        const connected = await isQuickBooksConnected(auth.orgId, auth.userId, auth.getToken);
+        setIsQBConnected(connected);
+      } catch (error) {
+        console.error('Error checking QuickBooks connection:', error);
+        // Don't mark as error, just show as disconnected
+        setIsQBConnected(false);
+      } finally {
+        setIsCheckingQBConnection(false);
+      }
+    };
+
+    checkConnection();
+  }, [auth.orgId, auth.userId, auth.getToken]);
 
   const handleChange = (key: keyof SettingsData, value: string) => {
     setSettings((prev) => ({
@@ -76,43 +114,77 @@ const SetAppSettingScreen = () => {
     setAppSettings(settings);
   }, [settings, setAppSettings]);
 
-  const connectToQuickBooks = useCallback(async () => {
-    try {
-      const apiFetch = createApiWithToken(auth.getToken);
-      const response = await apiFetch(
-        `${API_BASE_URL}/auth/qbo/connect?orgId=${auth.orgId}&userId=${auth.userId}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      );
+  const handleConnectToQuickBooks = useCallback(async () => {
+    if (!auth.orgId || !auth.userId) {
+      Alert.alert('Error', 'Authentication required to connect to QuickBooks');
+      return;
+    }
 
-      if (!response.ok) {
-        console.error(`HTTP error! status: ${response.status}`);
-        throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      const token = await auth.getToken();
+      if (!token) {
+        Alert.alert('Error', 'Unable to obtain authentication token');
+        return;
       }
 
-      const responseData = await response.json();
-      console.log('QuickBooks connection response:', responseData);
-
-      // Check if success is true
-      if (responseData.success === true && responseData.authUrl) {
-        try {
-          // Open the authUrl in a browser
-          await WebBrowser.openBrowserAsync(responseData.authUrl);
-        } catch (browserError) {
-          console.error('Error opening browser:', browserError);
-          Alert.alert('Error', 'Failed to open QuickBooks authorization page. Please try again.');
+      const { authUrl } = await qbConnect(auth.orgId, auth.userId, auth.getToken);
+      if (authUrl) {
+        const result = await WebBrowser.openBrowserAsync(authUrl);
+        // If browser was opened successfully, check connection status again
+        if (result.type === 'cancel' || result.type === 'dismiss') {
+          // User closed browser, check if they completed authentication
+          setTimeout(async () => {
+            try {
+              const connected = await isQuickBooksConnected(auth.orgId!, auth.userId!, auth.getToken);
+              setIsQBConnected(connected);
+              if (connected) {
+                Alert.alert('Success', 'Successfully connected to QuickBooks!');
+              }
+            } catch (error) {
+              console.error('Error checking connection after browser close:', error);
+            }
+          }, 1000);
         }
       } else {
-        Alert.alert('Error', responseData.msg || 'QuickBooks connection failed');
+        Alert.alert('Error', 'No authorization URL received from server');
       }
     } catch (error) {
-      console.error('Error connecting to QuickBooks:', error);
-      Alert.alert('Error', 'Failed to connect to QuickBooks. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      //console.error('Error connecting to QuickBooks:', errorMessage);
+      Alert.alert('Error', `Failed to connect to QuickBooks: ${errorMessage}`);
     }
+  }, [auth]);
+
+  const handleDisconnectFromQuickBooks = useCallback(async () => {
+    if (!auth.orgId || !auth.userId) {
+      Alert.alert('Error', 'Authentication required to disconnect from QuickBooks');
+      return;
+    }
+
+    Alert.alert('Disconnect QuickBooks', 'Are you sure you want to disconnect from QuickBooks?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Disconnect',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const token = await auth.getToken();
+            if (!token) {
+              Alert.alert('Error', 'Unable to obtain authentication token');
+              return;
+            }
+
+            await qbDisconnect(auth.orgId!, auth.userId!, auth.getToken);
+            setIsQBConnected(false);
+            Alert.alert('Success', 'Successfully disconnected from QuickBooks');
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            //console.error('Error disconnecting from QuickBooks:', errorMessage);
+            Alert.alert('Error', `Failed to disconnect from QuickBooks: ${errorMessage}`);
+          }
+        },
+      },
+    ]);
   }, [auth]);
 
   const pickImage = async () => {
@@ -262,15 +334,33 @@ const SetAppSettingScreen = () => {
               />
             )}
 
-            <TouchableOpacity
-              style={[
-                styles.button,
-                { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background },
-              ]}
-              onPress={connectToQuickBooks}
-            >
-              <Text>Connect to QuickBooks</Text>
-            </TouchableOpacity>
+            {!isCheckingQBConnection && (
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  {
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    backgroundColor: isQBConnected ? '#dc3545' : colors.tint,
+                  },
+                ]}
+                onPress={isQBConnected ? handleDisconnectFromQuickBooks : handleConnectToQuickBooks}
+              >
+                <Text style={{ color: 'white', fontWeight: '600' }}>
+                  {isQBConnected ? 'Disconnect from QuickBooks' : 'Connect to QuickBooks'}
+                </Text>
+              </TouchableOpacity>
+            )}
+            {isCheckingQBConnection && (
+              <View
+                style={[
+                  styles.button,
+                  { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background },
+                ]}
+              >
+                <Text>Checking...</Text>
+              </View>
+            )}
           </View>
           {isDevelopment && (
             <View
