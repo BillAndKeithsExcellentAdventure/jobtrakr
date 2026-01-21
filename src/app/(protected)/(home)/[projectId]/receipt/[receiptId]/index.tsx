@@ -3,7 +3,6 @@ import { ReceiptSummary } from '@/src/components/ReceiptSummary';
 import SwipeableLineItem from '@/src/components/SwipeableLineItem';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import { useNetwork } from '@/src/context/NetworkContext';
 import {
   ReceiptData,
   useAllRows,
@@ -26,7 +25,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const ReceiptDetailsPage = () => {
   const defaultDate = new Date();
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
-  const { isConnected, isInternetReachable } = useNetwork();
   const allProjectReceipts = useAllRows(projectId, 'receipts');
   const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
   const addReceiptImage = useAddImageCallback();
@@ -204,10 +202,6 @@ const ReceiptDetailsPage = () => {
   const onLayout = (event: LayoutChangeEvent) => {
     setContainerHeight(event.nativeEvent.layout.height);
   };
-
-  const handleClose = useCallback(() => {
-    router.back();
-  }, [router]);
 
   return (
     <>

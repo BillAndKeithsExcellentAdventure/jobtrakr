@@ -199,9 +199,11 @@ export const ProjectMediaList = ({
 
   const updateMediaItemsOnServer = useCallback(
     async (publicImageIds: string[]) => {
-      publicImageIds.length === 0
-        ? setPublicStateForSelectedMedia(projectId, [])
-        : setPublicStateForSelectedMedia(projectId, publicImageIds);
+      if (publicImageIds.length === 0) {
+        setPublicStateForSelectedMedia(projectId, []);
+      } else {
+        setPublicStateForSelectedMedia(projectId, publicImageIds);
+      }
     },
     [projectId, setPublicStateForSelectedMedia],
   );

@@ -37,7 +37,6 @@ export default function ProjectHomeScreen() {
   const toggleFavorite = useToggleFavoriteCallback();
   const [projectListEntries, setProjectListEntries] = useState<ProjectListEntryProps[]>([]);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
-  const [isReady, setIsReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const { signOut } = useClerk();
@@ -46,7 +45,6 @@ export default function ProjectHomeScreen() {
   const auth = useAuth();
   const { orgRole, orgId } = auth;
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
-  const allProjectTemplates = useAllRows('templates');
 
   const allVisibleCategories = useMemo(() => allCategories.filter((c) => !c.hidden), [allCategories]);
 
@@ -226,10 +224,6 @@ export default function ProjectHomeScreen() {
     },
     [router, signOut],
   );
-
-  const handleSignOut = useCallback(async () => {
-    await signOut();
-  }, [signOut]);
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(() => {
     const showInvite = orgId && orgRole.includes('admin');

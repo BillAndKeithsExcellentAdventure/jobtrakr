@@ -66,6 +66,7 @@ const AddReceiptPage = () => {
 
   const [projectReceipt, setProjectReceipt] = useState<ReceiptData>({
     id: '',
+    accountingId: '',
     vendor: '',
     description: '',
     amount: 0,
@@ -147,6 +148,7 @@ const AddReceiptPage = () => {
 
     const receiptToAdd = {
       ...projectReceipt,
+      accountingId: '', // Will be populated by backend
       markedComplete: applyToSingleCostCode && !!pickedSubCategoryOption,
     };
     const result = addReceipt(receiptToAdd);
@@ -285,6 +287,7 @@ const AddReceiptPage = () => {
     // clear state of receipt data
     setProjectReceipt({
       id: '',
+      accountingId: '',
       vendor: '',
       description: '',
       amount: 0,

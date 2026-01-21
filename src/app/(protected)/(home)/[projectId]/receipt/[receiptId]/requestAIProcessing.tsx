@@ -242,15 +242,6 @@ const RequestAIProcessingPage = () => {
     fetchAIResult();
   }, [fetchAIResult, imageId, projectId, userId, orgId]);
 
-  // Initial setup with all items taxable
-  useEffect(() => {
-    const initialized = aiItems.map((item) => ({ ...item, taxable: true, proratedTax: 0, isSelected: true }));
-    if (receiptSummary) {
-      const withTax = recalculateProratedTax(initialized, receiptSummary.totalTax);
-      setReceiptItems(withTax);
-    }
-  }, [aiItems, receiptSummary]);
-
   // Recalculate proratedTax values
   const recalculateProratedTax = useCallback((items: ReceiptItem[], totalTax: number): ReceiptItem[] => {
     // Create map of indices for taxable items to preserve original positions
@@ -287,6 +278,15 @@ const RequestAIProcessingPage = () => {
 
     return result;
   }, []);
+
+  // Initial setup with all items taxable
+  useEffect(() => {
+    const initialized = aiItems.map((item) => ({ ...item, taxable: true, proratedTax: 0, isSelected: true }));
+    if (receiptSummary) {
+      const withTax = recalculateProratedTax(initialized, receiptSummary.totalTax);
+      setReceiptItems(withTax);
+    }
+  }, [aiItems, receiptSummary, recalculateProratedTax]);
 
   const toggleTaxable = useCallback(
     (index: number) => {

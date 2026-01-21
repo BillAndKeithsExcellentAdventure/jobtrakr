@@ -5,7 +5,6 @@ import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
-import { useColors } from '@/src/context/ColorsContext';
 import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import { WorkItemDataCodeCompareAsNumber } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
@@ -27,11 +26,15 @@ const EditLineItemPage = () => {
     lineItemId: string;
   }>();
 
-  const colors = useColors();
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const updateLineItem = useUpdateRowCallback(projectId, 'workItemCostEntries');
-  const { projectWorkItems, availableCategoriesOptions, allAvailableCostItemOptions, allWorkItems, allWorkCategories } =
-    useProjectWorkItems(projectId);
+  const {
+    projectWorkItems,
+    availableCategoriesOptions,
+    allAvailableCostItemOptions,
+    allWorkItems,
+    allWorkCategories,
+  } = useProjectWorkItems(projectId);
   const [itemizedEntry, setItemizedEntry] = useState<WorkItemCostEntry>({
     id: '',
     label: '',
@@ -120,14 +123,11 @@ const EditLineItemPage = () => {
     setPickedSubCategoryOption(selectedSubCategory);
   }, []);
 
-  const handleCategoryChange = useCallback(
-    (selectedCategory: OptionEntry) => {
-      isDirtyRef.current = true;
-      setPickedCategoryOption(selectedCategory);
-      setPickedSubCategoryOption(undefined);
-    },
-    [],
-  );
+  const handleCategoryChange = useCallback((selectedCategory: OptionEntry) => {
+    isDirtyRef.current = true;
+    setPickedCategoryOption(selectedCategory);
+    setPickedSubCategoryOption(undefined);
+  }, []);
 
   useEffect(() => {
     const selectedCategoryId = pickedCategoryOption?.value;

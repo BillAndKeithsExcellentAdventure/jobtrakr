@@ -6,7 +6,7 @@ import {
   useAllRows as useAllConfigRows,
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useAddRowCallback, useAllRows } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useAddRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, StyleSheet } from 'react-native';
@@ -20,15 +20,12 @@ interface ItemData {
 }
 
 const AddCostWorkItemsScreen: React.FC = () => {
-  const { projectId, categoryId, categoryCode, availableWorkItemIds } = useLocalSearchParams<{
+  const { projectId, categoryCode, availableWorkItemIds } = useLocalSearchParams<{
     projectId: string;
-    categoryId: string;
-    categoryName: string;
     categoryCode: string;
     availableWorkItemIds: string;
   }>();
   const colors = useColors();
-  const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
   const [selectedWorkItemIds, setSelectedWorkItemIds] = useState<string[]>([]);
   const addWorkItemSummary = useAddRowCallback(projectId, 'workItemSummaries');
