@@ -621,12 +621,14 @@ const ProjectDetailsPage = () => {
       />
 
       <View style={styles.container}>
+        ``
         {!projectIsReady ? (
           <Text>Loading...</Text>
         ) : (
           <>
             <View style={styles.headerContainer}>
               <Text txtSize="title" text={projectData.name} />
+              <Text text={`quote: ${formatCurrency(projectData.quotedPrice, true)}`} />
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
                 <Text text={`est: ${formatCurrency(projectData.bidPrice, true)}`} />
                 <Text text={`bal: ${formatCurrency(projectBalance, true)}`} />

@@ -19,6 +19,7 @@ import { ProposedChangeOrderItem } from '@/src/models/types';
 import SwipeableProposedChangeOrderItem from '@/src/components/SwipeableProposedChangeOrderItem';
 import { ModalScreenContainerWithList } from '@/src/components/ModalScreenContainerWithList';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
+import { NumberInputField } from '@/src/components/NumberInputField';
 
 export default function AddChangeOrder() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
@@ -35,6 +36,7 @@ export default function AddChangeOrder() {
     title: '',
     description: '',
     bidAmount: 0,
+    quotedPrice: 0,
     dateCreated: Date.now(),
     status: 'draft',
   });
@@ -54,13 +56,25 @@ export default function AddChangeOrder() {
   }, [items]);
 
   useEffect(() => {
-    setCanAdd(newChangeOrder.bidAmount > 0 && !!newChangeOrder.title && !!newChangeOrder.description);
+    setCanAdd(
+      newChangeOrder.bidAmount > 0 &&
+        newChangeOrder.quotedPrice > 0 &&
+        !!newChangeOrder.title &&
+        !!newChangeOrder.description,
+    );
   }, [newChangeOrder]);
 
   const handleAmountChange = (value: number) => {
     setNewChangeOrder((prev) => ({
       ...prev,
       bidAmount: value,
+    }));
+  };
+
+  const handleQuotedPriceChange = (value: number) => {
+    setNewChangeOrder((prev) => ({
+      ...prev,
+      quotedPrice: value,
     }));
   };
 
@@ -151,7 +165,7 @@ export default function AddChangeOrder() {
         >
           <Text style={styles.modalTitle}>Add Change Order</Text>
 
-          <View style={{ gap: 8, padding: 16, backgroundColor: colors.listBackground }}>
+          <View style={{ gap: 8, padding: 8, backgroundColor: colors.listBackground }}>
             <TextInput
               style={[styles.input, { backgroundColor: colors.background }]}
               value={newChangeOrder.title}
@@ -176,6 +190,14 @@ export default function AddChangeOrder() {
               numberOfLines={4}
               multiline
             />
+            <NumberInputField
+              label="Customer Quoted Price"
+              style={{ ...styles.input, backgroundColor: colors.background }}
+              labelStyle={{ backgroundColor: colors.background }}
+              value={newChangeOrder.quotedPrice}
+              onChange={(value) => handleQuotedPriceChange(value)}
+              placeholder="Customer Quoted Price"
+            />
           </View>
 
           <View style={[styles.saveButtonRow, { gap: 10, paddingHorizontal: 10 }]}>
@@ -183,7 +205,7 @@ export default function AddChangeOrder() {
               <Text text="Change Order Items" txtSize="sub-title" />
             </View>
             <ActionButton
-              style={[styles.addButton, { marginVertical: 5 }]}
+              style={{ marginVertical: 5 }}
               onPress={() => {
                 Keyboard.dismiss();
                 setShowAddItemModal(true);
@@ -351,9 +373,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 10,
-  },
-  addButton: {
-    maxWidth: 100,
   },
   saveButton: {
     flex: 1,

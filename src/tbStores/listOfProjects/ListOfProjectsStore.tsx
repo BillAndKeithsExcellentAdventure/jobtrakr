@@ -36,6 +36,7 @@ const TABLES_SCHEMA = {
     startDate: { type: 'number' },
     plannedFinish: { type: 'number' },
     bidPrice: { type: 'number' },
+    quotedPrice: { type: 'number' },
     amountSpent: { type: 'number' },
     longitude: { type: 'number' },
     latitude: { type: 'number' },
@@ -118,7 +119,7 @@ export const useAddProjectCallback = () => {
     (projectData: ProjectData): { status: TBStatus; msg: string; id: string } => {
       const id = randomUUID();
       projectData.id = id;
-      
+
       // Set abbreviation if not provided
       if (!projectData.abbreviation) {
         projectData.abbreviation = generateAbbreviation(projectData.name);

@@ -1,3 +1,4 @@
+import { NumberInputField } from '@/src/components/NumberInputField';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
@@ -26,6 +27,7 @@ const EditProjectScreen = () => {
     ownerName: '',
     bidPrice: 0,
     amountSpent: 0,
+    quotedPrice: 0,
     longitude: 0,
     latitude: 0,
     radius: 50,
@@ -41,7 +43,8 @@ const EditProjectScreen = () => {
     ownerState: '',
     ownerZip: '',
     ownerPhone: '',
-    ownerEmail: 'string',
+    ownerEmail: '',
+    abbreviation: '',
   });
 
   const currentProject = useProject(projectId);
@@ -169,6 +172,16 @@ const EditProjectScreen = () => {
             onChangeText={(text) => setProject({ ...project, name: text })}
             onBlur={handleSubmit}
           />
+          <View style={{ flex: 1 }}>
+            <NumberInputField
+              label="Initial Quoted Price"
+              style={{ paddingHorizontal: 10 }}
+              value={project.quotedPrice || 0}
+              onChange={(value) => setProject({ ...project, quotedPrice: value })}
+              placeholder="Initial Quoted Price"
+            />
+          </View>
+
           <TextField
             containerStyle={styles.inputContainer}
             style={[styles.input, { borderColor: colors.transparent }]}
@@ -261,7 +274,15 @@ const EditProjectScreen = () => {
             autoCorrect={false}
             onBlur={handleSubmit}
           />
-
+          <TextField
+            containerStyle={styles.inputContainer}
+            style={[styles.input, { borderColor: colors.transparent }]}
+            placeholder="Abbreviation for Receipts and Invoices"
+            label="Abbreviation for Receipts and Invoices"
+            value={project.abbreviation}
+            onChangeText={(text) => setProject({ ...project, abbreviation: text })}
+            onBlur={handleSubmit}
+          />
           <View style={styles.dateContainer}>
             <TouchableOpacity activeOpacity={1} onPress={showStartDatePicker}>
               <Text txtSize="formLabel" text="Start Date" style={styles.inputLabel} />

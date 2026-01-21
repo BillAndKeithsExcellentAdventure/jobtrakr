@@ -9,7 +9,7 @@ import React, {
   useId,
   useContext,
 } from 'react';
-import { StyleSheet, TextInput, ViewStyle } from 'react-native';
+import { StyleSheet, TextInput, ViewStyle, TextStyle } from 'react-native';
 import { Text, View } from './Themed';
 import { FocusManagerContext } from '@/src/hooks/useFocusManager';
 
@@ -18,6 +18,7 @@ interface NumberInputFieldProps {
   numDecimalPlaces?: number;
   onChange: (value: number) => void;
   label?: string;
+  labelStyle?: TextStyle;
   placeholder?: string;
   readOnly?: boolean;
   style?: ViewStyle;
@@ -53,6 +54,7 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
       numDecimalPlaces = 2, // Default to 2 decimal places
       onChange,
       label,
+      labelStyle = {},
       placeholder = 'Enter number',
       readOnly = false,
       style = {},
@@ -177,21 +179,24 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
       } catch {}
     }, [inputValue]);
 
-    const handleInputChange = useCallback((text: string) => {
-      if (readOnly) return; // Prevent changes if readOnly is true
-      isEditingRef.current = true;
-      // Remove any non-numeric characters except for the decimal point
-      const sanitizedValue = text.replace(/[^0-9.]/g, '');
+    const handleInputChange = useCallback(
+      (text: string) => {
+        if (readOnly) return; // Prevent changes if readOnly is true
+        isEditingRef.current = true;
+        // Remove any non-numeric characters except for the decimal point
+        const sanitizedValue = text.replace(/[^0-9.]/g, '');
 
-      // Make sure we don't allow more decimal places than specified
-      const parts = sanitizedValue.split('.');
-      if (parts.length > 1 && parts[1].length > numDecimalPlaces) {
-        return; // Don't update input if decimal places exceed the limit
-      }
+        // Make sure we don't allow more decimal places than specified
+        const parts = sanitizedValue.split('.');
+        if (parts.length > 1 && parts[1].length > numDecimalPlaces) {
+          return; // Don't update input if decimal places exceed the limit
+        }
 
-      // If the number is valid, update the input value
-      setInputValue(sanitizedValue);
-    }, [readOnly, numDecimalPlaces]);
+        // If the number is valid, update the input value
+        setInputValue(sanitizedValue);
+      },
+      [readOnly, numDecimalPlaces],
+    );
 
     const handleBlur = useCallback(() => {
       handleBlurInternal();
@@ -214,16 +219,16 @@ export const NumberInputField = forwardRef<NumberInputFieldHandle, NumberInputFi
     );
 
     return (
-      <View style={[styles.container, style]}>
-        {!!label && <Text txtSize="formLabel" text={label} style={styles.label} />}
+      <View style={[styles.container]}>
+        {!!label && <Text txtSize="formLabel" text={label} style={[styles.label, labelStyle]} />}
         <View
           style={[
-            style,
             {
               backgroundColor: colors.neutral200,
               borderColor: colors.neutral400,
             },
             styles.inputContainer,
+            style,
           ]}
         >
           <TextInput
@@ -257,21 +262,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   inputContainer: {
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderRadius: 4,
     overflow: 'hidden',
     height: 36,
-    paddingEnd: 8,
   },
   label: { marginBottom: 4 },
   input: {
+    flex: 1,
     alignSelf: 'stretch',
     fontSize: 16,
     marginVertical: 0,
     paddingVertical: 0,
     paddingHorizontal: 0,
-    marginHorizontal: 10,
   },
 });
