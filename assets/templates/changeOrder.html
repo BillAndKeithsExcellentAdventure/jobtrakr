@@ -85,24 +85,20 @@
 
     <main>
       <p>Dear {{client.name}},</p>
-      <p>
-        The information below describes the requested change and provides a list of associated cost items.
-      </p>
+      <p>The information below describes the requested change and provides a list of associated items.</p>
 
       <h2>Change Order Summary</h2>
       <p>{{changeSummary}}</p>
       <table>
         <thead>
           <tr>
-            <th>Cost Items</th>
-            <th>Price</th>
+            <th>Items</th>
           </tr>
         </thead>
         <tbody>
           {{#changeItems}}
           <tr>
             <td>{{description}}</td>
-            <td>{{formattedCost}}</td>
           </tr>
           {{/changeItems}}
           <tr class="total">

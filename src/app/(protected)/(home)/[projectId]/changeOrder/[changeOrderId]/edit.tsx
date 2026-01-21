@@ -1,4 +1,5 @@
 import { ActionButton } from '@/src/components/ActionButton';
+import { NumberInputField } from '@/src/components/NumberInputField';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
@@ -66,6 +67,14 @@ const EditChangeOrder = () => {
               label="Description"
               value={changeOrder.description}
               onChangeText={(text) => setChangeOrder({ ...changeOrder, description: text })}
+            />
+            <NumberInputField
+              label="Customer Quoted Price"
+              style={{ ...styles.input, paddingLeft: 10 }}
+              labelStyle={{ marginBottom: 0 }}
+              value={changeOrder.quotedPrice}
+              onChange={(value) => setChangeOrder({ ...changeOrder, quotedPrice: value })}
+              placeholder="Customer Quoted Price"
             />
 
             <View style={styles.saveButtonRow}>

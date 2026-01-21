@@ -40,8 +40,6 @@ export interface ChangeOrderData {
  * @returns The final HTML string with injected data.
  */
 export function renderChangeOrderTemplate(template: string, data: ChangeOrderData): string {
-  const total = data.changeItems.reduce((sum, s) => sum + s.cost, 0);
-
   // Inject computed + formatted properties
   const view: ChangeOrderData = {
     ...data,
@@ -61,7 +59,7 @@ export function renderChangeOrderTemplate(template: string, data: ChangeOrderDat
       ...s,
       formattedCost: formatCurrency(s.cost, true, false),
     })),
-    formattedTotal: formatCurrency(total, true, false),
+    formattedTotal: data.formattedTotal,
   };
   console.log('data ready to apply to template');
   return Mustache.render(template, view);

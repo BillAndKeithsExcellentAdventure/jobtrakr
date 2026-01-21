@@ -192,8 +192,8 @@ export default function AddChangeOrder() {
             />
             <NumberInputField
               label="Customer Quoted Price"
-              style={{ ...styles.input, backgroundColor: colors.background }}
-              labelStyle={{ backgroundColor: colors.background }}
+              style={{ ...styles.input, backgroundColor: colors.background, borderColor: colors.border }}
+              labelStyle={{ backgroundColor: colors.listBackground, marginBottom: 0 }}
               value={newChangeOrder.quotedPrice}
               onChange={(value) => handleQuotedPriceChange(value)}
               placeholder="Customer Quoted Price"
