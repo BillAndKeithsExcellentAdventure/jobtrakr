@@ -209,6 +209,7 @@ const SetEstimatedCostsPage = () => {
                     />
                     <View style={{ flex: 1 }}>
                       <NumberInputField
+                        style={{ backgroundColor: colors.background }}
                         focusManagerId={ESTIMATE_FIELD_ID}
                         value={itemEstimate}
                         onChange={setItemEstimate}

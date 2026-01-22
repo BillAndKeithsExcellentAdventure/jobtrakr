@@ -55,6 +55,7 @@ const InvoiceDetailsPage = () => {
     pictureDate: defaultDate.getTime(),
     imageId: '',
     notes: '',
+    accountingId: '',
     markedComplete: false,
   });
 

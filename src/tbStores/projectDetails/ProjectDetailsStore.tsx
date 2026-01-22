@@ -77,6 +77,7 @@ export const TABLES_SCHEMA = {
     title: { type: 'string' },
     description: { type: 'string' },
     bidAmount: { type: 'number' },
+    quotedPrice: { type: 'number' },
     status: { type: 'string' }, // 'draft' | 'approval-pending' | 'approved' | 'cancelled';
     dateCreated: { type: 'number' }, // Date the change order was created.
   },

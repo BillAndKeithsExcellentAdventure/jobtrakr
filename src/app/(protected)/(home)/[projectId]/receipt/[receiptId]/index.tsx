@@ -53,6 +53,7 @@ const ReceiptDetailsPage = () => {
     pictureDate: defaultDate.getTime(),
     imageId: '',
     notes: '',
+    accountingId: '',
     markedComplete: false,
   });
 

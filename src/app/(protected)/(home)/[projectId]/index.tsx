@@ -55,6 +55,7 @@ const ProjectDetailsPage = () => {
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const workItemsWithoutCosts = useWorkItemsWithoutCosts(projectId);
+  const allChangeOrders = useAllRows(projectId, 'changeOrders');
 
   useEffect(() => {
     if (projectId) {
@@ -265,6 +266,19 @@ const ProjectDetailsPage = () => {
       Alert.alert('Error', 'Failed to export cost items');
     }
   }, [projectId, projectData, allWorkItems, categoryMap, allWorkItemSummaries, allActualCostItems]);
+
+  // add up total quotedPrice from changeOrders and projectData.quotedPrice
+  const totalQuotedPrice = useMemo(() => {
+    // sum change order quoted prices if change order status is 'approved'
+    const changeOrdersTotal = allChangeOrders
+      .filter((co) => co.status === 'approved')
+      .reduce((sum, co) => sum + co.quotedPrice, 0);
+
+    console.log('projectData?.quotedPrice:', projectData?.quotedPrice);
+    console.log('changeOrdersTotal:', changeOrdersTotal);
+
+    return (projectData?.quotedPrice ?? 0) + changeOrdersTotal;
+  }, [projectData, allChangeOrders]);
 
   const handleConfirmDelete = useCallback(async () => {
     if (!projectId) return;
@@ -627,6 +641,7 @@ const ProjectDetailsPage = () => {
           <>
             <View style={styles.headerContainer}>
               <Text txtSize="title" text={projectData.name} />
+              <Text text={`quote: ${formatCurrency(projectData.quotedPrice, true)}`} />
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
                 <Text text={`est: ${formatCurrency(projectData.bidPrice, true)}`} />
                 <Text text={`bal: ${formatCurrency(projectBalance, true)}`} />

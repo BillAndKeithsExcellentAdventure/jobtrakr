@@ -146,15 +146,6 @@ const RequestAIProcessingPage = () => {
     fetchAIResult();
   }, [fetchAIResult, imageId, projectId, userId, orgId]);
 
-  // Initial setup with all items taxable
-  useEffect(() => {
-    const initialized = aiItems.map((item) => ({ ...item, taxable: true, proratedTax: 0, isSelected: true }));
-    if (invoiceSummary) {
-      const withTax = recalculateProratedTax(initialized, invoiceSummary.totalTax);
-      setInvoiceItems(withTax);
-    }
-  }, [aiItems, invoiceSummary, recalculateProratedTax]);
-
   // Recalculate proratedTax values
   const recalculateProratedTax = useCallback((items: ReceiptItem[], totalTax: number): ReceiptItem[] => {
     // Create map of indices for taxable items to preserve original positions
@@ -191,6 +182,15 @@ const RequestAIProcessingPage = () => {
 
     return result;
   }, []);
+
+  // Initial setup with all items taxable
+  useEffect(() => {
+    const initialized = aiItems.map((item) => ({ ...item, taxable: true, proratedTax: 0, isSelected: true }));
+    if (invoiceSummary) {
+      const withTax = recalculateProratedTax(initialized, invoiceSummary.totalTax);
+      setInvoiceItems(withTax);
+    }
+  }, [aiItems, invoiceSummary, recalculateProratedTax]);
 
   const toggleTaxable = useCallback(
     (index: number) => {
@@ -381,7 +381,7 @@ const RequestAIProcessingPage = () => {
           <View style={{ width: '100%', gap: 20, padding: 10, alignItems: 'center' }}>
             <ActivityIndicator size="large" />
             <Text txtSize="sub-title">
-              Working on extracting data from invoice image, this shouldn&apos;t take long.
+              Working on extracting data from invoice image, this shouldn't take long.
             </Text>
           </View>
         ) : (

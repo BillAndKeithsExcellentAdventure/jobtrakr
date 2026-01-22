@@ -162,7 +162,7 @@ const DefineChangeOrderScreen = () => {
       project: projectData?.name ?? 'unknown',
       date: formatDate(new Date()),
       changeSummary: changeOrder.description,
-      formattedTotal: formatCurrency(changeOrder.bidAmount, true),
+      formattedTotal: formatCurrency(changeOrder.quotedPrice, true),
       changeItems: changeItemArray,
     };
   }, [changeOrder, projectData, appSettings, changeOrderItems]);
@@ -492,6 +492,7 @@ const DefineChangeOrderScreen = () => {
               <View style={{ gap: 6 }}>
                 <Text text={changeOrder?.title} txtSize="title" />
                 {changeOrder?.description && <Text text={changeOrder?.description} />}
+                <Text text={`quote: ${formatCurrency(changeOrder?.quotedPrice, true, false)}`} />
               </View>
             </View>
           </View>

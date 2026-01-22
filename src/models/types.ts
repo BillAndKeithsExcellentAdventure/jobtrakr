@@ -13,6 +13,7 @@ export interface ProjectData {
   startDate: number;
   plannedFinish: number;
   bidPrice: number;
+  quotedPrice: number; // initial quoted price (before change orders)
   amountSpent: number;
   longitude: number;
   latitude: number;
