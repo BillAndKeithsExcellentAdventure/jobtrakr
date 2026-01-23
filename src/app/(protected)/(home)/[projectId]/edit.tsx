@@ -143,10 +143,12 @@ const EditProjectScreen = () => {
     }
   }, [project, projectId, updatedProject]);
 
-  const handleBackPress = useAutoSaveNavigation(() => {
+  const processBackPress = useCallback(() => {
     handleSubmit();
     router.back();
-  });
+  }, [handleSubmit, router]);
+
+  const handleBackPress = useAutoSaveNavigation(processBackPress);
 
   return (
     <>

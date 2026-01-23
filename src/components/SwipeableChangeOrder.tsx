@@ -132,7 +132,11 @@ const SwipeableChangeOrder = React.memo<Props>(({ item, projectId }) => {
             />
 
             <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
-              <Feather name="chevrons-right" size={24} color={colors.iconColor} />
+              {item.status !== 'draft' ? (
+                <Feather name="chevron-right" size={24} color={colors.iconColor} />
+              ) : (
+                <Feather name="chevrons-right" size={24} color={colors.iconColor} />
+              )}
             </View>
           </View>
         </Pressable>

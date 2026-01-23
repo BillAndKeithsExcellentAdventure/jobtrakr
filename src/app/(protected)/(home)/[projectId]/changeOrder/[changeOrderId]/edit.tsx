@@ -1,8 +1,10 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { NumberInputField } from '@/src/components/NumberInputField';
+import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import {
   ChangeOrder,
   useAllRows,
@@ -37,9 +39,18 @@ const EditChangeOrder = () => {
   const handleSubmit = useCallback(async () => {
     if (changeOrder) {
       updateChangeOrder(changeOrderId, changeOrder);
-      router.back();
     }
-  }, [changeOrder, changeOrderId, router, updateChangeOrder]);
+  }, [changeOrder, changeOrderId, updateChangeOrder]);
+
+  const handleBackPress = useAutoSaveNavigation(() => {
+    router.back();
+  });
+
+  const handleQuotedPriceChange = (value: number) => {
+    if (changeOrder) {
+      updateChangeOrder(changeOrderId, { ...changeOrder, quotedPrice: value });
+    }
+  };
 
   return (
     <>
@@ -47,6 +58,8 @@ const EditChangeOrder = () => {
         options={{
           headerShown: true,
           title: 'Edit Order Details',
+          gestureEnabled: false,
+          headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
         }}
       />
 
@@ -59,6 +72,8 @@ const EditChangeOrder = () => {
               placeholder="Title"
               value={changeOrder.title}
               onChangeText={(text) => setChangeOrder({ ...changeOrder, title: text })}
+              onBlur={handleSubmit}
+              focusManagerId="TITLE"
             />
             <TextField
               containerStyle={styles.inputContainer}
@@ -67,28 +82,20 @@ const EditChangeOrder = () => {
               label="Description"
               value={changeOrder.description}
               onChangeText={(text) => setChangeOrder({ ...changeOrder, description: text })}
+              multiline={true}
+              numberOfLines={4}
+              focusManagerId="DESCRIPTION"
+              onBlur={handleSubmit}
             />
             <NumberInputField
               label="Customer Quoted Price"
               style={{ ...styles.input, paddingLeft: 10 }}
               labelStyle={{ marginBottom: 0 }}
-              value={changeOrder.quotedPrice}
-              onChange={(value) => setChangeOrder({ ...changeOrder, quotedPrice: value })}
+              value={changeOrder.quotedPrice ?? 0}
+              onChange={handleQuotedPriceChange}
               placeholder="Customer Quoted Price"
+              focusManagerId="CUSTOMER_QUOTED_PRICE"
             />
-
-            <View style={styles.saveButtonRow}>
-              <ActionButton style={styles.saveButton} onPress={handleSubmit} type={'ok'} title="Save" />
-
-              <ActionButton
-                style={styles.cancelButton}
-                onPress={() => {
-                  router.back();
-                }}
-                type={'cancel'}
-                title="Cancel"
-              />
-            </View>
           </View>
         )}
       </SafeAreaView>

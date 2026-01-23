@@ -166,7 +166,7 @@ const ProjectDetailsPage = () => {
     // sum change order quoted prices if change order status is 'approved'
     const changeOrdersTotal = allChangeOrders
       .filter((co) => co.status === 'approved')
-      .reduce((sum, co) => sum + co.quotedPrice, 0);
+      .reduce((sum, co) => sum + (co.quotedPrice ?? 0), 0);
 
     console.log('projectData?.quotedPrice:', projectData?.quotedPrice);
     console.log('changeOrdersTotal:', changeOrdersTotal);

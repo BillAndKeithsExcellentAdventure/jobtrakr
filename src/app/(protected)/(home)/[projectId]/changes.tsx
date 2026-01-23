@@ -1,6 +1,6 @@
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ActionButton } from '@/src/components/ActionButton';
@@ -19,6 +19,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { FlatList, StyleSheet } from 'react-native';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { formatCurrency } from '@/src/utils/formatters';
 
 const getChangeOrderStatuses = async (
   projectId: string,
@@ -154,6 +155,16 @@ const ChangeOrdersScreen = () => {
     }, [allChangeOrders, fetchStatuses]),
   );
 
+  // add up total quotedPrice from changeOrders and projectData.quotedPrice
+  const totalQuotedPrice = useMemo(() => {
+    // sum change order quoted prices if change order status is 'approved'
+    const changeOrdersTotal = allChangeOrders
+      .filter((co) => co.status === 'approved')
+      .reduce((sum, co) => sum + (co.quotedPrice ?? 0), 0);
+
+    return changeOrdersTotal;
+  }, [allChangeOrders]);
+
   useEffect(() => {
     // Only fetch if we have change orders
     if (allChangeOrders && allChangeOrders.length > 0) {
@@ -244,6 +255,11 @@ const ChangeOrdersScreen = () => {
               <Text txtSize="title" style={{ marginVertical: 5 }}>
                 Project Change Orders
               </Text>
+              <Text
+                txtSize="normal"
+                style={{ marginBottom: 5 }}
+                text={`Total Approved Quotes: ${formatCurrency(totalQuotedPrice, true, false)}`}
+              />
             </View>
 
             <FlatList

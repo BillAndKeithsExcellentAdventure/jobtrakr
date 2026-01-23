@@ -68,6 +68,7 @@ const EditReceiptDetailsPage = () => {
     imageId: '',
     notes: '',
     markedComplete: false,
+    accountingId: '',
   });
 
   useEffect(() => {
