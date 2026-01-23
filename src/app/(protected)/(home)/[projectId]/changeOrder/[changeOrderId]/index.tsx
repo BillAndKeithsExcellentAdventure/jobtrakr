@@ -457,7 +457,7 @@ const DefineChangeOrderScreen = () => {
             {(changeOrder.status === 'draft' || changeOrder.status === 'approval-pending') && (
               <View style={{ marginBottom: 10 }}>
                 <ActionButton
-                  title="Send for Approval"
+                  title={`${changeOrder.status === 'approval-pending' ? 'Resend' : 'Send'} for Approval`}
                   onPress={handleSendForApproval}
                   type={isSendingChangeOrder || changeOrder.quotedPrice <= 0 ? 'disabled' : 'action'}
                 />
