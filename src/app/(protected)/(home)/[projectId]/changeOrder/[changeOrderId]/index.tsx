@@ -100,7 +100,8 @@ const DefineChangeOrderScreen = () => {
     if (allChangeOrders) {
       const foundChangeOrder = allChangeOrders.find((co) => co.id === changeOrderId);
       if (foundChangeOrder) {
-        setChangeOrder(foundChangeOrder);
+        const quotedPrice = foundChangeOrder.quotedPrice || 0;
+        setChangeOrder({ ...foundChangeOrder, quotedPrice });
       }
     }
   }, [allChangeOrders, changeOrderId]);
@@ -264,7 +265,7 @@ const DefineChangeOrderScreen = () => {
     }"</strong>.</p>
     
     <p><strong>Project:</strong> ${projectData?.name ?? 'Unknown Project'}</p>
-    <p><strong>Change Order Amount:</strong> ${formatCurrency(changeOrder?.bidAmount ?? 0, true)}</p>
+    <p><strong>Change Order Amount:</strong> ${formatCurrency(changeOrder?.quotedPrice ?? 0, true)}</p>
     
     <p>To accept this change order, please click the button below:</p>
     
@@ -453,12 +454,12 @@ const DefineChangeOrderScreen = () => {
       <View style={{ flex: 1 }}>
         {changeOrder && (
           <View style={{ padding: 10, marginBottom: 10 }}>
-            {changeOrder.status === 'draft' && (
+            {(changeOrder.status === 'draft' || changeOrder.status === 'approval-pending') && (
               <View style={{ marginBottom: 10 }}>
                 <ActionButton
                   title="Send for Approval"
                   onPress={handleSendForApproval}
-                  type={isSendingChangeOrder ? 'disabled' : 'action'}
+                  type={isSendingChangeOrder || changeOrder.quotedPrice <= 0 ? 'disabled' : 'action'}
                 />
                 {isSendingChangeOrder && (
                   <View style={styles.sendingRow}>
@@ -492,7 +493,13 @@ const DefineChangeOrderScreen = () => {
               <View style={{ gap: 6 }}>
                 <Text text={changeOrder?.title} txtSize="title" />
                 {changeOrder?.description && <Text text={changeOrder?.description} />}
-                <Text text={`quote: ${formatCurrency(changeOrder?.quotedPrice, true, false)}`} />
+                <Text
+                  text={`quote: ${formatCurrency(changeOrder?.quotedPrice, true, false)}`}
+                  style={{
+                    color: changeOrder?.quotedPrice > 0 ? colors.text : colors.error,
+                    fontWeight: changeOrder?.quotedPrice > 0 ? 'normal' : '700',
+                  }}
+                />
               </View>
             </View>
           </View>

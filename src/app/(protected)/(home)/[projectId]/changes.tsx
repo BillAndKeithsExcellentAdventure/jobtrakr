@@ -110,7 +110,7 @@ const ChangeOrdersScreen = () => {
       }
 
       const changeOrderStatusResponse: ChangeOrderStatusResponse = JSON.parse(changeOrderStatusString);
-      //console.log('Parsed Change Order Statuses:', changeOrderStatusResponse);
+      console.log('Parsed Change Order Statuses:', changeOrderStatusResponse);
 
       // Create a map of change_order_id to status for quick lookup
       const statusMap = new Map<string, 'draft' | 'approval-pending' | 'approved' | 'cancelled'>();
