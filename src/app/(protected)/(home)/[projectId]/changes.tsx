@@ -93,6 +93,10 @@ const ChangeOrdersScreen = () => {
 
   const allChangeOrders = useAllRows(projectId, 'changeOrders');
 
+  const waitingForChangeOrderApprovals = useMemo(() => {
+    return allChangeOrders.filter((co) => co.status === 'approval-pending').length > 0;
+  }, [allChangeOrders]);
+
   // Check if required app settings are defined
   const isAppSettingsComplete =
     appSettings.companyName?.trim() && appSettings.ownerName?.trim() && appSettings.email?.trim();
@@ -148,11 +152,11 @@ const ChangeOrdersScreen = () => {
 
   useFocusEffect(
     useCallback(() => {
-      // Only fetch if we have change orders
-      if (allChangeOrders && allChangeOrders.length > 0) {
+      // Only fetch if we have change orders that are waiting for approval
+      if (waitingForChangeOrderApprovals) {
         fetchStatuses();
       }
-    }, [allChangeOrders, fetchStatuses]),
+    }, [waitingForChangeOrderApprovals, fetchStatuses]),
   );
 
   // add up total quotedPrice from changeOrders and projectData.quotedPrice
@@ -166,11 +170,11 @@ const ChangeOrdersScreen = () => {
   }, [allChangeOrders]);
 
   useEffect(() => {
-    // Only fetch if we have change orders
-    if (allChangeOrders && allChangeOrders.length > 0) {
+    // Only fetch if we have change orders that are waiting for approval
+    if (waitingForChangeOrderApprovals) {
       fetchStatuses();
     }
-  }, [allChangeOrders, fetchStatuses]);
+  }, [fetchStatuses, waitingForChangeOrderApprovals]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

@@ -15,7 +15,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 
-const ITEM_HEIGHT = 45;
+const ITEM_HEIGHT = 65;
 const RIGHT_ACTION_WIDTH = 80;
 const SWIPE_THRESHOLD_WIDTH = 50;
 
@@ -120,12 +120,29 @@ const SwipeableChangeOrder = React.memo<Props>(({ item, projectId }) => {
                 <MaterialCommunityIcons name="cancel" size={24} color={colors.iconColor} />
               </View>
             )}
-
-            <Text
-              style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
-              text={item.title}
-              numberOfLines={1}
-            />
+            <View
+              style={{
+                flex: 1,
+                gap: 4,
+                paddingHorizontal: 5,
+                paddingVertical: 4,
+                justifyContent: 'center',
+              }}
+            >
+              <Text
+                style={{ textOverflow: 'ellipsis', overflow: 'hidden' }}
+                text={item.title}
+                numberOfLines={1}
+              />
+              {item.accountingId && item.accountingId.length > 0 && (
+                <Text
+                  style={{ textOverflow: 'ellipsis', overflow: 'hidden' }}
+                  text={`[${item.accountingId}]`}
+                  txtSize="xs"
+                  numberOfLines={1}
+                />
+              )}
+            </View>
             <Text
               style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
               text={formatCurrency(item.bidAmount, false, true)}

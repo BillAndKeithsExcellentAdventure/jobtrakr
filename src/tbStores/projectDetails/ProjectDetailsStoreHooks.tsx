@@ -115,7 +115,7 @@ export interface ChangeOrder {
   quotedPrice: number; // amount quoted to customer which is bidAmount + markup
   status: 'draft' | 'approval-pending' | 'approved' | 'cancelled';
   dateCreated: number; // Date the change order was created.
-  accountId: string; // ID returned from backend after sending email
+  accountingId: string; // ID returned from backend after sending email
 }
 
 export interface ChangeOrderItem {

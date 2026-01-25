@@ -80,7 +80,7 @@ export const TABLES_SCHEMA = {
     quotedPrice: { type: 'number' },
     status: { type: 'string' }, // 'draft' | 'approval-pending' | 'approved' | 'cancelled';
     dateCreated: { type: 'number' }, // Date the change order was created.
-    accountId: { type: 'string' }, // ID returned from backend after sending email
+    accountingId: { type: 'string' }, // ID returned from backend after sending email
   },
 
   changeOrderItems: {
