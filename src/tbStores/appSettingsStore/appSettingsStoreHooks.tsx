@@ -5,9 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import { CrudResult } from '@/src/models/types';
 
-const {
-  useStore,
-} = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
+const { useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
 export interface SettingsData {
   id: string;
@@ -22,6 +20,7 @@ export interface SettingsData {
   phone: string;
   companyLogo: string;
   changeOrderTemplateFileName: string;
+  syncWithQuickBooks: boolean;
   debugForceOffline: boolean;
 }
 
@@ -38,6 +37,7 @@ const INITIAL_SETTINGS: SettingsData = {
   phone: '',
   companyLogo: '',
   changeOrderTemplateFileName: '',
+  syncWithQuickBooks: false,
   debugForceOffline: false,
 };
 

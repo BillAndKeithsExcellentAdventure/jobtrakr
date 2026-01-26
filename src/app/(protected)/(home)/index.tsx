@@ -26,6 +26,7 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { DOCS_URL } from '@/src/constants/app-constants';
 import { Image } from 'expo-image';
 import { useColorScheme } from '@/src/components/useColorScheme';
+import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 
 function isEntry(obj: any): obj is ProjectListEntryProps {
   return typeof obj.projectName === 'string' && typeof obj.projectId === 'string';
@@ -45,6 +46,21 @@ export default function ProjectHomeScreen() {
   const auth = useAuth();
   const { orgRole, orgId } = auth;
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
+
+  const appSettings = useAppSettings();
+
+  const minAppSettingsMet: boolean = useMemo(() => {
+    return (
+      appSettings.companyName.trim().length > 0 &&
+      appSettings.ownerName.trim().length > 0 &&
+      appSettings.address.trim().length > 0 &&
+      appSettings.city.trim().length > 0 &&
+      appSettings.state.trim().length > 0 &&
+      appSettings.zip.trim().length > 0 &&
+      appSettings.email.trim().length > 0 &&
+      appSettings.phone.trim().length > 0
+    );
+  }, [appSettings]);
 
   const allVisibleCategories = useMemo(() => allCategories.filter((c) => !c.hidden), [allCategories]);
 
@@ -165,7 +181,7 @@ export default function ProjectHomeScreen() {
 
       {
         icon: <Entypo name="text-document" size={24} color={colors.iconColor} />,
-        label: 'Invoices',
+        label: 'Bills',
         onPress: (e, actionContext) => {
           if (actionContext && actionContext.projectId)
             router.push({
@@ -331,6 +347,13 @@ export default function ProjectHomeScreen() {
     return () => clearTimeout(timer);
   }, [minConfigMet]);
 
+  // Handle onboarding redirect if app settings not met
+  useEffect(() => {
+    if (!minAppSettingsMet && !isLoading) {
+      router.replace('/appSettings/SetAppSettings');
+    }
+  }, [minAppSettingsMet, isLoading, router]);
+
   // wait for up to a 2 seconds to allow tinybase to load and synch data.
   if (isLoading) {
     return (
@@ -341,6 +364,36 @@ export default function ProjectHomeScreen() {
         </Text>
         <Image source={splashImage} style={styles.splashImage} contentFit="contain" />
       </View>
+    );
+  }
+
+  // Guard: show onboarding screen if app settings not complete
+  if (!minAppSettingsMet) {
+    return (
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            title: 'Company Setup Required',
+            headerLeft: () => null,
+          }}
+        />
+        <View style={[styles.container, { padding: 20, backgroundColor: colors.background }]}>
+          <View style={{ alignItems: 'center', marginVertical: 40 }}>
+            <Text text="Welcome!" txtSize="xl" />
+          </View>
+          <Text
+            style={{ marginBottom: 20, textAlign: 'center' }}
+            text="Before we can get started, we need some basic information about your company."
+          />
+          <ActionButton
+            style={{ zIndex: 1, marginTop: 20, width: '95%', maxWidth: 400, alignSelf: 'center' }}
+            onPress={() => router.push('/appSettings/SetAppSettings')}
+            type="action"
+            title="Complete Company Setup"
+          />
+        </View>
+      </SafeAreaView>
     );
   }
 

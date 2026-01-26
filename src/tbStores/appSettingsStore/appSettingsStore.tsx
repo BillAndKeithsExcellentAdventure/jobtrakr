@@ -21,6 +21,7 @@ export const TABLES_SCHEMA = {
     companyLogo: { type: 'string' },
     changeOrderTemplateFileName: { type: 'string' },
     debugForceOffline: { type: 'boolean', default: false },
+    syncWithQuickBooks: { type: 'boolean', default: false },
   },
 } as const;
 

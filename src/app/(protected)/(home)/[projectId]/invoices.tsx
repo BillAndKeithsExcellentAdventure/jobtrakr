@@ -236,7 +236,7 @@ const ProjectInvoicesPage = () => {
                 }}
               >
                 <Text txtSize="title" style={{ marginVertical: 5 }}>
-                  Project Invoices
+                  Project Bills
                 </Text>
               </View>
 
@@ -244,7 +244,7 @@ const ProjectInvoicesPage = () => {
                 <View style={{ padding: 10, alignItems: 'center' }}>
                   <ActivityIndicator size="large" color={colors.text} />
                   <Text
-                    text="Processing invoice image, this should only take a moment..."
+                    text="Processing bill image, this should only take a moment..."
                     style={{ marginTop: 10 }}
                   />
                 </View>
@@ -262,15 +262,11 @@ const ProjectInvoicesPage = () => {
                     data={classifiedInvoices}
                     keyExtractor={(item, index) => item.id ?? index.toString()}
                     renderItem={({ item }) => (
-                      <SwipeableInvoiceItem
-                        orgId={auth.orgId!}
-                        projectId={projectId}
-                        item={item}
-                      />
+                      <SwipeableInvoiceItem orgId={auth.orgId!} projectId={projectId} item={item} />
                     )}
                     ListEmptyComponent={
                       <View style={{ alignItems: 'center', margin: 20 }}>
-                        <Text txtSize="title" text="No invoices found." />
+                        <Text txtSize="title" text="No bills found." />
                       </View>
                     }
                   />

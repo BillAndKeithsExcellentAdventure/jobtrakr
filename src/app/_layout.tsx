@@ -111,12 +111,14 @@ function RootLayoutNav() {
       <TinyBaseProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <ClerkLoadingWrapper colorScheme={colorScheme ?? 'light'}>
-            <NetworkProvider>
-              <KeyboardProvider>
-                <ColorsProvider>
-                  <FocusManagerProvider>
-                    <SafeAreaProvider>
-                      <GestureHandlerRootView>
+            <KeyboardProvider>
+              <ColorsProvider>
+                <FocusManagerProvider>
+                  <SafeAreaProvider>
+                    <GestureHandlerRootView>
+                      <NetworkProvider>
+                        {/* NetworkProvider also initializes AppSettingsStore */}
+
                         <Stack screenOptions={{ headerShown: false }}>
                           <Stack.Screen
                             name="(auth)"
@@ -131,12 +133,12 @@ function RootLayoutNav() {
                             }}
                           />
                         </Stack>
-                      </GestureHandlerRootView>
-                    </SafeAreaProvider>
-                  </FocusManagerProvider>
-                </ColorsProvider>
-              </KeyboardProvider>
-            </NetworkProvider>
+                      </NetworkProvider>
+                    </GestureHandlerRootView>
+                  </SafeAreaProvider>
+                </FocusManagerProvider>
+              </ColorsProvider>
+            </KeyboardProvider>
           </ClerkLoadingWrapper>
         </ThemeProvider>
       </TinyBaseProvider>
