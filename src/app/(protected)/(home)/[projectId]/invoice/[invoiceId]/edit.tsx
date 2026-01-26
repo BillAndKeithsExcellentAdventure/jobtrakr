@@ -85,6 +85,7 @@ const EditInvoiceDetailsPage = () => {
     imageId: '',
     notes: '',
     markedComplete: false,
+    accountingId: '',
   });
 
   useEffect(() => {

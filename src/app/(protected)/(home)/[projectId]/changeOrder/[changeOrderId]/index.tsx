@@ -40,6 +40,8 @@ interface SendPdfParams {
   fromName: string;
   changeOrderId: string;
   projectId: string;
+  accountingId?: string;
+  projectAbbr?: string; // used to create accountingId if not provided
   expirationDate: string;
   ownerEmail: string;
   subject: string;
@@ -47,7 +49,6 @@ interface SendPdfParams {
 
 const generateAndSendPdf = async (
   params: SendPdfParams,
-  changeOrderId: string,
   getToken: () => Promise<string | null>,
 ): Promise<string | null> => {
   try {
@@ -64,7 +65,8 @@ const generateAndSendPdf = async (
       console.error(`HTTP error! status: ${response.status}`);
     }
 
-    return await response.text();
+    const data = await response.json();
+    return data.accountingId || null;
   } catch (error) {
     console.error('Error generating PDF:', error);
     throw new Error('Failed to generate PDF. Please try again.');
@@ -290,7 +292,7 @@ const DefineChangeOrderScreen = () => {
       `.trim();
 
       // Generate and send PDF with HTML email body
-      const pdfFilePath = await generateAndSendPdf(
+      const accountingId = await generateAndSendPdf(
         {
           userId: userId,
           htmlPdf: htmlOutput,
@@ -300,17 +302,26 @@ const DefineChangeOrderScreen = () => {
           fromName: appSettings.ownerName ?? '',
           changeOrderId: changeOrder?.id ?? '',
           projectId: projectId,
+          accountingId: changeOrder?.accountingId ?? '',
+          projectAbbr: projectData?.abbreviation,
           expirationDate: expirationDate.toString(),
           ownerEmail: projectData?.ownerEmail ?? '',
           subject: `${appSettings.companyName} : Please review and accept change order "${
             changeOrder?.title || 'unknown'
           }"`,
         },
-        changeOrder?.id || 'unknown',
         auth.getToken,
       );
 
-      if (pdfFilePath) {
+      if (accountingId && changeOrder) {
+        // Update change order to store the returned accountingId
+        const updatedChangeOrder: ChangeOrder = {
+          ...changeOrder,
+          accountingId: accountingId,
+        };
+        updateChangeOrder(changeOrder!.id, updatedChangeOrder);
+        setChangeOrder(updatedChangeOrder);
+
         Alert.alert('Success', 'Change order sent successfully!', [
           {
             text: 'OK',
@@ -492,6 +503,10 @@ const DefineChangeOrderScreen = () => {
               )}
               <View style={{ gap: 6 }}>
                 <Text text={changeOrder?.title} txtSize="title" />
+                {changeOrder.accountingId.length > 0 && (
+                  <Text text={`[${changeOrder.accountingId}]`} txtSize="xs" />
+                )}
+
                 {changeOrder?.description && <Text text={changeOrder?.description} />}
                 <Text
                   text={`quote: ${formatCurrency(changeOrder?.quotedPrice, true, false)}`}
