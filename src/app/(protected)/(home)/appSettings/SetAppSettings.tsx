@@ -4,7 +4,7 @@ import { TextField } from '@/src/components/TextField';
 import { Text, View } from '@/src/components/Themed';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
-import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
+
 import {
   SettingsData,
   useAppSettings,
@@ -81,6 +81,11 @@ const SetAppSettingScreen = () => {
         }
 
         const connected = await isQuickBooksConnected(auth.orgId, auth.userId, auth.getToken);
+        if (connected && settings.syncWithQuickBooks !== true) {
+          console.log('QuickBooks is connected');
+          const updatedSettings = { ...settings, syncWithQuickBooks: true };
+          setAppSettings(updatedSettings);
+        }
         setIsQBConnected(connected);
       } catch (error) {
         console.error('Error checking QuickBooks connection:', error);
@@ -92,7 +97,7 @@ const SetAppSettingScreen = () => {
     };
 
     checkConnection();
-  }, [auth, setIsQBConnected, setIsCheckingQBConnection]);
+  }, [auth, settings]);
 
   const handleChange = (key: keyof SettingsData, value: string) => {
     setSettings((prev) => ({
@@ -113,6 +118,20 @@ const SetAppSettingScreen = () => {
   const handleSave = useCallback(() => {
     setAppSettings(settings);
   }, [settings, setAppSettings]);
+
+  // Check which settings are complete
+  const areAllSettingsMet = useCallback((): boolean => {
+    return (
+      settings.companyName.trim().length > 0 &&
+      settings.ownerName.trim().length > 0 &&
+      settings.address.trim().length > 0 &&
+      settings.city.trim().length > 0 &&
+      settings.state.trim().length > 0 &&
+      settings.zip.trim().length > 0 &&
+      settings.email.trim().length > 0 &&
+      settings.phone.trim().length > 0
+    );
+  }, [settings]);
 
   const handleConnectToQuickBooks = useCallback(async () => {
     if (!auth.orgId || !auth.userId) {
@@ -211,10 +230,28 @@ const SetAppSettingScreen = () => {
     }
   };
 
-  const handleBackPress = useAutoSaveNavigation(() => {
+  const handleBackPress = useCallback(() => {
+    // Check if minimum app settings are met
+    const allSettingsMet =
+      settings.companyName.trim().length > 0 &&
+      settings.ownerName.trim().length > 0 &&
+      settings.address.trim().length > 0 &&
+      settings.city.trim().length > 0 &&
+      settings.state.trim().length > 0 &&
+      settings.zip.trim().length > 0 &&
+      settings.email.trim().length > 0 &&
+      settings.phone.trim().length > 0;
+
+    if (!allSettingsMet) {
+      Alert.alert('Incomplete Setup', 'Please complete all required fields before continuing.', [
+        { text: 'OK', style: 'default' },
+      ]);
+      return;
+    }
+
     handleSave();
     router.back();
-  });
+  }, [settings, handleSave, router]);
 
   return (
     <>
@@ -232,8 +269,54 @@ const SetAppSettingScreen = () => {
         contentContainerStyle={styles.modalContainer}
       >
         <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
+          {!isCheckingQBConnection && (
+            <View
+              style={{
+                flex: 1,
+                marginLeft: 10,
+                justifyContent: 'center',
+                backgroundColor: colors.listBackground,
+              }}
+            >
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  {
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    backgroundColor: isQBConnected ? '#dc3545' : colors.background,
+                  },
+                ]}
+                onPress={isQBConnected ? handleDisconnectFromQuickBooks : handleConnectToQuickBooks}
+              >
+                <Text
+                  lineBreakMode="middle"
+                  numberOfLines={3}
+                  style={{
+                    overflowX: 'hidden',
+                    fontWeight: '600',
+                    textAlign: 'center',
+                    color: isQBConnected ? '#ffffff' : colors.text,
+                  }}
+                >
+                  {isQBConnected ? 'Disconnect from QuickBooks' : 'Connect to QuickBooks'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <Text
+            style={{
+              textAlign: 'center',
+              fontWeight: '600',
+              marginBottom: 12,
+              color: areAllSettingsMet() ? colors.profitFg : colors.lossFg,
+            }}
+          >
+            {areAllSettingsMet() ? '✓ Required Fields Complete' : '⚠ Complete all required fields with *'}
+          </Text>
           <TextField
-            label="Company Name"
+            label="Company Name*"
             placeholder="Company Name"
             value={String(settings.companyName ?? '')}
             onChangeText={(text) => handleChange('companyName', text)}
@@ -242,7 +325,7 @@ const SetAppSettingScreen = () => {
             autoCorrect={false}
           />
           <TextField
-            label="Address"
+            label="Address*"
             placeholder="Address"
             value={String(settings.address ?? '')}
             onChangeText={(text) => handleChange('address', text)}
@@ -253,7 +336,7 @@ const SetAppSettingScreen = () => {
             autoCorrect={false}
           />
           <TextField
-            label="City"
+            label="City*"
             placeholder="City"
             value={String(settings.city ?? '')}
             onChangeText={(text) => handleChange('city', text)}
@@ -264,7 +347,7 @@ const SetAppSettingScreen = () => {
           <View style={{ flexDirection: 'row', backgroundColor: colors.listBackground, gap: 8 }}>
             <View style={{ marginBottom: 4, backgroundColor: colors.listBackground, flex: 1 }}>
               <TextField
-                label="State"
+                label="State*"
                 placeholder="State"
                 value={String(settings.state ?? '')}
                 onChangeText={(text) => handleChange('state', text)}
@@ -275,7 +358,7 @@ const SetAppSettingScreen = () => {
             </View>
             <View style={{ marginBottom: 4, width: 120, backgroundColor: colors.listBackground }}>
               <TextField
-                label="Zip"
+                label="Zip*"
                 placeholder="Zip"
                 keyboardType="numeric"
                 value={String(settings.zip ?? '')}
@@ -287,7 +370,7 @@ const SetAppSettingScreen = () => {
             </View>
           </View>
           <TextField
-            label="Owner/Contact"
+            label="Owner/Contact*"
             placeholder="Owner/Contact"
             value={String(settings.ownerName ?? '')}
             onChangeText={(text) => handleChange('ownerName', text)}
@@ -296,7 +379,7 @@ const SetAppSettingScreen = () => {
             autoCorrect={false}
           />
           <TextField
-            label="Phone"
+            label="Phone*"
             placeholder="Phone"
             keyboardType="phone-pad"
             value={String(settings.phone ?? '')}
@@ -306,7 +389,7 @@ const SetAppSettingScreen = () => {
             autoCorrect={false}
           />
           <TextField
-            label="Email"
+            label="Email*"
             placeholder="Email"
             keyboardType="email-address"
             value={String(settings.email ?? '')}
@@ -315,7 +398,9 @@ const SetAppSettingScreen = () => {
             autoCapitalize="none"
             autoCorrect={false}
           />
-          <View style={{ flexDirection: 'row', marginBottom: 4, backgroundColor: colors.listBackground }}>
+          <View
+            style={{ flexDirection: 'row', marginBottom: 4, gap: 10, backgroundColor: colors.listBackground }}
+          >
             <TouchableOpacity
               style={[
                 styles.button,
@@ -334,23 +419,6 @@ const SetAppSettingScreen = () => {
               />
             )}
 
-            {!isCheckingQBConnection && (
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  {
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    backgroundColor: isQBConnected ? '#dc3545' : colors.tint,
-                  },
-                ]}
-                onPress={isQBConnected ? handleDisconnectFromQuickBooks : handleConnectToQuickBooks}
-              >
-                <Text style={{ color: 'white', fontWeight: '600' }}>
-                  {isQBConnected ? 'Disconnect from QuickBooks' : 'Connect to QuickBooks'}
-                </Text>
-              </TouchableOpacity>
-            )}
             {isCheckingQBConnection && (
               <View
                 style={[
@@ -370,6 +438,7 @@ const SetAppSettingScreen = () => {
                 marginTop: 8,
                 backgroundColor: colors.listBackground,
                 alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
               <Switch
@@ -396,9 +465,8 @@ const styles = StyleSheet.create({
   },
   button: {
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 10,
     borderRadius: 8,
-    marginRight: 16,
   },
   modalContainer: {
     maxWidth: 460,

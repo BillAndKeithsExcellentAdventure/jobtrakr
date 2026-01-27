@@ -483,7 +483,7 @@ const ProjectDetailsPage = () => {
       },
       {
         icon: <Entypo name="text-document" size={24} color={colors.iconColor} />,
-        label: 'Invoices',
+        label: 'Bills',
         onPress: (e, actionContext) => {
           if (projectId && projectData)
             router.push({
