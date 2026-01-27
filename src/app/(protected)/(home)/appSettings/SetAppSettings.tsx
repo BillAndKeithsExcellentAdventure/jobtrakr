@@ -15,6 +15,7 @@ import {
   isQuickBooksConnected,
   connectToQuickBooks as qbConnect,
   disconnectQuickBooks as qbDisconnect,
+  fetchCompanyInfo,
 } from '@/src/utils/quickbooksAPI';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
@@ -173,6 +174,57 @@ const SetAppSettingScreen = () => {
       Alert.alert('Error', `Failed to connect to QuickBooks: ${errorMessage}`);
     }
   }, [auth]);
+
+  const handleFetchCompanyInfoFromQuickBooks = useCallback(async () => {
+    if (!auth.orgId || !auth.userId) {
+      Alert.alert('Error', 'Authentication required to fetch company information');
+      return;
+    }
+
+    if (!isQBConnected) {
+      Alert.alert('Error', 'Please connect to QuickBooks first');
+      return;
+    }
+
+    try {
+      const token = await auth.getToken();
+      if (!token) {
+        Alert.alert('Error', 'Unable to obtain authentication token');
+        return;
+      }
+
+      const companyInfo = await fetchCompanyInfo(auth.orgId, auth.userId, auth.getToken);
+
+      // Update settings with fetched company info
+      const updatedSettings = {
+        ...settings,
+        companyName: companyInfo.companyName || settings.companyName,
+        ownerName: companyInfo.ownerName || settings.ownerName,
+        address: companyInfo.address || settings.address,
+        address2: companyInfo.address2 || settings.address2,
+        city: companyInfo.city || settings.city,
+        state: companyInfo.state || settings.state,
+        zip: companyInfo.zip || settings.zip,
+        email: companyInfo.email || settings.email,
+        phone: companyInfo.phone || settings.phone,
+      };
+
+      console.log('Fetched company info from QuickBooks:', companyInfo);
+      //setSettings(updatedSettings);
+      //setAppSettings(updatedSettings);
+      //Alert.alert('Success', 'Company information retrieved from QuickBooks!');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error fetching company info from QuickBooks:', errorMessage);
+      Alert.alert('Error', `Failed to fetch company information: ${errorMessage}`);
+    }
+  }, [auth, isQBConnected, settings, setAppSettings]);
+
+  useEffect(() => {
+    if (isQBConnected) {
+      handleFetchCompanyInfoFromQuickBooks();
+    }
+  }, [isQBConnected, handleFetchCompanyInfoFromQuickBooks]);
 
   const handleDisconnectFromQuickBooks = useCallback(async () => {
     if (!auth.orgId || !auth.userId) {

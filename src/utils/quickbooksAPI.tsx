@@ -223,6 +223,18 @@ export async function addBill(
   return data.data?.Bill || ({ Id: '', VendorRef: { value: '' }, TotalAmt: 0 } as Bill);
 }
 
+export interface CompanyInfo {
+  companyName: string;
+  ownerName: string;
+  address: string;
+  address2: string;
+  city: string;
+  state: string;
+  zip: string;
+  email: string;
+  phone: string;
+}
+
 export interface PayBillLineItem {
   amount: number;
   billLineRef: { value: string };
@@ -267,4 +279,30 @@ export async function payBill(
   }
 
   return data.data?.BillPayment || ({ Id: '', TotalAmt: 0 } as BillPayment);
+}
+
+export async function fetchCompanyInfo(
+  orgId: string,
+  userId: string,
+  getToken: () => Promise<string | null>,
+): Promise<CompanyInfo> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/fetchCompanyInfo?orgId=${orgId}&userId=${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data: ApiDataResponse<CompanyInfo> = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to fetch company information');
+  }
+
+  if (!data.data) {
+    throw new Error('No company information returned');
+  }
+
+  return data.data;
 }
