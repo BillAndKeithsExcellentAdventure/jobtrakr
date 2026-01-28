@@ -136,14 +136,18 @@ const SetAppSettingScreen = () => {
 
   const checkQBConnectionWithRetry = useCallback(
     async (maxRetries = 5, retryInterval = 1000): Promise<boolean> => {
+      // Guard check for required auth values
+      if (!auth.orgId || !auth.userId) {
+        console.error('Cannot check QB connection: missing orgId or userId');
+        return false;
+      }
+
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-          // Wait before checking (except for first attempt)
-          if (attempt > 0) {
-            await new Promise((resolve) => setTimeout(resolve, retryInterval));
-          }
+          // Wait before checking (including first attempt to give backend time to process OAuth callback)
+          await new Promise((resolve) => setTimeout(resolve, retryInterval));
 
-          const connected = await isQuickBooksConnected(auth.orgId!, auth.userId!, auth.getToken);
+          const connected = await isQuickBooksConnected(auth.orgId, auth.userId, auth.getToken);
           if (connected) {
             return true;
           }
@@ -178,6 +182,11 @@ const SetAppSettingScreen = () => {
           const connected = await checkQBConnectionWithRetry(5, 1000);
           setIsQBConnected(connected);
           if (connected) {
+            // Update settings to enable QuickBooks sync
+            if (settings.syncWithQuickBooks !== true) {
+              const updatedSettings = { ...settings, syncWithQuickBooks: true };
+              setAppSettings(updatedSettings);
+            }
             Alert.alert('Success', 'Successfully connected to QuickBooks!');
           }
         }
@@ -189,7 +198,7 @@ const SetAppSettingScreen = () => {
       //console.error('Error connecting to QuickBooks:', errorMessage);
       Alert.alert('Error', `Failed to connect to QuickBooks: ${errorMessage}`);
     }
-  }, [auth, checkQBConnectionWithRetry]);
+  }, [auth, checkQBConnectionWithRetry, settings, setAppSettings]);
 
   const handleFetchCompanyInfoFromQuickBooks = useCallback(async () => {
     if (!auth.orgId || !auth.userId) {
