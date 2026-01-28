@@ -181,11 +181,6 @@ const SetAppSettingScreen = () => {
       return;
     }
 
-    if (!isQBConnected) {
-      Alert.alert('Error', 'Please connect to QuickBooks first');
-      return;
-    }
-
     try {
       const token = await auth.getToken();
       if (!token) {
@@ -194,12 +189,12 @@ const SetAppSettingScreen = () => {
       }
 
       const companyInfo = await fetchCompanyInfo(auth.orgId, auth.userId, auth.getToken);
+      console.log('Fetched company info from QuickBooks:', companyInfo);
 
-      // Update settings with fetched company info
-      const updatedSettings = {
+      // merge settings with fetched company info
+      const companySettings = {
         ...settings,
         companyName: companyInfo.companyName || settings.companyName,
-        ownerName: companyInfo.ownerName || settings.ownerName,
         address: companyInfo.address || settings.address,
         address2: companyInfo.address2 || settings.address2,
         city: companyInfo.city || settings.city,
@@ -209,22 +204,13 @@ const SetAppSettingScreen = () => {
         phone: companyInfo.phone || settings.phone,
       };
 
-      console.log('Fetched company info from QuickBooks:', companyInfo);
-      //setSettings(updatedSettings);
-      //setAppSettings(updatedSettings);
-      //Alert.alert('Success', 'Company information retrieved from QuickBooks!');
+      return companySettings;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('Error fetching company info from QuickBooks:', errorMessage);
       Alert.alert('Error', `Failed to fetch company information: ${errorMessage}`);
     }
   }, [auth, isQBConnected, settings, setAppSettings]);
-
-  useEffect(() => {
-    if (isQBConnected) {
-      handleFetchCompanyInfoFromQuickBooks();
-    }
-  }, [isQBConnected, handleFetchCompanyInfoFromQuickBooks]);
 
   const handleDisconnectFromQuickBooks = useCallback(async () => {
     if (!auth.orgId || !auth.userId) {
