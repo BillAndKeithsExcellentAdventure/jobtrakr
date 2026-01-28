@@ -223,9 +223,8 @@ export async function addBill(
   return data.data?.Bill || ({ Id: '', VendorRef: { value: '' }, TotalAmt: 0 } as Bill);
 }
 
-export interface CompanyInfo {
+export interface QBCompanyInfo {
   companyName: string;
-  ownerName: string;
   address: string;
   address2: string;
   city: string;
@@ -285,7 +284,7 @@ export async function fetchCompanyInfo(
   orgId: string,
   userId: string,
   getToken: () => Promise<string | null>,
-): Promise<CompanyInfo> {
+): Promise<QBCompanyInfo> {
   const apiFetch = createApiWithToken(getToken);
 
   const response = await apiFetch(`${API_BASE_URL}/qbo/fetchCompanyInfo?orgId=${orgId}&userId=${userId}`, {
@@ -295,7 +294,7 @@ export async function fetchCompanyInfo(
     },
   });
 
-  const data: ApiDataResponse<CompanyInfo> = await response.json();
+  const data: ApiDataResponse<QBCompanyInfo> = await response.json();
   if (!data.success) {
     throw new Error(data.message || 'Failed to fetch company information');
   }
