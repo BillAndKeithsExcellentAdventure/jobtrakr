@@ -134,6 +134,28 @@ const SetAppSettingScreen = () => {
     );
   }, [settings]);
 
+  const checkQBConnectionWithRetry = useCallback(
+    async (maxRetries = 5, retryInterval = 1000): Promise<boolean> => {
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          // Wait before checking (except for first attempt)
+          if (attempt > 0) {
+            await new Promise((resolve) => setTimeout(resolve, retryInterval));
+          }
+
+          const connected = await isQuickBooksConnected(auth.orgId!, auth.userId!, auth.getToken);
+          if (connected) {
+            return true;
+          }
+        } catch (error) {
+          console.error(`Error checking QB connection (attempt ${attempt + 1}/${maxRetries}):`, error);
+        }
+      }
+      return false;
+    },
+    [auth],
+  );
+
   const handleConnectToQuickBooks = useCallback(async () => {
     if (!auth.orgId || !auth.userId) {
       Alert.alert('Error', 'Authentication required to connect to QuickBooks');
@@ -152,18 +174,12 @@ const SetAppSettingScreen = () => {
         const result = await WebBrowser.openBrowserAsync(authUrl);
         // If browser was opened successfully, check connection status again
         if (result.type === 'cancel' || result.type === 'dismiss') {
-          // User closed browser, check if they completed authentication
-          setTimeout(async () => {
-            try {
-              const connected = await isQuickBooksConnected(auth.orgId!, auth.userId!, auth.getToken);
-              setIsQBConnected(connected);
-              if (connected) {
-                Alert.alert('Success', 'Successfully connected to QuickBooks!');
-              }
-            } catch (error) {
-              console.error('Error checking connection after browser close:', error);
-            }
-          }, 1000);
+          // User closed browser, check if they completed authentication with retry mechanism
+          const connected = await checkQBConnectionWithRetry(5, 1000);
+          setIsQBConnected(connected);
+          if (connected) {
+            Alert.alert('Success', 'Successfully connected to QuickBooks!');
+          }
         }
       } else {
         Alert.alert('Error', 'No authorization URL received from server');
@@ -173,7 +189,7 @@ const SetAppSettingScreen = () => {
       //console.error('Error connecting to QuickBooks:', errorMessage);
       Alert.alert('Error', `Failed to connect to QuickBooks: ${errorMessage}`);
     }
-  }, [auth]);
+  }, [auth, checkQBConnectionWithRetry]);
 
   const handleFetchCompanyInfoFromQuickBooks = useCallback(async () => {
     if (!auth.orgId || !auth.userId) {
