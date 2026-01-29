@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAllProjects, useToggleFavoriteCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
 import {
   useAllRows,
   WorkCategoryCodeCompareAsNumber,
@@ -27,6 +28,7 @@ import { DOCS_URL } from '@/src/constants/app-constants';
 import { Image } from 'expo-image';
 import { useColorScheme } from '@/src/components/useColorScheme';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { SvgImage } from '@/src/components/SvgImage';
 
 function isEntry(obj: any): obj is ProjectListEntryProps {
   return typeof obj.projectName === 'string' && typeof obj.projectId === 'string';
@@ -46,6 +48,7 @@ export default function ProjectHomeScreen() {
   const auth = useAuth();
   const { orgRole, orgId } = auth;
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
+  const { isConnectedToQuickBooks } = useNetwork();
 
   const appSettings = useAppSettings();
 
@@ -307,12 +310,14 @@ export default function ProjectHomeScreen() {
           style={{
             minWidth: 30,
             minHeight: 30,
+            gap: 16,
             alignItems: 'center',
             flexDirection: 'row',
             backgroundColor: 'transparent',
             marginRight: Platform.OS === 'android' ? 16 : 0,
           }}
         >
+          {isConnectedToQuickBooks && <SvgImage fileName="qb-logo" width={26} height={26} />}
           <Pressable
             style={{ alignItems: 'center' }}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -325,7 +330,7 @@ export default function ProjectHomeScreen() {
         </View>
       ),
     };
-  }, [colors.iconColor, headerMenuModalVisible, setHeaderMenuModalVisible]);
+  }, [colors.iconColor, headerMenuModalVisible, setHeaderMenuModalVisible, isConnectedToQuickBooks]);
 
   const minConfigMet: boolean = useMemo(
     () => {

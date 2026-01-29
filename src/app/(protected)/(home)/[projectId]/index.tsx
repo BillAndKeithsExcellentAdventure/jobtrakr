@@ -1,9 +1,11 @@
 import { ActionButtonProps, ButtonBar } from '@/src/components/ButtonBar';
 import { DeleteProjectConfirmationModal } from '@/src/components/DeleteProjectConfirmationModal';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
+import { SvgImage } from '@/src/components/SvgImage';
 import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
 import { CostSectionData, CostSectionDataCodeCompareAsNumber } from '@/src/models/types';
 import {
   useAllRows as useAllConfigRows,
@@ -33,7 +35,7 @@ import { File, Paths } from 'expo-file-system';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { Alert, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -56,6 +58,7 @@ const ProjectDetailsPage = () => {
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const workItemsWithoutCosts = useWorkItemsWithoutCosts(projectId);
   const allChangeOrders = useAllRows(projectId, 'changeOrders');
+  const { isConnectedToQuickBooks } = useNetwork();
 
   useEffect(() => {
     if (projectId) {
@@ -611,23 +614,28 @@ const ProjectDetailsPage = () => {
         options={{
           headerShown: true,
           headerBackTitle: '',
-          title: 'Project Overview',
+          title: 'Overview',
           headerRight: () => (
-            <View style={{ marginRight: 0 }}>
+            <View
+              style={{
+                minWidth: 30,
+                minHeight: 30,
+                gap: 16,
+                alignItems: 'center',
+                flexDirection: 'row',
+                backgroundColor: 'transparent',
+                marginRight: Platform.OS === 'android' ? 16 : 0,
+              }}
+            >
+              {isConnectedToQuickBooks && <SvgImage fileName="qb-logo" width={26} height={26} />}
               <Pressable
-                style={{ marginRight: 0 }}
+                style={{ alignItems: 'center' }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 onPress={() => {
                   setHeaderMenuModalVisible(!headerMenuModalVisible);
                 }}
               >
-                {({ pressed }) => (
-                  <MaterialCommunityIcons
-                    name="menu"
-                    size={28}
-                    color={colors.iconColor}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
+                <MaterialCommunityIcons name="menu" size={28} color={colors.iconColor} />
               </Pressable>
             </View>
           ),
