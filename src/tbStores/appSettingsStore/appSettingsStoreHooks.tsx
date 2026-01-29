@@ -22,6 +22,7 @@ export interface SettingsData {
   changeOrderTemplateFileName: string;
   syncWithQuickBooks: boolean;
   debugForceOffline: boolean;
+  quickBooksExpenseAccountId: string;
 }
 
 const INITIAL_SETTINGS: SettingsData = {
@@ -39,6 +40,7 @@ const INITIAL_SETTINGS: SettingsData = {
   changeOrderTemplateFileName: '',
   syncWithQuickBooks: false,
   debugForceOffline: false,
+  quickBooksExpenseAccountId: '',
 };
 
 // --- READ App Settings ---

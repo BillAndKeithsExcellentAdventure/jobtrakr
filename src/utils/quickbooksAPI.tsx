@@ -6,6 +6,14 @@ interface ApiDefaultResponse {
   message?: string;
 }
 
+interface QBAccountData {
+  id: string;
+  name: string;
+  classification?: string;
+  accountType?: string;
+  accountSubType?: string;
+}
+
 interface ApiDataResponse<T> extends ApiDefaultResponse {
   data?: T;
 }
@@ -304,4 +312,26 @@ export async function fetchCompanyInfo(
   }
 
   return data.data;
+}
+
+export async function fetchAccounts(
+  orgId: string,
+  userId: string,
+  getToken: () => Promise<string | null>,
+): Promise<QBAccountData[]> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/fetchAccounts?orgId=${orgId}&userId=${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data: ApiDataResponse<QBAccountData[]> = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to fetch accounts');
+  }
+
+  return data.data || [];
 }

@@ -16,6 +16,7 @@ import {
   connectToQuickBooks as qbConnect,
   disconnectQuickBooks as qbDisconnect,
   fetchCompanyInfo,
+  fetchAccounts,
 } from '@/src/utils/quickbooksAPI';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
@@ -98,6 +99,28 @@ const SetAppSettingScreen = () => {
 
     checkConnection();
   }, [auth, settings, setQuickBooksConnected, isConnectedToQuickBooks]);
+
+  const availableAccounts = useMemo(() => {
+    // Logic to memoize available accounts
+    const fetchAvailableAccounts = async () => {
+      if (!auth.orgId || !auth.userId) {
+        console.warn('Org ID or User ID not available for fetching accounts');
+        return [];
+      }
+      try {
+        const accounts = await fetchAccounts(auth.orgId, auth.userId, auth.getToken);
+        if (accounts && accounts.length > 0) {
+          return accounts.filter((account) => account.classification === 'Expense');
+        } else {
+          return [];
+        }
+      } catch (error) {
+        console.error('Error fetching available accounts:', error);
+        return [];
+      }
+    };
+    fetchAvailableAccounts();
+  }, [isConnectedToQuickBooks, auth]);
 
   const handleChange = (key: keyof SettingsData, value: string) => {
     setSettings((prev) => ({
@@ -401,7 +424,7 @@ const SetAppSettingScreen = () => {
               }}
             >
               {isConnecting ? (
-                <ActivityIndicator size="large" color={colors.primary} />
+                <ActivityIndicator size="large" color={colors.text} />
               ) : (
                 <>
                   <ActionButton
