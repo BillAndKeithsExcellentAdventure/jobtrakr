@@ -1,3 +1,4 @@
+import { VendorData } from '../tbStores/configurationStore/ConfigurationStoreHooks';
 import { createApiWithToken } from './apiWithToken';
 import { API_BASE_URL } from '@/src/constants/app-constants';
 
@@ -141,7 +142,7 @@ export async function fetchVendors(
   orgId: string,
   userId: string,
   getToken: () => Promise<string | null>,
-): Promise<QuickBooksVendor[]> {
+): Promise<VendorData[]> {
   const apiFetch = createApiWithToken(getToken);
 
   const response = await apiFetch(`${API_BASE_URL}/qbo/fetchVendors?orgId=${orgId}&userId=${userId}`, {
@@ -151,12 +152,12 @@ export async function fetchVendors(
     },
   });
 
-  const data: ApiDataResponse<{ QueryResponse?: { Vendor: QuickBooksVendor[] } }> = await response.json();
+  const data: ApiDataResponse<VendorData[]> = await response.json();
   if (!data.success) {
     throw new Error(data.message);
   }
 
-  return data.data?.QueryResponse?.Vendor || [];
+  return data.data || [];
 }
 
 export async function addVendor(
