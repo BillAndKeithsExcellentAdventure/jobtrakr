@@ -55,6 +55,7 @@ const SetAppSettingScreen = () => {
   const colors = useColors();
   const router = useRouter();
   const auth = useAuth();
+  const { orgId, userId, getToken } = auth;
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
   const [settings, setSettings] = useState<SettingsData>(appSettings);
@@ -67,41 +68,49 @@ const SetAppSettingScreen = () => {
 
   useEffect(() => {
     const match = availableAccounts.find((o) => o.value === settings.quickBooksExpenseAccountId);
-    setPickedOption(match);
-  }, [settings, availableAccounts]);
+    if (match?.value !== pickedOption?.value) {
+      setPickedOption(match);
+    }
+  }, [settings.quickBooksExpenseAccountId, availableAccounts, pickedOption?.value]);
 
   // Check if we're in a development build
   const isDevelopment = isDevelopmentBuild();
 
   // Sync settings state when appSettings changes
   useEffect(() => {
-    setSettings(appSettings);
-  }, [appSettings]);
+    const keys = Object.keys(appSettings) as Array<keyof SettingsData>;
+    const isSame = keys.every((key) => appSettings[key] === settings[key]);
+    if (!isSame) {
+      setSettings(appSettings);
+    }
+  }, [appSettings, settings]);
 
   // Check QuickBooks connection status on mount
   useEffect(() => {
     const checkConnection = async () => {
-      if (!auth.orgId || !auth.userId) {
+      if (!orgId || !userId) {
         console.warn('Org ID or User ID not available for QB connection check');
         setQuickBooksConnected(false);
         return;
       }
 
       try {
-        const token = await auth.getToken();
+        const token = await getToken();
         if (!token) {
           console.warn('No auth token available');
           setQuickBooksConnected(false);
           return;
         }
 
-        const connected = await isQuickBooksConnected(auth.orgId, auth.userId, auth.getToken);
+        const connected = await isQuickBooksConnected(orgId, userId, getToken);
         if (connected && settings.syncWithQuickBooks !== true) {
           console.log('QuickBooks is connected');
           const updatedSettings = { ...settings, syncWithQuickBooks: true };
           setAppSettings(updatedSettings);
         }
-        setQuickBooksConnected(connected);
+        if (connected !== isConnectedToQuickBooks) {
+          setQuickBooksConnected(connected);
+        }
       } catch (error) {
         console.error('Error checking QuickBooks connection:', error);
         // Don't mark as error, just show as disconnected
@@ -110,7 +119,15 @@ const SetAppSettingScreen = () => {
     };
 
     checkConnection();
-  }, [auth, settings, setQuickBooksConnected, isConnectedToQuickBooks]);
+  }, [
+    orgId,
+    userId,
+    getToken,
+    settings.syncWithQuickBooks,
+    setAppSettings,
+    setQuickBooksConnected,
+    isConnectedToQuickBooks,
+  ]);
 
   // Fetch available accounts when QuickBooks is connected
   useEffect(() => {
@@ -119,12 +136,14 @@ const SetAppSettingScreen = () => {
         return; // Already fetched during this session
       }
 
-      if (!isConnectedToQuickBooks || !auth.orgId || !auth.userId) {
-        setAvailableAccounts([]);
+      if (!isConnectedToQuickBooks || !orgId || !userId) {
+        if (availableAccounts.length > 0) {
+          setAvailableAccounts([]);
+        }
         return;
       }
       try {
-        const accounts = await fetchAccounts(auth.orgId, auth.userId, auth.getToken);
+        const accounts = await fetchAccounts(orgId, userId, getToken);
         if (accounts && accounts.length > 0) {
           const expenseAccounts = accounts
             .filter((account) => account.classification === 'Expense')
@@ -135,16 +154,20 @@ const SetAppSettingScreen = () => {
           setAvailableAccounts(expenseAccounts);
           hasAccountsFetched.current = true; // Mark as fetched
         } else {
-          setAvailableAccounts([]);
+          if (availableAccounts.length > 0) {
+            setAvailableAccounts([]);
+          }
         }
       } catch (error) {
         console.error('Error fetching available accounts:', error);
-        setAvailableAccounts([]);
+        if (availableAccounts.length > 0) {
+          setAvailableAccounts([]);
+        }
       }
     };
 
     fetchAvailableAccounts();
-  }, [isConnectedToQuickBooks, auth]);
+  }, [isConnectedToQuickBooks, orgId, userId, getToken, availableAccounts.length]);
 
   const handleChange = (key: keyof SettingsData, value: string) => {
     setSettings((prev) => ({
