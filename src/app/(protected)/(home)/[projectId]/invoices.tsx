@@ -112,6 +112,7 @@ const ProjectInvoicesPage = () => {
           imageId: imageAddResult.id,
           pictureDate: new Date().getTime(),
           invoiceNumber: '',
+          accountingId: '',
         };
 
         //console.log('Adding a new Invoice.', newInvoice);

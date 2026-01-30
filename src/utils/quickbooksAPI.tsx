@@ -6,6 +6,14 @@ interface ApiDefaultResponse {
   message?: string;
 }
 
+interface QBAccountData {
+  id: string;
+  name: string;
+  classification?: string;
+  accountType?: string;
+  accountSubType?: string;
+}
+
 interface ApiDataResponse<T> extends ApiDefaultResponse {
   data?: T;
 }
@@ -223,6 +231,17 @@ export async function addBill(
   return data.data?.Bill || ({ Id: '', VendorRef: { value: '' }, TotalAmt: 0 } as Bill);
 }
 
+export interface QBCompanyInfo {
+  companyName: string;
+  address: string;
+  address2: string;
+  city: string;
+  state: string;
+  zip: string;
+  email: string;
+  phone: string;
+}
+
 export interface PayBillLineItem {
   amount: number;
   billLineRef: { value: string };
@@ -267,4 +286,52 @@ export async function payBill(
   }
 
   return data.data?.BillPayment || ({ Id: '', TotalAmt: 0 } as BillPayment);
+}
+
+export async function fetchCompanyInfo(
+  orgId: string,
+  userId: string,
+  getToken: () => Promise<string | null>,
+): Promise<QBCompanyInfo> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/fetchCompanyInfo?orgId=${orgId}&userId=${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data: ApiDataResponse<QBCompanyInfo> = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to fetch company information');
+  }
+
+  if (!data.data) {
+    throw new Error('No company information returned');
+  }
+
+  return data.data;
+}
+
+export async function fetchAccounts(
+  orgId: string,
+  userId: string,
+  getToken: () => Promise<string | null>,
+): Promise<QBAccountData[]> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/fetchAccounts?orgId=${orgId}&userId=${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data: ApiDataResponse<QBAccountData[]> = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to fetch accounts');
+  }
+
+  return data.data || [];
 }

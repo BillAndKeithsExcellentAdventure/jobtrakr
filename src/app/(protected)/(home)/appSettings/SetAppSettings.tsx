@@ -15,15 +15,22 @@ import {
   isQuickBooksConnected,
   connectToQuickBooks as qbConnect,
   disconnectQuickBooks as qbDisconnect,
+  fetchCompanyInfo,
+  fetchAccounts,
 } from '@/src/utils/quickbooksAPI';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import * as WebBrowser from 'expo-web-browser';
 import { Stack, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Image, Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { Alert, Image, Platform, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { useAuth } from '@clerk/clerk-expo';
+import { useNetwork } from '@/src/context/NetworkContext';
+import { ActionButton } from '@/src/components/ActionButton';
+import { OptionPickerItem } from '@/src/components/OptionPickerItem';
+import OptionList, { OptionEntry } from '@/src/components/OptionList';
+import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 
 async function createBase64LogoImage(
   uri: string,
@@ -51,8 +58,17 @@ const SetAppSettingScreen = () => {
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
   const [settings, setSettings] = useState<SettingsData>(appSettings);
-  const [isQBConnected, setIsQBConnected] = useState<boolean>(false);
-  const [isCheckingQBConnection, setIsCheckingQBConnection] = useState<boolean>(true);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const { isConnected, isInternetReachable, isConnectedToQuickBooks, setQuickBooksConnected } = useNetwork();
+  const [isAccountListPickerVisible, setIsAccountListPickerVisible] = useState<boolean>(false);
+  const [availableAccounts, setAvailableAccounts] = useState<OptionEntry[]>([]);
+  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
+  const hasAccountsFetched = useRef(false);
+
+  useEffect(() => {
+    const match = availableAccounts.find((o) => o.value === settings.quickBooksExpenseAccountId);
+    setPickedOption(match);
+  }, [settings, availableAccounts]);
 
   // Check if we're in a development build
   const isDevelopment = isDevelopmentBuild();
@@ -67,7 +83,7 @@ const SetAppSettingScreen = () => {
     const checkConnection = async () => {
       if (!auth.orgId || !auth.userId) {
         console.warn('Org ID or User ID not available for QB connection check');
-        setIsCheckingQBConnection(false);
+        setQuickBooksConnected(false);
         return;
       }
 
@@ -75,8 +91,7 @@ const SetAppSettingScreen = () => {
         const token = await auth.getToken();
         if (!token) {
           console.warn('No auth token available');
-          setIsQBConnected(false);
-          setIsCheckingQBConnection(false);
+          setQuickBooksConnected(false);
           return;
         }
 
@@ -86,18 +101,50 @@ const SetAppSettingScreen = () => {
           const updatedSettings = { ...settings, syncWithQuickBooks: true };
           setAppSettings(updatedSettings);
         }
-        setIsQBConnected(connected);
+        setQuickBooksConnected(connected);
       } catch (error) {
         console.error('Error checking QuickBooks connection:', error);
         // Don't mark as error, just show as disconnected
-        setIsQBConnected(false);
-      } finally {
-        setIsCheckingQBConnection(false);
+        setQuickBooksConnected(false);
       }
     };
 
     checkConnection();
-  }, [auth, settings]);
+  }, [auth, settings, setQuickBooksConnected, isConnectedToQuickBooks]);
+
+  // Fetch available accounts when QuickBooks is connected
+  useEffect(() => {
+    const fetchAvailableAccounts = async () => {
+      if (hasAccountsFetched.current) {
+        return; // Already fetched during this session
+      }
+
+      if (!isConnectedToQuickBooks || !auth.orgId || !auth.userId) {
+        setAvailableAccounts([]);
+        return;
+      }
+      try {
+        const accounts = await fetchAccounts(auth.orgId, auth.userId, auth.getToken);
+        if (accounts && accounts.length > 0) {
+          const expenseAccounts = accounts
+            .filter((account) => account.classification === 'Expense')
+            .map((account) => ({
+              label: account.name,
+              value: account.id,
+            }));
+          setAvailableAccounts(expenseAccounts);
+          hasAccountsFetched.current = true; // Mark as fetched
+        } else {
+          setAvailableAccounts([]);
+        }
+      } catch (error) {
+        console.error('Error fetching available accounts:', error);
+        setAvailableAccounts([]);
+      }
+    };
+
+    fetchAvailableAccounts();
+  }, [isConnectedToQuickBooks, auth]);
 
   const handleChange = (key: keyof SettingsData, value: string) => {
     setSettings((prev) => ({
@@ -120,7 +167,7 @@ const SetAppSettingScreen = () => {
   }, [settings, setAppSettings]);
 
   // Check which settings are complete
-  const areAllSettingsMet = useCallback((): boolean => {
+  const areAllSettingsMet = useMemo((): boolean => {
     return (
       settings.companyName.trim().length > 0 &&
       settings.ownerName.trim().length > 0 &&
@@ -133,12 +180,109 @@ const SetAppSettingScreen = () => {
     );
   }, [settings]);
 
+  const checkQBConnectionWithRetry = useCallback(
+    async (maxRetries = 10, retryInterval = 1000): Promise<boolean> => {
+      // Guard check for required auth values
+      if (!auth.orgId || !auth.userId) {
+        console.error('Cannot check QB connection: missing orgId or userId');
+        return false;
+      }
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          // Wait before checking (including first attempt to give backend time to process OAuth callback)
+          await new Promise((resolve) => setTimeout(resolve, retryInterval));
+
+          console.log(`Checking QuickBooks connection (attempt ${attempt + 1}/${maxRetries})...`);
+          const connected = await isQuickBooksConnected(auth.orgId, auth.userId, auth.getToken);
+          if (connected) {
+            return true;
+          }
+        } catch (error) {
+          console.error(`Error checking QB connection (attempt ${attempt + 1}/${maxRetries}):`, error);
+        }
+      }
+
+      console.log('Max retries reached. QuickBooks connection could not be verified.');
+      return false;
+    },
+    [auth],
+  );
+
+  const handleFetchCompanyInfoFromQuickBooks = useCallback(async () => {
+    if (!auth.orgId || !auth.userId) {
+      Alert.alert('Error', 'Authentication required to fetch company information');
+      return;
+    }
+
+    try {
+      // Retry mechanism for fetching company info
+      let companyInfo;
+      const maxRetries = 5;
+      const retryInterval = 1000;
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          if (attempt > 0) {
+            await new Promise((resolve) => setTimeout(resolve, retryInterval));
+          }
+          console.log(`Fetching company info from QuickBooks (attempt ${attempt + 1}/${maxRetries})...`);
+          companyInfo = await fetchCompanyInfo(auth.orgId, auth.userId, auth.getToken);
+          console.log('Successfully fetched company info');
+          break; // Success, exit retry loop
+        } catch (error) {
+          console.error(`Error fetching company info (attempt ${attempt + 1}/${maxRetries}):`, error);
+          if (attempt === maxRetries - 1) {
+            // Last attempt failed, throw the error
+            throw error;
+          }
+        }
+      }
+
+      if (!companyInfo) {
+        throw new Error('Failed to fetch company information after all retries');
+      }
+      console.log('Fetched company info from QuickBooks:', companyInfo);
+
+      // merge settings with fetched company info
+      const companySettings = {
+        ...settings,
+        companyName: companyInfo.companyName || settings.companyName,
+        address: companyInfo.address || settings.address,
+        address2: companyInfo.address2 || settings.address2,
+        city: companyInfo.city || settings.city,
+        state: companyInfo.state || settings.state,
+        zip: companyInfo.zip || settings.zip,
+        email: companyInfo.email || settings.email,
+        phone: companyInfo.phone || settings.phone,
+      };
+
+      return companySettings;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error fetching company info from QuickBooks:', errorMessage);
+      Alert.alert('Error', `Failed to fetch company information: ${errorMessage}`);
+    }
+  }, [auth, settings]);
+
+  const handleLoadCompanyInfoFromQuickBooks = useCallback(async () => {
+    const companySettings = await handleFetchCompanyInfoFromQuickBooks();
+    if (companySettings) {
+      // load company info from QuickBooks and merge into settings
+      const updatedSettings = { ...settings, ...companySettings };
+      setAppSettings(updatedSettings);
+    }
+  }, [handleFetchCompanyInfoFromQuickBooks, setAppSettings, settings]);
+
   const handleConnectToQuickBooks = useCallback(async () => {
+    if (isConnecting) return;
+
     if (!auth.orgId || !auth.userId) {
       Alert.alert('Error', 'Authentication required to connect to QuickBooks');
       return;
     }
 
+    setIsConnecting(true);
     try {
       const token = await auth.getToken();
       if (!token) {
@@ -151,18 +295,39 @@ const SetAppSettingScreen = () => {
         const result = await WebBrowser.openBrowserAsync(authUrl);
         // If browser was opened successfully, check connection status again
         if (result.type === 'cancel' || result.type === 'dismiss') {
-          // User closed browser, check if they completed authentication
-          setTimeout(async () => {
-            try {
-              const connected = await isQuickBooksConnected(auth.orgId!, auth.userId!, auth.getToken);
-              setIsQBConnected(connected);
-              if (connected) {
-                Alert.alert('Success', 'Successfully connected to QuickBooks!');
-              }
-            } catch (error) {
-              console.error('Error checking connection after browser close:', error);
-            }
-          }, 1000);
+          // User closed browser, check if they completed authentication with retry mechanism
+          const connected = await checkQBConnectionWithRetry(60, 1000);
+
+          if (connected) {
+            setQuickBooksConnected(connected);
+
+            // after confirming connection via alert, fetch company info to update settings
+            Alert.alert('Success', 'Successfully connected to QuickBooks!', [
+              {
+                text: 'OK',
+                onPress: async () => {
+                  /*
+                  try {
+                    const updatedSettings = await handleFetchCompanyInfoFromQuickBooks();
+                    // Update settings to enable QuickBooks sync
+                    if (settings.syncWithQuickBooks !== true) {
+                      // load company info from QuickBooks and merge into settings
+                      const companySettings = await handleFetchCompanyInfoFromQuickBooks();
+                      const updatedSettings = { ...settings, ...companySettings, syncWithQuickBooks: true };
+                      setAppSettings(updatedSettings);
+                    }
+                  } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                    console.error('Error updating settings after QB connection:', errorMessage);
+                    Alert.alert('Error', `Failed to update settings: ${errorMessage}`);
+                  }
+                    */
+                },
+              },
+            ]);
+          } else {
+            Alert.alert('Not Connected', 'QuickBooks connection could not be verified.');
+          }
         }
       } else {
         Alert.alert('Error', 'No authorization URL received from server');
@@ -171,8 +336,10 @@ const SetAppSettingScreen = () => {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       //console.error('Error connecting to QuickBooks:', errorMessage);
       Alert.alert('Error', `Failed to connect to QuickBooks: ${errorMessage}`);
+    } finally {
+      setIsConnecting(false);
     }
-  }, [auth]);
+  }, [auth, checkQBConnectionWithRetry, settings, setAppSettings, setQuickBooksConnected, isConnecting]);
 
   const handleDisconnectFromQuickBooks = useCallback(async () => {
     if (!auth.orgId || !auth.userId) {
@@ -194,7 +361,10 @@ const SetAppSettingScreen = () => {
             }
 
             await qbDisconnect(auth.orgId!, auth.userId!, auth.getToken);
-            setIsQBConnected(false);
+            const updatedSettings = { ...settings, syncWithQuickBooks: false };
+            setQuickBooksConnected(false);
+            setAppSettings(updatedSettings);
+
             Alert.alert('Success', 'Successfully disconnected from QuickBooks');
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -204,7 +374,7 @@ const SetAppSettingScreen = () => {
         },
       },
     ]);
-  }, [auth]);
+  }, [auth, setQuickBooksConnected, settings, setAppSettings]);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -230,6 +400,17 @@ const SetAppSettingScreen = () => {
     }
   };
 
+  const handleAccountOptionChange = useCallback(
+    (option: OptionEntry) => {
+      setPickedOption(option);
+      const updatedSettings = { ...settings, quickBooksExpenseAccountId: option.value };
+      setSettings(updatedSettings);
+      setAppSettings(updatedSettings);
+      setIsAccountListPickerVisible(false);
+    },
+    [settings, setAppSettings],
+  );
+
   const handleBackPress = useCallback(() => {
     // Check if minimum app settings are met
     const allSettingsMet =
@@ -246,6 +427,15 @@ const SetAppSettingScreen = () => {
       Alert.alert('Incomplete Setup', 'Please complete all required fields before continuing.', [
         { text: 'OK', style: 'default' },
       ]);
+      return;
+    }
+
+    if (isConnectedToQuickBooks && !settings.quickBooksExpenseAccountId) {
+      Alert.alert(
+        'Expense Account Required',
+        'Please select a QuickBooks Expense Account before continuing.',
+        [{ text: 'OK', style: 'default' }],
+      );
       return;
     }
 
@@ -269,52 +459,47 @@ const SetAppSettingScreen = () => {
         contentContainerStyle={styles.modalContainer}
       >
         <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
-          {!isCheckingQBConnection && (
+          {isConnected && isInternetReachable && (
             <View
               style={{
                 flex: 1,
-                marginLeft: 10,
                 justifyContent: 'center',
                 backgroundColor: colors.listBackground,
               }}
             >
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  {
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    backgroundColor: isQBConnected ? '#dc3545' : colors.background,
-                  },
-                ]}
-                onPress={isQBConnected ? handleDisconnectFromQuickBooks : handleConnectToQuickBooks}
-              >
-                <Text
-                  lineBreakMode="middle"
-                  numberOfLines={3}
-                  style={{
-                    overflowX: 'hidden',
-                    fontWeight: '600',
-                    textAlign: 'center',
-                    color: isQBConnected ? '#ffffff' : colors.text,
-                  }}
-                >
-                  {isQBConnected ? 'Disconnect from QuickBooks' : 'Connect to QuickBooks'}
-                </Text>
-              </TouchableOpacity>
+              {isConnecting ? (
+                <ActivityIndicator size="large" color={colors.text} />
+              ) : (
+                <>
+                  <ActionButton
+                    type={isConnectedToQuickBooks ? 'cancel' : 'action'}
+                    title={isConnectedToQuickBooks ? 'Disconnect from QuickBooks' : 'Connect to QuickBooks'}
+                    onPress={
+                      isConnectedToQuickBooks ? handleDisconnectFromQuickBooks : handleConnectToQuickBooks
+                    }
+                  />
+                  {isConnectedToQuickBooks && (
+                    <ActionButton
+                      type="action"
+                      title="Load Company Info from QuickBooks"
+                      onPress={handleLoadCompanyInfoFromQuickBooks}
+                    />
+                  )}
+                </>
+              )}
             </View>
           )}
-
-          <Text
-            style={{
-              textAlign: 'center',
-              fontWeight: '600',
-              marginBottom: 12,
-              color: areAllSettingsMet() ? colors.profitFg : colors.lossFg,
-            }}
-          >
-            {areAllSettingsMet() ? '✓ Required Fields Complete' : '⚠ Complete all required fields with *'}
-          </Text>
+          {!areAllSettingsMet && (
+            <Text
+              style={{
+                textAlign: 'center',
+                fontWeight: '600',
+                marginBottom: 12,
+                color: areAllSettingsMet ? colors.profitFg : colors.lossFg,
+              }}
+              text="⚠ Complete all required fields with *"
+            />
+          )}
           <TextField
             label="Company Name*"
             placeholder="Company Name"
@@ -324,6 +509,16 @@ const SetAppSettingScreen = () => {
             autoCapitalize="none"
             autoCorrect={false}
           />
+          {isConnectedToQuickBooks && (
+            <OptionPickerItem
+              containerStyle={styles.inputContainer}
+              optionLabel={pickedOption?.label ?? ''}
+              placeholder="QB Expense Account"
+              label="QuickBooks Expense Account"
+              editable={false}
+              onPickerButtonPress={() => setIsAccountListPickerVisible(true)}
+            />
+          )}
           <TextField
             label="Address*"
             placeholder="Address"
@@ -418,17 +613,6 @@ const SetAppSettingScreen = () => {
                 style={{ width: 80, height: 80, resizeMode: 'contain' }}
               />
             )}
-
-            {isCheckingQBConnection && (
-              <View
-                style={[
-                  styles.button,
-                  { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background },
-                ]}
-              >
-                <Text>Checking...</Text>
-              </View>
-            )}
           </View>
           {isDevelopment && (
             <View
@@ -453,6 +637,20 @@ const SetAppSettingScreen = () => {
           )}
         </View>
       </KeyboardAwareScrollView>
+      {availableAccounts && isAccountListPickerVisible && (
+        <BottomSheetContainer
+          isVisible={isAccountListPickerVisible}
+          onClose={() => setIsAccountListPickerVisible(false)}
+        >
+          <OptionList
+            options={availableAccounts}
+            onSelect={(option) => handleAccountOptionChange(option)}
+            selectedOption={pickedOption}
+            enableSearch={availableAccounts.length > 15}
+          />
+        </BottomSheetContainer>
+      )}
+
       {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </>
   );
@@ -464,13 +662,17 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   button: {
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 8,
+    padding: 10,
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContainer: {
     maxWidth: 460,
     width: '100%',
+  },
+  inputContainer: {
+    marginTop: 6,
   },
 });
 
