@@ -599,11 +599,17 @@ const SetAppSettingScreen = () => {
             value={String(settings.address ?? '')}
             onChangeText={(text) => handleChange('address', text)}
             onBlur={handleSave}
-            multiline={true}
-            numberOfLines={2}
-            autoCapitalize="none"
             autoCorrect={false}
           />
+          <TextField
+            label="Address Line2 (optional)"
+            placeholder="Address Line2"
+            value={String(settings.address2 ?? '')}
+            onChangeText={(text) => handleChange('address2', text)}
+            onBlur={handleSave}
+            autoCorrect={false}
+          />
+
           <TextField
             label="City*"
             placeholder="City"
