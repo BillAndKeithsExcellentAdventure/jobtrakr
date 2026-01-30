@@ -63,6 +63,7 @@ const SetAppSettingScreen = () => {
   const setAppSettings = useSetAppSettingsCallback();
   const [settings, setSettings] = useState<SettingsData>(appSettings);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isLoadingCompanySettings, setIsLoadingCompanySettings] = useState(false);
   const { isConnected, isInternetReachable, isConnectedToQuickBooks, setQuickBooksConnected } = useNetwork();
   const [isAccountListPickerVisible, setIsAccountListPickerVisible] = useState<boolean>(false);
   const [availableAccounts, setAvailableAccounts] = useState<OptionEntry[]>([]);
@@ -293,11 +294,16 @@ const SetAppSettingScreen = () => {
   }, [auth, settings]);
 
   const handleLoadCompanyInfoFromQuickBooks = useCallback(async () => {
-    const companySettings = await handleFetchCompanyInfoFromQuickBooks();
-    if (companySettings) {
-      // load company info from QuickBooks and merge into settings
-      const updatedSettings = { ...settings, ...companySettings };
-      setAppSettings(updatedSettings);
+    setIsLoadingCompanySettings(true);
+    try {
+      const companySettings = await handleFetchCompanyInfoFromQuickBooks();
+      if (companySettings) {
+        // load company info from QuickBooks and merge into settings
+        const updatedSettings = { ...settings, ...companySettings };
+        setAppSettings(updatedSettings);
+      }
+    } finally {
+      setIsLoadingCompanySettings(false);
     }
   }, [handleFetchCompanyInfoFromQuickBooks, setAppSettings, settings]);
 
@@ -333,19 +339,23 @@ const SetAppSettingScreen = () => {
               {
                 text: 'OK',
                 onPress: async () => {
+                  setIsLoadingCompanySettings(true);
                   try {
-                    const updatedSettings = await handleFetchCompanyInfoFromQuickBooks();
-                    // Update settings to enable QuickBooks sync
-                    if (settings.syncWithQuickBooks !== true) {
-                      // load company info from QuickBooks and merge into settings
-                      const companySettings = await handleFetchCompanyInfoFromQuickBooks();
-                      const updatedSettings = { ...settings, ...companySettings, syncWithQuickBooks: true };
+                    const companySettings = await handleFetchCompanyInfoFromQuickBooks();
+                    if (companySettings) {
+                      const updatedSettings = {
+                        ...settings,
+                        ...companySettings,
+                        syncWithQuickBooks: true,
+                      };
                       setAppSettings(updatedSettings);
                     }
                   } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
                     console.error('Error updating settings after QB connection:', errorMessage);
                     Alert.alert('Error', `Failed to update settings: ${errorMessage}`);
+                  } finally {
+                    setIsLoadingCompanySettings(false);
                   }
                 },
               },
@@ -532,8 +542,16 @@ const SetAppSettingScreen = () => {
                 backgroundColor: colors.listBackground,
               }}
             >
-              {isConnecting ? (
-                <ActivityIndicator size="large" color={colors.text} />
+              {isLoadingCompanySettings ? (
+                <>
+                  <ActivityIndicator size="large" color={colors.text} />
+                  <Text style={{ textAlign: 'center', marginTop: 8 }} text="Loading company settings..." />
+                </>
+              ) : isConnecting ? (
+                <>
+                  <ActivityIndicator size="large" color={colors.text} />
+                  <Text style={{ textAlign: 'center', marginTop: 8 }} text="Connecting to QuickBooks..." />
+                </>
               ) : (
                 !isConnectedToQuickBooks && (
                   <ActionButton
