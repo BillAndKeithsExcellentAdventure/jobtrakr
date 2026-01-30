@@ -372,10 +372,7 @@ const Home = () => {
         ]);
         return;
       } else if (menuItem === 'GetQBVendors') {
-        // quickbooks vendor import logic will go here
         const qbVendors = await fetchVendors(auth.orgId!, auth.userId!, auth.getToken);
-        console.log('Fetched QB Vendors:', qbVendors);
-
         let addedCount = 0;
         let updatedCount = 0;
 
