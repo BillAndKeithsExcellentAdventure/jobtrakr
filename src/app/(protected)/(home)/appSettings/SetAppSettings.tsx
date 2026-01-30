@@ -28,9 +28,12 @@ import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-
 import { useAuth } from '@clerk/clerk-expo';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { ActionButton } from '@/src/components/ActionButton';
+import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
+import { ActionButtonProps } from '@/src/components/ButtonBar';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 async function createBase64LogoImage(
   uri: string,
@@ -65,6 +68,7 @@ const SetAppSettingScreen = () => {
   const [availableAccounts, setAvailableAccounts] = useState<OptionEntry[]>([]);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const hasAccountsFetched = useRef(false);
+  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState(false);
 
   useEffect(() => {
     const match = availableAccounts.find((o) => o.value === settings.quickBooksExpenseAccountId);
@@ -397,6 +401,34 @@ const SetAppSettingScreen = () => {
     ]);
   }, [auth, setQuickBooksConnected, settings, setAppSettings]);
 
+  const handleHeaderMenuItemPress = useCallback(
+    (menuItem: 'disconnect' | 'load') => {
+      setHeaderMenuModalVisible(false);
+      if (menuItem === 'disconnect') {
+        handleDisconnectFromQuickBooks();
+        return;
+      }
+      handleLoadCompanyInfoFromQuickBooks();
+    },
+    [handleDisconnectFromQuickBooks, handleLoadCompanyInfoFromQuickBooks],
+  );
+
+  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
+    () => [
+      {
+        icon: <MaterialCommunityIcons name="link-off" size={24} color={colors.iconColor} />,
+        label: 'Disconnect from QuickBooks',
+        onPress: () => handleHeaderMenuItemPress('disconnect'),
+      },
+      {
+        icon: <MaterialCommunityIcons name="cloud-download" size={24} color={colors.iconColor} />,
+        label: 'Load Company Info from QuickBooks',
+        onPress: () => handleHeaderMenuItemPress('load'),
+      },
+    ],
+    [colors.iconColor, handleHeaderMenuItemPress],
+  );
+
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -472,6 +504,18 @@ const SetAppSettingScreen = () => {
           title: 'Define Company Settings',
           gestureEnabled: false,
           headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
+          headerRight: () =>
+            isConnectedToQuickBooks ? (
+              <View style={{ backgroundColor: 'transparent' }}>
+                <TouchableOpacity
+                  style={{ alignItems: 'center' }}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  onPress={() => setHeaderMenuModalVisible(!headerMenuModalVisible)}
+                >
+                  <MaterialCommunityIcons name="menu" size={28} color={colors.iconColor} />
+                </TouchableOpacity>
+              </View>
+            ) : null,
         }}
       />
       <KeyboardAwareScrollView
@@ -491,22 +535,13 @@ const SetAppSettingScreen = () => {
               {isConnecting ? (
                 <ActivityIndicator size="large" color={colors.text} />
               ) : (
-                <>
+                !isConnectedToQuickBooks && (
                   <ActionButton
-                    type={isConnectedToQuickBooks ? 'cancel' : 'action'}
-                    title={isConnectedToQuickBooks ? 'Disconnect from QuickBooks' : 'Connect to QuickBooks'}
-                    onPress={
-                      isConnectedToQuickBooks ? handleDisconnectFromQuickBooks : handleConnectToQuickBooks
-                    }
+                    type="action"
+                    title="Connect to QuickBooks"
+                    onPress={handleConnectToQuickBooks}
                   />
-                  {isConnectedToQuickBooks && (
-                    <ActionButton
-                      type="action"
-                      title="Load Company Info from QuickBooks"
-                      onPress={handleLoadCompanyInfoFromQuickBooks}
-                    />
-                  )}
-                </>
+                )
               )}
             </View>
           )}
@@ -670,6 +705,14 @@ const SetAppSettingScreen = () => {
             enableSearch={availableAccounts.length > 15}
           />
         </BottomSheetContainer>
+      )}
+
+      {headerMenuModalVisible && (
+        <RightHeaderMenu
+          modalVisible={headerMenuModalVisible}
+          setModalVisible={setHeaderMenuModalVisible}
+          buttons={rightHeaderMenuButtons}
+        />
       )}
 
       {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
