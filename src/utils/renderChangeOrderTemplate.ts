@@ -61,6 +61,7 @@ export function renderChangeOrderTemplate(template: string, data: ChangeOrderDat
     })),
     formattedTotal: data.formattedTotal,
   };
+
   console.log('data ready to apply to template');
   return Mustache.render(template, view);
 }

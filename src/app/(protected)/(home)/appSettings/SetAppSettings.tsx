@@ -28,9 +28,12 @@ import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-
 import { useAuth } from '@clerk/clerk-expo';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { ActionButton } from '@/src/components/ActionButton';
+import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
+import { ActionButtonProps } from '@/src/components/ButtonBar';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 async function createBase64LogoImage(
   uri: string,
@@ -60,11 +63,13 @@ const SetAppSettingScreen = () => {
   const setAppSettings = useSetAppSettingsCallback();
   const [settings, setSettings] = useState<SettingsData>(appSettings);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isLoadingCompanySettings, setIsLoadingCompanySettings] = useState(false);
   const { isConnected, isInternetReachable, isConnectedToQuickBooks, setQuickBooksConnected } = useNetwork();
   const [isAccountListPickerVisible, setIsAccountListPickerVisible] = useState<boolean>(false);
   const [availableAccounts, setAvailableAccounts] = useState<OptionEntry[]>([]);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const hasAccountsFetched = useRef(false);
+  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState(false);
 
   useEffect(() => {
     const match = availableAccounts.find((o) => o.value === settings.quickBooksExpenseAccountId);
@@ -78,12 +83,8 @@ const SetAppSettingScreen = () => {
 
   // Sync settings state when appSettings changes
   useEffect(() => {
-    const keys = Object.keys(appSettings) as Array<keyof SettingsData>;
-    const isSame = keys.every((key) => appSettings[key] === settings[key]);
-    if (!isSame) {
-      setSettings(appSettings);
-    }
-  }, [appSettings, settings]);
+    setSettings(appSettings);
+  }, [appSettings]);
 
   // Check QuickBooks connection status on mount
   useEffect(() => {
@@ -191,6 +192,10 @@ const SetAppSettingScreen = () => {
 
   // Check which settings are complete
   const areAllSettingsMet = useMemo((): boolean => {
+    if (settings.syncWithQuickBooks && !settings.quickBooksExpenseAccountId) {
+      return false;
+    }
+
     return (
       settings.companyName.trim().length > 0 &&
       settings.ownerName.trim().length > 0 &&
@@ -289,11 +294,16 @@ const SetAppSettingScreen = () => {
   }, [auth, settings]);
 
   const handleLoadCompanyInfoFromQuickBooks = useCallback(async () => {
-    const companySettings = await handleFetchCompanyInfoFromQuickBooks();
-    if (companySettings) {
-      // load company info from QuickBooks and merge into settings
-      const updatedSettings = { ...settings, ...companySettings };
-      setAppSettings(updatedSettings);
+    setIsLoadingCompanySettings(true);
+    try {
+      const companySettings = await handleFetchCompanyInfoFromQuickBooks();
+      if (companySettings) {
+        // load company info from QuickBooks and merge into settings
+        const updatedSettings = { ...settings, ...companySettings };
+        setAppSettings(updatedSettings);
+      }
+    } finally {
+      setIsLoadingCompanySettings(false);
     }
   }, [handleFetchCompanyInfoFromQuickBooks, setAppSettings, settings]);
 
@@ -329,22 +339,24 @@ const SetAppSettingScreen = () => {
               {
                 text: 'OK',
                 onPress: async () => {
-                  /*
+                  setIsLoadingCompanySettings(true);
                   try {
-                    const updatedSettings = await handleFetchCompanyInfoFromQuickBooks();
-                    // Update settings to enable QuickBooks sync
-                    if (settings.syncWithQuickBooks !== true) {
-                      // load company info from QuickBooks and merge into settings
-                      const companySettings = await handleFetchCompanyInfoFromQuickBooks();
-                      const updatedSettings = { ...settings, ...companySettings, syncWithQuickBooks: true };
+                    const companySettings = await handleFetchCompanyInfoFromQuickBooks();
+                    if (companySettings) {
+                      const updatedSettings = {
+                        ...settings,
+                        ...companySettings,
+                        syncWithQuickBooks: true,
+                      };
                       setAppSettings(updatedSettings);
                     }
                   } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
                     console.error('Error updating settings after QB connection:', errorMessage);
                     Alert.alert('Error', `Failed to update settings: ${errorMessage}`);
+                  } finally {
+                    setIsLoadingCompanySettings(false);
                   }
-                    */
                 },
               },
             ]);
@@ -398,6 +410,34 @@ const SetAppSettingScreen = () => {
       },
     ]);
   }, [auth, setQuickBooksConnected, settings, setAppSettings]);
+
+  const handleHeaderMenuItemPress = useCallback(
+    (menuItem: 'disconnect' | 'load') => {
+      setHeaderMenuModalVisible(false);
+      if (menuItem === 'disconnect') {
+        handleDisconnectFromQuickBooks();
+        return;
+      }
+      handleLoadCompanyInfoFromQuickBooks();
+    },
+    [handleDisconnectFromQuickBooks, handleLoadCompanyInfoFromQuickBooks],
+  );
+
+  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
+    () => [
+      {
+        icon: <MaterialCommunityIcons name="link-off" size={24} color={colors.iconColor} />,
+        label: 'Disconnect from QuickBooks',
+        onPress: () => handleHeaderMenuItemPress('disconnect'),
+      },
+      {
+        icon: <MaterialCommunityIcons name="cloud-download" size={24} color={colors.iconColor} />,
+        label: 'Load Company Info from QuickBooks',
+        onPress: () => handleHeaderMenuItemPress('load'),
+      },
+    ],
+    [colors.iconColor, handleHeaderMenuItemPress],
+  );
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -474,6 +514,18 @@ const SetAppSettingScreen = () => {
           title: 'Define Company Settings',
           gestureEnabled: false,
           headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
+          headerRight: () =>
+            isConnectedToQuickBooks ? (
+              <View style={{ backgroundColor: 'transparent' }}>
+                <TouchableOpacity
+                  style={{ alignItems: 'center' }}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  onPress={() => setHeaderMenuModalVisible(!headerMenuModalVisible)}
+                >
+                  <MaterialCommunityIcons name="menu" size={28} color={colors.iconColor} />
+                </TouchableOpacity>
+              </View>
+            ) : null,
         }}
       />
       <KeyboardAwareScrollView
@@ -490,25 +542,24 @@ const SetAppSettingScreen = () => {
                 backgroundColor: colors.listBackground,
               }}
             >
-              {isConnecting ? (
-                <ActivityIndicator size="large" color={colors.text} />
-              ) : (
+              {isLoadingCompanySettings ? (
                 <>
-                  <ActionButton
-                    type={isConnectedToQuickBooks ? 'cancel' : 'action'}
-                    title={isConnectedToQuickBooks ? 'Disconnect from QuickBooks' : 'Connect to QuickBooks'}
-                    onPress={
-                      isConnectedToQuickBooks ? handleDisconnectFromQuickBooks : handleConnectToQuickBooks
-                    }
-                  />
-                  {isConnectedToQuickBooks && (
-                    <ActionButton
-                      type="action"
-                      title="Load Company Info from QuickBooks"
-                      onPress={handleLoadCompanyInfoFromQuickBooks}
-                    />
-                  )}
+                  <ActivityIndicator size="large" color={colors.text} />
+                  <Text style={{ textAlign: 'center', marginTop: 8 }} text="Loading company settings..." />
                 </>
+              ) : isConnecting ? (
+                <>
+                  <ActivityIndicator size="large" color={colors.text} />
+                  <Text style={{ textAlign: 'center', marginTop: 8 }} text="Connecting to QuickBooks..." />
+                </>
+              ) : (
+                !isConnectedToQuickBooks && (
+                  <ActionButton
+                    type="action"
+                    title="Connect to QuickBooks"
+                    onPress={handleConnectToQuickBooks}
+                  />
+                )
               )}
             </View>
           )}
@@ -534,10 +585,10 @@ const SetAppSettingScreen = () => {
           />
           {isConnectedToQuickBooks && (
             <OptionPickerItem
-              containerStyle={styles.inputContainer}
+              containerStyle={{ ...styles.inputContainer, backgroundColor: colors.listBackground }}
               optionLabel={pickedOption?.label ?? ''}
               placeholder="QB Expense Account"
-              label="QuickBooks Expense Account"
+              label="QuickBooks Expense Account*"
               editable={false}
               onPickerButtonPress={() => setIsAccountListPickerVisible(true)}
             />
@@ -548,11 +599,17 @@ const SetAppSettingScreen = () => {
             value={String(settings.address ?? '')}
             onChangeText={(text) => handleChange('address', text)}
             onBlur={handleSave}
-            multiline={true}
-            numberOfLines={2}
-            autoCapitalize="none"
             autoCorrect={false}
           />
+          <TextField
+            label="Address Line2 (optional)"
+            placeholder="Address Line2"
+            value={String(settings.address2 ?? '')}
+            onChangeText={(text) => handleChange('address2', text)}
+            onBlur={handleSave}
+            autoCorrect={false}
+          />
+
           <TextField
             label="City*"
             placeholder="City"
@@ -672,6 +729,14 @@ const SetAppSettingScreen = () => {
             enableSearch={availableAccounts.length > 15}
           />
         </BottomSheetContainer>
+      )}
+
+      {headerMenuModalVisible && (
+        <RightHeaderMenu
+          modalVisible={headerMenuModalVisible}
+          setModalVisible={setHeaderMenuModalVisible}
+          buttons={rightHeaderMenuButtons}
+        />
       )}
 
       {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
