@@ -22,12 +22,15 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import * as WebBrowser from 'expo-web-browser';
 import { Stack, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Alert, Image, Platform, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { useAuth } from '@clerk/clerk-expo';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { ActionButton } from '@/src/components/ActionButton';
+import { OptionPickerItem } from '@/src/components/OptionPickerItem';
+import OptionList, { OptionEntry } from '@/src/components/OptionList';
+import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 
 async function createBase64LogoImage(
   uri: string,
@@ -57,6 +60,15 @@ const SetAppSettingScreen = () => {
   const [settings, setSettings] = useState<SettingsData>(appSettings);
   const [isConnecting, setIsConnecting] = useState(false);
   const { isConnected, isInternetReachable, isConnectedToQuickBooks, setQuickBooksConnected } = useNetwork();
+  const [isAccountListPickerVisible, setIsAccountListPickerVisible] = useState<boolean>(false);
+  const [availableAccounts, setAvailableAccounts] = useState<OptionEntry[]>([]);
+  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
+  const hasAccountsFetched = useRef(false);
+
+  useEffect(() => {
+    const match = availableAccounts.find((o) => o.value === settings.quickBooksExpenseAccountId);
+    setPickedOption(match);
+  }, [settings, availableAccounts]);
 
   // Check if we're in a development build
   const isDevelopment = isDevelopmentBuild();
@@ -100,25 +112,37 @@ const SetAppSettingScreen = () => {
     checkConnection();
   }, [auth, settings, setQuickBooksConnected, isConnectedToQuickBooks]);
 
-  const availableAccounts = useMemo(() => {
-    // Logic to memoize available accounts
+  // Fetch available accounts when QuickBooks is connected
+  useEffect(() => {
     const fetchAvailableAccounts = async () => {
-      if (!auth.orgId || !auth.userId) {
-        console.warn('Org ID or User ID not available for fetching accounts');
-        return [];
+      if (hasAccountsFetched.current) {
+        return; // Already fetched during this session
+      }
+
+      if (!isConnectedToQuickBooks || !auth.orgId || !auth.userId) {
+        setAvailableAccounts([]);
+        return;
       }
       try {
         const accounts = await fetchAccounts(auth.orgId, auth.userId, auth.getToken);
         if (accounts && accounts.length > 0) {
-          return accounts.filter((account) => account.classification === 'Expense');
+          const expenseAccounts = accounts
+            .filter((account) => account.classification === 'Expense')
+            .map((account) => ({
+              label: account.name,
+              value: account.id,
+            }));
+          setAvailableAccounts(expenseAccounts);
+          hasAccountsFetched.current = true; // Mark as fetched
         } else {
-          return [];
+          setAvailableAccounts([]);
         }
       } catch (error) {
         console.error('Error fetching available accounts:', error);
-        return [];
+        setAvailableAccounts([]);
       }
     };
+
     fetchAvailableAccounts();
   }, [isConnectedToQuickBooks, auth]);
 
@@ -376,6 +400,17 @@ const SetAppSettingScreen = () => {
     }
   };
 
+  const handleAccountOptionChange = useCallback(
+    (option: OptionEntry) => {
+      setPickedOption(option);
+      const updatedSettings = { ...settings, quickBooksExpenseAccountId: option.value };
+      setSettings(updatedSettings);
+      setAppSettings(updatedSettings);
+      setIsAccountListPickerVisible(false);
+    },
+    [settings, setAppSettings],
+  );
+
   const handleBackPress = useCallback(() => {
     // Check if minimum app settings are met
     const allSettingsMet =
@@ -392,6 +427,15 @@ const SetAppSettingScreen = () => {
       Alert.alert('Incomplete Setup', 'Please complete all required fields before continuing.', [
         { text: 'OK', style: 'default' },
       ]);
+      return;
+    }
+
+    if (isConnectedToQuickBooks && !settings.quickBooksExpenseAccountId) {
+      Alert.alert(
+        'Expense Account Required',
+        'Please select a QuickBooks Expense Account before continuing.',
+        [{ text: 'OK', style: 'default' }],
+      );
       return;
     }
 
@@ -465,6 +509,16 @@ const SetAppSettingScreen = () => {
             autoCapitalize="none"
             autoCorrect={false}
           />
+          {isConnectedToQuickBooks && (
+            <OptionPickerItem
+              containerStyle={styles.inputContainer}
+              optionLabel={pickedOption?.label ?? ''}
+              placeholder="QB Expense Account"
+              label="QuickBooks Expense Account"
+              editable={false}
+              onPickerButtonPress={() => setIsAccountListPickerVisible(true)}
+            />
+          )}
           <TextField
             label="Address*"
             placeholder="Address"
@@ -583,6 +637,20 @@ const SetAppSettingScreen = () => {
           )}
         </View>
       </KeyboardAwareScrollView>
+      {availableAccounts && isAccountListPickerVisible && (
+        <BottomSheetContainer
+          isVisible={isAccountListPickerVisible}
+          onClose={() => setIsAccountListPickerVisible(false)}
+        >
+          <OptionList
+            options={availableAccounts}
+            onSelect={(option) => handleAccountOptionChange(option)}
+            selectedOption={pickedOption}
+            enableSearch={availableAccounts.length > 15}
+          />
+        </BottomSheetContainer>
+      )}
+
       {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </>
   );
@@ -602,6 +670,9 @@ const styles = StyleSheet.create({
   modalContainer: {
     maxWidth: 460,
     width: '100%',
+  },
+  inputContainer: {
+    marginTop: 6,
   },
 });
 
