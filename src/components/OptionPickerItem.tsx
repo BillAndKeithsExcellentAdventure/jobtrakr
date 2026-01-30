@@ -3,7 +3,16 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleProp, StyleSheet, ViewStyle, Keyboard, TextInput } from 'react-native';
 import { useThemeColor, View } from './Themed';
 import { Pressable } from 'react-native-gesture-handler';
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useId, useContext, useCallback } from 'react';
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  useId,
+  useContext,
+  useCallback,
+} from 'react';
 import { FocusManagerContext } from '@/src/hooks/useFocusManager';
 
 /* -------------------------------------------
@@ -156,7 +165,7 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
       return (
         <Pressable onPress={blurAndOpen}>
           <View style={[styles.optionPickerRow, containerStyle]}>
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, backgroundColor: 'transparent' }}>
               <TextField
                 style={[inputStyle, { color: text }]}
                 label={label}
@@ -166,7 +175,12 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
                 editable={editable}
               />
             </View>
-            <View style={[styles.pickerButtonContainer, { justifyContent: 'flex-end' }]}>
+            <View
+              style={[
+                styles.pickerButtonContainer,
+                { justifyContent: 'flex-end', backgroundColor: 'transparent' },
+              ]}
+            >
               <Ionicons name="ellipsis-horizontal-circle" size={36} color={iconColor} />
             </View>
           </View>

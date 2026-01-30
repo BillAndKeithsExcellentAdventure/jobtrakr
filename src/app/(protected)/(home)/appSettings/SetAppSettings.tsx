@@ -78,12 +78,8 @@ const SetAppSettingScreen = () => {
 
   // Sync settings state when appSettings changes
   useEffect(() => {
-    const keys = Object.keys(appSettings) as Array<keyof SettingsData>;
-    const isSame = keys.every((key) => appSettings[key] === settings[key]);
-    if (!isSame) {
-      setSettings(appSettings);
-    }
-  }, [appSettings, settings]);
+    setSettings(appSettings);
+  }, [appSettings]);
 
   // Check QuickBooks connection status on mount
   useEffect(() => {
@@ -191,6 +187,10 @@ const SetAppSettingScreen = () => {
 
   // Check which settings are complete
   const areAllSettingsMet = useMemo((): boolean => {
+    if (settings.syncWithQuickBooks && !settings.quickBooksExpenseAccountId) {
+      return false;
+    }
+
     return (
       settings.companyName.trim().length > 0 &&
       settings.ownerName.trim().length > 0 &&
@@ -329,7 +329,6 @@ const SetAppSettingScreen = () => {
               {
                 text: 'OK',
                 onPress: async () => {
-                  /*
                   try {
                     const updatedSettings = await handleFetchCompanyInfoFromQuickBooks();
                     // Update settings to enable QuickBooks sync
@@ -344,7 +343,6 @@ const SetAppSettingScreen = () => {
                     console.error('Error updating settings after QB connection:', errorMessage);
                     Alert.alert('Error', `Failed to update settings: ${errorMessage}`);
                   }
-                    */
                 },
               },
             ]);
@@ -534,10 +532,10 @@ const SetAppSettingScreen = () => {
           />
           {isConnectedToQuickBooks && (
             <OptionPickerItem
-              containerStyle={styles.inputContainer}
+              containerStyle={{ ...styles.inputContainer, backgroundColor: colors.listBackground }}
               optionLabel={pickedOption?.label ?? ''}
               placeholder="QB Expense Account"
-              label="QuickBooks Expense Account"
+              label="QuickBooks Expense Account*"
               editable={false}
               onPickerButtonPress={() => setIsAccountListPickerVisible(true)}
             />
