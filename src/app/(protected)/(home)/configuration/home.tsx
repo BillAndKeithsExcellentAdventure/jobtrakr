@@ -372,8 +372,42 @@ const Home = () => {
         ]);
         return;
       } else if (menuItem === 'GetQBVendors') {
-        // quickbooks vendor import logic will go here
         const qbVendors = await fetchVendors(auth.orgId!, auth.userId!, auth.getToken);
+        let addedCount = 0;
+        let updatedCount = 0;
+
+        for (const qbVendor of qbVendors) {
+          // Find existing vendor with matching accountingId
+          const existing = allVendors.find((v) => v.accountingId === qbVendor.id);
+
+          const vendorData: VendorData = {
+            id: existing ? existing.id : '', // empty id for new vendors
+            accountingId: qbVendor.id,
+            name: qbVendor.name,
+            address: qbVendor.address || '',
+            city: qbVendor.city || '',
+            state: qbVendor.state || '',
+            zip: qbVendor.zip || '',
+            mobilePhone: qbVendor.mobilePhone || '',
+            businessPhone: qbVendor.businessPhone || '',
+            notes: qbVendor.notes || '',
+          };
+
+          if (existing) {
+            // Update existing vendor
+            updateVendor(existing.id, vendorData);
+            updatedCount++;
+          } else {
+            // Add new vendor
+            addVendorToStore(vendorData);
+            addedCount++;
+          }
+        }
+
+        Alert.alert(
+          'QuickBooks Vendor Import Complete',
+          `Vendors imported successfully from QuickBooks.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
+        );
         return;
       }
     },

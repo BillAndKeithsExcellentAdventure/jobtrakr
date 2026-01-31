@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
 import Reanimated from 'react-native-reanimated';
+import { formatPhoneNumber } from '../utils/formatters';
 
 const RIGHT_ACTION_WIDTH = 100;
 const SWIPE_THRESHOLD_WIDTH = 50;
@@ -19,14 +20,17 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
   const processDelete = useDeleteRowCallback('vendors');
 
   const colors = useColors();
-  const handleDelete = useCallback((itemId: string) => {
-    Alert.alert(
-      'Delete Vendor',
-      'Are you sure you want to delete this vendor?',
-      [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete(itemId) }],
-      { cancelable: true },
-    );
-  }, [processDelete]);
+  const handleDelete = useCallback(
+    (itemId: string) => {
+      Alert.alert(
+        'Delete Vendor',
+        'Are you sure you want to delete this vendor?',
+        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete(itemId) }],
+        { cancelable: true },
+      );
+    },
+    [processDelete],
+  );
 
   const RightAction = useCallback(() => {
     return (
@@ -61,7 +65,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
         >
           <View style={[styles.vendorInfo, { borderColor: colors.border, borderTopWidth: 1 }]}>
             <View style={styles.vendorSummary}>
-              <Text style={styles.vendorName}>{`${
+              <Text numberOfLines={1} style={styles.vendorName}>{`${
                 vendor.name.length > 0 ? vendor.name : 'Not Specified'
               }`}</Text>
               {(vendor.city || vendor.address) && (
@@ -71,7 +75,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
                   <Text>{vendor.city}</Text>
                 </View>
               )}
-              {vendor.businessPhone && <Text text={vendor.businessPhone} />}
+              {vendor.businessPhone && <Text text={formatPhoneNumber(vendor.businessPhone)} />}
             </View>
             <View>
               <Feather name="chevrons-right" size={24} color={colors.iconColor} />

@@ -66,16 +66,20 @@ const EditVendor = () => {
       />
       <View style={styles.container}>
         <TextInput
-          style={[styles.input, { backgroundColor: colors.neutral200 }]}
+          style={[styles.input, { height: 'auto', backgroundColor: colors.neutral200, paddingBottom: 8 }]}
           placeholder="Name"
           value={updatedVendor.name}
+          numberOfLines={2}
+          multiline
           onChangeText={(text) => handleInputChange('name', text)}
           onBlur={handleBlur}
         />
         <TextInput
-          style={[styles.input, { backgroundColor: colors.neutral200 }]}
+          style={[styles.input, { height: 'auto', backgroundColor: colors.neutral200, paddingBottom: 8 }]}
           placeholder="Address"
           value={updatedVendor.address}
+          numberOfLines={2}
+          multiline
           onChangeText={(text) => handleInputChange('address', text)}
           onBlur={handleBlur}
         />
@@ -125,6 +129,7 @@ const EditVendor = () => {
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Notes"
           value={updatedVendor.notes}
+          multiline
           onChangeText={(text) => handleInputChange('notes', text)}
           onBlur={handleBlur}
         />
@@ -150,7 +155,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 5,
   },
-
 });
 
 export default EditVendor;

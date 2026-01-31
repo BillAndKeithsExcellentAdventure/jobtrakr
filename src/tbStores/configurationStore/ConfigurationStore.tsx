@@ -34,6 +34,7 @@ export const TABLES_SCHEMA = {
   },
   vendors: {
     id: { type: 'string' },
+    accountingId: { type: 'string' },
     name: { type: 'string' },
     address: { type: 'string' },
     city: { type: 'string' },

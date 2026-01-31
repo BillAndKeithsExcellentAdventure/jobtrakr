@@ -39,6 +39,7 @@ export interface TemplateWorkItemData {
 
 export interface VendorData {
   id: string;
+  accountingId: string; // QuickBooks Vendor Id
   name: string;
   address?: string;
   city?: string;
@@ -353,8 +354,8 @@ export const useTemplateWorkItemData = (templateId: string) => {
       const updatedWorkItemIds = templateWorkItemIds.includes(workItemId)
         ? templateWorkItemIds.filter((id) => id !== workItemId) // remove the workItemId
         : templateWorkItemIds.length > 0
-        ? [...templateWorkItemIds, workItemId]
-        : [workItemId]; // add the workItemId
+          ? [...templateWorkItemIds, workItemId]
+          : [workItemId]; // add the workItemId
 
       // create a comma separated list of workItemIds
       const workItemIdsString = updatedWorkItemIds.length > 0 ? updatedWorkItemIds.join(',') : '';
