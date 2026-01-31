@@ -11,7 +11,7 @@ import { fetchAccounts } from '@/src/utils/quickbooksAPI';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@clerk/clerk-expo';
 import { Stack, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { OptionEntry } from '@/src/components/OptionList';
@@ -51,6 +51,9 @@ const QBAccountsScreen = () => {
   const [isPaymentAccountPickerVisible, setIsPaymentAccountPickerVisible] = useState(false);
   const [isDefaultPaymentPickerVisible, setIsDefaultPaymentPickerVisible] = useState(false);
 
+  // Track if accounts have been fetched to prevent multiple API calls
+  const hasAccountsFetched = useRef(false);
+
   // Parse selected payment accounts from settings
   useEffect(() => {
     if (appSettings.quickBooksPaymentAccounts) {
@@ -64,7 +67,15 @@ const QBAccountsScreen = () => {
   // Fetch accounts from QuickBooks
   useEffect(() => {
     const fetchQBAccounts = async () => {
+      if (hasAccountsFetched.current) {
+        return; // Already fetched during this session
+      }
+
       if (!isConnectedToQuickBooks || !orgId || !userId) {
+        if (expenseAccounts.length > 0 || paymentAccounts.length > 0) {
+          setExpenseAccounts([]);
+          setPaymentAccounts([]);
+        }
         return;
       }
 
@@ -94,6 +105,7 @@ const QBAccountsScreen = () => {
             value: account.id,
           }));
         setPaymentAccounts(paymentList);
+        hasAccountsFetched.current = true; // Mark as fetched
       } catch (error) {
         console.error('Error fetching QuickBooks accounts:', error);
         Alert.alert('Error', 'Failed to fetch QuickBooks accounts. Please try again.');
@@ -103,7 +115,7 @@ const QBAccountsScreen = () => {
     };
 
     fetchQBAccounts();
-  }, [isConnectedToQuickBooks, orgId, userId, getToken]);
+  }, [isConnectedToQuickBooks, orgId, userId, getToken, expenseAccounts.length, paymentAccounts.length]);
 
   // Get display name for an account
   const getAccountName = useCallback(
