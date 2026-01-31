@@ -413,7 +413,7 @@ const Home = () => {
         {isQBConnected && (
           <ConfigurationEntry
             label="QuickBooks Accounts"
-            description="Configure expense and payment accounts"
+            description="Define accounts to use"
             onPress={() => router.push('/configuration/quickbooks/qbaccounts')}
           />
         )}

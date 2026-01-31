@@ -40,6 +40,9 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const appSettings = useAppSettings();
   const [isConnectedToQuickBooks, setIsConnectedToQuickBooks] = useState<boolean>(false);
   const auth = useAuth();
+
+  const { userId, orgId, getToken } = auth;
+
   // Check if we're in a development build and debug offline mode is enabled
   const debugForceOffline = isDevelopmentBuild() && appSettings.debugForceOffline;
 
@@ -84,15 +87,15 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
 
   useEffect(() => {
     const checkQbConnection = async () => {
-      if (auth.orgId && auth.userId && isConnected && isInternetReachable && appSettings.syncWithQuickBooks) {
-        const connected = await testQbIsConnected(auth.orgId, auth.userId, auth.getToken);
+      if (orgId && userId && isConnected && isInternetReachable && appSettings.syncWithQuickBooks) {
+        const connected = await testQbIsConnected(orgId, userId, getToken);
         setIsConnectedToQuickBooks(connected);
       } else {
         setIsConnectedToQuickBooks(false);
       }
     };
     checkQbConnection();
-  }, [appSettings.syncWithQuickBooks, auth.orgId, auth.userId, isConnected, isInternetReachable]);
+  }, [appSettings.syncWithQuickBooks, orgId, userId, isConnected, isInternetReachable, getToken]);
 
   const setQuickBooksConnected = (connected: boolean) => {
     setIsConnectedToQuickBooks(connected);
