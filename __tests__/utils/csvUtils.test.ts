@@ -1,8 +1,8 @@
 /**
  * Tests for CSV utility functions
  */
-import { vendorsToCsv, suppliersToCsv } from '@/src/utils/csvUtils';
-import { VendorData, SupplierData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { vendorsToCsv } from '@/src/utils/csvUtils';
+import { VendorData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 
 describe('csvUtils', () => {
   describe('vendorsToCsv', () => {
@@ -10,6 +10,7 @@ describe('csvUtils', () => {
       const vendors: VendorData[] = [
         {
           id: '1',
+          accountingId: '',
           name: 'Vendor One',
           address: '123 Main St',
           city: 'Springfield',
@@ -21,6 +22,7 @@ describe('csvUtils', () => {
         },
         {
           id: '2',
+          accountingId: '',
           name: 'Vendor Two',
           address: '456 Oak Ave',
           city: 'Chicago',
@@ -45,6 +47,7 @@ describe('csvUtils', () => {
       const vendors: VendorData[] = [
         {
           id: '1',
+          accountingId: '',
           name: 'Vendor, Inc',
           address: '123 Main St',
           city: 'Springfield',
@@ -64,6 +67,7 @@ describe('csvUtils', () => {
       const vendors: VendorData[] = [
         {
           id: '1',
+          accountingId: '',
           name: 'Vendor "Best" Inc',
           address: '123 Main St',
           city: 'Springfield',
@@ -83,6 +87,7 @@ describe('csvUtils', () => {
       const vendors: VendorData[] = [
         {
           id: '1',
+          accountingId: '',
           name: 'Vendor One',
           address: '123 Main St',
           city: 'Springfield',
@@ -108,6 +113,7 @@ describe('csvUtils', () => {
       const vendors: VendorData[] = [
         {
           id: '1',
+          accountingId: '',
           name: 'Vendor One',
           address: '',
           city: '',
@@ -126,10 +132,11 @@ describe('csvUtils', () => {
       expect(lines[1]).toContain('Vendor One');
     });
 
-    it('should not include id field in CSV', () => {
+    it('should not include id or accountingId fields in CSV', () => {
       const vendors: VendorData[] = [
         {
           id: 'should-not-appear',
+          accountingId: 'also-should-not-appear',
           name: 'Vendor One',
           address: '123 Main St',
           city: 'Springfield',
@@ -143,78 +150,9 @@ describe('csvUtils', () => {
 
       const csv = vendorsToCsv(vendors);
       expect(csv).not.toContain('should-not-appear');
+      expect(csv).not.toContain('also-should-not-appear');
       expect(csv).not.toContain('id');
-    });
-  });
-
-  describe('suppliersToCsv', () => {
-    it('should convert suppliers array to CSV format', () => {
-      const suppliers: SupplierData[] = [
-        {
-          id: '1',
-          name: 'Supplier One',
-          address: '789 Elm St',
-          city: 'Portland',
-          state: 'OR',
-          zip: '97201',
-          mobilePhone: '555-0301',
-          businessPhone: '555-0302',
-          notes: 'Test supplier',
-        },
-      ];
-
-      const csv = suppliersToCsv(suppliers);
-      const lines = csv.split('\n');
-      
-      expect(lines).toHaveLength(2); // header + 1 data row
-      expect(lines[0]).toBe('name,address,city,state,zip,mobilePhone,businessPhone,notes');
-      expect(lines[1]).toContain('Supplier One');
-    });
-
-    it('should handle empty suppliers array', () => {
-      const suppliers: SupplierData[] = [];
-      const csv = suppliersToCsv(suppliers);
-      expect(csv).toBe('');
-    });
-
-    it('should escape special characters in supplier data', () => {
-      const suppliers: SupplierData[] = [
-        {
-          id: '1',
-          name: 'Supplier, "Best"',
-          address: '789 Elm St',
-          city: 'Portland',
-          state: 'OR',
-          zip: '97201',
-          mobilePhone: '555-0301',
-          businessPhone: '555-0302',
-          notes: 'Top\nsupplier',
-        },
-      ];
-
-      const csv = suppliersToCsv(suppliers);
-      expect(csv).toContain('"Supplier, ""Best"""');
-      expect(csv).toContain('"Top\nsupplier"');
-    });
-
-    it('should not include id field in CSV', () => {
-      const suppliers: SupplierData[] = [
-        {
-          id: 'should-not-appear',
-          name: 'Supplier One',
-          address: '789 Elm St',
-          city: 'Portland',
-          state: 'OR',
-          zip: '97201',
-          mobilePhone: '555-0301',
-          businessPhone: '555-0302',
-          notes: 'Test supplier',
-        },
-      ];
-
-      const csv = suppliersToCsv(suppliers);
-      expect(csv).not.toContain('should-not-appear');
-      expect(csv).not.toContain('id');
+      expect(csv).not.toContain('accountingId');
     });
   });
 });

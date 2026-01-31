@@ -1,8 +1,8 @@
-# Vendor and Supplier CSV Import/Export
+# Vendor CSV Import/Export
 
 ## Overview
 
-The vendor and supplier CSV import/export feature allows users to export their vendor and supplier data to CSV files for backup or sharing, and import CSV files to add or update vendor and supplier records in bulk.
+The vendor CSV import/export feature allows users to export their vendor data to CSV files for backup or sharing, and import CSV files to add or update vendor records in bulk.
 
 ## How It Works
 
@@ -15,34 +15,31 @@ The import/export functionality is available from the Configuration home screen:
 3. Select one of the following options:
    - **Import Vendors** - Always available
    - **Export Vendors** - Only appears when vendor data exists
-   - **Import Suppliers** - Always available
-   - **Export Suppliers** - Only appears when supplier data exists
 
 ### Exporting Data
 
-**To export vendors or suppliers:**
+**To export vendors:**
 
 1. From the Configuration screen, tap the menu icon
-2. Select **"Export Vendors"** or **"Export Suppliers"**
+2. Select **"Export Vendors"** or **"Export Vendors"**
 3. Confirm the export in the dialog that appears
 4. The system creates a CSV file and opens the share dialog
 5. Choose where to save or share the file (email, cloud storage, etc.)
 
 **What gets exported:**
-- All vendor or supplier records in the database
+- All vendor records in the database
 - All fields except the internal `id` field
 - Fields included: `name`, `address`, `city`, `state`, `zip`, `mobilePhone`, `businessPhone`, `notes`
 
 **File naming:**
 - Vendors are exported to: `vendors.csv`
-- Suppliers are exported to: `suppliers.csv`
 
 ### Importing Data
 
-**To import vendors or suppliers:**
+**To import vendors:**
 
 1. From the Configuration screen, tap the menu icon
-2. Select **"Import Vendors"** or **"Import Suppliers"**
+2. Select **"Import Vendors"**
 3. Confirm the import in the dialog that appears
 4. The document picker opens - select your CSV file
 5. The system processes the file and shows a summary:
@@ -69,7 +66,7 @@ name,address,city,state,zip,mobilePhone,businessPhone,notes
 
 ```csv
 name,address,city,state,zip,mobilePhone,businessPhone,notes
-"Acme Hardware","123 Main St","Seattle","WA","98101","555-1234","555-5678","Preferred supplier for hardware"
+"Acme Hardware","123 Main St","Seattle","WA","98101","555-1234","555-5678","Preferred vendor for hardware"
 "Bob's Lumber","456 Oak Ave","Portland","OR","97201","555-8765","555-4321","Good prices on lumber"
 "City Electric","789 Pine Rd","Tacoma","WA","98402","555-2468","","Fast delivery"
 ```
@@ -78,7 +75,7 @@ name,address,city,state,zip,mobilePhone,businessPhone,notes
 
 | Field | Description | Required | Notes |
 |-------|-------------|----------|-------|
-| `name` | Vendor/Supplier name | Yes* | Used for matching during import |
+| `name` | Vendor/Merchant name | Yes* | Used for matching during import |
 | `address` | Street address | Yes* | Used for matching during import |
 | `city` | City name | No | Optional field |
 | `state` | State abbreviation | No | Optional field (e.g., WA, CA, OR) |
@@ -189,7 +186,7 @@ For each record in the CSV:
 
 **"No export option available"**
 - The export option only appears when you have data to export
-- Add at least one vendor or supplier first
+- Add at least one vendor first
 
 **File not appearing in share dialog**
 - Ensure you have granted storage permissions to the app
@@ -199,7 +196,7 @@ For each record in the CSV:
 
 ### File Location
 - Temporary CSV files are created in the app's document directory
-- Files are named: `vendors.csv` or `suppliers.csv`
+- Files are named: `vendors.csv`
 
 ### CSV Parser
 - Custom CSV parser handles quoted fields and escaped characters

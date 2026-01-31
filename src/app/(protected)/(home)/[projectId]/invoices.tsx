@@ -101,7 +101,7 @@ const ProjectInvoicesPage = () => {
 
         const newInvoice: InvoiceData = {
           id: '',
-          supplier: '',
+          vendor: '',
           description: '',
           amount: 0,
           numLineItems: 0,

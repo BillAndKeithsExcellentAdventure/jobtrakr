@@ -50,18 +50,6 @@ export interface VendorData {
   notes?: string;
 }
 
-export interface SupplierData {
-  id: string;
-  name: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  zip?: string;
-  mobilePhone?: string;
-  businessPhone?: string;
-  notes?: string;
-}
-
 export function WorkCategoryCodeCompareAsNumber(a: WorkCategoryData, b: WorkCategoryData) {
   const aValue = Number(a.code);
   const bValue = Number(b.code);
@@ -78,20 +66,17 @@ export type CategorySchema = typeof TABLES_SCHEMA.categories;
 export type WorkItemsSchema = typeof TABLES_SCHEMA.workItems;
 export type TemplateSchema = typeof TABLES_SCHEMA.templates;
 export type VendorsSchema = typeof TABLES_SCHEMA.vendors;
-export type SuppliersSchema = typeof TABLES_SCHEMA.suppliers;
 
 export type SchemaMap = {
   templates: TemplateSchema;
   categories: CategorySchema;
   workItems: WorkItemsSchema;
   vendors: VendorsSchema;
-  suppliers: SuppliersSchema;
 };
 
 // Type mapping between table names and data types
 export type TableDataMap = {
   vendors: VendorData;
-  suppliers: SupplierData;
   templates: ProjectTemplateData;
   templateWorkItems: TemplateWorkItemData;
   categories: WorkCategoryData;

@@ -1,7 +1,7 @@
-import { VendorData, SupplierData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { VendorData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { WorkCategoryDefinition } from '../models/types';
 
-// Shared headers for vendor and supplier CSV format (excluding id)
+// Shared headers for vendor CSV format (excluding id and accountingId)
 const ENTITY_CSV_HEADERS = [
   'name',
   'address',
@@ -14,7 +14,7 @@ const ENTITY_CSV_HEADERS = [
 ];
 
 /**
- * Converts an array of vendors to CSV format (excluding id field)
+ * Converts an array of vendors to CSV format (excluding id and accountingId fields)
  */
 export function vendorsToCsv(vendors: VendorData[]): string {
   if (!vendors || vendors.length === 0) {
@@ -28,33 +28,6 @@ export function vendorsToCsv(vendors: VendorData[]): string {
   const dataRows = vendors.map((vendor) => {
     return ENTITY_CSV_HEADERS.map((header) => {
       const value = vendor[header as keyof VendorData] || '';
-      // Escape quotes and wrap in quotes if contains comma, quote, or newline
-      const stringValue = String(value);
-      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-        return `"${stringValue.replace(/"/g, '""')}"`;
-      }
-      return stringValue;
-    }).join(',');
-  });
-
-  return [headerRow, ...dataRows].join('\n');
-}
-
-/**
- * Converts an array of suppliers to CSV format (excluding id field)
- */
-export function suppliersToCsv(suppliers: SupplierData[]): string {
-  if (!suppliers || suppliers.length === 0) {
-    return '';
-  }
-
-  // Create CSV header row
-  const headerRow = ENTITY_CSV_HEADERS.join(',');
-
-  // Create CSV data rows
-  const dataRows = suppliers.map((supplier) => {
-    return ENTITY_CSV_HEADERS.map((header) => {
-      const value = supplier[header as keyof SupplierData] || '';
       // Escape quotes and wrap in quotes if contains comma, quote, or newline
       const stringValue = String(value);
       if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
@@ -99,40 +72,6 @@ export function csvToVendors(csvText: string): Omit<VendorData, 'id'>[] {
   }
 
   return vendors;
-}
-
-/**
- * Parse CSV text and return array of supplier data objects
- */
-export function csvToSuppliers(csvText: string): Omit<SupplierData, 'id'>[] {
-  if (!csvText || csvText.trim() === '') {
-    return [];
-  }
-
-  const lines = csvText.split('\n').filter((line) => line.trim() !== '');
-  if (lines.length < 2) {
-    // Need at least header and one data row
-    return [];
-  }
-
-  const headers = parseCsvLine(lines[0]);
-  const suppliers: Omit<SupplierData, 'id'>[] = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const values = parseCsvLine(lines[i]);
-    const supplier: Record<string, string> = {};
-
-    for (let j = 0; j < headers.length; j++) {
-      const header = headers[j].trim();
-      // Handle missing columns gracefully
-      const value = j < values.length ? values[j].trim() : '';
-      supplier[header] = value;
-    }
-
-    suppliers.push(supplier as Omit<SupplierData, 'id'>);
-  }
-
-  return suppliers;
 }
 
 /**

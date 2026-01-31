@@ -98,7 +98,7 @@ const RequestAIProcessingPage = () => {
       }
 
       const summary = {
-        supplier: replaceNonPrintable(result.response.MerchantName.value),
+        vendor: replaceNonPrintable(result.response.MerchantName.value),
         receiptDate: Date.parse(result.response.TransactionDate.value),
         totalAmount: Number.parseFloat(result.response.Total.value),
         totalTax: Number.parseFloat(result.response.TotalTax.value),
@@ -282,7 +282,7 @@ const RequestAIProcessingPage = () => {
 
   // Handler for saving edited summary
   const handleSaveInvoiceSummary = (updatedSummary: {
-    supplier: string;
+    vendor: string;
     totalAmount: number;
     totalTax: number;
     receiptDate: number;
@@ -298,7 +298,7 @@ const RequestAIProcessingPage = () => {
       ...invoice,
       amount: invoiceSummary.totalAmount,
       invoiceDate: invoiceSummary.receiptDate,
-      supplier: invoiceSummary.supplier,
+      vendor: invoiceSummary.vendor,
     };
     // Proceed with saving cost items
     const invoiceResult = updateInvoice(invoiceId, updatedInvoice);
@@ -395,7 +395,7 @@ const RequestAIProcessingPage = () => {
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: 'row' }}>
                         <Text style={styles.label}>Supplier:</Text>
-                        <Text>{invoiceSummary.supplier}</Text>
+                        <Text>{invoiceSummary.vendor}</Text>
                       </View>
                       <View style={{ flexDirection: 'row' }}>
                         <Text style={styles.label}>Amount:</Text>

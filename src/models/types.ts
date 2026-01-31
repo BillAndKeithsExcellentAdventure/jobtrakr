@@ -90,7 +90,7 @@ export interface ReceiptSummary {
 }
 
 export interface InvoiceSummary {
-  supplier: string;
+  vendor: string;
   receiptDate: number;
   totalAmount: number;
   totalTax: number;
