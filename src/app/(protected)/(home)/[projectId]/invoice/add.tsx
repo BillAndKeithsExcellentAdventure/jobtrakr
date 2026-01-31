@@ -34,9 +34,9 @@ const AddInvoicePage = () => {
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const { isConnected, isInternetReachable } = useNetwork();
   const addInvoice = useAddRowCallback(projectId, 'invoices');
-  const [isSupplierListPickerVisible, setIsSupplierListPickerVisible] = useState<boolean>(false);
+  const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
-  const [suppliers, setSuppliers] = useState<OptionEntry[]>([]);
+  const [vendors, setVendors] = useState<OptionEntry[]>([]);
   const [applyToSingleCostCode, setApplyToSingleCostCode] = useState(false);
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
   const { projectWorkItems, availableCategoriesOptions, allAvailableCostItemOptions } =
@@ -51,13 +51,13 @@ const AddInvoicePage = () => {
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [canAddInvoice, setCanAddInvoice] = useState(false);
   const addPhotoImage = useAddImageCallback();
-  const allSuppliers = useAllConfigurationRows('suppliers');
+  const allVendors = useAllConfigurationRows('vendors');
 
   const router = useRouter();
   const [projectInvoice, setProjectInvoice] = useState<InvoiceData>({
     id: '',
     accountingId: '',
-    supplier: '',
+    vendor: '',
     description: '',
     amount: 0,
     numLineItems: 0,
@@ -70,33 +70,33 @@ const AddInvoicePage = () => {
     invoiceNumber: '',
   });
 
-  const handleSupplierChange = useCallback((supplier: string) => {
+  const handleVendorChange = useCallback((vendor: string) => {
     setProjectInvoice((prevReceipt) => ({
       ...prevReceipt,
-      supplier,
+      vendor,
     }));
   }, []);
 
-  const handleSupplierOptionChange = (option: OptionEntry) => {
+  const handleVendorOptionChange = (option: OptionEntry) => {
     setPickedOption(option);
     if (option) {
-      handleSupplierChange(option.label);
+      handleVendorChange(option.label);
     }
-    setIsSupplierListPickerVisible(false);
+    setIsVendorListPickerVisible(false);
   };
 
   useEffect(() => {
-    if (allSuppliers && allSuppliers.length > 0) {
-      const supplierOptions: OptionEntry[] = allSuppliers.map((supplier) => ({
-        label: `${supplier.name} ${
-          supplier.address ? ` - ${supplier.address}` : supplier.city ? ` - ${supplier.city}` : ''
+    if (allVendors && allVendors.length > 0) {
+      const vendorOptions: OptionEntry[] = allVendors.map((vendor) => ({
+        label: `${vendor.name} ${
+          vendor.address ? ` - ${vendor.address}` : vendor.city ? ` - ${vendor.city}` : ''
         }`,
-        value: supplier.id,
+        value: vendor.id,
       }));
 
-      setSuppliers(supplierOptions);
+      setVendors(vendorOptions);
     } else {
-      setSuppliers([]);
+      setVendors([]);
     }
   }, [allSuppliers]);
 
@@ -235,7 +235,7 @@ const AddInvoicePage = () => {
       setCanAddInvoice(false);
     } else {
       setCanAddInvoice(
-        (projectInvoice.amount > 0 && !!projectInvoice.supplier && !!projectInvoice.description) ||
+        (projectInvoice.amount > 0 && !!projectInvoice.vendor && !!projectInvoice.description) ||
           !!projectInvoice.imageId,
       );
     }
@@ -266,7 +266,7 @@ const AddInvoicePage = () => {
     setProjectInvoice({
       id: '',
       accountingId: '',
-      supplier: '',
+      vendor: '',
       description: '',
       amount: 0,
       numLineItems: 0,
@@ -324,7 +324,7 @@ const AddInvoicePage = () => {
           {suppliers && suppliers.length ? (
             <OptionPickerItem
               containerStyle={styles.inputContainer}
-              optionLabel={projectInvoice.supplier}
+              optionLabel={projectInvoice.vendor}
               label="Supplier/Contractor"
               placeholder="Supplier/Contractor"
               onOptionLabelChange={handleSupplierChange}
@@ -336,7 +336,7 @@ const AddInvoicePage = () => {
               style={[styles.input, { borderColor: colors.transparent }]}
               placeholder="Supplier/Contractor"
               label="Supplier/Contractor"
-              value={projectInvoice.supplier}
+              value={projectInvoice.vendor}
               onChangeText={handleSupplierChange}
             />
           )}
@@ -421,9 +421,9 @@ const AddInvoicePage = () => {
           )}
         </View>
       </ModalScreenContainer>
-      {suppliers && isSupplierListPickerVisible && (
+      {vendors && isVendorListPickerVisible && (
         <BottomSheetContainer
-          isVisible={isSupplierListPickerVisible}
+          isVisible={isVendorListPickerVisible}
           onClose={() => setIsSupplierListPickerVisible(false)}
         >
           <OptionList

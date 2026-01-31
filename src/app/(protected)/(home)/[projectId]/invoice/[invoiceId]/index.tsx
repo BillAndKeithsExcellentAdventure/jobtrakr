@@ -46,7 +46,7 @@ const InvoiceDetailsPage = () => {
   const [invoice, setInvoice] = useState<InvoiceData>({
     id: '',
     invoiceNumber: '',
-    supplier: '',
+    vendor: '',
     description: '',
     amount: 0,
     numLineItems: 0,

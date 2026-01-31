@@ -151,7 +151,7 @@ const SwipeableInvoiceItem = React.memo<{
               <>
                 <View style={{ flex: 1, justifyContent: 'center', paddingLeft: 10 }}>
                   <Text style={{ color: textColor }}>Amount: {formatCurrency(item.amount, true, true)}</Text>
-                  <Text style={{ color: textColor }}>Supplier: {item.supplier}</Text>
+                  <Text style={{ color: textColor }}>Vendor: {item.vendor}</Text>
                   <Text style={{ color: textColor }}>
                     # Items: {allInvoiceItems.length} / ({totalOfAllInvoiceItemsFormatted})
                   </Text>

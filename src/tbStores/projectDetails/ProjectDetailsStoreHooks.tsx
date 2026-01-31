@@ -66,7 +66,7 @@ export type ClassifiedReceiptData = ReceiptData & { fullyClassified: boolean };
 export type InvoiceData = {
   id: string;
   accountingId: string;
-  supplier: string;
+  vendor: string;
   description: string;
   amount: number;
   numLineItems: number;

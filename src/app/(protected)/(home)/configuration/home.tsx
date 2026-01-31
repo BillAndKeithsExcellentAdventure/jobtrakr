@@ -18,9 +18,8 @@ import {
   useAddRowCallback,
   useUpdateRowCallback,
   VendorData,
-  SupplierData,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { vendorsToCsv, suppliersToCsv, csvToVendors, csvToSuppliers } from '@/src/utils/csvUtils';
+import { vendorsToCsv, csvToVendors } from '@/src/utils/csvUtils';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import * as DocumentPicker from 'expo-document-picker';
@@ -35,14 +34,11 @@ const Home = () => {
   const allWorkItems = useAllRows('workItems');
   const allProjectTemplates = useAllRows('templates');
   const allVendors = useAllRows('vendors');
-  const allSuppliers = useAllRows('suppliers');
   const cleanupOrphanedWorkItems = useCleanOrphanedWorkItemsCallback();
   const exportConfiguration = useExportStoreDataCallback();
   const importConfiguration = useImportJsonConfigurationDataCallback();
   const addVendorToStore = useAddRowCallback('vendors');
   const updateVendor = useUpdateRowCallback('vendors');
-  const addSupplierToStore = useAddRowCallback('suppliers');
-  const updateSupplier = useUpdateRowCallback('suppliers');
   const [isQBConnected, setIsQBConnected] = useState<boolean>(false);
   const auth = useAuth();
 
@@ -55,7 +51,6 @@ const Home = () => {
   );
 
   const hasVendorData: boolean = useMemo(() => allVendors && allVendors.length > 0, [allVendors]);
-  const hasSupplierData: boolean = useMemo(() => allSuppliers && allSuppliers.length > 0, [allSuppliers]);
 
   // Check QuickBooks connection status on mount
   useEffect(() => {
@@ -282,95 +277,6 @@ const Home = () => {
           },
         ]);
         return;
-      } else if (menuItem === 'ExportSuppliers') {
-        Alert.alert('Export Suppliers', 'Would you like to export all suppliers to a CSV file?', [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-          {
-            text: 'Export',
-            onPress: async () => {
-              try {
-                const csvData = suppliersToCsv(allSuppliers);
-                const outputFile = new File(Paths.document, 'suppliers.csv');
-                outputFile.write(csvData);
-                const outputPath = outputFile.uri;
-
-                const isAvailable = await Sharing.isAvailableAsync();
-                if (isAvailable) {
-                  await Sharing.shareAsync(outputPath, {
-                    mimeType: 'text/csv',
-                    dialogTitle: 'Share Suppliers CSV',
-                    UTI: 'public.comma-separated-values-text',
-                  });
-                }
-              } catch (err) {
-                console.error('Error exporting suppliers:', err);
-                Alert.alert('Error', 'Failed to export suppliers');
-              }
-            },
-          },
-        ]);
-        return;
-      } else if (menuItem === 'ImportSuppliers') {
-        Alert.alert('Import Suppliers', 'Would you like to import suppliers from a CSV file?', [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-          {
-            text: 'Import',
-            onPress: async () => {
-              try {
-                const result = await DocumentPicker.getDocumentAsync({
-                  type: ['text/csv', 'text/comma-separated-values', '*/*'],
-                  copyToCacheDirectory: true,
-                  multiple: false,
-                });
-
-                if (!result.canceled && result.assets?.length > 0) {
-                  const file = result.assets[0];
-                  const fileObj = new File(file.uri);
-                  const fileText = await fileObj.text();
-                  const importedSuppliers = csvToSuppliers(fileText);
-
-                  let addedCount = 0;
-                  let updatedCount = 0;
-
-                  for (const supplier of importedSuppliers) {
-                    // Find existing supplier with matching name and address
-                    // Ensure both name and address have meaningful values for matching
-                    const existing = allSuppliers.find((s) => {
-                      const nameMatch = s.name && supplier.name && s.name === supplier.name;
-                      const addressMatch = s.address && supplier.address && s.address === supplier.address;
-                      return nameMatch && addressMatch;
-                    });
-
-                    if (existing) {
-                      // Update existing supplier
-                      updateSupplier(existing.id, supplier);
-                      updatedCount++;
-                    } else {
-                      // Add new supplier
-                      addSupplierToStore(supplier as SupplierData);
-                      addedCount++;
-                    }
-                  }
-
-                  Alert.alert(
-                    'Import Complete',
-                    `Suppliers imported successfully.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
-                  );
-                }
-              } catch (error) {
-                console.error('Error importing suppliers:', error);
-                Alert.alert('Error', 'Failed to import suppliers');
-              }
-            },
-          },
-        ]);
-        return;
       } else if (menuItem === 'GetQBVendors') {
         const qbVendors = await fetchVendors(auth.orgId!, auth.userId!, auth.getToken);
         let addedCount = 0;
@@ -415,11 +321,8 @@ const Home = () => {
       exportConfiguration,
       importConfiguration,
       allVendors,
-      allSuppliers,
       addVendorToStore,
       updateVendor,
-      addSupplierToStore,
-      updateSupplier,
       cleanupOrphanedWorkItems,
       auth.orgId,
       auth.userId,
@@ -477,27 +380,9 @@ const Home = () => {
             },
           ]
         : []),
-      ...(hasSupplierData
-        ? [
-            {
-              icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
-              label: 'Export Suppliers',
-              onPress: (e: GestureResponderEvent, actionContext?: any) => {
-                handleMenuItemPress('ExportSuppliers');
-              },
-            },
-          ]
-        : []),
-      {
-        icon: <MaterialCommunityIcons name="import" size={28} color={colors.iconColor} />,
-        label: 'Import Suppliers',
-        onPress: (e: GestureResponderEvent, actionContext?: any) => {
-          handleMenuItemPress('ImportSuppliers');
-        },
-      },
     ];
     return menuButtons;
-  }, [colors, handleMenuItemPress, hasConfigurationData, hasVendorData, hasSupplierData, isQBConnected]);
+  }, [colors, handleMenuItemPress, hasConfigurationData, hasVendorData, isQBConnected]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -524,11 +409,6 @@ const Home = () => {
           label="Vendors/Merchants"
           description="Add and Edit Vendors/Merchants"
           onPress={() => router.push('/configuration/vendor/vendors')}
-        />
-        <ConfigurationEntry
-          label="Suppliers/Contractors"
-          description="Add and Edit Suppliers/Contractors"
-          onPress={() => router.push('/configuration/supplier/suppliers')}
         />
       </View>
       {headerMenuModalVisible && (

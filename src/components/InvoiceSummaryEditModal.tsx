@@ -19,13 +19,13 @@ interface InvoiceSummaryEditModalProps {
   isVisible: boolean;
   onClose: () => void;
   invoiceSummary: {
-    supplier: string;
+    vendor: string;
     totalAmount: number;
     totalTax: number;
     receiptDate: number;
   };
   onSave: (updatedSummary: {
-    supplier: string;
+    vendor: string;
     totalAmount: number;
     totalTax: number;
     receiptDate: number;
@@ -41,49 +41,49 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
   const colors = useColors();
   const [editedSummary, setEditedSummary] = useState(invoiceSummary);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
-  const [isSupplierListPickerVisible, setIsSupplierListPickerVisible] = useState<boolean>(false);
-  const [pickedSupplierOption, setPickedSupplierOption] = useState<OptionEntry | undefined>(undefined);
-  const [suppliers, setSuppliers] = useState<OptionEntry[]>([]);
+  const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
+  const [pickedVendorOption, setPickedVendorOption] = useState<OptionEntry | undefined>(undefined);
+  const [vendors, setVendors] = useState<OptionEntry[]>([]);
 
-  const allSuppliers = useAllConfigurationRows('suppliers');
+  const allVendors = useAllConfigurationRows('vendors');
 
   useEffect(() => {
     setEditedSummary(invoiceSummary);
-    const supplierMatch = suppliers.find((v) => v.label === invoiceSummary.supplier);
-    setPickedSupplierOption(supplierMatch);
-  }, [invoiceSummary, suppliers]);
+    const vendorMatch = vendors.find((v) => v.label === invoiceSummary.vendor);
+    setPickedVendorOption(vendorMatch);
+  }, [invoiceSummary, vendors]);
 
   useEffect(() => {
-    if (allSuppliers && allSuppliers.length > 0) {
-      const supplierOptions: OptionEntry[] = allSuppliers.map((supplier) => ({
-        label: `${supplier.name} ${
-          supplier.address ? ` - ${supplier.address}` : supplier.city ? ` - ${supplier.city}` : ''
+    if (allVendors && allVendors.length > 0) {
+      const vendorOptions: OptionEntry[] = allVendors.map((vendor) => ({
+        label: `${vendor.name} ${
+          vendor.address ? ` - ${vendor.address}` : vendor.city ? ` - ${vendor.city}` : ''
         }`,
-        value: supplier.id,
+        value: vendor.id,
       }));
 
-      setSuppliers(supplierOptions);
+      setVendors(vendorOptions);
     } else {
-      setSuppliers([]);
+      setVendors([]);
     }
-  }, [allSuppliers]);
+  }, [allVendors]);
 
-  const handleSupplierChange = useCallback((supplier: string) => {
+  const handleVendorChange = useCallback((vendor: string) => {
     setEditedSummary((prev) => ({
       ...prev,
-      supplier,
+      vendor,
     }));
   }, []);
 
-  const handleSupplierOptionChange = useCallback(
+  const handleVendorOptionChange = useCallback(
     (option: OptionEntry) => {
-      setPickedSupplierOption(option);
+      setPickedVendorOption(option);
       if (option) {
-        handleSupplierChange(option.label);
+        handleVendorChange(option.label);
       }
-      setIsSupplierListPickerVisible(false);
+      setIsVendorListPickerVisible(false);
     },
-    [handleSupplierChange],
+    [handleVendorChange],
   );
 
   const handleSave = useCallback(() => {
@@ -93,10 +93,10 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
 
   const handleClose = useCallback(() => {
     setEditedSummary(invoiceSummary);
-    const supplierMatch = suppliers.find((v) => v.label === invoiceSummary.supplier);
-    setPickedSupplierOption(supplierMatch);
+    const vendorMatch = vendors.find((v) => v.label === invoiceSummary.vendor);
+    setPickedVendorOption(vendorMatch);
     onClose();
-  }, [invoiceSummary, suppliers, onClose]);
+  }, [invoiceSummary, vendors, onClose]);
 
   const handleDateConfirm = useCallback((date: Date) => {
     setEditedSummary((prev) => ({
@@ -117,31 +117,31 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
             </Text>
 
             <View style={styles.form}>
-              {suppliers && suppliers.length ? (
+              {vendors && vendors.length ? (
                 <OptionPickerItem
                   containerStyle={styles.inputContainer}
-                  optionLabel={editedSummary.supplier}
-                  label="Supplier/Contractor"
-                  placeholder="Supplier/Contractor"
-                  onOptionLabelChange={(supplier: string) =>
+                  optionLabel={editedSummary.vendor}
+                  label="Vendor/Merchant"
+                  placeholder="Vendor/Merchant"
+                  onOptionLabelChange={(vendor: string) =>
                     setEditedSummary((prev) => ({
                       ...prev,
-                      supplier,
+                      vendor,
                     }))
                   }
-                  onPickerButtonPress={() => setIsSupplierListPickerVisible(true)}
+                  onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
                 />
               ) : (
                 <TextField
                   containerStyle={styles.inputContainer}
                   style={[styles.input, { borderColor: colors.transparent }]}
-                  placeholder="Supplier/Contractor"
-                  label="Supplier/Contractor"
-                  value={editedSummary.supplier}
-                  onChangeText={(supplier: string) =>
+                  placeholder="Vendor/Merchant"
+                  label="Vendor/Merchant"
+                  value={editedSummary.vendor}
+                  onChangeText={(vendor: string) =>
                     setEditedSummary((prev) => ({
                       ...prev,
-                      supplier,
+                      vendor,
                     }))
                   }
                 />
@@ -189,15 +189,15 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
             </View>
           </View>
         </View>
-        {suppliers && isSupplierListPickerVisible && (
+        {vendors && isVendorListPickerVisible && (
           <BottomSheetContainer
-            isVisible={isSupplierListPickerVisible}
-            onClose={() => setIsSupplierListPickerVisible(false)}
+            isVisible={isVendorListPickerVisible}
+            onClose={() => setIsVendorListPickerVisible(false)}
           >
             <OptionList
-              options={suppliers}
-              onSelect={(option) => handleSupplierOptionChange(option)}
-              selectedOption={pickedSupplierOption}
+              options={vendors}
+              onSelect={(option) => handleVendorOptionChange(option)}
+              selectedOption={pickedVendorOption}
               enableSearch={suppliers.length > 15}
             />
           </BottomSheetContainer>
