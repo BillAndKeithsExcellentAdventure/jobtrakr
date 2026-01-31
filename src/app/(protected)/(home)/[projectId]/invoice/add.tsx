@@ -98,7 +98,7 @@ const AddInvoicePage = () => {
     } else {
       setVendors([]);
     }
-  }, [allSuppliers]);
+  }, [allVendors]);
 
   const colors = useColors();
 
@@ -325,19 +325,19 @@ const AddInvoicePage = () => {
             <OptionPickerItem
               containerStyle={styles.inputContainer}
               optionLabel={projectInvoice.vendor}
-              label="Supplier/Contractor"
-              placeholder="Supplier/Contractor"
-              onOptionLabelChange={handleSupplierChange}
-              onPickerButtonPress={() => setIsSupplierListPickerVisible(true)}
+              label="Vendor/Merchant"
+              placeholder="Vendor/Merchant"
+              onOptionLabelChange={handleVendorChange}
+              onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
             />
           ) : (
             <TextField
               containerStyle={styles.inputContainer}
               style={[styles.input, { borderColor: colors.transparent }]}
-              placeholder="Supplier/Contractor"
-              label="Supplier/Contractor"
+              placeholder="Vendor/Merchant"
+              label="Vendor/Merchant"
               value={projectInvoice.vendor}
-              onChangeText={handleSupplierChange}
+              onChangeText={handleVendorChange}
             />
           )}
 
@@ -424,11 +424,11 @@ const AddInvoicePage = () => {
       {vendors && isVendorListPickerVisible && (
         <BottomSheetContainer
           isVisible={isVendorListPickerVisible}
-          onClose={() => setIsSupplierListPickerVisible(false)}
+          onClose={() => setIsVendorListPickerVisible(false)}
         >
           <OptionList
             options={vendors}
-            onSelect={(option) => handleSupplierOptionChange(option)}
+            onSelect={(option) => handleVendorOptionChange(option)}
             selectedOption={pickedOption}
             enableSearch={vendors.length > 15}
           />

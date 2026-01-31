@@ -81,7 +81,7 @@ Tests for array manipulation utilities:
 Tests for CSV import/export functions:
 
 - `vendorsToCsv()` - Converting vendors to CSV format
-- `vendorsToCsv()` - Converting suppliers to CSV format
+- `vendorsToCsv()` - Converting vendors to CSV format
 - CSV escaping for special characters
 
 #### **tests**/utils/apiWithToken.test.ts (8 tests)

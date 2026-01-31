@@ -15,8 +15,6 @@ The import/export functionality is available from the Configuration home screen:
 3. Select one of the following options:
    - **Import Vendors** - Always available
    - **Export Vendors** - Only appears when vendor data exists
-   - **Import Suppliers** - Always available
-   - **Export Suppliers** - Only appears when supplier data exists
 
 ### Exporting Data
 
@@ -41,7 +39,7 @@ The import/export functionality is available from the Configuration home screen:
 **To import vendors:**
 
 1. From the Configuration screen, tap the menu icon
-2. Select **"Import Vendors"** or **"Import Vendors"**
+2. Select **"Import Vendors"**
 3. Confirm the import in the dialog that appears
 4. The document picker opens - select your CSV file
 5. The system processes the file and shows a summary:
@@ -198,7 +196,7 @@ For each record in the CSV:
 
 ### File Location
 - Temporary CSV files are created in the app's document directory
-- Files are named: `vendors.csv` or `vendors.csv`
+- Files are named: `vendors.csv`
 
 ### CSV Parser
 - Custom CSV parser handles quoted fields and escaped characters
