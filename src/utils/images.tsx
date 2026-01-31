@@ -42,9 +42,9 @@ const formatErrorMessage = (error: unknown): string => {
 export const getAddImageEndPointUrl = (resourceType: resourceType, mediaType: mediaType) => {
   switch (resourceType) {
     case 'receipt':
-      return `${API_BASE_URL}/addReceipt`;
+      return `${API_BASE_URL}/addReceiptImage`;
     case 'invoice':
-      return `${API_BASE_URL}/addInvoice`;
+      return `${API_BASE_URL}/addInvoiceImage`;
     case 'photo': {
       if (mediaType === 'video') {
         return `${API_BASE_URL}/addVideo`;
@@ -60,9 +60,9 @@ export const getAddImageEndPointUrl = (resourceType: resourceType, mediaType: me
 const getFetchImageEndPointUrl = (resourceType: resourceType) => {
   switch (resourceType) {
     case 'receipt':
-      return `${API_BASE_URL}/fetchReceipt`;
+      return `${API_BASE_URL}/fetchReceiptImage`;
     case 'invoice':
-      return `${API_BASE_URL}/fetchInvoice`;
+      return `${API_BASE_URL}/fetchInvoiceImage`;
     case 'photo':
       return `${API_BASE_URL}/fetchPhoto`;
     default:

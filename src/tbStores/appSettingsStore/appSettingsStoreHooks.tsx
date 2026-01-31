@@ -18,6 +18,7 @@ export interface SettingsData {
   zip: string;
   email: string;
   phone: string;
+  acc;
   companyLogo: string;
   changeOrderTemplateFileName: string;
   syncWithQuickBooks: boolean;
