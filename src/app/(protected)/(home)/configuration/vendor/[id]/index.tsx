@@ -24,6 +24,7 @@ const EditVendor = () => {
     mobilePhone: '',
     businessPhone: '',
     notes: '',
+    accountingId: '',
   });
 
   const vendorFromStore = useTypedRow('vendors', id);
