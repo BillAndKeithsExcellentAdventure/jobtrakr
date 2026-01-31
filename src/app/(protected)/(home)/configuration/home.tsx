@@ -410,6 +410,13 @@ const Home = () => {
           description="Add and Edit Vendors/Merchants"
           onPress={() => router.push('/configuration/vendor/vendors')}
         />
+        {isQBConnected && (
+          <ConfigurationEntry
+            label="QuickBooks Accounts"
+            description="Define accounts to use"
+            onPress={() => router.push('/configuration/quickbooks/qbaccounts')}
+          />
+        )}
       </View>
       {headerMenuModalVisible && (
         <RightHeaderMenu

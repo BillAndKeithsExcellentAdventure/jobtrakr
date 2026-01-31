@@ -104,6 +104,7 @@ const SwipeableInvoiceItem = React.memo<{
       orgId,
       deleteMediaCallback,
       store,
+      mediaToUpload,
     ],
   );
 

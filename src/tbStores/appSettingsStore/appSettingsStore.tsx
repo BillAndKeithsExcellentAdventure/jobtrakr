@@ -23,6 +23,8 @@ export const TABLES_SCHEMA = {
     debugForceOffline: { type: 'boolean', default: false },
     syncWithQuickBooks: { type: 'boolean', default: false },
     quickBooksExpenseAccountId: { type: 'string' },
+    quickBooksPaymentAccounts: { type: 'string' }, // Comma-separated list of account IDs
+    quickBooksDefaultPaymentAccountId: { type: 'string' },
   },
 } as const;
 

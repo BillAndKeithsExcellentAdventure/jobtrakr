@@ -16,7 +16,6 @@ import {
   connectToQuickBooks as qbConnect,
   disconnectQuickBooks as qbDisconnect,
   fetchCompanyInfo,
-  fetchAccounts,
 } from '@/src/utils/quickbooksAPI';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
@@ -29,9 +28,6 @@ import { useAuth } from '@clerk/clerk-expo';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { ActionButton } from '@/src/components/ActionButton';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
-import { OptionPickerItem } from '@/src/components/OptionPickerItem';
-import OptionList, { OptionEntry } from '@/src/components/OptionList';
-import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
@@ -65,18 +61,7 @@ const SetAppSettingScreen = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isLoadingCompanySettings, setIsLoadingCompanySettings] = useState(false);
   const { isConnected, isInternetReachable, isConnectedToQuickBooks, setQuickBooksConnected } = useNetwork();
-  const [isAccountListPickerVisible, setIsAccountListPickerVisible] = useState<boolean>(false);
-  const [availableAccounts, setAvailableAccounts] = useState<OptionEntry[]>([]);
-  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
-  const hasAccountsFetched = useRef(false);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState(false);
-
-  useEffect(() => {
-    const match = availableAccounts.find((o) => o.value === settings.quickBooksExpenseAccountId);
-    if (match?.value !== pickedOption?.value) {
-      setPickedOption(match);
-    }
-  }, [settings.quickBooksExpenseAccountId, availableAccounts, pickedOption?.value]);
 
   // Check if we're in a development build
   const isDevelopment = isDevelopmentBuild();
@@ -130,46 +115,6 @@ const SetAppSettingScreen = () => {
     isConnectedToQuickBooks,
   ]);
 
-  // Fetch available accounts when QuickBooks is connected
-  useEffect(() => {
-    const fetchAvailableAccounts = async () => {
-      if (hasAccountsFetched.current) {
-        return; // Already fetched during this session
-      }
-
-      if (!isConnectedToQuickBooks || !orgId || !userId) {
-        if (availableAccounts.length > 0) {
-          setAvailableAccounts([]);
-        }
-        return;
-      }
-      try {
-        const accounts = await fetchAccounts(orgId, userId, getToken);
-        if (accounts && accounts.length > 0) {
-          const expenseAccounts = accounts
-            .filter((account) => account.classification === 'Expense')
-            .map((account) => ({
-              label: account.name,
-              value: account.id,
-            }));
-          setAvailableAccounts(expenseAccounts);
-          hasAccountsFetched.current = true; // Mark as fetched
-        } else {
-          if (availableAccounts.length > 0) {
-            setAvailableAccounts([]);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching available accounts:', error);
-        if (availableAccounts.length > 0) {
-          setAvailableAccounts([]);
-        }
-      }
-    };
-
-    fetchAvailableAccounts();
-  }, [isConnectedToQuickBooks, orgId, userId, getToken, availableAccounts.length]);
-
   const handleChange = (key: keyof SettingsData, value: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -192,10 +137,6 @@ const SetAppSettingScreen = () => {
 
   // Check which settings are complete
   const areAllSettingsMet = useMemo((): boolean => {
-    if (settings.syncWithQuickBooks && !settings.quickBooksExpenseAccountId) {
-      return false;
-    }
-
     return (
       settings.companyName.trim().length > 0 &&
       settings.ownerName.trim().length > 0 &&
@@ -463,17 +404,6 @@ const SetAppSettingScreen = () => {
     }
   };
 
-  const handleAccountOptionChange = useCallback(
-    (option: OptionEntry) => {
-      setPickedOption(option);
-      const updatedSettings = { ...settings, quickBooksExpenseAccountId: option.value };
-      setSettings(updatedSettings);
-      setAppSettings(updatedSettings);
-      setIsAccountListPickerVisible(false);
-    },
-    [settings, setAppSettings],
-  );
-
   const handleBackPress = useCallback(() => {
     // Check if minimum app settings are met
     const allSettingsMet =
@@ -490,15 +420,6 @@ const SetAppSettingScreen = () => {
       Alert.alert('Incomplete Setup', 'Please complete all required fields before continuing.', [
         { text: 'OK', style: 'default' },
       ]);
-      return;
-    }
-
-    if (isConnectedToQuickBooks && !settings.quickBooksExpenseAccountId) {
-      Alert.alert(
-        'Expense Account Required',
-        'Please select a QuickBooks Expense Account before continuing.',
-        [{ text: 'OK', style: 'default' }],
-      );
       return;
     }
 
@@ -583,16 +504,6 @@ const SetAppSettingScreen = () => {
             autoCapitalize="none"
             autoCorrect={false}
           />
-          {isConnectedToQuickBooks && (
-            <OptionPickerItem
-              containerStyle={{ ...styles.inputContainer, backgroundColor: colors.listBackground }}
-              optionLabel={pickedOption?.label ?? ''}
-              placeholder="QB Expense Account"
-              label="QuickBooks Expense Account*"
-              editable={false}
-              onPickerButtonPress={() => setIsAccountListPickerVisible(true)}
-            />
-          )}
           <TextField
             label="Address*"
             placeholder="Address"
@@ -717,19 +628,6 @@ const SetAppSettingScreen = () => {
           )}
         </View>
       </KeyboardAwareScrollView>
-      {availableAccounts && isAccountListPickerVisible && (
-        <BottomSheetContainer
-          isVisible={isAccountListPickerVisible}
-          onClose={() => setIsAccountListPickerVisible(false)}
-        >
-          <OptionList
-            options={availableAccounts}
-            onSelect={(option) => handleAccountOptionChange(option)}
-            selectedOption={pickedOption}
-            enableSearch={availableAccounts.length > 15}
-          />
-        </BottomSheetContainer>
-      )}
 
       {headerMenuModalVisible && (
         <RightHeaderMenu

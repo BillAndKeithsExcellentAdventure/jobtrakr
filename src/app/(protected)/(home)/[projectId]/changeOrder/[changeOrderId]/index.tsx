@@ -340,7 +340,7 @@ const DefineChangeOrderScreen = () => {
     } finally {
       setIsSendingChangeOrder(false);
     }
-  }, [changeOrderData, changeOrder, appSettings, projectData, auth, projectId, router]);
+  }, [changeOrderData, changeOrder, appSettings, projectData, auth, projectId, router, updateChangeOrder]);
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
