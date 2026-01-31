@@ -298,7 +298,7 @@ const RequestAIProcessingPage = () => {
       ...invoice,
       amount: invoiceSummary.totalAmount,
       invoiceDate: invoiceSummary.receiptDate,
-      vendor: invoiceSummary.supplier,
+      vendor: invoiceSummary.vendor,
     };
     // Proceed with saving cost items
     const invoiceResult = updateInvoice(invoiceId, updatedInvoice);
@@ -395,7 +395,7 @@ const RequestAIProcessingPage = () => {
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: 'row' }}>
                         <Text style={styles.label}>Supplier:</Text>
-                        <Text>{invoiceSummary.supplier}</Text>
+                        <Text>{invoiceSummary.vendor}</Text>
                       </View>
                       <View style={{ flexDirection: 'row' }}>
                         <Text style={styles.label}>Amount:</Text>

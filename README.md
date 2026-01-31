@@ -223,7 +223,7 @@ The app supports multiple variants:
 
 ProjectHound uses a sophisticated data architecture with multiple specialized stores:
 
-1. **Configuration Store**: Global configuration including categories, cost items, templates, vendors, and suppliers
+1. **Configuration Store**: Global configuration including categories, cost items, templates, and vendors
 2. **Project List Store**: All projects for the organization
 3. **Project Details Store**: Per-project data including receipts, invoices, media, notes, and change orders
 4. **App Settings Store**: User preferences and application settings

@@ -282,7 +282,7 @@ The Configuration screen displays:
 
 **Accessing:** Tap **Vendors/Merchants** → "Add and Edit Vendors/Merchants"
 
-#### 4. Suppliers/Contractors
+#### 4. Vendors/Merchants
 
 **Purpose:** Maintain a list of suppliers and subcontractors who provide services (e.g., electricians, plumbers, HVAC contractors).
 
@@ -293,7 +293,7 @@ The Configuration screen displays:
 - Export suppliers to CSV files
 - Associate suppliers with invoices
 
-**Accessing:** Tap **Suppliers/Contractors** → "Add and Edit Suppliers/Contractors"
+**Accessing:** Tap **Vendors/Merchants** → "Add and Edit Vendors/Merchants"
 
 ### Configuration Menu (Top-Right)
 

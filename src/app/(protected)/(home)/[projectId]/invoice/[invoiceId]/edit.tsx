@@ -37,23 +37,23 @@ const EditInvoiceDetailsPage = () => {
     setIsVendorListPickerVisible(false);
   };
 
-  const allSuppliers = useAllConfigurationRows('suppliers');
+  const allVendors = useAllConfigurationRows('vendors');
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
 
   useEffect(() => {
-    if (allSuppliers && allSuppliers.length > 0) {
-      const supplierOptions: OptionEntry[] = allSuppliers.map((supplier) => ({
-        label: `${supplier.name} ${
-          supplier.address ? ` - ${supplier.address}` : supplier.city ? ` - ${supplier.city}` : ''
+    if (allVendors && allVendors.length > 0) {
+      const vendorOptions: OptionEntry[] = allVendors.map((vendor) => ({
+        label: `${vendor.name} ${
+          vendor.address ? ` - ${vendor.address}` : vendor.city ? ` - ${vendor.city}` : ''
         }`,
-        value: supplier.id,
+        value: vendor.id,
       }));
 
-      setSuppliers(supplierOptions);
+      setVendors(vendorOptions);
     } else {
-      setSuppliers([]);
+      setVendors([]);
     }
-  }, [allSuppliers]);
+  }, [allVendors]);
 
   const showDatePicker = () => {
     setDatePickerVisible(true);
@@ -75,7 +75,7 @@ const EditInvoiceDetailsPage = () => {
   const [invoice, setInvoice] = useState<InvoiceData>({
     id: '',
     invoiceNumber: '',
-    supplier: '',
+    vendor: '',
     description: '',
     amount: 0,
     numLineItems: 0,
@@ -96,15 +96,15 @@ const EditInvoiceDetailsPage = () => {
   }, [invoiceId, allProjectInvoices]);
 
   useEffect(() => {
-    const match = suppliers.find((o) => o.label === invoice.vendor);
+    const match = vendors.find((o) => o.label === invoice.vendor);
     setPickedOption(match);
-  }, [invoice, suppliers]);
+  }, [invoice, vendors]);
 
   const colors = useColors();
-  const handleVendorChange = useCallback((supplier: string) => {
+  const handleVendorChange = useCallback((vendor: string) => {
     setInvoice((prevInvoice) => ({
       ...prevInvoice,
-      supplier,
+      vendor,
     }));
   }, []);
 
@@ -168,7 +168,7 @@ const EditInvoiceDetailsPage = () => {
               }));
             }}
           />
-          {vendors && suppliers.length ? (
+          {vendors && vendors.length ? (
             <OptionPickerItem
               containerStyle={styles.inputContainer}
               optionLabel={invoice.vendor}
@@ -221,7 +221,7 @@ const EditInvoiceDetailsPage = () => {
               options={vendors}
               onSelect={(option) => handleSupplierOptionChange(option)}
               selectedOption={pickedOption}
-              enableSearch={suppliers.length > 15}
+              enableSearch={vendors.length > 15}
             />
           </BottomSheetContainer>
         )}

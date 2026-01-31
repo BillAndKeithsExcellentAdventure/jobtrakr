@@ -321,7 +321,7 @@ const AddInvoicePage = () => {
             onCancel={hideDatePicker}
           />
 
-          {suppliers && suppliers.length ? (
+          {vendors && vendors.length ? (
             <OptionPickerItem
               containerStyle={styles.inputContainer}
               optionLabel={projectInvoice.vendor}
@@ -427,10 +427,10 @@ const AddInvoicePage = () => {
           onClose={() => setIsSupplierListPickerVisible(false)}
         >
           <OptionList
-            options={suppliers}
+            options={vendors}
             onSelect={(option) => handleSupplierOptionChange(option)}
             selectedOption={pickedOption}
-            enableSearch={suppliers.length > 15}
+            enableSearch={vendors.length > 15}
           />
         </BottomSheetContainer>
       )}

@@ -198,7 +198,7 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
               options={vendors}
               onSelect={(option) => handleVendorOptionChange(option)}
               selectedOption={pickedVendorOption}
-              enableSearch={suppliers.length > 15}
+              enableSearch={vendors.length > 15}
             />
           </BottomSheetContainer>
         )}

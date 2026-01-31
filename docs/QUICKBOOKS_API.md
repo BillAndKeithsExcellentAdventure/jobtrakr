@@ -311,7 +311,7 @@ Create a new vendor in QuickBooks.
   "city": "Springfield",
   "state": "IL",
   "zip": "62701",
-  "notes": "Primary supplier for materials"
+  "notes": "Primary vendor for materials"
 }
 ```
 
