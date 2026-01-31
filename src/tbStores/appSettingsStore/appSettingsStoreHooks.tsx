@@ -18,12 +18,13 @@ export interface SettingsData {
   zip: string;
   email: string;
   phone: string;
-  acc;
   companyLogo: string;
   changeOrderTemplateFileName: string;
   syncWithQuickBooks: boolean;
   debugForceOffline: boolean;
   quickBooksExpenseAccountId: string;
+  quickBooksPaymentAccounts: string; // Comma-separated list of account IDs
+  quickBooksDefaultPaymentAccountId: string;
 }
 
 const INITIAL_SETTINGS: SettingsData = {
@@ -42,6 +43,8 @@ const INITIAL_SETTINGS: SettingsData = {
   syncWithQuickBooks: false,
   debugForceOffline: false,
   quickBooksExpenseAccountId: '',
+  quickBooksPaymentAccounts: '',
+  quickBooksDefaultPaymentAccountId: '',
 };
 
 // --- READ App Settings ---
