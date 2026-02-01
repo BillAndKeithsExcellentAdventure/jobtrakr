@@ -49,7 +49,6 @@ const QBAccountsScreen = () => {
   // Bottom sheet states
   const [isExpenseAccountPickerVisible, setIsExpenseAccountPickerVisible] = useState(false);
   const [isPaymentAccountPickerVisible, setIsPaymentAccountPickerVisible] = useState(false);
-  const [isDefaultPaymentPickerVisible, setIsDefaultPaymentPickerVisible] = useState(false);
 
   // Track if accounts have been fetched to prevent multiple API calls
   const hasAccountsFetched = useRef(false);
@@ -148,15 +147,6 @@ const QBAccountsScreen = () => {
     });
   }, []);
 
-  // Handle default payment account selection
-  const handleDefaultPaymentAccountSelect = useCallback(
-    (option: OptionEntry) => {
-      setDefaultPaymentAccountId(option.value);
-      setIsDefaultPaymentPickerVisible(false);
-    },
-    [],
-  );
-
   // Save all changes
   const handleSave = useCallback(() => {
     const updatedSettings: Partial<SettingsData> = {
@@ -177,11 +167,6 @@ const QBAccountsScreen = () => {
     setAppSettings,
     router,
   ]);
-
-  // Filter payment accounts for default selection (only from selected payment accounts)
-  const defaultPaymentAccountOptions = useMemo(() => {
-    return paymentAccounts.filter((account) => selectedPaymentAccountIds.includes(account.value));
-  }, [paymentAccounts, selectedPaymentAccountIds]);
 
   // Get selected payment accounts for display
   const selectedPaymentAccountsList = useMemo(() => {
@@ -311,30 +296,6 @@ const QBAccountsScreen = () => {
               )}
             </View>
 
-            {/* Default Payment Account Section */}
-            {selectedPaymentAccountIds.length > 0 && (
-              <View style={styles.section}>
-                <Text txtSize="title" style={{ marginBottom: 10 }}>
-                  Default Payment Account
-                </Text>
-                <Text txtSize="xs" style={{ marginBottom: 10, color: colors.neutral600 }}>
-                  This account will be pre-selected when adding receipts
-                </Text>
-                <TouchableOpacity
-                  style={[styles.accountCard, { backgroundColor: colors.neutral200, borderColor: colors.border }]}
-                  onPress={() => setIsDefaultPaymentPickerVisible(true)}
-                  disabled={selectedPaymentAccountIds.length === 0}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text txtSize="sub-title">
-                      {getAccountName(defaultPaymentAccountId, defaultPaymentAccountOptions)}
-                    </Text>
-                  </View>
-                  <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
-                </TouchableOpacity>
-              </View>
-            )}
-
             {/* Save Button */}
             <View style={styles.saveButtonContainer}>
               <ActionButton
@@ -383,21 +344,6 @@ const QBAccountsScreen = () => {
               )}
             </TouchableOpacity>
           )}
-        />
-      </BottomSheetContainer>
-
-      {/* Default Payment Account Picker */}
-      <BottomSheetContainer
-        isVisible={isDefaultPaymentPickerVisible}
-        onClose={() => setIsDefaultPaymentPickerVisible(false)}
-        title="Select Default Payment Account"
-      >
-        <OptionList
-          options={defaultPaymentAccountOptions}
-          onSelect={handleDefaultPaymentAccountSelect}
-          selectedOption={defaultPaymentAccountOptions.find((acc) => acc.value === defaultPaymentAccountId)}
-          showOkCancel={false}
-          enableSearch={false}
         />
       </BottomSheetContainer>
     </SafeAreaView>
