@@ -61,6 +61,13 @@ const QBAccountsScreen = () => {
   // Track if accounts have been fetched to prevent multiple API calls
   const hasAccountsFetched = useRef(false);
 
+  // Sync selected expense account from settings
+  useEffect(() => {
+    if (appSettings.quickBooksExpenseAccountId) {
+      setSelectedExpenseAccountId(appSettings.quickBooksExpenseAccountId);
+    }
+  }, [appSettings.quickBooksExpenseAccountId]);
+
   // Parse selected payment accounts from settings
   useEffect(() => {
     if (appSettings.quickBooksPaymentAccounts) {
@@ -70,6 +77,13 @@ const QBAccountsScreen = () => {
       setSelectedPaymentAccountIds([]);
     }
   }, [appSettings.quickBooksPaymentAccounts]);
+
+  // Sync default payment account from settings
+  useEffect(() => {
+    if (appSettings.quickBooksDefaultPaymentAccountId) {
+      setDefaultPaymentAccountId(appSettings.quickBooksDefaultPaymentAccountId);
+    }
+  }, [appSettings.quickBooksDefaultPaymentAccountId]);
 
   // Fetch accounts from QuickBooks
   useEffect(() => {
@@ -183,12 +197,20 @@ const QBAccountsScreen = () => {
 
   // Check if save is enabled
   const isSaveEnabled = useMemo(() => {
+    // Check if any values have changed from the saved settings
+    const hasChanges =
+      selectedExpenseAccountId !== (appSettings.quickBooksExpenseAccountId || '') ||
+      selectedPaymentAccountIds.join(',') !== (appSettings.quickBooksPaymentAccounts || '') ||
+      defaultPaymentAccountId !== (appSettings.quickBooksDefaultPaymentAccountId || '');
+
+    // Only enable save if there are changes AND all required fields are filled
     return (
+      hasChanges &&
       selectedExpenseAccountId !== '' &&
       selectedPaymentAccountIds.length > 0 &&
       defaultPaymentAccountId !== ''
     );
-  }, [selectedExpenseAccountId, selectedPaymentAccountIds, defaultPaymentAccountId]);
+  }, [selectedExpenseAccountId, selectedPaymentAccountIds, defaultPaymentAccountId, appSettings]);
 
   if (!isConnectedToQuickBooks) {
     return (
