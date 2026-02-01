@@ -233,17 +233,17 @@ const QBAccountsScreen = () => {
             {/* Expense Account Section */}
             <View style={styles.topSection}>
               <Text txtSize="title" style={{ marginBottom: 10 }}>
-                Default Expense Account for Bills
+                Expense Account for Bills
               </Text>
               <TouchableOpacity
                 style={[
                   styles.accountCard,
-                  { backgroundColor: colors.neutral200, borderColor: colors.border },
+                  { backgroundColor: colors.background, borderColor: colors.border },
                 ]}
                 onPress={() => setIsExpenseAccountPickerVisible(true)}
               >
                 <View style={{ flex: 1 }}>
-                  <Text txtSize="sub-title">{getAccountName(selectedExpenseAccountId, expenseAccounts)}</Text>
+                  <Text>{getAccountName(selectedExpenseAccountId, expenseAccounts)}</Text>
                 </View>
                 <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
               </TouchableOpacity>
@@ -255,14 +255,15 @@ const QBAccountsScreen = () => {
                 Payment Accounts
               </Text>
               <Text txtSize="xs" style={{ marginBottom: 10, color: colors.neutral600 }}>
-                Select one or more payment accounts to be used when adding receipts
+                Select one or more payment accounts to be used when adding receipts. You can set a default
+                payment account by tapping on it in the list below.
               </Text>
               <TouchableOpacity
-                style={[styles.addButton, { backgroundColor: colors.primary, borderColor: colors.border }]}
+                style={[styles.addButton, { backgroundColor: colors.background, borderColor: colors.border }]}
                 onPress={() => setIsPaymentAccountPickerVisible(true)}
               >
-                <MaterialIcons name="add" size={24} color="white" />
-                <Text style={{ color: 'white', marginLeft: 8 }}>Add Payment Account</Text>
+                <MaterialIcons name="add" size={24} color={colors.iconColor} />
+                <Text style={{ color: colors.iconColor, marginLeft: 8 }}>Add Payment Account</Text>
               </TouchableOpacity>
 
               {selectedPaymentAccountsList.length > 0 && (
@@ -348,7 +349,7 @@ const QBAccountsScreen = () => {
             >
               <Text style={{ flex: 1 }}>{item.label}</Text>
               {selectedPaymentAccountIds.includes(item.value) && (
-                <MaterialIcons name="check" size={24} color={colors.primary} />
+                <MaterialIcons name="check" size={24} color={colors.iconColor} />
               )}
             </TouchableOpacity>
           )}
@@ -361,7 +362,7 @@ const QBAccountsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 4,
   },
   notConnectedContainer: {
     flex: 1,
@@ -383,7 +384,7 @@ const styles = StyleSheet.create({
   accountCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 8,
     borderRadius: 8,
     borderWidth: 1,
   },
