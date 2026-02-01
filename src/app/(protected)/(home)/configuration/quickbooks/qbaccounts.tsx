@@ -12,7 +12,15 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@clerk/clerk-expo';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Platform, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { OptionEntry } from '@/src/components/OptionList';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
@@ -117,22 +125,16 @@ const QBAccountsScreen = () => {
   }, [isConnectedToQuickBooks, orgId, userId, getToken, expenseAccounts.length, paymentAccounts.length]);
 
   // Get display name for an account
-  const getAccountName = useCallback(
-    (accountId: string, accountsList: OptionEntry[]): string => {
-      const account = accountsList.find((acc) => acc.value === accountId);
-      return account ? account.label : 'Not Set';
-    },
-    [],
-  );
+  const getAccountName = useCallback((accountId: string, accountsList: OptionEntry[]): string => {
+    const account = accountsList.find((acc) => acc.value === accountId);
+    return account ? account.label : 'Not Set';
+  }, []);
 
   // Handle expense account selection
-  const handleExpenseAccountSelect = useCallback(
-    (option: OptionEntry) => {
-      setSelectedExpenseAccountId(option.value);
-      setIsExpenseAccountPickerVisible(false);
-    },
-    [],
-  );
+  const handleExpenseAccountSelect = useCallback((option: OptionEntry) => {
+    setSelectedExpenseAccountId(option.value);
+    setIsExpenseAccountPickerVisible(false);
+  }, []);
 
   // Handle payment account selection (multi-select)
   const handlePaymentAccountSelect = useCallback((option: OptionEntry) => {
@@ -221,18 +223,17 @@ const QBAccountsScreen = () => {
             <Text style={{ marginTop: 10 }}>Loading QuickBooks accounts...</Text>
           </View>
         ) : (
-          <ScrollView 
-            style={{ flex: 1 }}
-            contentContainerStyle={{ paddingBottom: 20 }}
-            showsVerticalScrollIndicator={true}
-          >
+          <View style={{ flex: 1 }}>
             {/* Expense Account Section */}
-            <View style={styles.section}>
+            <View style={styles.topSection}>
               <Text txtSize="title" style={{ marginBottom: 10 }}>
                 Default Expense Account for Bills
               </Text>
               <TouchableOpacity
-                style={[styles.accountCard, { backgroundColor: colors.neutral200, borderColor: colors.border }]}
+                style={[
+                  styles.accountCard,
+                  { backgroundColor: colors.neutral200, borderColor: colors.border },
+                ]}
                 onPress={() => setIsExpenseAccountPickerVisible(true)}
               >
                 <View style={{ flex: 1 }}>
@@ -259,43 +260,44 @@ const QBAccountsScreen = () => {
               </TouchableOpacity>
 
               {selectedPaymentAccountsList.length > 0 && (
-                <FlatList
-                  data={selectedPaymentAccountsList}
-                  keyExtractor={(item) => item.value}
-                  style={{ marginTop: 10 }}
-                  scrollEnabled={false}
-                  renderItem={({ item }) => {
-                    const isDefault = item.value === defaultPaymentAccountId;
-                    return (
-                      <View
-                        style={[
-                          styles.paymentAccountItem,
-                          { backgroundColor: colors.neutral200, borderColor: colors.border },
-                        ]}
-                      >
-                        <TouchableOpacity
-                          style={{ flex: 1 }}
-                          onPress={() => setDefaultPaymentAccountId(item.value)}
+                <View style={{ flex: 1 }}>
+                  <FlatList
+                    data={selectedPaymentAccountsList}
+                    keyExtractor={(item) => item.value}
+                    style={{ marginTop: 10 }}
+                    scrollEnabled={true}
+                    renderItem={({ item }) => {
+                      const isDefault = item.value === defaultPaymentAccountId;
+                      return (
+                        <View
+                          style={[
+                            styles.paymentAccountItem,
+                            { backgroundColor: colors.neutral200, borderColor: colors.border },
+                          ]}
                         >
-                          <Text style={{ color: isDefault ? colors.profitFg : colors.text }}>
-                            {item.label}
-                            {isDefault && ' (Default)'}
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={() =>
-                            setSelectedPaymentAccountIds((prev) => prev.filter((id) => id !== item.value))
-                          }
-                        >
-                          <MaterialIcons name="close" size={24} color={colors.iconColor} />
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  }}
-                />
+                          <TouchableOpacity
+                            style={{ flex: 1 }}
+                            onPress={() => setDefaultPaymentAccountId(item.value)}
+                          >
+                            <Text style={{ color: isDefault ? colors.profitFg : colors.text }}>
+                              {item.label}
+                              {isDefault && ' (Default)'}
+                            </Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() =>
+                              setSelectedPaymentAccountIds((prev) => prev.filter((id) => id !== item.value))
+                            }
+                          >
+                            <MaterialIcons name="close" size={24} color={colors.iconColor} />
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }}
+                  />
+                </View>
               )}
             </View>
-
             {/* Save Button */}
             <View style={styles.saveButtonContainer}>
               <ActionButton
@@ -304,7 +306,7 @@ const QBAccountsScreen = () => {
                 title="Save Settings"
               />
             </View>
-          </ScrollView>
+          </View>
         )}
       </View>
 
@@ -365,8 +367,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  topSection: {
+    marginBottom: 24,
+  },
   section: {
     marginBottom: 24,
+    flex: 1,
   },
   accountCard: {
     flexDirection: 'row',
