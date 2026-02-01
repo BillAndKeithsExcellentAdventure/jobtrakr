@@ -12,7 +12,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@clerk/clerk-expo';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Platform, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { OptionEntry } from '@/src/components/OptionList';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
@@ -236,7 +236,11 @@ const QBAccountsScreen = () => {
             <Text style={{ marginTop: 10 }}>Loading QuickBooks accounts...</Text>
           </View>
         ) : (
-          <>
+          <ScrollView 
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            showsVerticalScrollIndicator={true}
+          >
             {/* Expense Account Section */}
             <View style={styles.section}>
               <Text txtSize="title" style={{ marginBottom: 10 }}>
@@ -274,6 +278,7 @@ const QBAccountsScreen = () => {
                   data={selectedPaymentAccountsList}
                   keyExtractor={(item) => item.value}
                   style={{ marginTop: 10 }}
+                  scrollEnabled={false}
                   renderItem={({ item }) => {
                     const isDefault = item.value === defaultPaymentAccountId;
                     return (
@@ -338,7 +343,7 @@ const QBAccountsScreen = () => {
                 title="Save Settings"
               />
             </View>
-          </>
+          </ScrollView>
         )}
       </View>
 
