@@ -274,23 +274,34 @@ const QBAccountsScreen = () => {
                   data={selectedPaymentAccountsList}
                   keyExtractor={(item) => item.value}
                   style={{ marginTop: 10 }}
-                  renderItem={({ item }) => (
-                    <View
-                      style={[
-                        styles.paymentAccountItem,
-                        { backgroundColor: colors.neutral200, borderColor: colors.border },
-                      ]}
-                    >
-                      <Text style={{ flex: 1 }}>{item.label}</Text>
-                      <TouchableOpacity
-                        onPress={() =>
-                          setSelectedPaymentAccountIds((prev) => prev.filter((id) => id !== item.value))
-                        }
+                  renderItem={({ item }) => {
+                    const isDefault = item.value === defaultPaymentAccountId;
+                    return (
+                      <View
+                        style={[
+                          styles.paymentAccountItem,
+                          { backgroundColor: colors.neutral200, borderColor: colors.border },
+                        ]}
                       >
-                        <MaterialIcons name="close" size={24} color={colors.iconColor} />
-                      </TouchableOpacity>
-                    </View>
-                  )}
+                        <TouchableOpacity
+                          style={{ flex: 1 }}
+                          onPress={() => setDefaultPaymentAccountId(item.value)}
+                        >
+                          <Text style={{ color: isDefault ? colors.profitFg : colors.text }}>
+                            {item.label}
+                            {isDefault && ' (Default)'}
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() =>
+                            setSelectedPaymentAccountIds((prev) => prev.filter((id) => id !== item.value))
+                          }
+                        >
+                          <MaterialIcons name="close" size={24} color={colors.iconColor} />
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  }}
                 />
               )}
             </View>
