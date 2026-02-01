@@ -170,10 +170,16 @@ const QBAccountsScreen = () => {
     router,
   ]);
 
-  // Get selected payment accounts for display
+  // Get selected payment accounts for display, with default at the top
   const selectedPaymentAccountsList = useMemo(() => {
-    return paymentAccounts.filter((account) => selectedPaymentAccountIds.includes(account.value));
-  }, [paymentAccounts, selectedPaymentAccountIds]);
+    const filtered = paymentAccounts.filter((account) => selectedPaymentAccountIds.includes(account.value));
+    // Sort so default account appears first
+    return filtered.sort((a, b) => {
+      if (a.value === defaultPaymentAccountId) return -1;
+      if (b.value === defaultPaymentAccountId) return 1;
+      return 0;
+    });
+  }, [paymentAccounts, selectedPaymentAccountIds, defaultPaymentAccountId]);
 
   // Check if save is enabled
   const isSaveEnabled = useMemo(() => {
