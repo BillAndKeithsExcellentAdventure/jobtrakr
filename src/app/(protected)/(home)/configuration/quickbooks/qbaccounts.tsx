@@ -78,6 +78,13 @@ const QBAccountsScreen = () => {
     }
   }, [appSettings.quickBooksPaymentAccounts]);
 
+  // If no default is set, use the first selected payment account
+  useEffect(() => {
+    if (!defaultPaymentAccountId && selectedPaymentAccountIds.length > 0) {
+      setDefaultPaymentAccountId(selectedPaymentAccountIds[0]);
+    }
+  }, [defaultPaymentAccountId, selectedPaymentAccountIds]);
+
   // Sync default payment account from settings
   useEffect(() => {
     if (appSettings.quickBooksDefaultPaymentAccountId) {
