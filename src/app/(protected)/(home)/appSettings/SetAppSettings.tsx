@@ -10,6 +10,11 @@ import {
   useAppSettings,
   useSetAppSettingsCallback,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import {
+  useAllRows,
+  useAddRowCallback,
+  useUpdateRowCallback,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { isDevelopmentBuild } from '@/src/utils/environment';
 import {
   isQuickBooksConnected,
@@ -17,6 +22,7 @@ import {
   disconnectQuickBooks as qbDisconnect,
   fetchCompanyInfo,
 } from '@/src/utils/quickbooksAPI';
+import { importAccountsAndVendorsFromQuickBooks } from '@/src/utils/quickbooksImports';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import * as WebBrowser from 'expo-web-browser';
@@ -62,6 +68,14 @@ const SetAppSettingScreen = () => {
   const [isLoadingCompanySettings, setIsLoadingCompanySettings] = useState(false);
   const { isConnected, isInternetReachable, isConnectedToQuickBooks, setQuickBooksConnected } = useNetwork();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState(false);
+
+  // Get store hooks for accounts and vendors
+  const allAccounts = useAllRows('accounts');
+  const addAccount = useAddRowCallback('accounts');
+  const updateAccount = useUpdateRowCallback('accounts');
+  const allVendors = useAllRows('vendors');
+  const addVendor = useAddRowCallback('vendors');
+  const updateVendor = useUpdateRowCallback('vendors');
 
   // Check if we're in a development build
   const isDevelopment = isDevelopmentBuild();
@@ -282,6 +296,7 @@ const SetAppSettingScreen = () => {
                 onPress: async () => {
                   setIsLoadingCompanySettings(true);
                   try {
+                    // Fetch company info
                     const companySettings = await handleFetchCompanyInfoFromQuickBooks();
                     if (companySettings) {
                       const updatedSettings = {
@@ -290,6 +305,29 @@ const SetAppSettingScreen = () => {
                         syncWithQuickBooks: true,
                       };
                       setAppSettings(updatedSettings);
+                    }
+
+                    // Import accounts and vendors from QuickBooks
+                    try {
+                      await importAccountsAndVendorsFromQuickBooks(
+                        auth.orgId!,
+                        auth.userId!,
+                        auth.getToken,
+                        allAccounts,
+                        addAccount,
+                        updateAccount,
+                        allVendors,
+                        addVendor,
+                        updateVendor,
+                        true, // show alert
+                      );
+                    } catch (importError) {
+                      console.error('Error importing accounts and vendors:', importError);
+                      // Don't block the flow if import fails, just log it
+                      Alert.alert(
+                        'Warning',
+                        'Company settings updated successfully, but there was an issue importing accounts and vendors. You can import them manually from the Configuration screen.',
+                      );
                     }
                   } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -315,7 +353,21 @@ const SetAppSettingScreen = () => {
     } finally {
       setIsConnecting(false);
     }
-  }, [auth, checkQBConnectionWithRetry, settings, setAppSettings, setQuickBooksConnected, isConnecting]);
+  }, [
+    auth,
+    checkQBConnectionWithRetry,
+    settings,
+    setAppSettings,
+    setQuickBooksConnected,
+    isConnecting,
+    handleFetchCompanyInfoFromQuickBooks,
+    allAccounts,
+    addAccount,
+    updateAccount,
+    allVendors,
+    addVendor,
+    updateVendor,
+  ]);
 
   const handleDisconnectFromQuickBooks = useCallback(async () => {
     if (!auth.orgId || !auth.userId) {
