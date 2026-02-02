@@ -255,25 +255,25 @@ export default function ProjectHomeScreen() {
             // Find existing account with matching accountingId
             const existing = allAccounts.find((a) => a.accountingId === qbAccount.id);
 
+            // Store classification if available (for expense accounts), otherwise accountType (for payment accounts)
+            const accountType = qbAccount.classification || qbAccount.accountType || '';
+
             if (existing) {
               // Update existing account
-              const accountData: AccountData = {
+              updateAccount(existing.id, {
                 id: existing.id,
                 accountingId: qbAccount.id,
                 name: qbAccount.name,
-                // Store classification if available (for expense accounts), otherwise accountType (for payment accounts)
-                accountType: qbAccount.classification || qbAccount.accountType || '',
-              };
-              updateAccount(existing.id, accountData);
+                accountType,
+              });
               updatedCount++;
             } else {
               // Add new account (id will be generated automatically)
               addAccount({
                 accountingId: qbAccount.id,
                 name: qbAccount.name,
-                // Store classification if available (for expense accounts), otherwise accountType (for payment accounts)
-                accountType: qbAccount.classification || qbAccount.accountType || '',
-              } as AccountData);
+                accountType,
+              });
               addedCount++;
             }
           }
