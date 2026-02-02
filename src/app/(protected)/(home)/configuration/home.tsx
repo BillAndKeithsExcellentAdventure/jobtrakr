@@ -304,7 +304,6 @@ const Home = () => {
           console.error('Error importing vendors from QuickBooks:', error);
           Alert.alert('Error', 'Failed to import vendors from QuickBooks');
         }
-        return;
       } else if (menuItem === 'ImportQBAccounts') {
         // Import QuickBooks accounts
         if (!auth.orgId || !auth.userId) {
@@ -330,7 +329,6 @@ const Home = () => {
           console.error('Error importing QuickBooks accounts:', error);
           Alert.alert('Error', 'Failed to import QuickBooks accounts');
         }
-        return;
       }
     },
     [

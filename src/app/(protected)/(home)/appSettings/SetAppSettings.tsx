@@ -296,7 +296,6 @@ const SetAppSettingScreen = () => {
                 onPress: async () => {
                   setIsLoadingCompanySettings(true);
                   try {
-                    // Fetch company info
                     const companySettings = await handleFetchCompanyInfoFromQuickBooks();
                     if (companySettings) {
                       const updatedSettings = {
