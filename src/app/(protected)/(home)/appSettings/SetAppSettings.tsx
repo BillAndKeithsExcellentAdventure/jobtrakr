@@ -338,7 +338,7 @@ const SetAppSettingScreen = () => {
                       // Show success alert after all imports complete
                       Alert.alert(
                         'QuickBooks Import Complete',
-                        'Successfully imported company settings, accounts, and vendors from QuickBooks.',
+                        'Successfully loaded company settings, accounts, and vendors from QuickBooks.',
                       );
                     } catch (importError) {
                       console.error('Error importing accounts and vendors:', importError);
