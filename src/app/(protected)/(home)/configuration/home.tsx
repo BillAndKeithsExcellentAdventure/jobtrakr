@@ -5,7 +5,7 @@ import { Stack, useRouter } from 'expo-router';
 import { Paths, File } from 'expo-file-system';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { Pressable } from 'react-native-gesture-handler';
 import * as Sharing from 'expo-sharing';
 import { Alert, GestureResponderEvent, Platform } from 'react-native';
@@ -25,10 +25,7 @@ import { ActionButtonProps } from '@/src/components/ButtonBar';
 import * as DocumentPicker from 'expo-document-picker';
 import { useAuth } from '@clerk/clerk-expo';
 import { isQuickBooksConnected } from '@/src/utils/quickbooksAPI';
-import {
-  importAccountsFromQuickBooks,
-  importVendorsFromQuickBooks,
-} from '@/src/utils/quickbooksImports';
+import { importAccountsFromQuickBooks, importVendorsFromQuickBooks } from '@/src/utils/quickbooksImports';
 import { SvgImage } from '@/src/components/SvgImage';
 
 const Home = () => {
@@ -368,7 +365,7 @@ const Home = () => {
               },
             },
           ]),
-      ...(hasVendorData
+      ...(!isQBConnected && hasVendorData
         ? [
             {
               icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
@@ -379,13 +376,17 @@ const Home = () => {
             },
           ]
         : []),
-      {
-        icon: <MaterialCommunityIcons name="import" size={28} color={colors.iconColor} />,
-        label: 'Import Vendors',
-        onPress: (e: GestureResponderEvent, actionContext?: any) => {
-          handleMenuItemPress('ImportVendors');
-        },
-      },
+      ...(!isQBConnected
+        ? [
+            {
+              icon: <MaterialCommunityIcons name="import" size={28} color={colors.iconColor} />,
+              label: 'Import Vendors',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('ImportVendors');
+              },
+            },
+          ]
+        : []),
       ...(isQBConnected
         ? [
             {
@@ -396,7 +397,7 @@ const Home = () => {
               },
             },
             {
-              icon: <SvgImage fileName="qb-logo" width={28} height={28} />,
+              icon: <MaterialIcons name="account-balance" size={28} color={colors.iconColor} />,
               label: 'Import Accounts from QuickBooks',
               onPress: (e: GestureResponderEvent, actionContext?: any) => {
                 handleMenuItemPress('ImportQBAccounts');

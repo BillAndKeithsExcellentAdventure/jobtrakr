@@ -22,10 +22,7 @@ import {
   disconnectQuickBooks as qbDisconnect,
   fetchCompanyInfo,
 } from '@/src/utils/quickbooksAPI';
-import {
-  importAccountsFromQuickBooks,
-  importVendorsFromQuickBooks,
-} from '@/src/utils/quickbooksImports';
+import { importAccountsFromQuickBooks, importVendorsFromQuickBooks } from '@/src/utils/quickbooksImports';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import * as WebBrowser from 'expo-web-browser';
@@ -617,11 +614,11 @@ const SetAppSettingScreen = () => {
                 autoCorrect={false}
               />
             </View>
-            <View style={{ marginBottom: 4, width: 120, backgroundColor: colors.listBackground }}>
+            <View style={{ marginBottom: 4, width: 150, backgroundColor: colors.listBackground }}>
               <TextField
                 label="Zip*"
                 placeholder="Zip"
-                keyboardType="numeric"
+                keyboardType="number-pad"
                 value={String(settings.zip ?? '')}
                 onChangeText={(text) => handleChange('zip', text)}
                 onBlur={handleSave}
