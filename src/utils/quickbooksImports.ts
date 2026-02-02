@@ -41,9 +41,9 @@ export async function importAccountsFromQuickBooks(
       });
       updatedCount++;
     } else {
-      // Add new account - the callback will generate a unique id
+      // Add new account - the caller's add callback generates a unique id
       addAccount({
-        id: '', // Temporary placeholder, will be replaced with a UUID by useAddRowCallback
+        id: '', // Temporary placeholder, replaced with UUID by the add callback
         accountingId: qbAccount.id,
         name: qbAccount.name,
         accountType,
