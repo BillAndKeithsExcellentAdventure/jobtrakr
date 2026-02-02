@@ -370,7 +370,7 @@ const QBAccountsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 4,
+    paddingHorizontal: 12,
   },
   notConnectedContainer: {
     flex: 1,

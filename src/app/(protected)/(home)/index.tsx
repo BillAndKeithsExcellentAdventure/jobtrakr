@@ -261,7 +261,7 @@ export default function ProjectHomeScreen() {
             const existing = allAccounts.find((a) => a.accountingId === qbAccount.id);
 
             // Store classification if available (for expense accounts), otherwise accountType (for payment accounts)
-            const accountType = qbAccount.classification || qbAccount.accountType || '';
+            const accountType = qbAccount.accountType || qbAccount.classification || '';
 
             if (existing) {
               // Update existing account
