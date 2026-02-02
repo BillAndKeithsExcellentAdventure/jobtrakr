@@ -259,6 +259,7 @@ export default function ProjectHomeScreen() {
               id: existing ? existing.id : '',
               accountingId: qbAccount.id,
               name: qbAccount.name,
+              // Store classification if available (for expense accounts), otherwise accountType (for payment accounts)
               accountType: qbAccount.classification || qbAccount.accountType || '',
             };
 

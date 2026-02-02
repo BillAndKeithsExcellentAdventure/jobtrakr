@@ -98,9 +98,9 @@ const QBAccountsScreen = () => {
       return;
     }
 
-    // Filter expense accounts (accountType contains 'Expense')
+    // Filter expense accounts (accountType === 'Expense')
     const expenseList = storedAccounts
-      .filter((account) => account.accountType?.includes('Expense'))
+      .filter((account) => account.accountType === 'Expense')
       .map((account) => ({
         label: account.name,
         value: account.accountingId,
