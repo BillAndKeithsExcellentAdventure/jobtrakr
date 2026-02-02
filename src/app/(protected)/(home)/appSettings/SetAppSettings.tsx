@@ -22,7 +22,10 @@ import {
   disconnectQuickBooks as qbDisconnect,
   fetchCompanyInfo,
 } from '@/src/utils/quickbooksAPI';
-import { importAccountsAndVendorsFromQuickBooks } from '@/src/utils/quickbooksImports';
+import {
+  importAccountsFromQuickBooks,
+  importVendorsFromQuickBooks,
+} from '@/src/utils/quickbooksImports';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import * as WebBrowser from 'expo-web-browser';
@@ -66,6 +69,7 @@ const SetAppSettingScreen = () => {
   const [settings, setSettings] = useState<SettingsData>(appSettings);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isLoadingCompanySettings, setIsLoadingCompanySettings] = useState(false);
+  const [loadingStatusMessage, setLoadingStatusMessage] = useState<string>('');
   const { isConnected, isInternetReachable, isConnectedToQuickBooks, setQuickBooksConnected } = useNetwork();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState(false);
 
@@ -250,6 +254,7 @@ const SetAppSettingScreen = () => {
 
   const handleLoadCompanyInfoFromQuickBooks = useCallback(async () => {
     setIsLoadingCompanySettings(true);
+    setLoadingStatusMessage('Loading Company Settings...');
     try {
       const companySettings = await handleFetchCompanyInfoFromQuickBooks();
       if (companySettings) {
@@ -259,6 +264,7 @@ const SetAppSettingScreen = () => {
       }
     } finally {
       setIsLoadingCompanySettings(false);
+      setLoadingStatusMessage('');
     }
   }, [handleFetchCompanyInfoFromQuickBooks, setAppSettings, settings]);
 
@@ -296,6 +302,7 @@ const SetAppSettingScreen = () => {
                 onPress: async () => {
                   setIsLoadingCompanySettings(true);
                   try {
+                    setLoadingStatusMessage('Loading Company Settings...');
                     const companySettings = await handleFetchCompanyInfoFromQuickBooks();
                     if (companySettings) {
                       const updatedSettings = {
@@ -308,17 +315,30 @@ const SetAppSettingScreen = () => {
 
                     // Import accounts and vendors from QuickBooks
                     try {
-                      await importAccountsAndVendorsFromQuickBooks(
+                      setLoadingStatusMessage('Loading Accounts...');
+                      await importAccountsFromQuickBooks(
                         auth.orgId!,
                         auth.userId!,
                         auth.getToken,
                         allAccounts,
                         addAccount,
                         updateAccount,
+                      );
+
+                      setLoadingStatusMessage('Loading Vendors...');
+                      await importVendorsFromQuickBooks(
+                        auth.orgId!,
+                        auth.userId!,
+                        auth.getToken,
                         allVendors,
                         addVendor,
                         updateVendor,
-                        true, // show alert
+                      );
+
+                      // Show success alert after all imports complete
+                      Alert.alert(
+                        'QuickBooks Import Complete',
+                        'Successfully imported company settings, accounts, and vendors from QuickBooks.',
                       );
                     } catch (importError) {
                       console.error('Error importing accounts and vendors:', importError);
@@ -334,6 +354,7 @@ const SetAppSettingScreen = () => {
                     Alert.alert('Error', `Failed to update settings: ${errorMessage}`);
                   } finally {
                     setIsLoadingCompanySettings(false);
+                    setLoadingStatusMessage('');
                   }
                 },
               },
@@ -517,7 +538,10 @@ const SetAppSettingScreen = () => {
               {isLoadingCompanySettings ? (
                 <>
                   <ActivityIndicator size="large" color={colors.text} />
-                  <Text style={{ textAlign: 'center', marginTop: 8 }} text="Loading company settings..." />
+                  <Text
+                    style={{ textAlign: 'center', marginTop: 8 }}
+                    text={loadingStatusMessage || 'Loading...'}
+                  />
                 </>
               ) : isConnecting ? (
                 <>
