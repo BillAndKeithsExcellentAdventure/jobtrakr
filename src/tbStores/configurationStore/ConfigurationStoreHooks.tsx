@@ -50,6 +50,13 @@ export interface VendorData {
   notes?: string;
 }
 
+export interface AccountData {
+  id: string;
+  accountingId: string; // QuickBooks Account Id
+  name: string;
+  accountType: string; // e.g., 'Expense', 'Bank', 'Credit Card', 'Other Current Asset'
+}
+
 export function WorkCategoryCodeCompareAsNumber(a: WorkCategoryData, b: WorkCategoryData) {
   const aValue = Number(a.code);
   const bValue = Number(b.code);
@@ -66,12 +73,14 @@ export type CategorySchema = typeof TABLES_SCHEMA.categories;
 export type WorkItemsSchema = typeof TABLES_SCHEMA.workItems;
 export type TemplateSchema = typeof TABLES_SCHEMA.templates;
 export type VendorsSchema = typeof TABLES_SCHEMA.vendors;
+export type AccountsSchema = typeof TABLES_SCHEMA.accounts;
 
 export type SchemaMap = {
   templates: TemplateSchema;
   categories: CategorySchema;
   workItems: WorkItemsSchema;
   vendors: VendorsSchema;
+  accounts: AccountsSchema;
 };
 
 // Type mapping between table names and data types
@@ -81,6 +90,7 @@ export type TableDataMap = {
   templateWorkItems: TemplateWorkItemData;
   categories: WorkCategoryData;
   workItems: WorkItemData;
+  accounts: AccountData;
 };
 
 export type CONFIGURATION_TABLES = keyof TableDataMap;
