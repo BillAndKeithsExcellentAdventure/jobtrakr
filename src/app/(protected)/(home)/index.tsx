@@ -246,8 +246,13 @@ export default function ProjectHomeScreen() {
         router.push({ pathname: '/(protected)/(home)/about' });
       } else if (item === 'ImportQBAccounts') {
         // Import QuickBooks accounts
+        if (!auth.orgId || !auth.userId) {
+          Alert.alert('Error', 'Unable to import accounts. Please sign in again.');
+          return;
+        }
+
         try {
-          const qbAccounts = await fetchAccounts(auth.orgId!, auth.userId!, auth.getToken);
+          const qbAccounts = await fetchAccounts(auth.orgId, auth.userId, auth.getToken);
           let addedCount = 0;
           let updatedCount = 0;
 
