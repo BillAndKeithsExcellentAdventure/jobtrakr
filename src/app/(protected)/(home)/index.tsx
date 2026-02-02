@@ -275,6 +275,7 @@ export default function ProjectHomeScreen() {
             } else {
               // Add new account (id will be generated automatically)
               addAccount({
+                id: '',
                 accountingId: qbAccount.id,
                 name: qbAccount.name,
                 accountType,
