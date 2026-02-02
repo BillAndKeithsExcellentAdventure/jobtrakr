@@ -20,6 +20,9 @@ import { useNetwork } from '@/src/context/NetworkContext';
 import {
   useAllRows,
   WorkCategoryCodeCompareAsNumber,
+  useAddRowCallback,
+  useUpdateRowCallback,
+  AccountData,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAuth, useClerk } from '@clerk/clerk-expo';
 import { AntDesign } from '@expo/vector-icons';
@@ -29,6 +32,7 @@ import { Image } from 'expo-image';
 import { useColorScheme } from '@/src/components/useColorScheme';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { SvgImage } from '@/src/components/SvgImage';
+import { fetchAccounts } from '@/src/utils/quickbooksAPI';
 
 function isEntry(obj: any): obj is ProjectListEntryProps {
   return typeof obj.projectName === 'string' && typeof obj.projectId === 'string';
@@ -49,6 +53,9 @@ export default function ProjectHomeScreen() {
   const { orgRole, orgId } = auth;
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
   const { isConnectedToQuickBooks } = useNetwork();
+  const allAccounts = useAllRows('accounts');
+  const addAccount = useAddRowCallback('accounts');
+  const updateAccount = useUpdateRowCallback('accounts');
 
   const appSettings = useAppSettings();
 
@@ -237,11 +244,58 @@ export default function ProjectHomeScreen() {
         router.push({ pathname: '/(protected)/(home)/InviteUser' });
       } else if (item === 'About') {
         router.push({ pathname: '/(protected)/(home)/about' });
+      } else if (item === 'ImportQBAccounts') {
+        // Import QuickBooks accounts
+        if (!auth.orgId || !auth.userId) {
+          Alert.alert('Error', 'Unable to import accounts. Please sign in again.');
+          return;
+        }
+
+        try {
+          const qbAccounts = await fetchAccounts(auth.orgId, auth.userId, auth.getToken);
+          let addedCount = 0;
+          let updatedCount = 0;
+
+          for (const qbAccount of qbAccounts) {
+            // Find existing account with matching accountingId
+            const existing = allAccounts.find((a) => a.accountingId === qbAccount.id);
+
+            // Store classification if available (for expense accounts), otherwise accountType (for payment accounts)
+            const accountType = qbAccount.classification || qbAccount.accountType || '';
+
+            if (existing) {
+              // Update existing account
+              updateAccount(existing.id, {
+                id: existing.id,
+                accountingId: qbAccount.id,
+                name: qbAccount.name,
+                accountType,
+              });
+              updatedCount++;
+            } else {
+              // Add new account (id will be generated automatically)
+              addAccount({
+                accountingId: qbAccount.id,
+                name: qbAccount.name,
+                accountType,
+              });
+              addedCount++;
+            }
+          }
+
+          Alert.alert(
+            'QuickBooks Account Import Complete',
+            `Accounts imported successfully from QuickBooks.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
+          );
+        } catch (error) {
+          console.error('Error importing QuickBooks accounts:', error);
+          Alert.alert('Error', 'Failed to import QuickBooks accounts');
+        }
       } else if (item === 'Logout') {
         await signOut();
       }
     },
-    [router, signOut],
+    [router, signOut, auth, allAccounts, addAccount, updateAccount],
   );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(() => {
@@ -285,6 +339,17 @@ export default function ProjectHomeScreen() {
             } as ActionButtonProps,
           ]
         : []),
+      ...(isConnectedToQuickBooks
+        ? [
+            {
+              icon: <SvgImage fileName="qb-logo" width={28} height={28} />,
+              label: 'Import Accounts from QuickBooks',
+              onPress: (e, actionContext) => {
+                handleMenuItemPress('ImportQBAccounts', actionContext);
+              },
+            } as ActionButtonProps,
+          ]
+        : []),
       {
         icon: <AntDesign name="info-circle" size={28} color={colors.iconColor} />,
         label: 'About',
@@ -301,7 +366,7 @@ export default function ProjectHomeScreen() {
       },
     ];
     return menuButtons;
-  }, [colors, handleMenuItemPress, allCategories, orgId, orgRole]);
+  }, [colors, handleMenuItemPress, allCategories, orgId, orgRole, isConnectedToQuickBooks]);
 
   const headerRightComponent = useMemo(() => {
     return {

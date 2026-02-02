@@ -7,7 +7,7 @@ import {
   useAppSettings,
   useSetAppSettingsCallback,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
-import { fetchAccounts } from '@/src/utils/quickbooksAPI';
+import { useAllRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@clerk/clerk-expo';
 import { Stack, useRouter } from 'expo-router';
@@ -26,14 +26,6 @@ import { OptionEntry } from '@/src/components/OptionList';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import OptionList from '@/src/components/OptionList';
 
-interface QBAccount {
-  id: string;
-  name: string;
-  classification?: string;
-  accountType?: string;
-  accountSubType?: string;
-}
-
 const QBAccountsScreen = () => {
   const colors = useColors();
   const router = useRouter();
@@ -42,6 +34,7 @@ const QBAccountsScreen = () => {
   const { isConnectedToQuickBooks } = useNetwork();
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
+  const storedAccounts = useAllRows('accounts');
 
   const [isLoading, setIsLoading] = useState(false);
   const [expenseAccounts, setExpenseAccounts] = useState<OptionEntry[]>([]);
@@ -92,58 +85,43 @@ const QBAccountsScreen = () => {
     }
   }, [appSettings.quickBooksDefaultPaymentAccountId]);
 
-  // Fetch accounts from QuickBooks
+  // Load accounts from ConfigurationStore
   useEffect(() => {
-    const fetchQBAccounts = async () => {
-      if (hasAccountsFetched.current) {
-        return; // Already fetched during this session
-      }
+    if (hasAccountsFetched.current) {
+      return; // Already loaded during this session
+    }
 
-      if (!isConnectedToQuickBooks || !orgId || !userId) {
-        if (expenseAccounts.length > 0 || paymentAccounts.length > 0) {
-          setExpenseAccounts([]);
-          setPaymentAccounts([]);
-        }
-        return;
-      }
+    if (storedAccounts.length === 0) {
+      // No accounts in store
+      setExpenseAccounts([]);
+      setPaymentAccounts([]);
+      return;
+    }
 
-      setIsLoading(true);
-      try {
-        const accounts = await fetchAccounts(orgId, userId, getToken);
+    // Filter expense accounts (accountType === 'Expense')
+    const expenseList = storedAccounts
+      .filter((account) => account.accountType === 'Expense')
+      .map((account) => ({
+        label: account.name,
+        value: account.accountingId,
+      }));
+    setExpenseAccounts(expenseList);
 
-        // Filter expense accounts
-        const expenseList = accounts
-          .filter((account) => account.classification === 'Expense')
-          .map((account) => ({
-            label: account.name,
-            value: account.id,
-          }));
-        setExpenseAccounts(expenseList);
-
-        // Filter payment accounts (Bank, Credit Card, etc.)
-        const paymentList = accounts
-          .filter(
-            (account) =>
-              account.accountType === 'Bank' ||
-              account.accountType === 'Credit Card' ||
-              account.accountType === 'Other Current Asset',
-          )
-          .map((account) => ({
-            label: account.name,
-            value: account.id,
-          }));
-        setPaymentAccounts(paymentList);
-        hasAccountsFetched.current = true; // Mark as fetched
-      } catch (error) {
-        console.error('Error fetching QuickBooks accounts:', error);
-        Alert.alert('Error', 'Failed to fetch QuickBooks accounts. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchQBAccounts();
-  }, [isConnectedToQuickBooks, orgId, userId, getToken, expenseAccounts.length, paymentAccounts.length]);
+    // Filter payment accounts (Bank, Credit Card, Other Current Asset)
+    const paymentList = storedAccounts
+      .filter(
+        (account) =>
+          account.accountType === 'Bank' ||
+          account.accountType === 'Credit Card' ||
+          account.accountType === 'Other Current Asset',
+      )
+      .map((account) => ({
+        label: account.name,
+        value: account.accountingId,
+      }));
+    setPaymentAccounts(paymentList);
+    hasAccountsFetched.current = true; // Mark as loaded
+  }, [storedAccounts]);
 
   // Get display name for an account
   const getAccountName = useCallback((accountId: string, accountsList: OptionEntry[]): string => {
@@ -219,7 +197,8 @@ const QBAccountsScreen = () => {
     );
   }, [selectedExpenseAccountId, selectedPaymentAccountIds, defaultPaymentAccountId, appSettings]);
 
-  if (!isConnectedToQuickBooks) {
+  // Show message if no accounts are available (not connected and no stored accounts)
+  if (!isConnectedToQuickBooks && storedAccounts.length === 0) {
     return (
       <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
         <Stack.Screen
@@ -232,10 +211,10 @@ const QBAccountsScreen = () => {
           <View style={styles.notConnectedContainer}>
             <MaterialCommunityIcons name="link-off" size={64} color={colors.iconColor} />
             <Text txtSize="title" style={{ marginTop: 20, textAlign: 'center' }}>
-              Not Connected to QuickBooks
+              No Accounts Available
             </Text>
             <Text style={{ marginTop: 10, textAlign: 'center', paddingHorizontal: 20 }}>
-              Please connect to QuickBooks in the App Settings to configure accounts.
+              Please connect to QuickBooks and import accounts from the home screen menu to continue.
             </Text>
           </View>
         </View>
