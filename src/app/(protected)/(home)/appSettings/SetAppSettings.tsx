@@ -253,8 +253,8 @@ const SetAppSettingScreen = () => {
   }, [auth, settings]);
 
   const handleLoadCompanyInfoFromQuickBooks = useCallback(async () => {
-    setIsLoadingCompanySettings(true);
     setLoadingStatusMessage('Loading Company Settings...');
+    setIsLoadingCompanySettings(true);
     try {
       const companySettings = await handleFetchCompanyInfoFromQuickBooks();
       if (companySettings) {
@@ -300,9 +300,9 @@ const SetAppSettingScreen = () => {
               {
                 text: 'OK',
                 onPress: async () => {
+                  setLoadingStatusMessage('Loading Company Settings...');
                   setIsLoadingCompanySettings(true);
                   try {
-                    setLoadingStatusMessage('Loading Company Settings...');
                     const companySettings = await handleFetchCompanyInfoFromQuickBooks();
                     if (companySettings) {
                       const updatedSettings = {
