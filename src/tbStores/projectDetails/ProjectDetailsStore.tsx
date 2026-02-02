@@ -19,6 +19,9 @@ export const TABLES_SCHEMA = {
     id: { type: 'string' },
     accountingId: { type: 'string' },
     vendor: { type: 'string' },
+    vendorId: { type: 'string' }, // QuickBooks Vendor ID
+    paymentAccountId: { type: 'string' }, // QuickBooks Account ID
+    expenseAccountId: { type: 'string' }, // QuickBooks Expense Account ID
     description: { type: 'string' },
     amount: { type: 'number' }, // Total Amount
     numLineItems: { type: 'number' }, // Number of line items in the receipt
@@ -33,7 +36,9 @@ export const TABLES_SCHEMA = {
   invoices: {
     id: { type: 'string' },
     accountingId: { type: 'string' },
-    vendor: { type: 'string' },
+    vendorId: { type: 'string' }, // QuickBooks Vendor ID
+    expenseAccountId: { type: 'string' }, // QuickBooks Expense Account ID
+    paymentStatus: { type: 'string' }, // 'pending' | 'paid'
     description: { type: 'string' },
     amount: { type: 'number' }, // Total Amount
     numLineItems: { type: 'number' }, // Number of line items in the invoice

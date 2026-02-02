@@ -49,7 +49,10 @@ export function NoteCompletedCompare(a: NoteData, b: NoteData) {
 export type ReceiptData = {
   id: string;
   accountingId: string;
-  vendor: string;
+  vendor: string; // Vendor name for display purposes when not connected to QuickBooks
+  vendorId: string; // QuickBooks Vendor ID
+  paymentAccountId: string; // QuickBooks Account ID
+  expenseAccountId: string; // QuickBooks Expense Account ID
   description: string;
   amount: number;
   numLineItems: number;
@@ -66,7 +69,10 @@ export type ClassifiedReceiptData = ReceiptData & { fullyClassified: boolean };
 export type InvoiceData = {
   id: string;
   accountingId: string;
-  vendor: string;
+  vendor: string; // Vendor name for display purposes when not connected to QuickBooks
+  vendorId: string; // QuickBooks Vendor ID
+  paymentAccountId: string; // QuickBooks Account ID
+  expenseAccountId: string; // QuickBooks Expense Account ID
   description: string;
   amount: number;
   numLineItems: number;

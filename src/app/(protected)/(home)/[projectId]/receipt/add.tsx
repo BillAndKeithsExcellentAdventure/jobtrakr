@@ -32,7 +32,7 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker';
 const AddReceiptPage = () => {
   const defaultDate = useMemo(() => new Date(), []);
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
-  const { isConnected, isInternetReachable } = useNetwork();
+  const { isConnected, isInternetReachable, isConnectedToQuickBooks } = useNetwork();
   const addReceipt = useAddRowCallback(projectId, 'receipts');
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
@@ -59,7 +59,11 @@ const AddReceiptPage = () => {
   const handleVendorOptionChange = (option: OptionEntry) => {
     setPickedOption(option);
     if (option) {
-      handleVendorChange(option.label);
+      setProjectReceipt((prevReceipt) => ({
+        ...prevReceipt,
+        vendor: option.label,
+        vendorId: option.value,
+      }));
     }
     setIsVendorListPickerVisible(false);
   };
@@ -77,6 +81,9 @@ const AddReceiptPage = () => {
     imageId: '',
     notes: '',
     markedComplete: false,
+    vendorId: '',
+    paymentAccountId: '',
+    expenseAccountId: '',
   });
 
   useEffect(() => {
@@ -289,6 +296,9 @@ const AddReceiptPage = () => {
       id: '',
       accountingId: '',
       vendor: '',
+      vendorId: '',
+      paymentAccountId: '',
+      expenseAccountId: '',
       description: '',
       amount: 0,
       numLineItems: 0,
@@ -330,11 +340,11 @@ const AddReceiptPage = () => {
 
           {vendors && vendors.length ? (
             <OptionPickerItem
-              containerStyle={styles.inputContainer}
+              containerStyle={[styles.inputContainer, { marginBottom: 6 }]}
               optionLabel={projectReceipt.vendor}
               label="Vendor/Merchant"
               placeholder="Vendor/Merchant"
-              onOptionLabelChange={handleVendorChange}
+              editable={isConnectedToQuickBooks ? false : true}
               onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
             />
           ) : (
@@ -345,11 +355,13 @@ const AddReceiptPage = () => {
               label="Vendor/Merchant"
               value={projectReceipt.vendor}
               onChangeText={handleVendorChange}
+              editable={isConnectedToQuickBooks ? false : true}
             />
           )}
 
           <NumberInputField
-            style={styles.inputContainer}
+            style={{ ...styles.inputContainer, marginTop: 0, paddingLeft: 10 }}
+            labelStyle={{ marginBottom: 2 }}
             placeholder="Amount"
             label="Amount"
             value={projectReceipt.amount}
@@ -395,8 +407,8 @@ const AddReceiptPage = () => {
                     ? 'Retake Picture (Offline)'
                     : 'Take Picture (Offline)'
                   : projectReceipt.imageId
-                  ? 'Retake Picture'
-                  : 'Take Picture'
+                    ? 'Retake Picture'
+                    : 'Take Picture'
               }
             />
           </View>
@@ -430,6 +442,7 @@ const AddReceiptPage = () => {
       </ModalScreenContainer>
       {vendors && isVendorListPickerVisible && (
         <BottomSheetContainer
+          modalHeight={'60%'}
           isVisible={isVendorListPickerVisible}
           onClose={() => setIsVendorListPickerVisible(false)}
         >
@@ -443,6 +456,7 @@ const AddReceiptPage = () => {
       )}
       {isCategoryPickerVisible && (
         <BottomSheetContainer
+          modalHeight={'60%'}
           isVisible={isCategoryPickerVisible}
           onClose={() => setIsCategoryPickerVisible(false)}
         >
