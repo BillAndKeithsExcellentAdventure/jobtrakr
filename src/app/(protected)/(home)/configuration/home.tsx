@@ -24,7 +24,12 @@ import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import * as DocumentPicker from 'expo-document-picker';
 import { useAuth } from '@clerk/clerk-expo';
-import { fetchVendors, isQuickBooksConnected } from '@/src/utils/quickbooksAPI';
+import { isQuickBooksConnected } from '@/src/utils/quickbooksAPI';
+import {
+  importAccountsFromQuickBooks,
+  importVendorsFromQuickBooks,
+} from '@/src/utils/quickbooksImports';
+import { SvgImage } from '@/src/components/SvgImage';
 
 const Home = () => {
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
@@ -39,6 +44,9 @@ const Home = () => {
   const importConfiguration = useImportJsonConfigurationDataCallback();
   const addVendorToStore = useAddRowCallback('vendors');
   const updateVendor = useUpdateRowCallback('vendors');
+  const allAccounts = useAllRows('accounts');
+  const addAccount = useAddRowCallback('accounts');
+  const updateAccount = useUpdateRowCallback('accounts');
   const [isQBConnected, setIsQBConnected] = useState<boolean>(false);
   const auth = useAuth();
 
@@ -278,43 +286,49 @@ const Home = () => {
         ]);
         return;
       } else if (menuItem === 'GetQBVendors') {
-        const qbVendors = await fetchVendors(auth.orgId!, auth.userId!, auth.getToken);
-        let addedCount = 0;
-        let updatedCount = 0;
+        try {
+          const { addedCount, updatedCount } = await importVendorsFromQuickBooks(
+            auth.orgId!,
+            auth.userId!,
+            auth.getToken,
+            allVendors,
+            addVendorToStore,
+            updateVendor,
+          );
 
-        for (const qbVendor of qbVendors) {
-          // Find existing vendor with matching accountingId
-          const existing = allVendors.find((v) => v.accountingId === qbVendor.id);
-
-          const vendorData: VendorData = {
-            id: existing ? existing.id : '', // empty id for new vendors
-            accountingId: qbVendor.id,
-            name: qbVendor.name,
-            address: qbVendor.address || '',
-            city: qbVendor.city || '',
-            state: qbVendor.state || '',
-            zip: qbVendor.zip || '',
-            mobilePhone: qbVendor.mobilePhone || '',
-            businessPhone: qbVendor.businessPhone || '',
-            notes: qbVendor.notes || '',
-          };
-
-          if (existing) {
-            // Update existing vendor
-            updateVendor(existing.id, vendorData);
-            updatedCount++;
-          } else {
-            // Add new vendor
-            addVendorToStore(vendorData);
-            addedCount++;
-          }
+          Alert.alert(
+            'QuickBooks Vendor Import Complete',
+            `Vendors imported successfully from QuickBooks.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
+          );
+        } catch (error) {
+          console.error('Error importing vendors from QuickBooks:', error);
+          Alert.alert('Error', 'Failed to import vendors from QuickBooks');
+        }
+      } else if (menuItem === 'ImportQBAccounts') {
+        // Import QuickBooks accounts
+        if (!auth.orgId || !auth.userId) {
+          Alert.alert('Error', 'Unable to import accounts. Please sign in again.');
+          return;
         }
 
-        Alert.alert(
-          'QuickBooks Vendor Import Complete',
-          `Vendors imported successfully from QuickBooks.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
-        );
-        return;
+        try {
+          const { addedCount, updatedCount } = await importAccountsFromQuickBooks(
+            auth.orgId,
+            auth.userId,
+            auth.getToken,
+            allAccounts,
+            addAccount,
+            updateAccount,
+          );
+
+          Alert.alert(
+            'QuickBooks Account Import Complete',
+            `Accounts imported successfully from QuickBooks.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
+          );
+        } catch (error) {
+          console.error('Error importing QuickBooks accounts:', error);
+          Alert.alert('Error', 'Failed to import QuickBooks accounts');
+        }
       }
     },
     [
@@ -324,6 +338,9 @@ const Home = () => {
       addVendorToStore,
       updateVendor,
       cleanupOrphanedWorkItems,
+      allAccounts,
+      addAccount,
+      updateAccount,
       auth.orgId,
       auth.userId,
       auth.getToken,
@@ -376,6 +393,13 @@ const Home = () => {
               label: 'Get Vendors from QuickBooks',
               onPress: (e: GestureResponderEvent, actionContext?: any) => {
                 handleMenuItemPress('GetQBVendors');
+              },
+            },
+            {
+              icon: <SvgImage fileName="qb-logo" width={28} height={28} />,
+              label: 'Import Accounts from QuickBooks',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('ImportQBAccounts');
               },
             },
           ]

@@ -10,6 +10,11 @@ import {
   useAppSettings,
   useSetAppSettingsCallback,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import {
+  useAllRows,
+  useAddRowCallback,
+  useUpdateRowCallback,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { isDevelopmentBuild } from '@/src/utils/environment';
 import {
   isQuickBooksConnected,
@@ -17,6 +22,10 @@ import {
   disconnectQuickBooks as qbDisconnect,
   fetchCompanyInfo,
 } from '@/src/utils/quickbooksAPI';
+import {
+  importAccountsFromQuickBooks,
+  importVendorsFromQuickBooks,
+} from '@/src/utils/quickbooksImports';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import * as WebBrowser from 'expo-web-browser';
@@ -60,8 +69,17 @@ const SetAppSettingScreen = () => {
   const [settings, setSettings] = useState<SettingsData>(appSettings);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isLoadingCompanySettings, setIsLoadingCompanySettings] = useState(false);
+  const [loadingStatusMessage, setLoadingStatusMessage] = useState<string>('');
   const { isConnected, isInternetReachable, isConnectedToQuickBooks, setQuickBooksConnected } = useNetwork();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState(false);
+
+  // Get store hooks for accounts and vendors
+  const allAccounts = useAllRows('accounts');
+  const addAccount = useAddRowCallback('accounts');
+  const updateAccount = useUpdateRowCallback('accounts');
+  const allVendors = useAllRows('vendors');
+  const addVendor = useAddRowCallback('vendors');
+  const updateVendor = useUpdateRowCallback('vendors');
 
   // Check if we're in a development build
   const isDevelopment = isDevelopmentBuild();
@@ -235,6 +253,7 @@ const SetAppSettingScreen = () => {
   }, [auth, settings]);
 
   const handleLoadCompanyInfoFromQuickBooks = useCallback(async () => {
+    setLoadingStatusMessage('Loading Company Settings...');
     setIsLoadingCompanySettings(true);
     try {
       const companySettings = await handleFetchCompanyInfoFromQuickBooks();
@@ -245,6 +264,7 @@ const SetAppSettingScreen = () => {
       }
     } finally {
       setIsLoadingCompanySettings(false);
+      setLoadingStatusMessage('');
     }
   }, [handleFetchCompanyInfoFromQuickBooks, setAppSettings, settings]);
 
@@ -280,6 +300,7 @@ const SetAppSettingScreen = () => {
               {
                 text: 'OK',
                 onPress: async () => {
+                  setLoadingStatusMessage('Loading Company Settings...');
                   setIsLoadingCompanySettings(true);
                   try {
                     const companySettings = await handleFetchCompanyInfoFromQuickBooks();
@@ -291,12 +312,49 @@ const SetAppSettingScreen = () => {
                       };
                       setAppSettings(updatedSettings);
                     }
+
+                    // Import accounts and vendors from QuickBooks
+                    try {
+                      setLoadingStatusMessage('Loading Accounts...');
+                      await importAccountsFromQuickBooks(
+                        auth.orgId!,
+                        auth.userId!,
+                        auth.getToken,
+                        allAccounts,
+                        addAccount,
+                        updateAccount,
+                      );
+
+                      setLoadingStatusMessage('Loading Vendors...');
+                      await importVendorsFromQuickBooks(
+                        auth.orgId!,
+                        auth.userId!,
+                        auth.getToken,
+                        allVendors,
+                        addVendor,
+                        updateVendor,
+                      );
+
+                      // Show success alert after all imports complete
+                      Alert.alert(
+                        'QuickBooks Import Complete',
+                        'Successfully loaded company settings, accounts, and vendors from QuickBooks.',
+                      );
+                    } catch (importError) {
+                      console.error('Error importing accounts and vendors:', importError);
+                      // Don't block the flow if import fails, just log it
+                      Alert.alert(
+                        'Warning',
+                        'Company settings updated successfully, but there was an issue importing accounts and vendors. You can import them manually from the Configuration screen.',
+                      );
+                    }
                   } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
                     console.error('Error updating settings after QB connection:', errorMessage);
                     Alert.alert('Error', `Failed to update settings: ${errorMessage}`);
                   } finally {
                     setIsLoadingCompanySettings(false);
+                    setLoadingStatusMessage('');
                   }
                 },
               },
@@ -315,7 +373,21 @@ const SetAppSettingScreen = () => {
     } finally {
       setIsConnecting(false);
     }
-  }, [auth, checkQBConnectionWithRetry, settings, setAppSettings, setQuickBooksConnected, isConnecting]);
+  }, [
+    auth,
+    checkQBConnectionWithRetry,
+    settings,
+    setAppSettings,
+    setQuickBooksConnected,
+    isConnecting,
+    handleFetchCompanyInfoFromQuickBooks,
+    allAccounts,
+    addAccount,
+    updateAccount,
+    allVendors,
+    addVendor,
+    updateVendor,
+  ]);
 
   const handleDisconnectFromQuickBooks = useCallback(async () => {
     if (!auth.orgId || !auth.userId) {
@@ -466,7 +538,10 @@ const SetAppSettingScreen = () => {
               {isLoadingCompanySettings ? (
                 <>
                   <ActivityIndicator size="large" color={colors.text} />
-                  <Text style={{ textAlign: 'center', marginTop: 8 }} text="Loading company settings..." />
+                  <Text
+                    style={{ textAlign: 'center', marginTop: 8 }}
+                    text={loadingStatusMessage || 'Loading...'}
+                  />
                 </>
               ) : isConnecting ? (
                 <>
