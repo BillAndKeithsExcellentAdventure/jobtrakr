@@ -268,13 +268,12 @@ export default function ProjectHomeScreen() {
               updatedCount++;
             } else {
               // Add new account (id will be generated automatically)
-              const accountData: Omit<AccountData, 'id'> = {
+              addAccount({
                 accountingId: qbAccount.id,
                 name: qbAccount.name,
                 // Store classification if available (for expense accounts), otherwise accountType (for payment accounts)
                 accountType: qbAccount.classification || qbAccount.accountType || '',
-              };
-              addAccount(accountData as AccountData);
+              } as AccountData);
               addedCount++;
             }
           }

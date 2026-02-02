@@ -214,8 +214,7 @@ const QBAccountsScreen = () => {
               No Accounts Available
             </Text>
             <Text style={{ marginTop: 10, textAlign: 'center', paddingHorizontal: 20 }}>
-              Please connect to QuickBooks and import accounts from the home screen menu to configure QuickBooks
-              accounts.
+              Please connect to QuickBooks and import accounts from the home screen menu to continue.
             </Text>
           </View>
         </View>
