@@ -17,7 +17,9 @@ A Cloudflare Workers-based backend API for managing construction project media, 
   - [Media Management](#media-management)
   - [Intelligence Services](#intelligence-services)
   - [Change Order Management](#change-order-management)
+  - [Vendor Access Management](#vendor-access-management)
   - [QuickBooks Online Integration](#quickbooks-online-integration)
+  - [Notification Management](#notification-management)
 - [Error Responses](#error-responses)
 - [Development](#development)
 
@@ -111,9 +113,9 @@ Create a new organization.
 
 ```json
 {
-	"success": true,
-	"message": "Organization added successfully",
-	"id": 123
+  "success": true,
+  "message": "Organization added successfully",
+  "id": 123
 }
 ```
 
@@ -122,6 +124,81 @@ Create a new organization.
 ### Receipt Management
 
 #### POST /addReceipt
+
+Create a receipt with metadata and auto-generated accounting ID. Optionally creates a QuickBooks bill.
+
+**Authentication:** Required
+
+**Content-Type:** `application/json`
+
+**Request Body:**
+
+```json
+{
+  "userId": "string",
+  "orgId": "string",
+  "projectId": "string",
+  "projectAbbr": "string",
+  "projectName": "string",
+  "invoiceId": "string",
+  "imageId": "string",
+  "addAttachment": false,
+  "qbBillData": {
+    "vendorRef": "123",
+    "dueDate": "2024-02-15",
+    "docNumber": "RECEIPT-001",
+    "privateNote": "Optional note",
+    "lineItems": [
+      {
+        "amount": 100.0,
+        "description": "Line item description",
+        "accountRef": "45"
+      }
+    ]
+  }
+}
+```
+
+**Response (without QuickBooks):**
+
+```json
+{
+  "success": true,
+  "accountId": "RECEIPT-PROJ-001"
+}
+```
+
+**Response (with QuickBooks):**
+
+```json
+{
+  "success": true,
+  "message": "Bill created successfully",
+  "data": {
+    "Bill": {
+      "Id": "789",
+      "VendorRef": { "value": "123" },
+      "TotalAmt": 100.0,
+      "DueDate": "2024-02-15",
+      "DocNumber": "RECEIPT-001"
+    }
+  }
+}
+```
+
+**Notes:**
+
+- Auto-generates accounting ID in format: `RECEIPT-{projectAbbr}-{sequentialNumber}`
+- Required fields: `userId`, `orgId`, `projectId`, `projectAbbr`, `projectName`, `invoiceId`, `imageId`, `addAttachment`
+- `qbBillData` is optional - when provided, creates a bill in QuickBooks Online
+- When `qbBillData` is provided:
+  - `vendorRef` must be a valid QuickBooks vendor ID
+  - `lineItems` array is required with amount, description, and accountRef for each line
+  - Optional fields: `dueDate`, `docNumber`, `privateNote`
+  - If `addAttachment` is true, the system will attach the image to the QuickBooks bill
+- Use `/addReceiptImage` to upload the actual receipt image file
+
+#### POST /addReceiptImage
 
 Upload a receipt image with metadata.
 
@@ -161,9 +238,9 @@ Retrieve all receipts for a project.
 
 ```json
 {
-	"userId": "string",
-	"organizationId": "string",
-	"projectId": "string"
+  "userId": "string",
+  "organizationId": "string",
+  "projectId": "string"
 }
 ```
 
@@ -171,9 +248,9 @@ Retrieve all receipts for a project.
 
 ```json
 {
-	"success": true,
-	"message": "Receipts retrieved successfully",
-	"data": "[...]"
+  "success": true,
+  "message": "Receipts retrieved successfully",
+  "data": "[...]"
 }
 ```
 
@@ -209,7 +286,82 @@ Retrieve a receipt for processing (internal use).
 
 ### Invoice Management
 
-#### POST /addInvoice
+#### POST /addBill
+
+Create a bill/invoice with metadata and auto-generated accounting ID. Optionally creates a QuickBooks bill.
+
+**Authentication:** Required
+
+**Content-Type:** `application/json`
+
+**Request Body:**
+
+```json
+{
+  "userId": "string",
+  "orgId": "string",
+  "projectId": "string",
+  "projectAbbr": "string",
+  "projectName": "string",
+  "invoiceId": "string",
+  "imageId": "string",
+  "addAttachment": false,
+  "qbBillData": {
+    "vendorRef": "123",
+    "dueDate": "2024-02-15",
+    "docNumber": "INV-2024-001",
+    "privateNote": "Optional note",
+    "lineItems": [
+      {
+        "amount": 100.0,
+        "description": "Line item description",
+        "accountRef": "45"
+      }
+    ]
+  }
+}
+```
+
+**Response (without QuickBooks):**
+
+```json
+{
+  "success": true,
+  "accountId": "BILL-PROJ-001"
+}
+```
+
+**Response (with QuickBooks):**
+
+```json
+{
+  "success": true,
+  "message": "Bill created successfully",
+  "data": {
+    "Bill": {
+      "Id": "789",
+      "VendorRef": { "value": "123" },
+      "TotalAmt": 100.0,
+      "DueDate": "2024-02-15",
+      "DocNumber": "INV-2024-001"
+    }
+  }
+}
+```
+
+**Notes:**
+
+- Auto-generates accounting ID in format: `BILL-{projectAbbr}-{sequentialNumber}`
+- Required fields: `userId`, `orgId`, `projectId`, `projectAbbr`, `projectName`, `invoiceId`, `imageId`, `addAttachment`
+- `qbBillData` is optional - when provided, creates a bill in QuickBooks Online
+- When `qbBillData` is provided:
+  - `vendorRef` must be a valid QuickBooks vendor ID
+  - `lineItems` array is required with amount, description, and accountRef for each line
+  - Optional fields: `dueDate`, `docNumber`, `privateNote`
+  - If `addAttachment` is true, the system will attach the image to the QuickBooks bill
+- Use `/addInvoiceImage` to upload the actual invoice image file
+
+#### POST /addInvoiceImage
 
 Upload an invoice image with metadata.
 
@@ -217,7 +369,7 @@ Upload an invoice image with metadata.
 
 **Content-Type:** `multipart/form-data`
 
-**Form Fields:** Same as `/addReceipt`
+**Form Fields:** Same as `/addReceiptImage`
 
 **Response:**
 
@@ -229,9 +381,9 @@ Upload an invoice image with metadata.
 }
 ```
 
-#### GET /fetchProjectInvoices
+#### GET /fetchProjectInvoiceImages
 
-Retrieve all invoices for a project.
+Retrieve all invoice images for a project.
 
 **Authentication:** Required
 
@@ -239,9 +391,9 @@ Retrieve all invoices for a project.
 
 ```json
 {
-	"userId": "string",
-	"organizationId": "string",
-	"projectId": "string"
+  "userId": "string",
+  "organizationId": "string",
+  "projectId": "string"
 }
 ```
 
@@ -249,13 +401,13 @@ Retrieve all invoices for a project.
 
 ```json
 {
-	"success": true,
-	"message": "Invoices retrieved successfully",
-	"data": "[...]"
+  "success": true,
+  "message": "Invoice images retrieved successfully",
+  "data": "[...]"
 }
 ```
 
-#### GET /fetchInvoice
+#### GET /fetchInvoiceImage
 
 Retrieve a specific invoice image.
 
@@ -309,9 +461,9 @@ Retrieve all photos for a project.
 
 ```json
 {
-	"userId": "string",
-	"organizationId": "string",
-	"projectId": "string"
+  "userId": "string",
+  "organizationId": "string",
+  "projectId": "string"
 }
 ```
 
@@ -319,9 +471,9 @@ Retrieve all photos for a project.
 
 ```json
 {
-	"success": true,
-	"message": "Photos retrieved successfully",
-	"data": "[...]"
+  "success": true,
+  "message": "Photos retrieved successfully",
+  "data": "[...]"
 }
 ```
 
@@ -360,9 +512,9 @@ Mark specific photos as public within a project.
 
 ```json
 {
-	"userId": "string",
-	"projectId": "string",
-	"imageIds": ["string"]
+  "userId": "string",
+  "projectId": "string",
+  "imageIds": ["string"]
 }
 ```
 
@@ -370,38 +522,11 @@ Mark specific photos as public within a project.
 
 ```json
 {
-	"success": true,
-	"message": "All photos made public successfully",
-	"inserted": ["imageId1", "imageId2"],
-	"alreadyExists": [],
-	"failed": []
-}
-```
-
-##### POST /makePhotosNonPublic
-
-Remove public access status from specific photos.
-
-**Authentication:** Required (⚠️ Note: Currently bypassed in code for testing - should be enabled in production)
-
-**Request Body:**
-
-```json
-{
-	"userId": "string",
-	"imageIds": ["string"]
-}
-```
-
-**Response:**
-
-```json
-{
-	"success": true,
-	"message": "All photos made non-public successfully",
-	"deleted": ["imageId1", "imageId2"],
-	"notFound": [],
-	"failed": []
+  "success": true,
+  "message": "All photos made public successfully",
+  "inserted": ["imageId1", "imageId2"],
+  "alreadyExists": [],
+  "failed": []
 }
 ```
 
@@ -415,11 +540,11 @@ Grant a user access to view public photos in a specific project.
 
 ```json
 {
-	"userId": "string",
-	"emailId": "string",
-	"projectId": "string",
-	"projectName": "string",
-	"orgId": "string"
+  "userId": "string",
+  "emailId": "string",
+  "projectId": "string",
+  "projectName": "string",
+  "orgId": "string"
 }
 ```
 
@@ -427,14 +552,14 @@ Grant a user access to view public photos in a specific project.
 
 ```json
 {
-	"success": true,
-	"message": "Photo access granted successfully",
-	"data": {
-		"email_id": "user@example.com",
-		"project_id": "project123",
-		"project_name": "My Project",
-		"org_id": "org456"
-	}
+  "success": true,
+  "message": "Photo access granted successfully",
+  "data": {
+    "email_id": "user@example.com",
+    "project_id": "project123",
+    "project_name": "My Project",
+    "org_id": "org456"
+  }
 }
 ```
 
@@ -448,8 +573,8 @@ Revoke all users' access to public photos in a specific project.
 
 ```json
 {
-	"userId": "string",
-	"projectId": "string"
+  "userId": "string",
+  "projectId": "string"
 }
 ```
 
@@ -457,9 +582,9 @@ Revoke all users' access to public photos in a specific project.
 
 ```json
 {
-	"success": true,
-	"message": "Photo access revoked successfully for 2 user(s)",
-	"rowsDeleted": 2
+  "success": true,
+  "message": "Photo access revoked successfully for 2 user(s)",
+  "rowsDeleted": 2
 }
 ```
 
@@ -477,9 +602,9 @@ Retrieve a list of email addresses that have been granted access to public photo
 
 ```json
 {
-	"success": true,
-	"message": "Emails retrieved successfully",
-	"data": ["user1@example.com", "user2@example.com", "user3@example.com"]
+  "success": true,
+  "message": "Emails retrieved successfully",
+  "data": ["user1@example.com", "user2@example.com", "user3@example.com"]
 }
 ```
 
@@ -489,8 +614,8 @@ Retrieve a list of email addresses that have been granted access to public photo
 
 ```json
 {
-	"success": false,
-	"message": "Missing required field: projectId"
+  "success": false,
+  "message": "Missing required field: projectId"
 }
 ```
 
@@ -520,9 +645,9 @@ Retrieve a list of public image IDs for a specific project.
 
 ```json
 {
-	"success": true,
-	"message": "Image IDs retrieved successfully",
-	"data": ["img-001", "img-002", "img-003"]
+  "success": true,
+  "message": "Image IDs retrieved successfully",
+  "data": ["img-001", "img-002", "img-003"]
 }
 ```
 
@@ -532,8 +657,8 @@ Retrieve a list of public image IDs for a specific project.
 
 ```json
 {
-	"success": false,
-	"message": "Missing required field: projectId"
+  "success": false,
+  "message": "Missing required field: projectId"
 }
 ```
 
@@ -564,10 +689,10 @@ Check if an email address is registered for public photo access and their regist
 
 ```json
 {
-	"success": true,
-	"registered": false,
-	"message": "User not found in photo access records",
-	"status": "NOT_FOUND"
+  "success": true,
+  "registered": false,
+  "message": "User not found in photo access records",
+  "status": "NOT_FOUND"
 }
 ```
 
@@ -575,11 +700,11 @@ Check if an email address is registered for public photo access and their regist
 
 ```json
 {
-	"success": true,
-	"registered": true,
-	"requiresNewPassword": true,
-	"message": "User needs to complete registration by setting a password",
-	"status": "NEEDS_PASSWORD"
+  "success": true,
+  "registered": true,
+  "requiresNewPassword": true,
+  "message": "User needs to complete registration by setting a password",
+  "status": "NEEDS_PASSWORD"
 }
 ```
 
@@ -587,13 +712,53 @@ Check if an email address is registered for public photo access and their regist
 
 ```json
 {
-	"success": true,
-	"registered": true,
-	"requiresNewPassword": false,
-	"message": "User is fully registered for public photo access",
-	"status": "REGISTERED"
+  "success": true,
+  "registered": true,
+  "requiresNewPassword": false,
+  "message": "User is fully registered for public photo access",
+  "status": "REGISTERED"
 }
 ```
+
+**CORS Headers:** Allowed origin: `*`
+
+##### POST /loginForPublicPhotos
+
+Authenticate a public photo user and receive access tokens.
+
+**Authentication:** Not required
+
+**Request Body:**
+
+```json
+{
+  "email": "string",
+  "password": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "email": "user@example.com",
+    "registered": true,
+    "accessToken": "jwt_access_token",
+    "accessExpiresIn": 900,
+    "refreshToken": "refresh_token_string",
+    "refreshExpiresIn": 5184000
+  }
+}
+```
+
+**Notes:**
+
+- Returns 404 if email not found
+- Returns 409 if password is not set (registration required)
+- Returns 401 if password is invalid
 
 **CORS Headers:** Allowed origin: `*`
 
@@ -607,8 +772,8 @@ Complete registration for public photo access by setting a password. This must b
 
 ```json
 {
-	"email": "string",
-	"newPassword": "string"
+  "email": "string",
+  "newPassword": "string"
 }
 ```
 
@@ -616,16 +781,16 @@ Complete registration for public photo access by setting a password. This must b
 
 ```json
 {
-	"success": true,
-	"message": "Registration completed successfully",
-	"data": {
-		"email": "user@example.com",
-		"registered": true,
-		"accessToken": "jwt_access_token",
-		"accessExpiresIn": 900,
-		"refreshToken": "refresh_token_string",
-		"refreshExpiresIn": 2592000
-	}
+  "success": true,
+  "message": "Registration completed successfully",
+  "data": {
+    "email": "user@example.com",
+    "registered": true,
+    "accessToken": "jwt_access_token",
+    "accessExpiresIn": 900,
+    "refreshToken": "refresh_token_string",
+    "refreshExpiresIn": 2592000
+  }
 }
 ```
 
@@ -647,9 +812,9 @@ Refresh an expired access token using a valid refresh token.
 
 ```json
 {
-	"email": "string",
-	"refreshToken": "string",
-	"accessToken": "string"
+  "email": "string",
+  "refreshToken": "string",
+  "accessToken": "string"
 }
 ```
 
@@ -657,13 +822,13 @@ Refresh an expired access token using a valid refresh token.
 
 ```json
 {
-	"success": true,
-	"message": "Access token refreshed successfully",
-	"data": {
-		"email": "user@example.com",
-		"accessToken": "new_jwt_access_token",
-		"expiresIn": 900
-	}
+  "success": true,
+  "message": "Access token refreshed successfully",
+  "data": {
+    "email": "user@example.com",
+    "accessToken": "new_jwt_access_token",
+    "expiresIn": 900
+  }
 }
 ```
 
@@ -679,7 +844,7 @@ Get the list of projects that a user has been granted access to view public phot
 
 ```json
 {
-	"email": "string"
+  "email": "string"
 }
 ```
 
@@ -687,18 +852,18 @@ Get the list of projects that a user has been granted access to view public phot
 
 ```json
 {
-	"success": true,
-	"message": "Granted project IDs retrieved successfully",
-	"data": [
-		{
-			"projectId": "project123",
-			"projectName": "My Project"
-		},
-		{
-			"projectId": "project456",
-			"projectName": "Another Project"
-		}
-	]
+  "success": true,
+  "message": "Granted project IDs retrieved successfully",
+  "data": [
+    {
+      "projectId": "project123",
+      "projectName": "My Project"
+    },
+    {
+      "projectId": "project456",
+      "projectName": "Another Project"
+    }
+  ]
 }
 ```
 
@@ -726,9 +891,9 @@ Retrieve all public photos for a specific project that the user has access to.
 
 ```json
 {
-	"success": true,
-	"message": "Photos retrieved successfully",
-	"data": "[{\"orgId\":\"org456\",\"projectId\":\"project123\",\"imageId\":\"img789\",\"objects\":[{\"key\":\"org456/project123/img789\",\"size\":12345,\"long\":\"-122.4194\",\"lat\":\"37.7749\"}]}]"
+  "success": true,
+  "message": "Photos retrieved successfully",
+  "data": "[{\"orgId\":\"org456\",\"projectId\":\"project123\",\"imageId\":\"img789\",\"objects\":[{\"key\":\"org456/project123/img789\",\"size\":12345,\"long\":\"-122.4194\",\"lat\":\"37.7749\"}]}]"
 }
 ```
 
@@ -802,16 +967,6 @@ Upload a video with metadata.
 }
 ```
 
-#### GET /fetchVideo
-
-Retrieve a specific video file.
-
-**Authentication:** Required
-
-**Query Parameters:** Same as `/fetchReceipt`
-
-**Response:** Video file (MP4)
-
 ---
 
 ### Media Management
@@ -826,11 +981,11 @@ Delete one or more media items.
 
 ```json
 {
-	"userId": "string",
-	"organizationId": "string",
-	"projectId": "string",
-	"imageIds": ["string"],
-	"imageType": "string"
+  "userId": "string",
+  "organizationId": "string",
+  "projectId": "string",
+  "imageIds": ["string"],
+  "imageType": "string"
 }
 ```
 
@@ -838,8 +993,8 @@ Delete one or more media items.
 
 ```json
 {
-	"success": true,
-	"message": "Media deleted successfully"
+  "success": true,
+  "message": "Media deleted successfully"
 }
 ```
 
@@ -857,10 +1012,10 @@ Extract structured data from a receipt using AI.
 
 ```json
 {
-	"userId": "string",
-	"organizationId": "string",
-	"projectId": "string",
-	"imageId": "string"
+  "userId": "string",
+  "organizationId": "string",
+  "projectId": "string",
+  "imageId": "string"
 }
 ```
 
@@ -910,8 +1065,8 @@ Generate a professional change order description using AI.
 
 ```json
 {
-	"userId": "string",
-	"userPrompt": "string"
+  "userId": "string",
+  "userPrompt": "string"
 }
 ```
 
@@ -919,17 +1074,17 @@ Generate a professional change order description using AI.
 
 ```json
 {
-	"success": true,
-	"data": {
-		"description": "string",
-		"items": [
-			{
-				"code": "string",
-				"description": "string",
-				"unitcost": "number"
-			}
-		]
-	}
+  "success": true,
+  "data": {
+    "description": "string",
+    "items": [
+      {
+        "code": "string",
+        "description": "string",
+        "unitcost": "number"
+      }
+    ]
+  }
 }
 ```
 
@@ -947,8 +1102,8 @@ Generate a PDF from HTML content (deprecated - use `/sendChangeOrderEmail`).
 
 ```json
 {
-	"userId": "string",
-	"html": "string"
+  "userId": "string",
+  "html": "string"
 }
 ```
 
@@ -956,7 +1111,7 @@ Generate a PDF from HTML content (deprecated - use `/sendChangeOrderEmail`).
 
 ```json
 {
-	"status": "success"
+  "status": "success"
 }
 ```
 
@@ -970,17 +1125,17 @@ Generate a change order PDF and send it via email.
 
 ```json
 {
-	"userId": "string",
-	"htmlPdf": "string",
-	"htmlBody": "string",
-	"toEmail": "string",
-	"fromEmail": "string",
-	"fromName": "string",
-	"subject": "string",
-	"changeOrderId": "string",
-	"projectId": "string",
-	"expirationDate": "string",
-	"ownerEmail": "string"
+  "userId": "string",
+  "htmlPdf": "string",
+  "htmlBody": "string",
+  "toEmail": "string",
+  "fromEmail": "string",
+  "fromName": "string",
+  "subject": "string",
+  "changeOrderId": "string",
+  "projectId": "string",
+  "expirationDate": "string",
+  "ownerEmail": "string"
 }
 ```
 
@@ -988,7 +1143,7 @@ Generate a change order PDF and send it via email.
 
 ```json
 {
-	"status": "success"
+  "status": "success"
 }
 ```
 
@@ -1065,7 +1220,7 @@ Mark a change order as processed.
 }
 ```
 
-#### POST /GetChangeOrderStatuses
+#### POST /getChangeOrderStatuses
 
 Get all change order statuses for a project.
 
@@ -1075,7 +1230,7 @@ Get all change order statuses for a project.
 
 ```json
 {
-	"projectId": "string"
+  "projectId": "string"
 }
 ```
 
@@ -1088,6 +1243,293 @@ Get all change order statuses for a project.
   "data": [...]
 }
 ```
+
+#### GET /getNextChangeOrderNumber
+
+Get the next available change order number for a project.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `userId` (string): User identifier
+- `projectId` (string): Project identifier
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "newNumber": 42
+}
+```
+
+---
+
+### Vendor Access Management
+
+The Vendor Access Management system provides a secure portal for vendors to access their invoices and payment information. Vendors can register, login, and view organizations they have access to.
+
+**Key Features:**
+
+- Vendor registration and authentication
+- JWT-based access tokens with refresh token support
+- Organization-based access control
+- Secure password hashing with salted SHA-256
+- Invoice retrieval by vendor
+
+#### POST /loginForVendorAccess
+
+Authenticate a vendor and receive access tokens.
+
+**Authentication:** Not required (public endpoint)
+
+**Request Body:**
+
+```json
+{
+  "email": "vendor@example.com",
+  "password": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "email": "vendor@example.com",
+    "registered": true,
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "accessExpiresIn": 900,
+    "refreshToken": "a1b2c3d4...",
+    "refreshExpiresIn": 5184000,
+    "organizations": [
+      {
+        "org_id": "org123",
+        "organization_name": "Acme Construction",
+        "vendor_id": "vendor456"
+      }
+    ]
+  }
+}
+```
+
+**Notes:**
+
+- Access token expires in 15 minutes (900 seconds)
+- Refresh token expires in 60 days (5,184,000 seconds)
+- Returns list of organizations the vendor has access to
+- Returns 404 if email not found
+- Returns 409 if password not set (needs registration)
+- Returns 401 if invalid credentials
+
+#### POST /registerForVendorAccess
+
+Complete vendor registration by setting a password.
+
+**Authentication:** Not required (public endpoint)
+
+**Request Body:**
+
+```json
+{
+  "email": "vendor@example.com",
+  "password": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Registration completed successfully",
+  "data": {
+    "email": "vendor@example.com",
+    "registered": true,
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "accessExpiresIn": 900,
+    "refreshToken": "a1b2c3d4...",
+    "refreshExpiresIn": 5184000
+  }
+}
+```
+
+**Notes:**
+
+- Password must be at least 6 characters long
+- Vendor must be pre-authorized by an organization administrator
+- Returns 404 if email not found in vendor access records
+- Automatically generates and returns access and refresh tokens
+
+#### GET /isRegisteredForVendorAccess
+
+Check if a vendor email is registered and their registration status.
+
+**Authentication:** Not required (public endpoint)
+
+**Query Parameters:**
+
+- `email` (string): Vendor email address
+
+**Response (Not Found):**
+
+```json
+{
+  "success": true,
+  "registered": false,
+  "message": "User not found in vendor access records",
+  "status": "NOT_FOUND"
+}
+```
+
+**Response (Needs Password):**
+
+```json
+{
+  "success": true,
+  "registered": true,
+  "requiresNewPassword": true,
+  "message": "User needs to complete registration by setting a password",
+  "status": "NEEDS_PASSWORD"
+}
+```
+
+**Response (Fully Registered):**
+
+```json
+{
+  "success": true,
+  "registered": true,
+  "requiresNewPassword": false,
+  "message": "User is fully registered for vendor access",
+  "status": "REGISTERED"
+}
+```
+
+#### POST /grantVendorAccess
+
+Grant a vendor access to an organization.
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+  "userId": "string",
+  "vendorEmail": "vendor@example.com",
+  "vendorId": "vendor456",
+  "vendorName": "ABC Supplies",
+  "organizationName": "Acme Construction",
+  "orgId": "org123",
+  "fromEmail": "admin@acme.com",
+  "fromName": "Admin Name"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Vendor access granted successfully",
+  "data": {
+    "vendor_email": "vendor@example.com",
+    "vendor_id": "vendor456",
+    "vendor_name": "ABC Supplies",
+    "organization_name": "Acme Construction",
+    "org_id": "org123"
+  }
+}
+```
+
+**Notes:**
+
+- Sends an email notification to the vendor
+- Uses INSERT OR REPLACE to handle duplicate entries
+- Validates email format
+- All fields are required
+
+#### POST /getGrantedVendorOrganizations
+
+Get list of organizations a vendor has access to.
+
+**Authentication:** Required (Vendor JWT)
+
+**Request Body:**
+
+```json
+{
+  "email": "vendor@example.com"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Granted vendor organizations retrieved successfully",
+  "data": [
+    {
+      "org_id": "org123",
+      "organization_name": "Acme Construction",
+      "vendor_id": "vendor456"
+    },
+    {
+      "org_id": "org789",
+      "organization_name": "Builder Inc",
+      "vendor_id": "vendor456"
+    }
+  ]
+}
+```
+
+**Notes:**
+
+- Requires valid vendor access JWT token in Authorization header
+- Returns all organizations the vendor has been granted access to
+
+#### GET /fetchVendorInvoices
+
+Fetch all invoices for a specific vendor in an organization.
+
+**Authentication:** Required (Vendor JWT)
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `vendorId` (string): Vendor identifier
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "accountingId": "bill123",
+      "isPaid": true,
+      "paymentType": "Check",
+      "paymentStatus": "Completed",
+      "totalAmount": 1500.0,
+      "paymentTotal": 1500.0,
+      "updateDate": "2024-01-15T10:30:00Z"
+    }
+  ]
+}
+```
+
+**Notes:**
+
+- **Recently updated**: Now requires both `orgId` and `vendorId` parameters
+- Returns payment status for all bills associated with the vendor
+- Bill is considered paid if `paymentTotal >= totalAmount` and status is "Completed" or "PrintComplete"
+- Returns empty array if no invoices found
 
 ---
 
@@ -1123,8 +1565,8 @@ Initiate QuickBooks OAuth2 connection flow.
 
 ```json
 {
-	"success": true,
-	"authUrl": "https://appcenter.intuit.com/connect/oauth2?client_id=..."
+  "success": true,
+  "authUrl": "https://appcenter.intuit.com/connect/oauth2?client_id=..."
 }
 ```
 
@@ -1150,8 +1592,8 @@ Handle OAuth2 callback from QuickBooks after user authorization.
 
 ```json
 {
-	"success": true,
-	"message": "QuickBooks connected successfully"
+  "success": true,
+  "message": "QuickBooks connected successfully"
 }
 ```
 
@@ -1176,7 +1618,7 @@ Disconnect QuickBooks integration by removing stored tokens.
 
 ```json
 {
-	"success": true
+  "success": true
 }
 ```
 
@@ -1200,8 +1642,8 @@ Check if QuickBooks is currently connected for an organization and user.
 
 ```json
 {
-	"success": true,
-	"isConnected": true
+  "success": true,
+  "isConnected": true
 }
 ```
 
@@ -1226,20 +1668,20 @@ Retrieve all vendors from QuickBooks.
 
 ```json
 {
-	"success": true,
-	"data": [
-		{
-			"acctId": "123",
-			"name": "Vendor Name",
-			"address": "123 Main St",
-			"city": "Springfield",
-			"state": "IL",
-			"zip": "62701",
-			"mobilePhone": "5551234",
-			"businessPhone": "5551234",
-			"notes": "Optional notes"
-		}
-	]
+  "success": true,
+  "data": [
+    {
+      "acctId": "123",
+      "name": "Vendor Name",
+      "address": "123 Main St",
+      "city": "Springfield",
+      "state": "IL",
+      "zip": "62701",
+      "mobilePhone": "5551234",
+      "businessPhone": "5551234",
+      "notes": "Optional notes"
+    }
+  ]
 }
 ```
 
@@ -1247,8 +1689,8 @@ Retrieve all vendors from QuickBooks.
 
 ```json
 {
-	"success": false,
-	"message": "Token expired and refresh failed. Please reconnect QuickBooks."
+  "success": false,
+  "message": "Token expired and refresh failed. Please reconnect QuickBooks."
 }
 ```
 
@@ -1272,16 +1714,16 @@ Retrieve chart of accounts from QuickBooks.
 
 ```json
 {
-	"success": true,
-	"data": [
-		{
-			"id": "35",
-			"name": "Advertising",
-			"classification": "Expense",
-			"accountType": "Expense",
-			"accountSubType": "AdvertisingPromotional"
-		}
-	]
+  "success": true,
+  "data": [
+    {
+      "id": "35",
+      "name": "Advertising",
+      "classification": "Expense",
+      "accountType": "Expense",
+      "accountSubType": "AdvertisingPromotional"
+    }
+  ]
 }
 ```
 
@@ -1289,8 +1731,8 @@ Retrieve chart of accounts from QuickBooks.
 
 ```json
 {
-	"success": false,
-	"message": "Token expired and refresh failed. Please reconnect QuickBooks."
+  "success": false,
+  "message": "Token expired and refresh failed. Please reconnect QuickBooks."
 }
 ```
 
@@ -1315,18 +1757,18 @@ Retrieve company information from QuickBooks.
 
 ```json
 {
-	"success": true,
-	"data": {
-		"companyName": "Acme Corporation",
-		"ownerName": "Acme Corporation LLC",
-		"address": "123 Business St",
-		"address2": "Suite 100",
-		"city": "San Francisco",
-		"state": "CA",
-		"zip": "94102",
-		"email": "info@acmecorp.com",
-		"phone": "415-555-1234"
-	}
+  "success": true,
+  "data": {
+    "companyName": "Acme Corporation",
+    "ownerName": "Acme Corporation LLC",
+    "address": "123 Business St",
+    "address2": "Suite 100",
+    "city": "San Francisco",
+    "state": "CA",
+    "zip": "94102",
+    "email": "info@acmecorp.com",
+    "phone": "415-555-1234"
+  }
 }
 ```
 
@@ -1334,8 +1776,8 @@ Retrieve company information from QuickBooks.
 
 ```json
 {
-	"success": false,
-	"message": "Token expired and refresh failed. Please reconnect QuickBooks."
+  "success": false,
+  "message": "Token expired and refresh failed. Please reconnect QuickBooks."
 }
 ```
 
@@ -1360,13 +1802,13 @@ Create a new vendor in QuickBooks.
 
 ```json
 {
-	"name": "Acme Supplies Inc.",
-	"mobilePhone": "555-1234",
-	"address": "123 Main St",
-	"city": "Springfield",
-	"state": "IL",
-	"zip": "62701",
-	"notes": "Primary supplier for materials"
+  "name": "Acme Supplies Inc.",
+  "mobilePhone": "555-1234",
+  "address": "123 Main St",
+  "city": "Springfield",
+  "state": "IL",
+  "zip": "62701",
+  "notes": "Primary supplier for materials"
 }
 ```
 
@@ -1374,9 +1816,9 @@ Create a new vendor in QuickBooks.
 
 ```json
 {
-	"success": true,
-	"message": "Vendor added successfully",
-	"newQBId": "456"
+  "success": true,
+  "message": "Vendor added successfully",
+  "newQBId": "456"
 }
 ```
 
@@ -1385,82 +1827,6 @@ Create a new vendor in QuickBooks.
 - Required fields: `name`
 - Optional fields: `mobilePhone`, `address`, `city`, `state`, `zip`, `notes`
 - Returns the QuickBooks-assigned vendor ID in `newQBId` field
-
-#### POST /qbo/addBill
-
-Create a new bill in QuickBooks with optional attachment support.
-
-**Authentication:** Required
-
-**Query Parameters:**
-
-- `orgId` (string): Organization identifier
-- `userId` (string): User identifier
-
-**Request Body:**
-
-```json
-{
-	"vendorRef": "123",
-	"billType": "invoice",
-	"lineItems": [
-		{
-			"amount": 100.0,
-			"description": "Construction materials",
-			"accountRef": "456"
-		}
-	],
-	"dueDate": "2024-02-15",
-	"docNumber": "INV-2024-001",
-	"privateNote": "Payment due net 30",
-	"addAttachment": true,
-	"projectId": "project123",
-	"invoiceId": "inv789",
-	"imageId": "img456",
-	"attachmentFileName": "invoice-img456.jpg"
-}
-```
-
-**Note:** `vendorRef` must be a valid QuickBooks vendor ID, and `accountRef` values must be valid QuickBooks account IDs from your chart of accounts.
-
-**Response:**
-
-```json
-{
-	"success": true,
-	"message": "Bill created successfully",
-	"data": {
-		"Bill": {
-			"Id": "789",
-			"VendorRef": {
-				"value": "123"
-			},
-			"TotalAmt": 100.0,
-			"DueDate": "2024-02-15",
-			"DocNumber": "INV-2024-001"
-		}
-	}
-}
-```
-
-**Notes:**
-
-- Required fields: `vendorRef`, `billType`, `lineItems`, `dueDate`, `docNumber`
-- `billType` must be either `"invoice"` or `"receipt"`
-- `vendorRef` must be a valid QuickBooks vendor ID (from `/qbo/fetchVendors` or `/qbo/addVendor`)
-- Each line item must include:
-  - `amount`: Line item amount
-  - `description`: Line item description
-  - `accountRef`: Valid QuickBooks account ID (from `/qbo/fetchAccounts`)
-- Optional fields: `privateNote`
-- Attachment support: Set `addAttachment: true` to attach the source image to the bill
-  - When `addAttachment` is `true`, also required: `projectId`, `imageId`
-  - Required when `billType` is `"invoice"`: `invoiceId`
-  - Required when `billType` is `"receipt"`: `receiptId` (use the same field name as `invoiceId` in the implementation)
-  - Optional: `attachmentFileName` (defaults to `{billType}-{imageId}.jpg`)
-  - The system automatically fetches the original image from storage and uploads it to QuickBooks
-  - Attachment upload failures are logged but don't fail the bill creation
-- The bill creation automatically creates a payment tracking record in the local database
 
 #### POST /qbo/payBill
 
@@ -1477,29 +1843,29 @@ Create a bill payment in QuickBooks.
 
 ```json
 {
-	"billRef": {
-		"value": "789"
-	},
-	"paymentAccountRef": {
-		"value": "101"
-	},
-	"totalAmt": 100.0,
-	"paymentMethodRef": {
-		"value": "1"
-	},
-	"paymentDate": "2024-01-20",
-	"privateNote": "string",
-	"checkPayment": {
-		"checkNum": "1001"
-	},
-	"lineItems": [
-		{
-			"amount": 100.0,
-			"billLineRef": {
-				"value": "1"
-			}
-		}
-	]
+  "billRef": {
+    "value": "789"
+  },
+  "paymentAccountRef": {
+    "value": "101"
+  },
+  "totalAmt": 100.0,
+  "paymentMethodRef": {
+    "value": "1"
+  },
+  "paymentDate": "2024-01-20",
+  "privateNote": "string",
+  "checkPayment": {
+    "checkNum": "1001"
+  },
+  "lineItems": [
+    {
+      "amount": 100.0,
+      "billLineRef": {
+        "value": "1"
+      }
+    }
+  ]
 }
 ```
 
@@ -1507,15 +1873,15 @@ Create a bill payment in QuickBooks.
 
 ```json
 {
-	"success": true,
-	"message": "Bill payment processed successfully",
-	"data": {
-		"BillPayment": {
-			"Id": "890",
-			"TotalAmt": 100.0,
-			"PaymentType": "Check"
-		}
-	}
+  "success": true,
+  "message": "Bill payment processed successfully",
+  "data": {
+    "BillPayment": {
+      "Id": "890",
+      "TotalAmt": 100.0,
+      "PaymentType": "Check"
+    }
+  }
 }
 ```
 
@@ -1526,6 +1892,164 @@ Create a bill payment in QuickBooks.
 - `totalAmt` must be a positive number
 - `paymentDate` defaults to current date if not provided
 
+#### POST /qbo/isBillPaid
+
+Check if a specific bill is paid in QuickBooks.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `userId` (string): User identifier
+
+**Request Body:**
+
+```json
+{
+  "orgId": "org123",
+  "projectId": "project456",
+  "accountingId": "bill123"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "isPaid": true,
+    "paymentType": "Check",
+    "paymentStatus": "Completed",
+    "totalAmount": 1500.0,
+    "paymentTotal": 1500.0,
+    "updateDate": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+**Notes:**
+
+- All fields in request body are required: `orgId`, `projectId`, `accountingId`
+- Bill is considered paid if `paymentTotal >= totalAmount` and status is "Completed" or "PrintComplete"
+- Returns empty data object if bill not found in payment tracking database
+
+#### POST /qbo/areBillsPaid
+
+Check payment status for all bills in a project.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `userId` (string): User identifier
+
+**Request Body:**
+
+```json
+{
+  "orgId": "org123",
+  "projectId": "project456"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "accountingId": "bill1",
+      "isPaid": true,
+      "paymentType": "Check",
+      "paymentStatus": "Completed",
+      "totalAmount": 1500.0,
+      "paymentTotal": 1500.0,
+      "updateDate": "2024-01-15T10:30:00Z"
+    },
+    {
+      "accountingId": "bill2",
+      "isPaid": false,
+      "paymentType": null,
+      "paymentStatus": null,
+      "totalAmount": 2500.0,
+      "paymentTotal": 0.0,
+      "updateDate": "2024-01-10T08:00:00Z"
+    }
+  ]
+}
+```
+
+**Notes:**
+
+- Required fields in request body: `orgId`, `projectId`
+- Returns payment status for all bills associated with the project
+- Bills are considered paid if `paymentTotal >= totalAmount` and status is "Completed" or "PrintComplete"
+- Returns empty array if no bills found for the project
+
+#### POST /qbo/notificationWebhook
+
+Webhook endpoint for receiving QuickBooks Online notifications.
+
+**Authentication:** HMAC signature verification (internal)
+
+**Headers:**
+
+- `intuit-signature` (string): HMAC-SHA256 signature of request body
+
+**Request Body:**
+
+QuickBooks webhook payload (various event types)
+
+**Response:**
+
+```
+200 OK
+```
+
+**Notes:**
+
+- This is an internal endpoint used by QuickBooks to notify of data changes
+- Signature is verified using the QuickBooks webhook token
+- Not intended for direct API consumer use
+- Handles various QuickBooks event types (bill updates, payment changes, etc.)
+
+---
+
+### Notification Management
+
+#### POST /registerExpoPushToken
+
+Register an Expo push notification token for a user.
+
+**Authentication:** Not required
+
+**Request Body:**
+
+```json
+{
+  "orgId": "org123",
+  "userId": "user456",
+  "expoPushToken": "ExponentPushToken[xxxxxxxxxxxxxx]"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true
+}
+```
+
+**Notes:**
+
+- Stores the Expo push token in KV storage for later use
+- Token is stored with key format: `expo:{orgId}:{userId}`
+- All fields are required and cannot be empty
+- Used for sending mobile push notifications via Expo
+
 ---
 
 ## Error Responses
@@ -1534,8 +2058,8 @@ All endpoints return error responses in the following format:
 
 ```json
 {
-	"success": false,
-	"message": "Error description"
+  "success": false,
+  "message": "Error description"
 }
 ```
 
