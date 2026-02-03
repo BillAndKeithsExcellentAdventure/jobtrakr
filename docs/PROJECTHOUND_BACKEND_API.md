@@ -1,0 +1,1601 @@
+# Project Hound Backend
+
+A Cloudflare Workers-based backend API for managing construction project media, receipts, invoices, and change orders.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Setup](#setup)
+- [Authentication](#authentication)
+- [API Endpoints](#api-endpoints)
+  - [Organization Management](#organization-management)
+  - [Receipt Management](#receipt-management)
+  - [Invoice Management](#invoice-management)
+  - [Photo Management](#photo-management)
+    - [Public Photo Access Management](#public-photo-access-management)
+  - [Video Management](#video-management)
+  - [Media Management](#media-management)
+  - [Intelligence Services](#intelligence-services)
+  - [Change Order Management](#change-order-management)
+  - [QuickBooks Online Integration](#quickbooks-online-integration)
+- [Error Responses](#error-responses)
+- [Development](#development)
+
+## Overview
+
+Project Hound Backend is a serverless API built on Cloudflare Workers that provides media management, document intelligence, and change order processing capabilities for construction projects.
+
+### Key Features
+
+- Media upload and retrieval (photos, receipts, invoices, videos)
+- Multi-device image optimization (phone, tablet, desktop)
+- AI-powered document intelligence for receipts and invoices
+- Change order generation and approval workflow
+- PDF generation and email distribution
+- JWT-based authentication
+
+## Setup
+
+### Prerequisites
+
+- Node.js (v16 or higher)
+- npm or yarn
+- Cloudflare account with Workers enabled
+- Wrangler CLI
+
+### Installation
+
+```bash
+npm install
+```
+
+### Configuration
+
+The application uses Cloudflare Workers bindings configured in `wrangler.jsonc`:
+
+- R2 buckets for image storage
+- D1 database for metadata
+- Service bindings
+- Environment variables
+
+### Development
+
+```bash
+# Start development server
+npm run dev
+
+# Deploy to production
+npm run deploy
+
+# Run tests
+npm test
+```
+
+## Authentication
+
+Most endpoints require JWT bearer token authentication in the `Authorization` header:
+
+```
+Authorization: Bearer <jwt_token>
+```
+
+The JWT token must:
+
+- Be properly formatted with 3 parts (header.payload.signature)
+- Contain `sub` (user ID) and `exp` (expiration timestamp) claims
+- Match the `userId` in the request
+- Not be expired
+
+## API Endpoints
+
+### Organization Management
+
+#### POST /addOrganization
+
+Create a new organization.
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+  "userId": "string",
+  "name": "string",
+  "slug": "string",
+  "isDev": boolean
+}
+```
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "Organization added successfully",
+	"id": 123
+}
+```
+
+---
+
+### Receipt Management
+
+#### POST /addReceipt
+
+Upload a receipt image with metadata.
+
+**Authentication:** Required
+
+**Content-Type:** `multipart/form-data`
+
+**Form Fields:**
+
+- `id` (string): Unique receipt identifier
+- `createdAt` (string): ISO timestamp
+- `userId` (string): User identifier
+- `organizationId` (string): Organization identifier
+- `projectId` (string): Project identifier
+- `latitude` (number): GPS latitude
+- `longitude` (number): GPS longitude
+- `image` (File): Image file (JPEG, PNG, or HEIC, max 10MB)
+- `deviceTypes` (string): Comma-separated device types for optimization
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Receipt added successfully",
+  "data": { ... }
+}
+```
+
+#### GET /fetchProjectReceipts
+
+Retrieve all receipts for a project.
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+	"userId": "string",
+	"organizationId": "string",
+	"projectId": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "Receipts retrieved successfully",
+	"data": "[...]"
+}
+```
+
+#### GET /fetchReceipt
+
+Retrieve a specific receipt image.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `organizationId` (string)
+- `projectId` (string)
+- `imageId` (string)
+- `userId` (string)
+- `deviceType` (string): "phone", "tablet", "desktop", or "original"
+
+**Response:** Image file (JPEG)
+
+#### GET /getReceiptForProcessing
+
+Retrieve a receipt for processing (internal use).
+
+**Authentication:** Not required
+
+**Query Parameters:**
+
+- `key` (string): Format: "organizationId/projectId/receiptId"
+
+**Response:** Image file (JPEG)
+
+---
+
+### Invoice Management
+
+#### POST /addInvoice
+
+Upload an invoice image with metadata.
+
+**Authentication:** Required
+
+**Content-Type:** `multipart/form-data`
+
+**Form Fields:** Same as `/addReceipt`
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Invoice added successfully",
+  "data": { ... }
+}
+```
+
+#### GET /fetchProjectInvoices
+
+Retrieve all invoices for a project.
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+	"userId": "string",
+	"organizationId": "string",
+	"projectId": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "Invoices retrieved successfully",
+	"data": "[...]"
+}
+```
+
+#### GET /fetchInvoice
+
+Retrieve a specific invoice image.
+
+**Authentication:** Required
+
+**Query Parameters:** Same as `/fetchReceipt`
+
+**Response:** Image file (JPEG)
+
+#### GET /getInvoiceForProcessing
+
+Retrieve an invoice for processing (internal use).
+
+**Authentication:** Not required
+
+**Query Parameters:** Same as `/getReceiptForProcessing`
+
+**Response:** Image file (JPEG)
+
+---
+
+### Photo Management
+
+#### POST /addPhoto
+
+Upload a photo with metadata.
+
+**Authentication:** Required
+
+**Content-Type:** `multipart/form-data`
+
+**Form Fields:** Same as `/addReceipt`
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Photo added successfully",
+  "data": { ... }
+}
+```
+
+#### GET /fetchProjectPhotos
+
+Retrieve all photos for a project.
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+	"userId": "string",
+	"organizationId": "string",
+	"projectId": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "Photos retrieved successfully",
+	"data": "[...]"
+}
+```
+
+#### GET /fetchPhoto
+
+Retrieve a specific photo image.
+
+**Authentication:** Required
+
+**Query Parameters:** Same as `/fetchReceipt`
+
+**Response:** Image file (JPEG)
+
+#### Public Photo Access Management
+
+The following endpoints enable managing public access to photos without requiring full project authentication. This allows sharing photos with external users who can register and view specific project photos.
+
+**Typical Workflow:**
+
+1. **Project Owner:** Upload photos using `/addPhoto`
+2. **Project Owner:** Mark selected photos as public using `/makePhotosPublic`
+3. **Project Owner:** Grant access to external users via `/grantPhotoAccess` (creates access record with email)
+4. **External User:** Check registration status via `/isRegisteredForPhotos`
+5. **External User:** Complete registration by setting password via `/registerForPublicPhotos` (receives access token and refresh token)
+6. **External User:** List accessible projects via `/getGrantedProjectIds` (requires access token)
+7. **External User:** Retrieve public photos via `/fetchProjectPublicPhotos` and `/fetchPublicPhoto`
+8. **External User:** Refresh expired access token via `/refreshToken` using refresh token
+
+##### POST /makePhotosPublic
+
+Mark specific photos as public within a project.
+
+**Authentication:** Required (⚠️ Note: Currently bypassed in code for testing - should be enabled in production)
+
+**Request Body:**
+
+```json
+{
+	"userId": "string",
+	"projectId": "string",
+	"imageIds": ["string"]
+}
+```
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "All photos made public successfully",
+	"inserted": ["imageId1", "imageId2"],
+	"alreadyExists": [],
+	"failed": []
+}
+```
+
+##### POST /makePhotosNonPublic
+
+Remove public access status from specific photos.
+
+**Authentication:** Required (⚠️ Note: Currently bypassed in code for testing - should be enabled in production)
+
+**Request Body:**
+
+```json
+{
+	"userId": "string",
+	"imageIds": ["string"]
+}
+```
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "All photos made non-public successfully",
+	"deleted": ["imageId1", "imageId2"],
+	"notFound": [],
+	"failed": []
+}
+```
+
+##### POST /grantPhotoAccess
+
+Grant a user access to view public photos in a specific project.
+
+**Authentication:** Required (⚠️ Note: Currently bypassed in code for testing - should be enabled in production)
+
+**Request Body:**
+
+```json
+{
+	"userId": "string",
+	"emailId": "string",
+	"projectId": "string",
+	"projectName": "string",
+	"orgId": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "Photo access granted successfully",
+	"data": {
+		"email_id": "user@example.com",
+		"project_id": "project123",
+		"project_name": "My Project",
+		"org_id": "org456"
+	}
+}
+```
+
+##### POST /revokePhotoAccess
+
+Revoke all users' access to public photos in a specific project.
+
+**Authentication:** Required (⚠️ Note: Currently bypassed in code for testing - should be enabled in production)
+
+**Request Body:**
+
+```json
+{
+	"userId": "string",
+	"projectId": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "Photo access revoked successfully for 2 user(s)",
+	"rowsDeleted": 2
+}
+```
+
+##### GET /fetchEmailsWithPhotoAccess
+
+Retrieve a list of email addresses that have been granted access to public photos for a specific project.
+
+**Authentication:** Not required
+
+**Query Parameters:**
+
+- `projectId` (string): Project identifier
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "Emails retrieved successfully",
+	"data": ["user1@example.com", "user2@example.com", "user3@example.com"]
+}
+```
+
+**Error Responses:**
+
+- `400 Bad Request` - Missing or invalid projectId:
+
+```json
+{
+	"success": false,
+	"message": "Missing required field: projectId"
+}
+```
+
+- `405 Method Not Allowed` - Non-GET request:
+
+```
+Method not allowed
+```
+
+**Notes:**
+
+- Returns email addresses in alphabetical order
+- Queries the `public_photos_access` table
+- Useful for displaying who has access to a project's photos
+
+##### GET /fetchProjectPublicImageIds
+
+Retrieve a list of public image IDs for a specific project.
+
+**Authentication:** Not required
+
+**Query Parameters:**
+
+- `projectId` (string): Project identifier
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "Image IDs retrieved successfully",
+	"data": ["img-001", "img-002", "img-003"]
+}
+```
+
+**Error Responses:**
+
+- `400 Bad Request` - Missing or invalid projectId:
+
+```json
+{
+	"success": false,
+	"message": "Missing required field: projectId"
+}
+```
+
+- `405 Method Not Allowed` - Non-GET request:
+
+```
+Method not allowed
+```
+
+**Notes:**
+
+- Returns image IDs in alphabetical order
+- Queries the `public_photos` table
+- Returns an empty array if no public images are found for the project
+- Useful for retrieving the list of public images available for a project
+
+##### GET /isRegisteredForPhotos
+
+Check if an email address is registered for public photo access and their registration status.
+
+**Authentication:** Not required
+
+**Query Parameters:**
+
+- `email` (string): Email address to check
+
+**Response (Not Found):**
+
+```json
+{
+	"success": true,
+	"registered": false,
+	"message": "User not found in photo access records",
+	"status": "NOT_FOUND"
+}
+```
+
+**Response (Needs Password):**
+
+```json
+{
+	"success": true,
+	"registered": true,
+	"requiresNewPassword": true,
+	"message": "User needs to complete registration by setting a password",
+	"status": "NEEDS_PASSWORD"
+}
+```
+
+**Response (Fully Registered):**
+
+```json
+{
+	"success": true,
+	"registered": true,
+	"requiresNewPassword": false,
+	"message": "User is fully registered for public photo access",
+	"status": "REGISTERED"
+}
+```
+
+**CORS Headers:** Allowed origin: `*`
+
+##### POST /registerForPublicPhotos
+
+Complete registration for public photo access by setting a password. This must be called after an email has been granted access via `/grantPhotoAccess`.
+
+**Authentication:** Not required
+
+**Request Body:**
+
+```json
+{
+	"email": "string",
+	"newPassword": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "Registration completed successfully",
+	"data": {
+		"email": "user@example.com",
+		"registered": true,
+		"accessToken": "jwt_access_token",
+		"accessExpiresIn": 900,
+		"refreshToken": "refresh_token_string",
+		"refreshExpiresIn": 2592000
+	}
+}
+```
+
+**Notes:**
+
+- Password must be at least 6 characters long
+- Returns JWT access token (expires in 15 minutes) and refresh token (expires in 30 days)
+- Access token is used for authenticating requests to public photo endpoints
+
+**CORS Headers:** Allowed origin: `*`
+
+##### POST /refreshToken
+
+Refresh an expired access token using a valid refresh token.
+
+**Authentication:** Not required (uses refresh token)
+
+**Request Body:**
+
+```json
+{
+	"email": "string",
+	"refreshToken": "string",
+	"accessToken": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "Access token refreshed successfully",
+	"data": {
+		"email": "user@example.com",
+		"accessToken": "new_jwt_access_token",
+		"expiresIn": 900
+	}
+}
+```
+
+**CORS Headers:** Allowed origin: `*`
+
+##### POST /getGrantedProjectIds
+
+Get the list of projects that a user has been granted access to view public photos.
+
+**Authentication:** Required (JWT access token in Authorization header)
+
+**Request Body:**
+
+```json
+{
+	"email": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "Granted project IDs retrieved successfully",
+	"data": [
+		{
+			"projectId": "project123",
+			"projectName": "My Project"
+		},
+		{
+			"projectId": "project456",
+			"projectName": "Another Project"
+		}
+	]
+}
+```
+
+**CORS Headers:** Allowed origin: `*`
+
+**Notes:**
+
+- Requires valid JWT access token obtained from `/registerForPublicPhotos` or `/refreshToken`
+- Returns 401 if token is valid but expired
+- Returns 403 if token signature is invalid
+
+##### GET /fetchProjectPublicPhotos
+
+Retrieve all public photos for a specific project that the user has access to.
+
+**Authentication:** Required (JWT access token in Authorization header)
+
+**Query Parameters:**
+
+- `emailId` (string): User's email address
+- `projectId` (string): Project identifier
+- `deviceType` (string, optional): Device type (defaults to "desktop")
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "Photos retrieved successfully",
+	"data": "[{\"orgId\":\"org456\",\"projectId\":\"project123\",\"imageId\":\"img789\",\"objects\":[{\"key\":\"org456/project123/img789\",\"size\":12345,\"long\":\"-122.4194\",\"lat\":\"37.7749\"}]}]"
+}
+```
+
+**CORS Headers:** Allowed origin: `*`
+
+**Notes:**
+
+- Requires valid JWT access token obtained from `/registerForPublicPhotos` or `/refreshToken`
+- Only returns photos that have been marked as public via `/makePhotosPublic`
+- Only returns photos from projects the user has been granted access to via `/grantPhotoAccess`
+
+##### GET /fetchPublicPhoto
+
+Retrieve a specific public photo image file.
+
+**Authentication:** Not required
+
+**Query Parameters:**
+
+- `organizationId` (string): Organization identifier
+- `projectId` (string): Project identifier
+- `imageId` (string): Image identifier
+- `deviceType` (string, optional): "phone", "tablet", "desktop", or "original" (defaults to "desktop")
+
+**Response:** Image file (JPEG)
+
+**Headers:**
+
+- `Content-Type: image/jpeg`
+- `Cache-Control: public, max-age=86400` (24 hour cache)
+- `ETag`: Image identifier-based ETag for caching
+
+**CORS Headers:** Allowed origin: `*`
+
+**Notes:**
+
+- Supports ETag-based caching (returns 304 Not Modified if `If-None-Match` header matches)
+- This endpoint does not require authentication but only serves photos marked as public
+
+---
+
+### Video Management
+
+#### POST /addVideo
+
+Upload a video with metadata.
+
+**Authentication:** Required
+
+**Content-Type:** `multipart/form-data`
+
+**Form Fields:**
+
+- `id` (string): Unique video identifier
+- `createdAt` (string): ISO timestamp
+- `userId` (string): User identifier
+- `organizationId` (string): Organization identifier
+- `projectId` (string): Project identifier
+- `latitude` (number): GPS latitude
+- `longitude` (number): GPS longitude
+- `image` (File): Video file (MP4, max 100MB)
+- `deviceTypes` (string): Device types
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Video added successfully",
+  "data": { ... }
+}
+```
+
+#### GET /fetchVideo
+
+Retrieve a specific video file.
+
+**Authentication:** Required
+
+**Query Parameters:** Same as `/fetchReceipt`
+
+**Response:** Video file (MP4)
+
+---
+
+### Media Management
+
+#### POST /deleteMedia
+
+Delete one or more media items.
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+	"userId": "string",
+	"organizationId": "string",
+	"projectId": "string",
+	"imageIds": ["string"],
+	"imageType": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "Media deleted successfully"
+}
+```
+
+---
+
+### Intelligence Services
+
+#### POST /getReceiptIntelligence
+
+Extract structured data from a receipt using AI.
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+	"userId": "string",
+	"organizationId": "string",
+	"projectId": "string",
+	"imageId": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "merchantName": "string",
+    "total": "number",
+    "date": "string",
+    "items": [...]
+  }
+}
+```
+
+#### POST /getInvoiceIntelligence
+
+Extract structured data from an invoice using AI.
+
+**Authentication:** Required
+
+**Request Body:** Same as `/getReceiptIntelligence`
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "vendorName": "string",
+    "invoiceNumber": "string",
+    "total": "number",
+    "items": [...]
+  }
+}
+```
+
+#### POST /transformChangeOrder
+
+Generate a professional change order description using AI.
+
+**Authentication:** Required (⚠️ Note: Currently bypassed in code for testing - should be enabled in production)
+
+**Request Body:**
+
+```json
+{
+	"userId": "string",
+	"userPrompt": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"data": {
+		"description": "string",
+		"items": [
+			{
+				"code": "string",
+				"description": "string",
+				"unitcost": "number"
+			}
+		]
+	}
+}
+```
+
+---
+
+### Change Order Management
+
+#### POST /generatePdf
+
+Generate a PDF from HTML content (deprecated - use `/sendChangeOrderEmail`).
+
+**Authentication:** Required (⚠️ Note: Currently bypassed in code - should be enabled in production)
+
+**Request Body:**
+
+```json
+{
+	"userId": "string",
+	"html": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+	"status": "success"
+}
+```
+
+#### POST /sendChangeOrderEmail
+
+Generate a change order PDF and send it via email.
+
+**Authentication:** Required (⚠️ Note: Currently bypassed in code for testing - should be enabled in production)
+
+**Request Body:**
+
+```json
+{
+	"userId": "string",
+	"htmlPdf": "string",
+	"htmlBody": "string",
+	"toEmail": "string",
+	"fromEmail": "string",
+	"fromName": "string",
+	"subject": "string",
+	"changeOrderId": "string",
+	"projectId": "string",
+	"expirationDate": "string",
+	"ownerEmail": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+	"status": "success"
+}
+```
+
+**Notes:**
+
+- The `htmlBody` can contain `<[AcceptURL]>` placeholder which will be replaced with the acceptance URL
+- An acceptance link is generated with hash-based verification
+
+#### GET /AcceptChangeOrder
+
+Accept a change order via email link.
+
+**Authentication:** Not required (hash-based verification)
+
+**Query Parameters:**
+
+- `projectId` (string)
+- `changeOrderId` (string)
+- `email` (string): Acceptor's email
+- `hash` (string): Verification hash
+- `expirationDate` (string): Custom timestamp in seconds since January 1, 2000 00:00:00 UTC (not standard Unix epoch)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Change order accepted.",
+  "data": { ... }
+}
+```
+
+**CORS Headers:** Allowed origin: `https://projecthoundinfo.pages.dev`
+
+#### GET /IsChangeOrderAccepted
+
+Check if a change order has been accepted.
+
+**Authentication:** Not required
+
+**Query Parameters:**
+
+- `StoreId` (string)
+- `ChangeId` (string)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Change order is accepted.",
+  "data": { ... }
+}
+```
+
+#### GET /ChangeOrderProcessed
+
+Mark a change order as processed.
+
+**Authentication:** Not required
+
+**Query Parameters:**
+
+- `StoreId` (string)
+- `ChangeId` (string)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Change order set as processed.",
+  "data": { ... }
+}
+```
+
+#### POST /GetChangeOrderStatuses
+
+Get all change order statuses for a project.
+
+**Authentication:** Not required
+
+**Request Body:**
+
+```json
+{
+	"projectId": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Change order statuses retrieved.",
+  "data": [...]
+}
+```
+
+---
+
+### QuickBooks Online Integration
+
+The API provides comprehensive integration with QuickBooks Online (QBO) for accounting operations including:
+
+- **Authentication & Connection Management**: OAuth2-based connection flow with automatic token refresh
+- **Data Retrieval**: Fetch vendors, chart of accounts, and company information
+- **Vendor Management**: Create and manage vendor records
+- **Bill Processing**: Create bills with optional image attachments and track payment status
+- **Payment Processing**: Process bill payments and track payment records
+
+**Key Features:**
+
+- Automatic token refresh for expired access tokens
+- Attachment support for bills (automatically uploads invoice/receipt images)
+- Payment tracking integration with local database
+- Normalized response formats for easier consumption
+
+#### GET /auth/qbo/connect
+
+Initiate QuickBooks OAuth2 connection flow.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"authUrl": "https://appcenter.intuit.com/connect/oauth2?client_id=..."
+}
+```
+
+**Notes:**
+
+- Returns the QuickBooks OAuth2 authorization URL
+- User's browser should be redirected to this URL to authorize the connection
+- After authorization, QuickBooks redirects to the callback endpoint
+
+#### GET /auth/qbo/callback
+
+Handle OAuth2 callback from QuickBooks after user authorization.
+
+**Authentication:** Not required (OAuth2 callback)
+
+**Query Parameters:**
+
+- `code` (string): Authorization code from QuickBooks
+- `realmId` (string): QuickBooks company ID
+- `state` (string): Base64-encoded JSON containing orgId and userId
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "QuickBooks connected successfully"
+}
+```
+
+**Notes:**
+
+- This endpoint is called by QuickBooks after user authorization
+- Exchanges authorization code for access and refresh tokens
+- Stores tokens in KV storage for future API calls
+
+#### GET /auth/qbo/disconnect
+
+Disconnect QuickBooks integration by removing stored tokens.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Response:**
+
+```json
+{
+	"success": true
+}
+```
+
+**Notes:**
+
+- Removes QuickBooks tokens from storage
+- User will need to reconnect to use QuickBooks features again
+
+#### GET /qbo/isConnected
+
+Check if QuickBooks is currently connected for an organization and user.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"isConnected": true
+}
+```
+
+**Notes:**
+
+- Returns boolean indicating connection status
+- Validates stored tokens have required fields
+- Uses eventual consistency check for KV storage
+
+#### GET /qbo/fetchVendors
+
+Retrieve all vendors from QuickBooks.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"data": [
+		{
+			"acctId": "123",
+			"name": "Vendor Name",
+			"address": "123 Main St",
+			"city": "Springfield",
+			"state": "IL",
+			"zip": "62701",
+			"mobilePhone": "5551234",
+			"businessPhone": "5551234",
+			"notes": "Optional notes"
+		}
+	]
+}
+```
+
+**Error Response (401):**
+
+```json
+{
+	"success": false,
+	"message": "Token expired and refresh failed. Please reconnect QuickBooks."
+}
+```
+
+**Notes:**
+
+- Automatically refreshes expired tokens
+- Returns 401 if token refresh fails (requires reconnection)
+
+#### GET /qbo/fetchAccounts
+
+Retrieve chart of accounts from QuickBooks.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"data": [
+		{
+			"id": "35",
+			"name": "Advertising",
+			"classification": "Expense",
+			"accountType": "Expense",
+			"accountSubType": "AdvertisingPromotional"
+		}
+	]
+}
+```
+
+**Error Response (401):**
+
+```json
+{
+	"success": false,
+	"message": "Token expired and refresh failed. Please reconnect QuickBooks."
+}
+```
+
+**Notes:**
+
+- Automatically refreshes expired tokens
+- Returns 401 if token refresh fails (requires reconnection)
+- Returns all accounts including assets, liabilities, equity, income, and expense accounts
+
+#### GET /qbo/fetchCompanyInfo
+
+Retrieve company information from QuickBooks.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"data": {
+		"companyName": "Acme Corporation",
+		"ownerName": "Acme Corporation LLC",
+		"address": "123 Business St",
+		"address2": "Suite 100",
+		"city": "San Francisco",
+		"state": "CA",
+		"zip": "94102",
+		"email": "info@acmecorp.com",
+		"phone": "415-555-1234"
+	}
+}
+```
+
+**Error Response (401):**
+
+```json
+{
+	"success": false,
+	"message": "Token expired and refresh failed. Please reconnect QuickBooks."
+}
+```
+
+**Notes:**
+
+- Automatically refreshes expired tokens
+- Returns 401 if token refresh fails (requires reconnection)
+- Response is normalized from QuickBooks CompanyInfo structure for easier consumption
+
+#### POST /qbo/addVendor
+
+Create a new vendor in QuickBooks.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Request Body:**
+
+```json
+{
+	"name": "Acme Supplies Inc.",
+	"mobilePhone": "555-1234",
+	"address": "123 Main St",
+	"city": "Springfield",
+	"state": "IL",
+	"zip": "62701",
+	"notes": "Primary supplier for materials"
+}
+```
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "Vendor added successfully",
+	"newQBId": "456"
+}
+```
+
+**Notes:**
+
+- Required fields: `name`
+- Optional fields: `mobilePhone`, `address`, `city`, `state`, `zip`, `notes`
+- Returns the QuickBooks-assigned vendor ID in `newQBId` field
+
+#### POST /qbo/addBill
+
+Create a new bill in QuickBooks with optional attachment support.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Request Body:**
+
+```json
+{
+	"vendorRef": "123",
+	"billType": "invoice",
+	"lineItems": [
+		{
+			"amount": 100.0,
+			"description": "Construction materials",
+			"accountRef": "456"
+		}
+	],
+	"dueDate": "2024-02-15",
+	"docNumber": "INV-2024-001",
+	"privateNote": "Payment due net 30",
+	"addAttachment": true,
+	"projectId": "project123",
+	"invoiceId": "inv789",
+	"imageId": "img456",
+	"attachmentFileName": "invoice-img456.jpg"
+}
+```
+
+**Note:** `vendorRef` must be a valid QuickBooks vendor ID, and `accountRef` values must be valid QuickBooks account IDs from your chart of accounts.
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "Bill created successfully",
+	"data": {
+		"Bill": {
+			"Id": "789",
+			"VendorRef": {
+				"value": "123"
+			},
+			"TotalAmt": 100.0,
+			"DueDate": "2024-02-15",
+			"DocNumber": "INV-2024-001"
+		}
+	}
+}
+```
+
+**Notes:**
+
+- Required fields: `vendorRef`, `billType`, `lineItems`, `dueDate`, `docNumber`
+- `billType` must be either `"invoice"` or `"receipt"`
+- `vendorRef` must be a valid QuickBooks vendor ID (from `/qbo/fetchVendors` or `/qbo/addVendor`)
+- Each line item must include:
+  - `amount`: Line item amount
+  - `description`: Line item description
+  - `accountRef`: Valid QuickBooks account ID (from `/qbo/fetchAccounts`)
+- Optional fields: `privateNote`
+- Attachment support: Set `addAttachment: true` to attach the source image to the bill
+  - When `addAttachment` is `true`, also required: `projectId`, `imageId`
+  - Required when `billType` is `"invoice"`: `invoiceId`
+  - Required when `billType` is `"receipt"`: `receiptId` (use the same field name as `invoiceId` in the implementation)
+  - Optional: `attachmentFileName` (defaults to `{billType}-{imageId}.jpg`)
+  - The system automatically fetches the original image from storage and uploads it to QuickBooks
+  - Attachment upload failures are logged but don't fail the bill creation
+- The bill creation automatically creates a payment tracking record in the local database
+
+#### POST /qbo/payBill
+
+Create a bill payment in QuickBooks.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Request Body:**
+
+```json
+{
+	"billRef": {
+		"value": "789"
+	},
+	"paymentAccountRef": {
+		"value": "101"
+	},
+	"totalAmt": 100.0,
+	"paymentMethodRef": {
+		"value": "1"
+	},
+	"paymentDate": "2024-01-20",
+	"privateNote": "string",
+	"checkPayment": {
+		"checkNum": "1001"
+	},
+	"lineItems": [
+		{
+			"amount": 100.0,
+			"billLineRef": {
+				"value": "1"
+			}
+		}
+	]
+}
+```
+
+**Response:**
+
+```json
+{
+	"success": true,
+	"message": "Bill payment processed successfully",
+	"data": {
+		"BillPayment": {
+			"Id": "890",
+			"TotalAmt": 100.0,
+			"PaymentType": "Check"
+		}
+	}
+}
+```
+
+**Notes:**
+
+- Required fields: `billRef`, `paymentAccountRef`, `totalAmt`
+- Optional fields: `paymentMethodRef`, `paymentDate`, `privateNote`, `checkPayment`, `lineItems`
+- `totalAmt` must be a positive number
+- `paymentDate` defaults to current date if not provided
+
+---
+
+## Error Responses
+
+All endpoints return error responses in the following format:
+
+```json
+{
+	"success": false,
+	"message": "Error description"
+}
+```
+
+### Common Error Codes
+
+- `400 Bad Request`: Invalid request body or parameters
+- `403 Forbidden`: Invalid or expired authentication token
+- `404 Not Found`: Resource not found
+- `405 Method Not Allowed`: HTTP method not supported for endpoint
+
+## Development
+
+### Project Structure
+
+```
+src/
+├── index.ts                    # Main API router
+├── receipts.ts                 # Receipt management
+├── invoices.ts                 # Invoice management
+├── photos.ts                   # Photo management
+├── organization.ts             # Organization management
+├── receiptIntelligence.ts      # Receipt AI processing
+├── invoiceIntelligence.ts      # Invoice AI processing
+├── transformChangeOrder.ts     # Change order AI generation
+├── changeOrders.ts             # Change order workflow
+├── pdfService.ts              # PDF generation
+├── calculatehash.ts           # Hash generation for verification
+├── imageUtils.ts              # Image processing utilities
+└── types.d.ts                 # TypeScript type definitions
+```
+
+### Running Tests
+
+```bash
+npm test
+```
+
+### Type Generation
+
+Generate TypeScript types from Wrangler configuration:
+
+```bash
+npm run cf-typegen
+```
+
+### CORS Configuration
+
+The API supports CORS preflight requests and returns appropriate headers. For change order acceptance endpoints, the allowed origin is `https://projecthoundinfo.pages.dev`.
+
+## Technologies
+
+- **Runtime:** Cloudflare Workers
+- **Storage:** Cloudflare R2 (object storage)
+- **Database:** Cloudflare D1 (SQLite)
+- **Image Processing:** Cloudflare Images API
+- **Document Intelligence:** Azure AI Document Intelligence
+- **Generative AI:** Azure OpenAI (GPT-4o-mini)
+- **PDF Generation:** API2PDF
+- **Email:** SMTP2GO
+
+## License
+
+Private - All rights reserved
