@@ -15,14 +15,18 @@ import {
   useAllRows as useAllConfigurationRows,
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useProjectValue } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   ReceiptData,
   useAddRowCallback,
+  useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
+import { addReceipt as addReceiptAPI } from '@/src/utils/receiptAPI';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
+import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -36,6 +40,10 @@ const AddReceiptPage = () => {
   const { isConnected, isInternetReachable, isConnectedToQuickBooks } = useNetwork();
   const appSettings = useAppSettings();
   const addReceipt = useAddRowCallback(projectId, 'receipts');
+  const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
+  const auth = useAuth();
+  const { userId, orgId, getToken } = auth;
+  const [projectAbbr] = useProjectValue(projectId, 'abbreviation');
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
@@ -205,13 +213,47 @@ const AddReceiptPage = () => {
 
     const receiptToAdd = {
       ...projectReceipt,
-      accountingId: '', // Will be populated by backend
+      accountingId: '', // Will be populated by backend if payment account is specified
       markedComplete: applyToSingleCostCode && !!pickedSubCategoryOption,
     };
     const result = addReceipt(receiptToAdd);
     if (result.status !== 'Success') {
       console.log('Add Project receipt failed:', receiptToAdd);
     } else {
+      // Call the backend /addReceipt endpoint if payment account is specified and we have an image
+      if (projectReceipt.paymentAccountId && projectReceipt.imageId && userId && orgId) {
+        try {
+          const addReceiptResponse = await addReceiptAPI(
+            {
+              userId,
+              orgId,
+              projectId,
+              projectAbbr: projectAbbr as string,
+              projectName: projectName as string,
+              invoiceId: result.id, // Receipt ID in our system
+              imageId: projectReceipt.imageId,
+              addAttachment: false, // Can be made configurable later
+              // QuickBooks bill data is optional - could be added later based on requirements
+            },
+            getToken,
+          );
+
+          // Update the receipt with the accounting ID returned from backend
+          if (addReceiptResponse.success && addReceiptResponse.accountId) {
+            const updateResult = updateReceipt(result.id, { accountingId: addReceiptResponse.accountId });
+            if (updateResult.status === 'Success') {
+              console.log('Receipt accounting ID updated:', addReceiptResponse.accountId);
+            } else {
+              console.log('Failed to update receipt with accounting ID:', updateResult);
+            }
+          }
+        } catch (error) {
+          console.error('Error calling backend /addReceipt:', error);
+          // Don't fail the whole operation - the receipt is already saved locally
+          // The user can still see and use the receipt, just without the accounting ID
+        }
+      }
+
       if (applyToSingleCostCode && !!pickedSubCategoryOption) {
         const newLineItem: WorkItemCostEntry = {
           id: '',
@@ -236,10 +278,17 @@ const AddReceiptPage = () => {
     projectReceipt,
     canAddReceipt,
     addReceipt,
+    updateReceipt,
     addLineItem,
     applyToSingleCostCode,
     pickedSubCategoryOption,
     router,
+    userId,
+    orgId,
+    projectId,
+    projectAbbr,
+    projectName,
+    getToken,
   ]);
 
   const handleCaptureImage = useCallback(async () => {
