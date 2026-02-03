@@ -46,7 +46,7 @@ export interface AddReceiptRequest {
  */
 export interface AddReceiptResponse {
   success: boolean;
-  accountId?: string; // The accounting ID (e.g., "RECEIPT-PROJ-001")
+  accountId?: string; // The accounting ID (e.g., "RECEIPT-PROJ-001") - named accountId in API response
   message?: string;
   data?: any; // QuickBooks bill data if created
 }

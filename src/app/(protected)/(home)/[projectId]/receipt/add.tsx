@@ -221,15 +221,22 @@ const AddReceiptPage = () => {
       console.log('Add Project receipt failed:', receiptToAdd);
     } else {
       // Call the backend /addReceipt endpoint if payment account is specified and we have an image
-      if (projectReceipt.paymentAccountId && projectReceipt.imageId && userId && orgId) {
+      if (
+        projectReceipt.paymentAccountId &&
+        projectReceipt.imageId &&
+        userId &&
+        orgId &&
+        projectAbbr &&
+        projectName
+      ) {
         try {
           const addReceiptResponse = await addReceiptAPI(
             {
               userId,
               orgId,
               projectId,
-              projectAbbr: projectAbbr as string,
-              projectName: projectName as string,
+              projectAbbr,
+              projectName,
               invoiceId: result.id, // Receipt ID in our system
               imageId: projectReceipt.imageId,
               addAttachment: false, // Can be made configurable later
@@ -239,6 +246,7 @@ const AddReceiptPage = () => {
           );
 
           // Update the receipt with the accounting ID returned from backend
+          // Note: API returns 'accountId' but we store as 'accountingId' in our data structure
           if (addReceiptResponse.success && addReceiptResponse.accountId) {
             const updateResult = updateReceipt(result.id, { accountingId: addReceiptResponse.accountId });
             if (updateResult.status === 'Success') {
