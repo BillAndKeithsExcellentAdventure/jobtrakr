@@ -19,6 +19,7 @@ import {
   useAddRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { SettingsData, useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
@@ -33,6 +34,7 @@ const AddReceiptPage = () => {
   const defaultDate = useMemo(() => new Date(), []);
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const { isConnected, isInternetReachable, isConnectedToQuickBooks } = useNetwork();
+  const appSettings = useAppSettings();
   const addReceipt = useAddRowCallback(projectId, 'receipts');
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
@@ -49,12 +51,29 @@ const AddReceiptPage = () => {
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [canAddReceipt, setCanAddReceipt] = useState(false);
   const allVendors = useAllConfigurationRows('vendors');
+  const allAccounts = useAllConfigurationRows('accounts');
+  const [paymentAccounts, setPaymentAccounts] = useState<OptionEntry[]>([]);
+  const [pickedPaymentAccountOption, setPickedPaymentAccountOption] = useState<OptionEntry | undefined>(
+    undefined,
+  );
+  const [isPaymentAccountPickerVisible, setIsPaymentAccountPickerVisible] = useState<boolean>(false);
   const addPhotoImage = useAddImageCallback();
   const router = useRouter();
 
   const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
     setPickedSubCategoryOption(selectedSubCategory);
   }, []);
+
+  const handlePaymentAccountOptionChange = (option: OptionEntry) => {
+    setPickedPaymentAccountOption(option);
+    if (option) {
+      setProjectReceipt((prevReceipt) => ({
+        ...prevReceipt,
+        paymentAccountId: option.value,
+      }));
+    }
+    setIsPaymentAccountPickerVisible(false);
+  };
 
   const handleVendorOptionChange = (option: OptionEntry) => {
     setPickedOption(option);
@@ -82,7 +101,7 @@ const AddReceiptPage = () => {
     notes: '',
     markedComplete: false,
     vendorId: '',
-    paymentAccountId: '',
+    paymentAccountId: appSettings.quickBooksDefaultPaymentAccountId || '',
     expenseAccountId: '',
   });
 
@@ -100,6 +119,44 @@ const AddReceiptPage = () => {
       setVendors([]);
     }
   }, [allVendors]);
+
+  // Load payment accounts from configuration store
+  useEffect(() => {
+    if (allAccounts && allAccounts.length > 0) {
+      // Parse configured payment account IDs
+      const configuredAccountIds = appSettings.quickBooksPaymentAccounts
+        ? appSettings.quickBooksPaymentAccounts.split(',').filter((id) => id.trim() !== '')
+        : [];
+
+      // Filter payment accounts (Bank, Credit Card, Other Current Asset) that are in the configured list
+      const paymentList = allAccounts
+        .filter(
+          (account) =>
+            (account.accountType === 'Bank' ||
+              account.accountType === 'Credit Card' ||
+              account.accountType === 'Other Current Asset') &&
+            configuredAccountIds.includes(account.accountingId),
+        )
+        .map((account) => ({
+          label: account.name,
+          value: account.accountingId,
+        }));
+
+      setPaymentAccounts(paymentList);
+
+      // Set default payment account if one is configured
+      if (appSettings.quickBooksDefaultPaymentAccountId) {
+        const defaultAccount = paymentList.find(
+          (acc) => acc.value === appSettings.quickBooksDefaultPaymentAccountId,
+        );
+        if (defaultAccount) {
+          setPickedPaymentAccountOption(defaultAccount);
+        }
+      }
+    } else {
+      setPaymentAccounts([]);
+    }
+  }, [allAccounts, appSettings.quickBooksPaymentAccounts, appSettings.quickBooksDefaultPaymentAccountId]);
 
   const colors = useColors();
 
@@ -297,7 +354,7 @@ const AddReceiptPage = () => {
       accountingId: '',
       vendor: '',
       vendorId: '',
-      paymentAccountId: '',
+      paymentAccountId: appSettings.quickBooksDefaultPaymentAccountId || '',
       expenseAccountId: '',
       description: '',
       amount: 0,
@@ -310,7 +367,7 @@ const AddReceiptPage = () => {
       markedComplete: false,
     });
     router.back();
-  }, [router, defaultDate]);
+  }, [router, defaultDate, appSettings.quickBooksDefaultPaymentAccountId]);
 
   return (
     <View style={{ flex: 1, width: '100%' }}>
@@ -375,6 +432,18 @@ const AddReceiptPage = () => {
             value={projectReceipt.description}
             onChangeText={handleDescriptionChange}
           />
+
+          {paymentAccounts && paymentAccounts.length > 0 && (
+            <OptionPickerItem
+              containerStyle={styles.inputContainer}
+              optionLabel={pickedPaymentAccountOption?.label}
+              label="Payment Account"
+              placeholder="Payment Account"
+              editable={false}
+              onPickerButtonPress={() => setIsPaymentAccountPickerVisible(true)}
+            />
+          )}
+
           {/*----------- Hide until we find a need to specify a note
               <TextField
                 containerStyle={styles.inputContainer}
@@ -480,6 +549,20 @@ const AddReceiptPage = () => {
             onSelect={(option) => handleSubCategoryOptionChange(option)}
             selectedOption={pickedSubCategoryOption}
             enableSearch={subCategories.length > 15}
+          />
+        </BottomSheetContainer>
+      )}
+      {paymentAccounts && isPaymentAccountPickerVisible && (
+        <BottomSheetContainer
+          modalHeight={'60%'}
+          isVisible={isPaymentAccountPickerVisible}
+          onClose={() => setIsPaymentAccountPickerVisible(false)}
+        >
+          <OptionList
+            options={paymentAccounts}
+            onSelect={(option) => handlePaymentAccountOptionChange(option)}
+            selectedOption={pickedPaymentAccountOption}
+            enableSearch={paymentAccounts.length > 15}
           />
         </BottomSheetContainer>
       )}
