@@ -10,23 +10,23 @@ import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
+import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import {
-  WorkItemDataCodeCompareAsNumber,
   useAllRows as useAllConfigurationRows,
+  WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   ReceiptData,
   useAddRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { SettingsData, useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
@@ -59,6 +59,7 @@ const AddReceiptPage = () => {
   const [isPaymentAccountPickerVisible, setIsPaymentAccountPickerVisible] = useState<boolean>(false);
   const addPhotoImage = useAddImageCallback();
   const router = useRouter();
+  const colors = useColors();
 
   const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
     setPickedSubCategoryOption(selectedSubCategory);
@@ -130,13 +131,7 @@ const AddReceiptPage = () => {
 
       // Filter payment accounts (Bank, Credit Card, Other Current Asset) that are in the configured list
       const paymentList = allAccounts
-        .filter(
-          (account) =>
-            (account.accountType === 'Bank' ||
-              account.accountType === 'Credit Card' ||
-              account.accountType === 'Other Current Asset') &&
-            configuredAccountIds.includes(account.accountingId),
-        )
+        .filter((account) => configuredAccountIds.includes(account.accountingId))
         .map((account) => ({
           label: account.name,
           value: account.accountingId,
@@ -157,8 +152,6 @@ const AddReceiptPage = () => {
       setPaymentAccounts([]);
     }
   }, [allAccounts, appSettings.quickBooksPaymentAccounts, appSettings.quickBooksDefaultPaymentAccountId]);
-
-  const colors = useColors();
 
   const showDatePicker = () => {
     setDatePickerVisible(true);
