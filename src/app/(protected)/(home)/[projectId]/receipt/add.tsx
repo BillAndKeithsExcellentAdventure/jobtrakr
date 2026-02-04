@@ -35,7 +35,7 @@ const AddReceiptPage = () => {
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const { isConnected, isInternetReachable, isConnectedToQuickBooks } = useNetwork();
   const appSettings = useAppSettings();
-  const addReceipt = useAddRowCallback(projectId, 'receipts');
+  const addReceiptToLocalStore = useAddRowCallback(projectId, 'receipts');
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
@@ -103,7 +103,7 @@ const AddReceiptPage = () => {
     markedComplete: false,
     vendorId: '',
     paymentAccountId: appSettings.quickBooksDefaultPaymentAccountId || '',
-    expenseAccountId: '',
+    billId: '',
   });
 
   useEffect(() => {
@@ -208,7 +208,7 @@ const AddReceiptPage = () => {
       accountingId: '', // Will be populated by backend
       markedComplete: applyToSingleCostCode && !!pickedSubCategoryOption,
     };
-    const result = addReceipt(receiptToAdd);
+    const result = addReceiptToLocalStore(receiptToAdd);
     if (result.status !== 'Success') {
       console.log('Add Project receipt failed:', receiptToAdd);
     } else {
@@ -235,7 +235,7 @@ const AddReceiptPage = () => {
   }, [
     projectReceipt,
     canAddReceipt,
-    addReceipt,
+    addReceiptToLocalStore,
     addLineItem,
     applyToSingleCostCode,
     pickedSubCategoryOption,
