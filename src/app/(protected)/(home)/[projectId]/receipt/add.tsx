@@ -18,11 +18,16 @@ import {
 import {
   ReceiptData,
   useAddRowCallback,
+  useUpdateRowCallback,
+  useAllRows,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useProjectValue } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
+import { addReceiptToQuickBooks, QBBillLineItem } from '@/src/utils/quickbooksAPI';
+import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -34,8 +39,12 @@ const AddReceiptPage = () => {
   const defaultDate = useMemo(() => new Date(), []);
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const { isConnected, isInternetReachable, isConnectedToQuickBooks } = useNetwork();
+  const auth = useAuth();
+  const { userId, orgId, getToken } = auth;
   const appSettings = useAppSettings();
   const addReceiptToLocalStore = useAddRowCallback(projectId, 'receipts');
+  const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
+  const projectAbbr = useProjectValue(projectId, 'abbreviation');
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
@@ -52,6 +61,7 @@ const AddReceiptPage = () => {
   const [canAddReceipt, setCanAddReceipt] = useState(false);
   const allVendors = useAllConfigurationRows('vendors');
   const allAccounts = useAllConfigurationRows('accounts');
+  const allLineItems = useAllRows(projectId, 'workItemCostEntries');
   const [paymentAccounts, setPaymentAccounts] = useState<OptionEntry[]>([]);
   const [pickedPaymentAccountOption, setPickedPaymentAccountOption] = useState<OptionEntry | undefined>(
     undefined,
@@ -203,6 +213,7 @@ const AddReceiptPage = () => {
   const handleAddReceipt = useCallback(async () => {
     if (!canAddReceipt) return;
 
+    // Phase 1: Add receipt to local store
     const receiptToAdd = {
       ...projectReceipt,
       accountingId: '', // Will be populated by backend
@@ -211,34 +222,155 @@ const AddReceiptPage = () => {
     const result = addReceiptToLocalStore(receiptToAdd);
     if (result.status !== 'Success') {
       console.log('Add Project receipt failed:', receiptToAdd);
-    } else {
-      if (applyToSingleCostCode && !!pickedSubCategoryOption) {
-        const newLineItem: WorkItemCostEntry = {
-          id: '',
-          label: projectReceipt.description,
-          workItemId: pickedSubCategoryOption.value,
-          amount: projectReceipt.amount,
-          parentId: result.id,
-          documentationType: 'receipt',
-        };
-        const addLineItemResult = addLineItem(newLineItem);
-        if (addLineItemResult.status !== 'Success') {
-          Alert.alert('Error', 'Unable to add line item for receipt.');
-          console.log('Error adding line item for receipt:', addLineItemResult);
-          router.back();
-          return;
-        }
+      Alert.alert('Error', 'Unable to add receipt to local store.');
+      return;
+    }
+
+    const receiptId = result.id;
+
+    // Add line items if applying to single cost code
+    if (applyToSingleCostCode && !!pickedSubCategoryOption) {
+      const newLineItem: WorkItemCostEntry = {
+        id: '',
+        label: projectReceipt.description,
+        workItemId: pickedSubCategoryOption.value,
+        amount: projectReceipt.amount,
+        parentId: receiptId,
+        documentationType: 'receipt',
+      };
+      const addLineItemResult = addLineItem(newLineItem);
+      if (addLineItemResult.status !== 'Success') {
+        Alert.alert('Error', 'Unable to add line item for receipt.');
+        console.log('Error adding line item for receipt:', addLineItemResult);
+        router.back();
+        return;
       }
     }
+
+    // Phase 2: Send to QuickBooks if conditions are met
+    // Conditions: connected to QuickBooks, has at least one line item, has amount and payment account
+    const receiptLineItems = (allLineItems || []).filter((item) => item.parentId === receiptId);
+    const hasLineItems = receiptLineItems.length > 0;
+    const hasAmount = projectReceipt.amount > 0;
+    const hasPaymentAccount = !!projectReceipt.paymentAccountId;
+    const hasVendorId = !!projectReceipt.vendorId;
+
+    if (
+      isConnectedToQuickBooks &&
+      hasLineItems &&
+      hasAmount &&
+      hasPaymentAccount &&
+      hasVendorId &&
+      userId &&
+      orgId &&
+      projectAbbr
+    ) {
+      try {
+        // Build line items for QuickBooks bill
+        const qbLineItems: QBBillLineItem[] = [];
+        const skippedLineItems: string[] = [];
+
+        for (const lineItem of receiptLineItems) {
+          // Find the work item to get its account reference
+          const workItem = projectWorkItems.find((wi) => wi.id === lineItem.workItemId);
+          const account = (allAccounts || []).find((acc) => acc.id === workItem?.accountId);
+
+          // Only include line items with valid account references
+          if (account?.accountingId) {
+            qbLineItems.push({
+              amount: lineItem.amount,
+              description: lineItem.label,
+              accountRef: account.accountingId,
+            });
+          } else {
+            skippedLineItems.push(lineItem.label);
+            console.warn(
+              `Skipping line item ${lineItem.id} - no valid account reference found for work item ${lineItem.workItemId}`
+            );
+          }
+        }
+
+        // Only proceed if we have valid line items
+        if (qbLineItems.length === 0) {
+          console.warn('No valid line items with account references - skipping QuickBooks sync');
+          if (skippedLineItems.length > 0) {
+            Alert.alert(
+              'QuickBooks Sync Skipped',
+              `Cannot sync to QuickBooks: ${skippedLineItems.length} line item(s) missing account references.`
+            );
+          }
+        } else {
+          // Notify user if some items were skipped
+          if (skippedLineItems.length > 0) {
+            console.warn(
+              `Warning: ${skippedLineItems.length} line item(s) were not synced to QuickBooks due to missing account references: ${skippedLineItems.join(', ')}`
+            );
+          }
+
+          // Prepare receipt data for backend
+          const receiptData = {
+            userId,
+            orgId,
+            projectId,
+            projectAbbr,
+            projectName: projectName || '',
+            invoiceId: receiptId, // Backend API uses 'invoiceId' field for both receipts and invoices
+            imageId: projectReceipt.imageId || '',
+            addAttachment: !!projectReceipt.imageId,
+            qbBillData: {
+              vendorRef: projectReceipt.vendorId,
+              lineItems: qbLineItems,
+              // Note: docNumber is optional and will be auto-generated if not provided
+              privateNote: projectReceipt.notes || projectReceipt.description || '',
+              dueDate: new Date(projectReceipt.receiptDate).toISOString().split('T')[0],
+            },
+          };
+
+          const response = await addReceiptToQuickBooks(receiptData, getToken);
+
+          // Update the local receipt with accountingId and billId from response
+          const updates: Partial<ReceiptData> = {};
+          if (response.accountId) {
+            // Backend returns 'accountId', but local store uses 'accountingId'
+            updates.accountingId = response.accountId;
+          }
+          if (response.data?.Bill?.Id) {
+            updates.billId = response.data.Bill.Id;
+          }
+
+          if (Object.keys(updates).length > 0) {
+            updateReceipt(receiptId, updates);
+          }
+
+          console.log('Receipt successfully synced to QuickBooks:', response);
+        }
+      } catch (error) {
+        console.error('Error syncing receipt to QuickBooks:', error);
+        // Don't alert the user - the receipt is already saved locally
+        // and they can retry syncing later if needed
+      }
+    }
+
     console.log('Project receipt successfully added:', projectReceipt);
     router.back();
   }, [
     projectReceipt,
     canAddReceipt,
     addReceiptToLocalStore,
+    updateReceipt,
     addLineItem,
     applyToSingleCostCode,
     pickedSubCategoryOption,
+    isConnectedToQuickBooks,
+    userId,
+    orgId,
+    projectId,
+    projectAbbr,
+    projectName,
+    getToken,
+    projectWorkItems,
+    allAccounts,
+    allLineItems,
     router,
   ]);
 
