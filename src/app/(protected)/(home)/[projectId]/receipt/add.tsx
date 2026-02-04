@@ -268,6 +268,7 @@ const AddReceiptPage = () => {
       try {
         // Build line items for QuickBooks bill
         const qbLineItems: QBBillLineItem[] = [];
+        const skippedLineItems: string[] = [];
 
         for (const lineItem of receiptLineItems) {
           // Find the work item to get its account reference
@@ -282,6 +283,7 @@ const AddReceiptPage = () => {
               accountRef: account.accountingId,
             });
           } else {
+            skippedLineItems.push(lineItem.label);
             console.warn(
               `Skipping line item ${lineItem.id} - no valid account reference found for work item ${lineItem.workItemId}`
             );
@@ -291,7 +293,20 @@ const AddReceiptPage = () => {
         // Only proceed if we have valid line items
         if (qbLineItems.length === 0) {
           console.warn('No valid line items with account references - skipping QuickBooks sync');
+          if (skippedLineItems.length > 0) {
+            Alert.alert(
+              'QuickBooks Sync Skipped',
+              `Cannot sync to QuickBooks: ${skippedLineItems.length} line item(s) missing account references.`
+            );
+          }
         } else {
+          // Notify user if some items were skipped
+          if (skippedLineItems.length > 0) {
+            console.warn(
+              `Warning: ${skippedLineItems.length} line item(s) were not synced to QuickBooks due to missing account references: ${skippedLineItems.join(', ')}`
+            );
+          }
+
           // Prepare receipt data for backend
           const receiptData = {
             userId,
@@ -299,14 +314,14 @@ const AddReceiptPage = () => {
             projectId,
             projectAbbr,
             projectName: projectName || '',
-            invoiceId: receiptId, // Backend uses 'invoiceId' for receipt identifier
+            invoiceId: receiptId, // Backend API uses 'invoiceId' field for both receipts and invoices
             imageId: projectReceipt.imageId || '',
             addAttachment: !!projectReceipt.imageId,
             qbBillData: {
               vendorRef: projectReceipt.vendorId,
               lineItems: qbLineItems,
-              docNumber: projectReceipt.description,
-              privateNote: projectReceipt.notes || '',
+              // Note: docNumber is optional and will be auto-generated if not provided
+              privateNote: projectReceipt.notes || projectReceipt.description || '',
               dueDate: new Date(projectReceipt.receiptDate).toISOString().split('T')[0],
             },
           };
