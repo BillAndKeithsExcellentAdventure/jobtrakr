@@ -267,53 +267,68 @@ const AddReceiptPage = () => {
     ) {
       try {
         // Build line items for QuickBooks bill
-        const qbLineItems: QBBillLineItem[] = receiptLineItems.map((lineItem) => {
+        const qbLineItems: QBBillLineItem[] = [];
+
+        for (const lineItem of receiptLineItems) {
           // Find the work item to get its account reference
           const workItem = projectWorkItems.find((wi) => wi.id === lineItem.workItemId);
           const account = (allAccounts || []).find((acc) => acc.id === workItem?.accountId);
 
-          return {
-            amount: lineItem.amount,
-            description: lineItem.label,
-            accountRef: account?.accountingId || '',
+          // Only include line items with valid account references
+          if (account?.accountingId) {
+            qbLineItems.push({
+              amount: lineItem.amount,
+              description: lineItem.label,
+              accountRef: account.accountingId,
+            });
+          } else {
+            console.warn(
+              `Skipping line item ${lineItem.id} - no valid account reference found for work item ${lineItem.workItemId}`
+            );
+          }
+        }
+
+        // Only proceed if we have valid line items
+        if (qbLineItems.length === 0) {
+          console.warn('No valid line items with account references - skipping QuickBooks sync');
+        } else {
+          // Prepare receipt data for backend
+          const receiptData = {
+            userId,
+            orgId,
+            projectId,
+            projectAbbr,
+            projectName: projectName || '',
+            invoiceId: receiptId, // Backend uses 'invoiceId' for receipt identifier
+            imageId: projectReceipt.imageId || '',
+            addAttachment: !!projectReceipt.imageId,
+            qbBillData: {
+              vendorRef: projectReceipt.vendorId,
+              lineItems: qbLineItems,
+              docNumber: projectReceipt.description,
+              privateNote: projectReceipt.notes || '',
+              dueDate: new Date(projectReceipt.receiptDate).toISOString().split('T')[0],
+            },
           };
-        });
 
-        // Prepare receipt data for backend
-        const receiptData = {
-          userId,
-          orgId,
-          projectId,
-          projectAbbr,
-          projectName: projectName || '',
-          invoiceId: receiptId,
-          imageId: projectReceipt.imageId || '',
-          addAttachment: !!projectReceipt.imageId,
-          qbBillData: {
-            vendorRef: projectReceipt.vendorId,
-            lineItems: qbLineItems,
-            docNumber: projectReceipt.description,
-            privateNote: projectReceipt.notes || '',
-            dueDate: new Date(projectReceipt.receiptDate).toISOString().split('T')[0],
-          },
-        };
+          const response = await addReceiptToQuickBooks(receiptData, getToken);
 
-        const response = await addReceiptToQuickBooks(receiptData, getToken);
+          // Update the local receipt with accountingId and billId from response
+          const updates: Partial<ReceiptData> = {};
+          if (response.accountId) {
+            // Backend returns 'accountId', but local store uses 'accountingId'
+            updates.accountingId = response.accountId;
+          }
+          if (response.data?.Bill?.Id) {
+            updates.billId = response.data.Bill.Id;
+          }
 
-        // Update the local receipt with accountingId and billId from response
-        const updates: Partial<ReceiptData> = {};
-        if (response.accountId) {
-          updates.accountingId = response.accountId;
+          if (Object.keys(updates).length > 0) {
+            updateReceipt(receiptId, updates);
+          }
+
+          console.log('Receipt successfully synced to QuickBooks:', response);
         }
-        if (response.data?.Bill?.Id) {
-          updates.billId = response.data.Bill.Id;
-        }
-
-        if (Object.keys(updates).length > 0) {
-          updateReceipt(receiptId, updates);
-        }
-
-        console.log('Receipt successfully synced to QuickBooks:', response);
       } catch (error) {
         console.error('Error syncing receipt to QuickBooks:', error);
         // Don't alert the user - the receipt is already saved locally
