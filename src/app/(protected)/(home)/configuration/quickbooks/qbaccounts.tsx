@@ -105,6 +105,10 @@ const QBAccountsScreen = () => {
         label: account.name,
         value: account.accountingId,
       }));
+
+    // add a entry to the top of the list to indicate to use a project specific expense account
+    expenseList.unshift({ label: 'Project-Specific Expense Account', value: '*' });
+
     setExpenseAccounts(expenseList);
 
     // Filter payment accounts (Bank, Credit Card, Other Current Asset)
