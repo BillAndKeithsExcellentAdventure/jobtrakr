@@ -336,3 +336,73 @@ export async function fetchAccounts(
 
   return data.data || [];
 }
+
+export interface QBBillLineItem {
+  amount: number;
+  description: string;
+  accountRef: string;
+}
+
+export interface QBBillData {
+  vendorRef: string;
+  dueDate?: string;
+  docNumber?: string;
+  privateNote?: string;
+  lineItems: QBBillLineItem[];
+}
+
+export interface AddReceiptRequest {
+  userId: string;
+  orgId: string;
+  projectId: string;
+  projectAbbr: string;
+  projectName: string;
+  invoiceId: string;
+  imageId: string;
+  addAttachment: boolean;
+  qbBillData?: QBBillData;
+}
+
+export interface AddReceiptResponse {
+  success: boolean;
+  message?: string;
+  accountId?: string;
+  data?: {
+    Bill?: {
+      Id: string;
+      VendorRef: { value: string };
+      TotalAmt: number;
+      DueDate?: string;
+      DocNumber?: string;
+    };
+  };
+}
+
+/**
+ * Add a receipt to the backend and optionally create a QuickBooks bill.
+ * 
+ * @param receiptData - The receipt data to send to the backend
+ * @param getToken - Function to get the authentication token
+ * @returns The response containing accountingId and optionally billId
+ */
+export async function addReceiptToQuickBooks(
+  receiptData: AddReceiptRequest,
+  getToken: () => Promise<string | null>,
+): Promise<AddReceiptResponse> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/addReceipt`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(receiptData),
+  });
+
+  const data: AddReceiptResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to add receipt');
+  }
+
+  return data;
+}
