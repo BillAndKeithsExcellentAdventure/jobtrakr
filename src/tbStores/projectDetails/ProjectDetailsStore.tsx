@@ -31,13 +31,13 @@ export const TABLES_SCHEMA = {
     imageId: { type: 'string' },
     notes: { type: 'string' }, // not currently in ui
     markedComplete: { type: 'boolean' },
+    billId: { type: 'string' }, // QuickBooks Bill ID
   },
 
   invoices: {
     id: { type: 'string' },
     accountingId: { type: 'string' },
     vendorId: { type: 'string' }, // QuickBooks Vendor ID
-    expenseAccountId: { type: 'string' }, // QuickBooks Expense Account ID
     paymentStatus: { type: 'string' }, // 'pending' | 'paid'
     description: { type: 'string' },
     amount: { type: 'number' }, // Total Amount
@@ -49,6 +49,7 @@ export const TABLES_SCHEMA = {
     imageId: { type: 'string' },
     notes: { type: 'string' }, // not currently in ui
     markedComplete: { type: 'boolean' },
+    billId: { type: 'string' }, // QuickBooks Bill ID
   },
 
   workItemCostEntries: {

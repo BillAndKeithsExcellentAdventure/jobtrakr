@@ -52,7 +52,6 @@ export type ReceiptData = {
   vendor: string; // Vendor name for display purposes when not connected to QuickBooks
   vendorId: string; // QuickBooks Vendor ID
   paymentAccountId: string; // QuickBooks Account ID
-  expenseAccountId: string; // QuickBooks Expense Account ID
   description: string;
   amount: number;
   numLineItems: number;
@@ -62,6 +61,7 @@ export type ReceiptData = {
   imageId: string;
   notes: string;
   markedComplete: boolean;
+  billId: string; // QuickBooks Bill ID
 };
 
 export type ClassifiedReceiptData = ReceiptData & { fullyClassified: boolean };
@@ -72,7 +72,6 @@ export type InvoiceData = {
   vendor: string; // Vendor name for display purposes when not connected to QuickBooks
   vendorId: string; // QuickBooks Vendor ID
   paymentAccountId: string; // QuickBooks Account ID
-  expenseAccountId: string; // QuickBooks Expense Account ID
   description: string;
   amount: number;
   numLineItems: number;
@@ -83,6 +82,7 @@ export type InvoiceData = {
   imageId: string;
   notes: string;
   markedComplete: boolean;
+  billId: string; // QuickBooks Bill ID
 };
 
 export type ClassifiedInvoiceData = InvoiceData & { fullyClassified: boolean };
