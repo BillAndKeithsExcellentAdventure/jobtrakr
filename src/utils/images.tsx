@@ -773,18 +773,13 @@ export const useAddImageCallback = () => {
         `[useAddImageCallback] START - ID: ${id}, mediaType: ${mediaType}, resourceType: ${resourceType}`,
       );
 
-      if (!auth) {
-        console.error('[useAddImageCallback] Auth not available');
-        return { status: 'Error', id: id, msg: 'Auth not available' };
-      }
+      const latitude = 0;
+      const longitude = 0;
 
       if (!userId || !orgId) {
         console.error('[useAddImageCallback] Missing userId or orgId', { userId, orgId });
         return { status: 'Error', id: id, msg: 'User ID or Organization ID not available' };
       }
-
-      const latitude = 0;
-      const longitude = 0;
 
       const details: ImageDetails = {
         id: id,

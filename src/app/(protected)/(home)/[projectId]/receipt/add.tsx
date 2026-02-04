@@ -348,7 +348,6 @@ const AddReceiptPage = () => {
       vendor: '',
       vendorId: '',
       paymentAccountId: appSettings.quickBooksDefaultPaymentAccountId || '',
-      expenseAccountId: '',
       description: '',
       amount: 0,
       numLineItems: 0,
@@ -357,6 +356,7 @@ const AddReceiptPage = () => {
       pictureDate: 0,
       imageId: '',
       notes: '',
+      billId: '',
       markedComplete: false,
     });
     router.back();

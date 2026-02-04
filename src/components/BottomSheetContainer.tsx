@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   titleContainer: {
-    height: 40,
+    height: 50,
     borderTopRightRadius: 10,
     borderTopLeftRadius: 10,
     paddingHorizontal: 20,

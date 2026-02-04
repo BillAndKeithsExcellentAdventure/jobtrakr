@@ -5,6 +5,7 @@ import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import {
   ClassifiedReceiptData,
   ReceiptData,
@@ -58,8 +59,9 @@ const ProjectReceiptsPage = () => {
   const allReceipts = useAllRows(projectId, 'receipts', RecentReceiptDateCompare);
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const addReceiptImage = useAddImageCallback();
-  const addReceipt = useAddRowCallback(projectId, 'receipts');
+  const addReceiptToLocalStore = useAddRowCallback(projectId, 'receipts');
   const allWorkItems = useAllRowsConfiguration('workItems');
+  const appSettings = useAppSettings();
 
   useCostUpdater(projectId);
 
@@ -99,6 +101,9 @@ const ProjectReceiptsPage = () => {
     async (assetUri: string, assetId?: string | null) => {
       try {
         // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
+
+        // addReceiptImage will save the image to the app's directory and then add it to queue to be uploaded
+        // to the backend.
         const imageAddResult = await addReceiptImage(assetUri, projectId, 'photo', 'receipt');
         if (imageAddResult.status !== 'Success') {
           Alert.alert('Error', `Unable to add receipt image: ${JSON.stringify(imageAddResult)}`);
@@ -120,11 +125,14 @@ const ProjectReceiptsPage = () => {
           markedComplete: false,
           imageId: imageAddResult.id,
           pictureDate: new Date().getTime(),
+          billId: '',
+          accountingId: '',
+          vendorId: '',
+          paymentAccountId: appSettings.quickBooksDefaultPaymentAccountId || '',
         };
 
-        //console.log('Adding a new Receipt.', newReceipt);
-
-        const response = addReceipt(newReceipt);
+        //console.log('Adding a new Receipt to local store.', newReceipt);
+        const response = addReceiptToLocalStore(newReceipt);
         if (response?.status === 'Success') {
           newReceipt.id = response.id;
           console.log('Project receipt successfully added:', newReceipt.imageId);
@@ -156,7 +164,7 @@ const ProjectReceiptsPage = () => {
         setIsProcessingImage(false);
       }
     },
-    [projectId, addReceiptImage, addReceipt],
+    [projectId, addReceiptImage, addReceiptToLocalStore],
   );
 
   const handleAddPhotoReceipt = useCallback(async () => {

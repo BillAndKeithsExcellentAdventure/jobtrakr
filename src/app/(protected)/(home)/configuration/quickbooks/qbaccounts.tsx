@@ -107,7 +107,7 @@ const QBAccountsScreen = () => {
       }));
 
     // add a entry to the top of the list to indicate to use a project specific expense account
-    expenseList.unshift({ label: 'Project-Specific Expense Account', value: '*' });
+    expenseList.unshift({ label: 'Project-Specific (Auto-Generated)', value: '*' });
 
     setExpenseAccounts(expenseList);
 
@@ -333,6 +333,7 @@ const QBAccountsScreen = () => {
       <BottomSheetContainer
         isVisible={isExpenseAccountPickerVisible}
         onClose={() => setIsExpenseAccountPickerVisible(false)}
+        modalHeight={'70%'}
         title="Select Expense Account"
       >
         <OptionList
@@ -349,7 +350,8 @@ const QBAccountsScreen = () => {
       <BottomSheetContainer
         isVisible={isPaymentAccountPickerVisible}
         onClose={() => setIsPaymentAccountPickerVisible(false)}
-        title="Select Payment Accounts"
+        title={`Payment Accounts (${selectedPaymentAccountIds.length} selected)`}
+        modalHeight={'60%'}
       >
         <FlatList
           data={paymentAccounts}
