@@ -102,9 +102,9 @@ const ProjectInvoicesPage = () => {
         const newInvoice: InvoiceData = {
           id: '',
           vendor: '',
+          vendorId: '',
           description: '',
           amount: 0,
-          numLineItems: 0,
           thumbnail: thumbnail ?? '',
           invoiceDate: new Date().getTime(),
           notes: '',
@@ -113,6 +113,8 @@ const ProjectInvoicesPage = () => {
           pictureDate: new Date().getTime(),
           invoiceNumber: '',
           accountingId: '',
+          paymentAccountId: '',
+          billId: '',
         };
 
         //console.log('Adding a new Invoice.', newInvoice);

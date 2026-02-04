@@ -18,7 +18,7 @@ import { useRouter } from 'expo-router';
 import { useDeleteMediaCallback, deleteLocalMediaFile } from '../utils/images';
 import { useAllMediaToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
 
-export const ITEM_HEIGHT = 100;
+export const ITEM_HEIGHT = 140;
 const RIGHT_ACTION_WIDTH = 100;
 const SWIPE_THRESHOLD_WIDTH = 50;
 
@@ -163,6 +163,7 @@ const SwipeableReceiptItem = React.memo<{
             ) : (
               <>
                 <View style={{ flex: 1, justifyContent: 'center', paddingLeft: 10 }}>
+                  {item.accountingId && <Text style={{ color: textColor }}>{`[${item.accountingId}]`}</Text>}
                   <Text style={{ color: textColor }}>Amount: {formatCurrency(item.amount, true, true)}</Text>
                   <Text style={{ color: textColor }}>Vendor: {item.vendor}</Text>
                   <Text style={{ color: textColor }}>

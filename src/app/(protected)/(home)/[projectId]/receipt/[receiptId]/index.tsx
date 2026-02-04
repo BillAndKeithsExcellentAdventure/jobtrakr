@@ -47,7 +47,6 @@ const ReceiptDetailsPage = () => {
     vendor: '',
     description: '',
     amount: 0,
-    numLineItems: 0,
     thumbnail: '',
     receiptDate: defaultDate.getTime(),
     pictureDate: defaultDate.getTime(),

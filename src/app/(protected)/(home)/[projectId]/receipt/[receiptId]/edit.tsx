@@ -61,7 +61,6 @@ const EditReceiptDetailsPage = () => {
     vendor: '',
     description: '',
     amount: 0,
-    numLineItems: 0,
     receiptDate: defaultDate.getTime(),
     thumbnail: '',
     pictureDate: 0,

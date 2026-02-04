@@ -60,7 +60,6 @@ const AddInvoicePage = () => {
     vendor: '',
     description: '',
     amount: 0,
-    numLineItems: 0,
     invoiceDate: defaultDate.getTime(),
     thumbnail: '',
     pictureDate: 0,
@@ -269,7 +268,6 @@ const AddInvoicePage = () => {
       vendor: '',
       description: '',
       amount: 0,
-      numLineItems: 0,
       invoiceDate: defaultDate.getTime(),
       thumbnail: '',
       pictureDate: 0,
@@ -388,8 +386,8 @@ const AddInvoicePage = () => {
                     ? 'Retake Picture (Offline)'
                     : 'Take Picture (Offline)'
                   : projectInvoice.imageId
-                  ? 'Retake Picture'
-                  : 'Take Picture'
+                    ? 'Retake Picture'
+                    : 'Take Picture'
               }
             />
           </View>

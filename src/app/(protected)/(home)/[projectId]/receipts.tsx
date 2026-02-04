@@ -118,7 +118,6 @@ const ProjectReceiptsPage = () => {
           vendor: '',
           description: '',
           amount: 0,
-          numLineItems: 0,
           thumbnail: thumbnail ?? '',
           receiptDate: new Date().getTime(),
           notes: '',

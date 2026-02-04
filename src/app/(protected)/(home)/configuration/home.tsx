@@ -17,6 +17,7 @@ import {
   useCleanOrphanedWorkItemsCallback,
   useAddRowCallback,
   useUpdateRowCallback,
+  useDeleteRowCallback,
   VendorData,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { vendorsToCsv, csvToVendors } from '@/src/utils/csvUtils';
@@ -26,7 +27,6 @@ import * as DocumentPicker from 'expo-document-picker';
 import { useAuth } from '@clerk/clerk-expo';
 import { isQuickBooksConnected } from '@/src/utils/quickbooksAPI';
 import { importAccountsFromQuickBooks, importVendorsFromQuickBooks } from '@/src/utils/quickbooksImports';
-import { SvgImage } from '@/src/components/SvgImage';
 
 const Home = () => {
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
@@ -41,6 +41,7 @@ const Home = () => {
   const importConfiguration = useImportJsonConfigurationDataCallback();
   const addVendorToStore = useAddRowCallback('vendors');
   const updateVendor = useUpdateRowCallback('vendors');
+  const deleteVendor = useDeleteRowCallback('vendors');
   const allAccounts = useAllRows('accounts');
   const addAccount = useAddRowCallback('accounts');
   const updateAccount = useUpdateRowCallback('accounts');
@@ -283,6 +284,19 @@ const Home = () => {
         ]);
         return;
       } else if (menuItem === 'GetQBVendors') {
+        // NOTE: we shouldn't have to do this in the future but I was having issues with importing accountingIds to existing records.
+        // remove existing vendors and import from QuickBooks
+        for (const vendor of allVendors) {
+          // No delete function currently, so just log
+          console.log(`delete vendor: ${vendor.name} (${vendor.id})`);
+          deleteVendor(vendor.id);
+        }
+
+        if (!auth.orgId || !auth.userId) {
+          Alert.alert('Error', 'Unable to import vendors. Please sign in again.');
+          return;
+        }
+
         try {
           const { addedCount, updatedCount } = await importVendorsFromQuickBooks(
             auth.orgId!,

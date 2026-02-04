@@ -49,7 +49,6 @@ const InvoiceDetailsPage = () => {
     vendor: '',
     description: '',
     amount: 0,
-    numLineItems: 0,
     thumbnail: '',
     invoiceDate: defaultDate.getTime(),
     pictureDate: defaultDate.getTime(),

@@ -24,7 +24,6 @@ export const TABLES_SCHEMA = {
     expenseAccountId: { type: 'string' }, // QuickBooks Expense Account ID
     description: { type: 'string' },
     amount: { type: 'number' }, // Total Amount
-    numLineItems: { type: 'number' }, // Number of line items in the receipt
     receiptDate: { type: 'number' }, // Date on the receipt.
     thumbnail: { type: 'string' },
     pictureDate: { type: 'number' }, // Date the picture was taken.
@@ -41,7 +40,6 @@ export const TABLES_SCHEMA = {
     paymentStatus: { type: 'string' }, // 'pending' | 'paid'
     description: { type: 'string' },
     amount: { type: 'number' }, // Total Amount
-    numLineItems: { type: 'number' }, // Number of line items in the invoice
     invoiceDate: { type: 'number' }, // Date on the invoice.
     invoiceNumber: { type: 'string' }, // Vendor's invoice number
     thumbnail: { type: 'string' },
