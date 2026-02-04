@@ -79,28 +79,37 @@ export async function importVendorsFromQuickBooks(
 
   for (const qbVendor of qbVendors) {
     // Find existing vendor with matching accountingId
-    const existing = allVendors.find((v) => v.accountingId === qbVendor.id);
-
-    const vendorData: VendorData = {
-      id: existing ? existing.id : '', // empty id for new vendors
-      accountingId: qbVendor.id,
-      name: qbVendor.name,
-      address: qbVendor.address || '',
-      city: qbVendor.city || '',
-      state: qbVendor.state || '',
-      zip: qbVendor.zip || '',
-      mobilePhone: qbVendor.mobilePhone || '',
-      businessPhone: qbVendor.businessPhone || '',
-      notes: qbVendor.notes || '',
-    };
+    const existing = allVendors.find((v) => v.accountingId === qbVendor.accountingId);
 
     if (existing) {
       // Update existing vendor
-      updateVendor(existing.id, vendorData);
+      updateVendor(existing.id, {
+        id: existing.id,
+        accountingId: qbVendor.accountingId,
+        name: qbVendor.name,
+        address: qbVendor.address || '',
+        city: qbVendor.city || '',
+        state: qbVendor.state || '',
+        zip: qbVendor.zip || '',
+        mobilePhone: qbVendor.mobilePhone || '',
+        businessPhone: qbVendor.businessPhone || '',
+        notes: qbVendor.notes || '',
+      });
       updatedCount++;
     } else {
       // Add new vendor
-      addVendor(vendorData);
+      addVendor({
+        id: '', // empty id for new vendors, replaced with UUID by the add callback
+        accountingId: qbVendor.accountingId,
+        name: qbVendor.name,
+        address: qbVendor.address || '',
+        city: qbVendor.city || '',
+        state: qbVendor.state || '',
+        zip: qbVendor.zip || '',
+        mobilePhone: qbVendor.mobilePhone || '',
+        businessPhone: qbVendor.businessPhone || '',
+        notes: qbVendor.notes || '',
+      });
       addedCount++;
     }
   }

@@ -78,7 +78,6 @@ const EditInvoiceDetailsPage = () => {
     vendor: '',
     description: '',
     amount: 0,
-    numLineItems: 0,
     invoiceDate: defaultDate.getTime(),
     thumbnail: '',
     pictureDate: 0,

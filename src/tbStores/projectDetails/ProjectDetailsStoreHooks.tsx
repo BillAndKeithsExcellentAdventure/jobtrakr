@@ -54,7 +54,6 @@ export type ReceiptData = {
   paymentAccountId: string; // QuickBooks Account ID
   description: string;
   amount: number;
-  numLineItems: number;
   receiptDate: number;
   thumbnail: string;
   pictureDate: number;
@@ -74,7 +73,6 @@ export type InvoiceData = {
   paymentAccountId: string; // QuickBooks Account ID
   description: string;
   amount: number;
-  numLineItems: number;
   invoiceDate: number;
   invoiceNumber: string;
   thumbnail: string;

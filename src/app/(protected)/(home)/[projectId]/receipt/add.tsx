@@ -22,7 +22,7 @@ import {
   useAllRows,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { useProjectValue } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
@@ -31,7 +31,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
@@ -40,13 +40,14 @@ const AddReceiptPage = () => {
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const { isConnected, isInternetReachable, isConnectedToQuickBooks } = useNetwork();
   const auth = useAuth();
+  const project = useProject(projectId);
+  const projectAbbr = project?.abbreviation ?? '';
   const { userId, orgId, getToken } = auth;
   const appSettings = useAppSettings();
   const addReceiptToLocalStore = useAddRowCallback(projectId, 'receipts');
   const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
-  const projectAbbr = useProjectValue(projectId, 'abbreviation');
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
-  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
+  const [pickedVendorOption, setPickedVendorOption] = useState<OptionEntry | undefined>(undefined);
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
   const [applyToSingleCostCode, setApplyToSingleCostCode] = useState(false);
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
@@ -61,7 +62,6 @@ const AddReceiptPage = () => {
   const [canAddReceipt, setCanAddReceipt] = useState(false);
   const allVendors = useAllConfigurationRows('vendors');
   const allAccounts = useAllConfigurationRows('accounts');
-  const allLineItems = useAllRows(projectId, 'workItemCostEntries');
   const [paymentAccounts, setPaymentAccounts] = useState<OptionEntry[]>([]);
   const [pickedPaymentAccountOption, setPickedPaymentAccountOption] = useState<OptionEntry | undefined>(
     undefined,
@@ -75,6 +75,23 @@ const AddReceiptPage = () => {
     setPickedSubCategoryOption(selectedSubCategory);
   }, []);
 
+  const [projectReceipt, setProjectReceipt] = useState<ReceiptData>({
+    id: '',
+    accountingId: '',
+    vendor: '',
+    description: '',
+    amount: 0,
+    receiptDate: defaultDate.getTime(),
+    thumbnail: '',
+    pictureDate: 0,
+    imageId: '',
+    notes: '',
+    markedComplete: false,
+    vendorId: '',
+    paymentAccountId: appSettings.quickBooksDefaultPaymentAccountId || '',
+    billId: '',
+  });
+
   const handlePaymentAccountOptionChange = (option: OptionEntry) => {
     setPickedPaymentAccountOption(option);
     if (option) {
@@ -87,7 +104,7 @@ const AddReceiptPage = () => {
   };
 
   const handleVendorOptionChange = (option: OptionEntry) => {
-    setPickedOption(option);
+    setPickedVendorOption(option);
     if (option) {
       setProjectReceipt((prevReceipt) => ({
         ...prevReceipt,
@@ -98,31 +115,13 @@ const AddReceiptPage = () => {
     setIsVendorListPickerVisible(false);
   };
 
-  const [projectReceipt, setProjectReceipt] = useState<ReceiptData>({
-    id: '',
-    accountingId: '',
-    vendor: '',
-    description: '',
-    amount: 0,
-    numLineItems: 0,
-    receiptDate: defaultDate.getTime(),
-    thumbnail: '',
-    pictureDate: 0,
-    imageId: '',
-    notes: '',
-    markedComplete: false,
-    vendorId: '',
-    paymentAccountId: appSettings.quickBooksDefaultPaymentAccountId || '',
-    billId: '',
-  });
-
   useEffect(() => {
     if (allVendors && allVendors.length > 0) {
       const vendorOptions: OptionEntry[] = allVendors.map((vendor) => ({
         label: `${vendor.name} ${
           vendor.address ? ` - ${vendor.address}` : vendor.city ? ` - ${vendor.city}` : ''
         }`,
-        value: vendor.id,
+        value: vendor.accountingId, // need the id used in QuickBooks
       }));
 
       setVendors(vendorOptions);
@@ -163,6 +162,15 @@ const AddReceiptPage = () => {
     }
   }, [allAccounts, appSettings.quickBooksPaymentAccounts, appSettings.quickBooksDefaultPaymentAccountId]);
 
+  useEffect(() => {
+    if (pickedPaymentAccountOption !== undefined) {
+      setProjectReceipt((prevReceipt) => ({
+        ...prevReceipt,
+        paymentAccountId: pickedPaymentAccountOption.value,
+      }));
+    }
+  }, [pickedPaymentAccountOption]);
+
   const showDatePicker = () => {
     setDatePickerVisible(true);
   };
@@ -184,13 +192,6 @@ const AddReceiptPage = () => {
     setProjectReceipt((prevReceipt) => ({
       ...prevReceipt,
       amount,
-    }));
-  }, []);
-
-  const handleVendorChange = useCallback((vendor: string) => {
-    setProjectReceipt((prevReceipt) => ({
-      ...prevReceipt,
-      vendor,
     }));
   }, []);
 
@@ -228,6 +229,8 @@ const AddReceiptPage = () => {
 
     const receiptId = result.id;
 
+    const receiptLineItems: WorkItemCostEntry[] = [];
+
     // Add line items if applying to single cost code
     if (applyToSingleCostCode && !!pickedSubCategoryOption) {
       const newLineItem: WorkItemCostEntry = {
@@ -238,6 +241,7 @@ const AddReceiptPage = () => {
         parentId: receiptId,
         documentationType: 'receipt',
       };
+      receiptLineItems.push(newLineItem);
       const addLineItemResult = addLineItem(newLineItem);
       if (addLineItemResult.status !== 'Success') {
         Alert.alert('Error', 'Unable to add line item for receipt.');
@@ -249,7 +253,6 @@ const AddReceiptPage = () => {
 
     // Phase 2: Send to QuickBooks if conditions are met
     // Conditions: connected to QuickBooks, has at least one line item, has amount and payment account
-    const receiptLineItems = (allLineItems || []).filter((item) => item.parentId === receiptId);
     const hasLineItems = receiptLineItems.length > 0;
     const hasAmount = projectReceipt.amount > 0;
     const hasPaymentAccount = !!projectReceipt.paymentAccountId;
@@ -269,23 +272,21 @@ const AddReceiptPage = () => {
         // Build line items for QuickBooks bill
         const qbLineItems: QBBillLineItem[] = [];
         const skippedLineItems: string[] = [];
+        const qbExpenseAccountId = appSettings.quickBooksExpenseAccountId;
+        //         const account = (allAccounts || []).find((acc) => acc.id === workItem?.accountId);
 
         for (const lineItem of receiptLineItems) {
-          // Find the work item to get its account reference
-          const workItem = projectWorkItems.find((wi) => wi.id === lineItem.workItemId);
-          const account = (allAccounts || []).find((acc) => acc.id === workItem?.accountId);
-
           // Only include line items with valid account references
-          if (account?.accountingId) {
+          if (qbExpenseAccountId) {
             qbLineItems.push({
               amount: lineItem.amount,
               description: lineItem.label,
-              accountRef: account.accountingId,
+              accountRef: qbExpenseAccountId,
             });
           } else {
             skippedLineItems.push(lineItem.label);
             console.warn(
-              `Skipping line item ${lineItem.id} - no valid account reference found for work item ${lineItem.workItemId}`
+              `Skipping line item ${lineItem.id} - no valid account reference found for work item ${lineItem.workItemId}`,
             );
           }
         }
@@ -296,14 +297,14 @@ const AddReceiptPage = () => {
           if (skippedLineItems.length > 0) {
             Alert.alert(
               'QuickBooks Sync Skipped',
-              `Cannot sync to QuickBooks: ${skippedLineItems.length} line item(s) missing account references.`
+              `Cannot sync to QuickBooks: ${skippedLineItems.length} line item(s) missing account references.`,
             );
           }
         } else {
           // Notify user if some items were skipped
           if (skippedLineItems.length > 0) {
             console.warn(
-              `Warning: ${skippedLineItems.length} line item(s) were not synced to QuickBooks due to missing account references: ${skippedLineItems.join(', ')}`
+              `Warning: ${skippedLineItems.length} line item(s) were not synced to QuickBooks due to missing account references: ${skippedLineItems.join(', ')}`,
             );
           }
 
@@ -370,8 +371,8 @@ const AddReceiptPage = () => {
     getToken,
     projectWorkItems,
     allAccounts,
-    allLineItems,
     router,
+    appSettings.quickBooksExpenseAccountId,
   ]);
 
   const handleCaptureImage = useCallback(async () => {
@@ -482,7 +483,6 @@ const AddReceiptPage = () => {
       paymentAccountId: appSettings.quickBooksDefaultPaymentAccountId || '',
       description: '',
       amount: 0,
-      numLineItems: 0,
       receiptDate: defaultDate.getTime(),
       thumbnail: '',
       pictureDate: 0,
@@ -536,7 +536,6 @@ const AddReceiptPage = () => {
               placeholder="Vendor/Merchant"
               label="Vendor/Merchant"
               value={projectReceipt.vendor}
-              onChangeText={handleVendorChange}
               editable={isConnectedToQuickBooks ? false : true}
             />
           )}
@@ -643,7 +642,7 @@ const AddReceiptPage = () => {
           <OptionList
             options={vendors}
             onSelect={(option) => handleVendorOptionChange(option)}
-            selectedOption={pickedOption}
+            selectedOption={pickedVendorOption}
             enableSearch={vendors.length > 15}
           />
         </BottomSheetContainer>
