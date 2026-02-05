@@ -91,7 +91,7 @@ export default function CreateOrganization() {
         //console.log('onCreateOrganizationPress-Auth:', auth);
         //console.log('onCreateOrganizationPress-Clerk:', clerk);
         if (clerk && clerk.session) {
-          if (auth.getToken && auth.userId) {
+          if (auth.userId) {
             // Determine deployment type. Use NODE_ENV when available, fall back to React Native __DEV__.
             const isDev =
               (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||

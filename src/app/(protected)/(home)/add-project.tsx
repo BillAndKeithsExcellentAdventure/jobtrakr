@@ -20,9 +20,11 @@ const AddProjectScreen = () => {
   const [project, setProject] = useState<ProjectData>({
     id: '',
     name: '',
+    abbreviation: '',
     location: '',
     ownerName: '',
     bidPrice: 0,
+    quotedPrice: 0,
     amountSpent: 0,
     longitude: 0,
     latitude: 0,

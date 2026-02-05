@@ -47,6 +47,7 @@ const InvoiceDetailsPage = () => {
     id: '',
     invoiceNumber: '',
     vendor: '',
+    vendorId: '',
     description: '',
     amount: 0,
     thumbnail: '',
@@ -56,6 +57,8 @@ const InvoiceDetailsPage = () => {
     notes: '',
     accountingId: '',
     markedComplete: false,
+    paymentAccountId: '',
+    billId: '',
   });
 
   useEffect(() => {

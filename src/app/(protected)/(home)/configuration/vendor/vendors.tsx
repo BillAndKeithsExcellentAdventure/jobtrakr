@@ -24,6 +24,7 @@ const VendorsScreen = () => {
   const [showAdd, setShowAdd] = useState(false);
   const [vendor, setVendor] = useState<VendorData>({
     id: '',
+    accountingId: '',
     name: '',
     address: '',
     city: '',
@@ -53,6 +54,7 @@ const VendorsScreen = () => {
     // Clear the input fields
     setVendor({
       id: '',
+      accountingId: '',
       name: '',
       address: '',
       city: '',

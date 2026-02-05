@@ -76,6 +76,7 @@ const EditInvoiceDetailsPage = () => {
     id: '',
     invoiceNumber: '',
     vendor: '',
+    vendorId: '',
     description: '',
     amount: 0,
     invoiceDate: defaultDate.getTime(),
@@ -85,6 +86,8 @@ const EditInvoiceDetailsPage = () => {
     notes: '',
     markedComplete: false,
     accountingId: '',
+    paymentAccountId: '',
+    billId: '',
   });
 
   useEffect(() => {

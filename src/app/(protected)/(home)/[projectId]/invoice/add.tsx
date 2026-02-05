@@ -58,6 +58,8 @@ const AddInvoicePage = () => {
     id: '',
     accountingId: '',
     vendor: '',
+    vendorId: '',
+    paymentAccountId: '',
     description: '',
     amount: 0,
     invoiceDate: defaultDate.getTime(),
@@ -67,6 +69,7 @@ const AddInvoicePage = () => {
     notes: '',
     markedComplete: false,
     invoiceNumber: '',
+    billId: '',
   });
 
   const handleVendorChange = useCallback((vendor: string) => {
@@ -266,6 +269,8 @@ const AddInvoicePage = () => {
       id: '',
       accountingId: '',
       vendor: '',
+      vendorId: '',
+      paymentAccountId: '',
       description: '',
       amount: 0,
       invoiceDate: defaultDate.getTime(),
@@ -275,6 +280,7 @@ const AddInvoicePage = () => {
       notes: '',
       markedComplete: false,
       invoiceNumber: '',
+      billId: '',
     });
     router.back();
   }, [router, defaultDate]);

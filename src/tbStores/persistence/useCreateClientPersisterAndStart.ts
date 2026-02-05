@@ -1,17 +1,18 @@
 import * as UiReact from 'tinybase/ui-react/with-schemas';
-import { Content, MergeableStore, OptionalSchemas } from 'tinybase/with-schemas';
+import { Content, MergeableStore, OptionalSchemas, Store } from 'tinybase/with-schemas';
 import { createClientPersister } from './createClientPersister';
 
 export const useCreateClientPersisterAndStart = <Schemas extends OptionalSchemas>(
   storeId: string,
-  store: MergeableStore<Schemas>,
+  store: MergeableStore<Schemas> | Store<Schemas>,
   initialValues?: string,
   then?: () => void,
 ) =>
   (UiReact as UiReact.WithSchemas<Schemas>).useCreatePersister(
     store,
     // Create the persister.
-    (store: MergeableStore<Schemas>) => createClientPersister(storeId, store),
+    (store: MergeableStore<Schemas> | Store<Schemas>) =>
+      createClientPersister(storeId, store as MergeableStore<Schemas>),
     [storeId],
     async (persister) => {
       // Determine if there is initial content for a newly-created store.

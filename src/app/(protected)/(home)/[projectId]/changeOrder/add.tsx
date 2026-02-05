@@ -39,7 +39,7 @@ export default function AddChangeOrder() {
     quotedPrice: 0,
     dateCreated: Date.now(),
     status: 'draft',
-    accountId: '',
+    accountingId: '',
   });
 
   // State for modal ChangeItem fields

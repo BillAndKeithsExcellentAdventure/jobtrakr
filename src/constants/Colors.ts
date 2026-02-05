@@ -137,6 +137,7 @@ export const Colors = {
     opaqueModalOverlayBackgroundColor: '#1F1F1F',
     errorText: '#C03403',
     errorBackground: '#F2D6CD',
+    error: '#C03403',
     textDim: '#78716e',
     textPlaceholder: '#78716e',
     transparent: 'rgba(0, 0, 0, 0)',
