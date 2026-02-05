@@ -6,6 +6,7 @@ import { StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { useColors } from '../context/ColorsContext';
 import Base64Image from './Base64Image';
+import { SvgImage } from './SvgImage';
 
 interface ReceiptSummaryProps {
   item: ReceiptData;
@@ -41,9 +42,15 @@ export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({ item, onShowRece
       <View style={[{ flex: 1, alignItems: 'flex-start' }, !!!item.amount && { alignItems: 'center' }]}>
         {0 !== item.amount || item.description?.length > 0 ? (
           <Pressable onPress={() => onShowDetails(item)} style={{ flex: 1, justifyContent: 'center' }}>
-            {item.amount > 0 && <Text text={`Amount: ${formatCurrency(item.amount, true, true)}`} />}
-            {item.vendor && <Text numberOfLines={1} text={`Vendor: ${item.vendor}`} />}
-            {item.description && <Text numberOfLines={1} text={`Descr: ${item.description}`} />}
+            {item.accountingId && (
+              <View style={{ flexDirection: 'row', gap: 20 }}>
+                <SvgImage fileName="qb-logo" width={20} height={20} />
+                <Text>{`${item.accountingId}`}</Text>
+              </View>
+            )}
+            {item.amount > 0 && <Text text={`${formatCurrency(item.amount, true, true)}`} />}
+            {item.vendor && <Text numberOfLines={1} text={`${item.vendor}`} />}
+            {item.description && <Text numberOfLines={1} text={`${item.description}`} />}
           </Pressable>
         ) : (
           <Pressable onPress={() => onShowDetails(item)} style={{ flex: 1, justifyContent: 'center' }}>

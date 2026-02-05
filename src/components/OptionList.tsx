@@ -22,6 +22,7 @@ type Props = {
   boldSelectedOption?: boolean;
   enableSearch?: boolean;
   searchPlaceholder?: string;
+  initialSearchText?: string;
 };
 
 export default function OptionList({
@@ -35,6 +36,7 @@ export default function OptionList({
   boldSelectedOption = true,
   enableSearch = true,
   searchPlaceholder = 'Search...',
+  initialSearchText,
 }: Props) {
   const [isOkToSaveSelectedValue, setIsOkToSaveSelectedValue] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
@@ -65,6 +67,12 @@ export default function OptionList({
       }
     }
   }, [selectedOption, options, showOkCancel, onOptionSelected]);
+
+  useEffect(() => {
+    if (initialSearchText !== undefined) {
+      setSearchText(initialSearchText);
+    }
+  }, [initialSearchText]);
 
   // Filter options based on search text
   const filteredOptions = useMemo(() => {
