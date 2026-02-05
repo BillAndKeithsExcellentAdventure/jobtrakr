@@ -19,7 +19,6 @@ import {
   ReceiptData,
   useAddRowCallback,
   useUpdateRowCallback,
-  useAllRows,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
@@ -328,22 +327,24 @@ const AddReceiptPage = () => {
           };
 
           const response = await addReceiptToQuickBooks(receiptData, getToken);
+          console.log('Receipt successfully synced to QuickBooks:', response);
 
           // Update the local receipt with accountingId and billId from response
           const updates: Partial<ReceiptData> = {};
-          if (response.accountId) {
+          if (response.data?.Bill?.DocNumber) {
             // Backend returns 'accountId', but local store uses 'accountingId'
-            updates.accountingId = response.accountId;
+            updates.accountingId = response.data.Bill.DocNumber;
+            console.log('Updating local receipt with accountingId:', response.data?.Bill?.DocNumber);
           }
           if (response.data?.Bill?.Id) {
             updates.billId = response.data.Bill.Id;
+            console.log('Updating local receipt with billId:', response.data.Bill.Id);
           }
 
           if (Object.keys(updates).length > 0) {
+            console.log('Updating local receipt with:', updates);
             updateReceipt(receiptId, updates);
           }
-
-          console.log('Receipt successfully synced to QuickBooks:', response);
         }
       } catch (error) {
         console.error('Error syncing receipt to QuickBooks:', error);
