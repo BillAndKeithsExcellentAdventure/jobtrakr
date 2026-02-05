@@ -26,6 +26,7 @@ import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { addReceiptToQuickBooks, QBBillLineItem } from '@/src/utils/quickbooksAPI';
+import { getReceiptSyncHash } from '@/src/utils/quickbooksSyncHash';
 import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
@@ -90,6 +91,7 @@ const AddReceiptPage = () => {
     vendorId: '',
     paymentAccountId: appSettings.quickBooksDefaultPaymentAccountId || '',
     billId: '',
+    qbSyncHash: '',
   });
 
   const handlePaymentAccountOptionChange = (option: OptionEntry) => {
@@ -334,7 +336,9 @@ const AddReceiptPage = () => {
             console.log('Receipt successfully synced to QuickBooks:', response);
 
             // Update the local receipt with accountingId and billId from response
-            const updates: Partial<ReceiptData> = {};
+            const updates: Partial<ReceiptData> = {
+              qbSyncHash: getReceiptSyncHash(receiptToAdd, receiptLineItems),
+            };
             if (response.data?.Bill?.DocNumber) {
               // Backend returns 'accountId', but local store uses 'accountingId'
               updates.accountingId = response.data.Bill.DocNumber;
@@ -499,6 +503,7 @@ const AddReceiptPage = () => {
       notes: '',
       billId: '',
       markedComplete: false,
+      qbSyncHash: '',
     });
     router.back();
   }, [router, defaultDate, appSettings.quickBooksDefaultPaymentAccountId]);

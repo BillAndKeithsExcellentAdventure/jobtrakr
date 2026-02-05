@@ -17,6 +17,7 @@ import { formatCurrency } from '@/src/utils/formatters';
 import { buildLocalMediaUri, useAddImageCallback, useGetImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { addReceiptToQuickBooks, QBBillLineItem } from '@/src/utils/quickbooksAPI';
+import { getReceiptSyncHash } from '@/src/utils/quickbooksSyncHash';
 import { useAuth } from '@clerk/clerk-expo';
 import { File } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
@@ -66,6 +67,7 @@ const ReceiptDetailsPage = () => {
     accountingId: '',
     markedComplete: false,
     billId: '',
+    qbSyncHash: '',
   });
 
   useEffect(() => {
@@ -79,6 +81,10 @@ const ReceiptDetailsPage = () => {
   const [itemsTotalCost, setItemsTotalCost] = useState(0);
   const [isSavingToQuickBooks, setIsSavingToQuickBooks] = useState(false);
   const router = useRouter();
+
+  const currentSyncHash = getReceiptSyncHash(receipt, allReceiptLineItems);
+  const isReceiptOutOfSync = !!receipt.billId && receipt.qbSyncHash !== currentSyncHash;
+  const isReceiptUpToDate = !!receipt.billId && !isReceiptOutOfSync;
 
   useEffect(() => {
     setItemsTotalCost(allReceiptLineItems.reduce((acc, item) => acc + item.amount, 0));
@@ -218,7 +224,6 @@ const ReceiptDetailsPage = () => {
 
   const canSyncToQuickBooks =
     isConnectedToQuickBooks &&
-    !receipt.billId &&
     allReceiptLineItems.length > 0 &&
     receipt.amount > 0 &&
     !!receipt.paymentAccountId &&
@@ -313,6 +318,7 @@ const ReceiptDetailsPage = () => {
     isSavingToQuickBooks,
     appSettings.quickBooksExpenseAccountId,
     allReceiptLineItems,
+    currentSyncHash,
     userId,
     orgId,
     projectId,
@@ -431,11 +437,17 @@ const ReceiptDetailsPage = () => {
                             text="Saving Receipt to QuickBooks"
                           />
                         </View>
+                      ) : isReceiptUpToDate ? (
+                        <View style={[styles.upToDateBadge, { backgroundColor: colors.neutral200 }]}>
+                          <Text txtSize="standard" style={styles.upToDateText} text="Up to date" />
+                        </View>
                       ) : (
                         <ActionButton
                           onPress={handleSyncToQuickBooks}
                           type="action"
-                          title="Save Receipt to QuickBooks"
+                          title={
+                            isReceiptOutOfSync ? 'Update Receipt in QuickBooks' : 'Save Receipt to QuickBooks'
+                          }
                         />
                       )}
                     </View>
@@ -485,5 +497,14 @@ const styles = StyleSheet.create({
   },
   savingText: {
     marginLeft: 10,
+  },
+  upToDateBadge: {
+    alignSelf: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  upToDateText: {
+    fontWeight: '600',
   },
 });

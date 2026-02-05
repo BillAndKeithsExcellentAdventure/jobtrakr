@@ -100,6 +100,7 @@ const EditReceiptDetailsPage = () => {
     markedComplete: false,
     accountingId: '',
     billId: '',
+    qbSyncHash: '',
   });
 
   useEffect(() => {

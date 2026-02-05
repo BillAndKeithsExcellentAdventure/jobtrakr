@@ -31,6 +31,7 @@ export const TABLES_SCHEMA = {
     notes: { type: 'string' }, // not currently in ui
     markedComplete: { type: 'boolean' },
     billId: { type: 'string' }, // QuickBooks Bill ID
+    qbSyncHash: { type: 'string' },
   },
 
   invoices: {
