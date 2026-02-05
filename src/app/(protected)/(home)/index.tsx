@@ -408,6 +408,15 @@ export default function ProjectHomeScreen() {
         options={{
           headerShown: true,
           title: 'Projects',
+          headerLeft: () => (
+            <View style={styles.headerLeftContainer}>
+              <Image
+                source={require('@/assets/images/icon.png')}
+                style={styles.appIcon}
+                contentFit="contain"
+              />
+            </View>
+          ),
           ...headerRightComponent,
         }}
       />
@@ -507,5 +516,12 @@ export const styles = StyleSheet.create({
     width: 300,
     height: 300,
     marginTop: 40,
+  },
+  headerLeftContainer: {
+    marginLeft: Platform.OS === 'android' ? 16 : 0,
+  },
+  appIcon: {
+    width: 32,
+    height: 32,
   },
 });
