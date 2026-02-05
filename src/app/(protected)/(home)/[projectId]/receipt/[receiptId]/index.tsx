@@ -291,10 +291,35 @@ const ReceiptDetailsPage = () => {
         },
       };
 
+      if (receipt.billId) {
+        Alert.alert(
+          'Confirm Update',
+          'This receipt is already in QuickBooks. Do you want to update the existing record?',
+          [
+            { text: 'Cancel', style: 'cancel', onPress: () => setIsSavingToQuickBooks(false) },
+            {
+              text: 'Update',
+              onPress: async () => {
+                try {
+                  const response = await addReceiptToQuickBooks(receiptData, getToken);
+                  console.log('Receipt successfully updated in QuickBooks:', response);
+                } catch (error) {
+                  console.error('Error updating receipt in QuickBooks:', error);
+                } finally {
+                  setIsSavingToQuickBooks(false);
+                }
+              },
+            },
+          ],
+        );
+        return;
+      }
+
+      // Create new Bill in QuickBooks
       const response = await addReceiptToQuickBooks(receiptData, getToken);
       console.log('Receipt successfully synced to QuickBooks:', response);
 
-      const updates: Partial<ReceiptData> = {};
+      const updates: ReceiptData = { ...receipt };
       if (response.data?.Bill?.DocNumber) {
         updates.accountingId = response.data.Bill.DocNumber;
         console.log('Updating local receipt with accountingId:', response.data?.Bill?.DocNumber);
@@ -304,10 +329,10 @@ const ReceiptDetailsPage = () => {
         console.log('Updating local receipt with billId:', response.data.Bill.Id);
       }
 
-      if (Object.keys(updates).length > 0) {
-        console.log('Updating local receipt with:', updates);
-        updateReceipt(receipt.id, updates);
-      }
+      const newHash = getReceiptSyncHash(updates, allReceiptLineItems);
+      updates.qbSyncHash = newHash;
+      console.log('Updating local receipt with:', updates);
+      updateReceipt(receipt.id, updates);
     } catch (error) {
       console.error('Error syncing receipt to QuickBooks:', error);
     } finally {
@@ -318,18 +343,12 @@ const ReceiptDetailsPage = () => {
     isSavingToQuickBooks,
     appSettings.quickBooksExpenseAccountId,
     allReceiptLineItems,
-    currentSyncHash,
+    receipt,
     userId,
     orgId,
     projectId,
     projectAbbr,
     projectName,
-    receipt.id,
-    receipt.imageId,
-    receipt.vendorId,
-    receipt.notes,
-    receipt.description,
-    receipt.receiptDate,
     getToken,
     updateReceipt,
   ]);
@@ -438,9 +457,7 @@ const ReceiptDetailsPage = () => {
                           />
                         </View>
                       ) : isReceiptUpToDate ? (
-                        <View style={[styles.upToDateBadge, { backgroundColor: colors.neutral200 }]}>
-                          <Text txtSize="standard" style={styles.upToDateText} text="Up to date" />
-                        </View>
+                        <></>
                       ) : (
                         <ActionButton
                           onPress={handleSyncToQuickBooks}
