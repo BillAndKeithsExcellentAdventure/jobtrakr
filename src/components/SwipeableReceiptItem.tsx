@@ -17,8 +17,9 @@ import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { useRouter } from 'expo-router';
 import { useDeleteMediaCallback, deleteLocalMediaFile } from '../utils/images';
 import { useAllMediaToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
+import { SvgImage } from './SvgImage';
 
-export const ITEM_HEIGHT = 140;
+export const ITEM_HEIGHT = 128;
 const RIGHT_ACTION_WIDTH = 100;
 const SWIPE_THRESHOLD_WIDTH = 50;
 
@@ -163,13 +164,18 @@ const SwipeableReceiptItem = React.memo<{
             ) : (
               <>
                 <View style={{ flex: 1, justifyContent: 'center', paddingLeft: 10 }}>
-                  {item.accountingId && <Text style={{ color: textColor }}>{`[${item.accountingId}]`}</Text>}
-                  <Text style={{ color: textColor }}>Amount: {formatCurrency(item.amount, true, true)}</Text>
-                  <Text style={{ color: textColor }}>Vendor: {item.vendor}</Text>
-                  <Text style={{ color: textColor }}>
-                    # Items: {allReceiptItems.length} / ({totalOfAllReceiptItemsFormatted})
+                  {item.accountingId && (
+                    <View style={{ flexDirection: 'row', gap: 20 }}>
+                      <SvgImage fileName="qb-logo" width={20} height={20} />
+                      <Text style={{ color: textColor }}>{`${item.accountingId}`}</Text>
+                    </View>
+                  )}
+                  <Text style={{ color: textColor }}>{formatCurrency(item.amount, true, true)}</Text>
+                  <Text numberOfLines={1} style={{ color: textColor }}>
+                    {item.vendor}
                   </Text>
-                  <Text style={{ color: textColor }}>Date: {formatDate(item.receiptDate)}</Text>
+                  <Text style={{ color: textColor }}>{item.description}</Text>
+                  <Text style={{ color: textColor }}>{formatDate(item.receiptDate)}</Text>
                 </View>
                 <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
                   <Feather name="chevrons-right" size={24} color={colors.iconColor} />
