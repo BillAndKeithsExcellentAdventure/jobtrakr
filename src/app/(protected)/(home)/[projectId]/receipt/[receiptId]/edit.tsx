@@ -6,7 +6,9 @@ import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton'
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
 import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
+import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   ReceiptData,
@@ -27,8 +29,14 @@ const EditReceiptDetailsPage = () => {
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
+  const [isPaymentAccountPickerVisible, setIsPaymentAccountPickerVisible] = useState<boolean>(false);
+  const [pickedPaymentAccountOption, setPickedPaymentAccountOption] = useState<OptionEntry | undefined>(
+    undefined,
+  );
   const allProjectReceipts = useAllRows(projectId, 'receipts');
   const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
+  const appSettings = useAppSettings();
+  const { isConnectedToQuickBooks } = useNetwork();
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const showDatePicker = () => {
     setDatePickerVisible(true);
@@ -39,7 +47,9 @@ const EditReceiptDetailsPage = () => {
   };
 
   const allVendors = useAllConfigurationRows('vendors');
+  const allAccounts = useAllConfigurationRows('accounts');
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
+  const [paymentAccounts, setPaymentAccounts] = useState<OptionEntry[]>([]);
 
   useEffect(() => {
     if (allVendors && allVendors.length > 0) {
@@ -47,7 +57,7 @@ const EditReceiptDetailsPage = () => {
         label: `${vendor.name} ${
           vendor.address ? ` - ${vendor.address}` : vendor.city ? ` - ${vendor.city}` : ''
         }`,
-        value: vendor.id,
+        value: vendor.accountingId,
       }));
 
       setVendors(vendorOptions);
@@ -56,9 +66,30 @@ const EditReceiptDetailsPage = () => {
     }
   }, [allVendors]);
 
+  useEffect(() => {
+    if (allAccounts && allAccounts.length > 0) {
+      const configuredAccountIds = appSettings.quickBooksPaymentAccounts
+        ? appSettings.quickBooksPaymentAccounts.split(',').filter((id) => id.trim() !== '')
+        : [];
+
+      const paymentList = allAccounts
+        .filter((account) => configuredAccountIds.includes(account.accountingId))
+        .map((account) => ({
+          label: account.name,
+          value: account.accountingId,
+        }));
+
+      setPaymentAccounts(paymentList);
+    } else {
+      setPaymentAccounts([]);
+    }
+  }, [allAccounts, appSettings.quickBooksPaymentAccounts]);
+
   const [receipt, setReceipt] = useState<ReceiptData>({
     id: '',
     vendor: '',
+    vendorId: '',
+    paymentAccountId: '',
     description: '',
     amount: 0,
     receiptDate: defaultDate.getTime(),
@@ -68,6 +99,7 @@ const EditReceiptDetailsPage = () => {
     notes: '',
     markedComplete: false,
     accountingId: '',
+    billId: '',
   });
 
   useEffect(() => {
@@ -78,9 +110,40 @@ const EditReceiptDetailsPage = () => {
   }, [receiptId, allProjectReceipts]);
 
   useEffect(() => {
-    const match = vendors.find((o) => o.label === receipt.vendor);
+    const match = isConnectedToQuickBooks
+      ? vendors.find((o) => o.value === receipt.vendorId)
+      : vendors.find((o) => o.label === receipt.vendor);
     setPickedOption(match);
-  }, [receipt, vendors]);
+  }, [receipt, vendors, isConnectedToQuickBooks]);
+
+  useEffect(() => {
+    if (!paymentAccounts.length) {
+      setPickedPaymentAccountOption(undefined);
+      return;
+    }
+    const match = paymentAccounts.find((o) => o.value === receipt.paymentAccountId);
+    setPickedPaymentAccountOption(match);
+  }, [receipt.paymentAccountId, paymentAccounts]);
+
+  useEffect(() => {
+    if (!receipt.id || receipt.id !== receiptId) {
+      return;
+    }
+    if (!receipt.paymentAccountId && appSettings.quickBooksDefaultPaymentAccountId) {
+      const newReceipt = {
+        ...receipt,
+        paymentAccountId: appSettings.quickBooksDefaultPaymentAccountId,
+      };
+      updateReceipt(receiptId, newReceipt);
+    }
+  }, [
+    receipt,
+    receipt.id,
+    receipt.paymentAccountId,
+    appSettings.quickBooksDefaultPaymentAccountId,
+    receiptId,
+    updateReceipt,
+  ]);
 
   const colors = useColors();
 
@@ -128,10 +191,26 @@ const EditReceiptDetailsPage = () => {
   const handleVendorOptionChange = useCallback(
     (option: OptionEntry) => {
       if (option) {
-        const newReceipt = { ...receipt, vendor: option.label };
+        const newReceipt = {
+          ...receipt,
+          vendor: option.label,
+          vendorId: option.value ?? '',
+        };
         updateReceipt(receiptId, newReceipt);
       }
       setIsVendorListPickerVisible(false);
+    },
+    [receipt, receiptId, updateReceipt],
+  );
+
+  const handlePaymentAccountOptionChange = useCallback(
+    (option: OptionEntry) => {
+      if (option) {
+        const newReceipt = { ...receipt, paymentAccountId: option.value };
+        updateReceipt(receiptId, newReceipt);
+        setPickedPaymentAccountOption(option);
+      }
+      setIsPaymentAccountPickerVisible(false);
     },
     [receipt, receiptId, updateReceipt],
   );
@@ -155,7 +234,7 @@ const EditReceiptDetailsPage = () => {
       <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
         <View style={[styles.container, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
           <View style={styles.editContainer}>
-            <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border }}>
+            <View style={{ paddingBottom: 8 }}>
               <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
                 <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
                 <TextInput
@@ -177,7 +256,8 @@ const EditReceiptDetailsPage = () => {
             </View>
 
             <NumberInputField
-              style={styles.inputContainer}
+              style={{ ...styles.inputContainer, paddingLeft: 10, marginTop: 0 }}
+              labelStyle={{ marginBottom: 0 }}
               label="Amount"
               value={receiptAmount}
               onChange={handleAmountChange}
@@ -185,11 +265,12 @@ const EditReceiptDetailsPage = () => {
             {vendors && vendors.length ? (
               <OptionPickerItem
                 containerStyle={styles.inputContainer}
-                optionLabel={receipt.vendor}
+                optionLabel={isConnectedToQuickBooks && !receipt.vendorId ? '' : receipt.vendor}
                 placeholder="Vendor/Merchant"
                 label="Vendor/Merchant"
+                editable={!isConnectedToQuickBooks}
                 onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
-                onOptionLabelChange={handleVendorLabelChange}
+                onOptionLabelChange={!isConnectedToQuickBooks ? handleVendorLabelChange : undefined}
               />
             ) : (
               <TextField
@@ -219,6 +300,16 @@ const EditReceiptDetailsPage = () => {
               }}
               onBlur={() => handleDescriptionChange(receipt.description)}
             />
+            {isConnectedToQuickBooks && paymentAccounts && paymentAccounts.length > 0 && (
+              <OptionPickerItem
+                containerStyle={styles.inputContainer}
+                optionLabel={pickedPaymentAccountOption?.label}
+                label="Payment Account"
+                placeholder="Payment Account"
+                editable={false}
+                onPickerButtonPress={() => setIsPaymentAccountPickerVisible(true)}
+              />
+            )}
           </View>
           {vendors && isVendorListPickerVisible && (
             <BottomSheetContainer
@@ -229,7 +320,24 @@ const EditReceiptDetailsPage = () => {
                 options={vendors}
                 onSelect={(option) => handleVendorOptionChange(option)}
                 selectedOption={pickedOption}
-                enableSearch={vendors.length > 15}
+                initialSearchText={isConnectedToQuickBooks && !receipt.vendorId ? receipt.vendor : undefined}
+                enableSearch={
+                  vendors.length > 15 || (isConnectedToQuickBooks && !receipt.vendorId && !!receipt.vendor)
+                }
+              />
+            </BottomSheetContainer>
+          )}
+          {isConnectedToQuickBooks && paymentAccounts && isPaymentAccountPickerVisible && (
+            <BottomSheetContainer
+              modalHeight={'60%'}
+              isVisible={isPaymentAccountPickerVisible}
+              onClose={() => setIsPaymentAccountPickerVisible(false)}
+            >
+              <OptionList
+                options={paymentAccounts}
+                onSelect={(option) => handlePaymentAccountOptionChange(option)}
+                selectedOption={pickedPaymentAccountOption}
+                enableSearch={paymentAccounts.length > 15}
               />
             </BottomSheetContainer>
           )}

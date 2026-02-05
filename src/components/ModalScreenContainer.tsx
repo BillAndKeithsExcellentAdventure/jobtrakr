@@ -1,9 +1,9 @@
 import { ActionButton } from '@/src/components/ActionButton';
-import { View } from '@/src/components/Themed';
+import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { Stack } from 'expo-router';
 import React, { PropsWithChildren } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '../constants/app-constants';
@@ -16,6 +16,8 @@ type ModalScreenContainerProps = PropsWithChildren<{
   canSave?: boolean;
   saveButtonTitle?: string;
   cancelButtonTitle?: string;
+  isSaving?: boolean;
+  savingLabel?: string;
 }>;
 
 export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
@@ -24,6 +26,8 @@ export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
   canSave = true,
   saveButtonTitle = 'Save',
   cancelButtonTitle = 'Cancel',
+  isSaving = false,
+  savingLabel = 'Saving',
   children,
 }) => {
   const colors = useColors();
@@ -46,20 +50,27 @@ export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
           <View style={styles.container}>
             {children}
 
-            <View style={styles.saveButtonRow}>
-              <ActionButton
-                style={styles.saveButton}
-                onPress={onSave}
-                type={canSave ? 'ok' : 'disabled'}
-                title={saveButtonTitle}
-              />
-              <ActionButton
-                style={styles.cancelButton}
-                onPress={onCancel}
-                type="cancel"
-                title={cancelButtonTitle}
-              />
-            </View>
+            {isSaving ? (
+              <View style={styles.savingRow}>
+                <ActivityIndicator />
+                <Text txtSize="standard" style={styles.savingText} text={savingLabel} />
+              </View>
+            ) : (
+              <View style={styles.saveButtonRow}>
+                <ActionButton
+                  style={styles.saveButton}
+                  onPress={onSave}
+                  type={canSave ? 'ok' : 'disabled'}
+                  title={saveButtonTitle}
+                />
+                <ActionButton
+                  style={styles.cancelButton}
+                  onPress={onCancel}
+                  type="cancel"
+                  title={cancelButtonTitle}
+                />
+              </View>
+            )}
           </View>
         </KeyboardAwareScrollView>
       </SafeAreaView>
@@ -92,6 +103,16 @@ const styles = StyleSheet.create({
     marginTop: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  savingRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  savingText: {
+    marginLeft: 10,
   },
   saveButton: {
     flex: 1,

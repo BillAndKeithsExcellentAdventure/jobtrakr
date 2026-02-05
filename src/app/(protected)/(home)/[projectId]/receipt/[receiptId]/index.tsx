@@ -3,6 +3,8 @@ import { ReceiptSummary } from '@/src/components/ReceiptSummary';
 import SwipeableLineItem from '@/src/components/SwipeableLineItem';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
+import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import {
   ReceiptData,
   useAllRows,
@@ -10,16 +12,18 @@ import {
   useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatCurrency } from '@/src/utils/formatters';
 import { buildLocalMediaUri, useAddImageCallback, useGetImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
+import { addReceiptToQuickBooks, QBBillLineItem } from '@/src/utils/quickbooksAPI';
 import { useAuth } from '@clerk/clerk-expo';
 import { File } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ReceiptDetailsPage = () => {
@@ -28,11 +32,16 @@ const ReceiptDetailsPage = () => {
   const allProjectReceipts = useAllRows(projectId, 'receipts');
   const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
   const addReceiptImage = useAddImageCallback();
+  const appSettings = useAppSettings();
+  const { isConnectedToQuickBooks } = useNetwork();
+  const project = useProject(projectId);
+  const projectAbbr = project?.abbreviation ?? '';
+  const projectName = project?.name ?? '';
 
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   useCostUpdater(projectId);
   const auth = useAuth();
-  const { orgId } = auth;
+  const { userId, orgId, getToken } = auth;
   const getImage = useGetImageCallback();
 
   const [allReceiptLineItems, setAllReceiptLineItems] = useState<WorkItemCostEntry[]>([]);
@@ -45,6 +54,8 @@ const ReceiptDetailsPage = () => {
   const [receipt, setReceipt] = useState<ReceiptData>({
     id: '',
     vendor: '',
+    vendorId: '',
+    paymentAccountId: '',
     description: '',
     amount: 0,
     thumbnail: '',
@@ -54,6 +65,7 @@ const ReceiptDetailsPage = () => {
     notes: '',
     accountingId: '',
     markedComplete: false,
+    billId: '',
   });
 
   useEffect(() => {
@@ -65,6 +77,7 @@ const ReceiptDetailsPage = () => {
   }, [receiptId, allProjectReceipts]);
 
   const [itemsTotalCost, setItemsTotalCost] = useState(0);
+  const [isSavingToQuickBooks, setIsSavingToQuickBooks] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -203,6 +216,118 @@ const ReceiptDetailsPage = () => {
     setContainerHeight(event.nativeEvent.layout.height);
   };
 
+  const canSyncToQuickBooks =
+    isConnectedToQuickBooks &&
+    !receipt.billId &&
+    allReceiptLineItems.length > 0 &&
+    receipt.amount > 0 &&
+    !!receipt.paymentAccountId &&
+    !!receipt.vendorId &&
+    !!userId &&
+    !!orgId &&
+    !!projectAbbr;
+
+  const handleSyncToQuickBooks = useCallback(async () => {
+    if (!canSyncToQuickBooks || isSavingToQuickBooks) return;
+
+    setIsSavingToQuickBooks(true);
+
+    try {
+      const qbLineItems: QBBillLineItem[] = [];
+      const skippedLineItems: string[] = [];
+      const qbExpenseAccountId = appSettings.quickBooksExpenseAccountId;
+
+      for (const lineItem of allReceiptLineItems) {
+        if (qbExpenseAccountId) {
+          qbLineItems.push({
+            amount: lineItem.amount,
+            description: lineItem.label,
+            accountRef: qbExpenseAccountId,
+          });
+        } else {
+          skippedLineItems.push(lineItem.label);
+          console.warn(
+            `Skipping line item ${lineItem.id} - no valid account reference found for work item ${lineItem.workItemId}`,
+          );
+        }
+      }
+
+      if (qbLineItems.length === 0) {
+        console.warn('No valid line items with account references - skipping QuickBooks sync');
+        if (skippedLineItems.length > 0) {
+          Alert.alert(
+            'QuickBooks Sync Skipped',
+            `Cannot sync to QuickBooks: ${skippedLineItems.length} line item(s) missing account references.`,
+          );
+        }
+        return;
+      }
+
+      if (skippedLineItems.length > 0) {
+        console.warn(
+          `Warning: ${skippedLineItems.length} line item(s) were not synced to QuickBooks due to missing account references: ${skippedLineItems.join(', ')}`,
+        );
+      }
+
+      const receiptData = {
+        userId,
+        orgId,
+        projectId,
+        projectAbbr,
+        projectName,
+        invoiceId: receipt.id,
+        imageId: receipt.imageId || '',
+        addAttachment: !!receipt.imageId,
+        qbBillData: {
+          vendorRef: receipt.vendorId,
+          lineItems: qbLineItems,
+          privateNote: receipt.notes || receipt.description || '',
+          dueDate: new Date(receipt.receiptDate).toISOString().split('T')[0],
+        },
+      };
+
+      const response = await addReceiptToQuickBooks(receiptData, getToken);
+      console.log('Receipt successfully synced to QuickBooks:', response);
+
+      const updates: Partial<ReceiptData> = {};
+      if (response.data?.Bill?.DocNumber) {
+        updates.accountingId = response.data.Bill.DocNumber;
+        console.log('Updating local receipt with accountingId:', response.data?.Bill?.DocNumber);
+      }
+      if (response.data?.Bill?.Id) {
+        updates.billId = response.data.Bill.Id;
+        console.log('Updating local receipt with billId:', response.data.Bill.Id);
+      }
+
+      if (Object.keys(updates).length > 0) {
+        console.log('Updating local receipt with:', updates);
+        updateReceipt(receipt.id, updates);
+      }
+    } catch (error) {
+      console.error('Error syncing receipt to QuickBooks:', error);
+    } finally {
+      setIsSavingToQuickBooks(false);
+    }
+  }, [
+    canSyncToQuickBooks,
+    isSavingToQuickBooks,
+    appSettings.quickBooksExpenseAccountId,
+    allReceiptLineItems,
+    userId,
+    orgId,
+    projectId,
+    projectAbbr,
+    projectName,
+    receipt.id,
+    receipt.imageId,
+    receipt.vendorId,
+    receipt.notes,
+    receipt.description,
+    receipt.receiptDate,
+    getToken,
+    updateReceipt,
+  ]);
+
   return (
     <>
       <Stack.Screen options={{ headerShown: true, title: 'Receipt Details' }} />
@@ -218,7 +343,13 @@ const ReceiptDetailsPage = () => {
 
               <View style={styles.container}>
                 <View
-                  style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    gap: 10,
+                    marginBottom: 10,
+                    paddingHorizontal: 10,
+                  }}
                 >
                   <ActionButton
                     style={styles.leftButton}
@@ -289,6 +420,26 @@ const ReceiptDetailsPage = () => {
                       }`}
                     />
                   </View>
+                  {canSyncToQuickBooks && (
+                    <View style={styles.syncButtonRow}>
+                      {isSavingToQuickBooks ? (
+                        <View style={styles.savingRow}>
+                          <ActivityIndicator />
+                          <Text
+                            txtSize="standard"
+                            style={styles.savingText}
+                            text="Saving Receipt to QuickBooks"
+                          />
+                        </View>
+                      ) : (
+                        <ActionButton
+                          onPress={handleSyncToQuickBooks}
+                          type="action"
+                          title="Save Receipt to QuickBooks"
+                        />
+                      )}
+                    </View>
+                  )}
                 </View>
               </View>
             </>
@@ -320,5 +471,19 @@ const styles = StyleSheet.create({
   },
   rightButton: {
     flex: 1,
+  },
+  syncButtonRow: {
+    marginTop: 10,
+    height: 60,
+    paddingHorizontal: 10,
+  },
+  savingRow: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  savingText: {
+    marginLeft: 10,
   },
 });
