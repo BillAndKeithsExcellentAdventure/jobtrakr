@@ -54,8 +54,8 @@ export const Switch: FC<SwitchProps> = ({
       ? { backgroundColor: switchContainerOnBackgroundColor }
       : styles.switchContainerOn
     : switchContainerOffBackgroundColor
-    ? { backgroundColor: switchContainerOffBackgroundColor }
-    : styles.switchContainerOff;
+      ? { backgroundColor: switchContainerOffBackgroundColor }
+      : styles.switchContainerOff;
 
   return (
     <TouchableOpacity
