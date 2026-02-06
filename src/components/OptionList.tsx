@@ -23,6 +23,8 @@ type Props = {
   enableSearch?: boolean;
   searchPlaceholder?: string;
   initialSearchText?: string;
+  okButtonText?: string;
+  cancelButtonText?: string;
 };
 
 export default function OptionList({
@@ -37,6 +39,8 @@ export default function OptionList({
   enableSearch = true,
   searchPlaceholder = 'Search...',
   initialSearchText,
+  okButtonText = 'OK',
+  cancelButtonText = 'Cancel',
 }: Props) {
   const [isOkToSaveSelectedValue, setIsOkToSaveSelectedValue] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
@@ -174,13 +178,13 @@ export default function OptionList({
                 style={styles.saveButton}
                 onPress={onOkSelected}
                 type={isOkToSaveSelectedValue ? 'ok' : 'disabled'}
-                title="Save"
+                title={okButtonText}
               />
               <ActionButton
                 style={styles.cancelButton}
                 onPress={() => onCancel && onCancel()}
                 type={'cancel'}
-                title="Cancel"
+                title={cancelButtonText}
               />
             </View>
           </View>

@@ -163,7 +163,7 @@ const ProjectReceiptsPage = () => {
           billId: '',
           accountingId: '',
           vendorId: '',
-          paymentAccountId: appSettings.quickBooksDefaultPaymentAccountId || '',
+          paymentAccountId: selectedPaymentAccountId,
           qbSyncHash: '',
         };
 
@@ -200,7 +200,7 @@ const ProjectReceiptsPage = () => {
         setIsProcessingImage(false);
       }
     },
-    [projectId, addReceiptImage, addReceiptToLocalStore, appSettings.quickBooksDefaultPaymentAccountId],
+    [projectId, addReceiptImage, addReceiptToLocalStore, selectedPaymentAccountId],
   );
 
   const handleAddPhotoReceipt = useCallback(
@@ -417,6 +417,7 @@ const ProjectReceiptsPage = () => {
         isVisible={isPaymentAccountPickerVisible}
         onClose={() => setIsPaymentAccountPickerVisible(false)}
         title="Select payment account for receipt"
+        showClose={false}
         modalHeight="60%"
       >
         <OptionList

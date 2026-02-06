@@ -20,6 +20,7 @@ type Props = PropsWithChildren<{
   onClose: () => void;
   title?: string;
   modalHeight?: DimensionValue;
+  showClose?: boolean;
 }>;
 
 export default function BottomSheetContainer({
@@ -28,6 +29,7 @@ export default function BottomSheetContainer({
   onClose,
   title,
   modalHeight = '40%',
+  showClose = true,
 }: Props) {
   const { top, bottom } = useSafeAreaInsets();
   const colors = useColors();
@@ -37,7 +39,7 @@ export default function BottomSheetContainer({
   return (
     <Modal animationType="slide" transparent={true} visible={isVisible} onRequestClose={() => onClose()}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <TouchableWithoutFeedback onPress={() => onClose()}>
+        <TouchableWithoutFeedback onPress={() => (onClose ? onClose() : null)}>
           <View style={{ flex: 1, backgroundColor: 'transparent' }}>
             <View
               style={{
@@ -60,9 +62,11 @@ export default function BottomSheetContainer({
                     ]}
                   >
                     <Text txtSize="standard" style={[{ fontWeight: '600' }]} text={title} />
-                    <Pressable onPress={() => onClose()}>
-                      <MaterialIcons name="close" color={colors.iconColor} size={22} />
-                    </Pressable>
+                    {showClose && (
+                      <Pressable onPress={() => onClose()}>
+                        <MaterialIcons name="close" color={colors.iconColor} size={22} />
+                      </Pressable>
+                    )}
                   </View>
                 ) : (
                   <View style={{ height: 10 }} />
