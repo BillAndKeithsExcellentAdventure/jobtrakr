@@ -21,6 +21,7 @@ type Props = PropsWithChildren<{
   title?: string;
   modalHeight?: DimensionValue;
   showClose?: boolean;
+  showKeyboardToolbar?: boolean;
 }>;
 
 export default function BottomSheetContainer({
@@ -30,6 +31,7 @@ export default function BottomSheetContainer({
   title,
   modalHeight = '40%',
   showClose = true,
+  showKeyboardToolbar = true,
 }: Props) {
   const { top, bottom } = useSafeAreaInsets();
   const colors = useColors();
@@ -40,7 +42,7 @@ export default function BottomSheetContainer({
     <Modal animationType="slide" transparent={true} visible={isVisible} onRequestClose={() => onClose()}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <TouchableWithoutFeedback onPress={() => (onClose ? onClose() : null)}>
-          <View style={{ flex: 1, backgroundColor: 'transparent' }}>
+          <View style={{ flex: 1, backgroundColor: colors.transparent }}>
             <View
               style={{
                 flex: 1,
@@ -77,7 +79,9 @@ export default function BottomSheetContainer({
           </View>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
+      {Platform.OS === 'ios' && showKeyboardToolbar && (
+        <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />
+      )}
     </Modal>
   );
 }

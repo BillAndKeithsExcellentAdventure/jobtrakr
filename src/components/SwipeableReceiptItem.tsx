@@ -66,6 +66,11 @@ const SwipeableReceiptItem = React.memo<{
     return allAccounts.find((account) => account.accountingId === item.paymentAccountId)?.name ?? '';
   }, [allAccounts, item.paymentAccountId]);
 
+  const paymentAccountLabel = useMemo(() => {
+    if (item.notes) return `Check# ${item.notes}`;
+    return paymentAccountName;
+  }, [item.notes, paymentAccountName]);
+
   const removeReceipt = useCallback(
     (id: string | undefined) => {
       if (id !== undefined) {
@@ -179,7 +184,7 @@ const SwipeableReceiptItem = React.memo<{
                   )}
                   <Text numberOfLines={1} style={{ color: textColor }}>
                     {`${formatCurrency(item.amount, true, true)}${
-                      paymentAccountName ? ` - ${paymentAccountName}` : ''
+                      paymentAccountLabel ? ` - ${paymentAccountLabel}` : ''
                     }`}
                   </Text>
                   <Text numberOfLines={1} style={{ color: textColor }}>

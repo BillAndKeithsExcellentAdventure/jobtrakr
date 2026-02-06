@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   saveButtonRow: {
     paddingHorizontal: 10,
     borderTopWidth: 2,
-    marginTop: 10,
+    marginVertical: 10,
     paddingTop: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',

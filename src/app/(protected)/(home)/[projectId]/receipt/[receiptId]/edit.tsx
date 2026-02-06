@@ -165,6 +165,14 @@ const EditReceiptDetailsPage = () => {
     [receipt, receiptId, updateReceipt],
   );
 
+  const handleNotesChange = useCallback(
+    (notes: string) => {
+      const newReceipt = { ...receipt, notes };
+      updateReceipt(receiptId, newReceipt);
+    },
+    [receipt, receiptId, updateReceipt],
+  );
+
   const handleVendorChange = useCallback(
     (vendor: string) => {
       const newReceipt = { ...receipt, vendor };
@@ -302,14 +310,31 @@ const EditReceiptDetailsPage = () => {
               onBlur={() => handleDescriptionChange(receipt.description)}
             />
             {isConnectedToQuickBooks && paymentAccounts && paymentAccounts.length > 0 && (
-              <OptionPickerItem
-                containerStyle={styles.inputContainer}
-                optionLabel={pickedPaymentAccountOption?.label}
-                label="Payment Account"
-                placeholder="Payment Account"
-                editable={false}
-                onPickerButtonPress={() => setIsPaymentAccountPickerVisible(true)}
-              />
+              <>
+                <OptionPickerItem
+                  containerStyle={styles.inputContainer}
+                  optionLabel={pickedPaymentAccountOption?.label}
+                  label="Payment Account"
+                  placeholder="Payment Account"
+                  editable={false}
+                  onPickerButtonPress={() => setIsPaymentAccountPickerVisible(true)}
+                />
+                {pickedPaymentAccountOption?.label?.toLowerCase().includes('checking') && (
+                  <TextField
+                    label="Check #"
+                    containerStyle={styles.inputContainer}
+                    placeholder="Check #"
+                    value={receipt.notes}
+                    onChangeText={(text): void => {
+                      setReceipt((prevReceipt) => ({
+                        ...prevReceipt,
+                        notes: text,
+                      }));
+                    }}
+                    onBlur={() => handleNotesChange(receipt.notes)}
+                  />
+                )}
+              </>
             )}
           </View>
           {vendors && isVendorListPickerVisible && (

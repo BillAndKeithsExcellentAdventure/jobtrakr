@@ -46,7 +46,7 @@ export const TABLES_SCHEMA = {
     thumbnail: { type: 'string' },
     pictureDate: { type: 'number' }, // Date the picture was taken.
     imageId: { type: 'string' },
-    notes: { type: 'string' }, // not currently in ui
+    notes: { type: 'string' }, // currently used for check number
     markedComplete: { type: 'boolean' },
     billId: { type: 'string' }, // QuickBooks Bill ID
   },

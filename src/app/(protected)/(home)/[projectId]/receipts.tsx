@@ -47,7 +47,9 @@ const ProjectReceiptsPage = () => {
   const [showUnsentOnly, setShowUnsentOnly] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [isPaymentAccountPickerVisible, setIsPaymentAccountPickerVisible] = useState(false);
+  const [isCheckNumberModalVisible, setIsCheckNumberModalVisible] = useState(false);
   const [selectedPaymentAccountId, setSelectedPaymentAccountId] = useState<string>('');
+  const [checkNumber, setCheckNumber] = useState('');
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const { isConnectedToQuickBooks } = useNetwork();
@@ -134,7 +136,12 @@ const ProjectReceiptsPage = () => {
   }, [allAccounts, appSettings.quickBooksPaymentAccounts]);
 
   const processReceiptImage = useCallback(
-    async (assetUri: string, assetId?: string | null, paymentAccountId?: string) => {
+    async (
+      assetUri: string,
+      assetId?: string | null,
+      paymentAccountId?: string,
+      receiptCheckNumber?: string,
+    ) => {
       try {
         // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
 
@@ -156,7 +163,7 @@ const ProjectReceiptsPage = () => {
           amount: 0,
           thumbnail: thumbnail ?? '',
           receiptDate: new Date().getTime(),
-          notes: '',
+          notes: receiptCheckNumber ?? '',
           markedComplete: false,
           imageId: imageAddResult.id,
           pictureDate: new Date().getTime(),
@@ -200,11 +207,11 @@ const ProjectReceiptsPage = () => {
         setIsProcessingImage(false);
       }
     },
-    [projectId, addReceiptImage, addReceiptToLocalStore, selectedPaymentAccountId],
+    [projectId, addReceiptImage, addReceiptToLocalStore, appSettings.quickBooksDefaultPaymentAccountId],
   );
 
   const handleAddPhotoReceipt = useCallback(
-    async (paymentAccountId: string) => {
+    async (paymentAccountId: string, receiptCheckNumber?: string) => {
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
       if (permissionResult.granted === false) {
@@ -220,7 +227,9 @@ const ProjectReceiptsPage = () => {
         setIsProcessingImage(true);
 
         // Use requestAnimationFrame to ensure React renders the ActivityIndicator before starting heavy operations
-        requestAnimationFrame(() => processReceiptImage(asset.uri, asset.assetId, paymentAccountId));
+        requestAnimationFrame(() =>
+          processReceiptImage(asset.uri, asset.assetId, paymentAccountId, receiptCheckNumber),
+        );
       }
     },
     [processReceiptImage],
@@ -240,10 +249,21 @@ const ProjectReceiptsPage = () => {
     (option: OptionEntry) => {
       setSelectedPaymentAccountId(option.value);
       setIsPaymentAccountPickerVisible(false);
+      if (option.label.toLowerCase().includes('checking')) {
+        setCheckNumber('');
+        setIsCheckNumberModalVisible(true);
+        return;
+      }
+
       handleAddPhotoReceipt(option.value);
     },
     [handleAddPhotoReceipt],
   );
+
+  const handleCheckNumberConfirm = useCallback(() => {
+    setIsCheckNumberModalVisible(false);
+    handleAddPhotoReceipt(selectedPaymentAccountId, checkNumber.trim());
+  }, [checkNumber, handleAddPhotoReceipt, selectedPaymentAccountId]);
 
   const handleAddReceipt = useCallback(() => {
     router.push({
@@ -429,7 +449,49 @@ const ProjectReceiptsPage = () => {
           selectedOption={paymentAccountOptions.find((option) => option.value === selectedPaymentAccountId)}
         />
       </BottomSheetContainer>
-      <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />
+      <BottomSheetContainer
+        isVisible={isCheckNumberModalVisible}
+        onClose={() => setIsCheckNumberModalVisible(false)}
+        title="Enter check number"
+        showKeyboardToolbar={false}
+        modalHeight="40%"
+      >
+        <View style={{ paddingHorizontal: 16, paddingTop: 10, gap: 12 }}>
+          <Text text="Check #" style={{ fontWeight: '600' }} />
+          <TextInput
+            style={[
+              styles.filterInput,
+              {
+                backgroundColor: colors.background,
+                color: colors.text,
+                borderWidth: 1,
+                borderRadius: 8,
+                borderColor: colors.border,
+                paddingHorizontal: 10,
+              },
+            ]}
+            placeholder="Enter check number"
+            placeholderTextColor={colors.textPlaceholder}
+            value={checkNumber}
+            onChangeText={setCheckNumber}
+            keyboardType="number-pad"
+          />
+          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
+            <ActionButton
+              style={{ flex: 1 }}
+              onPress={handleCheckNumberConfirm}
+              type={checkNumber.trim() ? 'ok' : 'disabled'}
+              title="Continue"
+            />
+            <ActionButton
+              style={{ flex: 1 }}
+              onPress={() => setIsCheckNumberModalVisible(false)}
+              type="cancel"
+              title="Cancel"
+            />
+          </View>
+        </View>
+      </BottomSheetContainer>
     </>
   );
 };
