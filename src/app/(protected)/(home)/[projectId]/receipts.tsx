@@ -163,7 +163,7 @@ const ProjectReceiptsPage = () => {
           billId: '',
           accountingId: '',
           vendorId: '',
-          paymentAccountId: selectedPaymentAccountId,
+          paymentAccountId: paymentAccountId || appSettings.quickBooksDefaultPaymentAccountId || '',
           qbSyncHash: '',
         };
 
@@ -204,7 +204,7 @@ const ProjectReceiptsPage = () => {
   );
 
   const handleAddPhotoReceipt = useCallback(
-    async (paymentAccountId?: string) => {
+    async (paymentAccountId: string) => {
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
       if (permissionResult.granted === false) {

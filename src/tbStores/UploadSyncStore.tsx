@@ -51,8 +51,12 @@ export const TABLES_SCHEMA = {
   },
 } as const;
 
-const { useCreateMergeableStore, useDelRowCallback, useProvideStore, useStore: useStoreInternal } =
-  UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
+const {
+  useCreateMergeableStore,
+  useDelRowCallback,
+  useProvideStore,
+  useStore: useStoreInternal,
+} = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
 const useStoreIdInternal = () => {
   const { userId } = useAuth();
@@ -88,7 +92,9 @@ export const useAllMediaToUpload = () => {
         itemId: row.itemId ?? '',
         uploadDate: row.uploadDate ?? 0,
       }));
-      console.log(`Fetched ${items.length} media items queued for upload`);
+      if (items.length > 0) {
+        console.log(`Fetched ${items.length} media items queued for upload`);
+      }
       return [...items].sort((a, b) => (b.uploadDate ?? 0) - (a.uploadDate ?? 0));
     }
     return [];
