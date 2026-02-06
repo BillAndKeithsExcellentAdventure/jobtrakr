@@ -1828,6 +1828,100 @@ Create a new vendor in QuickBooks.
 - Optional fields: `mobilePhone`, `address`, `city`, `state`, `zip`, `notes`
 - Returns the QuickBooks-assigned vendor ID in `newQBId` field
 
+#### POST /qbo/editBill
+
+Update an existing bill in QuickBooks.
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+  "orgId": "org123",
+  "userId": "user456",
+  "projectId": "project789",
+  "projectName": "Project Alpha",
+  "accountingId": "bill123",
+  "qbBillData": {
+    "vendorRef": "321",
+    "dueDate": "2024-02-15",
+    "docNumber": "INV-2024-001",
+    "privateNote": "Optional note",
+    "lineItems": [
+      {
+        "amount": 100.0,
+        "description": "Line item description",
+        "accountRef": "45"
+      }
+    ]
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Bill updated successfully",
+  "data": {
+    "Bill": {
+      "Id": "789",
+      "VendorRef": { "value": "321" },
+      "TotalAmt": 100.0,
+      "DueDate": "2024-02-15",
+      "DocNumber": "INV-2024-001"
+    }
+  }
+}
+```
+
+**Notes:**
+
+- Required fields: `orgId`, `userId`, `projectId`, `projectName`, `accountingId`, `qbBillData`
+- `qbBillData` required fields: `vendorRef`, `dueDate`, `lineItems`
+- `lineItems` must be a non-empty array with `amount`, `description`, and `accountRef` for each item
+- Optional fields: `docNumber`, `privateNote`
+- Returns 401 if token refresh fails (requires reconnection)
+
+#### POST /qbo/deleteBill
+
+Delete an existing bill in QuickBooks.
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+  "orgId": "org123",
+  "userId": "user456",
+  "projectId": "project789",
+  "accountingId": "bill123"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Bill deleted successfully",
+  "data": {
+    "Bill": {
+      "Id": "789",
+      "status": "Deleted"
+    }
+  }
+}
+```
+
+**Notes:**
+
+- Required fields: `orgId`, `userId`, `projectId`, `accountingId`
+- Returns 401 if token refresh fails (requires reconnection)
+
 #### POST /qbo/payBill
 
 Create a bill payment in QuickBooks.
