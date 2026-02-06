@@ -87,7 +87,7 @@ const CostItemPickerModal = ({
         <View style={[styles.container, styles.modalBackground, { backgroundColor: colors.listBackground }]}>
           <View style={[styles.modalContainer]}>
             <Text txtSize="title" style={styles.modalTitle} text="Select Cost Item" />
-            {subtitle.length && <Text txtSize="sub-title" style={styles.modalTitle} text={subtitle} />}
+            {subtitle.length > 0 && <Text txtSize="sub-title" style={styles.modalTitle} text={subtitle} />}
             <View style={{ flex: 1, paddingBottom: 10 }}>
               <OptionPickerItem
                 containerStyle={styles.inputContainer}
