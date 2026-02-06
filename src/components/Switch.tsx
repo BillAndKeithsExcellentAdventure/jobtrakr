@@ -7,6 +7,7 @@ export interface SwitchProps {
   isOffOnToggle?: boolean;
   size?: 'small' | 'medium' | 'large';
   switchContainerOffBackgroundColor?: string;
+  switchContainerOnBackgroundColor?: string;
 }
 
 export const Switch: FC<SwitchProps> = ({
@@ -15,6 +16,7 @@ export const Switch: FC<SwitchProps> = ({
   isOffOnToggle: isOnOffToggle = false,
   size = 'small',
   switchContainerOffBackgroundColor,
+  switchContainerOnBackgroundColor,
 }) => {
   const [animValue] = useState(new Animated.Value(value ? 1 : 0));
   const [containerWidth, setContainerWidth] = useState(0);
@@ -48,7 +50,9 @@ export const Switch: FC<SwitchProps> = ({
   });
 
   const switchBackgroundColor = value
-    ? styles.switchContainerOn
+    ? switchContainerOnBackgroundColor
+      ? { backgroundColor: switchContainerOnBackgroundColor }
+      : styles.switchContainerOn
     : switchContainerOffBackgroundColor
     ? { backgroundColor: switchContainerOffBackgroundColor }
     : styles.switchContainerOff;

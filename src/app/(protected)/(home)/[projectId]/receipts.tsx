@@ -313,7 +313,7 @@ const ProjectReceiptsPage = () => {
                         style={{
                           flexDirection: 'row',
                           alignItems: 'center',
-                          gap: 20,
+                          gap: 10,
                           borderWidth: 1,
                           borderRadius: 8,
                           borderColor: colors.border,
@@ -328,7 +328,11 @@ const ProjectReceiptsPage = () => {
                           switchContainerOffBackgroundColor={colors.profitFg}
                           size="medium"
                         />
-                        <Text text="Unsent to QuickBooks" style={{ fontWeight: 'bold' }} />
+                        <Text
+                          numberOfLines={1}
+                          text="Not posted to QuickBooks"
+                          style={{ fontWeight: 'bold' }}
+                        />
                       </View>
                     )}
                   </View>
