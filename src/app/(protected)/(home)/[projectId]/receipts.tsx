@@ -1,4 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
+import BottomSheetContainer from '@/src/components/BottomSheetContainer';
+import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import SwipeableReceiptItem from '@/src/components/SwipeableReceiptItem';
 import { Text, View } from '@/src/components/Themed';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
@@ -44,6 +46,8 @@ const ProjectReceiptsPage = () => {
   const [vendorFilter, setVendorFilter] = useState('');
   const [showUnsentOnly, setShowUnsentOnly] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [isPaymentAccountPickerVisible, setIsPaymentAccountPickerVisible] = useState(false);
+  const [selectedPaymentAccountId, setSelectedPaymentAccountId] = useState<string>('');
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const { isConnectedToQuickBooks } = useNetwork();
@@ -65,6 +69,7 @@ const ProjectReceiptsPage = () => {
   const addReceiptImage = useAddImageCallback();
   const addReceiptToLocalStore = useAddRowCallback(projectId, 'receipts');
   const allWorkItems = useAllRowsConfiguration('workItems');
+  const allAccounts = useAllRowsConfiguration('accounts');
   const appSettings = useAppSettings();
 
   useCostUpdater(projectId);
@@ -107,8 +112,29 @@ const ProjectReceiptsPage = () => {
 
   const colors = useColors();
 
+  const [paymentAccountOptions, setPaymentAccountOptions] = useState<OptionEntry[]>([]);
+
+  useEffect(() => {
+    if (allAccounts && allAccounts.length > 0) {
+      const configuredAccountIds = appSettings.quickBooksPaymentAccounts
+        ? appSettings.quickBooksPaymentAccounts.split(',').filter((id) => id.trim() !== '')
+        : [];
+
+      const paymentList = allAccounts
+        .filter((account) => configuredAccountIds.includes(account.accountingId))
+        .map((account) => ({
+          label: account.name,
+          value: account.accountingId,
+        }));
+
+      setPaymentAccountOptions(paymentList);
+    } else {
+      setPaymentAccountOptions([]);
+    }
+  }, [allAccounts, appSettings.quickBooksPaymentAccounts]);
+
   const processReceiptImage = useCallback(
-    async (assetUri: string, assetId?: string | null) => {
+    async (assetUri: string, assetId?: string | null, paymentAccountId?: string) => {
       try {
         // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
 
@@ -174,28 +200,50 @@ const ProjectReceiptsPage = () => {
         setIsProcessingImage(false);
       }
     },
-    [projectId, addReceiptImage, addReceiptToLocalStore],
+    [projectId, addReceiptImage, addReceiptToLocalStore, appSettings.quickBooksDefaultPaymentAccountId],
   );
 
-  const handleAddPhotoReceipt = useCallback(async () => {
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+  const handleAddPhotoReceipt = useCallback(
+    async (paymentAccountId?: string) => {
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
-    if (permissionResult.granted === false) {
-      alert("You've refused to allow this app to access your camera!");
+      if (permissionResult.granted === false) {
+        alert("You've refused to allow this app to access your camera!");
+        return;
+      }
+
+      const cameraResponse = await ImagePicker.launchCameraAsync({ quality: 0.25 });
+
+      if (!cameraResponse.canceled) {
+        const asset = cameraResponse.assets[0];
+        if (!cameraResponse.assets || cameraResponse.assets.length === 0 || !asset) return;
+        setIsProcessingImage(true);
+
+        // Use requestAnimationFrame to ensure React renders the ActivityIndicator before starting heavy operations
+        requestAnimationFrame(() => processReceiptImage(asset.uri, asset.assetId, paymentAccountId));
+      }
+    },
+    [processReceiptImage],
+  );
+
+  const handleAddPhoto = useCallback(() => {
+    if (paymentAccountOptions.length === 0) {
+      handleAddPhotoReceipt(appSettings.quickBooksDefaultPaymentAccountId || '');
       return;
     }
 
-    const cameraResponse = await ImagePicker.launchCameraAsync({ quality: 0.25 });
+    setSelectedPaymentAccountId(appSettings.quickBooksDefaultPaymentAccountId || '');
+    setIsPaymentAccountPickerVisible(true);
+  }, [appSettings.quickBooksDefaultPaymentAccountId, handleAddPhotoReceipt, paymentAccountOptions.length]);
 
-    if (!cameraResponse.canceled) {
-      const asset = cameraResponse.assets[0];
-      if (!cameraResponse.assets || cameraResponse.assets.length === 0 || !asset) return;
-      setIsProcessingImage(true);
-
-      // Use requestAnimationFrame to ensure React renders the ActivityIndicator before starting heavy operations
-      requestAnimationFrame(() => processReceiptImage(asset.uri, asset.assetId));
-    }
-  }, [processReceiptImage]);
+  const handlePaymentAccountSelect = useCallback(
+    (option: OptionEntry) => {
+      setSelectedPaymentAccountId(option.value);
+      setIsPaymentAccountPickerVisible(false);
+      handleAddPhotoReceipt(option.value);
+    },
+    [handleAddPhotoReceipt],
+  );
 
   const handleAddReceipt = useCallback(() => {
     router.push({
@@ -242,7 +290,7 @@ const ProjectReceiptsPage = () => {
                   >
                     <ActionButton
                       style={{ flex: 1 }}
-                      onPress={handleAddPhotoReceipt}
+                      onPress={handleAddPhoto}
                       type="action"
                       title="Add Photo"
                     />
@@ -365,6 +413,21 @@ const ProjectReceiptsPage = () => {
           )}
         </View>
       </SafeAreaView>
+      <BottomSheetContainer
+        isVisible={isPaymentAccountPickerVisible}
+        onClose={() => setIsPaymentAccountPickerVisible(false)}
+        title="Select payment account for receipt"
+        modalHeight="60%"
+      >
+        <OptionList
+          options={paymentAccountOptions}
+          onSelect={handlePaymentAccountSelect}
+          showOkCancel
+          onCancel={() => setIsPaymentAccountPickerVisible(false)}
+          enableSearch={false}
+          selectedOption={paymentAccountOptions.find((option) => option.value === selectedPaymentAccountId)}
+        />
+      </BottomSheetContainer>
       <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />
     </>
   );
