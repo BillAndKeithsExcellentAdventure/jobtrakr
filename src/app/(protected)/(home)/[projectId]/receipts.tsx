@@ -4,6 +4,7 @@ import { Text, View } from '@/src/components/Themed';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
 import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import {
@@ -28,6 +29,7 @@ import { ActivityIndicator, Alert, StyleSheet, TextInput } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { KeyboardAvoidingView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Switch } from '@/src/components/Switch';
 
 const ProjectReceiptsPage = () => {
   const router = useRouter();
@@ -40,9 +42,11 @@ const ProjectReceiptsPage = () => {
   const previousReceiptCount = useRef(0);
   const [projectIsReady, setProjectIsReady] = useState(false);
   const [vendorFilter, setVendorFilter] = useState('');
+  const [showUnsentOnly, setShowUnsentOnly] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
+  const { isConnectedToQuickBooks } = useNetwork();
   const auth = useAuth();
 
   useEffect(() => {
@@ -87,13 +91,19 @@ const ProjectReceiptsPage = () => {
       };
     });
 
-    // Filter by vendor if filter text exists
+    if (isConnectedToQuickBooks) {
+      if (showUnsentOnly) {
+        return receipts.filter((receipt) => !receipt.billId);
+      }
+      return receipts;
+    }
+
     if (vendorFilter.trim()) {
       return receipts.filter((receipt) => receipt.vendor.toLowerCase().includes(vendorFilter.toLowerCase()));
     }
 
     return receipts;
-  }, [allReceipts, allCostItems, allWorkItems, vendorFilter]);
+  }, [allReceipts, allCostItems, allWorkItems, vendorFilter, isConnectedToQuickBooks, showUnsentOnly]);
 
   const colors = useColors();
 
@@ -268,35 +278,59 @@ const ProjectReceiptsPage = () => {
 
                 <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding" keyboardVerticalOffset={100}>
                   <View style={{ backgroundColor: colors.listBackground, padding: 5 }}>
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        borderWidth: 1,
-                        borderRadius: 8,
-                        borderColor: colors.border,
-                        paddingLeft: 10,
-                        paddingRight: 5,
-                        justifyContent: 'space-between',
-                      }}
-                    >
-                      <TextInput
-                        style={[
-                          styles.filterInput,
-                          {
-                            backgroundColor: colors.background,
-                            color: colors.text,
-                          },
-                        ]}
-                        placeholder="Filter by vendor..."
-                        placeholderTextColor={colors.textPlaceholder}
-                        value={vendorFilter}
-                        onChangeText={setVendorFilter}
-                      />
-                      <Pressable onPress={() => setVendorFilter('')}>
-                        <MaterialIcons name="clear" size={24} color={colors.iconColor} />
-                      </Pressable>
-                    </View>
+                    {!isConnectedToQuickBooks ? (
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          borderWidth: 1,
+                          borderRadius: 8,
+                          borderColor: colors.border,
+                          paddingLeft: 10,
+                          paddingRight: 5,
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <TextInput
+                          style={[
+                            styles.filterInput,
+                            {
+                              backgroundColor: colors.background,
+                              color: colors.text,
+                            },
+                          ]}
+                          placeholder="Filter by vendor..."
+                          placeholderTextColor={colors.textPlaceholder}
+                          value={vendorFilter}
+                          onChangeText={setVendorFilter}
+                        />
+                        <Pressable onPress={() => setVendorFilter('')}>
+                          <MaterialIcons name="clear" size={24} color={colors.iconColor} />
+                        </Pressable>
+                      </View>
+                    ) : (
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 20,
+                          borderWidth: 1,
+                          borderRadius: 8,
+                          borderColor: colors.border,
+                          paddingHorizontal: 12,
+                          paddingVertical: 8,
+                        }}
+                      >
+                        <Text text="All" style={{ fontWeight: 'bold' }} />
+                        <Switch
+                          value={showUnsentOnly}
+                          onValueChange={setShowUnsentOnly}
+                          switchContainerOffBackgroundColor={colors.profitFg}
+                          size="medium"
+                        />
+                        <Text text="Unsent to QuickBooks" style={{ fontWeight: 'bold' }} />
+                      </View>
+                    )}
                   </View>
 
                   <View style={{ flex: 1, paddingHorizontal: 5 }}>

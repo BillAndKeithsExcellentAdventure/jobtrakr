@@ -133,7 +133,7 @@ const SwipeableReceiptItem = React.memo<{
       actionWidth={RIGHT_ACTION_WIDTH}
       renderRightActions={renderRightActions}
     >
-      <View style={[styles.itemEntry, { borderColor: colors.border }]}>
+      <View style={[styles.itemEntry, { borderColor: colors.separatorColor }]}>
         <Pressable
           onPress={() =>
             router.push({

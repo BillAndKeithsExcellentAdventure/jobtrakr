@@ -55,7 +55,7 @@ export const Colors = {
     iconColor: '#000',
     pressedIconColor: '#111',
     shadowColor: '#000',
-    separatorColor: '#DDDDDD',
+    separatorColor: '#777',
     inputBorder: '#777',
     percentBarBackground: '#dddddd',
     percentCompleteBackground: '#73bf73',
