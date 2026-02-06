@@ -1,4 +1,5 @@
 import { Text, View } from '@/src/components/Themed';
+import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { ReceiptData } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
 import React from 'react';
@@ -16,6 +17,11 @@ interface ReceiptSummaryProps {
 
 export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({ item, onShowReceipt, onShowDetails }) => {
   const colors = useColors();
+  const allAccounts = useAllConfigurationRows('accounts');
+  const paymentAccountName = React.useMemo(() => {
+    if (!item.paymentAccountId) return '';
+    return allAccounts.find((account) => account.accountingId === item.paymentAccountId)?.name ?? '';
+  }, [allAccounts, item.paymentAccountId]);
   return (
     <View style={{ flex: 1, flexDirection: 'row' }}>
       <View style={styles.imageContentContainer}>
@@ -48,7 +54,15 @@ export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({ item, onShowRece
                 <Text>{`${item.accountingId}`}</Text>
               </View>
             )}
-            {item.amount > 0 && <Text text={`${formatCurrency(item.amount, true, true)}`} />}
+            {item.amount > 0 && (
+              <Text
+                numberOfLines={1}
+                style={styles.amountRow}
+                text={`${formatCurrency(item.amount, true, true)}${
+                  paymentAccountName ? ` - ${paymentAccountName}` : ''
+                }`}
+              />
+            )}
             {item.vendor && <Text numberOfLines={1} text={`${item.vendor}`} />}
             {item.description && <Text numberOfLines={1} text={`${item.description}`} />}
           </Pressable>
@@ -63,6 +77,10 @@ export const ReceiptSummary: React.FC<ReceiptSummaryProps> = ({ item, onShowRece
 };
 
 const styles = StyleSheet.create({
+  amountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   imageContentContainer: {
     marginRight: 10,
     width: 120,

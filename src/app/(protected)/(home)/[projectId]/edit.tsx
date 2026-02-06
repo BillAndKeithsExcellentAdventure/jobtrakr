@@ -282,6 +282,7 @@ const EditProjectScreen = () => {
             placeholder="Abbreviation for Receipts and Invoices"
             label="Abbreviation for Receipts and Invoices"
             value={project.abbreviation}
+            autoCorrect={false}
             onChangeText={(text) => setProject({ ...project, abbreviation: text })}
             onBlur={handleSubmit}
           />

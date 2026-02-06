@@ -13,6 +13,7 @@ import {
   useAllRows,
   useDeleteRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { useRouter } from 'expo-router';
 import { useDeleteMediaCallback, deleteLocalMediaFile } from '../utils/images';
@@ -40,6 +41,7 @@ const SwipeableReceiptItem = React.memo<{
   const deleteReceipt = useDeleteRowCallback(projectId, 'receipts');
   const deleteReceiptLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
   const allReceiptLineItems = useAllRows(projectId, 'workItemCostEntries');
+  const allAccounts = useAllConfigurationRows('accounts');
   const deleteMediaCallback = useDeleteMediaCallback();
   const mediaToUpload = useAllMediaToUpload();
   const store = useUploadSyncStore();
@@ -58,6 +60,11 @@ const SwipeableReceiptItem = React.memo<{
     () => formatCurrency(totalOfAllReceiptItems, true, true),
     [totalOfAllReceiptItems],
   );
+
+  const paymentAccountName = useMemo(() => {
+    if (!item.paymentAccountId) return '';
+    return allAccounts.find((account) => account.accountingId === item.paymentAccountId)?.name ?? '';
+  }, [allAccounts, item.paymentAccountId]);
 
   const removeReceipt = useCallback(
     (id: string | undefined) => {
@@ -170,7 +177,11 @@ const SwipeableReceiptItem = React.memo<{
                       <Text style={{ color: textColor }}>{`${item.accountingId}`}</Text>
                     </View>
                   )}
-                  <Text style={{ color: textColor }}>{formatCurrency(item.amount, true, true)}</Text>
+                  <Text numberOfLines={1} style={{ color: textColor }}>
+                    {`${formatCurrency(item.amount, true, true)}${
+                      paymentAccountName ? ` - ${paymentAccountName}` : ''
+                    }`}
+                  </Text>
                   <Text numberOfLines={1} style={{ color: textColor }}>
                     {item.vendor}
                   </Text>
