@@ -14,6 +14,7 @@ import {
   useAllRows,
   useAddRowCallback,
   useUpdateRowCallback,
+  useDeleteRowCallback,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { isDevelopmentBuild } from '@/src/utils/environment';
 import {
@@ -77,6 +78,7 @@ const SetAppSettingScreen = () => {
   const allVendors = useAllRows('vendors');
   const addVendor = useAddRowCallback('vendors');
   const updateVendor = useUpdateRowCallback('vendors');
+  const deleteVendor = useDeleteRowCallback('vendors');
 
   // Check if we're in a development build
   const isDevelopment = isDevelopmentBuild();
@@ -323,6 +325,15 @@ const SetAppSettingScreen = () => {
                       );
 
                       setLoadingStatusMessage('Loading Vendors...');
+
+                      // NOTE: we shouldn't have to do this in the future but I was having issues with importing accountingIds to existing records.
+                      // remove existing vendors and import from QuickBooks
+                      for (const vendor of allVendors) {
+                        // No delete function currently, so just log
+                        console.log(`delete vendor: ${vendor.name} (${vendor.id})`);
+                        deleteVendor(vendor.id);
+                      }
+
                       await importVendorsFromQuickBooks(
                         auth.orgId!,
                         auth.userId!,
