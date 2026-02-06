@@ -468,7 +468,7 @@ const ReceiptDetailsPage = () => {
                       }`}
                     />
                   </View>
-                  {canSyncToQuickBooks && (
+                  {canSyncToQuickBooks ? (
                     <View style={styles.syncButtonRow}>
                       {isSavingToQuickBooks ? (
                         <View style={styles.savingRow}>
@@ -491,7 +491,16 @@ const ReceiptDetailsPage = () => {
                         />
                       )}
                     </View>
-                  )}
+                  ) : isConnectedToQuickBooks ? (
+                    <View style={styles.syncButtonRow}>
+                      <Text
+                        txtSize="xs"
+                        style={{ ...styles.quickBooksWarning, color: colors.error }}
+                        text="Please Edit Receipt to complete data required by QuickBooks"
+                      />
+                      <ActionButton onPress={() => editDetails(receipt)} type="cancel" title="Edit" />
+                    </View>
+                  ) : null}
                 </View>
               </View>
             </>
@@ -537,6 +546,10 @@ const styles = StyleSheet.create({
   },
   savingText: {
     marginLeft: 10,
+  },
+  quickBooksWarning: {
+    textAlign: 'center',
+    marginBottom: 8,
   },
   upToDateBadge: {
     alignSelf: 'center',
