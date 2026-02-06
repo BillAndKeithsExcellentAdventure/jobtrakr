@@ -82,9 +82,35 @@ const ReceiptDetailsPage = () => {
   const [isSavingToQuickBooks, setIsSavingToQuickBooks] = useState(false);
   const router = useRouter();
 
-  const currentSyncHash = getReceiptSyncHash(receipt, allReceiptLineItems);
-  const isReceiptOutOfSync = !!receipt.billId && receipt.qbSyncHash !== currentSyncHash;
-  const isReceiptUpToDate = !!receipt.billId && !isReceiptOutOfSync;
+  const [currentSyncHash, setCurrentSyncHash] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const computeSyncHash = async () => {
+      try {
+        const hash = await getReceiptSyncHash(receipt, allReceiptLineItems);
+        if (isActive) {
+          setCurrentSyncHash(hash);
+        }
+      } catch (error) {
+        console.error('Failed to compute receipt sync hash:', error);
+        if (isActive) {
+          setCurrentSyncHash(null);
+        }
+      }
+    };
+
+    computeSyncHash();
+
+    return () => {
+      isActive = false;
+    };
+  }, [receipt, allReceiptLineItems]);
+
+  const isReceiptOutOfSync =
+    !!receipt.billId && currentSyncHash !== null && receipt.qbSyncHash !== currentSyncHash;
+  const isReceiptUpToDate = !!receipt.billId && currentSyncHash !== null && !isReceiptOutOfSync;
 
   useEffect(() => {
     setItemsTotalCost(allReceiptLineItems.reduce((acc, item) => acc + item.amount, 0));
@@ -300,14 +326,11 @@ const ReceiptDetailsPage = () => {
             {
               text: 'Update',
               onPress: async () => {
-                try {
-                  const response = await addReceiptToQuickBooks(receiptData, getToken);
-                  console.log('Receipt successfully updated in QuickBooks:', response);
-                } catch (error) {
-                  console.error('Error updating receipt in QuickBooks:', error);
-                } finally {
-                  setIsSavingToQuickBooks(false);
-                }
+                /*
+                Once we support updating existing Bills in QuickBooks, we can implement that logic here.
+                We will also need to recalculate the qbSyncHash after the update and save it to our local receipt record,
+               just like we do after creating a new Bill.
+                */
               },
             },
           ],
@@ -329,7 +352,7 @@ const ReceiptDetailsPage = () => {
         console.log('Updating local receipt with billId:', response.data.Bill.Id);
       }
 
-      const newHash = getReceiptSyncHash(updates, allReceiptLineItems);
+      const newHash = await getReceiptSyncHash(updates, allReceiptLineItems);
       updates.qbSyncHash = newHash;
       console.log('Updating local receipt with:', updates);
       updateReceipt(receipt.id, updates);

@@ -1,4 +1,5 @@
 import { ReceiptData, WorkItemCostEntry } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import * as Crypto from 'expo-crypto';
 
 type NormalizedLineItem = {
   amount: number;
@@ -29,7 +30,10 @@ const compareLineItems = (a: NormalizedLineItem, b: NormalizedLineItem) => {
   return a.amount - b.amount;
 };
 
-export const getReceiptSyncHash = (receipt: ReceiptData, lineItems: WorkItemCostEntry[]): string => {
+export const getReceiptSyncHash = async (
+  receipt: ReceiptData,
+  lineItems: WorkItemCostEntry[],
+): Promise<string> => {
   const payload: ReceiptSyncPayload = {
     amount: receipt.amount,
     description: receipt.description,
@@ -41,5 +45,6 @@ export const getReceiptSyncHash = (receipt: ReceiptData, lineItems: WorkItemCost
     lineItems: lineItems.map(normalizeLineItem).sort(compareLineItems),
   };
 
-  return JSON.stringify(payload);
+  const hash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, JSON.stringify(payload));
+  return hash;
 };

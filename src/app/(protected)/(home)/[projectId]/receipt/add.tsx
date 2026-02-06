@@ -332,15 +332,12 @@ const AddReceiptPage = () => {
               },
             };
 
+            // Create new Bill in QuickBooks
             const response = await addReceiptToQuickBooks(receiptData, getToken);
             console.log('Receipt successfully synced to QuickBooks:', response);
 
-            // Update the local receipt with accountingId and billId from response
-            const updates: Partial<ReceiptData> = {
-              qbSyncHash: getReceiptSyncHash(receiptToAdd, receiptLineItems),
-            };
+            const updates: ReceiptData = { ...projectReceipt };
             if (response.data?.Bill?.DocNumber) {
-              // Backend returns 'accountId', but local store uses 'accountingId'
               updates.accountingId = response.data.Bill.DocNumber;
               console.log('Updating local receipt with accountingId:', response.data?.Bill?.DocNumber);
             }
@@ -349,10 +346,10 @@ const AddReceiptPage = () => {
               console.log('Updating local receipt with billId:', response.data.Bill.Id);
             }
 
-            if (Object.keys(updates).length > 0) {
-              console.log('Updating local receipt with:', updates);
-              updateReceipt(receiptId, updates);
-            }
+            const newHash = await getReceiptSyncHash(updates, receiptLineItems);
+            updates.qbSyncHash = newHash;
+            console.log('Updating local receipt with:', updates);
+            updateReceipt(projectReceipt.id, updates);
           }
         } catch (error) {
           console.error('Error syncing receipt to QuickBooks:', error);
@@ -515,6 +512,7 @@ const AddReceiptPage = () => {
         onCancel={handleCancel}
         canSave={canAddReceipt}
         isSaving={isSavingReceipt}
+        useKeyboardToolbar={false}
         savingLabel="Saving Receipt to QuickBooks"
       >
         <Text txtSize="standard" style={[styles.modalTitle, { fontWeight: '600' }]} text={projectName} />

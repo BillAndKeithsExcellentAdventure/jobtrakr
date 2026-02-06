@@ -18,6 +18,7 @@ type ModalScreenContainerProps = PropsWithChildren<{
   cancelButtonTitle?: string;
   isSaving?: boolean;
   savingLabel?: string;
+  useKeyboardToolbar?: boolean;
 }>;
 
 export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
@@ -29,6 +30,7 @@ export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
   isSaving = false,
   savingLabel = 'Saving',
   children,
+  useKeyboardToolbar = true,
 }) => {
   const colors = useColors();
 
@@ -74,7 +76,9 @@ export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
           </View>
         </KeyboardAwareScrollView>
       </SafeAreaView>
-      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
+      {Platform.OS === 'ios' && useKeyboardToolbar && (
+        <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />
+      )}
     </>
   );
 };
