@@ -55,6 +55,7 @@ export interface AccountData {
   accountingId: string; // QuickBooks Account Id
   name: string;
   accountType: string; // e.g., 'Expense', 'Bank', 'Credit Card', 'Other Current Asset'
+  accountSubType: string; // e.g., 'Checking', 'CreditCard',
 }
 
 export function WorkCategoryCodeCompareAsNumber(a: WorkCategoryData, b: WorkCategoryData) {

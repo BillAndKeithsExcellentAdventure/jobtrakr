@@ -38,6 +38,7 @@ export async function importAccountsFromQuickBooks(
         accountingId: qbAccount.id,
         name: qbAccount.name,
         accountType,
+        accountSubType: qbAccount.accountSubType || '',
       });
       updatedCount++;
     } else {
@@ -47,6 +48,7 @@ export async function importAccountsFromQuickBooks(
         accountingId: qbAccount.id,
         name: qbAccount.name,
         accountType,
+        accountSubType: qbAccount.accountSubType || '',
       });
       addedCount++;
     }

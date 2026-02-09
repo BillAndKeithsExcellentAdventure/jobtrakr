@@ -208,6 +208,18 @@ export interface Bill {
   TotalAmt: number;
 }
 
+export interface DeleteBillRequest {
+  orgId: string;
+  userId: string;
+  projectId: string;
+  accountingId: string;
+}
+
+export interface DeleteBillResponse {
+  Id: string;
+  status?: string;
+}
+
 export async function addBill(
   orgId: string,
   userId: string,
@@ -230,6 +242,31 @@ export async function addBill(
   }
 
   return data.data?.Bill || ({ Id: '', VendorRef: { value: '' }, TotalAmt: 0 } as Bill);
+}
+
+export async function deleteBillFromQuickBooks(
+  orgId: string,
+  userId: string,
+  projectId: string,
+  accountingId: string,
+  getToken: () => Promise<string | null>,
+): Promise<DeleteBillResponse> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/deleteBill?orgId=${orgId}&userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ orgId, userId, projectId, accountingId } as DeleteBillRequest),
+  });
+
+  const data: ApiDataResponse<{ Bill: DeleteBillResponse }> = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to delete bill');
+  }
+
+  return data.data?.Bill || ({ Id: '', status: 'Deleted' } as DeleteBillResponse);
 }
 
 export interface QBCompanyInfo {
@@ -341,6 +378,7 @@ export interface QBBillLineItem {
   amount: number;
   description: string;
   accountRef: string;
+  accountSubType?: string;
 }
 
 export interface QBBillData {
@@ -380,7 +418,7 @@ export interface AddReceiptResponse {
 
 /**
  * Add a receipt to the backend and optionally create a QuickBooks bill.
- * 
+ *
  * @param receiptData - The receipt data to send to the backend
  * @param getToken - Function to get the authentication token
  * @returns The response containing accountingId and optionally billId

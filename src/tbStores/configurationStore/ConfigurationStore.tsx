@@ -49,6 +49,7 @@ export const TABLES_SCHEMA = {
     accountingId: { type: 'string' },
     name: { type: 'string' },
     accountType: { type: 'string' },
+    accountSubType: { type: 'string' },
   },
 } as const;
 

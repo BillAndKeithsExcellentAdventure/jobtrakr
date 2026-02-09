@@ -17,7 +17,7 @@ export const TABLES_SCHEMA = {
 
   receipts: {
     id: { type: 'string' },
-    accountingId: { type: 'string' },
+    accountingId: { type: 'string' }, // Receipt ID like 'RECEIPT_PROJABBR_12345'
     vendor: { type: 'string' },
     vendorId: { type: 'string' }, // QuickBooks Vendor ID
     paymentAccountId: { type: 'string' }, // QuickBooks Account ID
