@@ -5,6 +5,7 @@ import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   ReceiptData,
   useAllRows,
@@ -38,6 +39,7 @@ const ReceiptDetailsPage = () => {
   const project = useProject(projectId);
   const projectAbbr = project?.abbreviation ?? '';
   const projectName = project?.name ?? '';
+  const allAccounts = useAllConfigurationRows('accounts');
 
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   useCostUpdater(projectId);
@@ -300,6 +302,10 @@ const ReceiptDetailsPage = () => {
         );
       }
 
+      const paymentAccountSubType = allAccounts.find(
+        (acc) => acc.accountingId === receipt.paymentAccountId,
+      )?.accountSubType;
+
       const receiptData = {
         userId,
         orgId,
@@ -314,6 +320,11 @@ const ReceiptDetailsPage = () => {
           lineItems: qbLineItems,
           privateNote: receipt.notes || receipt.description || '',
           dueDate: new Date(receipt.receiptDate).toISOString().split('T')[0],
+        },
+        paymentAccount: {
+          paymentAccountRef: receipt.paymentAccountId,
+          paymentType: paymentAccountSubType,
+          checkNumber: paymentAccountSubType === 'Checking' ? receipt.notes : undefined, // Using 'notes' field to store check number if applicable
         },
       };
 
@@ -374,6 +385,7 @@ const ReceiptDetailsPage = () => {
     projectName,
     getToken,
     updateReceipt,
+    allAccounts,
   ]);
 
   return (

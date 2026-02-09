@@ -377,8 +377,14 @@ export async function fetchAccounts(
 export interface QBBillLineItem {
   amount: number;
   description: string;
-  accountRef: string;
-  accountSubType?: string;
+  accountRef: string; // expense account
+  // customerRef?: string;
+}
+
+interface QBAccountData {
+  paymentAccountRef?: string;
+  paymentType?: 'Checking' | 'CreditCard'; // accountSubType from QuickBooks
+  checkNumber?: string;
 }
 
 export interface QBBillData {

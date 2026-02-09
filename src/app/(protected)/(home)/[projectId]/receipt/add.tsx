@@ -313,6 +313,9 @@ const AddReceiptPage = () => {
               );
             }
 
+            const paymentAccountSubType = allAccounts.find(
+              (acc) => acc.accountingId === projectReceipt.paymentAccountId,
+            )?.accountSubType;
             // Prepare receipt data for backend
             const receiptData = {
               userId,
@@ -323,6 +326,11 @@ const AddReceiptPage = () => {
               invoiceId: receiptId, // Backend API uses 'invoiceId' field for both receipts and invoices
               imageId: projectReceipt.imageId || '',
               addAttachment: !!projectReceipt.imageId,
+              paymentAccount: {
+                paymentAccountRef: projectReceipt.paymentAccountId,
+                paymentType: paymentAccountSubType,
+                checkNumber: paymentAccountSubType === 'Checking' ? projectReceipt.notes : undefined, // Using 'notes' field to store check number if applicable
+              },
               qbBillData: {
                 vendorRef: projectReceipt.vendorId,
                 lineItems: qbLineItems,
