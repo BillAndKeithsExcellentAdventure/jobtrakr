@@ -339,7 +339,7 @@ const AddReceiptPage = () => {
               },
             };
 
-            // Create new Bill in QuickBooks
+            // Create new Purchase in QuickBooks
             const response = await addReceiptToQuickBooks(receiptData, getToken);
             console.log('Receipt successfully synced to QuickBooks:', response);
 
@@ -410,7 +410,7 @@ const AddReceiptPage = () => {
       const asset = response.assets[0];
       if (!response.assets || response.assets.length === 0 || !asset) return;
 
-      const imageAddResult = await addPhotoImage(asset.uri, projectId, 'photo', 'photo');
+      const imageAddResult = await addPhotoImage(asset.uri, projectId, 'photo', 'receipt'); // TODO - verify - originally this used 'photo' and not 'receipt'?
       console.log('Image Add Result:', imageAddResult);
       if (imageAddResult.status === 'Success' && imageAddResult.uri) {
         const thumbnail = await createThumbnail(asset.uri);
