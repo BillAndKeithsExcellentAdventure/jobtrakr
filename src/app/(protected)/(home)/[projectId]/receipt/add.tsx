@@ -90,7 +90,7 @@ const AddReceiptPage = () => {
     markedComplete: false,
     vendorId: '',
     paymentAccountId: appSettings.quickBooksDefaultPaymentAccountId || '',
-    billId: '',
+    purchaseId: '',
     qbSyncHash: '',
   });
 
@@ -323,20 +323,19 @@ const AddReceiptPage = () => {
               projectId,
               projectAbbr,
               projectName: projectName || '',
-              invoiceId: receiptId, // Backend API uses 'invoiceId' field for both receipts and invoices
               imageId: projectReceipt.imageId || '',
               addAttachment: !!projectReceipt.imageId,
-              paymentAccount: {
-                paymentAccountRef: projectReceipt.paymentAccountId,
-                paymentType: paymentAccountSubType,
-                checkNumber: paymentAccountSubType === 'Checking' ? projectReceipt.notes : undefined, // Using 'notes' field to store check number if applicable
-              },
-              qbBillData: {
+              qbPurchaseData: {
                 vendorRef: projectReceipt.vendorId,
                 lineItems: qbLineItems,
                 // Note: docNumber is optional and will be auto-generated if not provided
                 privateNote: projectReceipt.notes || projectReceipt.description || '',
-                dueDate: new Date(projectReceipt.receiptDate).toISOString().split('T')[0],
+                txnDate: new Date(projectReceipt.receiptDate).toISOString().split('T')[0],
+                paymentAccount: {
+                  paymentAccountRef: projectReceipt.paymentAccountId,
+                  paymentType: paymentAccountSubType,
+                  checkNumber: paymentAccountSubType === 'Checking' ? projectReceipt.notes : undefined, // Using 'notes' field to store check number if applicable
+                },
               },
             };
 
@@ -345,13 +344,13 @@ const AddReceiptPage = () => {
             console.log('Receipt successfully synced to QuickBooks:', response);
 
             const updates: ReceiptData = { ...projectReceipt };
-            if (response.data?.Bill?.DocNumber) {
-              updates.accountingId = response.data.Bill.DocNumber;
-              console.log('Updating local receipt with accountingId:', response.data?.Bill?.DocNumber);
+            if (response.data?.Purchase?.DocNumber) {
+              updates.accountingId = response.data.Purchase.DocNumber;
+              console.log('Updating local receipt with accountingId:', response.data?.Purchase?.DocNumber);
             }
-            if (response.data?.Bill?.Id) {
-              updates.billId = response.data.Bill.Id;
-              console.log('Updating local receipt with billId:', response.data.Bill.Id);
+            if (response.data?.Purchase?.Id) {
+              updates.purchaseId = response.data.Purchase.Id;
+              console.log('Updating local receipt with purchaseId:', response.data.Purchase.Id);
             }
 
             const newHash = await getReceiptSyncHash(updates, receiptLineItems);

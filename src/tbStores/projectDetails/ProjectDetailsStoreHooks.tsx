@@ -60,7 +60,7 @@ export type ReceiptData = {
   imageId: string;
   notes: string;
   markedComplete: boolean;
-  billId: string; // QuickBooks Bill ID
+  purchaseId: string;
   qbSyncHash: string;
 };
 
@@ -81,8 +81,7 @@ export type InvoiceData = {
   imageId: string;
   notes: string;
   markedComplete: boolean;
-  billId: string; // QuickBooks Bill ID
-};
+  purchaseId: string;
 
 export type ClassifiedInvoiceData = InvoiceData & { fullyClassified: boolean };
 

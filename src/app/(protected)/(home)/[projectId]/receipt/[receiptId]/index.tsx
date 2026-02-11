@@ -312,23 +312,22 @@ const ReceiptDetailsPage = () => {
         projectId,
         projectAbbr,
         projectName,
-        invoiceId: receipt.id,
         imageId: receipt.imageId || '',
         addAttachment: !!receipt.imageId,
-        qbBillData: {
+        qbPurchaseData: {
           vendorRef: receipt.vendorId,
           lineItems: qbLineItems,
           privateNote: receipt.notes || receipt.description || '',
-          dueDate: new Date(receipt.receiptDate).toISOString().split('T')[0],
-        },
-        paymentAccount: {
-          paymentAccountRef: receipt.paymentAccountId,
-          paymentType: paymentAccountSubType,
-          checkNumber: paymentAccountSubType === 'Checking' ? receipt.notes : undefined, // Using 'notes' field to store check number if applicable
+          txnDate: new Date(receipt.receiptDate).toISOString().split('T')[0],
+          paymentAccount: {
+            paymentAccountRef: receipt.paymentAccountId,
+            paymentType: paymentAccountSubType,
+            checkNumber: paymentAccountSubType === 'Checking' ? receipt.notes : undefined, // Using 'notes' field to store check number if applicable
+          },
         },
       };
 
-      if (receipt.billId) {
+      if (receipt.purchaseId) {
         Alert.alert(
           'Confirm Update',
           'This receipt is already in QuickBooks. Do you want to update the existing record?',
@@ -355,11 +354,11 @@ const ReceiptDetailsPage = () => {
 
       const updates: ReceiptData = { ...receipt };
       if (response.data?.Bill?.DocNumber) {
-        updates.accountingId = response.data.Bill.DocNumber;
+        updates.accountingId = response.data.Purchase.DocNumber;
         console.log('Updating local receipt with accountingId:', response.data?.Bill?.DocNumber);
       }
       if (response.data?.Bill?.Id) {
-        updates.billId = response.data.Bill.Id;
+        updates.purchaseId = response.data.Purchase?.Id ?? '';
         console.log('Updating local receipt with billId:', response.data.Bill.Id);
       }
 

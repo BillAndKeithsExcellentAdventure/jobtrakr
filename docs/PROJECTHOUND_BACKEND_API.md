@@ -125,7 +125,7 @@ Create a new organization.
 
 #### POST /addReceipt
 
-Create a receipt with metadata and auto-generated accounting ID. Optionally creates a QuickBooks bill.
+Create a receipt with metadata and auto-generated accounting ID. Optionally creates a QuickBooks purchase and can attach the receipt image.
 
 **Authentication:** Required
 
@@ -140,14 +140,18 @@ Create a receipt with metadata and auto-generated accounting ID. Optionally crea
   "projectId": "string",
   "projectAbbr": "string",
   "projectName": "string",
-  "invoiceId": "string",
   "imageId": "string",
   "addAttachment": false,
-  "qbBillData": {
+  "qbPurchaseData": {
     "vendorRef": "123",
-    "dueDate": "2024-02-15",
+    "txnDate": "2024-02-15",
     "docNumber": "RECEIPT-001",
     "privateNote": "Optional note",
+    "paymentAccount": {
+      "paymentAccountRef": "98",
+      "paymentType": "Checking",
+      "checkNumber": "1001"
+    },
     "lineItems": [
       {
         "amount": 100.0,
@@ -173,13 +177,13 @@ Create a receipt with metadata and auto-generated accounting ID. Optionally crea
 ```json
 {
   "success": true,
-  "message": "Bill created successfully",
+  "message": "Purchase created successfully",
   "data": {
-    "Bill": {
+    "Purchase": {
       "Id": "789",
-      "VendorRef": { "value": "123" },
+      "PaymentType": "Check",
       "TotalAmt": 100.0,
-      "DueDate": "2024-02-15",
+      "TxnDate": "2024-02-15",
       "DocNumber": "RECEIPT-001"
     }
   }
@@ -189,13 +193,16 @@ Create a receipt with metadata and auto-generated accounting ID. Optionally crea
 **Notes:**
 
 - Auto-generates accounting ID in format: `RECEIPT-{projectAbbr}-{sequentialNumber}`
-- Required fields: `userId`, `orgId`, `projectId`, `projectAbbr`, `projectName`, `invoiceId`, `imageId`, `addAttachment`
-- `qbBillData` is optional - when provided, creates a bill in QuickBooks Online
-- When `qbBillData` is provided:
+- Required fields: `userId`, `orgId`, `projectId`, `projectAbbr`, `projectName`, `imageId`, `addAttachment`
+- `qbPurchaseData` is optional - when provided, creates a purchase in QuickBooks Online
+- When `qbPurchaseData` is provided:
   - `vendorRef` must be a valid QuickBooks vendor ID
+  - `txnDate` is required and is stored as the QuickBooks purchase date
+  - `paymentAccount` is required and must include `paymentAccountRef`
   - `lineItems` array is required with amount, description, and accountRef for each line
-  - Optional fields: `dueDate`, `docNumber`, `privateNote`
-  - If `addAttachment` is true, the system will attach the image to the QuickBooks bill
+  - Optional fields: `docNumber`, `privateNote`, `paymentType`, `checkNumber`
+  - If `addAttachment` is true, the system will attach the receipt image to the QuickBooks purchase
+- If `docNumber` is not provided, it defaults to the generated accounting ID
 - Use `/addReceiptImage` to upload the actual receipt image file
 
 #### POST /addReceiptImage

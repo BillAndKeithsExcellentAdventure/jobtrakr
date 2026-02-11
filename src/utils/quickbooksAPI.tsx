@@ -412,12 +412,12 @@ export interface AddReceiptResponse {
   message?: string;
   accountId?: string;
   data?: {
-    Bill?: {
-      Id: string;
-      VendorRef: { value: string };
+    Purchase?: {
+      Id: string; // purchaseId
+      PaymentType: string;
       TotalAmt: number;
-      DueDate?: string;
-      DocNumber?: string;
+      TxnDate?: string;
+      DocNumber?: string; //accountingId
     };
   };
 }
