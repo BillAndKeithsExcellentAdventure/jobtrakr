@@ -30,7 +30,7 @@ export const TABLES_SCHEMA = {
     imageId: { type: 'string' },
     notes: { type: 'string' }, // not currently in ui
     markedComplete: { type: 'boolean' },
-    billId: { type: 'string' }, // QuickBooks Bill ID
+    purchaseId: { type: 'string' }, // QuickBooks Purchase ID
     qbSyncHash: { type: 'string' },
   },
 

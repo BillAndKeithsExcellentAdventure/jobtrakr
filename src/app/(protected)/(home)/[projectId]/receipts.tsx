@@ -100,7 +100,7 @@ const ProjectReceiptsPage = () => {
 
     if (isConnectedToQuickBooks) {
       if (showUnsentOnly) {
-        return receipts.filter((receipt) => !receipt.billId);
+        return receipts.filter((receipt) => !receipt.purchaseId);
       }
       return receipts;
     }
@@ -167,7 +167,7 @@ const ProjectReceiptsPage = () => {
           markedComplete: false,
           imageId: imageAddResult.id,
           pictureDate: new Date().getTime(),
-          billId: '',
+          purchaseId: '',
           accountingId: '',
           vendorId: '',
           paymentAccountId: paymentAccountId || appSettings.quickBooksDefaultPaymentAccountId || '',

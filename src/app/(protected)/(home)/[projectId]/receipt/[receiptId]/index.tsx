@@ -68,7 +68,7 @@ const ReceiptDetailsPage = () => {
     notes: '',
     accountingId: '',
     markedComplete: false,
-    billId: '',
+    purchaseId: '',
     qbSyncHash: '',
   });
 
@@ -111,8 +111,8 @@ const ReceiptDetailsPage = () => {
   }, [receipt, allReceiptLineItems]);
 
   const isReceiptOutOfSync =
-    !!receipt.billId && currentSyncHash !== null && receipt.qbSyncHash !== currentSyncHash;
-  const isReceiptUpToDate = !!receipt.billId && currentSyncHash !== null && !isReceiptOutOfSync;
+    !!receipt.purchaseId && currentSyncHash !== null && receipt.qbSyncHash !== currentSyncHash;
+  const isReceiptUpToDate = !!receipt.purchaseId && currentSyncHash !== null && !isReceiptOutOfSync;
 
   useEffect(() => {
     setItemsTotalCost(allReceiptLineItems.reduce((acc, item) => acc + item.amount, 0));
@@ -353,18 +353,18 @@ const ReceiptDetailsPage = () => {
       console.log('Receipt successfully synced to QuickBooks:', response);
 
       const updates: ReceiptData = { ...receipt };
-      if (response.data?.Bill?.DocNumber) {
+      if (response.data?.Purchase?.DocNumber) {
         updates.accountingId = response.data.Purchase.DocNumber;
-        console.log('Updating local receipt with accountingId:', response.data?.Bill?.DocNumber);
+        console.log('Updating local receipt with accountingId:', response.data?.Purchase?.DocNumber);
       }
-      if (response.data?.Bill?.Id) {
+      if (response.data?.Purchase?.Id) {
         updates.purchaseId = response.data.Purchase?.Id ?? '';
-        console.log('Updating local receipt with billId:', response.data.Bill.Id);
+        console.log('Updating local receipt with purchaseId:', response.data.Purchase.Id);
       }
 
       const newHash = await getReceiptSyncHash(updates, allReceiptLineItems);
       updates.qbSyncHash = newHash;
-      console.log('Updating local receipt with:', updates);
+      // console.log('Updating local receipt with:', updates);
       updateReceipt(receipt.id, updates);
     } catch (error) {
       console.error('Error syncing receipt to QuickBooks:', error);

@@ -505,7 +505,7 @@ const AddReceiptPage = () => {
       pictureDate: 0,
       imageId: '',
       notes: '',
-      billId: '',
+      purchaseId: '',
       markedComplete: false,
       qbSyncHash: '',
     });

@@ -81,7 +81,8 @@ export type InvoiceData = {
   imageId: string;
   notes: string;
   markedComplete: boolean;
-  purchaseId: string;
+  billId: string;
+};
 
 export type ClassifiedInvoiceData = InvoiceData & { fullyClassified: boolean };
 

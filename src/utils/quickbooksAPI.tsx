@@ -401,7 +401,6 @@ export interface AddReceiptRequest {
   projectId: string;
   projectAbbr: string;
   projectName: string;
-  invoiceId: string;
   imageId: string;
   addAttachment: boolean;
   qbBillData?: QBBillData;

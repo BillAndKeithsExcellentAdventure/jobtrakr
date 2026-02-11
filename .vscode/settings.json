@@ -5,6 +5,7 @@
     "Backsplash",
     "Bardstown",
     "bkea",
+    "calculatehash",
     "checkcircle",
     "checkcircleo",
     "Countertops",
@@ -15,6 +16,7 @@
     "favorited",
     "focusable",
     "grotesk",
+    "HMAC",
     "HVAC",
     "jobmedia",
     "jobplus",
@@ -24,6 +26,7 @@
     "mappin",
     "Millis",
     "netinfo",
+    "PROJABBR",
     "PROJECTDETAILS",
     "projecthound",
     "projecthoundserver",
@@ -36,6 +39,7 @@
     "tiktoksharesdk",
     "tinybase",
     "Trackpad",
+    "unitcost",
     "unregistration",
     "videocam",
     "wice",
@@ -44,6 +48,7 @@
     "workitems",
     "worklets",
     "XDML",
+    "XVCJ",
     "zhiliaoapp"
   ]
 }

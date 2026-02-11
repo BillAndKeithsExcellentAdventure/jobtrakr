@@ -19,7 +19,7 @@ import { useRouter } from 'expo-router';
 import { useDeleteMediaCallback, deleteLocalMediaFile } from '../utils/images';
 import { useAllMediaToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
 import { SvgImage } from './SvgImage';
-import { deleteBillFromQuickBooks } from '../utils/quickbooksAPI';
+//import { deletePurchaseFromQuickBooks } from '../utils/quickbooksAPI';
 import { useAuth } from '@clerk/clerk-expo';
 
 export const ITEM_HEIGHT = 128;
@@ -85,14 +85,14 @@ const SwipeableReceiptItem = React.memo<{
         console.log('Deleting receipt with id:', id);
         deleteReceipt(id);
 
-        // if receipt has billId, we should also delete the bill in QuickBooks using deleteBillFromQuickBooks
-        if (item.billId && userId && getToken) {
-          console.log('Receipt has associated billId:', item.billId);
-          // We can reuse the deleteMediaCallback to delete the bill in QuickBooks since it will queue the deletion if offline
+        // if receipt has purchaseId, we should also delete the purchase in QuickBooks using deletePurchaseFromQuickBooks
+        if (item.purchaseId && userId) {
+          console.log('Receipt has associated purchaseId:', item.purchaseId);
+          // We can reuse the deleteMediaCallback to delete the purchase in QuickBooks since it will queue the deletion if offline
           (async () => {
-            const result = await deleteBillFromQuickBooks(orgId, userId, projectId, item.billId, getToken);
+            //const result = await deletePurchaseFromQuickBooks(orgId, userId, projectId, item.purchaseId, getToken);
             //if (!result.status) {
-            //  console.error('Failed to delete associated bill in QuickBooks:', result.message);
+            //  console.error('Failed to delete associated purchase in QuickBooks:', result.message);
             //}
           })();
         }
@@ -135,11 +135,11 @@ const SwipeableReceiptItem = React.memo<{
   );
 
   const handleDelete = useCallback(() => {
-    // if there is a billId associated with the receipt, we should inform user that the receipt
+    // if there is a purchaseId associated with the receipt, we should inform user that the receipt
     // will be deleted from QuickBooks as well.
 
-    const alertMessage = item.billId
-      ? 'Are you sure you want to delete this receipt? This will also delete the associated bill in QuickBooks.'
+    const alertMessage = item.purchaseId
+      ? 'Are you sure you want to delete this receipt? This will also delete the associated purchase in QuickBooks.'
       : 'Are you sure you want to delete this receipt and any of its association line items?';
 
     Alert.alert(
@@ -148,7 +148,7 @@ const SwipeableReceiptItem = React.memo<{
       [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeReceipt(item.id) }],
       { cancelable: true },
     );
-  }, [item.id, removeReceipt, item.billId]);
+  }, [item.id, removeReceipt, item.purchaseId]);
 
   const renderRightActions = useCallback(() => <RightAction onDelete={handleDelete} />, [handleDelete]);
   const photoDate = formatDate(item.pictureDate, undefined, true);
@@ -197,12 +197,12 @@ const SwipeableReceiptItem = React.memo<{
             ) : (
               <>
                 <View style={{ flex: 1, justifyContent: 'center', paddingLeft: 10 }}>
-                  {item.accountingId && (
-                    <View style={{ flexDirection: 'row', gap: 20 }}>
-                      <SvgImage fileName="qb-logo" width={20} height={20} />
+                  <View style={{ flexDirection: 'row', gap: 20 }}>
+                    {item.purchaseId?.length > 0 && <SvgImage fileName="qb-logo" width={20} height={20} />}
+                    {item.accountingId.length > 0 && (
                       <Text style={{ color: textColor }}>{`${item.accountingId}`}</Text>
-                    </View>
-                  )}
+                    )}
+                  </View>
                   <Text numberOfLines={1} style={{ color: textColor }}>
                     {`${formatCurrency(item.amount, true, true)}${
                       paymentAccountLabel ? ` - ${paymentAccountLabel}` : ''
