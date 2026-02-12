@@ -356,7 +356,7 @@ const AddReceiptPage = () => {
             const newHash = await getReceiptSyncHash(updates, receiptLineItems);
             updates.qbSyncHash = newHash;
             console.log('Updating local receipt with:', updates);
-            updateReceipt(projectReceipt.id, updates);
+            updateReceipt(receiptId, updates);
           }
         } catch (error) {
           console.error('Error syncing receipt to QuickBooks:', error);
@@ -593,16 +593,6 @@ const AddReceiptPage = () => {
             />
           )}
 
-          {/*----------- Hide until we find a need to specify a note
-              <TextField
-                containerStyle={styles.inputContainer}
-                style={[styles.input, { borderColor: colors.transparent }]}
-                placeholder="Notes"
-                label="Notes"
-                value={projectReceipt.notes}
-                onChangeText={handleNotesChange}
-              />
-              -------- */}
           {projectReceipt.thumbnail && (
             <>
               <View style={{ alignItems: 'center', justifyContent: 'center' }}>
