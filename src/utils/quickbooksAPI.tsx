@@ -457,6 +457,62 @@ export async function addReceiptToQuickBooks(
   return data;
 }
 
+export interface EditReceiptRequest {
+  orgId: string;
+  userId: string;
+  projectId: string;
+  projectName: string;
+  accountingId: string;
+  purchaseId: string;
+  projectAbbr?: string;
+  imageId?: string;
+  addAttachment: boolean;
+  qbPurchaseData: {
+    vendorRef: string;
+    txnDate: string;
+    docNumber?: string;
+    privateNote?: string;
+    paymentAccount?: {
+      paymentAccountRef: string;
+      paymentType?: string;
+      checkNumber?: string;
+    };
+    lineItems: QBBillLineItem[];
+  };
+}
+
+/**
+ * Update an existing receipt (purchase) in QuickBooks.
+ *
+ * @param receiptData - The receipt data to update in QuickBooks
+ * @param getToken - Function to get the authentication token
+ * @returns The response containing the updated purchase information
+ */
+export async function editReceiptInQuickBooks(
+  receiptData: EditReceiptRequest,
+  getToken: () => Promise<string | null>,
+): Promise<AddReceiptResponse> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(
+    `${API_BASE_URL}/qbo/editReceipt?orgId=${receiptData.orgId}&userId=${receiptData.userId}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(receiptData),
+    },
+  );
+
+  const data: AddReceiptResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to edit receipt');
+  }
+
+  return data;
+}
+
 export async function deleteReceiptFromQuickBooks(
   orgId: string,
   userId: string,

@@ -17,7 +17,7 @@ import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatCurrency } from '@/src/utils/formatters';
 import { buildLocalMediaUri, useAddImageCallback, useGetImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
-import { addReceiptToQuickBooks, QBBillLineItem } from '@/src/utils/quickbooksAPI';
+import { addReceiptToQuickBooks, editReceiptInQuickBooks, QBBillLineItem } from '@/src/utils/quickbooksAPI';
 import { getReceiptSyncHash } from '@/src/utils/quickbooksSyncHash';
 import { useAuth } from '@clerk/clerk-expo';
 import { File } from 'expo-file-system';
@@ -82,6 +82,7 @@ const ReceiptDetailsPage = () => {
 
   const [itemsTotalCost, setItemsTotalCost] = useState(0);
   const [isSavingToQuickBooks, setIsSavingToQuickBooks] = useState(false);
+  const [wasImageJustAdded, setWasImageJustAdded] = useState(false);
   const router = useRouter();
 
   const [currentSyncHash, setCurrentSyncHash] = useState<string | null>(null);
@@ -161,6 +162,8 @@ const ReceiptDetailsPage = () => {
         Alert.alert('Error', `Unable to add receipt image - ${JSON.stringify(response)}`);
         return;
       }
+
+      setWasImageJustAdded(true);
 
       // Delete the photo from the camera roll after successfully copying to app directory and updating receipt
       if (asset.assetId) {
@@ -306,6 +309,61 @@ const ReceiptDetailsPage = () => {
         (acc) => acc.accountingId === receipt.paymentAccountId,
       )?.accountSubType;
 
+      if (receipt.purchaseId) {
+        Alert.alert(
+          'Confirm Update',
+          'This receipt is already in QuickBooks. Do you want to update the existing record?',
+          [
+            { text: 'Cancel', style: 'cancel', onPress: () => setIsSavingToQuickBooks(false) },
+            {
+              text: 'Update',
+              onPress: async () => {
+                const receiptEditData = {
+                  purchaseId: receipt.purchaseId,
+                  accountingId: receipt.accountingId,
+                  orgId: orgId,
+                  userId: userId,
+                  projectId: projectId,
+                  projectAbbr: projectAbbr,
+                  projectName: projectName,
+                  addAttachment: wasImageJustAdded && !!receipt.imageId,
+                  imageId: receipt.imageId || '',
+                  qbPurchaseData: {
+                    vendorRef: receipt.vendorId,
+                    lineItems: qbLineItems,
+                    privateNote: receipt.notes || receipt.description || '',
+                    txnDate: new Date(receipt.receiptDate).toISOString().split('T')[0],
+                    paymentAccount: {
+                      paymentAccountRef: receipt.paymentAccountId,
+                      paymentType: paymentAccountSubType,
+                      checkNumber: paymentAccountSubType === 'Checking' ? receipt.notes : undefined, // Using 'notes' field to store check number if applicable
+                    },
+                  },
+                };
+                try {
+                  const response = await editReceiptInQuickBooks(receiptEditData, getToken);
+                  console.log('Receipt successfully updated in QuickBooks:', response);
+
+                  const updates: ReceiptData = { ...receipt };
+
+                  const newHash = await getReceiptSyncHash(updates, allReceiptLineItems);
+                  updates.qbSyncHash = newHash;
+                  // console.log('Updating local receipt with:', updates);
+                  updateReceipt(receipt.id, updates);
+                  setWasImageJustAdded(false);
+                } catch (error) {
+                  console.error('Error updating receipt in QuickBooks:', error);
+                } finally {
+                  setIsSavingToQuickBooks(false);
+                }
+              },
+            },
+          ],
+        );
+        return;
+      }
+
+      // ------------------- adding new receipt to QuickBooks -------------------
       const receiptData = {
         userId,
         orgId,
@@ -327,27 +385,6 @@ const ReceiptDetailsPage = () => {
         },
       };
 
-      if (receipt.purchaseId) {
-        Alert.alert(
-          'Confirm Update',
-          'This receipt is already in QuickBooks. Do you want to update the existing record?',
-          [
-            { text: 'Cancel', style: 'cancel', onPress: () => setIsSavingToQuickBooks(false) },
-            {
-              text: 'Update',
-              onPress: async () => {
-                /*
-                Once we support updating existing Bills in QuickBooks, we can implement that logic here.
-                We will also need to recalculate the qbSyncHash after the update and save it to our local receipt record,
-               just like we do after creating a new Bill.
-                */
-              },
-            },
-          ],
-        );
-        return;
-      }
-
       // Create new Bill in QuickBooks
       const response = await addReceiptToQuickBooks(receiptData, getToken);
       console.log('Receipt successfully synced to QuickBooks:', response);
@@ -366,6 +403,7 @@ const ReceiptDetailsPage = () => {
       updates.qbSyncHash = newHash;
       // console.log('Updating local receipt with:', updates);
       updateReceipt(receipt.id, updates);
+      setWasImageJustAdded(false);
     } catch (error) {
       console.error('Error syncing receipt to QuickBooks:', error);
     } finally {
@@ -374,6 +412,7 @@ const ReceiptDetailsPage = () => {
   }, [
     canSyncToQuickBooks,
     isSavingToQuickBooks,
+    wasImageJustAdded,
     appSettings.quickBooksExpenseAccountId,
     allReceiptLineItems,
     receipt,

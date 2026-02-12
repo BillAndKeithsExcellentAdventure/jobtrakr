@@ -1905,7 +1905,7 @@ Delete an existing bill in QuickBooks.
   "orgId": "org123",
   "userId": "user456",
   "projectId": "project789",
-  "accountingId": "bill123"
+  "billId": "789"
 }
 ```
 
@@ -1926,7 +1926,112 @@ Delete an existing bill in QuickBooks.
 
 **Notes:**
 
-- Required fields: `orgId`, `userId`, `projectId`, `accountingId`
+- Required fields: `orgId`, `userId`, `projectId`, `billId`
+- `billId` is the QuickBooks Bill ID (not the accounting ID)
+- Returns 401 if token refresh fails (requires reconnection)
+
+#### POST /qbo/editReceipt
+
+Update an existing purchase (receipt) in QuickBooks.
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+  "orgId": "org123",
+  "userId": "user456",
+  "projectId": "project789",
+  "projectName": "Project Alpha",
+  "accountingId": "RECEIPT-PROJ-001",
+  "addAttachment": true,
+  "imageId": "receipt-image-001",
+  "qbPurchaseData": {
+    "vendorRef": "321",
+    "txnDate": "2024-02-15",
+    "docNumber": "RECEIPT-001",
+    "privateNote": "Optional note",
+    "paymentAccount": {
+      "paymentAccountRef": "98",
+      "paymentType": "Checking",
+      "checkNumber": "1001"
+    },
+    "lineItems": [
+      {
+        "amount": 100.0,
+        "description": "Line item description",
+        "accountRef": "45"
+      }
+    ]
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Purchase updated successfully",
+  "data": {
+    "Purchase": {
+      "Id": "789",
+      "PaymentType": "Check",
+      "TotalAmt": 100.0,
+      "TxnDate": "2024-02-15",
+      "DocNumber": "RECEIPT-001"
+    }
+  }
+}
+```
+
+**Notes:**
+
+- Required fields: `orgId`, `userId`, `projectId`, `projectName`, `accountingId`, `qbPurchaseData`
+- `qbPurchaseData` required fields: `vendorRef`, `txnDate`, `paymentAccount`, `lineItems`
+- `paymentAccount` must include `paymentAccountRef`
+- `lineItems` must be a non-empty array with `amount`, `description`, and `accountRef` for each item
+- Optional fields: `docNumber`, `privateNote`, `paymentType`, `checkNumber`
+- If `addAttachment` is true, the system will attach the receipt image to the updated purchase
+- Returns 401 if token refresh fails (requires reconnection)
+
+#### POST /qbo/deleteReceipt
+
+Delete an existing purchase (receipt) in QuickBooks.
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+  "orgId": "org123",
+  "userId": "user456",
+  "projectId": "project789",
+  "purchaseId": "789"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Purchase deleted successfully",
+  "data": {
+    "Purchase": {
+      "Id": "789",
+      "status": "Deleted"
+    }
+  }
+}
+```
+
+**Notes:**
+
+- Required fields: `orgId`, `userId`, `projectId`, `purchaseId`
+- `purchaseId` is the QuickBooks Purchase ID (not the accounting ID)
 - Returns 401 if token refresh fails (requires reconnection)
 
 #### POST /qbo/payBill
