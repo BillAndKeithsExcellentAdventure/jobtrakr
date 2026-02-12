@@ -76,18 +76,28 @@ const SwipeableReceiptItem = React.memo<{
 
   const removeReceipt = useCallback(
     async (id: string | undefined) => {
-      if (id !== undefined) {
+      if (id == undefined) return;
+      try {
         // before deleting receipt, we should delete all line items associated with it
         allReceiptItems.forEach((lineItem) => {
           console.log('Deleting receipt line item with id:', lineItem.id);
           deleteReceiptLineItem(lineItem.id);
         });
-        // now delete the receipt itself
+      } catch (error) {
+        console.error('Error deleting receipt line items:', error);
+      }
+
+      // now delete the receipt itself
+      try {
         console.log('Deleting receipt with id:', id);
         deleteReceipt(id);
+      } catch (error) {
+        console.error('Error deleting receipt:', error);
+      }
 
-        // if receipt has purchaseId, we should also delete the purchase in QuickBooks using deletePurchaseFromQuickBooks
-        if (item.purchaseId && userId) {
+      // if receipt has purchaseId, we should also delete the purchase in QuickBooks using deletePurchaseFromQuickBooks
+      if (item.purchaseId && userId) {
+        try {
           console.log('Receipt has associated purchaseId:', item.purchaseId);
           const result = await deleteReceiptFromQuickBooks(
             orgId,
@@ -98,10 +108,16 @@ const SwipeableReceiptItem = React.memo<{
           );
           if (!result.success) {
             console.error('Failed to delete associated purchase in QuickBooks:', result.message);
+          } else {
+            console.log('Successfully deleted associated purchase in QuickBooks');
           }
+        } catch (error) {
+          console.error('Error deleting associated purchase in QuickBooks:', error);
         }
+      }
 
-        if (item.imageId) {
+      if (item.imageId) {
+        try {
           // Check if this image is in the mediaToUpload queue
           const uploadInQueue = mediaToUpload.find((upload) => upload.itemId === item.imageId);
           if (uploadInQueue && store) {
@@ -118,6 +134,8 @@ const SwipeableReceiptItem = React.memo<{
 
           // Delete the local media file (receipts are always photos)
           await deleteLocalMediaFile(orgId, projectId, item.imageId, 'photo', 'receipt');
+        } catch (error) {
+          console.error('Error deleting receipt image:', error);
         }
       }
     },
