@@ -21,6 +21,7 @@ import { useAllMediaToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSy
 import { SvgImage } from './SvgImage';
 //import { deletePurchaseFromQuickBooks } from '../utils/quickbooksAPI';
 import { useAuth } from '@clerk/clerk-expo';
+import { deleteReceiptFromQuickBooks } from '../utils/quickbooksAPI';
 
 export const ITEM_HEIGHT = 128;
 const RIGHT_ACTION_WIDTH = 100;
@@ -74,7 +75,7 @@ const SwipeableReceiptItem = React.memo<{
   }, [item.notes, paymentAccountName]);
 
   const removeReceipt = useCallback(
-    (id: string | undefined) => {
+    async (id: string | undefined) => {
       if (id !== undefined) {
         // before deleting receipt, we should delete all line items associated with it
         allReceiptItems.forEach((lineItem) => {
@@ -88,13 +89,16 @@ const SwipeableReceiptItem = React.memo<{
         // if receipt has purchaseId, we should also delete the purchase in QuickBooks using deletePurchaseFromQuickBooks
         if (item.purchaseId && userId) {
           console.log('Receipt has associated purchaseId:', item.purchaseId);
-          // We can reuse the deleteMediaCallback to delete the purchase in QuickBooks since it will queue the deletion if offline
-          (async () => {
-            //const result = await deletePurchaseFromQuickBooks(orgId, userId, projectId, item.purchaseId, getToken);
-            //if (!result.status) {
-            //  console.error('Failed to delete associated purchase in QuickBooks:', result.message);
-            //}
-          })();
+          const result = await deleteReceiptFromQuickBooks(
+            orgId,
+            userId,
+            projectId,
+            item.purchaseId,
+            getToken,
+          );
+          if (!result.success) {
+            console.error('Failed to delete associated purchase in QuickBooks:', result.message);
+          }
         }
 
         if (item.imageId) {
@@ -106,18 +110,14 @@ const SwipeableReceiptItem = React.memo<{
             store.delRow('mediaToUpload', uploadInQueue.id);
           } else {
             // Use the new hook to delete media (will queue if offline)
-            (async () => {
-              const result = await deleteMediaCallback(projectId, [item.imageId], 'receipt');
-              if (!result.success) {
-                console.error('Failed to delete receipt media:', result.msg);
-              }
-            })();
+            const result = await deleteMediaCallback(projectId, [item.imageId], 'receipt');
+            if (!result.success) {
+              console.error('Failed to delete receipt media:', result.msg);
+            }
           }
 
           // Delete the local media file (receipts are always photos)
-          (async () => {
-            await deleteLocalMediaFile(orgId, projectId, item.imageId, 'photo', 'receipt');
-          })();
+          await deleteLocalMediaFile(orgId, projectId, item.imageId, 'photo', 'receipt');
         }
       }
     },
@@ -199,7 +199,7 @@ const SwipeableReceiptItem = React.memo<{
                 <View style={{ flex: 1, justifyContent: 'center', paddingLeft: 10 }}>
                   <View style={{ flexDirection: 'row', gap: 20 }}>
                     {item.purchaseId?.length > 0 && <SvgImage fileName="qb-logo" width={20} height={20} />}
-                    {item.accountingId.length > 0 && (
+                    {item.accountingId?.length > 0 && (
                       <Text style={{ color: textColor }}>{`${item.accountingId}`}</Text>
                     )}
                   </View>

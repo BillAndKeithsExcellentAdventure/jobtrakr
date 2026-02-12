@@ -208,6 +208,13 @@ export interface Bill {
   TotalAmt: number;
 }
 
+interface DeleteReceiptRequest {
+  purchaseId: string; // QuickBooks Purchase Id. Required for deleting an existing purchase.
+  orgId: string;
+  userId: string;
+  projectId: string;
+}
+
 export interface DeleteBillRequest {
   orgId: string;
   userId: string;
@@ -445,6 +452,38 @@ export async function addReceiptToQuickBooks(
   const data: AddReceiptResponse = await response.json();
   if (!data.success) {
     throw new Error(data.message || 'Failed to add receipt');
+  }
+
+  return data;
+}
+
+export async function deleteReceiptFromQuickBooks(
+  orgId: string,
+  userId: string,
+  projectId: string,
+  purchaseId: string,
+  getToken: () => Promise<string | null>,
+): Promise<ApiDefaultResponse> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const deletePayload: DeleteReceiptRequest = {
+    purchaseId,
+    orgId,
+    userId,
+    projectId,
+  };
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/deleteReceipt?orgId=${orgId}&userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(deletePayload),
+  });
+
+  const data: ApiDefaultResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to delete receipt');
   }
 
   return data;
