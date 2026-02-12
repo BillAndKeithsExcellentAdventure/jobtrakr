@@ -82,6 +82,7 @@ export type InvoiceData = {
   notes: string;
   markedComplete: boolean;
   billId: string;
+  qbSyncHash: string;
 };
 
 export type ClassifiedInvoiceData = InvoiceData & { fullyClassified: boolean };

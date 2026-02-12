@@ -1,10 +1,24 @@
-import { ReceiptData, WorkItemCostEntry } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import {
+  InvoiceData,
+  ReceiptData,
+  WorkItemCostEntry,
+} from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import * as Crypto from 'expo-crypto';
 
 type NormalizedLineItem = {
   amount: number;
   description: string;
   workItemId: string;
+};
+
+type BillSyncPayload = {
+  amount: number;
+  description: string;
+  vendorId: string;
+  invoiceDate: number;
+  imageId: string;
+  notes: string;
+  lineItems: NormalizedLineItem[];
 };
 
 type ReceiptSyncPayload = {
@@ -42,6 +56,24 @@ export const getReceiptSyncHash = async (
     receiptDate: receipt.receiptDate,
     imageId: receipt.imageId,
     notes: receipt.notes,
+    lineItems: lineItems.map(normalizeLineItem).sort(compareLineItems),
+  };
+
+  const hash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, JSON.stringify(payload));
+  return hash;
+};
+
+export const getBillSyncHash = async (
+  invoice: InvoiceData,
+  lineItems: WorkItemCostEntry[],
+): Promise<string> => {
+  const payload: BillSyncPayload = {
+    amount: invoice.amount,
+    description: invoice.description,
+    vendorId: invoice.vendorId,
+    invoiceDate: invoice.invoiceDate,
+    imageId: invoice.imageId,
+    notes: invoice.notes,
     lineItems: lineItems.map(normalizeLineItem).sort(compareLineItems),
   };
 

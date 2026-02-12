@@ -49,6 +49,7 @@ export const TABLES_SCHEMA = {
     notes: { type: 'string' }, // currently used for check number
     markedComplete: { type: 'boolean' },
     billId: { type: 'string' }, // QuickBooks Bill ID
+    qbSyncHash: { type: 'string' },
   },
 
   workItemCostEntries: {
