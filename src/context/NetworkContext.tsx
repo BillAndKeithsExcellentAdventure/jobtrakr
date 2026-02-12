@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { isDevelopmentBuild } from '@/src/utils/environment';
@@ -40,6 +40,11 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const appSettings = useAppSettings();
   const [isConnectedToQuickBooks, setIsConnectedToQuickBooks] = useState<boolean>(false);
   const auth = useAuth();
+  const lastNetworkStateRef = useRef<{
+    isConnected: boolean;
+    isInternetReachable: boolean | null;
+    type: string | null;
+  } | null>(null);
 
   const { userId, orgId, getToken } = auth;
 
@@ -53,30 +58,39 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   }, [debugForceOffline]);
 
   useEffect(() => {
+    const handleNetworkState = (state: NetInfoState, logLabel: string) => {
+      const nextState = {
+        isConnected: state.isConnected ?? false,
+        isInternetReachable: state.isInternetReachable ?? null,
+        type: state.type,
+      };
+
+      const lastState = lastNetworkStateRef.current;
+      const hasChanged =
+        !lastState ||
+        lastState.isConnected !== nextState.isConnected ||
+        lastState.isInternetReachable !== nextState.isInternetReachable ||
+        lastState.type !== nextState.type;
+
+      if (!hasChanged) {
+        return;
+      }
+
+      lastNetworkStateRef.current = nextState;
+      console.log(logLabel, nextState);
+      setIsConnected(nextState.isConnected);
+      setIsInternetReachable(nextState.isInternetReachable);
+      setNetworkType(nextState.type);
+    };
+
     // Subscribe to network state updates
     const unsubscribe = NetInfo.addEventListener((state: NetInfoState) => {
-      console.log('Network state changed:', {
-        isConnected: state.isConnected ?? false,
-        isInternetReachable: state.isInternetReachable,
-        type: state.type,
-      });
-
-      setIsConnected(state.isConnected ?? false);
-      setIsInternetReachable(state.isInternetReachable ?? null);
-      setNetworkType(state.type);
+      handleNetworkState(state, 'Network state changed:');
     });
 
     // Fetch initial network state
     NetInfo.fetch().then((state: NetInfoState) => {
-      console.log('Initial network state:', {
-        isConnected: state.isConnected ?? false,
-        isInternetReachable: state.isInternetReachable,
-        type: state.type,
-      });
-
-      setIsConnected(state.isConnected ?? false);
-      setIsInternetReachable(state.isInternetReachable ?? null);
-      setNetworkType(state.type);
+      handleNetworkState(state, 'Initial network state:');
     });
 
     // Cleanup subscription on unmount

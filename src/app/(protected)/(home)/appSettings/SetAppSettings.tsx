@@ -70,6 +70,7 @@ const SetAppSettingScreen = () => {
   const [loadingStatusMessage, setLoadingStatusMessage] = useState<string>('');
   const { isConnected, isInternetReachable, isConnectedToQuickBooks, setQuickBooksConnected } = useNetwork();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState(false);
+  const lastQuickBooksConnectedRef = useRef<boolean | null>(null);
 
   // Get store hooks for accounts and vendors
   const allAccounts = useAllRows('accounts');
@@ -94,6 +95,7 @@ const SetAppSettingScreen = () => {
       if (!orgId || !userId) {
         console.warn('Org ID or User ID not available for QB connection check');
         setQuickBooksConnected(false);
+        lastQuickBooksConnectedRef.current = false;
         return;
       }
 
@@ -102,12 +104,20 @@ const SetAppSettingScreen = () => {
         if (!token) {
           console.warn('No auth token available');
           setQuickBooksConnected(false);
+          lastQuickBooksConnectedRef.current = false;
           return;
         }
 
         const connected = await isQuickBooksConnected(orgId, userId, getToken);
-        if (connected && settings.syncWithQuickBooks !== true) {
+        const lastConnected = lastQuickBooksConnectedRef.current;
+        if (connected && lastConnected !== true) {
           console.log('QuickBooks is connected');
+          lastQuickBooksConnectedRef.current = true;
+        } else if (!connected && lastConnected !== false) {
+          lastQuickBooksConnectedRef.current = false;
+        }
+
+        if (connected && settings.syncWithQuickBooks !== true) {
           const updatedSettings = { ...settings, syncWithQuickBooks: true };
           setAppSettings(updatedSettings);
         }
@@ -118,6 +128,7 @@ const SetAppSettingScreen = () => {
         console.error('Error checking QuickBooks connection:', error);
         // Don't mark as error, just show as disconnected
         setQuickBooksConnected(false);
+        lastQuickBooksConnectedRef.current = false;
       }
     };
 
