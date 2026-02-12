@@ -1,9 +1,10 @@
 import { ConfigurationEntry } from '@/src/components/ConfigurationEntry';
 import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
 import { Stack, useRouter } from 'expo-router';
 import { Paths, File } from 'expo-file-system';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { Pressable } from 'react-native-gesture-handler';
@@ -25,7 +26,6 @@ import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import * as DocumentPicker from 'expo-document-picker';
 import { useAuth } from '@clerk/clerk-expo';
-import { isQuickBooksConnected } from '@/src/utils/quickbooksAPI';
 import { importAccountsFromQuickBooks, importVendorsFromQuickBooks } from '@/src/utils/quickbooksImports';
 
 const Home = () => {
@@ -45,7 +45,7 @@ const Home = () => {
   const allAccounts = useAllRows('accounts');
   const addAccount = useAddRowCallback('accounts');
   const updateAccount = useUpdateRowCallback('accounts');
-  const [isQBConnected, setIsQBConnected] = useState<boolean>(false);
+  const { isConnectedToQuickBooks } = useNetwork();
   const auth = useAuth();
 
   const hasConfigurationData: boolean = useMemo(
@@ -57,34 +57,6 @@ const Home = () => {
   );
 
   const hasVendorData: boolean = useMemo(() => allVendors && allVendors.length > 0, [allVendors]);
-
-  // Check QuickBooks connection status on mount
-  useEffect(() => {
-    const checkConnection = async () => {
-      if (!auth.orgId || !auth.userId) {
-        console.warn('Org ID or User ID not available for QB connection check');
-        return;
-      }
-
-      try {
-        const token = await auth.getToken();
-        if (!token) {
-          console.warn('No auth token available');
-          setIsQBConnected(false);
-          return;
-        }
-
-        const connected = await isQuickBooksConnected(auth.orgId, auth.userId, auth.getToken);
-        setIsQBConnected(connected);
-      } catch (error) {
-        console.error('Error checking QuickBooks connection:', error);
-        // Don't mark as error, just show as disconnected
-        setIsQBConnected(false);
-      }
-    };
-
-    checkConnection();
-  }, [auth.orgId, auth.userId, auth.getToken, auth]);
 
   const headerRightComponent = useMemo(() => {
     return {
@@ -379,7 +351,7 @@ const Home = () => {
               },
             },
           ]),
-      ...(!isQBConnected && hasVendorData
+      ...(!isConnectedToQuickBooks && hasVendorData
         ? [
             {
               icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
@@ -390,7 +362,7 @@ const Home = () => {
             },
           ]
         : []),
-      ...(!isQBConnected
+      ...(!isConnectedToQuickBooks
         ? [
             {
               icon: <MaterialCommunityIcons name="import" size={28} color={colors.iconColor} />,
@@ -401,7 +373,7 @@ const Home = () => {
             },
           ]
         : []),
-      ...(isQBConnected
+      ...(isConnectedToQuickBooks
         ? [
             {
               icon: <MaterialCommunityIcons name="account-supervisor" size={28} color={colors.iconColor} />,
@@ -421,7 +393,7 @@ const Home = () => {
         : []),
     ];
     return menuButtons;
-  }, [colors, handleMenuItemPress, hasConfigurationData, hasVendorData, isQBConnected]);
+  }, [colors, handleMenuItemPress, hasConfigurationData, hasVendorData, isConnectedToQuickBooks]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -449,7 +421,7 @@ const Home = () => {
           description="Add and Edit Vendors/Merchants"
           onPress={() => router.push('/configuration/vendor/vendors')}
         />
-        {isQBConnected && (
+        {isConnectedToQuickBooks && (
           <ConfigurationEntry
             label="QuickBooks Accounts"
             description="Define accounts to use"
