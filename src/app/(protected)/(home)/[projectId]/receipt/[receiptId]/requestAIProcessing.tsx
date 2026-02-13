@@ -386,8 +386,36 @@ const RequestAIProcessingPage = () => {
     setReceiptSummary(updatedSummary);
   };
 
+  // Verify that receipt summary total matches line items total
+  const verifyReceiptTotal = useCallback((): boolean => {
+    if (!receiptSummary) return false;
+
+    const lineItemsTotal = receiptItems.reduce((sum, item) => sum + item.amount + item.proratedTax, 0);
+    const roundedLineItemsTotal = parseFloat(lineItemsTotal.toFixed(2));
+    const roundedSummaryTotal = parseFloat(receiptSummary.totalAmount.toFixed(2));
+
+    const isValid = roundedLineItemsTotal === roundedSummaryTotal;
+
+    if (!isValid) {
+      console.warn(
+        `Receipt total mismatch: Summary total = ${roundedSummaryTotal}, Line items total = ${roundedLineItemsTotal}`,
+      );
+    }
+
+    return isValid;
+  }, [receiptSummary, receiptItems]);
+
   const saveReceiptProcessing = useCallback(() => {
     if (!receiptSummary) return;
+
+    // Verify receipt total before saving
+    if (!verifyReceiptTotal()) {
+      Alert.alert(
+        'Receipt Total Mismatch',
+        'The sum of line items does not match the receipt total. Please review the amounts and tax allocation.',
+      );
+      return;
+    }
 
     // save receipt processing
     const updatedReceipt = {
@@ -396,6 +424,7 @@ const RequestAIProcessingPage = () => {
       receiptDate: receiptSummary.receiptDate,
       vendor: receiptSummary.vendor,
     };
+
     // Proceed with saving cost items
     const receiptResult = updateReceipt(receiptId, updatedReceipt);
     if (receiptResult.status !== 'Success') {
@@ -404,21 +433,19 @@ const RequestAIProcessingPage = () => {
     }
 
     receiptItems.forEach((item) => {
-      if (item.costWorkItem) {
-        const newItemizedEntry: WorkItemCostEntry = {
-          id: '',
-          label: item.description,
-          amount: item.amount + item.proratedTax,
-          parentId: receiptId,
-          documentationType: 'receipt',
-          workItemId: item.costWorkItem?.workItemId,
-        };
-        addLineItem(newItemizedEntry);
-      }
+      const newItemizedEntry: WorkItemCostEntry = {
+        id: '',
+        label: item.description,
+        amount: item.amount + item.proratedTax,
+        parentId: receiptId,
+        documentationType: 'receipt',
+        workItemId: item.costWorkItem?.workItemId ?? '',
+      };
+      addLineItem(newItemizedEntry);
     });
 
     router.back();
-  }, [receiptSummary, receipt, receiptId, updateReceipt, receiptItems, addLineItem]);
+  }, [receiptSummary, receipt, receiptId, updateReceipt, receiptItems, addLineItem, verifyReceiptTotal]);
 
   const handleSaveReceiptCostItems = useCallback(() => {
     if (!someCostItemsSpecified) {
@@ -428,14 +455,15 @@ const RequestAIProcessingPage = () => {
       );
       return;
     }
+
     if (!allCostItemsSpecified) {
       Alert.alert(
-        'Save Cost Items',
-        'Line items that have Cost Item set to NOT SPECIFIED will not be saved for this receipt. Is this want you really want to do?',
+        'Save Receipt?',
+        'Line items that are not for the current project are on this receipt. Please confirm if this is what you really want to do?',
         [
           { text: 'Cancel', style: 'cancel' },
           {
-            text: 'Yes, Save specified Cost Items',
+            text: 'Yes, Save Receipt',
             onPress: saveReceiptProcessing,
           },
         ],

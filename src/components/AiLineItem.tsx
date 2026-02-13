@@ -60,7 +60,7 @@ export const AiLineItem: React.FC<AiLineItemProps> = ({
           {item.costWorkItem ? (
             <Text>{`Cost Item: ${item.costWorkItem.label}`}</Text>
           ) : (
-            <Text style={{ color: colors.angry500 }}>Cost Item: NOT SPECIFIED</Text>
+            <Text style={{ color: colors.angry500 }}>Not for Current Project</Text>
           )}
         </View>
       </Pressable>
