@@ -99,7 +99,7 @@ const EditReceiptDetailsPage = () => {
     notes: '',
     markedComplete: false,
     accountingId: '',
-    billId: '',
+    purchaseId: '',
     qbSyncHash: '',
   });
 
