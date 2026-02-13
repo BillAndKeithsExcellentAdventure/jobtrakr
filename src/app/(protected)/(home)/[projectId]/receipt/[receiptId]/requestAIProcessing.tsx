@@ -49,15 +49,8 @@ const processAIProcessing = async (
     });
 
     const responseText = await response.text();
-
-    if (!response.ok) {
-      console.error(`HTTP error! status: ${response.status}. Response: ${responseText}`);
-      throw new Error('AI processing request failed');
-    }
-
     try {
       const data = responseText ? JSON.parse(responseText) : null;
-      //console.log(' response:', JSON.stringify(data));
       return data;
     } catch (parseError) {
       console.error('Error parsing AI processing response:', parseError);
@@ -182,10 +175,10 @@ const RequestAIProcessingPage = () => {
     try {
       const result = await processAIProcessing(imageId, projectId, userId!, orgId!, auth.getToken);
 
-      if (!result || result.status !== 'Success' || !result.response) {
+      if (!result || !result.success) {
         Alert.alert(
           'Processing Failed',
-          'We could not extract data from this receipt. You can still add line items manually.',
+          `We could not extract data from this receipt. You can still add line items manually. Error message: ${result?.message || 'Unknown error'}`,
         );
         setReceiptSummary(undefined);
         setAiItems([]);
@@ -475,6 +468,10 @@ const RequestAIProcessingPage = () => {
 
   const handleBackPress = useCallback(() => {
     if (fetchingData) return;
+    if (!receiptSummary && aiItems.length === 0) {
+      router.back();
+      return;
+    }
 
     Alert.alert(
       'Leave Without Saving?',
@@ -584,7 +581,8 @@ const RequestAIProcessingPage = () => {
               <>
                 <Text>
                   SORRY, The receipt could not be processed automatically! You can always manually add line
-                  items.
+                  items. Use the back button to return to the receipt details page and add line items
+                  manually.
                 </Text>
               </>
             )}

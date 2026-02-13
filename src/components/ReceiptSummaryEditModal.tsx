@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from './ActionButton';
 import { Text, TextInput } from './Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useFocusManager } from '@/src/hooks/useFocusManager';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { formatDate } from '@/src/utils/formatters';
 import { NumberInputField } from './NumberInputField';
@@ -39,6 +40,7 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
   onSave,
 }) => {
   const colors = useColors();
+  const focusManager = useFocusManager();
   const [editedSummary, setEditedSummary] = useState(receiptSummary);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
@@ -86,10 +88,19 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
     [handleVendorChange],
   );
 
-  const handleSave = useCallback(() => {
-    onSave(editedSummary);
+  const handleSave = useCallback(async () => {
+    // special handling for NumberInputFields
+    const totalAmount = focusManager.getFieldValue<number>('receipt-summary-amount') ?? 0;
+    const totalTax = focusManager.getFieldValue<number>('receipt-summary-tax') ?? 0;
+
+    const updatedSummary = {
+      ...editedSummary,
+      totalAmount,
+      totalTax,
+    };
+    onSave(updatedSummary);
     onClose();
-  }, [editedSummary, onSave, onClose]);
+  }, [editedSummary, onSave, onClose, focusManager]);
 
   const handleClose = useCallback(() => {
     setEditedSummary(receiptSummary);
@@ -148,6 +159,7 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
               )}
 
               <NumberInputField
+                focusManagerId="receipt-summary-amount"
                 style={styles.inputContainer}
                 placeholder="Amount"
                 label="Amount"
@@ -156,6 +168,7 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
               />
 
               <NumberInputField
+                focusManagerId="receipt-summary-tax"
                 style={styles.inputContainer}
                 placeholder="Tax"
                 label="Tax"
