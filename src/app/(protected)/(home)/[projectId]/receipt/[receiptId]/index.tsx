@@ -1,5 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { ReceiptSummary } from '@/src/components/ReceiptSummary';
+import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import SwipeableLineItem from '@/src/components/SwipeableLineItem';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
@@ -426,9 +427,42 @@ const ReceiptDetailsPage = () => {
     allAccounts,
   ]);
 
+  const handleBackPress = useCallback(() => {
+    // Check if receipt amount matches the total of all line items
+    const roundedReceiptAmount = parseFloat(receipt.amount.toFixed(2));
+    const roundedItemsTotal = parseFloat(itemsTotalCost.toFixed(2));
+
+    if (allReceiptLineItems.length > 0 && roundedReceiptAmount !== roundedItemsTotal) {
+      Alert.alert(
+        'Amount Mismatch',
+        `The receipt amount (${formatCurrency(receipt.amount, true, true)}) does not match the total of all line items (${formatCurrency(itemsTotalCost, true, true)}).`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Update Receipt Total',
+            onPress: () => {
+              const updatedReceipt = { ...receipt, amount: itemsTotalCost };
+              updateReceipt(receipt.id, updatedReceipt);
+              router.back();
+            },
+          },
+        ],
+      );
+      return;
+    }
+
+    router.back();
+  }, [receipt.amount, itemsTotalCost, allReceiptLineItems.length, router, receipt, updateReceipt]);
+
   return (
     <>
-      <Stack.Screen options={{ headerShown: true, title: 'Receipt Details' }} />
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Receipt Details',
+          headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
+        }}
+      />
       <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
         <View style={{ flex: 1, width: '100%' }} onLayout={onLayout}>
           {containerHeight > 0 && (
