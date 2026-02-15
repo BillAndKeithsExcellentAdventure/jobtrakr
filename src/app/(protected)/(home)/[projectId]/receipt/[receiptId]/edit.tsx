@@ -241,7 +241,7 @@ const EditReceiptDetailsPage = () => {
         }}
       />
       <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-        <View style={[styles.container, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
+        <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
           <View style={styles.editContainer}>
             <View style={{ paddingBottom: 8 }}>
               <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
@@ -266,7 +266,7 @@ const EditReceiptDetailsPage = () => {
 
             <NumberInputField
               style={{ ...styles.inputContainer, paddingLeft: 10, marginTop: 0 }}
-              labelStyle={{ marginBottom: 0 }}
+              labelStyle={{ marginBottom: 2 }}
               label="Amount"
               value={receiptAmount}
               onChange={handleAmountChange}
@@ -358,12 +358,13 @@ const EditReceiptDetailsPage = () => {
               modalHeight={'60%'}
               isVisible={isPaymentAccountPickerVisible}
               onClose={() => setIsPaymentAccountPickerVisible(false)}
+              showKeyboardToolbar={false}
             >
               <OptionList
                 options={paymentAccounts}
                 onSelect={(option) => handlePaymentAccountOptionChange(option)}
                 selectedOption={pickedPaymentAccountOption}
-                enableSearch={paymentAccounts.length > 15}
+                enableSearch={false}
               />
             </BottomSheetContainer>
           )}

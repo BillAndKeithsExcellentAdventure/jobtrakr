@@ -48,7 +48,7 @@ const SwipeableReceiptItem = React.memo<{
   const deleteMediaCallback = useDeleteMediaCallback();
   const mediaToUpload = useAllMediaToUpload();
   const store = useUploadSyncStore();
-  const textColor = item.fullyClassified ? colors.text : colors.errorText;
+  const textColor = item.fullyClassified || item.purchaseId ? colors.text : colors.errorText;
   const allReceiptItems = useMemo(
     () => allReceiptLineItems.filter((lineItem) => lineItem.parentId === item.id),
     [allReceiptLineItems, item.id],

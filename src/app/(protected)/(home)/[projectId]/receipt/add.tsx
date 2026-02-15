@@ -645,6 +645,7 @@ const AddReceiptPage = () => {
           modalHeight={'60%'}
           isVisible={isVendorListPickerVisible}
           onClose={() => setIsVendorListPickerVisible(false)}
+          showKeyboardToolbar={false}
         >
           <OptionList
             options={vendors}
@@ -659,6 +660,7 @@ const AddReceiptPage = () => {
           modalHeight={'60%'}
           isVisible={isCategoryPickerVisible}
           onClose={() => setIsCategoryPickerVisible(false)}
+          showKeyboardToolbar={false}
         >
           <OptionList
             options={availableCategoriesOptions}

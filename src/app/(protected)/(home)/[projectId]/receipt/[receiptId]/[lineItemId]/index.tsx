@@ -161,7 +161,8 @@ const EditLineItemPage = () => {
       />
       <View style={styles.container}>
         <NumberInputField
-          style={styles.inputContainer}
+          style={{ ...styles.inputContainer, marginTop: 0 }}
+          labelStyle={{ marginBottom: 2 }}
           label="Amount"
           value={itemizedEntry.amount}
           onChange={(value: number): void => {

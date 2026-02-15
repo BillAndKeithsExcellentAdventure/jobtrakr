@@ -25,7 +25,7 @@ import { File } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -254,6 +254,16 @@ const ReceiptDetailsPage = () => {
     setContainerHeight(event.nativeEvent.layout.height);
   };
 
+  const hasItemWithNoWorkItemId = useMemo(
+    () => allReceiptLineItems.some((item) => !item.workItemId),
+    [allReceiptLineItems],
+  );
+
+  const amountsMatch = useMemo(
+    () => parseFloat(receipt.amount.toFixed(2)) === parseFloat(itemsTotalCost.toFixed(2)),
+    [receipt.amount, itemsTotalCost],
+  );
+
   const canSyncToQuickBooks =
     isConnectedToQuickBooks &&
     allReceiptLineItems.length > 0 &&
@@ -262,7 +272,127 @@ const ReceiptDetailsPage = () => {
     !!receipt.vendorId &&
     !!userId &&
     !!orgId &&
-    !!projectAbbr;
+    !!projectAbbr &&
+    amountsMatch;
+
+  const processSyncToQuickBooks = useCallback(
+    async (receiptData: any) => {
+      // Create new Bill in QuickBooks
+      const response = await addReceiptToQuickBooks(receiptData, getToken);
+      console.log('Receipt successfully synced to QuickBooks:', response);
+
+      const updates: ReceiptData = { ...receipt };
+      if (response.data?.Purchase?.DocNumber) {
+        updates.accountingId = response.data.Purchase.DocNumber;
+        console.log('Updating local receipt with accountingId:', response.data?.Purchase?.DocNumber);
+      }
+      if (response.data?.Purchase?.Id) {
+        updates.purchaseId = response.data.Purchase?.Id ?? '';
+        console.log('Updating local receipt with purchaseId:', response.data.Purchase.Id);
+      }
+
+      const newHash = await getReceiptSyncHash(updates, allReceiptLineItems);
+      updates.qbSyncHash = newHash;
+      updateReceipt(receipt.id, updates);
+      setWasImageJustAdded(false);
+    },
+    [getToken, receipt, allReceiptLineItems, updateReceipt],
+  );
+
+  const updateExistingReceiptInQuickBooks = useCallback(
+    async (qbLineItems: QBBillLineItem[], paymentAccountSubType: string | undefined) => {
+      if (orgId === undefined || userId === undefined) {
+        Alert.alert('Error', 'Missing user or organization information for QuickBooks sync.');
+        return;
+      }
+
+      const receiptEditData = {
+        purchaseId: receipt.purchaseId,
+        accountingId: receipt.accountingId,
+        orgId: orgId!,
+        userId: userId!,
+        projectId: projectId,
+        projectAbbr: projectAbbr,
+        projectName: projectName,
+        addAttachment: wasImageJustAdded && !!receipt.imageId,
+        imageId: receipt.imageId || '',
+        qbPurchaseData: {
+          vendorRef: receipt.vendorId,
+          lineItems: qbLineItems,
+          privateNote: receipt.notes || receipt.description || '',
+          txnDate: new Date(receipt.receiptDate).toISOString().split('T')[0],
+          paymentAccount: {
+            paymentAccountRef: receipt.paymentAccountId,
+            paymentType: paymentAccountSubType,
+            checkNumber: paymentAccountSubType === 'Checking' ? receipt.notes : undefined,
+          },
+        },
+      };
+
+      try {
+        const response = await editReceiptInQuickBooks(receiptEditData, getToken);
+        console.log('Receipt successfully updated in QuickBooks:', response);
+
+        const updates: ReceiptData = { ...receipt };
+        const newHash = await getReceiptSyncHash(updates, allReceiptLineItems);
+        updates.qbSyncHash = newHash;
+        updateReceipt(receipt.id, updates);
+        setWasImageJustAdded(false);
+      } catch (error) {
+        console.error('Error updating receipt in QuickBooks:', error);
+        throw error;
+      }
+    },
+    [
+      receipt,
+      orgId,
+      userId,
+      projectId,
+      projectAbbr,
+      projectName,
+      wasImageJustAdded,
+      getToken,
+      allReceiptLineItems,
+      updateReceipt,
+    ],
+  );
+
+  const addNewReceiptToQuickBooks = useCallback(
+    async (qbLineItems: QBBillLineItem[], paymentAccountSubType: string | undefined) => {
+      const receiptData = {
+        userId,
+        orgId,
+        projectId,
+        projectAbbr,
+        projectName,
+        imageId: receipt.imageId || '',
+        addAttachment: !!receipt.imageId,
+        qbPurchaseData: {
+          vendorRef: receipt.vendorId,
+          lineItems: qbLineItems,
+          privateNote: receipt.notes || receipt.description || '',
+          txnDate: new Date(receipt.receiptDate).toISOString().split('T')[0],
+          paymentAccount: {
+            paymentAccountRef: receipt.paymentAccountId,
+            paymentType: paymentAccountSubType,
+            checkNumber: paymentAccountSubType === 'Checking' ? receipt.notes : undefined,
+          },
+        },
+      };
+
+      await processSyncToQuickBooks(receiptData);
+    },
+    [
+      userId,
+      orgId,
+      projectId,
+      projectAbbr,
+      projectName,
+      receipt,
+      allReceiptLineItems,
+      processSyncToQuickBooks,
+    ],
+  );
 
   const handleSyncToQuickBooks = useCallback(async () => {
     if (!canSyncToQuickBooks || isSavingToQuickBooks) return;
@@ -284,7 +414,7 @@ const ReceiptDetailsPage = () => {
         } else {
           skippedLineItems.push(lineItem.label);
           console.warn(
-            `Skipping line item ${lineItem.id} - no valid account reference found for work item ${lineItem.workItemId}`,
+            `Skipping line item ${lineItem.id} - no valid account reference found for cost item ${lineItem.workItemId}`,
           );
         }
       }
@@ -315,43 +445,12 @@ const ReceiptDetailsPage = () => {
           'Confirm Update',
           'This receipt is already in QuickBooks. Do you want to update the existing record?',
           [
-            { text: 'Cancel', style: 'cancel', onPress: () => setIsSavingToQuickBooks(false) },
+            { text: 'Cancel', style: 'cancel' },
             {
               text: 'Update',
               onPress: async () => {
-                const receiptEditData = {
-                  purchaseId: receipt.purchaseId,
-                  accountingId: receipt.accountingId,
-                  orgId: orgId,
-                  userId: userId,
-                  projectId: projectId,
-                  projectAbbr: projectAbbr,
-                  projectName: projectName,
-                  addAttachment: wasImageJustAdded && !!receipt.imageId,
-                  imageId: receipt.imageId || '',
-                  qbPurchaseData: {
-                    vendorRef: receipt.vendorId,
-                    lineItems: qbLineItems,
-                    privateNote: receipt.notes || receipt.description || '',
-                    txnDate: new Date(receipt.receiptDate).toISOString().split('T')[0],
-                    paymentAccount: {
-                      paymentAccountRef: receipt.paymentAccountId,
-                      paymentType: paymentAccountSubType,
-                      checkNumber: paymentAccountSubType === 'Checking' ? receipt.notes : undefined, // Using 'notes' field to store check number if applicable
-                    },
-                  },
-                };
                 try {
-                  const response = await editReceiptInQuickBooks(receiptEditData, getToken);
-                  console.log('Receipt successfully updated in QuickBooks:', response);
-
-                  const updates: ReceiptData = { ...receipt };
-
-                  const newHash = await getReceiptSyncHash(updates, allReceiptLineItems);
-                  updates.qbSyncHash = newHash;
-                  // console.log('Updating local receipt with:', updates);
-                  updateReceipt(receipt.id, updates);
-                  setWasImageJustAdded(false);
+                  await updateExistingReceiptInQuickBooks(qbLineItems, paymentAccountSubType);
                 } catch (error) {
                   console.error('Error updating receipt in QuickBooks:', error);
                 } finally {
@@ -361,50 +460,47 @@ const ReceiptDetailsPage = () => {
             },
           ],
         );
-        return;
+      } else {
+        // if any line items don't have workItemId then verify with user before syncing to QuickBooks
+        if (hasItemWithNoWorkItemId) {
+          const lineItemCount =
+            allReceiptLineItems.reduce((count, item) => (!item.workItemId ? count + 1 : count), 0) || 0;
+          Alert.alert(
+            'Missing Account References',
+            `This receipt has ${lineItemCount} line item(s) that do not have an assigned cost code. These items' cost will not be assigned to this project. Do you want to proceed?`,
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+                onPress: () => {
+                  setIsSavingToQuickBooks(false);
+                },
+              },
+              {
+                text: 'Proceed',
+                onPress: async () => {
+                  try {
+                    await addNewReceiptToQuickBooks(qbLineItems, paymentAccountSubType);
+                  } catch (error) {
+                    console.error('Error adding receipt to QuickBooks:', error);
+                  } finally {
+                    setIsSavingToQuickBooks(false);
+                  }
+                },
+              },
+            ],
+          );
+          return;
+        }
+
+        try {
+          await addNewReceiptToQuickBooks(qbLineItems, paymentAccountSubType);
+        } catch (error) {
+          console.error('Error adding receipt to QuickBooks:', error);
+        } finally {
+          setIsSavingToQuickBooks(false);
+        }
       }
-
-      // ------------------- adding new receipt to QuickBooks -------------------
-      const receiptData = {
-        userId,
-        orgId,
-        projectId,
-        projectAbbr,
-        projectName,
-        imageId: receipt.imageId || '',
-        addAttachment: !!receipt.imageId,
-        qbPurchaseData: {
-          vendorRef: receipt.vendorId,
-          lineItems: qbLineItems,
-          privateNote: receipt.notes || receipt.description || '',
-          txnDate: new Date(receipt.receiptDate).toISOString().split('T')[0],
-          paymentAccount: {
-            paymentAccountRef: receipt.paymentAccountId,
-            paymentType: paymentAccountSubType,
-            checkNumber: paymentAccountSubType === 'Checking' ? receipt.notes : undefined, // Using 'notes' field to store check number if applicable
-          },
-        },
-      };
-
-      // Create new Bill in QuickBooks
-      const response = await addReceiptToQuickBooks(receiptData, getToken);
-      console.log('Receipt successfully synced to QuickBooks:', response);
-
-      const updates: ReceiptData = { ...receipt };
-      if (response.data?.Purchase?.DocNumber) {
-        updates.accountingId = response.data.Purchase.DocNumber;
-        console.log('Updating local receipt with accountingId:', response.data?.Purchase?.DocNumber);
-      }
-      if (response.data?.Purchase?.Id) {
-        updates.purchaseId = response.data.Purchase?.Id ?? '';
-        console.log('Updating local receipt with purchaseId:', response.data.Purchase.Id);
-      }
-
-      const newHash = await getReceiptSyncHash(updates, allReceiptLineItems);
-      updates.qbSyncHash = newHash;
-      // console.log('Updating local receipt with:', updates);
-      updateReceipt(receipt.id, updates);
-      setWasImageJustAdded(false);
     } catch (error) {
       console.error('Error syncing receipt to QuickBooks:', error);
     } finally {
@@ -413,18 +509,13 @@ const ReceiptDetailsPage = () => {
   }, [
     canSyncToQuickBooks,
     isSavingToQuickBooks,
-    wasImageJustAdded,
-    appSettings.quickBooksExpenseAccountId,
     allReceiptLineItems,
-    receipt,
-    userId,
-    orgId,
-    projectId,
-    projectAbbr,
-    projectName,
-    getToken,
-    updateReceipt,
+    receipt.paymentAccountId,
+    receipt.purchaseId,
+    appSettings.quickBooksExpenseAccountId,
     allAccounts,
+    updateExistingReceiptInQuickBooks,
+    addNewReceiptToQuickBooks,
   ]);
 
   const handleBackPress = useCallback(() => {
@@ -575,14 +666,27 @@ const ReceiptDetailsPage = () => {
                         />
                       )}
                     </View>
-                  ) : isConnectedToQuickBooks ? (
+                  ) : isConnectedToQuickBooks && allReceiptLineItems.length > 0 ? (
                     <View style={styles.syncButtonRow}>
-                      <Text
-                        txtSize="xs"
-                        style={{ ...styles.quickBooksWarning, color: colors.error }}
-                        text="Please Edit Receipt to complete data required by QuickBooks"
-                      />
-                      <ActionButton onPress={() => editDetails(receipt)} type="cancel" title="Edit" />
+                      {!amountsMatch ? (
+                        <>
+                          <Text
+                            txtSize="xs"
+                            style={{ ...styles.quickBooksWarning, color: colors.error }}
+                            text="Receipt amount must match line item total"
+                          />
+                          <ActionButton onPress={() => editDetails(receipt)} type="cancel" title="Edit" />
+                        </>
+                      ) : (
+                        <>
+                          <Text
+                            txtSize="xs"
+                            style={{ ...styles.quickBooksWarning, color: colors.error }}
+                            text="Please Edit Receipt to complete data required by QuickBooks"
+                          />
+                          <ActionButton onPress={() => editDetails(receipt)} type="cancel" title="Edit" />
+                        </>
+                      )}
                     </View>
                   ) : null}
                 </View>
