@@ -19,6 +19,7 @@ type ModalScreenContainerProps = PropsWithChildren<{
   isSaving?: boolean;
   savingLabel?: string;
   useKeyboardToolbar?: boolean;
+  title?: string;
 }>;
 
 export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
@@ -31,6 +32,7 @@ export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
   savingLabel = 'Saving',
   children,
   useKeyboardToolbar = true,
+  title,
 }) => {
   const colors = useColors();
 
@@ -50,6 +52,7 @@ export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
           contentContainerStyle={styles.modalContainer}
         >
           <View style={styles.container}>
+            {title && <Text txtSize="title" style={styles.title} text={title} />}
             {children}
 
             {isSaving ? (
@@ -88,6 +91,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'stretch',
+  },
+  title: {
+    textAlign: 'center',
+    marginBottom: 10,
   },
   container: {
     width: '100%',

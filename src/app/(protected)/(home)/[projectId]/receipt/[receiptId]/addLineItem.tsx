@@ -7,20 +7,41 @@ import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import { WorkItemDataCodeCompareAsNumber } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import {
-  useAddRowCallback,
-  WorkItemCostEntry,
-} from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useAddRowCallback, WorkItemCostEntry } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
+import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 
 const AddReceiptLineItemPage = () => {
   const router = useRouter();
+  const allProjects = useAllProjects();
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
   const { projectWorkItems, availableCategoriesOptions, allAvailableCostItemOptions } =
     useProjectWorkItems(projectId);
+
+  const [isProjectPickerVisible, setIsProjectPickerVisible] = useState<boolean>(false);
+  const [pickedProjectOption, setPickedProjectOption] = useState<OptionEntry | undefined>(undefined);
+  const [projectOptions, setProjectOptions] = useState<OptionEntry[] | undefined>(undefined);
+
+  useEffect(() => {
+    if (allProjects && allProjects.length > 0) {
+      const options: OptionEntry[] = allProjects.map((project) => ({
+        label: project.name,
+        value: project.id,
+      }));
+      setProjectOptions(options);
+
+      // Set the picked project option to the current project
+      if (projectId) {
+        const currentProjectOption = options.find((option) => option.value === projectId);
+        if (currentProjectOption) {
+          setPickedProjectOption(currentProjectOption);
+        }
+      }
+    }
+  }, [allProjects, projectId]);
 
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
@@ -40,6 +61,13 @@ const AddReceiptLineItemPage = () => {
       handleSubCategoryChange(option);
     }
     setIsSubCategoryPickerVisible(false);
+  };
+
+  const handleProjectOptionChange = (option: OptionEntry) => {
+    if (option) {
+      setPickedProjectOption(option);
+    }
+    setIsProjectPickerVisible(false);
   };
 
   const handleCategoryOptionChange = (option: OptionEntry) => {
@@ -90,6 +118,7 @@ const AddReceiptLineItemPage = () => {
     const newItemizedEntry: WorkItemCostEntry = {
       ...itemizedEntry,
       workItemId: pickedSubCategoryOption ? (pickedSubCategoryOption.value as string) : '',
+      projectId: pickedProjectOption ? (pickedProjectOption.value as string) : projectId,
     };
     const result = addLineItem(newItemizedEntry);
     if (result.status !== 'Success') {
@@ -97,17 +126,18 @@ const AddReceiptLineItemPage = () => {
       return;
     }
     router.back();
-  }, [itemizedEntry, pickedSubCategoryOption, addLineItem, router]);
+  }, [itemizedEntry, pickedSubCategoryOption, pickedProjectOption, addLineItem, router, projectId]);
 
   return (
     <View style={{ flex: 1, width: '100%' }}>
       <ModalScreenContainer
         onSave={handleOkPress}
+        title="Add Receipt Line Item"
         onCancel={() => router.back()}
         canSave={!!itemizedEntry.label && !!itemizedEntry.amount}
       >
         <NumberInputField
-          style={styles.inputContainer}
+          style={{ ...styles.inputContainer, marginTop: 0 }}
           label="Amount"
           value={itemizedEntry.amount}
           onChange={(value: number): void => {
@@ -129,6 +159,16 @@ const AddReceiptLineItemPage = () => {
             }));
           }}
         />
+        {projectOptions && projectOptions?.length > 1 && (
+          <OptionPickerItem
+            containerStyle={styles.inputContainer}
+            optionLabel={pickedProjectOption?.label}
+            label="Project"
+            placeholder="Project"
+            editable={false}
+            onPickerButtonPress={() => setIsProjectPickerVisible(true)}
+          />
+        )}
         <OptionPickerItem
           containerStyle={styles.inputContainer}
           optionLabel={pickedCategoryOption?.label}
@@ -173,6 +213,20 @@ const AddReceiptLineItemPage = () => {
             onSelect={(option) => handleSubCategoryOptionChange(option)}
             selectedOption={pickedSubCategoryOption}
             enableSearch={subCategories.length > 15}
+          />
+        </BottomSheetContainer>
+      )}
+      {isProjectPickerVisible && projectOptions && (
+        <BottomSheetContainer
+          modalHeight="65%"
+          isVisible={isProjectPickerVisible}
+          onClose={() => setIsProjectPickerVisible(false)}
+        >
+          <OptionList
+            options={projectOptions}
+            onSelect={(option) => handleProjectOptionChange(option)}
+            selectedOption={pickedProjectOption}
+            enableSearch={projectOptions.length > 15}
           />
         </BottomSheetContainer>
       )}

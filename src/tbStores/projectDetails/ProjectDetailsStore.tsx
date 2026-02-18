@@ -59,6 +59,7 @@ export const TABLES_SCHEMA = {
     workItemId: { type: 'string' },
     parentId: { type: 'string' }, // ReceiptId or InvoiceId
     documentationType: { type: 'string' }, // 'receipt' or 'invoice'
+    projectId: { type: 'string' }, // Project ID - this is needed if cost entry is associated with another project
   },
 
   mediaEntries: {

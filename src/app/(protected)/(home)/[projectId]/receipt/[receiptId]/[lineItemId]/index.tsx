@@ -7,6 +7,7 @@ import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
+import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { WorkItemDataCodeCompareAsNumber } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   useAllRows,
@@ -20,6 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditLineItemPage = () => {
   const router = useRouter();
+  const allProjects = useAllProjects();
   const { projectId, lineItemId } = useLocalSearchParams<{
     projectId: string;
     receiptId: string;
@@ -43,6 +45,10 @@ const EditLineItemPage = () => {
     parentId: '',
     documentationType: 'receipt',
   });
+
+  const [isProjectPickerVisible, setIsProjectPickerVisible] = useState<boolean>(false);
+  const [pickedProjectOption, setPickedProjectOption] = useState<OptionEntry | undefined>(undefined);
+  const [projectOptions, setProjectOptions] = useState<OptionEntry[] | undefined>(undefined);
 
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
@@ -69,6 +75,7 @@ const EditLineItemPage = () => {
       const updatedItemizedEntry: WorkItemCostEntry = {
         ...entryToSave,
         workItemId: pickedSubCategoryOption ? (pickedSubCategoryOption.value as string) : '',
+        projectId: pickedProjectOption ? (pickedProjectOption.value as string) : projectId,
       };
       const result = updateLineItem(updatedItemizedEntry.id, updatedItemizedEntry);
       if (result.status !== 'Success') {
@@ -77,7 +84,7 @@ const EditLineItemPage = () => {
       }
       isDirtyRef.current = false;
     },
-    [itemizedEntry, pickedSubCategoryOption, updateLineItem],
+    [itemizedEntry, pickedSubCategoryOption, pickedProjectOption, updateLineItem, projectId],
   );
 
   useEffect(() => {
@@ -90,6 +97,24 @@ const EditLineItemPage = () => {
   }, [allCostItems, lineItemId]);
 
   useEffect(() => {
+    if (allProjects && allProjects.length > 0) {
+      const options: OptionEntry[] = allProjects.map((project) => ({
+        label: project.name,
+        value: project.id,
+      }));
+      setProjectOptions(options);
+
+      // Set the picked project option to the current project
+      if (projectId) {
+        const currentProjectOption = options.find((option) => option.value === projectId);
+        if (currentProjectOption) {
+          setPickedProjectOption(currentProjectOption);
+        }
+      }
+    }
+  }, [allProjects, projectId]);
+
+  useEffect(() => {
     if (itemizedEntry.workItemId) {
       const workItem = allWorkItems.find((item) => item.id === itemizedEntry.workItemId);
       if (workItem) {
@@ -100,6 +125,15 @@ const EditLineItemPage = () => {
     }
   }, [itemizedEntry.workItemId, allWorkItems, allWorkCategories]);
 
+  useEffect(() => {
+    if (itemizedEntry.projectId) {
+      const projectOption = projectOptions?.find((option) => option.value === itemizedEntry.projectId);
+      if (projectOption) {
+        setPickedProjectOption(projectOption);
+      }
+    }
+  }, [itemizedEntry.projectId, projectOptions]);
+
   const handleSubCategoryOptionChange = (option: OptionEntry) => {
     if (option) {
       handleSubCategoryChange(option);
@@ -107,6 +141,14 @@ const EditLineItemPage = () => {
     setIsSubCategoryPickerVisible(false);
     isDirtyRef.current = true;
     void saveEntry();
+  };
+
+  const handleProjectOptionChange = (option: OptionEntry) => {
+    if (option) {
+      setPickedProjectOption(option);
+      isDirtyRef.current = true;
+    }
+    setIsProjectPickerVisible(false);
   };
 
   const handleCategoryOptionChange = (option: OptionEntry) => {
@@ -194,6 +236,16 @@ const EditLineItemPage = () => {
             void saveEntry();
           }}
         />
+        {projectOptions && projectOptions.length > 1 && (
+          <OptionPickerItem
+            containerStyle={styles.inputContainer}
+            optionLabel={pickedProjectOption?.label}
+            label="Project"
+            placeholder="Project"
+            editable={false}
+            onPickerButtonPress={() => setIsProjectPickerVisible(true)}
+          />
+        )}
         <OptionPickerItem
           containerStyle={styles.inputContainer}
           optionLabel={pickedCategoryOption?.label}
@@ -211,11 +263,27 @@ const EditLineItemPage = () => {
           onPickerButtonPress={() => setIsSubCategoryPickerVisible(true)}
         />
       </View>
+      {isProjectPickerVisible && projectOptions && (
+        <BottomSheetContainer
+          modalHeight="65%"
+          isVisible={isProjectPickerVisible}
+          onClose={() => setIsProjectPickerVisible(false)}
+          showKeyboardToolbar={false}
+        >
+          <OptionList
+            options={projectOptions}
+            onSelect={(option) => handleProjectOptionChange(option)}
+            selectedOption={pickedProjectOption}
+            enableSearch={projectOptions.length > 15}
+          />
+        </BottomSheetContainer>
+      )}
       {isCategoryPickerVisible && (
         <BottomSheetContainer
           isVisible={isCategoryPickerVisible}
           onClose={() => setIsCategoryPickerVisible(false)}
           modalHeight="65%"
+          showKeyboardToolbar={false}
         >
           <OptionList
             options={availableCategoriesOptions}

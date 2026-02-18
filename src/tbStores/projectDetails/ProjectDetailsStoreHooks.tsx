@@ -94,6 +94,7 @@ export type WorkItemCostEntry = {
   workItemId: string;
   parentId: string; // the receiptId or invoiceId
   documentationType: 'receipt' | 'invoice';
+  projectId?: string; // Project ID - this is needed if cost entry is associated with another project
 };
 
 export interface MediaEntryData {
