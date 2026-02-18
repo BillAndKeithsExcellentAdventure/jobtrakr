@@ -385,7 +385,7 @@ export interface QBBillLineItem {
   amount: number;
   description: string;
   accountRef: string; // expense account
-  // customerRef?: string;
+  projectId?: string; // support receipts with line-items for multiple projects.
 }
 
 interface QBAccountData {

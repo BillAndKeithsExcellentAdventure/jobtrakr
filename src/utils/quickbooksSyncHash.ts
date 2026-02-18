@@ -9,6 +9,7 @@ type NormalizedLineItem = {
   amount: number;
   description: string;
   workItemId: string;
+  projectId?: string;
 };
 
 type BillSyncPayload = {
@@ -36,11 +37,15 @@ const normalizeLineItem = (lineItem: WorkItemCostEntry): NormalizedLineItem => (
   amount: lineItem.amount,
   description: lineItem.label,
   workItemId: lineItem.workItemId,
+  projectId: lineItem.projectId ?? '',
 });
 
 const compareLineItems = (a: NormalizedLineItem, b: NormalizedLineItem) => {
   if (a.workItemId !== b.workItemId) return a.workItemId.localeCompare(b.workItemId);
   if (a.description !== b.description) return a.description.localeCompare(b.description);
+  const projectA = a.projectId || '';
+  const projectB = b.projectId || '';
+  if (projectA !== projectB) return projectA.localeCompare(projectB);
   return a.amount - b.amount;
 };
 
