@@ -229,11 +229,11 @@ const AddReceiptPage = () => {
       if (result.status !== 'Success') {
         console.log('Add Project receipt failed:', receiptToAdd);
         Alert.alert('Error', 'Unable to add receipt to local store.');
+        setIsSavingReceipt(false);
         return;
       }
 
       const receiptId = result.id;
-
       const receiptLineItems: WorkItemCostEntry[] = [];
 
       // Add line items if applying to single cost code
@@ -252,6 +252,7 @@ const AddReceiptPage = () => {
           Alert.alert('Error', 'Unable to add line item for receipt.');
           console.log('Error adding line item for receipt:', addLineItemResult);
           router.back();
+          setIsSavingReceipt(false);
           return;
         }
       }
@@ -304,60 +305,55 @@ const AddReceiptPage = () => {
                 'QuickBooks Sync Skipped',
                 `Cannot sync to QuickBooks: ${skippedLineItems.length} line item(s) missing account references.`,
               );
+              return;
             }
-          } else {
-            // Notify user if some items were skipped
-            if (skippedLineItems.length > 0) {
-              console.warn(
-                `Warning: ${skippedLineItems.length} line item(s) were not synced to QuickBooks due to missing account references: ${skippedLineItems.join(', ')}`,
-              );
-            }
-
-            const paymentAccountSubType = allAccounts.find(
-              (acc) => acc.accountingId === projectReceipt.paymentAccountId,
-            )?.accountSubType;
-            // Prepare receipt data for backend
-            const receiptData = {
-              userId,
-              orgId,
-              projectId,
-              projectAbbr,
-              projectName: projectName || '',
-              imageId: projectReceipt.imageId || '',
-              addAttachment: !!projectReceipt.imageId,
-              qbPurchaseData: {
-                vendorRef: projectReceipt.vendorId,
-                lineItems: qbLineItems,
-                // Note: docNumber is optional and will be auto-generated if not provided
-                privateNote: projectReceipt.notes || projectReceipt.description || '',
-                txnDate: new Date(projectReceipt.receiptDate).toISOString().split('T')[0],
-                paymentAccount: {
-                  paymentAccountRef: projectReceipt.paymentAccountId,
-                  paymentType: paymentAccountSubType,
-                  checkNumber: paymentAccountSubType === 'Checking' ? projectReceipt.notes : undefined, // Using 'notes' field to store check number if applicable
-                },
-              },
-            };
-
-            // Create new Purchase in QuickBooks
-            const response = await addReceiptToQuickBooks(receiptData, getToken);
-            console.log('Receipt successfully synced to QuickBooks:', response);
-
-            const updates: ReceiptData = { ...projectReceipt };
-            if (response.data?.Purchase?.DocNumber) {
-              updates.accountingId = response.data.Purchase.DocNumber;
-              console.log('Updating local receipt with accountingId:', response.data?.Purchase?.DocNumber);
-            }
-            if (response.data?.Purchase?.Id) {
-              updates.purchaseId = response.data.Purchase.Id;
-              console.log('Updating local receipt with purchaseId:', response.data.Purchase.Id);
-            }
-
-            const newHash = await getReceiptSyncHash(updates, receiptLineItems);
-            updates.qbSyncHash = newHash;
-            console.log('Updating local receipt with:', updates);
-            updateReceipt(receiptId, updates);
           }
+
+          const paymentAccountSubType = allAccounts.find(
+            (acc) => acc.accountingId === projectReceipt.paymentAccountId,
+          )?.accountSubType;
+
+          // Prepare receipt data for backend
+          const receiptData = {
+            userId,
+            orgId,
+            projectId,
+            projectAbbr,
+            projectName: projectName || '',
+            imageId: projectReceipt.imageId || '',
+            addAttachment: !!projectReceipt.imageId,
+            qbPurchaseData: {
+              vendorRef: projectReceipt.vendorId,
+              lineItems: qbLineItems,
+              // Note: docNumber is optional and will be auto-generated if not provided
+              privateNote: projectReceipt.notes || projectReceipt.description || '',
+              txnDate: new Date(projectReceipt.receiptDate).toISOString().split('T')[0],
+              paymentAccount: {
+                paymentAccountRef: projectReceipt.paymentAccountId,
+                paymentType: paymentAccountSubType,
+                checkNumber: paymentAccountSubType === 'Checking' ? projectReceipt.notes : undefined, // Using 'notes' field to store check number if applicable
+              },
+            },
+          };
+
+          // Create new Purchase in QuickBooks
+          const response = await addReceiptToQuickBooks(receiptData, getToken);
+          console.log('Receipt successfully synced to QuickBooks:', response);
+
+          const updates: ReceiptData = { ...projectReceipt };
+          if (response.data?.Purchase?.DocNumber) {
+            updates.accountingId = response.data.Purchase.DocNumber;
+            console.log('Updating local receipt with accountingId:', response.data?.Purchase?.DocNumber);
+          }
+          if (response.data?.Purchase?.Id) {
+            updates.purchaseId = response.data.Purchase.Id;
+            console.log('Updating local receipt with purchaseId:', response.data.Purchase.Id);
+          }
+
+          const newHash = await getReceiptSyncHash(updates, receiptLineItems);
+          updates.qbSyncHash = newHash;
+          console.log('Updating local receipt with:', updates);
+          updateReceipt(receiptId, updates);
         } catch (error) {
           console.error('Error syncing receipt to QuickBooks:', error);
           // Don't alert the user - the receipt is already saved locally
@@ -365,7 +361,6 @@ const AddReceiptPage = () => {
         }
       }
 
-      console.log('Project receipt successfully added:', projectReceipt);
       router.back();
     } finally {
       setIsSavingReceipt(false);
@@ -674,6 +669,7 @@ const AddReceiptPage = () => {
         <BottomSheetContainer
           isVisible={isSubCategoryPickerVisible}
           onClose={() => setIsSubCategoryPickerVisible(false)}
+          modalHeight={'70%'}
         >
           <OptionList
             centerOptions={false}
@@ -690,6 +686,7 @@ const AddReceiptPage = () => {
           modalHeight={'60%'}
           isVisible={isPaymentAccountPickerVisible}
           onClose={() => setIsPaymentAccountPickerVisible(false)}
+          showKeyboardToolbar={false}
         >
           <OptionList
             options={paymentAccounts}

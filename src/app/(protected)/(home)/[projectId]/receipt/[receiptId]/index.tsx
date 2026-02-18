@@ -306,6 +306,10 @@ const ReceiptDetailsPage = () => {
         return;
       }
 
+      if (wasImageJustAdded && receipt.imageId) {
+        console.log('Updating existing receipt image in QuickBooks');
+      }
+
       const receiptEditData = {
         purchaseId: receipt.purchaseId,
         accountingId: receipt.accountingId,
@@ -382,16 +386,7 @@ const ReceiptDetailsPage = () => {
 
       await processSyncToQuickBooks(receiptData);
     },
-    [
-      userId,
-      orgId,
-      projectId,
-      projectAbbr,
-      projectName,
-      receipt,
-      allReceiptLineItems,
-      processSyncToQuickBooks,
-    ],
+    [userId, orgId, projectId, projectAbbr, projectName, receipt, processSyncToQuickBooks],
   );
 
   const handleSyncToQuickBooks = useCallback(async () => {
@@ -399,110 +394,100 @@ const ReceiptDetailsPage = () => {
 
     setIsSavingToQuickBooks(true);
 
-    try {
-      const qbLineItems: QBBillLineItem[] = [];
-      const skippedLineItems: string[] = [];
-      const qbExpenseAccountId = appSettings.quickBooksExpenseAccountId;
+    const qbLineItems: QBBillLineItem[] = [];
+    const skippedLineItems: string[] = [];
+    const qbExpenseAccountId = appSettings.quickBooksExpenseAccountId;
 
-      for (const lineItem of allReceiptLineItems) {
-        if (qbExpenseAccountId) {
-          qbLineItems.push({
-            amount: lineItem.amount,
-            description: lineItem.label,
-            accountRef: qbExpenseAccountId,
-          });
-        } else {
-          skippedLineItems.push(lineItem.label);
-          console.warn(
-            `Skipping line item ${lineItem.id} - no valid account reference found for cost item ${lineItem.workItemId}`,
-          );
-        }
-      }
-
-      if (qbLineItems.length === 0) {
-        console.warn('No valid line items with account references - skipping QuickBooks sync');
-        if (skippedLineItems.length > 0) {
-          Alert.alert(
-            'QuickBooks Sync Skipped',
-            `Cannot sync to QuickBooks: ${skippedLineItems.length} line item(s) missing account references.`,
-          );
-        }
-        return;
-      }
-
-      if (skippedLineItems.length > 0) {
-        console.warn(
-          `Warning: ${skippedLineItems.length} line item(s) were not synced to QuickBooks due to missing account references: ${skippedLineItems.join(', ')}`,
-        );
-      }
-
-      const paymentAccountSubType = allAccounts.find(
-        (acc) => acc.accountingId === receipt.paymentAccountId,
-      )?.accountSubType;
-
-      if (receipt.purchaseId) {
-        Alert.alert(
-          'Confirm Update',
-          'This receipt is already in QuickBooks. Do you want to update the existing record?',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Update',
-              onPress: async () => {
-                try {
-                  await updateExistingReceiptInQuickBooks(qbLineItems, paymentAccountSubType);
-                } catch (error) {
-                  console.error('Error updating receipt in QuickBooks:', error);
-                } finally {
-                  setIsSavingToQuickBooks(false);
-                }
-              },
-            },
-          ],
-        );
+    for (const lineItem of allReceiptLineItems) {
+      if (qbExpenseAccountId) {
+        qbLineItems.push({
+          amount: lineItem.amount,
+          description: lineItem.label,
+          accountRef: qbExpenseAccountId,
+        });
       } else {
-        // if any line items don't have workItemId then verify with user before syncing to QuickBooks
-        if (hasItemWithNoWorkItemId) {
-          const lineItemCount =
-            allReceiptLineItems.reduce((count, item) => (!item.workItemId ? count + 1 : count), 0) || 0;
-          Alert.alert(
-            'Missing Account References',
-            `This receipt has ${lineItemCount} line item(s) that do not have an assigned cost code. These items' cost will not be assigned to this project. Do you want to proceed?`,
-            [
-              {
-                text: 'Cancel',
-                style: 'cancel',
-                onPress: () => {
-                  setIsSavingToQuickBooks(false);
-                },
-              },
-              {
-                text: 'Proceed',
-                onPress: async () => {
-                  try {
-                    await addNewReceiptToQuickBooks(qbLineItems, paymentAccountSubType);
-                  } catch (error) {
-                    console.error('Error adding receipt to QuickBooks:', error);
-                  } finally {
-                    setIsSavingToQuickBooks(false);
-                  }
-                },
-              },
-            ],
-          );
-          return;
-        }
-
-        try {
-          await addNewReceiptToQuickBooks(qbLineItems, paymentAccountSubType);
-        } catch (error) {
-          console.error('Error adding receipt to QuickBooks:', error);
-        } finally {
-          setIsSavingToQuickBooks(false);
-        }
+        skippedLineItems.push(lineItem.label);
+        console.warn(
+          `Skipping line item ${lineItem.id} - no valid account reference found for cost item ${lineItem.workItemId}`,
+        );
       }
+    }
+
+    if (qbLineItems.length === 0) {
+      console.warn('No valid line items with account references - skipping QuickBooks sync');
+      if (skippedLineItems.length > 0) {
+        Alert.alert(
+          'QuickBooks Sync Skipped',
+          `Cannot sync to QuickBooks: ${skippedLineItems.length} line item(s) missing account references.`,
+        );
+      }
+      setIsSavingToQuickBooks(false);
+      return;
+    }
+
+    const paymentAccountSubType = allAccounts.find(
+      (acc) => acc.accountingId === receipt.paymentAccountId,
+    )?.accountSubType;
+
+    if (receipt.purchaseId) {
+      Alert.alert(
+        'Confirm Update',
+        'This receipt is already in QuickBooks. Do you want to update the existing record?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Update',
+            onPress: async () => {
+              try {
+                await updateExistingReceiptInQuickBooks(qbLineItems, paymentAccountSubType);
+              } catch (error) {
+                console.error('Error updating receipt in QuickBooks:', error);
+              } finally {
+                setIsSavingToQuickBooks(false);
+              }
+            },
+          },
+        ],
+      );
+      return;
+    }
+
+    // if any line items don't have workItemId then verify with user before syncing to QuickBooks
+    if (hasItemWithNoWorkItemId) {
+      const lineItemCount =
+        allReceiptLineItems.reduce((count, item) => (!item.workItemId ? count + 1 : count), 0) || 0;
+      Alert.alert(
+        'Missing Account References',
+        `This receipt has ${lineItemCount} line item(s) that do not have an assigned cost code. These items' cost will not be assigned to this project. Do you want to proceed?`,
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+            onPress: () => {
+              setIsSavingToQuickBooks(false);
+            },
+          },
+          {
+            text: 'Proceed',
+            onPress: async () => {
+              try {
+                await addNewReceiptToQuickBooks(qbLineItems, paymentAccountSubType);
+              } catch (error) {
+                console.error('Error adding receipt to QuickBooks:', error);
+              } finally {
+                setIsSavingToQuickBooks(false);
+              }
+            },
+          },
+        ],
+      );
+      return;
+    }
+
+    try {
+      await addNewReceiptToQuickBooks(qbLineItems, paymentAccountSubType);
     } catch (error) {
-      console.error('Error syncing receipt to QuickBooks:', error);
+      console.error('Error adding receipt to QuickBooks:', error);
     } finally {
       setIsSavingToQuickBooks(false);
     }
@@ -514,6 +499,7 @@ const ReceiptDetailsPage = () => {
     receipt.purchaseId,
     appSettings.quickBooksExpenseAccountId,
     allAccounts,
+    hasItemWithNoWorkItemId,
     updateExistingReceiptInQuickBooks,
     addNewReceiptToQuickBooks,
   ]);
