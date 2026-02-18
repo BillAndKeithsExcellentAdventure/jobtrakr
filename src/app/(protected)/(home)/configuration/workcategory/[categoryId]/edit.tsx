@@ -56,6 +56,8 @@ const EditWorkCategory = () => {
         options={{
           headerShown: true,
           title: 'Edit Cost Category',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
 

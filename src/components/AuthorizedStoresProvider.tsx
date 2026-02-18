@@ -1,6 +1,7 @@
 import React from 'react';
 import ConfigurationStore from '@/src/tbStores/configurationStore/ConfigurationStore';
 import ListOfProjectsStore from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import ReceiptQueueStore from '@/src/tbStores/ReceiptQueueStore';
 import { useAuth } from '@clerk/clerk-expo';
 import AppSettingsStore from '../tbStores/appSettingsStore/appSettingsStore';
 import MediaUploadSyncStore from '../tbStores/UploadSyncStore';
@@ -16,6 +17,7 @@ export const AuthorizedStoresProvider = () => {
       <ConfigurationStore />
       <ListOfProjectsStore />
       <MediaUploadSyncStore />
+      <ReceiptQueueStore />
     </>
   );
 };

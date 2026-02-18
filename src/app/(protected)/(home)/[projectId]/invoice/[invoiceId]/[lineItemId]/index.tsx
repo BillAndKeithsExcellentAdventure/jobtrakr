@@ -28,8 +28,13 @@ const EditLineItemPage = () => {
   const colors = useColors();
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const updateLineItem = useUpdateRowCallback(projectId, 'workItemCostEntries');
-  const { projectWorkItems, availableCategoriesOptions, allAvailableCostItemOptions, allWorkItems, allWorkCategories } =
-    useProjectWorkItems(projectId);
+  const {
+    projectWorkItems,
+    availableCategoriesOptions,
+    allAvailableCostItemOptions,
+    allWorkItems,
+    allWorkCategories,
+  } = useProjectWorkItems(projectId);
   const [itemizedEntry, setItemizedEntry] = useState<WorkItemCostEntry>({
     id: '',
     label: '',
@@ -121,7 +126,14 @@ const EditLineItemPage = () => {
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: 'Add Invoice Line Item', headerShown: true }} />
+      <Stack.Screen
+        options={{
+          title: 'Add Invoice Line Item',
+          headerShown: true,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
+        }}
+      />
       <View style={[styles.container, { borderColor: colors.border }]}>
         <NumberInputField
           style={styles.inputContainer}

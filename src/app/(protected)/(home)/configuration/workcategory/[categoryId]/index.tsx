@@ -107,6 +107,8 @@ const ShowWorkCategory = () => {
           options={{
             headerShown: true,
             title: 'Cost Category',
+            headerBackTitle: '',
+            headerBackButtonDisplayMode: 'minimal',
           }}
         />
 

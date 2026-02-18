@@ -441,6 +441,8 @@ const DefineChangeOrderScreen = () => {
         options={{
           headerShown: true,
           title: 'Change Order Details',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
           headerRight: () => (
             <View style={{ marginRight: 0 }}>
               <Pressable

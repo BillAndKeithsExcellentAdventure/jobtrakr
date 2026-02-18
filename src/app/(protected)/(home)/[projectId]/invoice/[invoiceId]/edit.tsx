@@ -119,7 +119,14 @@ const EditInvoiceDetailsPage = () => {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: 'Edit Invoice Summary', headerShown: false }} />
+      <Stack.Screen
+        options={{
+          title: 'Edit Invoice Summary',
+          headerShown: false,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
+        }}
+      />
 
       <View style={[styles.container, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
         <View style={styles.editContainer}>

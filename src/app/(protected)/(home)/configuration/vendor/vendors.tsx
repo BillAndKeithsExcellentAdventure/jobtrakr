@@ -86,6 +86,8 @@ const VendorsScreen = () => {
             headerShown: true,
             title: 'Vendors/Merchants',
             headerRight: renderHeaderRight,
+            headerBackTitle: '',
+            headerBackButtonDisplayMode: 'minimal',
           }}
         />
         <View style={[styles.container, { backgroundColor: colors.listBackground }]}>

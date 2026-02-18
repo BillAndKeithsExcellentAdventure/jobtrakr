@@ -289,6 +289,53 @@ Retrieve a receipt for processing (internal use).
 
 **Response:** Image file (JPEG)
 
+#### POST /duplicateReceiptImage
+
+Duplicate a receipt image from one project to another. Copies the receipt image across all device optimizations (original, phone, tablet, desktop).
+
+**Authentication:** Required
+
+**Content-Type:** `application/json`
+
+**Request Body:**
+
+```json
+{
+  "userId": "string",
+  "orgId": "string",
+  "fromProjectId": "string",
+  "toProjectId": "string",
+  "imageId": "string"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Receipt image duplicated successfully",
+  "copiedBuckets": ["OriginalReceipts", "PhoneReceipts", "TabletReceipts", "DesktopReceipts"]
+}
+```
+
+**Error Response (404 - Image not found):**
+
+```json
+{
+  "success": false,
+  "message": "Receipt image not found in source project."
+}
+```
+
+**Notes:**
+
+- Required fields: `userId`, `orgId`, `fromProjectId`, `toProjectId`, `imageId`
+- Copies the image to all device-optimized buckets
+- Returns the list of buckets where the image was successfully copied
+- If source and target are the same, returns success with empty copied buckets list
+- Returns 404 if the source image does not exist
+
 ---
 
 ### Invoice Management
@@ -1793,6 +1840,238 @@ Retrieve company information from QuickBooks.
 - Automatically refreshes expired tokens
 - Returns 401 if token refresh fails (requires reconnection)
 - Response is normalized from QuickBooks CompanyInfo structure for easier consumption
+
+#### GET /qbo/fetchPreferences
+
+Retrieve QuickBooks company preferences and settings.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "Name": "Company Preferences",
+    "TimeZone": "America/Los_Angeles",
+    "Currency": { "value": "USD" }
+  }
+}
+```
+
+**Error Response (401):**
+
+```json
+{
+  "success": false,
+  "message": "Token expired and refresh failed. Please reconnect QuickBooks."
+}
+```
+
+**Notes:**
+
+- Automatically refreshes expired tokens
+- Returns 401 if token refresh fails (requires reconnection)
+- Returns company-level preferences and settings from QuickBooks
+
+#### GET /qbo/fetchCustomers
+
+Retrieve all customers from QuickBooks.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "QueryResponse": [
+      {
+        "id": "123",
+        "displayName": "Acme Construction",
+        "email": "contact@acme.com",
+        "phone": "555-1234",
+        "active": true
+      }
+    ],
+    "time": "2024-02-15T10:30:00Z"
+  }
+}
+```
+
+**Error Response (401):**
+
+```json
+{
+  "success": false,
+  "message": "Token expired and refresh failed. Please reconnect QuickBooks."
+}
+```
+
+**Notes:**
+
+- Automatically refreshes expired tokens
+- Returns 401 if token refresh fails (requires reconnection)
+- Returns all customers in the QuickBooks instance
+
+#### GET /qbo/fetchProjects
+
+Retrieve all active projects (job customers) from QuickBooks.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "456",
+      "displayName": "Downtown Office Renovation",
+      "fullyQualifiedName": "Acme Construction:Downtown Office Renovation",
+      "parentRef": { "value": "123" },
+      "active": true,
+      "isProject": true
+    }
+  ]
+}
+```
+
+**Error Response (401):**
+
+```json
+{
+  "success": false,
+  "message": "Token expired and refresh failed. Please reconnect QuickBooks."
+}
+```
+
+**Notes:**
+
+- Automatically refreshes expired tokens
+- Returns 401 if token refresh fails (requires reconnection)
+- Only returns customers marked as jobs (projects) in QuickBooks
+- Returns normalized project data for easier consumption
+
+#### POST /qbo/addCustomer
+
+Create a new customer in QuickBooks.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Request Body:**
+
+```json
+{
+  "displayName": "New Customer Name",
+  "firstName": "John",
+  "lastName": "Doe",
+  "phone": "555-1234",
+  "email": "john@example.com",
+  "address": "123 Main St",
+  "address2": "Suite 100",
+  "city": "Springfield",
+  "state": "IL",
+  "zip": "62701"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Customer added successfully",
+  "newQBId": "789"
+}
+```
+
+**Error Response (401):**
+
+```json
+{
+  "success": false,
+  "message": "Token expired and refresh failed. Please reconnect QuickBooks."
+}
+```
+
+**Notes:**
+
+- Required field: `displayName`
+- Optional fields: `firstName`, `lastName`, `phone`, `email`, `address`, `address2`, `city`, `state`, `zip`
+- Returns the QuickBooks-assigned customer ID in `newQBId` field
+- Returns 401 if token refresh fails (requires reconnection)
+
+#### POST /qbo/addProject
+
+Create a new project (sub-customer) under an existing customer in QuickBooks.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Request Body:**
+
+```json
+{
+  "customerId": "123",
+  "projectName": "Downtown Office Renovation",
+  "projectId": "proj-001"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Project added successfully",
+  "newQBId": "456"
+}
+```
+
+**Error Response (401):**
+
+```json
+{
+  "success": false,
+  "message": "Token expired and refresh failed. Please reconnect QuickBooks."
+}
+```
+
+**Notes:**
+
+- Required fields: `customerId`, `projectName`, `projectId`
+- Creates a sub-customer (job) under the specified parent customer
+- Returns the QuickBooks-assigned project ID in `newQBId` field
+- Returns 401 if token refresh fails (requires reconnection)
+- Projects are stored as customers with Job=true in QuickBooks
 
 #### POST /qbo/addVendor
 

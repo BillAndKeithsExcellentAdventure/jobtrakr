@@ -61,6 +61,8 @@ const ImportDevicePhotosPage = () => {
         options={{
           headerShown: true,
           title: 'Import photos from device',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
 

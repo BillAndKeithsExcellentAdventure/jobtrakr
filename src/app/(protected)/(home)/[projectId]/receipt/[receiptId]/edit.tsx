@@ -237,6 +237,8 @@ const EditReceiptDetailsPage = () => {
           title: 'Edit Receipt Summary',
           headerShown: true,
           gestureEnabled: false,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
           headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
         }}
       />

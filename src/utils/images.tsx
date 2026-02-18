@@ -323,6 +323,77 @@ const createServerMediaToDeleteData = (
 });
 
 /**
+ * API call to duplicate a receipt image from one project to another.
+ * @param userId - User ID
+ * @param orgId - Organization ID
+ * @param fromProjectId - Source project ID
+ * @param toProjectId - Target project ID
+ * @param imageId - Receipt image ID
+ * @param getToken - Token getter function
+ */
+const duplicateReceiptImage = async (
+  userId: string,
+  orgId: string,
+  fromProjectId: string,
+  toProjectId: string,
+  imageId: string,
+  getToken: () => Promise<string | null>,
+): Promise<{ success: boolean; msg: string; copiedBuckets?: string[] }> => {
+  try {
+    const endPointUrl = `${API_BASE_URL}/duplicateReceiptImage`;
+
+    const apiFetch = createApiWithToken(getToken);
+    const response = await apiFetch(endPointUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: userId,
+        orgId: orgId,
+        fromProjectId: fromProjectId,
+        toProjectId: toProjectId,
+        imageId: imageId,
+      }),
+    });
+
+    if (!response.ok) {
+      let errorBody = '';
+      try {
+        errorBody = await response.text();
+      } catch {
+        // ignore
+      }
+      console.error('Duplicate receipt image failed. HTTP:', response.status, 'Body:', errorBody);
+      return {
+        success: false,
+        msg: `Duplicate receipt image failed. HTTP ${response.status}. ${errorBody || 'No response body.'}`,
+      };
+    }
+
+    let data: any = null;
+    try {
+      data = await response.json();
+    } catch {
+      // acceptable if no JSON body
+    }
+
+    console.log('Receipt image duplicated successfully:', data);
+    return {
+      success: true,
+      msg: data?.message || 'Receipt image duplicated successfully',
+      copiedBuckets: data?.copiedBuckets,
+    };
+  } catch (error) {
+    console.error('Error duplicating receipt image:', error);
+    return {
+      success: false,
+      msg: `Error duplicating receipt image: ${formatErrorMessage(error)}`,
+    };
+  }
+};
+
+/**
  * API call to make photos public.
  * @param userId - User ID
  * @param projectId - Project ID
@@ -618,6 +689,66 @@ export const useDeleteMediaCallback = () => {
       }
     },
     [userId, orgId, auth, addServerMediaToDeleteRecord, mediaToUpload],
+  );
+};
+
+/**
+ * Hook that provides a callback to duplicate a receipt image between projects.
+ * If offline, the request will fail.
+ * If online, the request is executed immediately via the API.
+ */
+export const useDuplicateReceiptImageCallback = () => {
+  const auth = useAuth();
+  const { userId, orgId } = auth;
+  const { isConnected, isInternetReachable } = useNetwork();
+
+  return useCallback(
+    async (
+      fromProjectId: string,
+      toProjectId: string,
+      imageId: string,
+    ): Promise<{ success: boolean; msg: string; copiedBuckets?: string[] }> => {
+      if (!userId || !orgId) {
+        return { success: false, msg: 'User ID or Organization ID not available' };
+      }
+
+      if (!auth.getToken) {
+        return { success: false, msg: 'Auth token getter not available' };
+      }
+
+      if (!isConnected || isInternetReachable === false) {
+        return { success: false, msg: 'No network connection detected.' };
+      }
+
+      try {
+        const duplicateResult = await duplicateReceiptImage(
+          userId,
+          orgId,
+          fromProjectId,
+          toProjectId,
+          imageId,
+          auth.getToken,
+        );
+
+        if (!duplicateResult.success) {
+          console.log('Duplicate receipt image failed:', duplicateResult.msg);
+          return {
+            success: false,
+            msg: `Duplicate receipt image failed: ${duplicateResult.msg}`,
+          };
+        }
+
+        return duplicateResult;
+      } catch (error) {
+        console.error('Unexpected error in useDuplicateReceiptImageCallback:', error);
+
+        return {
+          success: false,
+          msg: `Duplicate receipt image failed with error: ${formatErrorMessage(error)}`,
+        };
+      }
+    },
+    [userId, orgId, auth, isConnected, isInternetReachable],
   );
 };
 

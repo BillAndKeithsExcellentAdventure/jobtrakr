@@ -160,6 +160,8 @@ export default function SignUpScreen() {
           options={{
             headerShown: true,
             title: 'Verify Sign Up',
+            headerBackTitle: '',
+            headerBackButtonDisplayMode: 'minimal',
           }}
         />
         <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
@@ -198,6 +200,8 @@ export default function SignUpScreen() {
         options={{
           headerShown: true,
           title: 'Sign Up',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
 

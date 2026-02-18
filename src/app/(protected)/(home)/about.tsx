@@ -31,6 +31,8 @@ export default function AboutScreen() {
         options={{
           headerShown: true,
           title: 'About',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <ScrollView

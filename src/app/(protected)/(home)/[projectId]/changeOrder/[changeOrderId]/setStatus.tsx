@@ -219,6 +219,8 @@ const SetChangeOrderStatus = () => {
         options={{
           headerShown: true,
           title: 'Set Change Order Status',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
 

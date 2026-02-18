@@ -152,6 +152,8 @@ export const InviteUser = () => {
         options={{
           headerShown: true,
           title: 'Manage Team Members',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
 

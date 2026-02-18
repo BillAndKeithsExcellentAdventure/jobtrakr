@@ -83,7 +83,14 @@ const ProjectNotes = () => {
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: `${projectName}`, headerShown: true }} />
+      <Stack.Screen
+        options={{
+          title: `${projectName}`,
+          headerShown: true,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
+        }}
+      />
       <View style={styles.container}>
         {!projectIsReady ? (
           <Text>Loading...</Text>

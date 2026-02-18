@@ -63,6 +63,8 @@ const EditVendor = () => {
         options={{
           headerShown: true,
           title: 'Edit Vendor',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <View style={styles.container}>

@@ -164,6 +164,8 @@ const ProjectPhotosPage = () => {
         options={{
           headerShown: true,
           title: projectName,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
           headerRight: () => (
             <Pressable
               onPress={() => {

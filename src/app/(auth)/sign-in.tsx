@@ -175,6 +175,8 @@ function SignInForm() {
           title: 'Sign In',
           headerTitleAlign: 'center',
           animation: 'none',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <View style={[styles.container, { backgroundColor: colors.listBackground }]}>

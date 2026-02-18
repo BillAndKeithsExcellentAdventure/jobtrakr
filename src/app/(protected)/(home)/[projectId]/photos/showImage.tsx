@@ -18,7 +18,14 @@ const ShowProjectPhotoPage = () => {
         <Text txtSize="title" text={photoDate} />
       </View>
       <View style={styles.container}>
-        <Stack.Screen options={{ title: projectName, headerShown: true }} />
+        <Stack.Screen
+          options={{
+            title: projectName,
+            headerShown: true,
+            headerBackTitle: '',
+            headerBackButtonDisplayMode: 'minimal',
+          }}
+        />
         <ZoomImageViewer imageUri={uri} />
       </View>
     </SafeAreaView>

@@ -120,6 +120,8 @@ const ListWorkCategories = () => {
           headerShown: true,
           title: 'Cost Categories',
           headerRight: renderHeaderRight,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
 

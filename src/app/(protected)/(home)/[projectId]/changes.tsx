@@ -178,7 +178,14 @@ const ChangeOrdersScreen = () => {
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: projectName, headerShown: true }} />
+      <Stack.Screen
+        options={{
+          title: projectName,
+          headerShown: true,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
+        }}
+      />
       <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
         {!projectIsReady ? (
           <Text>Loading...</Text>

@@ -50,6 +50,8 @@ const EditWorkItem = () => {
           options={{
             headerShown: true,
             title: 'Edit Cost Item',
+            headerBackTitle: '',
+            headerBackButtonDisplayMode: 'minimal',
           }}
         />
 
@@ -66,6 +68,8 @@ const EditWorkItem = () => {
         options={{
           headerShown: true,
           title: 'Edit Work Item',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
 

@@ -373,6 +373,8 @@ const RequestAIProcessingPage = () => {
           title: 'Process Invoice Image',
           headerShown: true,
           gestureEnabled: false,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
           headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
         }}
       />

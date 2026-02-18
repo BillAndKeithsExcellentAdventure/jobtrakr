@@ -209,7 +209,14 @@ const InvoiceDetailsPage = () => {
 
   return (
     <SafeAreaView onLayout={onLayout} edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: 'Invoice Details', headerShown: true }} />
+      <Stack.Screen
+        options={{
+          title: 'Invoice Details',
+          headerShown: true,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
+        }}
+      />
       {containerHeight > 0 && (
         <>
           <View style={[styles.itemContainer, { borderColor: colors.border }]}>

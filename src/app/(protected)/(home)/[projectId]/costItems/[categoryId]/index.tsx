@@ -186,6 +186,8 @@ const CategorySpecificCostItemsPage = () => {
         options={{
           headerShown: true,
           title: 'Cost Breakdown',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
           headerRight: () => (
             <Pressable
               style={{ marginRight: 0 }}

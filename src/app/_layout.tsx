@@ -124,12 +124,16 @@ function RootLayoutNav() {
                             name="(auth)"
                             options={{
                               animation: 'none',
+                              headerBackTitle: '',
+                              headerBackButtonDisplayMode: 'minimal',
                             }}
                           />
                           <Stack.Screen
                             name="(protected)"
                             options={{
                               animation: 'none',
+                              headerBackTitle: '',
+                              headerBackButtonDisplayMode: 'minimal',
                             }}
                           />
                         </Stack>

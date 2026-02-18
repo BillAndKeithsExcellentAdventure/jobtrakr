@@ -470,6 +470,8 @@ const SetAppSettingScreen = () => {
           headerShown: true,
           title: 'Define Company Settings',
           gestureEnabled: false,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
           headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
           headerRight: () =>
             isConnectedToQuickBooks ? (

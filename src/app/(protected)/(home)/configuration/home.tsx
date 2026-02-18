@@ -401,6 +401,8 @@ const Home = () => {
         options={{
           headerShown: true,
           title: 'Configuration',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
           ...headerRightComponent,
         }}
       />

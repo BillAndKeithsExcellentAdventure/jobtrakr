@@ -102,6 +102,8 @@ const CostItemDetails = () => {
         options={{
           headerShown: true,
           title: 'Cost Item Details',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <View style={styles.container}>

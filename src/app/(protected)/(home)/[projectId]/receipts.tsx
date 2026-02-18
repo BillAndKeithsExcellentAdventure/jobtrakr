@@ -286,7 +286,14 @@ const ProjectReceiptsPage = () => {
   return (
     <>
       <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
-        <Stack.Screen options={{ title: `${projectName}`, headerShown: true }} />
+        <Stack.Screen
+          options={{
+            title: `${projectName}`,
+            headerShown: true,
+            headerBackTitle: '',
+            headerBackButtonDisplayMode: 'minimal',
+          }}
+        />
         <View style={styles.viewCenteringContainer}>
           {!projectIsReady ? (
             <Text>Loading...</Text>

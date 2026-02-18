@@ -154,7 +154,6 @@ export default function ManageAccessScreen() {
 
   useEffect(() => {
     loadEmails(projectId);
-     
   }, [projectId, loadEmails]); // Only run when projectId changes
 
   const handleAddEmail = useCallback(async () => {
@@ -214,7 +213,8 @@ export default function ManageAccessScreen() {
       <Stack.Screen
         options={{
           title: 'Manage Photo Access',
-          headerBackTitle: 'Back',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       {!isAppSettingsComplete ? (

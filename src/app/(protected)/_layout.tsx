@@ -49,12 +49,14 @@ export default function ProtectedLayout() {
       <ActiveProjectIdsProvider>
         <WorkItemSpentSummaryProvider>
           <ActiveProjectDetailsStoreProvider>
-            <Stack>
+            <Stack screenOptions={{ headerBackButtonDisplayMode: 'minimal', headerBackTitle: '' }}>
               <Stack.Screen
                 name="(home)"
                 options={{
                   headerShown: false,
                   animation: 'none',
+                  headerBackTitle: '',
+                  headerBackButtonDisplayMode: 'minimal',
                 }}
               />
             </Stack>

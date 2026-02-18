@@ -381,6 +381,8 @@ export default function ProjectHomeScreen() {
             headerShown: true,
             title: 'Company Setup Required',
             headerLeft: () => null,
+            headerBackTitle: '',
+            headerBackButtonDisplayMode: 'minimal',
           }}
         />
         <View style={[styles.container, { padding: 20, backgroundColor: colors.background }]}>
@@ -408,6 +410,8 @@ export default function ProjectHomeScreen() {
         options={{
           headerShown: true,
           title: 'Projects',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
           headerLeft: () => (
             <View style={styles.headerLeftContainer}>
               <Image

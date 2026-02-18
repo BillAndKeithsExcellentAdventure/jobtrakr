@@ -112,12 +112,15 @@ const ProjectTemplatesConfigurationScreen: React.FC = () => {
 
   const marginBottom = Platform.OS === 'android' ? 20 : 0;
 
-  const handleEditTemplate = useCallback((id: string) => {
-    router.push({
-      pathname: '/configuration/template/[templateId]/edit',
-      params: { templateId: id },
-    });
-  }, [router]);
+  const handleEditTemplate = useCallback(
+    (id: string) => {
+      router.push({
+        pathname: '/configuration/template/[templateId]/edit',
+        params: { templateId: id },
+      });
+    },
+    [router],
+  );
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -125,6 +128,8 @@ const ProjectTemplatesConfigurationScreen: React.FC = () => {
         options={{
           headerShown: true,
           title: 'Define Template Work Items',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <View style={[styles.container, { marginBottom }]}>

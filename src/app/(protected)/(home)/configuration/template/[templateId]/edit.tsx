@@ -51,6 +51,8 @@ const EditProjectTemplate = () => {
           headerShown: true,
           title: 'Edit Project Template',
           gestureEnabled: false,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
           headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
         }}
       />

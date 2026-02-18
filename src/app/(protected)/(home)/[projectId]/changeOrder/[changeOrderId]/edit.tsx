@@ -58,6 +58,8 @@ const EditChangeOrder = () => {
           headerShown: true,
           title: 'Edit Order Details',
           gestureEnabled: false,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
           headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
         }}
       />

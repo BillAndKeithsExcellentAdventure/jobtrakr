@@ -537,6 +537,8 @@ const ReceiptDetailsPage = () => {
         options={{
           headerShown: true,
           title: 'Receipt Details',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
           headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
         }}
       />

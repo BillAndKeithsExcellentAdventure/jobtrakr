@@ -142,6 +142,8 @@ export default function CreateOrganization() {
           headerShown: true,
           title: 'Create Organization',
           headerTitleAlign: 'center',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
 

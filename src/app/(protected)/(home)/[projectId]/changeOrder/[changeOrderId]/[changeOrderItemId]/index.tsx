@@ -135,6 +135,8 @@ const EditChangeOrderItem = () => {
         options={{
           headerShown: true,
           title: 'Edit Change Order Item',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
 

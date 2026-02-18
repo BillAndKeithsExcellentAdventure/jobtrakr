@@ -78,7 +78,14 @@ const SetLocationViaMap = () => {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Set Project Location', headerShown: true }} />
+      <Stack.Screen
+        options={{
+          title: 'Set Project Location',
+          headerShown: true,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
+        }}
+      />
 
       <SafeAreaView
         edges={['right', 'bottom', 'left']}

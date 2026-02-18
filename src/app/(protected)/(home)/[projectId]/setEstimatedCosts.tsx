@@ -108,7 +108,7 @@ const SetEstimatedCostsPage = () => {
 
   useEffect(() => {
     setItemEstimate(currentCostSummary ? currentCostSummary.bidAmount : 0);
-    setItemNote(currentCostSummary ? currentCostSummary.bidNote ?? '' : '');
+    setItemNote(currentCostSummary ? (currentCostSummary.bidNote ?? '') : '');
   }, [currentCostSummary]);
 
   const handleCategoryChange = useCallback((selectedCategory: OptionEntry) => {
@@ -164,7 +164,14 @@ const SetEstimatedCostsPage = () => {
 
   return (
     <>
-      <Stack.Screen options={{ title: `${projectName}`, headerShown: true }} />
+      <Stack.Screen
+        options={{
+          title: `${projectName}`,
+          headerShown: true,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
+        }}
+      />
       <View style={styles.modalContainer}>
         <View style={{ flex: 1 }}>
           <View style={{ paddingHorizontal: 10 }}>

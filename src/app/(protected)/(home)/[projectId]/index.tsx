@@ -614,6 +614,7 @@ const ProjectDetailsPage = () => {
         options={{
           headerShown: true,
           headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
           title: 'Overview',
           headerRight: () => (
             <View

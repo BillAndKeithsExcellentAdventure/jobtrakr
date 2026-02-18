@@ -70,6 +70,8 @@ const ListProjectTemplates = () => {
           headerShown: true,
           title: 'Project Templates',
           headerRight: renderHeaderRight,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <KeyboardAvoidingView

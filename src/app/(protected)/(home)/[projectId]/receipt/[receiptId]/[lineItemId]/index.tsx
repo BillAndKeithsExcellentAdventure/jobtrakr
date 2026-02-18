@@ -156,6 +156,8 @@ const EditLineItemPage = () => {
           title: 'Edit Receipt Line Item',
           headerShown: true,
           gestureEnabled: false,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
           headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
         }}
       />

@@ -10,7 +10,14 @@ const ShowInvoicePage = () => {
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <View style={styles.container}>
-        <Stack.Screen options={{ title: `Invoice Image`, headerShown: true }} />
+        <Stack.Screen
+          options={{
+            title: `Invoice Image`,
+            headerShown: true,
+            headerBackTitle: '',
+            headerBackButtonDisplayMode: 'minimal',
+          }}
+        />
         <ZoomImageViewer imageUri={uri} />
       </View>
     </SafeAreaView>

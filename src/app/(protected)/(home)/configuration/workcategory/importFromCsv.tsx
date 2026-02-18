@@ -94,7 +94,13 @@ export default function ImportFromCsvScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Import Cost Categories from CSV' }} />
+      <Stack.Screen
+        options={{
+          title: 'Import Cost Categories from CSV',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
+        }}
+      />
 
       <TouchableOpacity onPress={handleSelectFile} disabled={loading} style={styles.selectButton}>
         <Text style={styles.selectButtonText}>{loading ? 'Loading...' : 'Select CSV File'}</Text>

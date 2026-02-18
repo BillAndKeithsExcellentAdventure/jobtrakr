@@ -201,6 +201,8 @@ const QBAccountsScreen = () => {
           options={{
             headerShown: true,
             title: 'QuickBooks Accounts',
+            headerBackTitle: '',
+            headerBackButtonDisplayMode: 'minimal',
           }}
         />
         <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
@@ -224,6 +226,8 @@ const QBAccountsScreen = () => {
         options={{
           headerShown: true,
           title: 'QuickBooks Accounts',
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <View style={[styles.container, { backgroundColor: colors.listBackground }]}>

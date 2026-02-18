@@ -494,6 +494,8 @@ const RequestAIProcessingPage = () => {
           title: 'Process Receipt Image',
           headerShown: true,
           gestureEnabled: false,
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
           headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
         }}
       />
