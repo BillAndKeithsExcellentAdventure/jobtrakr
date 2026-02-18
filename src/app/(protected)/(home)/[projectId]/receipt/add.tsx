@@ -288,6 +288,7 @@ const AddReceiptPage = () => {
                 amount: lineItem.amount,
                 description: lineItem.label,
                 accountRef: qbExpenseAccountId,
+                projectId: lineItem.projectId,
               });
             } else {
               skippedLineItems.push(lineItem.label);
