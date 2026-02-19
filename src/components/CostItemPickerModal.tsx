@@ -27,7 +27,7 @@ const CostItemPickerModal = ({
   onClose: () => void;
   handleCostItemOptionSelected: (entry: OptionEntry | undefined) => void;
   showProjectPicker?: boolean;
-  handleProjectChange?: (entry: OptionEntry | undefined) => void;
+  handleProjectChange?: (entry: OptionEntry) => void;
   selectedProjectPickerOption?: OptionEntry;
   allProjectPickerOptions?: OptionEntry[];
 }) => {
