@@ -460,6 +460,13 @@ const SetAppSettingScreen = () => {
     }
 
     handleSave();
+    const canGoBack = typeof router.canGoBack === 'function' ? router.canGoBack() : false;
+    if (!canGoBack) {
+      console.log('SetAppSettings: no back stack, replacing to home');
+      router.replace('/(protected)/(home)');
+      return;
+    }
+
     router.back();
   }, [settings, handleSave, router]);
 

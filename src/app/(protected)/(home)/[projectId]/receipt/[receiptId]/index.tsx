@@ -259,6 +259,14 @@ const ReceiptDetailsPage = () => {
     [allReceiptLineItems],
   );
 
+  const hasLineItemForCurrentProject = useMemo(
+    () =>
+      allReceiptLineItems.some(
+        (item) => item.projectId === undefined || item.projectId === '' || item.projectId === projectId,
+      ),
+    [allReceiptLineItems, projectId],
+  );
+
   const amountsMatch = useMemo(
     () => parseFloat(receipt.amount.toFixed(2)) === parseFloat(itemsTotalCost.toFixed(2)),
     [receipt.amount, itemsTotalCost],
@@ -273,6 +281,8 @@ const ReceiptDetailsPage = () => {
     !!userId &&
     !!orgId &&
     !!projectAbbr &&
+    !hasItemWithNoWorkItemId &&
+    hasLineItemForCurrentProject &&
     amountsMatch;
 
   const processSyncToQuickBooks = useCallback(
@@ -632,6 +642,24 @@ const ReceiptDetailsPage = () => {
                       }`}
                     />
                   </View>
+                  {isConnectedToQuickBooks && hasItemWithNoWorkItemId && (
+                    <View style={{ paddingHorizontal: 10, paddingVertical: 8 }}>
+                      <Text
+                        txtSize="xs"
+                        style={{ color: colors.error, textAlign: 'center' }}
+                        text="All line items must be fully specified with a cost code before syncing to QuickBooks"
+                      />
+                    </View>
+                  )}
+                  {isConnectedToQuickBooks && !hasLineItemForCurrentProject && (
+                    <View style={{ paddingHorizontal: 10, paddingVertical: 8 }}>
+                      <Text
+                        txtSize="xs"
+                        style={{ color: colors.error, textAlign: 'center' }}
+                        text="At least one line item must be assigned to this project"
+                      />
+                    </View>
+                  )}
                   {canSyncToQuickBooks ? (
                     <View style={styles.syncButtonRow}>
                       {isSavingToQuickBooks ? (

@@ -100,7 +100,7 @@ const ProjectDetailsPage = () => {
       if (!category) continue;
 
       const spentAmount = allActualCostItems
-        .filter((i) => i.workItemId === workItem.id)
+        .filter((i) => i.workItemId === workItem.id && (i.projectId ? i.projectId === projectId : true))
         .reduce((sum, item) => sum + item.amount, 0);
 
       let section = sections.find((sec) => sec.categoryId === category.id);

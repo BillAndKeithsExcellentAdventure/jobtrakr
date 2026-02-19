@@ -295,7 +295,11 @@ export const useCostUpdater = (projectId: string): void => {
   const [, setAmountSpent] = useProjectValue(projectId, 'amountSpent');
 
   useEffect(() => {
-    const spentAmount = allCostRows.reduce((sum, item) => sum + item.amount, 0);
+    const spentAmount = allCostRows
+      .filter(
+        (item) => item.projectId === projectId && (item.projectId ? item.projectId === projectId : true),
+      )
+      .reduce((sum, item) => sum + item.amount, 0);
     setAmountSpent(spentAmount);
   }, [allCostRows, setAmountSpent]);
 };

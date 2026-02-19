@@ -101,15 +101,49 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
 
   useEffect(() => {
     const checkQbConnection = async () => {
-      if (orgId && userId && isConnected && isInternetReachable && appSettings.syncWithQuickBooks) {
+      if (!auth.isLoaded || !auth.isSignedIn) {
+        console.log('Skipping QuickBooks check: auth not ready/signed in');
+        setIsConnectedToQuickBooks(false);
+        return;
+      }
+
+      if (!orgId || !userId) {
+        console.log('Skipping QuickBooks check: missing orgId/userId');
+        setIsConnectedToQuickBooks(false);
+        return;
+      }
+
+      if (!isConnected || isInternetReachable === false) {
+        console.log('Skipping QuickBooks check: offline');
+        setIsConnectedToQuickBooks(false);
+        return;
+      }
+
+      if (!appSettings.syncWithQuickBooks) {
+        setIsConnectedToQuickBooks(false);
+        return;
+      }
+
+      try {
         const connected = await testQbIsConnected(orgId, userId, getToken);
         setIsConnectedToQuickBooks(connected);
-      } else {
+      } catch (error) {
+        console.error('QuickBooks connection check failed:', error);
         setIsConnectedToQuickBooks(false);
       }
     };
-    checkQbConnection();
-  }, [appSettings.syncWithQuickBooks, orgId, userId, isConnected, isInternetReachable, getToken]);
+
+    void checkQbConnection();
+  }, [
+    auth.isLoaded,
+    auth.isSignedIn,
+    appSettings.syncWithQuickBooks,
+    orgId,
+    userId,
+    isConnected,
+    isInternetReachable,
+    getToken,
+  ]);
 
   const setQuickBooksConnected = (connected: boolean) => {
     setIsConnectedToQuickBooks(connected);
