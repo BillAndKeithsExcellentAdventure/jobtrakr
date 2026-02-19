@@ -55,6 +55,7 @@ export type ColorSchemeColors = {
   errorText: string;
   errorBackground: string;
   textDim: string;
+  textMuted: string;
   textPlaceholder: string;
   transparent: string;
   bottomSheetBackground: string;

@@ -18,7 +18,12 @@ import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatCurrency } from '@/src/utils/formatters';
 import { buildLocalMediaUri, useAddImageCallback, useGetImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
-import { addReceiptToQuickBooks, editReceiptInQuickBooks, QBBillLineItem } from '@/src/utils/quickbooksAPI';
+import {
+  AddReceiptRequest,
+  addReceiptToQuickBooks,
+  editReceiptInQuickBooks,
+  QBBillLineItem,
+} from '@/src/utils/quickbooksAPI';
 import { getReceiptSyncHash } from '@/src/utils/quickbooksSyncHash';
 import { useAuth } from '@clerk/clerk-expo';
 import { File } from 'expo-file-system';
@@ -28,6 +33,11 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  ReceiptLineItem,
+  serializeReceiptLineItems,
+  useAddReceiptQueueEntryCallback,
+} from '@/src/tbStores/ReceiptQueueStoreHooks';
 
 const ReceiptDetailsPage = () => {
   const defaultDate = new Date();
@@ -41,7 +51,7 @@ const ReceiptDetailsPage = () => {
   const projectAbbr = project?.abbreviation ?? '';
   const projectName = project?.name ?? '';
   const allAccounts = useAllConfigurationRows('accounts');
-
+  const addReceiptQueueEntry = useAddReceiptQueueEntryCallback();
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   useCostUpdater(projectId);
   const auth = useAuth();
@@ -285,8 +295,8 @@ const ReceiptDetailsPage = () => {
     hasLineItemForCurrentProject &&
     amountsMatch;
 
-  const processSyncToQuickBooks = useCallback(
-    async (receiptData: any) => {
+  const processAddReceiptToQuickBooks = useCallback(
+    async (receiptData: AddReceiptRequest) => {
       // Create new Bill in QuickBooks
       const response = await addReceiptToQuickBooks(receiptData, getToken);
       console.log('Receipt successfully synced to QuickBooks:', response);
@@ -305,8 +315,32 @@ const ReceiptDetailsPage = () => {
       updates.qbSyncHash = newHash;
       updateReceipt(receipt.id, updates);
       setWasImageJustAdded(false);
+
+      const otherProjectsWithLineItems = allCostItems
+        .filter((item) => item.projectId && item.projectId !== projectId)
+        .map((item) => item.projectId);
+      if (otherProjectsWithLineItems.length > 0) {
+        const receiptLineItems: ReceiptLineItem[] = allReceiptLineItems.map((item) => ({
+          amount: item.amount,
+          itemDescription: item.label,
+          projectId: item.projectId ?? projectId,
+        }));
+
+        // add receipt queue entries for each other project that has line items on this receipt
+        const queueEntryData = {
+          purchaseId: updates.purchaseId,
+          fromProjectId: projectId,
+          vendorRef: receipt.vendorId,
+          imageId: receipt.imageId,
+          lineItems: receiptLineItems,
+        };
+        const result = addReceiptQueueEntry(queueEntryData);
+        console.log(
+          `Adding receipt for purchaseId ${updates.purchaseId} to queue. Result: ${JSON.stringify(result)}`,
+        );
+      }
     },
-    [getToken, receipt, allReceiptLineItems, updateReceipt],
+    [getToken, receipt, allReceiptLineItems, updateReceipt, addReceiptQueueEntry],
   );
 
   const updateExistingReceiptInQuickBooks = useCallback(
@@ -374,8 +408,8 @@ const ReceiptDetailsPage = () => {
   const addNewReceiptToQuickBooks = useCallback(
     async (qbLineItems: QBBillLineItem[], paymentAccountSubType: string | undefined) => {
       const receiptData = {
-        userId,
-        orgId,
+        userId: userId!,
+        orgId: orgId!,
         projectId,
         projectAbbr,
         projectName,
@@ -394,9 +428,9 @@ const ReceiptDetailsPage = () => {
         },
       };
 
-      await processSyncToQuickBooks(receiptData);
+      await processAddReceiptToQuickBooks(receiptData);
     },
-    [userId, orgId, projectId, projectAbbr, projectName, receipt, processSyncToQuickBooks],
+    [userId, orgId, projectId, projectAbbr, projectName, receipt, processAddReceiptToQuickBooks],
   );
 
   const handleSyncToQuickBooks = useCallback(async () => {
@@ -409,19 +443,12 @@ const ReceiptDetailsPage = () => {
     const qbExpenseAccountId = appSettings.quickBooksExpenseAccountId;
 
     for (const lineItem of allReceiptLineItems) {
-      if (qbExpenseAccountId) {
-        qbLineItems.push({
-          amount: lineItem.amount,
-          description: lineItem.label,
-          accountRef: qbExpenseAccountId,
-          projectId: lineItem.projectId,
-        });
-      } else {
-        skippedLineItems.push(lineItem.label);
-        console.warn(
-          `Skipping line item ${lineItem.id} - no valid account reference found for cost item ${lineItem.workItemId}`,
-        );
-      }
+      qbLineItems.push({
+        amount: lineItem.amount,
+        description: lineItem.label,
+        accountRef: qbExpenseAccountId,
+        projectId: lineItem.projectId,
+      });
     }
 
     if (qbLineItems.length === 0) {
@@ -463,38 +490,6 @@ const ReceiptDetailsPage = () => {
       return;
     }
 
-    // if any line items don't have workItemId then verify with user before syncing to QuickBooks
-    if (hasItemWithNoWorkItemId) {
-      const lineItemCount =
-        allReceiptLineItems.reduce((count, item) => (!item.workItemId ? count + 1 : count), 0) || 0;
-      Alert.alert(
-        'Missing Account References',
-        `This receipt has ${lineItemCount} line item(s) that do not have an assigned cost code. These items' cost will not be assigned to this project. Do you want to proceed?`,
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-            onPress: () => {
-              setIsSavingToQuickBooks(false);
-            },
-          },
-          {
-            text: 'Proceed',
-            onPress: async () => {
-              try {
-                await addNewReceiptToQuickBooks(qbLineItems, paymentAccountSubType);
-              } catch (error) {
-                console.error('Error adding receipt to QuickBooks:', error);
-              } finally {
-                setIsSavingToQuickBooks(false);
-              }
-            },
-          },
-        ],
-      );
-      return;
-    }
-
     try {
       await addNewReceiptToQuickBooks(qbLineItems, paymentAccountSubType);
     } catch (error) {
@@ -510,7 +505,6 @@ const ReceiptDetailsPage = () => {
     receipt.purchaseId,
     appSettings.quickBooksExpenseAccountId,
     allAccounts,
-    hasItemWithNoWorkItemId,
     updateExistingReceiptInQuickBooks,
     addNewReceiptToQuickBooks,
   ]);

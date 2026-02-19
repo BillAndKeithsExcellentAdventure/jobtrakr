@@ -42,11 +42,10 @@ describe('ReceiptQueueStore', () => {
     act(() => {
       result.current.addEntry({
         purchaseId: 'purchase-1',
-        toProjectId: 'project-b',
         fromProjectId: 'project-a',
         vendorRef: 'vendor-1',
         imageId: 'image-1',
-        lineItems: [{ itemDescription: 'Lumber', amount: 125.5 }],
+        lineItems: [{ itemDescription: 'Lumber', amount: 125.5, projectId: 'project-b' }],
       });
     });
 
@@ -55,10 +54,11 @@ describe('ReceiptQueueStore', () => {
     });
 
     expect(result.current.entries[0].purchaseId).toBe('purchase-1');
-    expect(result.current.entries[0].toProjectId).toBe('project-b');
     expect(result.current.entries[0].fromProjectId).toBe('project-a');
     expect(result.current.entries[0].vendorRef).toBe('vendor-1');
     expect(result.current.entries[0].imageId).toBe('image-1');
-    expect(result.current.entries[0].lineItems).toEqual([{ itemDescription: 'Lumber', amount: 125.5 }]);
+    expect(result.current.entries[0].lineItems).toEqual([
+      { itemDescription: 'Lumber', amount: 125.5, projectId: 'project-b' },
+    ]);
   });
 });

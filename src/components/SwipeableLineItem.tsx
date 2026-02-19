@@ -51,7 +51,9 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
   const label = useTableValue(projectId, 'workItemCostEntries', lineItem.id, 'label');
   const amount = useTableValue(projectId, 'workItemCostEntries', lineItem.id, 'amount');
   const isValidWorkItemId = allWorkItems.find((item) => item.id === lineItem.workItemId) !== undefined;
-
+  const textColor = !lineItem.projectId || lineItem.projectId === projectId ? colors.text : colors.textMuted;
+  const iconColor =
+    !lineItem.projectId || lineItem.projectId === projectId ? colors.iconColor : colors.textMuted;
   const isInvoice = lineItem.documentationType === 'invoice';
   return (
     <SwipeableComponent
@@ -75,8 +77,11 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
           }
         >
           <View style={styles.itemInfo}>
-            <Text style={styles.itemAmount} text={formatCurrency(amount, true, true)} />
-            <Text style={styles.itemName} numberOfLines={1}>
+            <Text
+              style={[styles.itemAmount, { color: textColor }]}
+              text={formatCurrency(amount, true, true)}
+            />
+            <Text style={[styles.itemName, { color: textColor }]} numberOfLines={1}>
               {label}
             </Text>
             {lineItem.workItemId && isValidWorkItemId ? (
@@ -88,15 +93,10 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
                   backgroundColor: 'transparent',
                 }}
               >
-                <AntDesign
-                  style={{ marginRight: -12 }}
-                  name="check-circle"
-                  size={24}
-                  color={colors.iconColor}
-                />
+                <AntDesign style={{ marginRight: -12 }} name="check-circle" size={24} color={iconColor} />
               </View>
             ) : (
-              <Feather name="chevrons-right" size={24} color={colors.iconColor} />
+              <Feather name="chevrons-right" size={24} color={iconColor} />
             )}
           </View>
         </Pressable>

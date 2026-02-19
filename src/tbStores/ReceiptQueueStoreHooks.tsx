@@ -9,12 +9,12 @@ const { useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoVal
 export interface ReceiptLineItem {
   itemDescription: string;
   amount: number;
+  projectId: string;
 }
 
 export interface ReceiptQueueEntry {
   id: string; // purchaseId_toProjectId
   purchaseId: string;
-  toProjectId: string;
   fromProjectId: string;
   vendorRef: string;
   imageId?: string;
@@ -24,7 +24,6 @@ export interface ReceiptQueueEntry {
 
 export interface ReceiptQueueEntryInput {
   purchaseId: string;
-  toProjectId: string;
   fromProjectId: string;
   vendorRef: string;
   imageId?: string;
@@ -33,18 +32,13 @@ export interface ReceiptQueueEntryInput {
 
 export type RECEIPT_QUEUE_TABLES = keyof typeof TABLES_SCHEMA;
 
-// --- Helper function to generate unique ID ---
-const generateReceiptQueueId = (purchaseId: string, toProjectId: string): string => {
-  return `${purchaseId}_${toProjectId}`;
-};
-
 // --- Helper function to serialize line items ---
-const serializeLineItems = (lineItems: ReceiptLineItem[]): string => {
+export const serializeReceiptLineItems = (lineItems: ReceiptLineItem[]): string => {
   return JSON.stringify(lineItems);
 };
 
 // --- Helper function to deserialize line items ---
-const deserializeLineItems = (serialized: string): ReceiptLineItem[] => {
+export const deserializeReceiptLineItems = (serialized: string): ReceiptLineItem[] => {
   try {
     return JSON.parse(serialized);
   } catch {
@@ -57,11 +51,10 @@ const rowToReceiptQueueEntry = (row: any): ReceiptQueueEntry => {
   return {
     id: row.id,
     purchaseId: row.purchaseId,
-    toProjectId: row.toProjectId,
     fromProjectId: row.fromProjectId,
     vendorRef: row.vendorRef,
     imageId: row.imageId,
-    lineItems: deserializeLineItems(row.lineItems || '[]'),
+    lineItems: deserializeReceiptLineItems(row.lineItems || '[]'),
     createdAt: row.createdAt,
   };
 };
@@ -98,16 +91,10 @@ export const useAllReceiptQueueEntries = (): ReceiptQueueEntry[] => {
   return entries;
 };
 
-// --- Retrieve queued entries for a specific project ---
-export const useReceiptQueueEntriesForProject = (projectId: string): ReceiptQueueEntry[] => {
-  const allEntries = useAllReceiptQueueEntries();
-  return allEntries.filter((entry) => entry.toProjectId === projectId);
-};
-
 // --- Retrieve a specific queued entry ---
-export const useReceiptQueueEntry = (purchaseId: string, toProjectId: string): ReceiptQueueEntry | null => {
+export const useReceiptQueueEntry = (purchaseId: string): ReceiptQueueEntry | null => {
   const store = useStore(useStoreId());
-  const entryId = generateReceiptQueueId(purchaseId, toProjectId);
+  const entryId = purchaseId;
   const [entry, setEntry] = useState<ReceiptQueueEntry | null>(null);
 
   useEffect(() => {
@@ -137,17 +124,16 @@ export function useAddReceiptQueueEntryCallback() {
     (data: ReceiptQueueEntryInput): CrudResult => {
       if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
 
-      const id = generateReceiptQueueId(data.purchaseId, data.toProjectId);
+      const id = data.purchaseId;
       const now = Date.now();
 
       const success = store.setRow('receiptQueueEntries', id, {
         id,
         purchaseId: data.purchaseId,
-        toProjectId: data.toProjectId,
         fromProjectId: data.fromProjectId,
         vendorRef: data.vendorRef,
         imageId: data.imageId || '',
-        lineItems: serializeLineItems(data.lineItems),
+        lineItems: serializeReceiptLineItems(data.lineItems),
         createdAt: now,
       });
 
@@ -163,10 +149,10 @@ export function useAddReceiptQueueEntryCallback() {
 export function useUpdateReceiptQueueEntryCallback() {
   const store = useStore(useStoreId());
   return useCallback(
-    (purchaseId: string, toProjectId: string, updates: Partial<ReceiptQueueEntryInput>): CrudResult => {
+    (purchaseId: string, updates: Partial<ReceiptQueueEntryInput>): CrudResult => {
       if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
 
-      const id = generateReceiptQueueId(purchaseId, toProjectId);
+      const id = purchaseId;
       const existing = store.getRow('receiptQueueEntries', id);
       if (!existing) return { status: 'Error', id: '0', msg: 'Queue entry not found' };
 
@@ -174,7 +160,7 @@ export function useUpdateReceiptQueueEntryCallback() {
         ...existing,
         ...(updates.vendorRef && { vendorRef: updates.vendorRef }),
         ...(updates.imageId !== undefined && { imageId: updates.imageId || '' }),
-        ...(updates.lineItems && { lineItems: serializeLineItems(updates.lineItems) }),
+        ...(updates.lineItems && { lineItems: serializeReceiptLineItems(updates.lineItems) }),
       };
 
       const success = store.setRow('receiptQueueEntries', id, updatedRow);
@@ -193,7 +179,7 @@ export function useDeleteReceiptQueueEntryCallback() {
     (purchaseId: string, toProjectId: string): CrudResult => {
       if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
 
-      const id = generateReceiptQueueId(purchaseId, toProjectId);
+      const id = purchaseId;
       const existing = store.getRow('receiptQueueEntries', id);
       if (!existing) return { status: 'Error', id: '0', msg: 'Queue entry not found' };
 

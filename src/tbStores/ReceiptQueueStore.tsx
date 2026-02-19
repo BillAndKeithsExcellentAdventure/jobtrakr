@@ -10,7 +10,6 @@ export const TABLES_SCHEMA = {
   receiptQueueEntries: {
     id: { type: 'string' }, // purchaseId_toProjectId (unique key for queued receipt)
     purchaseId: { type: 'string' }, // Original purchase/receipt ID
-    toProjectId: { type: 'string' }, // Project ID where this receipt needs to be added
     fromProjectId: { type: 'string' }, // Project ID where this receipt was originally created
     vendorRef: { type: 'string' }, // Vendor reference/ID
     imageId: { type: 'string' }, // Optional image ID associated with receipt

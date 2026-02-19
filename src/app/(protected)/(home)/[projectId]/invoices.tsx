@@ -115,6 +115,7 @@ const ProjectInvoicesPage = () => {
           accountingId: '',
           paymentAccountId: '',
           billId: '',
+          qbSyncHash: '',
         };
 
         //console.log('Adding a new Invoice.', newInvoice);
