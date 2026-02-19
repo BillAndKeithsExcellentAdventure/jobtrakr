@@ -19,9 +19,10 @@ import { createApiWithToken } from '@/src/utils/apiWithToken';
 import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 
 const processAIProcessing = async (
   imageId: string,
@@ -81,6 +82,29 @@ const RequestAIProcessingPage = () => {
   const receipt = useTypedRow(projectId, 'receipts', receiptId);
   const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
+  const allProjects = useAllProjects();
+  const projectPickerOptions = useMemo(
+    () => allProjects.map((p) => ({ label: p.name, value: p.id })),
+    [allProjects],
+  );
+  const defaultProjectOption = projectPickerOptions.find((option) => option.value === projectId);
+  const [lineItemProjectId, setLineItemProjectId] = useState<string>(defaultProjectOption?.value ?? '');
+
+  useEffect(() => {
+    if (defaultProjectOption) {
+      setLineItemProjectId(defaultProjectOption.value);
+    }
+  }, [defaultProjectOption]);
+
+  const handleLineItemProjectChange = useCallback(
+    (option: OptionEntry) => {
+      const selectedProject = allProjects.find((p) => p.id === option.value);
+      if (selectedProject) {
+        setLineItemProjectId(selectedProject.id);
+      }
+    },
+    [allProjects, receiptId],
+  );
 
   // Simulated AI result for testing
   async function fetchSimulatedAIResult(returnSingleItem = false) {
@@ -175,7 +199,7 @@ const RequestAIProcessingPage = () => {
     try {
       const result = await processAIProcessing(imageId, projectId, userId!, orgId!, auth.getToken);
 
-      if (!result || !result.success) {
+      if (!result || result.status !== 'Success' || !result.response) {
         Alert.alert(
           'Processing Failed',
           `We could not extract data from this receipt. You can still add line items manually. Error message: ${result?.message || 'Unknown error'}`,
@@ -597,6 +621,10 @@ const RequestAIProcessingPage = () => {
           onClose={() => setShowCostItemPicker(false)}
           projectId={projectId}
           handleCostItemOptionSelected={onCostItemOptionSelected}
+          showProjectPicker={true}
+          handleProjectChange={handleLineItemProjectChange}
+          selectedProjectPickerOption={defaultProjectOption}
+          allProjectPickerOptions={projectPickerOptions}
         />
       )}
       {receiptSummary && (

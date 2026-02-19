@@ -16,17 +16,26 @@ const CostItemPickerModal = ({
   subtitle = '',
   onClose,
   handleCostItemOptionSelected,
+  showProjectPicker = false,
+  handleProjectChange,
+  selectedProjectPickerOption,
+  allProjectPickerOptions = [],
 }: {
   projectId: string;
   isVisible: boolean;
   subtitle?: string;
   onClose: () => void;
   handleCostItemOptionSelected: (entry: OptionEntry | undefined) => void;
+  showProjectPicker?: boolean;
+  handleProjectChange?: (entry: OptionEntry | undefined) => void;
+  selectedProjectPickerOption?: OptionEntry;
+  allProjectPickerOptions?: OptionEntry[];
 }) => {
   const colors = useColors();
   const { availableCategoriesOptions, allAvailableCostItemOptions, projectWorkItems } =
     useProjectWorkItems(projectId);
 
+  const [isProjectPickerVisible, setIsProjectPickerVisible] = useState<boolean>(false);
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
 
@@ -81,6 +90,16 @@ const CostItemPickerModal = ({
     [handleCategoryChange],
   );
 
+  const handleProjectOptionChange = useCallback(
+    (option: OptionEntry) => {
+      if (option && handleProjectChange) {
+        handleProjectChange(option);
+      }
+      setIsProjectPickerVisible(false);
+    },
+    [handleProjectChange],
+  );
+
   return (
     <Modal visible={isVisible} transparent={true} animationType="fade">
       <SafeAreaView edges={['top']} style={[{ flex: 1 }, Platform.OS === 'ios' && { marginTop: 60 }]}>
@@ -89,6 +108,19 @@ const CostItemPickerModal = ({
             <Text txtSize="title" style={styles.modalTitle} text="Select Cost Item" />
             {subtitle.length > 0 && <Text txtSize="sub-title" style={styles.modalTitle} text={subtitle} />}
             <View style={{ flex: 1, paddingBottom: 10 }}>
+              {showProjectPicker && allProjectPickerOptions && allProjectPickerOptions.length > 0 && (
+                <OptionPickerItem
+                  containerStyle={styles.inputContainer}
+                  optionLabel={selectedProjectPickerOption?.label}
+                  label="Project"
+                  placeholder="Project"
+                  editable={false}
+                  onPickerButtonPress={() => {
+                    setIsProjectPickerVisible(true);
+                  }}
+                />
+              )}
+
               <OptionPickerItem
                 containerStyle={styles.inputContainer}
                 optionLabel={pickedCategoryOption?.label}
@@ -126,6 +158,21 @@ const CostItemPickerModal = ({
               />
             </View>
           </View>
+          {isProjectPickerVisible && (
+            <BottomSheetContainer
+              modalHeight="65%"
+              isVisible={isProjectPickerVisible}
+              onClose={() => setIsProjectPickerVisible(false)}
+            >
+              <OptionList
+                options={allProjectPickerOptions}
+                enableSearch={allProjectPickerOptions.length > 15}
+                onSelect={(option) => handleProjectOptionChange(option)}
+                selectedOption={selectedProjectPickerOption}
+              />
+            </BottomSheetContainer>
+          )}
+
           {isCategoryPickerVisible && (
             <BottomSheetContainer
               modalHeight="65%"
