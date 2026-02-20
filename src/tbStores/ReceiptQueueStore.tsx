@@ -11,7 +11,14 @@ export const TABLES_SCHEMA = {
     id: { type: 'string' }, // purchaseId_toProjectId (unique key for queued receipt)
     purchaseId: { type: 'string' }, // Original purchase/receipt ID
     fromProjectId: { type: 'string' }, // Project ID where this receipt was originally created
-    vendorRef: { type: 'string' }, // Vendor reference/ID
+    vendorId: { type: 'string' }, // Vendor ID (QuickBooks Vendor ID)
+    vendor: { type: 'string' }, // Vendor display name
+    paymentAccountId: { type: 'string' }, // QuickBooks Account ID
+    description: { type: 'string' }, // Receipt description
+    receiptDate: { type: 'number' }, // Date on the receipt
+    pictureDate: { type: 'number' }, // Date the picture was taken
+    thumbnail: { type: 'string' }, // Thumbnail image data
+    notes: { type: 'string' }, // Receipt notes
     imageId: { type: 'string' }, // Optional image ID associated with receipt
     lineItems: { type: 'string' }, // JSON stringified array of ReceiptLineItem objects
     createdAt: { type: 'number' }, // Timestamp when entry was queued

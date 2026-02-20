@@ -17,19 +17,20 @@ export interface ReceiptQueueEntry {
   id: string; // purchaseId_toProjectId
   purchaseId: string;
   fromProjectId: string;
-  vendorRef: string;
+  vendorId: string;
+  vendor: string;
+  paymentAccountId: string;
+  description: string;
+  receiptDate: number;
+  pictureDate: number;
+  thumbnail: string;
+  notes: string;
   imageId?: string;
   lineItems: ReceiptLineItem[];
   createdAt: number;
 }
 
-export interface ReceiptQueueEntryInput {
-  purchaseId: string;
-  fromProjectId: string;
-  vendorRef: string;
-  imageId?: string;
-  lineItems: ReceiptLineItem[];
-}
+export type ReceiptQueueEntryInput = Omit<ReceiptQueueEntry, 'id' | 'createdAt'>;
 
 export type RECEIPT_QUEUE_TABLES = keyof typeof TABLES_SCHEMA;
 
@@ -53,7 +54,14 @@ const rowToReceiptQueueEntry = (row: any): ReceiptQueueEntry => {
     id: row.id,
     purchaseId: row.purchaseId,
     fromProjectId: row.fromProjectId,
-    vendorRef: row.vendorRef,
+    vendorId: row.vendorId,
+    vendor: row.vendor || '',
+    paymentAccountId: row.paymentAccountId || '',
+    description: row.description || '',
+    receiptDate: row.receiptDate || 0,
+    pictureDate: row.pictureDate || 0,
+    thumbnail: row.thumbnail || '',
+    notes: row.notes || '',
     imageId: row.imageId,
     lineItems: deserializeReceiptLineItems(row.lineItems || '[]'),
     createdAt: row.createdAt,
@@ -132,7 +140,14 @@ export function useAddReceiptQueueEntryCallback() {
         id,
         purchaseId: data.purchaseId,
         fromProjectId: data.fromProjectId,
-        vendorRef: data.vendorRef,
+        vendorId: data.vendorId,
+        vendor: data.vendor,
+        paymentAccountId: data.paymentAccountId,
+        description: data.description,
+        receiptDate: data.receiptDate,
+        pictureDate: data.pictureDate,
+        thumbnail: data.thumbnail,
+        notes: data.notes,
         imageId: data.imageId || '',
         lineItems: serializeReceiptLineItems(data.lineItems),
         createdAt: now,
@@ -159,7 +174,7 @@ export function useUpdateReceiptQueueEntryCallback() {
 
       const updatedRow = {
         ...existing,
-        ...(updates.vendorRef && { vendorRef: updates.vendorRef }),
+        ...(updates.vendorId && { vendorId: updates.vendorId }),
         ...(updates.imageId !== undefined && { imageId: updates.imageId || '' }),
         ...(updates.lineItems && { lineItems: serializeReceiptLineItems(updates.lineItems) }),
       };
