@@ -334,6 +334,7 @@ const ReceiptDetailsPage = () => {
           vendorId: receipt.vendorId,
           vendor: receipt.vendor,
           paymentAccountId: receipt.paymentAccountId,
+          accountingId: receipt.accountingId,
           description: receipt.description,
           receiptDate: receipt.receiptDate,
           pictureDate: receipt.pictureDate,
@@ -341,6 +342,7 @@ const ReceiptDetailsPage = () => {
           notes: receipt.notes,
           imageId: receipt.imageId,
           lineItems: receiptLineItems,
+          qbSyncHash: updates.qbSyncHash ?? '',
         };
         const result = addReceiptQueueEntry(queueEntryData);
         console.log(

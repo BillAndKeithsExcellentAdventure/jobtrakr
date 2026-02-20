@@ -20,6 +20,7 @@ export interface ReceiptQueueEntry {
   vendorId: string;
   vendor: string;
   paymentAccountId: string;
+  accountingId: string;
   description: string;
   receiptDate: number;
   pictureDate: number;
@@ -27,6 +28,7 @@ export interface ReceiptQueueEntry {
   notes: string;
   imageId?: string;
   lineItems: ReceiptLineItem[];
+  qbSyncHash: string;
   createdAt: number;
 }
 
@@ -57,6 +59,7 @@ const rowToReceiptQueueEntry = (row: any): ReceiptQueueEntry => {
     vendorId: row.vendorId,
     vendor: row.vendor || '',
     paymentAccountId: row.paymentAccountId || '',
+    accountingId: row.accountingId || '',
     description: row.description || '',
     receiptDate: row.receiptDate || 0,
     pictureDate: row.pictureDate || 0,
@@ -64,6 +67,7 @@ const rowToReceiptQueueEntry = (row: any): ReceiptQueueEntry => {
     notes: row.notes || '',
     imageId: row.imageId,
     lineItems: deserializeReceiptLineItems(row.lineItems || '[]'),
+    qbSyncHash: row.qbSyncHash || '',
     createdAt: row.createdAt,
   };
 };
@@ -143,6 +147,7 @@ export function useAddReceiptQueueEntryCallback() {
         vendorId: data.vendorId,
         vendor: data.vendor,
         paymentAccountId: data.paymentAccountId,
+        accountingId: data.accountingId,
         description: data.description,
         receiptDate: data.receiptDate,
         pictureDate: data.pictureDate,
@@ -150,6 +155,7 @@ export function useAddReceiptQueueEntryCallback() {
         notes: data.notes,
         imageId: data.imageId || '',
         lineItems: serializeReceiptLineItems(data.lineItems),
+        qbSyncHash: data.qbSyncHash,
         createdAt: now,
       });
 
@@ -175,6 +181,7 @@ export function useUpdateReceiptQueueEntryCallback() {
       const updatedRow = {
         ...existing,
         ...(updates.vendorId && { vendorId: updates.vendorId }),
+        ...(updates.accountingId !== undefined && { accountingId: updates.accountingId }),
         ...(updates.imageId !== undefined && { imageId: updates.imageId || '' }),
         ...(updates.lineItems && { lineItems: serializeReceiptLineItems(updates.lineItems) }),
       };
@@ -201,6 +208,36 @@ export function useDeleteReceiptQueueEntryCallback() {
 
       store.delRow('receiptQueueEntries', id);
       return { status: 'Success', id, msg: '' };
+    },
+    [store],
+  );
+}
+
+// --- DELETE multiple queued receipt entries ---
+export function useDeleteReceiptQueueEntriesCallback() {
+  const store = useStore(useStoreId());
+  return useCallback(
+    (purchaseIds: string[]): CrudResult => {
+      if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
+
+      if (purchaseIds.length === 0) {
+        return { status: 'Success', id: '', msg: 'No entries to delete' };
+      }
+
+      let deletedCount = 0;
+      for (const purchaseId of purchaseIds) {
+        const existing = store.getRow('receiptQueueEntries', purchaseId);
+        if (existing) {
+          store.delRow('receiptQueueEntries', purchaseId);
+          deletedCount++;
+        }
+      }
+
+      return {
+        status: 'Success',
+        id: '',
+        msg: `Deleted ${deletedCount} of ${purchaseIds.length} queue entries`,
+      };
     },
     [store],
   );

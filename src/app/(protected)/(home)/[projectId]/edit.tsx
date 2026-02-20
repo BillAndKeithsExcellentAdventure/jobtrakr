@@ -144,6 +144,15 @@ const EditProjectScreen = () => {
     }
   }, [project, projectId, updatedProject]);
 
+  const handleAbbreviationChange = useCallback((text: string) => {
+    // Allow only uppercase letters and limit to 10 characters
+    const formattedText = text
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, '')
+      .slice(0, 10);
+    setProject((prev) => ({ ...prev, abbreviation: formattedText }));
+  }, []);
+
   const processBackPress = useCallback(() => {
     handleSubmit();
     router.back();
@@ -181,10 +190,9 @@ const EditProjectScreen = () => {
             placeholder="Abbreviation for Receipts and Bills"
             label="Abbreviation for Receipts and Bills"
             value={project.abbreviation}
-            autoCapitalize="characters"
             autoCorrect={false}
-            maxLength={10}
-            onChangeText={(text) => setProject({ ...project, abbreviation: text })}
+            autoCapitalize="characters"
+            onChangeText={handleAbbreviationChange}
             onBlur={handleSubmit}
           />
           <View style={{ flex: 1 }}>

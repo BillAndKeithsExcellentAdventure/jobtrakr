@@ -67,12 +67,14 @@ export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
                   onPress={onSave}
                   type={canSave ? 'ok' : 'disabled'}
                   title={saveButtonTitle}
+                  triggerBlurOnPress={true}
                 />
                 <ActionButton
                   style={styles.cancelButton}
                   onPress={onCancel}
                   type="cancel"
                   title={cancelButtonTitle}
+                  triggerBlurOnPress={false}
                 />
               </View>
             )}

@@ -3,7 +3,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { useNetwork } from '../context/NetworkContext';
 import {
   useAllReceiptQueueEntries,
-  useDeleteReceiptQueueEntryCallback,
+  useDeleteReceiptQueueEntriesCallback,
   ReceiptQueueEntry,
 } from '../tbStores/ReceiptQueueStoreHooks';
 import { useDuplicateReceiptImageCallback } from '../utils/images';
@@ -27,7 +27,7 @@ export const useReceiptQueue = () => {
   const { userId, orgId, getToken } = auth;
   const { isConnected, isInternetReachable } = useNetwork();
   const receiptsToProcess = useAllReceiptQueueEntries();
-  const deleteQueuedReceipt = useDeleteReceiptQueueEntryCallback();
+  const deleteQueuedReceipts = useDeleteReceiptQueueEntriesCallback();
   const duplicateReceiptImage = useDuplicateReceiptImageCallback();
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
@@ -73,7 +73,7 @@ export const useReceiptQueue = () => {
         vendor: queuedReceipt.vendor,
         vendorId: queuedReceipt.vendorId,
         paymentAccountId: queuedReceipt.paymentAccountId,
-        expenseAccountId: '',
+        expenseAccountId: queuedReceipt.accountingId,
         description: queuedReceipt.description,
         amount: queuedReceipt.lineItems
           .filter((item) => item.projectId === toProjectId)
@@ -85,7 +85,7 @@ export const useReceiptQueue = () => {
         notes: queuedReceipt.notes,
         markedComplete: false,
         purchaseId: queuedReceipt.purchaseId,
-        qbSyncHash: '',
+        qbSyncHash: queuedReceipt.qbSyncHash,
         id: newReceiptId,
       };
 
@@ -159,6 +159,7 @@ export const useReceiptQueue = () => {
 
       let successCount = 0;
       let failCount = 0;
+      const idsToDelete: string[] = [];
 
       // Process each queued receipt
       for (const queuedReceipt of itemsToProcess) {
@@ -180,57 +181,71 @@ export const useReceiptQueue = () => {
 
           if (targetProjectIds.length === 0) {
             console.log(
-              `Receipt queue: No target projects found for receipt ${queuedReceipt.purchaseId}. Removing from queue.`,
+              `Receipt queue: No target projects found for receipt ${queuedReceipt.purchaseId}. Marking for removal.`,
             );
-            deleteQueuedReceipt(queuedReceipt.purchaseId);
+            idsToDelete.push(queuedReceipt.id);
             successCount++;
             setProcessedCount(successCount + failCount);
             continue;
           }
 
-          for (const toProjectId of targetProjectIds) {
-            console.log(
-              `Receipt queue: Processing receipt ${queuedReceipt.purchaseId} for target project ${toProjectId}`,
-            );
-
-            // Get the store for this specific project from the cache
-            const store = getStoreFromCache(toProjectId);
-
-            if (!store) {
-              console.warn(
-                `Receipt queue: Store not yet loaded for project ${toProjectId}. Will retry in next cycle.`,
+          let storeNotFoundCount = 0;
+          while (targetProjectIds.length > 0) {
+            for (const toProjectId of targetProjectIds) {
+              console.log(
+                `Receipt queue: Processing receipt ${queuedReceipt.purchaseId} for target project ${toProjectId}`,
               );
-              continue;
+
+              // Get the store for this specific project from the cache
+              const store = getStoreFromCache(toProjectId);
+
+              if (!store) {
+                console.warn(
+                  `Receipt queue: Store not yet loaded for project ${toProjectId}. Will retry in next cycle.`,
+                );
+                storeNotFoundCount++;
+                if (storeNotFoundCount > 5) {
+                  throw new Error(
+                    `Store not found for project ${toProjectId} after multiple attempts. Skipping this project for now.`,
+                  ); // Avoid infinite retries for this project
+                }
+                continue;
+              }
+
+              const result = createReceiptCopyInProject(queuedReceipt, toProjectId, store);
+              if (result.success) {
+                processedProjectIds.push(toProjectId);
+                if (queuedReceipt.imageId) {
+                  const duplicateResult = await duplicateReceiptImage(
+                    queuedReceipt.fromProjectId,
+                    toProjectId,
+                    queuedReceipt.imageId,
+                  );
+                  if (!duplicateResult.success) {
+                    console.warn(
+                      `Receipt queue: Image duplication failed for receipt ${queuedReceipt.purchaseId}: ${duplicateResult.msg}`,
+                    );
+                  } else {
+                    console.log(
+                      `Receipt queue: Successfully duplicated image for receipt ${queuedReceipt.purchaseId} to target project ${toProjectId}`,
+                    );
+                  }
+                }
+              }
             }
 
-            const result = createReceiptCopyInProject(queuedReceipt, toProjectId, store);
-            if (result.success) {
-              processedProjectIds.push(toProjectId);
+            // Remove project IDs that were successfully processed
+            for (const processedProjectId of processedProjectIds) {
+              const index = targetProjectIds.indexOf(processedProjectId);
+              if (index !== -1) {
+                targetProjectIds.splice(index, 1);
+              }
             }
           }
 
-          // Remove project IDs that were successfully processed
-          for (const processedProjectId of processedProjectIds) {
-            const index = targetProjectIds.indexOf(processedProjectId);
-            if (index !== -1) {
-              targetProjectIds.splice(index, 1);
-            }
-          }
-
-          if (targetProjectIds.length === 0) {
-            console.log(
-              `Receipt queue: Successfully processed receipt ${queuedReceipt.purchaseId} for all target projects. Removing from queue.`,
-            );
-            deleteQueuedReceipt(queuedReceipt.purchaseId);
-            successCount++;
-          } else {
-            console.log(
-              `Receipt queue: Failed to process receipt ${queuedReceipt.purchaseId} for projects: ${targetProjectIds.join(
-                ', ',
-              )}. Will retry in next cycle.`,
-            );
-            failCount++;
-          }
+          // All target projects processed successfully, mark for deletion
+          idsToDelete.push(queuedReceipt.id);
+          successCount++;
         } catch (error) {
           console.error(`Receipt queue: Error processing receipt ${queuedReceipt.purchaseId}:`, error);
           failCount++;
@@ -239,17 +254,25 @@ export const useReceiptQueue = () => {
         }
       }
 
+      // Delete all successfully processed entries at once
+      if (idsToDelete.length > 0) {
+        console.log(`Receipt queue: Deleting ${idsToDelete.length} processed entries`);
+        const deleteResult = deleteQueuedReceipts(idsToDelete);
+        console.log(`Receipt queue: Delete result - ${deleteResult.msg}`);
+      }
+
       console.log(
         `Receipt queue: Processing complete. Success: ${successCount}, Failed: ${failCount}, Total: ${itemsToProcess.length}`,
       );
       setIsProcessing(false);
     };
 
-    // Run immediately on mount if there are items
+    // Run immediately on mount and when dependencies change if there are items to process
     if (receiptsToProcess.length > 0) {
       void processQueue();
     }
 
+    /*
     // Set up interval to run every hour (3600000 milliseconds)
     intervalRef.current = setInterval(() => {
       if (receiptsToProcess.length > 0) {
@@ -264,6 +287,7 @@ export const useReceiptQueue = () => {
         intervalRef.current = null;
       }
     };
+    */
   }, [
     userId,
     orgId,
@@ -272,7 +296,7 @@ export const useReceiptQueue = () => {
     isProcessing,
     isConnected,
     isInternetReachable,
-    deleteQueuedReceipt,
+    deleteQueuedReceipts,
     duplicateReceiptImage,
     getToken,
     createReceiptCopyInProject,

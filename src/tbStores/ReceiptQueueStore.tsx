@@ -14,6 +14,7 @@ export const TABLES_SCHEMA = {
     vendorId: { type: 'string' }, // Vendor ID (QuickBooks Vendor ID)
     vendor: { type: 'string' }, // Vendor display name
     paymentAccountId: { type: 'string' }, // QuickBooks Account ID
+    accountingId: { type: 'string' }, // QuickBooks Expense Account ID
     description: { type: 'string' }, // Receipt description
     receiptDate: { type: 'number' }, // Date on the receipt
     pictureDate: { type: 'number' }, // Date the picture was taken
@@ -21,6 +22,7 @@ export const TABLES_SCHEMA = {
     notes: { type: 'string' }, // Receipt notes
     imageId: { type: 'string' }, // Optional image ID associated with receipt
     lineItems: { type: 'string' }, // JSON stringified array of ReceiptLineItem objects
+    qbSyncHash: { type: 'string' }, // QuickBooks sync hash
     createdAt: { type: 'number' }, // Timestamp when entry was queued
   },
 } as const;

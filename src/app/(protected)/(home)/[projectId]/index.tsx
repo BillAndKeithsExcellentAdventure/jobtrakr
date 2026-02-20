@@ -1,3 +1,4 @@
+import { ActionButton } from '@/src/components/ActionButton';
 import { ActionButtonProps, ButtonBar } from '@/src/components/ButtonBar';
 import { DeleteProjectConfirmationModal } from '@/src/components/DeleteProjectConfirmationModal';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
@@ -516,6 +517,17 @@ const ProjectDetailsPage = () => {
     [colors, router, projectId, projectData],
   );
 
+  const handleSetPriceQuotePress = useCallback(() => {
+    if (projectId && projectData)
+      router.push({
+        pathname: '/[projectId]/setPriceQuote',
+        params: {
+          projectId: projectId,
+          projectName: projectData.name,
+        },
+      });
+  }, [router, projectId, projectData]);
+
   const renderItem = (item: CostSectionData, projectId: string) => {
     const showSection = (): void => {
       // use router to push to the cost items page
@@ -615,7 +627,7 @@ const ProjectDetailsPage = () => {
           headerShown: true,
           headerBackTitle: '',
           headerBackButtonDisplayMode: 'minimal',
-          title: 'Overview',
+          title: 'Project Overview',
           headerRight: () => (
             <View
               style={{
@@ -650,15 +662,27 @@ const ProjectDetailsPage = () => {
           <>
             <View style={styles.headerContainer}>
               <Text txtSize="title" text={projectData.name} />
-              <Text text={`quote: ${formatCurrency(totalQuotedPrice, true)}`} />
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                <Text text={`est: ${formatCurrency(projectData.bidPrice, true)}`} />
-                <Text text={`bal: ${formatCurrency(projectBalance, true)}`} />
-              </View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                <Text text={`spent: ${formatCurrency(projectData.amountSpent, true)}`} />
-                <Text text={`complete: ${numCompletedWorkItemSummaries} of ${numWorkItemSummaries}`} />
-              </View>
+              {totalQuotedPrice && totalQuotedPrice > 0 ? (
+                <>
+                  <Text text={`quote: ${formatCurrency(totalQuotedPrice, true)}`} />
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                    <Text text={`est: ${formatCurrency(projectData.bidPrice, true)}`} />
+                    <Text text={`bal: ${formatCurrency(projectBalance, true)}`} />
+                  </View>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                    <Text text={`spent: ${formatCurrency(projectData.amountSpent, true)}`} />
+                    <Text text={`complete: ${numCompletedWorkItemSummaries} of ${numWorkItemSummaries}`} />
+                  </View>
+                </>
+              ) : (
+                <>
+                  <ActionButton
+                    title="Set Initial Price Quote"
+                    onPress={handleSetPriceQuotePress}
+                    type={'action'}
+                  />
+                </>
+              )}
             </View>
             <View style={{ flex: 1, paddingBottom: 5 }}>
               <View style={{ marginBottom: 5, alignItems: 'center' }}>

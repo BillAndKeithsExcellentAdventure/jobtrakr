@@ -1,14 +1,6 @@
 import React, { useCallback } from 'react';
-import {
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-  ViewStyle,
-  TextStyle,
-} from 'react-native';
+import { Text, TouchableOpacity, StyleSheet, Platform, ViewStyle, TextStyle, Keyboard } from 'react-native';
 import { useColorScheme } from './useColorScheme';
-import { useFocusManager } from '../hooks/useFocusManager';
 
 type ActionButtonProps = {
   title: string;
@@ -16,7 +8,7 @@ type ActionButtonProps = {
   type: 'action' | 'ok' | 'cancel' | 'disabled';
   style?: ViewStyle; // Optional custom border style
   textStyle?: TextStyle; // Optional custom text style
-  triggerBlurOnPress?: boolean; // Optional flag to trigger blur on press
+  triggerBlurOnPress?: boolean; // Optional flag to dismiss keyboard on press
 };
 
 interface ButtonSettings {
@@ -31,23 +23,21 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
   type,
   style,
   textStyle,
-  triggerBlurOnPress = true,
+  triggerBlurOnPress = false,
 }) => {
   const platform = Platform.OS; // Get the current platform (iOS or Android)
   const colorScheme = useColorScheme();
-  const focusManager = useFocusManager();
   const handlePress = useCallback(() => {
     if (type === 'disabled') return;
 
     if (triggerBlurOnPress) {
-      // call focusManger to blur all fields before invoking onPress
-      focusManager?.blurAllFields();
+      // Dismiss keyboard immediately - this is the key to avoiding two taps
+      Keyboard.dismiss();
     }
 
-    setTimeout(() => {
-      onPress();
-    }, 0);
-  }, [onPress, type, triggerBlurOnPress, focusManager]);
+    // Call onPress immediately (or after blur if needed)
+    onPress();
+  }, [onPress, type, triggerBlurOnPress]);
 
   const getButtonStyles = (buttonType: ActionButtonProps['type'], platform: string): ButtonSettings => {
     switch (buttonType) {
