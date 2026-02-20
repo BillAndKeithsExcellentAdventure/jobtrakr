@@ -11,7 +11,7 @@ export const TABLES_SCHEMA = {
     id: { type: 'string' }, // purchaseId_toProjectId (unique key for queued receipt)
     purchaseId: { type: 'string' }, // Original purchase/receipt ID
     fromProjectId: { type: 'string' }, // Project ID where this receipt was originally created
-    vendorRef: { type: 'string' }, // Vendor reference/ID (QuickBooks Vendor ID)
+    vendorId: { type: 'string' }, // Vendor ID (QuickBooks Vendor ID)
     vendor: { type: 'string' }, // Vendor display name
     paymentAccountId: { type: 'string' }, // QuickBooks Account ID
     description: { type: 'string' }, // Receipt description

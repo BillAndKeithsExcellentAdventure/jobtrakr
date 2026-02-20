@@ -331,7 +331,7 @@ const ReceiptDetailsPage = () => {
         const queueEntryData = {
           purchaseId: updates.purchaseId,
           fromProjectId: projectId,
-          vendorRef: receipt.vendorId,
+          vendorId: receipt.vendorId,
           vendor: receipt.vendor,
           paymentAccountId: receipt.paymentAccountId,
           description: receipt.description,

@@ -17,7 +17,7 @@ export interface ReceiptQueueEntry {
   id: string; // purchaseId_toProjectId
   purchaseId: string;
   fromProjectId: string;
-  vendorRef: string;
+  vendorId: string;
   vendor: string;
   paymentAccountId: string;
   description: string;
@@ -33,7 +33,7 @@ export interface ReceiptQueueEntry {
 export interface ReceiptQueueEntryInput {
   purchaseId: string;
   fromProjectId: string;
-  vendorRef: string;
+  vendorId: string;
   vendor: string;
   paymentAccountId: string;
   description: string;
@@ -67,7 +67,7 @@ const rowToReceiptQueueEntry = (row: any): ReceiptQueueEntry => {
     id: row.id,
     purchaseId: row.purchaseId,
     fromProjectId: row.fromProjectId,
-    vendorRef: row.vendorRef,
+    vendorId: row.vendorId,
     vendor: row.vendor || '',
     paymentAccountId: row.paymentAccountId || '',
     description: row.description || '',
@@ -153,7 +153,7 @@ export function useAddReceiptQueueEntryCallback() {
         id,
         purchaseId: data.purchaseId,
         fromProjectId: data.fromProjectId,
-        vendorRef: data.vendorRef,
+        vendorId: data.vendorId,
         vendor: data.vendor,
         paymentAccountId: data.paymentAccountId,
         description: data.description,
@@ -187,7 +187,7 @@ export function useUpdateReceiptQueueEntryCallback() {
 
       const updatedRow = {
         ...existing,
-        ...(updates.vendorRef && { vendorRef: updates.vendorRef }),
+        ...(updates.vendorId && { vendorId: updates.vendorId }),
         ...(updates.imageId !== undefined && { imageId: updates.imageId || '' }),
         ...(updates.lineItems && { lineItems: serializeReceiptLineItems(updates.lineItems) }),
       };

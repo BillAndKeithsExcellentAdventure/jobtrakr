@@ -43,7 +43,7 @@ describe('ReceiptQueueStore', () => {
       result.current.addEntry({
         purchaseId: 'purchase-1',
         fromProjectId: 'project-a',
-        vendorRef: 'vendor-1',
+        vendorId: 'vendor-1',
         vendor: 'Acme Supply Co.',
         paymentAccountId: 'account-1',
         description: 'Building materials',
@@ -64,7 +64,7 @@ describe('ReceiptQueueStore', () => {
 
     expect(result.current.entries[0].purchaseId).toBe('purchase-1');
     expect(result.current.entries[0].fromProjectId).toBe('project-a');
-    expect(result.current.entries[0].vendorRef).toBe('vendor-1');
+    expect(result.current.entries[0].vendorId).toBe('vendor-1');
     expect(result.current.entries[0].vendor).toBe('Acme Supply Co.');
     expect(result.current.entries[0].paymentAccountId).toBe('account-1');
     expect(result.current.entries[0].description).toBe('Building materials');

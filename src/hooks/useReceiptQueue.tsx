@@ -71,7 +71,7 @@ export const useReceiptQueue = () => {
       const receiptData = {
         accountingId: '',
         vendor: queuedReceipt.vendor,
-        vendorId: queuedReceipt.vendorRef,
+        vendorId: queuedReceipt.vendorId,
         paymentAccountId: queuedReceipt.paymentAccountId,
         expenseAccountId: '',
         description: queuedReceipt.description,
