@@ -29,6 +29,7 @@ import { Image } from 'expo-image';
 import { useColorScheme } from '@/src/components/useColorScheme';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { SvgImage } from '@/src/components/SvgImage';
+import { ReceiptQueueProcessor } from '@/src/components/ReceiptQueueProcessor';
 
 function isEntry(obj: any): obj is ProjectListEntryProps {
   return typeof obj.projectName === 'string' && typeof obj.projectId === 'string';
@@ -406,6 +407,7 @@ export default function ProjectHomeScreen() {
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
+      <ReceiptQueueProcessor />
       <Stack.Screen
         options={{
           headerShown: true,

@@ -3,6 +3,7 @@ import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { createMergeableStore, NoValuesSchema } from 'tinybase/with-schemas';
 import { useCreateClientPersisterAndStart } from '../persistence/useCreateClientPersisterAndStart';
 import { useCreateServerSynchronizerAndStart } from '../synchronization/useCreateServerSynchronizerAndStart';
+import { useProjectDetailsStoreCache } from '../../context/ProjectDetailsStoreCacheContext';
 
 const STORE_ID_PREFIX = 'projectDetailsStore-';
 
@@ -107,12 +108,26 @@ export const getStoreId = (projId: string) => STORE_ID_PREFIX + projId;
 
 // Create, persist, and sync a store containing the project and its categories.
 export default function ProjectDetailsStore({ projectId }: { projectId: string }) {
-  useEffect(() => console.log('Mounting ProjectDetailsStore for projectId:', projectId), [projectId]);
+  const { addStoreToCache, removeStoreFromCache } = useProjectDetailsStoreCache();
+
   const storeId = getStoreId(projectId);
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
 
   useCreateClientPersisterAndStart(storeId, store);
   useCreateServerSynchronizerAndStart(storeId, store);
   useProvideStore(storeId, store);
+
+  // Add store to cache when it's created
+  useEffect(() => {
+    if (store) {
+      console.log('Mounting ProjectDetailsStore for projectId:', projectId);
+      addStoreToCache(projectId, store);
+      return () => {
+        console.log('Unmounting ProjectDetailsStore for projectId:', projectId);
+        removeStoreFromCache(projectId);
+      };
+    }
+  }, [projectId, store, addStoreToCache, removeStoreFromCache]);
+
   return null;
 }

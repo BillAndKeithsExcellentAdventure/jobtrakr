@@ -3,6 +3,7 @@ import { useActiveProjectIds } from '../context/ActiveProjectIdsContext';
 import { useRowIds } from 'tinybase/ui-react';
 import ProjectDetailsStore from '../tbStores/projectDetails/ProjectDetailsStore';
 import { useProjectListStoreId } from '../tbStores/listOfProjects/ListOfProjectsStore';
+import { ProjectDetailsStoreCacheProvider } from '../context/ProjectDetailsStoreCacheContext';
 
 const ActiveProjectDetailsStoreProvider = ({ children }: PropsWithChildren) => {
   const { activeProjectIds } = useActiveProjectIds();
@@ -20,17 +21,17 @@ const ActiveProjectDetailsStoreProvider = ({ children }: PropsWithChildren) => {
   }, [activeProjectIds, allAvailableProjectIds]);
 
   if (projectDetailsStoresToBuild.length === 0) {
-    return <>{children}</>;
+    return <ProjectDetailsStoreCacheProvider>{children}</ProjectDetailsStoreCacheProvider>;
   }
 
   // Render ProjectDetailsStore components for each project
   return (
-    <>
+    <ProjectDetailsStoreCacheProvider>
       {projectDetailsStoresToBuild.map((id) => (
         <ProjectDetailsStore projectId={id} key={id} />
       ))}
       {children}
-    </>
+    </ProjectDetailsStoreCacheProvider>
   );
 };
 

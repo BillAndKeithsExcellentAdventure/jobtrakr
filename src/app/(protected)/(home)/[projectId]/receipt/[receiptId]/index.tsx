@@ -324,6 +324,7 @@ const ReceiptDetailsPage = () => {
           amount: item.amount,
           itemDescription: item.label,
           projectId: item.projectId ?? projectId,
+          workItemId: item.workItemId ?? '',
         }));
 
         // add receipt queue entries for each other project that has line items on this receipt

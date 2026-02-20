@@ -13,7 +13,11 @@ const ProjectsLayout = () => {
   }
 
   if (auth.isSignedIn && auth.orgId) {
-    return <Stack screenOptions={{ headerShown: true, headerBackTitle: ' ' }} />;
+    return (
+      <Stack
+        screenOptions={{ headerShown: true, headerBackTitle: '', headerBackButtonDisplayMode: 'minimal' }}
+      />
+    );
   }
 
   return <Redirect href="/sign-in" />;

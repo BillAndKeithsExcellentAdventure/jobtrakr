@@ -10,6 +10,7 @@ export interface ReceiptLineItem {
   itemDescription: string;
   amount: number;
   projectId: string;
+  workItemId: string;
 }
 
 export interface ReceiptQueueEntry {
@@ -176,7 +177,7 @@ export function useUpdateReceiptQueueEntryCallback() {
 export function useDeleteReceiptQueueEntryCallback() {
   const store = useStore(useStoreId());
   return useCallback(
-    (purchaseId: string, toProjectId: string): CrudResult => {
+    (purchaseId: string): CrudResult => {
       if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
 
       const id = purchaseId;
@@ -185,34 +186,6 @@ export function useDeleteReceiptQueueEntryCallback() {
 
       store.delRow('receiptQueueEntries', id);
       return { status: 'Success', id, msg: '' };
-    },
-    [store],
-  );
-}
-
-// --- DELETE all queued entries for a specific project ---
-export function useDeleteAllReceiptQueueEntriesForProjectCallback() {
-  const store = useStore(useStoreId());
-  return useCallback(
-    (toProjectId: string): CrudResult => {
-      if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
-
-      const table = store.getTable('receiptQueueEntries');
-      if (!table) return { status: 'Success', id: '', msg: 'No entries to delete' };
-
-      let deletedCount = 0;
-      for (const [entryId, row] of Object.entries(table)) {
-        if ((row as any).toProjectId === toProjectId) {
-          store.delRow('receiptQueueEntries', entryId);
-          deletedCount++;
-        }
-      }
-
-      return {
-        status: 'Success',
-        id: '',
-        msg: `Deleted ${deletedCount} queue entries for project ${toProjectId}`,
-      };
     },
     [store],
   );
