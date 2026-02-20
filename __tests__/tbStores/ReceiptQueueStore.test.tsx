@@ -45,7 +45,9 @@ describe('ReceiptQueueStore', () => {
         fromProjectId: 'project-a',
         vendorRef: 'vendor-1',
         imageId: 'image-1',
-        lineItems: [{ itemDescription: 'Lumber', amount: 125.5, projectId: 'project-b' }],
+        lineItems: [
+          { itemDescription: 'Lumber', amount: 125.5, projectId: 'project-b', workItemId: 'workItem-1' },
+        ],
       });
     });
 
@@ -58,7 +60,7 @@ describe('ReceiptQueueStore', () => {
     expect(result.current.entries[0].vendorRef).toBe('vendor-1');
     expect(result.current.entries[0].imageId).toBe('image-1');
     expect(result.current.entries[0].lineItems).toEqual([
-      { itemDescription: 'Lumber', amount: 125.5, projectId: 'project-b' },
+      { itemDescription: 'Lumber', amount: 125.5, projectId: 'project-b', workItemId: 'workItem-1' },
     ]);
   });
 });
