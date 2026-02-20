@@ -70,17 +70,19 @@ export const useReceiptQueue = () => {
       // Create the receipt in the target project
       const receiptData = {
         accountingId: '',
-        vendor: queuedReceipt.vendorRef,
+        vendor: queuedReceipt.vendor,
         vendorId: queuedReceipt.vendorRef,
-        paymentAccountId: '',
+        paymentAccountId: queuedReceipt.paymentAccountId,
         expenseAccountId: '',
-        description: `Copy of receipt from project ${queuedReceipt.fromProjectId}`,
-        amount: queuedReceipt.lineItems.reduce((sum, item) => sum + item.amount, 0),
-        receiptDate: queuedReceipt.createdAt,
-        thumbnail: '',
-        pictureDate: queuedReceipt.createdAt,
+        description: queuedReceipt.description,
+        amount: queuedReceipt.lineItems
+          .filter((item) => item.projectId === toProjectId)
+          .reduce((sum, item) => sum + item.amount, 0),
+        receiptDate: queuedReceipt.receiptDate,
+        thumbnail: queuedReceipt.thumbnail,
+        pictureDate: queuedReceipt.pictureDate,
         imageId: queuedReceipt.imageId || '',
-        notes: `Automatically copied from project ${queuedReceipt.fromProjectId}`,
+        notes: queuedReceipt.notes,
         markedComplete: false,
         purchaseId: queuedReceipt.purchaseId,
         qbSyncHash: '',
@@ -95,14 +97,15 @@ export const useReceiptQueue = () => {
 
       console.log(`Receipt queue: Created receipt ${newReceiptId} in project ${toProjectId}`);
 
-      // Create work item cost entries for each line item
-      for (const lineItem of queuedReceipt.lineItems) {
+      // Create work item cost entries for each line item belonging to this target project
+      const targetLineItems = queuedReceipt.lineItems.filter((item) => item.projectId === toProjectId);
+      for (const lineItem of targetLineItems) {
         const costEntryId = randomUUID();
         const costEntryData = {
           id: costEntryId,
           label: lineItem.itemDescription,
           amount: lineItem.amount,
-          workItemId: '',
+          workItemId: lineItem.workItemId,
           parentId: newReceiptId,
           documentationType: 'receipt',
           projectId: toProjectId,

@@ -18,6 +18,13 @@ export interface ReceiptQueueEntry {
   purchaseId: string;
   fromProjectId: string;
   vendorRef: string;
+  vendor: string;
+  paymentAccountId: string;
+  description: string;
+  receiptDate: number;
+  pictureDate: number;
+  thumbnail: string;
+  notes: string;
   imageId?: string;
   lineItems: ReceiptLineItem[];
   createdAt: number;
@@ -27,6 +34,13 @@ export interface ReceiptQueueEntryInput {
   purchaseId: string;
   fromProjectId: string;
   vendorRef: string;
+  vendor: string;
+  paymentAccountId: string;
+  description: string;
+  receiptDate: number;
+  pictureDate: number;
+  thumbnail: string;
+  notes: string;
   imageId?: string;
   lineItems: ReceiptLineItem[];
 }
@@ -54,6 +68,13 @@ const rowToReceiptQueueEntry = (row: any): ReceiptQueueEntry => {
     purchaseId: row.purchaseId,
     fromProjectId: row.fromProjectId,
     vendorRef: row.vendorRef,
+    vendor: row.vendor || '',
+    paymentAccountId: row.paymentAccountId || '',
+    description: row.description || '',
+    receiptDate: row.receiptDate || 0,
+    pictureDate: row.pictureDate || 0,
+    thumbnail: row.thumbnail || '',
+    notes: row.notes || '',
     imageId: row.imageId,
     lineItems: deserializeReceiptLineItems(row.lineItems || '[]'),
     createdAt: row.createdAt,
@@ -133,6 +154,13 @@ export function useAddReceiptQueueEntryCallback() {
         purchaseId: data.purchaseId,
         fromProjectId: data.fromProjectId,
         vendorRef: data.vendorRef,
+        vendor: data.vendor,
+        paymentAccountId: data.paymentAccountId,
+        description: data.description,
+        receiptDate: data.receiptDate,
+        pictureDate: data.pictureDate,
+        thumbnail: data.thumbnail,
+        notes: data.notes,
         imageId: data.imageId || '',
         lineItems: serializeReceiptLineItems(data.lineItems),
         createdAt: now,

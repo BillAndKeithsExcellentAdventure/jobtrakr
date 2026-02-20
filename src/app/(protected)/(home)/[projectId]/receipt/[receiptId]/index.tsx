@@ -332,6 +332,13 @@ const ReceiptDetailsPage = () => {
           purchaseId: updates.purchaseId,
           fromProjectId: projectId,
           vendorRef: receipt.vendorId,
+          vendor: receipt.vendor,
+          paymentAccountId: receipt.paymentAccountId,
+          description: receipt.description,
+          receiptDate: receipt.receiptDate,
+          pictureDate: receipt.pictureDate,
+          thumbnail: receipt.thumbnail,
+          notes: receipt.notes,
           imageId: receipt.imageId,
           lineItems: receiptLineItems,
         };

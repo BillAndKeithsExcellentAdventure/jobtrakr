@@ -44,6 +44,13 @@ describe('ReceiptQueueStore', () => {
         purchaseId: 'purchase-1',
         fromProjectId: 'project-a',
         vendorRef: 'vendor-1',
+        vendor: 'Acme Supply Co.',
+        paymentAccountId: 'account-1',
+        description: 'Building materials',
+        receiptDate: 1700000000000,
+        pictureDate: 1700000001000,
+        thumbnail: 'thumb-data',
+        notes: 'Test receipt notes',
         imageId: 'image-1',
         lineItems: [
           { itemDescription: 'Lumber', amount: 125.5, projectId: 'project-b', workItemId: 'workItem-1' },
@@ -58,6 +65,13 @@ describe('ReceiptQueueStore', () => {
     expect(result.current.entries[0].purchaseId).toBe('purchase-1');
     expect(result.current.entries[0].fromProjectId).toBe('project-a');
     expect(result.current.entries[0].vendorRef).toBe('vendor-1');
+    expect(result.current.entries[0].vendor).toBe('Acme Supply Co.');
+    expect(result.current.entries[0].paymentAccountId).toBe('account-1');
+    expect(result.current.entries[0].description).toBe('Building materials');
+    expect(result.current.entries[0].receiptDate).toBe(1700000000000);
+    expect(result.current.entries[0].pictureDate).toBe(1700000001000);
+    expect(result.current.entries[0].thumbnail).toBe('thumb-data');
+    expect(result.current.entries[0].notes).toBe('Test receipt notes');
     expect(result.current.entries[0].imageId).toBe('image-1');
     expect(result.current.entries[0].lineItems).toEqual([
       { itemDescription: 'Lumber', amount: 125.5, projectId: 'project-b', workItemId: 'workItem-1' },
