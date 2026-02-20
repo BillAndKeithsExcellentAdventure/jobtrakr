@@ -30,20 +30,7 @@ export interface ReceiptQueueEntry {
   createdAt: number;
 }
 
-export interface ReceiptQueueEntryInput {
-  purchaseId: string;
-  fromProjectId: string;
-  vendorId: string;
-  vendor: string;
-  paymentAccountId: string;
-  description: string;
-  receiptDate: number;
-  pictureDate: number;
-  thumbnail: string;
-  notes: string;
-  imageId?: string;
-  lineItems: ReceiptLineItem[];
-}
+export type ReceiptQueueEntryInput = Omit<ReceiptQueueEntry, 'id' | 'createdAt'>;
 
 export type RECEIPT_QUEUE_TABLES = keyof typeof TABLES_SCHEMA;
 
