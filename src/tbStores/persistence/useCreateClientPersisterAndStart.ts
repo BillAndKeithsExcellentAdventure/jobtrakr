@@ -37,7 +37,6 @@ export const useCreateClientPersisterAndStart = <Schemas extends OptionalSchemas
       try {
         await persister.stopAutoSave();
         await persister.destroy();
-        console.log(`Successfully cleaned up persister for: ${storeId}`);
       } catch (error) {
         console.error(`Error cleaning up persister for ${storeId}:`, error);
       }

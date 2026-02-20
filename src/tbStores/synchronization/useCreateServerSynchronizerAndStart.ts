@@ -51,7 +51,6 @@ export const useCreateServerSynchronizerAndStart = <Schemas extends OptionalSche
         }
 
         await synchronizer.destroy();
-        console.log(`Successfully cleaned up synchronizer for: ${storeId}`);
       } catch (error) {
         console.error(`Error cleaning up synchronizer for ${storeId}:`, error);
       }
