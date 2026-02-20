@@ -77,7 +77,9 @@ const AddProjectScreen = () => {
   }, [allProjectTemplates, allTemplateWorkItems]);
 
   useEffect(() => {
-    setCanAddProject(project.name.length > 0 && undefined !== pickedTemplate);
+    setCanAddProject(
+      project.name.length > 0 && undefined !== pickedTemplate && project.abbreviation.length > 0,
+    );
   }, [project, pickedTemplate]);
 
   const handleSubmit = useCallback(async () => {
@@ -125,6 +127,16 @@ const AddProjectScreen = () => {
           value={project.name}
           onChangeText={(text) => setProject({ ...project, name: text })}
         />
+        {/* Abbreviation is optional but if entered should be max 10 characters */}
+        <TextInput
+          style={[styles.input, { backgroundColor: colors.neutral200 }]}
+          placeholder="Abbreviation for Receipts and Bills"
+          autoCapitalize="characters"
+          autoCorrect={false}
+          maxLength={10}
+          value={project.abbreviation}
+          onChangeText={(text) => setProject({ ...project, abbreviation: text })}
+        />
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Location"
@@ -134,12 +146,14 @@ const AddProjectScreen = () => {
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Owner Name"
+          autoCapitalize="words"
           value={project.ownerName}
           onChangeText={(text) => setProject({ ...project, ownerName: text })}
         />
         <View style={{ marginBottom: 10, backgroundColor: colors.listBackground }}>
           <TextInput
             placeholder="Owner Address"
+            autoCapitalize="words"
             value={String(project.ownerAddress ?? '')}
             onChangeText={(text) => setProject({ ...project, ownerAddress: text })}
             style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
@@ -151,6 +165,7 @@ const AddProjectScreen = () => {
         <View style={{ marginBottom: 10, backgroundColor: colors.listBackground }}>
           <TextInput
             placeholder="Owner City"
+            autoCapitalize="words"
             value={String(project.ownerCity ?? '')}
             onChangeText={(text) => setProject({ ...project, ownerCity: text })}
             style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
@@ -206,7 +221,7 @@ const AddProjectScreen = () => {
         <OptionPickerItem
           containerStyle={{ backgroundColor: colors.neutral200, height: 36 }}
           optionLabel={pickedTemplate?.label}
-          placeholder="Project Template"
+          placeholder="Project Costs Template"
           editable={false}
           onPickerButtonPress={() => setIsTemplateListPickerVisible(true)}
         />

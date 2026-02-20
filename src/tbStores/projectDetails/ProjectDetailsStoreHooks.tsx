@@ -324,11 +324,10 @@ export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
   const addWorkItemSummary = useAddRowCallback(projectId, 'workItemSummaries');
   const { activeProjectIds } = useActiveProjectIds();
 
-  const seedInitialData = useCallback((): void => {
-    if (allWorkItemSummaries.length > 0 || !seedWorkItems) return;
+  const seedInitialData = useCallback((): boolean => {
+    if (allWorkItemSummaries.length > 0 || !seedWorkItems) return false;
 
     const workItemIds = seedWorkItems.split(',');
-    setSeedWorkItems(''); // Clear the seedWorkItems after seeding
     for (const workItemId of workItemIds) {
       if (!workItemId) continue;
       addWorkItemSummary({
@@ -338,13 +337,17 @@ export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
         complete: false,
       });
     }
+    return true;
   }, [seedWorkItems, allWorkItemSummaries, addWorkItemSummary, setSeedWorkItems]);
 
   useEffect(() => {
     if (activeProjectIds.includes(projectId)) {
       if (projectId && seedWorkItems && allWorkItemSummaries.length === 0) {
         console.log('Seeding initial data for project', projectId);
-        seedInitialData();
+        if (seedInitialData()) {
+          console.log('Initial data seeded for project', projectId);
+          setSeedWorkItems(''); // Clear the seedWorkItems after seeding
+        }
       }
     }
   }, [projectId, seedWorkItems, allWorkItemSummaries, activeProjectIds, seedInitialData]);

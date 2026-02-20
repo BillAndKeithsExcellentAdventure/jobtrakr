@@ -4,6 +4,7 @@ import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
 import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import { ProjectData } from '@/src/models/types';
 import { useProject, useUpdateProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
@@ -174,6 +175,18 @@ const EditProjectScreen = () => {
             onChangeText={(text) => setProject({ ...project, name: text })}
             onBlur={handleSubmit}
           />
+          <TextField
+            containerStyle={styles.inputContainer}
+            style={[styles.input, { borderColor: colors.transparent }]}
+            placeholder="Abbreviation for Receipts and Bills"
+            label="Abbreviation for Receipts and Bills"
+            value={project.abbreviation}
+            autoCapitalize="characters"
+            autoCorrect={false}
+            maxLength={10}
+            onChangeText={(text) => setProject({ ...project, abbreviation: text })}
+            onBlur={handleSubmit}
+          />
           <View style={{ flex: 1 }}>
             <NumberInputField
               label="Initial Quoted Price"
@@ -197,6 +210,7 @@ const EditProjectScreen = () => {
             containerStyle={styles.inputContainer}
             style={[styles.input, { borderColor: colors.transparent }]}
             placeholder="Owner Name"
+            autoCapitalize="words"
             label="Owner Name"
             value={project.ownerName}
             onChangeText={(text) => setProject({ ...project, ownerName: text })}
@@ -206,6 +220,7 @@ const EditProjectScreen = () => {
             containerStyle={styles.inputContainer}
             label="Owner Address"
             placeholder="Owner Address"
+            autoCapitalize="words"
             value={String(project.ownerAddress ?? '')}
             onChangeText={(text) => setProject({ ...project, ownerAddress: text })}
             style={[styles.input, { maxHeight: 80, borderColor: colors.transparent }]}
@@ -217,6 +232,7 @@ const EditProjectScreen = () => {
             containerStyle={styles.inputContainer}
             placeholder="Owner City"
             label="Owner City"
+            autoCapitalize="words"
             value={String(project.ownerCity ?? '')}
             onChangeText={(text) => setProject({ ...project, ownerCity: text })}
             style={[styles.input, { borderColor: colors.transparent }]}
@@ -274,16 +290,6 @@ const EditProjectScreen = () => {
             style={[styles.input, { borderColor: colors.transparent }]}
             autoCapitalize="none"
             autoCorrect={false}
-            onBlur={handleSubmit}
-          />
-          <TextField
-            containerStyle={styles.inputContainer}
-            style={[styles.input, { borderColor: colors.transparent }]}
-            placeholder="Abbreviation for Receipts and Invoices"
-            label="Abbreviation for Receipts and Invoices"
-            value={project.abbreviation}
-            autoCorrect={false}
-            onChangeText={(text) => setProject({ ...project, abbreviation: text })}
             onBlur={handleSubmit}
           />
           <View style={styles.dateContainer}>
