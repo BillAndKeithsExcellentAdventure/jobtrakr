@@ -46,6 +46,7 @@ export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
       >
         <KeyboardAwareScrollView
           bottomOffset={BUTTON_ROW_HEIGHT}
+          keyboardShouldPersistTaps="handled"
           style={[
             { backgroundColor: colors.modalOverlayBackgroundColor, flex: 1, marginBottom: BUTTON_ROW_HEIGHT },
           ]}
