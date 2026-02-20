@@ -35,6 +35,8 @@ ProjectHound is a mobile-first application designed to help contractors and cons
   - Track taxable vs non-taxable items with automatic tax proration
   - Vendor management and tracking
   - Receipt completion status
+  - **QuickBooks sync**: Automatically post receipts to QuickBooks Online as Purchase records when connected
+  - **Multi-project receipt posting**: Receipts with line items spanning multiple projects are automatically copied to all referenced projects via the Receipt Queue
 
 - **Invoice Management**:
   - Create and manage vendor invoices
@@ -100,6 +102,32 @@ ProjectHound is a mobile-first application designed to help contractors and cons
   - Create task-based notes for projects
   - Mark notes as completed
   - Track project-specific to-do items
+
+### 🔗 QuickBooks Integration
+
+ProjectHound integrates with **QuickBooks Online** to keep your project financials in sync with your accounting software:
+
+- **Connection Management**:
+  - Connect and disconnect your QuickBooks Online account from the Configuration screen
+  - Connection status is displayed in the app header when QuickBooks is active
+
+- **Vendor & Account Import**:
+  - Import vendors directly from QuickBooks to ensure consistent naming and IDs
+  - Import QuickBooks expense and payment accounts for use in receipt line items
+  - Configure a default expense account and payment account(s) for new receipts
+
+- **Receipt Posting**:
+  - When QuickBooks is connected, saving a new receipt automatically creates a corresponding **Purchase** record in QuickBooks
+  - Each receipt line item maps to a QuickBooks expense account on the purchase
+  - Vendor, payment account, date, and document number are all synced to QuickBooks
+  - Editing a receipt updates the existing QuickBooks Purchase record
+  - Deleting a receipt removes the corresponding Purchase from QuickBooks
+  - Receipts include an attachment of the receipt image in QuickBooks (when an image is available)
+
+- **Receipt Queue (Cross-Project Posting)**:
+  - Receipts whose line items reference multiple projects are automatically posted to all referenced projects in the background
+  - The Receipt Queue processes postings asynchronously and safely handles offline conditions
+  - See `docs/RECEIPT_QUEUE_PROCESSING.md` for detailed documentation
 
 ### 🔄 Data Synchronization
 
@@ -228,6 +256,7 @@ ProjectHound uses a sophisticated data architecture with multiple specialized st
 3. **Project Details Store**: Per-project data including receipts, invoices, media, notes, and change orders
 4. **App Settings Store**: User preferences and application settings
 5. **Upload Sync Store**: Manages file upload synchronization
+6. **Receipt Queue Store**: Queues receipts for cross-project posting
 
 All stores use TinyBase's mergeable store pattern for conflict-free replication across devices.
 
@@ -240,6 +269,17 @@ The application implements a centralized FocusManager system that:
 - Prevents data loss during navigation
 
 See `docs/AUTO_SAVE_IMPLEMENTATION.md` for detailed documentation.
+
+## QuickBooks Integration
+
+ProjectHound supports full two-way sync with QuickBooks Online for receipts:
+
+- Receipts posted to QuickBooks create **Purchase** records automatically
+- Edits to receipts update the corresponding QuickBooks Purchase
+- Deleting a receipt removes the associated Purchase from QuickBooks
+- Vendors and accounts can be imported from QuickBooks to ensure consistent data
+
+See `docs/RECEIPT_QUEUE_PROCESSING.md` for details on cross-project receipt posting.
 
 ## Permissions
 
