@@ -4,8 +4,7 @@ import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
-import { useNetwork } from '@/src/context/NetworkContext';
-import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
+import { useAutoSaveNavigation, useFocusManager } from '@/src/hooks/useFocusManager';
 import { ProjectData } from '@/src/models/types';
 import { useProject, useUpdateProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatDate } from '@/src/utils/formatters';
@@ -20,6 +19,7 @@ const EditProjectScreen = () => {
   const colors = useColors();
   const router = useRouter();
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
+  const focusManager = useFocusManager();
 
   const [project, setProject] = useState<ProjectData>({
     id: '',
@@ -58,7 +58,7 @@ const EditProjectScreen = () => {
     }
   }, [currentProject]);
 
-  const updatedProject = useUpdateProjectCallback();
+  const updateProject = useUpdateProjectCallback();
   const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
   const [finishDatePickerVisible, setFinishDatePickerVisible] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
@@ -90,12 +90,12 @@ const EditProjectScreen = () => {
   const handleStartDateConfirm = useCallback(
     (date: Date) => {
       const newProject = { ...project, startDate: date.getTime() };
-      if (updatedProject && projectId) {
-        updatedProject(projectId, newProject);
+      if (projectId) {
+        updateProject(projectId, newProject);
       }
       hideStartDatePicker();
     },
-    [project, projectId, updatedProject],
+    [project, projectId, updateProject],
   );
 
   const showFinishDatePicker = () => {
@@ -118,31 +118,33 @@ const EditProjectScreen = () => {
         longitude: currentLocation.coords.longitude,
         latitude: currentLocation.coords.latitude,
       };
-      if (updatedProject && projectId) {
-        updatedProject(projectId, newProject);
+      if (projectId) {
+        updateProject(projectId, newProject);
       }
     }
-  }, [currentLocation, project, projectId, updatedProject]);
+  }, [currentLocation, project, projectId, updateProject]);
 
   const handleFinishDateConfirm = useCallback(
     (date: Date) => {
       const newProject = { ...project, plannedFinish: date.getTime() };
-      if (updatedProject && projectId) {
-        updatedProject(projectId, newProject);
+      if (projectId) {
+        updateProject(projectId, newProject);
       }
       hideFinishDatePicker();
     },
-    [project, projectId, updatedProject],
+    [project, projectId, updateProject],
   );
 
   const handleSubmit = useCallback(async () => {
-    if (!project || !projectId || !updatedProject) return;
+    if (!project || !projectId) return;
 
-    const result = updatedProject(projectId, project);
+    const quotedPrice = focusManager.getFieldValue<number>('InitialQuotedPrice') ?? project.quotedPrice ?? 0;
+    const updatedProjectData = { ...project, quotedPrice };
+    const result = updateProject(projectId, updatedProjectData);
     if (result.status !== 'Success') {
-      console.log('Project update failed:', project);
+      console.log('Project update failed:', updatedProjectData);
     }
-  }, [project, projectId, updatedProject]);
+  }, [project, projectId, updateProject]);
 
   const handleAbbreviationChange = useCallback((text: string) => {
     // Allow only uppercase letters and limit to 10 characters
@@ -200,6 +202,7 @@ const EditProjectScreen = () => {
               label="Initial Quoted Price"
               style={{ paddingHorizontal: 10 }}
               value={project.quotedPrice || 0}
+              focusManagerId="InitialQuotedPrice"
               onChange={(value) => setProject({ ...project, quotedPrice: value })}
               placeholder="Initial Quoted Price"
             />
