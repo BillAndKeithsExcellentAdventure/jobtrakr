@@ -14,7 +14,7 @@ export const StyledHeaderBackButton: React.FC<HeaderBackButtonProps> = (props) =
     <HeaderBackButton
       {...props}
       style={[styles.backButton, props.style]}
-      tintColor={Platform.OS === 'ios' ? '#007AFF' : colors.text}
+      tintColor={colors.tint}
     />
   );
 };
