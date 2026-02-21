@@ -149,7 +149,7 @@ const QBAccountsScreen = () => {
     const updatedSettings: Partial<SettingsData> = {
       ...appSettings,
       quickBooksExpenseAccountId: selectedExpenseAccountId,
-      quickBooksPaymentAccounts: selectedPaymentAccountIds.join(','),
+      quickBooksPaymentAccounts: selectedPaymentAccountsList.map((account) => account.value).join(','),
       quickBooksDefaultPaymentAccountId: defaultPaymentAccountId,
     };
 
