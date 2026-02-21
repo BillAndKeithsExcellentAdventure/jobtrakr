@@ -24,6 +24,7 @@ import {
   fetchCompanyInfo,
 } from '@/src/utils/quickbooksAPI';
 import { importAccountsFromQuickBooks, importVendorsFromQuickBooks } from '@/src/utils/quickbooksImports';
+import { sanitizeQuickBooksAccountSettings } from '@/src/utils/quickbooksAccountSettings';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import * as WebBrowser from 'expo-web-browser';
@@ -75,6 +76,7 @@ const SetAppSettingScreen = () => {
   const allAccounts = useAllRows('accounts');
   const addAccount = useAddRowCallback('accounts');
   const updateAccount = useUpdateRowCallback('accounts');
+  const deleteAccount = useDeleteRowCallback('accounts');
   const allVendors = useAllRows('vendors');
   const addVendor = useAddRowCallback('vendors');
   const updateVendor = useUpdateRowCallback('vendors');
@@ -98,8 +100,8 @@ const SetAppSettingScreen = () => {
   const handleDebugOfflineToggle = useCallback(
     (value: boolean) => {
       const updatedSettings = { ...settings, debugForceOffline: value };
-      setSettings(updatedSettings);
       setAppSettings(updatedSettings);
+      setSettings(updatedSettings);
     },
     [settings, setAppSettings],
   );
@@ -271,14 +273,24 @@ const SetAppSettingScreen = () => {
                     // Import accounts and vendors from QuickBooks
                     try {
                       setLoadingStatusMessage('Loading Accounts...');
-                      await importAccountsFromQuickBooks(
+                      const { accounts: importedAccounts } = await importAccountsFromQuickBooks(
                         auth.orgId!,
                         auth.userId!,
                         auth.getToken,
                         allAccounts,
                         addAccount,
                         updateAccount,
+                        () => {
+                          for (const account of allAccounts) {
+                            deleteAccount(account.id, true);
+                          }
+                        },
                       );
+
+                      const sanitizedSettings = sanitizeQuickBooksAccountSettings(settings, importedAccounts);
+                      const updatedSettings = { ...settings, ...sanitizedSettings };
+                      setAppSettings(updatedSettings);
+                      setSettings(updatedSettings);
 
                       setLoadingStatusMessage('Loading Vendors...');
 
@@ -341,6 +353,7 @@ const SetAppSettingScreen = () => {
     auth,
     checkQBConnectionWithRetry,
     settings,
+    setSettings,
     setAppSettings,
     setQuickBooksConnected,
     isConnecting,
@@ -348,6 +361,7 @@ const SetAppSettingScreen = () => {
     allAccounts,
     addAccount,
     updateAccount,
+    deleteAccount,
     allVendors,
     addVendor,
     updateVendor,
@@ -435,8 +449,8 @@ const SetAppSettingScreen = () => {
       const dataUrl = base64Image ? `data:image/png;base64,${base64Image}` : '';
       // Update local state and save to store immediately
       const updatedSettings = { ...settings, companyLogo: dataUrl };
-      setSettings(updatedSettings);
       setAppSettings(updatedSettings);
+      setSettings(updatedSettings);
     }
   };
 

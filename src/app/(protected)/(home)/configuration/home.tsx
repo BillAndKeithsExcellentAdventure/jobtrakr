@@ -27,6 +27,11 @@ import { ActionButtonProps } from '@/src/components/ButtonBar';
 import * as DocumentPicker from 'expo-document-picker';
 import { useAuth } from '@clerk/clerk-expo';
 import { importAccountsFromQuickBooks, importVendorsFromQuickBooks } from '@/src/utils/quickbooksImports';
+import {
+  useAppSettings,
+  useSetAppSettingsCallback,
+} from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { sanitizeQuickBooksAccountSettings } from '@/src/utils/quickbooksAccountSettings';
 
 const Home = () => {
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
@@ -45,8 +50,11 @@ const Home = () => {
   const allAccounts = useAllRows('accounts');
   const addAccount = useAddRowCallback('accounts');
   const updateAccount = useUpdateRowCallback('accounts');
+  const deleteAccount = useDeleteRowCallback('accounts');
   const { isConnectedToQuickBooks } = useNetwork();
   const auth = useAuth();
+  const appSettings = useAppSettings();
+  const setAppSettings = useSetAppSettingsCallback();
 
   const hasConfigurationData: boolean = useMemo(
     () =>
@@ -295,18 +303,26 @@ const Home = () => {
         }
 
         try {
-          const { addedCount, updatedCount } = await importAccountsFromQuickBooks(
+          const { addedCount, accounts } = await importAccountsFromQuickBooks(
             auth.orgId,
             auth.userId,
             auth.getToken,
             allAccounts,
             addAccount,
             updateAccount,
+            () => {
+              for (const account of allAccounts) {
+                deleteAccount(account.id, true);
+              }
+            },
           );
+
+          const sanitizedSettings = sanitizeQuickBooksAccountSettings(appSettings, accounts);
+          setAppSettings({ ...appSettings, ...sanitizedSettings });
 
           Alert.alert(
             'QuickBooks Account Import Complete',
-            `Accounts imported successfully from QuickBooks.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
+            `${addedCount} Accounts imported successfully from QuickBooks.`,
           );
         } catch (error) {
           console.error('Error importing QuickBooks accounts:', error);
@@ -324,9 +340,12 @@ const Home = () => {
       allAccounts,
       addAccount,
       updateAccount,
+      deleteAccount,
       auth.orgId,
       auth.userId,
       auth.getToken,
+      appSettings,
+      setAppSettings,
     ],
   );
 

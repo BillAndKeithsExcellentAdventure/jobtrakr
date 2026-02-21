@@ -10,51 +10,43 @@ import { AccountData, VendorData } from '@/src/tbStores/configurationStore/Confi
  * @param allAccounts - Existing accounts in the store
  * @param addAccount - Callback to add a new account to the store
  * @param updateAccount - Callback to update an existing account in the store
- * @returns Object with counts of added and updated accounts
+ * @returns Object with counts of added and updated accounts and imported accounts list
  */
 export async function importAccountsFromQuickBooks(
   orgId: string,
   userId: string,
   getToken: () => Promise<string | null>,
-  allAccounts: AccountData[],
+  _allAccounts: AccountData[],
   addAccount: (account: AccountData) => void,
-  updateAccount: (id: string, account: Partial<AccountData>) => void,
-): Promise<{ addedCount: number; updatedCount: number }> {
+  _updateAccount: (id: string, account: Partial<AccountData>) => void,
+  deleteAllAccounts: () => void,
+): Promise<{ addedCount: number; accounts: AccountData[] }> {
   const qbAccounts = await fetchAccounts(orgId, userId, getToken);
-  let addedCount = 0;
-  let updatedCount = 0;
-
-  for (const qbAccount of qbAccounts) {
-    // Find existing account with matching accountingId
-    const existing = allAccounts.find((a) => a.accountingId === qbAccount.id);
-
-    // Store classification if available (for expense accounts), otherwise accountType (for payment accounts)
-    const accountType = qbAccount.accountType || qbAccount.classification || '';
-
-    if (existing) {
-      // Update existing account
-      updateAccount(existing.id, {
-        id: existing.id,
-        accountingId: qbAccount.id,
-        name: qbAccount.name,
-        accountType,
-        accountSubType: qbAccount.accountSubType || '',
-      });
-      updatedCount++;
-    } else {
-      // Add new account - the caller's add callback generates a unique id
-      addAccount({
-        id: '', // Temporary placeholder, replaced with UUID by the add callback
-        accountingId: qbAccount.id,
-        name: qbAccount.name,
-        accountType,
-        accountSubType: qbAccount.accountSubType || '',
-      });
-      addedCount++;
-    }
+  if (qbAccounts.length > 0) {
+    deleteAllAccounts();
+  } else {
+    Alert.alert('No Accounts Found', 'No accounts were found in QuickBooks to import.');
+    return { addedCount: 0, accounts: [] };
   }
 
-  return { addedCount, updatedCount };
+  const accounts: AccountData[] = [];
+
+  for (const qbAccount of qbAccounts) {
+    // Store classification if available (for expense accounts), otherwise accountType (for payment accounts)
+    const accountType = qbAccount.accountType || qbAccount.classification || '';
+    const account: AccountData = {
+      id: '', // Temporary placeholder, replaced with UUID by the add callback
+      accountingId: qbAccount.id,
+      name: qbAccount.name,
+      accountType,
+      accountSubType: qbAccount.accountSubType || '',
+    };
+
+    addAccount(account);
+    accounts.push(account);
+  }
+
+  return { addedCount: accounts.length, accounts };
 }
 
 /**
@@ -131,7 +123,7 @@ export async function importVendorsFromQuickBooks(
  * @param addVendor - Callback to add a new vendor to the store
  * @param updateVendor - Callback to update an existing vendor in the store
  * @param showAlert - Whether to show alert dialogs (default: true)
- * @returns Object with counts of added and updated accounts and vendors
+ * @returns Object with counts of added and updated accounts and vendors, plus imported accounts list
  */
 export async function importAccountsAndVendorsFromQuickBooks(
   orgId: string,
@@ -140,12 +132,13 @@ export async function importAccountsAndVendorsFromQuickBooks(
   allAccounts: AccountData[],
   addAccount: (account: AccountData) => void,
   updateAccount: (id: string, account: Partial<AccountData>) => void,
+  deleteAllAccounts: () => void,
   allVendors: VendorData[],
   addVendor: (vendor: VendorData) => void,
   updateVendor: (id: string, vendor: Partial<VendorData>) => void,
   showAlert: boolean = true,
 ): Promise<{
-  accounts: { addedCount: number; updatedCount: number };
+  accounts: { addedCount: number; updatedCount: number; accounts: AccountData[] };
   vendors: { addedCount: number; updatedCount: number };
 }> {
   try {
@@ -156,6 +149,7 @@ export async function importAccountsAndVendorsFromQuickBooks(
       allAccounts,
       addAccount,
       updateAccount,
+      deleteAllAccounts,
     );
 
     const vendorResults = await importVendorsFromQuickBooks(
