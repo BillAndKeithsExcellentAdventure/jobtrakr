@@ -382,7 +382,7 @@ export async function fetchAccounts(
 }
 
 export interface QBBillLineItem {
-  amount: number;
+  amount: string;
   description: string;
   accountRef: string; // expense account
   projectId?: string; // support receipts with line-items for multiple projects.

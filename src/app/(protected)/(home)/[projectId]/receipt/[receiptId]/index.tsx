@@ -428,7 +428,6 @@ const ReceiptDetailsPage = () => {
         qbPurchaseData: {
           vendorRef: receipt.vendorId,
           lineItems: qbLineItems,
-          privateNote: receipt.notes || receipt.description || '',
           txnDate: new Date(receipt.receiptDate).toISOString().split('T')[0],
           paymentAccount: {
             paymentAccountRef: receipt.paymentAccountId,
@@ -454,10 +453,10 @@ const ReceiptDetailsPage = () => {
 
     for (const lineItem of allReceiptLineItems) {
       qbLineItems.push({
-        amount: lineItem.amount,
+        amount: lineItem.amount.toFixed(2),
         description: lineItem.label,
         accountRef: qbExpenseAccountId,
-        projectId: lineItem.projectId,
+        projectId: lineItem.projectId === projectId ? undefined : lineItem.projectId, // only include projectId if it's different from the receipt's project
       });
     }
 
