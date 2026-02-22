@@ -25,6 +25,7 @@ const TABLES_SCHEMA = {
     name: { type: 'string' },
     abbreviation: { type: 'string' },
     location: { type: 'string' },
+    customerId: { type: 'string' },
     ownerName: { type: 'string' },
     ownerAddress: { type: 'string' },
     ownerAddress2: { type: 'string' },
@@ -79,7 +80,7 @@ export const useAllProjects = () => {
           ({
             ...row,
             id: id,
-          } as ProjectData),
+          }) as ProjectData,
       );
 
       return [...projects].sort((a, b) => (b.favorite ?? 0) - (a.favorite ?? 0));

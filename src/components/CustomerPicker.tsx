@@ -63,9 +63,7 @@ export const CustomerPicker = ({
     setIsPickerVisible(true);
   };
 
-  const displayText = selectedCustomer
-    ? `${selectedCustomer.name}${selectedCustomer.contactName ? ` (${selectedCustomer.contactName})` : ''}`
-    : '';
+  const displayText = selectedCustomer ? selectedCustomer.name : '';
 
   return (
     <>
@@ -135,12 +133,9 @@ export const CustomerPicker = ({
                 style={[
                   {
                     width: '100%',
-                    paddingHorizontal: 15,
                     borderBottomWidth: 1,
-                    borderBottomColor: colors.border,
+                    borderBottomColor: colors.separatorColor,
                     justifyContent: 'center',
-                    minHeight: 60,
-                    paddingVertical: 10,
                   },
                   selectedCustomer?.id === item.id && {
                     backgroundColor: colors.neutral200,
@@ -148,7 +143,7 @@ export const CustomerPicker = ({
                 ]}
                 onPress={() => handleCustomerSelect(item)}
               >
-                <View>
+                <View style={{ paddingHorizontal: 12, paddingVertical: 8 }}>
                   <Text
                     style={[
                       { fontWeight: 500, fontSize: 16 },
@@ -169,17 +164,6 @@ export const CustomerPicker = ({
                       }}
                     >
                       {item.contactName}
-                    </Text>
-                  ) : null}
-                  {item.email ? (
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        color: colors.textMuted,
-                        marginTop: 2,
-                      }}
-                    >
-                      {item.email}
                     </Text>
                   ) : null}
                 </View>

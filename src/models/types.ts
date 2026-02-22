@@ -9,6 +9,7 @@ export interface ProjectData {
   name: string;
   abbreviation: string;
   location: string;
+  customerId: string; // id of the customer associated with the project
   ownerName: string;
   startDate: number;
   plannedFinish: number;

@@ -1,4 +1,5 @@
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
+import { CustomerPicker } from '@/src/components/CustomerPicker';
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
@@ -6,7 +7,7 @@ import { TextInput, View, Text } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { ProjectData } from '@/src/models/types';
-import { useAllRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useAllRows, CustomerData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAddProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -22,6 +23,7 @@ const AddProjectScreen = () => {
     name: '',
     abbreviation: '',
     location: '',
+    customerId: '',
     ownerName: '',
     bidPrice: 0,
     quotedPrice: 0,
@@ -49,8 +51,10 @@ const AddProjectScreen = () => {
   const router = useRouter();
   const allProjectTemplates = useAllRows('templates');
   const allTemplateWorkItems = useAllRows('templateWorkItems');
+  const allCustomers = useAllRows('customers');
   const [isTemplateListPickerVisible, setIsTemplateListPickerVisible] = useState<boolean>(false);
   const [pickedTemplate, setPickedTemplate] = useState<OptionEntry | undefined>(undefined);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | undefined>(undefined);
   const [templateOptions, setTemplateOptions] = useState<OptionEntry[]>([]);
   const [canAddProject, setCanAddProject] = useState(false);
   const { addActiveProjectIds } = useActiveProjectIds();
@@ -78,9 +82,12 @@ const AddProjectScreen = () => {
 
   useEffect(() => {
     setCanAddProject(
-      project.name.length > 0 && undefined !== pickedTemplate && project.abbreviation.length > 0,
+      project.name.length > 0 &&
+        undefined !== pickedTemplate &&
+        project.abbreviation.length > 0 &&
+        undefined !== selectedCustomer,
     );
-  }, [project, pickedTemplate]);
+  }, [project, pickedTemplate, selectedCustomer]);
 
   const handleSubmit = useCallback(async () => {
     if (!canAddProject) {
@@ -98,6 +105,10 @@ const AddProjectScreen = () => {
       }
     }
 
+    if (selectedCustomer) {
+      project.customerId = selectedCustomer.id;
+    }
+
     const result = addProject(project);
     if (result.status !== 'Success') {
       Alert.alert(`Project creation failed for project ${project.name}: ${result.msg}`);
@@ -109,6 +120,7 @@ const AddProjectScreen = () => {
     project,
     canAddProject,
     pickedTemplate,
+    selectedCustomer,
     allProjectTemplates,
     allTemplateWorkItems,
     addProject,
@@ -142,6 +154,12 @@ const AddProjectScreen = () => {
           placeholder="Location"
           value={project.location}
           onChangeText={(text) => setProject({ ...project, location: text })}
+        />
+        <CustomerPicker
+          selectedCustomer={selectedCustomer}
+          onCustomerSelected={setSelectedCustomer}
+          customers={allCustomers}
+          placeholder="Select a customer"
         />
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
