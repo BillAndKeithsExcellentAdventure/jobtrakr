@@ -34,6 +34,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { ReceiptLineItem } from '@/src/tbStores/ReceiptQueueStoreHooks';
 
 const AddReceiptPage = () => {
   const defaultDate = useMemo(() => new Date(), []);
@@ -285,7 +286,7 @@ const AddReceiptPage = () => {
             // Only include line items with valid account references
             if (qbExpenseAccountId) {
               qbLineItems.push({
-                amount: lineItem.amount,
+                amount: lineItem.amount.toFixed(2),
                 description: lineItem.label,
                 accountRef: qbExpenseAccountId,
                 projectId: lineItem.projectId,
@@ -326,8 +327,6 @@ const AddReceiptPage = () => {
             qbPurchaseData: {
               vendorRef: projectReceipt.vendorId,
               lineItems: qbLineItems,
-              // Note: docNumber is optional and will be auto-generated if not provided
-              privateNote: projectReceipt.notes || projectReceipt.description || '',
               txnDate: new Date(projectReceipt.receiptDate).toISOString().split('T')[0],
               paymentAccount: {
                 paymentAccountRef: projectReceipt.paymentAccountId,
@@ -355,6 +354,42 @@ const AddReceiptPage = () => {
           updates.qbSyncHash = newHash;
           console.log('Updating local receipt with:', updates);
           updateReceipt(receiptId, updates);
+
+          const otherProjectsWithLineItems = receiptLineItems
+            .filter((item) => item.projectId && item.projectId !== projectId)
+            .map((item) => item.projectId);
+
+          // See if receipt has line items associated with other projects that also need to be synced to QuickBooks
+          if (otherProjectsWithLineItems.length > 0) {
+            const receiptLineItemsToSync: ReceiptLineItem[] = receiptLineItems.map((item) => ({
+              amount: item.amount,
+              itemDescription: item.label,
+              projectId: item.projectId ?? projectId,
+              workItemId: item.workItemId ?? '',
+            }));
+
+            // add receipt queue entries for each other project that has line items on this receipt
+            const queueEntryData = {
+              purchaseId: updates.purchaseId,
+              fromProjectId: projectId,
+              vendorId: updates.vendorId,
+              vendor: updates.vendor,
+              paymentAccountId: updates.paymentAccountId,
+              accountingId: updates.accountingId,
+              description: updates.description,
+              receiptDate: updates.receiptDate,
+              pictureDate: updates.pictureDate,
+              thumbnail: updates.thumbnail,
+              notes: updates.notes,
+              imageId: updates.imageId,
+              lineItems: receiptLineItemsToSync,
+              qbSyncHash: updates.qbSyncHash ?? '',
+            };
+            const result = addReceiptQueueEntry(queueEntryData);
+            console.log(
+              `Adding receipt for purchaseId ${updates.purchaseId} to queue. Result: ${JSON.stringify(result)}`,
+            );
+          }
         } catch (error) {
           console.error('Error syncing receipt to QuickBooks:', error);
           // Don't alert the user - the receipt is already saved locally
@@ -744,3 +779,21 @@ const styles = StyleSheet.create({
 });
 
 export default AddReceiptPage;
+function addReceiptQueueEntry(queueEntryData: {
+  purchaseId: string;
+  fromProjectId: string;
+  vendorId: string;
+  vendor: string;
+  paymentAccountId: string;
+  accountingId: string;
+  description: string;
+  receiptDate: number;
+  pictureDate: number;
+  thumbnail: string;
+  notes: string;
+  imageId: string;
+  lineItems: ReceiptLineItem[];
+  qbSyncHash: string;
+}) {
+  throw new Error('Function not implemented.');
+}
