@@ -1,6 +1,6 @@
-import { AccountData, VendorData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { AccountData, CustomerData, VendorData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Alert } from 'react-native';
-import { fetchAccounts, fetchVendors } from './quickbooksAPI';
+import { fetchAccounts, fetchCustomers, fetchVendors } from './quickbooksAPI';
 
 /**
  * Import accounts from QuickBooks
@@ -96,4 +96,64 @@ export async function importVendorsFromQuickBooks(
   }
 
   return { addedCount };
+}
+
+/**
+ * Import customers from QuickBooks
+ * If a customer with the same accountingId already exists, update it (preserving contactName).
+ * Otherwise, add a new customer.
+ * @param orgId - Organization ID
+ * @param userId - User ID
+ * @param getToken - Function to get auth token
+ * @param allCustomers - Existing customers in the store
+ * @param addCustomer - Callback to add a new customer to the store
+ * @param updateCustomer - Callback to update an existing customer in the store
+ * @returns Object with counts of added and updated customers
+ */
+export async function importCustomersFromQuickBooks(
+  orgId: string,
+  userId: string,
+  getToken: () => Promise<string | null>,
+  allCustomers: CustomerData[],
+  addCustomer: (customer: CustomerData) => void,
+  updateCustomer: (id: string, updates: Partial<CustomerData>) => void,
+): Promise<{ addedCount: number; updatedCount: number }> {
+  const qbCustomers = await fetchCustomers(orgId, userId, getToken);
+
+  if (qbCustomers.length === 0) {
+    Alert.alert('No Customers Found', 'No customers were found in QuickBooks to import.');
+    return { addedCount: 0, updatedCount: 0 };
+  }
+
+  let addedCount = 0;
+  let updatedCount = 0;
+
+  for (const qbCustomer of qbCustomers) {
+    const existing = allCustomers.find((c) => c.accountingId === qbCustomer.id);
+
+    if (existing) {
+      // Update existing customer, preserving contactName
+      updateCustomer(existing.id, {
+        name: qbCustomer.displayName,
+        email: qbCustomer.email || '',
+        phone: qbCustomer.phone || '',
+        active: qbCustomer.active ?? true,
+      });
+      updatedCount++;
+    } else {
+      // Add new customer
+      addCustomer({
+        id: '',
+        accountingId: qbCustomer.id,
+        name: qbCustomer.displayName,
+        contactName: '',
+        email: qbCustomer.email || '',
+        phone: qbCustomer.phone || '',
+        active: qbCustomer.active ?? true,
+      });
+      addedCount++;
+    }
+  }
+
+  return { addedCount, updatedCount };
 }

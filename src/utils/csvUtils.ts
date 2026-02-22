@@ -1,4 +1,7 @@
-import { VendorData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  CustomerData,
+  VendorData,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { WorkCategoryDefinition } from '../models/types';
 
 // Shared headers for vendor CSV format (excluding id and accountingId)
@@ -169,4 +172,67 @@ export function parseWorkItemsCsvText(csvText: string): WorkCategoryDefinition[]
     }
   }
   return categories;
+}
+
+// Shared headers for customer CSV format (excluding id and accountingId)
+const CUSTOMER_CSV_HEADERS = ['name', 'contactName', 'email', 'phone', 'active'];
+
+/**
+ * Converts an array of customers to CSV format (excluding id and accountingId fields)
+ */
+export function customersToCsv(customers: CustomerData[]): string {
+  if (!customers || customers.length === 0) {
+    return '';
+  }
+
+  const headerRow = CUSTOMER_CSV_HEADERS.join(',');
+
+  const dataRows = customers.map((customer) => {
+    return CUSTOMER_CSV_HEADERS.map((header) => {
+      const value = customer[header as keyof CustomerData];
+      const stringValue = String(value ?? '');
+      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    }).join(',');
+  });
+
+  return [headerRow, ...dataRows].join('\n');
+}
+
+/**
+ * Parse CSV text and return array of customer data objects (without id/accountingId)
+ */
+export function csvToCustomers(csvText: string): Omit<CustomerData, 'id' | 'accountingId'>[] {
+  if (!csvText || csvText.trim() === '') {
+    return [];
+  }
+
+  const lines = csvText.split('\n').filter((line) => line.trim() !== '');
+  if (lines.length < 2) {
+    return [];
+  }
+
+  const headers = parseCsvLine(lines[0]);
+  const customers: Omit<CustomerData, 'id' | 'accountingId'>[] = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCsvLine(lines[i]);
+    const customer: Record<string, any> = {};
+
+    for (let j = 0; j < headers.length; j++) {
+      const header = headers[j].trim();
+      const value = j < values.length ? values[j].trim() : '';
+      if (header === 'active') {
+        customer[header] = value.toLowerCase() !== 'false';
+      } else {
+        customer[header] = value;
+      }
+    }
+
+    customers.push(customer as Omit<CustomerData, 'id' | 'accountingId'>);
+  }
+
+  return customers;
 }
