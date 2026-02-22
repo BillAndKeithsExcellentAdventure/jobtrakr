@@ -94,9 +94,8 @@ export const CustomerPicker = ({
       phone: '',
       active: true,
     });
-    setIsAddCustomerModalVisible(false);
-    setIsPickerVisible(false);
     setSearchText('');
+    setIsAddCustomerModalVisible(false);
   }, [newCustomer, addCustomerToStore, onCustomerSelected]);
 
   const handleCustomerSelect = useCallback(
@@ -119,6 +118,15 @@ export const CustomerPicker = ({
   };
 
   const displayText = selectedCustomer ? selectedCustomer.name : '';
+
+  const handleAddCustomerPress = () => {
+    console.log('Add Customer Pressed');
+    setIsPickerVisible(false);
+    // delay opening the add customer modal to allow the first bottom sheet to close and avoid z-index issues
+    setTimeout(() => {
+      setIsAddCustomerModalVisible(true);
+    }, 300);
+  };
 
   return (
     <>
@@ -143,7 +151,7 @@ export const CustomerPicker = ({
         modalHeight="75%"
       >
         <View style={{ flex: 1, backgroundColor: colors.listBackground }}>
-          <View style={[styles.searchContainer, { borderBottomColor: colors.border }]}>
+          <View style={[styles.searchContainer, { borderBottomColor: colors.border, height: 56 }]}>
             <View
               style={{
                 flex: 1,
@@ -186,18 +194,21 @@ export const CustomerPicker = ({
                   <MaterialIcons name="clear" size={24} color={colors.iconColor} />
                 </Pressable>
               </View>
-              <View
-                style={{
-                  width: 40,
-                  height: 40,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Pressable onPress={() => setIsAddCustomerModalVisible(true)}>
+              <Pressable onPress={handleAddCustomerPress}>
+                <View
+                  style={{
+                    width: 48,
+                    height: 48,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderWidth: 1,
+                    borderRadius: 24,
+                    borderColor: colors.border,
+                  }}
+                >
                   <Ionicons name="person-add-sharp" size={24} color={colors.iconColor} />
-                </Pressable>
-              </View>
+                </View>
+              </Pressable>
             </View>
           </View>
 
