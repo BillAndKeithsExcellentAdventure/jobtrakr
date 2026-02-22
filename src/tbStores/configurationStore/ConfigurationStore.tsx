@@ -55,6 +55,7 @@ export const TABLES_SCHEMA = {
     id: { type: 'string' },
     accountingId: { type: 'string' },
     name: { type: 'string' },
+    contactName: { type: 'string' },
     email: { type: 'string' },
     phone: { type: 'string' },
     active: { type: 'boolean' },

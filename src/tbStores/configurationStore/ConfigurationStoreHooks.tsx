@@ -54,6 +54,7 @@ export interface CustomerData {
   id: string;
   accountingId: string; // QuickBooks Customer Id
   name: string;
+  contactName: string; // Contact name for the customer, not provided by QuickBooks but can be filled in by the user
   email: string;
   phone: string;
   active: boolean;

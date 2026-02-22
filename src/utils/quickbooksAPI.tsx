@@ -64,7 +64,6 @@ export interface QuickBooksCustomer {
   email?: string;
   phone?: string;
   active?: boolean;
-  contactName?: string; // Optional field for contact name, not in QuickBooks
 }
 
 export interface AddVendorRequest {
