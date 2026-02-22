@@ -51,6 +51,14 @@ export const TABLES_SCHEMA = {
     accountType: { type: 'string' },
     accountSubType: { type: 'string' },
   },
+  customers: {
+    id: { type: 'string' },
+    accountingId: { type: 'string' },
+    name: { type: 'string' },
+    email: { type: 'string' },
+    phone: { type: 'string' },
+    active: { type: 'boolean' },
+  },
 } as const;
 
 const { useCreateMergeableStore, useProvideStore } = UiReact as UiReact.WithSchemas<

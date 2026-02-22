@@ -58,6 +58,15 @@ export interface QuickBooksVendor {
   Id: string;
 }
 
+export interface QuickBooksCustomer {
+  id: string;
+  displayName: string; // This could be person or company name.
+  email?: string;
+  phone?: string;
+  active?: boolean;
+  contactName?: string; // Optional field for contact name, not in QuickBooks
+}
+
 export interface AddVendorRequest {
   DisplayName: string;
   CompanyName?: string;
@@ -158,6 +167,28 @@ export async function fetchVendors(
   }
 
   return data.data || [];
+}
+
+export async function fetchCustomers(
+  orgId: string,
+  userId: string,
+  getToken: () => Promise<string | null>,
+): Promise<QuickBooksCustomer[]> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/fetchCustomers?orgId=${orgId}&userId=${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data: ApiDataResponse<{ QueryResponse: QuickBooksCustomer[] }> = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to fetch customers');
+  }
+
+  return data.data?.QueryResponse || [];
 }
 
 export async function addVendor(

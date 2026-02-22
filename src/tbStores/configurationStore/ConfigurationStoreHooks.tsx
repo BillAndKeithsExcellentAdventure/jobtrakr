@@ -50,6 +50,15 @@ export interface VendorData {
   notes?: string;
 }
 
+export interface CustomerData {
+  id: string;
+  accountingId: string; // QuickBooks Customer Id
+  name: string;
+  email: string;
+  phone: string;
+  active: boolean;
+}
+
 export interface AccountData {
   id: string;
   accountingId: string; // QuickBooks Account Id
@@ -75,6 +84,7 @@ export type WorkItemsSchema = typeof TABLES_SCHEMA.workItems;
 export type TemplateSchema = typeof TABLES_SCHEMA.templates;
 export type VendorsSchema = typeof TABLES_SCHEMA.vendors;
 export type AccountsSchema = typeof TABLES_SCHEMA.accounts;
+export type CustomersSchema = typeof TABLES_SCHEMA.customers;
 
 export type SchemaMap = {
   templates: TemplateSchema;
@@ -82,6 +92,7 @@ export type SchemaMap = {
   workItems: WorkItemsSchema;
   vendors: VendorsSchema;
   accounts: AccountsSchema;
+  customers: CustomersSchema;
 };
 
 // Type mapping between table names and data types
@@ -92,6 +103,7 @@ export type TableDataMap = {
   categories: WorkCategoryData;
   workItems: WorkItemData;
   accounts: AccountData;
+  customers: CustomerData;
 };
 
 export type CONFIGURATION_TABLES = keyof TableDataMap;
