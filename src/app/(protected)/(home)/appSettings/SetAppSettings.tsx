@@ -279,12 +279,7 @@ const SetAppSettingScreen = () => {
                         auth.getToken,
                         allAccounts,
                         addAccount,
-                        updateAccount,
-                        () => {
-                          for (const account of allAccounts) {
-                            deleteAccount(account.id, true);
-                          }
-                        },
+                        deleteAccount,
                       );
 
                       const sanitizedSettings = sanitizeQuickBooksAccountSettings(settings, importedAccounts);
@@ -294,27 +289,21 @@ const SetAppSettingScreen = () => {
 
                       setLoadingStatusMessage('Loading Vendors...');
 
-                      // NOTE: we shouldn't have to do this in the future but I was having issues with importing accountingIds to existing records.
-                      // remove existing vendors and import from QuickBooks
-                      for (const vendor of allVendors) {
-                        // No delete function currently, so just log
-                        console.log(`delete vendor: ${vendor.name} (${vendor.id})`);
-                        deleteVendor(vendor.id);
-                      }
-
-                      await importVendorsFromQuickBooks(
+                      const { addedCount: vendorAddedCount } = await importVendorsFromQuickBooks(
                         auth.orgId!,
                         auth.userId!,
                         auth.getToken,
                         allVendors,
                         addVendor,
-                        updateVendor,
+                        deleteVendor,
                       );
 
                       // Show success alert after all imports complete
                       Alert.alert(
                         'QuickBooks Import Complete',
-                        'Successfully loaded company settings, accounts, and vendors from QuickBooks.',
+                        `Successfully loaded company settings, accounts, and vendors from QuickBooks.\n\n` +
+                          `Accounts - Imported: ${importedAccounts.length}\n` +
+                          `Vendors - Imported: ${vendorAddedCount}`,
                       );
                     } catch (importError) {
                       console.error('Error importing accounts and vendors:', importError);
@@ -364,7 +353,7 @@ const SetAppSettingScreen = () => {
     deleteAccount,
     allVendors,
     addVendor,
-    updateVendor,
+    deleteVendor,
   ]);
 
   const handleDisconnectFromQuickBooks = useCallback(async () => {

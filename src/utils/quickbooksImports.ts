@@ -1,6 +1,6 @@
+import { AccountData, VendorData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Alert } from 'react-native';
 import { fetchAccounts, fetchVendors } from './quickbooksAPI';
-import { AccountData, VendorData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 
 /**
  * Import accounts from QuickBooks
@@ -9,7 +9,7 @@ import { AccountData, VendorData } from '@/src/tbStores/configurationStore/Confi
  * @param getToken - Function to get auth token
  * @param allAccounts - Existing accounts in the store
  * @param addAccount - Callback to add a new account to the store
- * @param updateAccount - Callback to update an existing account in the store
+ * @param deleteAccount - Callback to delete an existing account in the store
  * @returns Object with counts of added and updated accounts and imported accounts list
  */
 export async function importAccountsFromQuickBooks(
@@ -18,12 +18,14 @@ export async function importAccountsFromQuickBooks(
   getToken: () => Promise<string | null>,
   _allAccounts: AccountData[],
   addAccount: (account: AccountData) => void,
-  _updateAccount: (id: string, account: Partial<AccountData>) => void,
-  deleteAllAccounts: () => void,
+  deleteAccount: (id: string, force?: boolean) => void,
 ): Promise<{ addedCount: number; accounts: AccountData[] }> {
   const qbAccounts = await fetchAccounts(orgId, userId, getToken);
   if (qbAccounts.length > 0) {
-    deleteAllAccounts();
+    // Remove existing accounts before importing new ones
+    for (const account of _allAccounts) {
+      deleteAccount(account.id, true);
+    }
   } else {
     Alert.alert('No Accounts Found', 'No accounts were found in QuickBooks to import.');
     return { addedCount: 0, accounts: [] };
@@ -56,8 +58,8 @@ export async function importAccountsFromQuickBooks(
  * @param getToken - Function to get auth token
  * @param allVendors - Existing vendors in the store
  * @param addVendor - Callback to add a new vendor to the store
- * @param updateVendor - Callback to update an existing vendor in the store
- * @returns Object with counts of added and updated vendors
+ * @param deleteVendor - Callback to delete a vendor from the store
+ * @returns Object with counts of added vendors
  */
 export async function importVendorsFromQuickBooks(
   orgId: string,
@@ -65,120 +67,33 @@ export async function importVendorsFromQuickBooks(
   getToken: () => Promise<string | null>,
   allVendors: VendorData[],
   addVendor: (vendor: VendorData) => void,
-  updateVendor: (id: string, vendor: Partial<VendorData>) => void,
-): Promise<{ addedCount: number; updatedCount: number }> {
+  deleteVendor: (id: string) => void,
+): Promise<{ addedCount: number }> {
   const qbVendors = await fetchVendors(orgId, userId, getToken);
   let addedCount = 0;
-  let updatedCount = 0;
+
+  if (qbVendors.length > 0) {
+    // Remove existing vendors before importing new ones
+    for (const vendor of allVendors) {
+      deleteVendor(vendor.id);
+    }
+  }
 
   for (const qbVendor of qbVendors) {
-    // Find existing vendor with matching accountingId
-    const existing = allVendors.find((v) => v.accountingId === qbVendor.accountingId);
-
-    if (existing) {
-      // Update existing vendor
-      updateVendor(existing.id, {
-        id: existing.id,
-        accountingId: qbVendor.accountingId,
-        name: qbVendor.name,
-        address: qbVendor.address || '',
-        city: qbVendor.city || '',
-        state: qbVendor.state || '',
-        zip: qbVendor.zip || '',
-        mobilePhone: qbVendor.mobilePhone || '',
-        businessPhone: qbVendor.businessPhone || '',
-        notes: qbVendor.notes || '',
-      });
-      updatedCount++;
-    } else {
-      // Add new vendor
-      addVendor({
-        id: '', // empty id for new vendors, replaced with UUID by the add callback
-        accountingId: qbVendor.accountingId,
-        name: qbVendor.name,
-        address: qbVendor.address || '',
-        city: qbVendor.city || '',
-        state: qbVendor.state || '',
-        zip: qbVendor.zip || '',
-        mobilePhone: qbVendor.mobilePhone || '',
-        businessPhone: qbVendor.businessPhone || '',
-        notes: qbVendor.notes || '',
-      });
-      addedCount++;
-    }
+    addVendor({
+      id: '', // empty id for new vendors, replaced with UUID by the add callback
+      accountingId: qbVendor.accountingId,
+      name: qbVendor.name,
+      address: qbVendor.address || '',
+      city: qbVendor.city || '',
+      state: qbVendor.state || '',
+      zip: qbVendor.zip || '',
+      mobilePhone: qbVendor.mobilePhone || '',
+      businessPhone: qbVendor.businessPhone || '',
+      notes: qbVendor.notes || '',
+    });
+    addedCount++;
   }
 
-  return { addedCount, updatedCount };
-}
-
-/**
- * Import both accounts and vendors from QuickBooks
- * @param orgId - Organization ID
- * @param userId - User ID
- * @param getToken - Function to get auth token
- * @param allAccounts - Existing accounts in the store
- * @param addAccount - Callback to add a new account to the store
- * @param updateAccount - Callback to update an existing account in the store
- * @param allVendors - Existing vendors in the store
- * @param addVendor - Callback to add a new vendor to the store
- * @param updateVendor - Callback to update an existing vendor in the store
- * @param showAlert - Whether to show alert dialogs (default: true)
- * @returns Object with counts of added and updated accounts and vendors, plus imported accounts list
- */
-export async function importAccountsAndVendorsFromQuickBooks(
-  orgId: string,
-  userId: string,
-  getToken: () => Promise<string | null>,
-  allAccounts: AccountData[],
-  addAccount: (account: AccountData) => void,
-  updateAccount: (id: string, account: Partial<AccountData>) => void,
-  deleteAllAccounts: () => void,
-  allVendors: VendorData[],
-  addVendor: (vendor: VendorData) => void,
-  updateVendor: (id: string, vendor: Partial<VendorData>) => void,
-  showAlert: boolean = true,
-): Promise<{
-  accounts: { addedCount: number; updatedCount: number; accounts: AccountData[] };
-  vendors: { addedCount: number; updatedCount: number };
-}> {
-  try {
-    const accountResults = await importAccountsFromQuickBooks(
-      orgId,
-      userId,
-      getToken,
-      allAccounts,
-      addAccount,
-      updateAccount,
-      deleteAllAccounts,
-    );
-
-    const vendorResults = await importVendorsFromQuickBooks(
-      orgId,
-      userId,
-      getToken,
-      allVendors,
-      addVendor,
-      updateVendor,
-    );
-
-    if (showAlert) {
-      Alert.alert(
-        'QuickBooks Import Complete',
-        `Import from QuickBooks completed successfully.\n\n` +
-          `Accounts - Added: ${accountResults.addedCount}, Updated: ${accountResults.updatedCount}\n` +
-          `Vendors - Added: ${vendorResults.addedCount}, Updated: ${vendorResults.updatedCount}`,
-      );
-    }
-
-    return {
-      accounts: accountResults,
-      vendors: vendorResults,
-    };
-  } catch (error) {
-    console.error('Error importing from QuickBooks:', error);
-    if (showAlert) {
-      Alert.alert('Error', 'Failed to import from QuickBooks');
-    }
-    throw error;
-  }
+  return { addedCount };
 }

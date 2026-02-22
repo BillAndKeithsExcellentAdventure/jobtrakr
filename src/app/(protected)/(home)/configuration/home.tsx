@@ -264,32 +264,24 @@ const Home = () => {
         ]);
         return;
       } else if (menuItem === 'GetQBVendors') {
-        // NOTE: we shouldn't have to do this in the future but I was having issues with importing accountingIds to existing records.
-        // remove existing vendors and import from QuickBooks
-        for (const vendor of allVendors) {
-          // No delete function currently, so just log
-          console.log(`delete vendor: ${vendor.name} (${vendor.id})`);
-          deleteVendor(vendor.id);
-        }
-
         if (!auth.orgId || !auth.userId) {
           Alert.alert('Error', 'Unable to import vendors. Please sign in again.');
           return;
         }
 
         try {
-          const { addedCount, updatedCount } = await importVendorsFromQuickBooks(
+          const { addedCount } = await importVendorsFromQuickBooks(
             auth.orgId!,
             auth.userId!,
             auth.getToken,
             allVendors,
             addVendorToStore,
-            updateVendor,
+            deleteVendor,
           );
 
           Alert.alert(
             'QuickBooks Vendor Import Complete',
-            `Vendors imported successfully from QuickBooks.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
+            `${addedCount} Vendors imported successfully from QuickBooks.`,
           );
         } catch (error) {
           console.error('Error importing vendors from QuickBooks:', error);
@@ -309,12 +301,7 @@ const Home = () => {
             auth.getToken,
             allAccounts,
             addAccount,
-            updateAccount,
-            () => {
-              for (const account of allAccounts) {
-                deleteAccount(account.id, true);
-              }
-            },
+            deleteAccount,
           );
 
           const sanitizedSettings = sanitizeQuickBooksAccountSettings(appSettings, accounts);
