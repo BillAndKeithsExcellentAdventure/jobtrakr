@@ -122,7 +122,7 @@ export const CustomerPicker = ({
   const handleAddCustomerPress = () => {
     console.log('Add Customer Pressed');
     setIsPickerVisible(false);
-    // delay opening the add customer modal to allow the first bottom sheet to close and avoid z-index issues
+    // delay opening the add customer modal to allow the first bottom sheet to close
     setTimeout(() => {
       setIsAddCustomerModalVisible(true);
     }, 300);
