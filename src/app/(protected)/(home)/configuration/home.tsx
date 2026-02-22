@@ -20,13 +20,18 @@ import {
   useUpdateRowCallback,
   useDeleteRowCallback,
   VendorData,
+  CustomerData,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { vendorsToCsv, csvToVendors } from '@/src/utils/csvUtils';
+import { vendorsToCsv, csvToVendors, csvToCustomers } from '@/src/utils/csvUtils';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import * as DocumentPicker from 'expo-document-picker';
 import { useAuth } from '@clerk/clerk-expo';
-import { importAccountsFromQuickBooks, importVendorsFromQuickBooks } from '@/src/utils/quickbooksImports';
+import {
+  importAccountsFromQuickBooks,
+  importCustomersFromQuickBooks,
+  importVendorsFromQuickBooks,
+} from '@/src/utils/quickbooksImports';
 import {
   useAppSettings,
   useSetAppSettingsCallback,
@@ -51,6 +56,9 @@ const Home = () => {
   const addAccount = useAddRowCallback('accounts');
   const updateAccount = useUpdateRowCallback('accounts');
   const deleteAccount = useDeleteRowCallback('accounts');
+  const allCustomers = useAllRows('customers');
+  const addCustomer = useAddRowCallback('customers');
+  const updateCustomer = useUpdateRowCallback('customers');
   const { isConnectedToQuickBooks } = useNetwork();
   const auth = useAuth();
   const appSettings = useAppSettings();
@@ -315,6 +323,83 @@ const Home = () => {
           console.error('Error importing QuickBooks accounts:', error);
           Alert.alert('Error', 'Failed to import QuickBooks accounts');
         }
+      } else if (menuItem === 'GetQBCustomers') {
+        if (!auth.orgId || !auth.userId) {
+          Alert.alert('Error', 'Unable to import customers. Please sign in again.');
+          return;
+        }
+
+        try {
+          const { addedCount, updatedCount } = await importCustomersFromQuickBooks(
+            auth.orgId,
+            auth.userId,
+            auth.getToken,
+            allCustomers,
+            addCustomer,
+            updateCustomer,
+          );
+
+          Alert.alert(
+            'QuickBooks Customer Import Complete',
+            `${addedCount} Customers added, ${updatedCount} updated from QuickBooks.`,
+          );
+        } catch (error) {
+          console.error('Error importing customers from QuickBooks:', error);
+          Alert.alert('Error', 'Failed to import customers from QuickBooks');
+        }
+      } else if (menuItem === 'ImportCustomers') {
+        Alert.alert('Import Customers', 'Would you like to import customers from a CSV file?', [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Import',
+            onPress: async () => {
+              try {
+                const result = await DocumentPicker.getDocumentAsync({
+                  type: ['text/csv', 'text/comma-separated-values', '*/*'],
+                  copyToCacheDirectory: true,
+                  multiple: false,
+                });
+
+                if (!result.canceled && result.assets?.length > 0) {
+                  const file = result.assets[0];
+                  const fileObj = new File(file.uri);
+                  const fileText = await fileObj.text();
+                  const importedCustomers = csvToCustomers(fileText);
+
+                  let addedCount = 0;
+                  let updatedCount = 0;
+
+                  for (const c of importedCustomers) {
+                    const existing = allCustomers.find(
+                      (ec) =>
+                        ec.name && c.name && ec.name === c.name && (!c.email || ec.email === c.email),
+                    );
+
+                    if (existing) {
+                      updateCustomer(existing.id, c);
+                      updatedCount++;
+                    } else {
+                      addCustomer({ id: '', accountingId: '', ...c });
+                      addedCount++;
+                    }
+                  }
+
+                  Alert.alert(
+                    'Import Complete',
+                    `Customers imported successfully.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
+                  );
+                }
+              } catch (error) {
+                console.error('Error importing customers:', error);
+                Alert.alert('Error', 'Failed to import customers');
+              }
+            },
+          },
+        ]);
+        return;
       }
     },
     [
@@ -328,6 +413,9 @@ const Home = () => {
       addAccount,
       updateAccount,
       deleteAccount,
+      allCustomers,
+      addCustomer,
+      updateCustomer,
       auth.orgId,
       auth.userId,
       auth.getToken,
@@ -395,6 +483,24 @@ const Home = () => {
                 handleMenuItemPress('ImportQBAccounts');
               },
             },
+            {
+              icon: <MaterialCommunityIcons name="account-group" size={28} color={colors.iconColor} />,
+              label: 'Get Customers from QuickBooks',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('GetQBCustomers');
+              },
+            },
+          ]
+        : []),
+      ...(!isConnectedToQuickBooks
+        ? [
+            {
+              icon: <MaterialCommunityIcons name="import" size={28} color={colors.iconColor} />,
+              label: 'Import Customers from CSV',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('ImportCustomers');
+              },
+            },
           ]
         : []),
     ];
@@ -428,6 +534,11 @@ const Home = () => {
           label="Vendors/Merchants"
           description="Add and Edit Vendors/Merchants"
           onPress={() => router.push('/configuration/vendor/vendors')}
+        />
+        <ConfigurationEntry
+          label="Customers"
+          description="Add and Edit Customers"
+          onPress={() => router.push('/configuration/customer/customers')}
         />
         {isConnectedToQuickBooks && (
           <ConfigurationEntry
