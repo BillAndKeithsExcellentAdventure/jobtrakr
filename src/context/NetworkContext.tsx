@@ -141,6 +141,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     auth.isSignedIn,
     isConnectedToQuickBooks,
     appSettings.syncWithQuickBooks,
+    appSettings.id,
     orgId,
     userId,
     isConnected,

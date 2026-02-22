@@ -79,7 +79,6 @@ const SetAppSettingScreen = () => {
   const deleteAccount = useDeleteRowCallback('accounts');
   const allVendors = useAllRows('vendors');
   const addVendor = useAddRowCallback('vendors');
-  const updateVendor = useUpdateRowCallback('vendors');
   const deleteVendor = useDeleteRowCallback('vendors');
 
   // Check if we're in a development build
