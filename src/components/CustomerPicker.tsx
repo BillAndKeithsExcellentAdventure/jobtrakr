@@ -156,6 +156,7 @@ export const CustomerPicker = ({
             >
               <View
                 style={{
+                  flex: 1,
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: 8,
@@ -191,7 +192,6 @@ export const CustomerPicker = ({
                   height: 40,
                   justifyContent: 'center',
                   alignItems: 'center',
-                  backgroundColor: 'red',
                 }}
               >
                 <Pressable onPress={() => setIsAddCustomerModalVisible(true)}>
