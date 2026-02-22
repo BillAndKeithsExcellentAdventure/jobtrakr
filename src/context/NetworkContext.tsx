@@ -119,7 +119,8 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
         return;
       }
 
-      if (!appSettings.syncWithQuickBooks) {
+      if (!appSettings.syncWithQuickBooks && appSettings.id.length && !isConnectedToQuickBooks) {
+        console.log('QuickBooks not connected because syncWithQuickBooks is false');
         setIsConnectedToQuickBooks(false);
         return;
       }
@@ -127,6 +128,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
       try {
         const connected = await testQbIsConnected(orgId, userId, getToken);
         setIsConnectedToQuickBooks(connected);
+        console.log('QuickBooks is connected ✅');
       } catch (error) {
         console.error('QuickBooks connection check failed:', error);
         setIsConnectedToQuickBooks(false);
@@ -137,6 +139,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   }, [
     auth.isLoaded,
     auth.isSignedIn,
+    isConnectedToQuickBooks,
     appSettings.syncWithQuickBooks,
     orgId,
     userId,

@@ -250,8 +250,6 @@ const SetAppSettingScreen = () => {
           const connected = await checkQBConnectionWithRetry(60, 1000);
 
           if (connected) {
-            setQuickBooksConnected(connected);
-
             // after confirming connection via alert, fetch company info to update settings
             Alert.alert('Success', 'Successfully connected to QuickBooks!', [
               {
@@ -268,6 +266,10 @@ const SetAppSettingScreen = () => {
                         syncWithQuickBooks: true,
                       };
                       setAppSettings(updatedSettings);
+                      // call following after a delay to ensure settings are updated before attempting to set variable that will trigger looking at appSettings.
+                      setTimeout(() => {
+                        setQuickBooksConnected(connected);
+                      }, 100);
                     }
 
                     // Import accounts and vendors from QuickBooks
@@ -286,6 +288,10 @@ const SetAppSettingScreen = () => {
                       const updatedSettings = { ...settings, ...sanitizedSettings };
                       setAppSettings(updatedSettings);
                       setSettings(updatedSettings);
+                      // call following after a delay to ensure settings are updated before attempting to set variable that will trigger looking at appSettings.
+                      setTimeout(() => {
+                        setQuickBooksConnected(connected);
+                      }, 100);
 
                       setLoadingStatusMessage('Loading Vendors...');
 
@@ -377,8 +383,11 @@ const SetAppSettingScreen = () => {
 
             await qbDisconnect(auth.orgId!, auth.userId!, auth.getToken);
             const updatedSettings = { ...settings, syncWithQuickBooks: false };
-            setQuickBooksConnected(false);
             setAppSettings(updatedSettings);
+            // call following after a delay to ensure settings are updated before attempting to set variable that will trigger looking at appSettings.
+            setTimeout(() => {
+              setQuickBooksConnected(false);
+            }, 100);
 
             Alert.alert('Success', 'Successfully disconnected from QuickBooks');
           } catch (error) {
