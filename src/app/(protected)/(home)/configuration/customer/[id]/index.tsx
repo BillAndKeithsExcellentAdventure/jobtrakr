@@ -69,6 +69,13 @@ const EditCustomer = () => {
         }}
       />
       <View style={styles.container}>
+        {isFromQuickBooks && (
+          <Text
+            txtSize="xs"
+            text="This customer was imported from QuickBooks. Only the Contact Name and the Active status can be edited."
+            style={{ marginBottom: 12, color: colors.neutral500 }}
+          />
+        )}
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Customer Name"
@@ -79,6 +86,7 @@ const EditCustomer = () => {
         />
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
+          label="Contact Name"
           placeholder="Contact Name"
           value={updatedCustomer.contactName}
           onChangeText={(text) => handleInputChange('contactName', text)}
@@ -107,13 +115,6 @@ const EditCustomer = () => {
           <Text txtSize="standard" text="Active" />
           <Switch value={updatedCustomer.active} onValueChange={handleToggleActive} size="medium" />
         </View>
-        {isFromQuickBooks && (
-          <Text
-            txtSize="xs"
-            text="This customer was imported from QuickBooks. Only the Contact Name can be edited."
-            style={{ marginTop: 12, color: colors.neutral500 }}
-          />
-        )}
       </View>
     </SafeAreaView>
   );

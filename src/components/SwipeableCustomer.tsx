@@ -1,17 +1,14 @@
-import { SwipeableComponent } from '@/src/components/SwipeableComponent';
+import { SwipeableComponent, SwipeableHandles } from '@/src/components/SwipeableComponent';
 import { Text, View } from '@/src/components/Themed';
-import { Switch } from '@/src/components/Switch';
-import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
 import {
   CustomerData,
-  useDeleteRowCallback,
   useUpdateRowCallback,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback } from 'react';
-import { Alert, Pressable, StyleSheet } from 'react-native';
+import React, { useCallback, useRef } from 'react';
+import { Pressable, StyleSheet } from 'react-native';
 import Reanimated from 'react-native-reanimated';
 
 const RIGHT_ACTION_WIDTH = 100;
@@ -19,43 +16,28 @@ const SWIPE_THRESHOLD_WIDTH = 50;
 
 const SwipeableCustomer = ({ customer }: { customer: CustomerData }) => {
   const router = useRouter();
-  const processDelete = useDeleteRowCallback('customers');
   const updateCustomer = useUpdateRowCallback('customers');
   const colors = useColors();
-
-  const handleDelete = useCallback(
-    (itemId: string) => {
-      Alert.alert(
-        'Delete Customer',
-        'Are you sure you want to delete this customer?',
-        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete(itemId) }],
-        { cancelable: true },
-      );
-    },
-    [processDelete],
-  );
+  const swipeableRef = useRef<SwipeableHandles>(null);
 
   const handleToggleActive = useCallback(() => {
     updateCustomer(customer.id, { active: !customer.active });
+    swipeableRef.current?.close();
   }, [customer.id, customer.active, updateCustomer]);
 
   const RightAction = useCallback(() => {
     return (
-      <Pressable
-        style={styles.rightAction}
-        onPress={() => {
-          handleDelete(customer.id);
-        }}
-      >
+      <Pressable style={[styles.rightAction, { backgroundColor: colors.tint }]} onPress={handleToggleActive}>
         <Reanimated.View>
-          <MaterialIcons name="delete" size={32} color="white" />
+          <MaterialIcons name={customer.active ? 'visibility-off' : 'visibility'} size={32} color="white" />
         </Reanimated.View>
       </Pressable>
     );
-  }, [customer.id, handleDelete]);
+  }, [customer.active, handleToggleActive, colors.tint]);
 
   return (
     <SwipeableComponent
+      ref={swipeableRef}
       key={customer.id}
       threshold={SWIPE_THRESHOLD_WIDTH}
       actionWidth={RIGHT_ACTION_WIDTH}
@@ -73,15 +55,18 @@ const SwipeableCustomer = ({ customer }: { customer: CustomerData }) => {
             }}
           >
             <View style={styles.customerSummary}>
-              <Text numberOfLines={1} style={styles.customerName}>
+              <Text
+                numberOfLines={1}
+                style={[styles.customerName, !customer.active && { color: colors.textMuted }]}
+              >
                 {customer.name.length > 0 ? customer.name : 'Not Specified'}
               </Text>
-              {customer.contactName ? <Text>{customer.contactName}</Text> : null}
-              {customer.email ? <Text>{customer.email}</Text> : null}
+              {customer.contactName ? (
+                <Text style={!customer.active && { color: colors.textMuted }}>{customer.contactName}</Text>
+              ) : null}
             </View>
           </Pressable>
           <View style={styles.customerActions}>
-            <Switch value={customer.active} onValueChange={handleToggleActive} size="medium" />
             <Pressable
               onPress={() => {
                 router.push({
@@ -113,6 +98,7 @@ const styles = StyleSheet.create({
   },
   customerSummary: {
     flex: 1,
+    justifyContent: 'center',
   },
   customerName: {
     fontSize: 18,
@@ -131,7 +117,6 @@ const styles = StyleSheet.create({
   rightAction: {
     width: RIGHT_ACTION_WIDTH,
     minHeight: 70,
-    backgroundColor: deleteBg,
     alignItems: 'center',
     justifyContent: 'center',
   },

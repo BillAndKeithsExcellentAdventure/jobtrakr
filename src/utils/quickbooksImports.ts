@@ -1,4 +1,8 @@
-import { AccountData, CustomerData, VendorData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  AccountData,
+  CustomerData,
+  VendorData,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Alert } from 'react-native';
 import { fetchAccounts, fetchCustomers, fetchVendors } from './quickbooksAPI';
 
@@ -129,27 +133,34 @@ export async function importCustomersFromQuickBooks(
   let updatedCount = 0;
 
   for (const qbCustomer of qbCustomers) {
-    const existing = allCustomers.find((c) => c.accountingId === qbCustomer.id);
+    const existing = allCustomers.find((c) => c.accountingId === qbCustomer.Id);
+
+    // Use QuickBooks contact name if available, otherwise preserve existing contact name, or default to empty string
+    const contactName =
+      [qbCustomer.GivenName, qbCustomer.FamilyName].filter(Boolean).join(' ').trim() ||
+      existing?.contactName ||
+      '';
 
     if (existing) {
       // Update existing customer, preserving contactName
       updateCustomer(existing.id, {
-        name: qbCustomer.displayName,
-        email: qbCustomer.email || '',
-        phone: qbCustomer.phone || '',
-        active: qbCustomer.active ?? true,
+        name: qbCustomer.DisplayName,
+        email: qbCustomer.PrimaryEmailAddr?.Address || '',
+        phone: qbCustomer.PrimaryPhone?.FreeFormNumber || '',
+        active: qbCustomer.Active ?? true,
+        contactName,
       });
       updatedCount++;
     } else {
       // Add new customer
       addCustomer({
-        id: '',
-        accountingId: qbCustomer.id,
-        name: qbCustomer.displayName,
-        contactName: '',
-        email: qbCustomer.email || '',
-        phone: qbCustomer.phone || '',
-        active: qbCustomer.active ?? true,
+        id: '', // empty id for new customers, replaced with UUID by the add callback
+        accountingId: qbCustomer.Id,
+        name: qbCustomer.DisplayName,
+        email: qbCustomer.PrimaryEmailAddr?.Address || '',
+        phone: qbCustomer.PrimaryPhone?.FreeFormNumber || '',
+        active: qbCustomer.Active ?? true,
+        contactName,
       });
       addedCount++;
     }

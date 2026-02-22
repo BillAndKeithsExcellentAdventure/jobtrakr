@@ -1,5 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import SwipeableCustomer from '@/src/components/SwipeableCustomer';
+import { Switch } from '@/src/components/Switch';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import {
@@ -20,6 +21,7 @@ const CustomersScreen = () => {
   const addCustomerToStore = useAddRowCallback('customers');
   const allCustomers = useAllRows('customers');
   const [showAdd, setShowAdd] = useState(false);
+  const [showActiveOnly, setShowActiveOnly] = useState(false);
   const [customer, setCustomer] = useState<CustomerData>({
     id: '',
     accountingId: '',
@@ -31,6 +33,8 @@ const CustomersScreen = () => {
   });
 
   const colors = useColors();
+
+  const filteredCustomers = showActiveOnly ? allCustomers.filter((c) => c.active) : allCustomers;
 
   const handleInputChange = useCallback((name: keyof CustomerData, value: string) => {
     setCustomer((prev) => ({
@@ -59,11 +63,7 @@ const CustomersScreen = () => {
   }, [addCustomerToStore, customer]);
 
   const renderHeaderRight = () => (
-    <Pressable
-      onPress={() => setShowAdd(!showAdd)}
-      hitSlop={10}
-      style={styles.headerButton}
-    >
+    <Pressable onPress={() => setShowAdd(!showAdd)} hitSlop={10} style={styles.headerButton}>
       <Ionicons name={showAdd ? 'chevron-up-sharp' : 'add'} size={24} color={colors.iconColor} />
     </Pressable>
   );
@@ -82,7 +82,11 @@ const CustomersScreen = () => {
         />
         <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
           {showAdd && (
-            <View style={{ backgroundColor: colors.listBackground }}>
+            <View
+              style={{
+                backgroundColor: colors.listBackground,
+              }}
+            >
               <View style={{ padding: 10, borderRadius: 10, marginVertical: 10, marginHorizontal: 15 }}>
                 <TextInput
                   style={[styles.input, { backgroundColor: colors.neutral200 }]}
@@ -120,9 +124,23 @@ const CustomersScreen = () => {
             </View>
           )}
 
+          <View
+            style={[
+              styles.filterContainer,
+              {
+                backgroundColor: colors.background,
+                borderBottomColor: colors.border,
+                paddingBottom: 10,
+              },
+            ]}
+          >
+            <Text>Show active only</Text>
+            <Switch value={showActiveOnly} onValueChange={setShowActiveOnly} size="medium" />
+          </View>
+
           <FlatList
             style={{ borderTopColor: colors.border }}
-            data={allCustomers}
+            data={filteredCustomers}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => <SwipeableCustomer customer={item} />}
             ListEmptyComponent={() => (
@@ -159,6 +177,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingLeft: 10,
     borderRadius: 4,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
   },
 });
 

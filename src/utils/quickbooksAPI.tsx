@@ -59,11 +59,14 @@ export interface QuickBooksVendor {
 }
 
 export interface QuickBooksCustomer {
-  id: string;
-  displayName: string; // This could be person or company name.
-  email?: string;
-  phone?: string;
-  active?: boolean;
+  Id: string;
+  DisplayName: string; // This could be person or company name.
+  PrimaryEmailAddr?: QBEmail;
+  PrimaryPhone?: QBPhone;
+  BillAddr?: QBAddress;
+  Active?: boolean;
+  GivenName?: string;
+  FamilyName?: string;
 }
 
 export interface AddVendorRequest {
@@ -182,12 +185,18 @@ export async function fetchCustomers(
     },
   });
 
-  const data: ApiDataResponse<{ QueryResponse: QuickBooksCustomer[] }> = await response.json();
+  const data: ApiDataResponse<{ QueryResponse: { Customer: QuickBooksCustomer[] } }> = await response.json();
   if (!data.success) {
     throw new Error(data.message || 'Failed to fetch customers');
   }
 
-  return data.data?.QueryResponse || [];
+  const customers = data.data?.QueryResponse.Customer;
+  // Ensure we always return an array
+  if (!customers || !Array.isArray(customers)) {
+    return [];
+  }
+
+  return customers;
 }
 
 export async function addVendor(
