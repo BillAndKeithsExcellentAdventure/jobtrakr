@@ -24,7 +24,6 @@ const AddProjectScreen = () => {
     abbreviation: '',
     location: '',
     customerId: '',
-    ownerName: '',
     bidPrice: 0,
     quotedPrice: 0,
     amountSpent: 0,
@@ -37,13 +36,6 @@ const AddProjectScreen = () => {
     seedWorkItems: '', // comma separated list of workItemIds
     startDate: defaultStart.getTime(),
     plannedFinish: defaultFinish.getTime(),
-    ownerAddress: '',
-    ownerAddress2: '',
-    ownerCity: '',
-    ownerEmail: '',
-    ownerPhone: '',
-    ownerZip: '',
-    ownerState: '',
   });
 
   const addProject = useAddProjectCallback();
@@ -161,80 +153,6 @@ const AddProjectScreen = () => {
           customers={allCustomers}
           placeholder="Select a customer"
         />
-        <TextInput
-          style={[styles.input, { backgroundColor: colors.neutral200 }]}
-          placeholder="Owner Name"
-          autoCapitalize="words"
-          value={project.ownerName}
-          onChangeText={(text) => setProject({ ...project, ownerName: text })}
-        />
-        <View style={{ marginBottom: 10, backgroundColor: colors.listBackground }}>
-          <TextInput
-            placeholder="Owner Address"
-            autoCapitalize="words"
-            value={String(project.ownerAddress ?? '')}
-            onChangeText={(text) => setProject({ ...project, ownerAddress: text })}
-            style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
-            multiline={true}
-            numberOfLines={2}
-            autoCorrect={false}
-          />
-        </View>
-        <View style={{ marginBottom: 10, backgroundColor: colors.listBackground }}>
-          <TextInput
-            placeholder="Owner City"
-            autoCapitalize="words"
-            value={String(project.ownerCity ?? '')}
-            onChangeText={(text) => setProject({ ...project, ownerCity: text })}
-            style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
-            autoCorrect={false}
-          />
-        </View>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <View style={{ marginBottom: 10, flex: 1 }}>
-            <TextInput
-              placeholder="Owner State"
-              value={String(project.ownerState ?? '')}
-              onChangeText={(text) => setProject({ ...project, ownerState: text })}
-              style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
-              autoCorrect={false}
-            />
-          </View>
-          <View style={{ marginBottom: 10, width: 120 }}>
-            <TextInput
-              value={String(project.ownerZip ?? '')}
-              placeholder="Owner Zip"
-              keyboardType="numeric"
-              onChangeText={(text) => setProject({ ...project, ownerZip: text })}
-              style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-        </View>
-
-        <View style={{ marginBottom: 10 }}>
-          <TextInput
-            value={String(project.ownerPhone ?? '')}
-            placeholder="Owner Phone"
-            keyboardType="phone-pad"
-            onChangeText={(text) => setProject({ ...project, ownerPhone: text })}
-            style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
-        <View style={{ marginBottom: 10 }}>
-          <TextInput
-            value={String(project.ownerEmail ?? '')}
-            placeholder="Owner Email"
-            keyboardType="email-address"
-            onChangeText={(text) => setProject({ ...project, ownerEmail: text })}
-            style={{ borderWidth: 1, padding: 4, backgroundColor: colors.neutral200 }}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
 
         <OptionPickerItem
           containerStyle={{ backgroundColor: colors.neutral200, height: 36 }}

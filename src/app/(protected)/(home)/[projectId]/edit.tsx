@@ -25,7 +25,6 @@ const EditProjectScreen = () => {
     id: '',
     name: '',
     location: '',
-    ownerName: '',
     bidPrice: 0,
     amountSpent: 0,
     quotedPrice: 0,
@@ -38,14 +37,8 @@ const EditProjectScreen = () => {
     seedWorkItems: '',
     startDate: 0,
     plannedFinish: 0,
-    ownerAddress: '',
-    ownerAddress2: '',
-    ownerCity: '',
-    ownerState: '',
-    ownerZip: '',
-    ownerPhone: '',
-    ownerEmail: '',
     abbreviation: '',
+    customerId: '',
   });
 
   const currentProject = useProject(projectId);
@@ -215,92 +208,6 @@ const EditProjectScreen = () => {
             label="Location"
             value={project.location}
             onChangeText={(text) => setProject({ ...project, location: text })}
-            onBlur={handleSubmit}
-          />
-          <TextField
-            containerStyle={styles.inputContainer}
-            style={[styles.input, { borderColor: colors.transparent }]}
-            placeholder="Owner Name"
-            autoCapitalize="words"
-            label="Owner Name"
-            value={project.ownerName}
-            onChangeText={(text) => setProject({ ...project, ownerName: text })}
-            onBlur={handleSubmit}
-          />
-          <TextField
-            containerStyle={styles.inputContainer}
-            label="Owner Address"
-            placeholder="Owner Address"
-            autoCapitalize="words"
-            value={String(project.ownerAddress ?? '')}
-            onChangeText={(text) => setProject({ ...project, ownerAddress: text })}
-            style={[styles.input, { maxHeight: 80, borderColor: colors.transparent }]}
-            numberOfLines={2}
-            autoCorrect={false}
-            onBlur={handleSubmit}
-          />
-          <TextField
-            containerStyle={styles.inputContainer}
-            placeholder="Owner City"
-            label="Owner City"
-            autoCapitalize="words"
-            value={String(project.ownerCity ?? '')}
-            onChangeText={(text) => setProject({ ...project, ownerCity: text })}
-            style={[styles.input, { borderColor: colors.transparent }]}
-            autoCorrect={false}
-            onBlur={handleSubmit}
-          />
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <View style={{ marginBottom: 0, flex: 1 }}>
-              <TextField
-                containerStyle={styles.inputContainer}
-                placeholder="Owner State"
-                label="Owner State"
-                value={String(project.ownerState ?? '')}
-                onChangeText={(text) => setProject({ ...project, ownerState: text })}
-                style={[styles.input, { borderColor: colors.transparent }]}
-                autoCorrect={false}
-                onBlur={handleSubmit}
-              />
-            </View>
-            <View style={{ marginBottom: 0, width: 120 }}>
-              <TextField
-                value={String(project.ownerZip ?? '')}
-                containerStyle={styles.inputContainer}
-                placeholder="Owner Zip"
-                keyboardType="numeric"
-                label="Zip"
-                onChangeText={(text) => setProject({ ...project, ownerZip: text })}
-                style={[styles.input, { borderColor: colors.transparent }]}
-                autoCapitalize="none"
-                autoCorrect={false}
-                onBlur={handleSubmit}
-              />
-            </View>
-          </View>
-
-          <TextField
-            containerStyle={styles.inputContainer}
-            value={String(project.ownerPhone ?? '')}
-            placeholder="Owner Phone"
-            label="Owner Phone"
-            keyboardType="phone-pad"
-            onChangeText={(text) => setProject({ ...project, ownerPhone: text })}
-            style={[styles.input, { borderColor: colors.transparent }]}
-            autoCapitalize="none"
-            autoCorrect={false}
-            onBlur={handleSubmit}
-          />
-          <TextField
-            containerStyle={styles.inputContainer}
-            value={String(project.ownerEmail ?? '')}
-            placeholder="Owner Email"
-            label="Owner Email"
-            keyboardType="email-address"
-            onChangeText={(text) => setProject({ ...project, ownerEmail: text })}
-            style={[styles.input, { borderColor: colors.transparent }]}
-            autoCapitalize="none"
-            autoCorrect={false}
             onBlur={handleSubmit}
           />
           <View style={styles.dateContainer}>
