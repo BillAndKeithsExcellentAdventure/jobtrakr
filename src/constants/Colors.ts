@@ -42,6 +42,8 @@ export const Colors = {
     overlay20: 'rgba(25, 16, 21, 0.2)',
     overlay50: 'rgba(25, 16, 21, 0.5)',
 
+    slideMenuBackground: tintColorLight,
+    slideMenuForeground: tintColorDark,
     text: '#000',
     background: '#fff',
     tint: tintColorLight,
@@ -115,6 +117,8 @@ export const Colors = {
     overlay20: 'rgba(25, 16, 21, 0.2)',
     overlay50: 'rgba(25, 16, 21, 0.5)',
 
+    slideMenuBackground: tintColorLight,
+    slideMenuForeground: tintColorDark,
     text: '#fff',
     background: '#000',
     tint: tintColorDark,

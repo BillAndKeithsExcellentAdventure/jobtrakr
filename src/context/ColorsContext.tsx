@@ -68,6 +68,8 @@ export type ColorSchemeColors = {
   percentCompleteBackground: string;
   profitFg: string;
   lossFg: string;
+  slideMenuBackground: string;
+  slideMenuForeground: string;
 };
 
 const ColorsContext = createContext<ColorSchemeColors | null>(null);

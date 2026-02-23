@@ -27,13 +27,20 @@ const SwipeableCustomer = ({ customer }: { customer: CustomerData }) => {
 
   const RightAction = useCallback(() => {
     return (
-      <Pressable style={[styles.rightAction, { backgroundColor: colors.tint }]} onPress={handleToggleActive}>
+      <Pressable
+        style={[styles.rightAction, { backgroundColor: colors.slideMenuBackground }]}
+        onPress={handleToggleActive}
+      >
         <Reanimated.View>
-          <MaterialIcons name={customer.active ? 'visibility-off' : 'visibility'} size={32} color="white" />
+          <MaterialIcons
+            name={customer.active ? 'visibility-off' : 'visibility'}
+            size={32}
+            color={colors.slideMenuForeground}
+          />
         </Reanimated.View>
       </Pressable>
     );
-  }, [customer.active, handleToggleActive, colors.tint]);
+  }, [customer.active, handleToggleActive, colors.slideMenuBackground, colors.slideMenuForeground]);
 
   return (
     <SwipeableComponent
