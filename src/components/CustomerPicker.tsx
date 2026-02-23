@@ -394,6 +394,7 @@ export const CustomerPicker = ({
               onPress={handleAddCustomer}
               type={newCustomer.name.trim() ? 'action' : 'disabled'}
               title="Add Customer"
+              triggerBlurOnPress={true}
             />
           )}
         </View>
