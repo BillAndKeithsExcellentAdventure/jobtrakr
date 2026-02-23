@@ -7,12 +7,11 @@ import {
   Pressable,
   StyleSheet,
   TouchableWithoutFeedback,
-  KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, View } from './Themed';
-import { KeyboardToolbar } from 'react-native-keyboard-controller';
+import { KeyboardToolbar, KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '../constants/app-constants';
 
 type Props = PropsWithChildren<{
@@ -40,7 +39,11 @@ export default function BottomSheetContainer({
 
   return (
     <Modal animationType="slide" transparent={true} visible={isVisible} onRequestClose={() => onClose()}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={100}
+      >
         <TouchableWithoutFeedback onPress={() => (onClose ? onClose() : null)}>
           <View style={{ flex: 1, backgroundColor: colors.transparent }}>
             <View
