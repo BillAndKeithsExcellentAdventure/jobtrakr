@@ -88,11 +88,13 @@ const RequestAIProcessingPage = () => {
     [allProjects],
   );
   const defaultProjectOption = projectPickerOptions.find((option) => option.value === projectId);
-  const [lineItemProjectId, setLineItemProjectId] = useState<string>(defaultProjectOption?.value ?? '');
+  const [lineItemProjectOption, setLineItemProjectOption] = useState<OptionEntry | undefined>(
+    defaultProjectOption,
+  );
 
   useEffect(() => {
     if (defaultProjectOption) {
-      setLineItemProjectId(defaultProjectOption.value);
+      setLineItemProjectOption(defaultProjectOption);
     }
   }, [defaultProjectOption]);
 
@@ -100,7 +102,7 @@ const RequestAIProcessingPage = () => {
     (option: OptionEntry) => {
       const selectedProject = allProjects.find((p) => p.id === option.value);
       if (selectedProject) {
-        setLineItemProjectId(selectedProject.id);
+        setLineItemProjectOption(option);
       }
     },
     [allProjects, receiptId],
@@ -353,7 +355,10 @@ const RequestAIProcessingPage = () => {
   );
 
   const someCostItemsSpecified = useMemo(
-    () => receiptItems.some((item) => item.costWorkItem),
+    () =>
+      receiptItems.some((item) =>
+        item.costWorkItem && item.costWorkItem.projectId ? item.costWorkItem.projectId === projectId : true,
+      ),
     [receiptItems],
   );
 
@@ -366,12 +371,13 @@ const RequestAIProcessingPage = () => {
       if (costItemEntry) {
         const label = costItemEntry.label;
         const workItemId = costItemEntry.value ?? '';
+        const projId = lineItemProjectOption ? lineItemProjectOption.value : projectId;
 
         const updatedItems = receiptItems.map((item) => {
           if (item.isSelected) {
             return {
               ...item,
-              costWorkItem: { label, workItemId },
+              costWorkItem: { label, workItemId, projectId: projId },
               isSelected: false, // Deselect after assigning cost item
             };
           }
@@ -386,11 +392,22 @@ const RequestAIProcessingPage = () => {
           return 0;
         });
 
-        setReceiptItems(updatedItems);
+        // select items that still need there Cost Item specified
+        const selectedUpdatedItems = updatedItems.map((item) => {
+          if (!item.costWorkItem) {
+            return {
+              ...item,
+              isSelected: true,
+            };
+          }
+          return item;
+        });
+        setReceiptItems(selectedUpdatedItems);
       }
       setShowCostItemPicker(false);
+      setLineItemProjectOption(defaultProjectOption);
     },
-    [receiptItems],
+    [receiptItems, lineItemProjectOption, projectId],
   );
 
   // Handler for saving edited summary
@@ -457,6 +474,7 @@ const RequestAIProcessingPage = () => {
         parentId: receiptId,
         documentationType: 'receipt',
         workItemId: item.costWorkItem?.workItemId ?? '',
+        projectId: item.costWorkItem?.projectId ?? projectId,
       };
       addLineItem(newItemizedEntry);
     });
@@ -468,7 +486,7 @@ const RequestAIProcessingPage = () => {
     if (!someCostItemsSpecified) {
       Alert.alert(
         'Cost Item Required',
-        "At least one line item must have a Cost Item specified. Use the 'Set Cost Item for Selection' button to specify a cost item.",
+        "At least one line item must have a Cost Item specified for the current project. Use the 'Set Cost Item for Selection' button to specify a cost item.",
       );
       return;
     }
@@ -590,6 +608,7 @@ const RequestAIProcessingPage = () => {
                             showTaxToggle={receiptItems.length > 1}
                             onTaxableChange={toggleTaxable}
                             onSelectItem={toggleSelection}
+                            currentProjectId={projectId}
                           />
                         )}
                       />
@@ -623,7 +642,7 @@ const RequestAIProcessingPage = () => {
           handleCostItemOptionSelected={onCostItemOptionSelected}
           showProjectPicker={true}
           handleProjectChange={handleLineItemProjectChange}
-          selectedProjectPickerOption={defaultProjectOption}
+          selectedProjectPickerOption={lineItemProjectOption}
           allProjectPickerOptions={projectPickerOptions}
         />
       )}

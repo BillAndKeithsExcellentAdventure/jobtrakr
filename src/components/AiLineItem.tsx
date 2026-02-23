@@ -10,6 +10,7 @@ import { Switch } from './Switch';
 interface AiLineItemProps {
   item: ReceiptItem;
   index: number;
+  currentProjectId: string;
   showTaxToggle?: boolean;
   onTaxableChange: (index: number) => void;
   onSelectItem?: (index: number) => void;
@@ -21,9 +22,14 @@ export const AiLineItem: React.FC<AiLineItemProps> = ({
   showTaxToggle = true,
   onTaxableChange,
   onSelectItem,
+  currentProjectId,
 }) => {
   const colors = useColors();
-
+  const textColor = item.costWorkItem?.projectId
+    ? item.costWorkItem?.projectId === currentProjectId
+      ? colors.text
+      : colors.textMuted
+    : colors.text; // Use muted color if not associated with the current project
   return (
     <View
       style={[
@@ -33,8 +39,10 @@ export const AiLineItem: React.FC<AiLineItemProps> = ({
     >
       <Pressable onPress={() => onSelectItem?.(index)}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={styles.description}>{item.description}</Text>
-          <Text style={styles.amountText}>Amt: {formatCurrency(item.amount, false, true)}</Text>
+          <Text style={{ ...styles.description, color: textColor }}>{item.description}</Text>
+          <Text style={{ ...styles.amountText, color: textColor }}>
+            Amt: {formatCurrency(item.amount, false, true)}
+          </Text>
         </View>
       </Pressable>
       <View style={styles.amountRow}>
@@ -48,8 +56,10 @@ export const AiLineItem: React.FC<AiLineItemProps> = ({
         )}
         <Pressable style={{ flex: 1 }} onPress={() => onSelectItem?.(index)}>
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={styles.taxText}>Tax: {formatCurrency(item.proratedTax, false, true)}</Text>
-            <Text style={styles.totalText}>
+            <Text style={{ ...styles.taxText, color: textColor }}>
+              Tax: {formatCurrency(item.proratedTax, false, true)}
+            </Text>
+            <Text style={{ ...styles.totalText, color: textColor }}>
               Total: {formatCurrency(item.amount + item.proratedTax, false, true)}
             </Text>
           </View>
@@ -58,9 +68,9 @@ export const AiLineItem: React.FC<AiLineItemProps> = ({
       <Pressable onPress={() => onSelectItem?.(index)}>
         <View style={styles.costItemRow}>
           {item.costWorkItem ? (
-            <Text>{`Cost Item: ${item.costWorkItem.label}`}</Text>
+            <Text style={{ color: textColor }}>{`Cost Item: ${item.costWorkItem.label}`}</Text>
           ) : (
-            <Text style={{ color: colors.angry500 }}>Not for Current Project</Text>
+            <Text style={{ color: colors.angry500 }}>No Cost Item specified.</Text>
           )}
         </View>
       </Pressable>

@@ -72,6 +72,7 @@ export interface ReceiptItemFromAI {
 export interface ReceiptCostWorkItem {
   label: string;
   workItemId: string;
+  projectId?: string;
 }
 
 export interface ReceiptItem {
