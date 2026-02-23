@@ -223,6 +223,49 @@ export async function addVendor(
   return data.data?.QueryResponse || ({ Id: '', DisplayName: '' } as QuickBooksVendor);
 }
 
+export interface AddCustomerRequest {
+  displayName: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  address2?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+}
+
+export interface AddCustomerResponse {
+  success: boolean;
+  message: string;
+  newQBId?: string;
+}
+
+export async function addCustomer(
+  orgId: string,
+  userId: string,
+  customer: AddCustomerRequest,
+  getToken: () => Promise<string | null>,
+): Promise<AddCustomerResponse> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/addCustomer?orgId=${orgId}&userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(customer),
+  });
+
+  const data: AddCustomerResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to add customer');
+  }
+
+  return data;
+}
+
 export interface LineItem {
   amount: number;
   description: string;

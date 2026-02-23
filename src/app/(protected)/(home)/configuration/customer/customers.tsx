@@ -16,8 +16,14 @@ import { Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
+import { addCustomer } from '@/src/utils/quickbooksAPI';
+import { useAuth } from '@clerk/clerk-expo';
+import { useNetwork } from '@/src/context/NetworkContext';
 
 const CustomersScreen = () => {
+  const auth = useAuth();
+  const { orgId, userId, getToken } = auth;
+  const { isConnectedToQuickBooks } = useNetwork();
   const addCustomerToStore = useAddRowCallback('customers');
   const allCustomers = useAllRows('customers');
   const [showAdd, setShowAdd] = useState(false);
@@ -43,11 +49,50 @@ const CustomersScreen = () => {
     }));
   }, []);
 
-  const handleSave = useCallback(() => {
-    const result = addCustomerToStore(customer);
+  const handleSave = useCallback(async () => {
+    let accountingId = '';
+
+    if (isConnectedToQuickBooks) {
+      if (!orgId || !userId) {
+        console.error('Missing orgId or userId');
+        return;
+      }
+
+      const names = customer.name.split(' ');
+      const firstName = customer.contactName || names[0] || '';
+      const lastName = names.length > 1 ? names.slice(1).join(' ') : '';
+      const addQbCustomerResult = await addCustomer(
+        orgId,
+        userId,
+        {
+          displayName: customer.name,
+          firstName: firstName,
+          lastName: lastName,
+          email: customer.email,
+          phone: customer.phone,
+          address: '',
+          address2: '',
+          city: '',
+          state: '',
+          zip: '',
+        },
+        getToken,
+      );
+
+      if (!addQbCustomerResult || !addQbCustomerResult.success) {
+        console.error(
+          'Failed to add customer to QuickBooks:',
+          addQbCustomerResult ? addQbCustomerResult.message : 'Unknown error',
+        );
+        return;
+      } else {
+        accountingId = addQbCustomerResult.newQBId ?? '';
+      }
+    }
+    const result = addCustomerToStore({ ...customer, accountingId });
 
     if (result && result.status !== 'Success') {
-      console.error('Failed to add customer:', result ? result.msg : 'Unknown error');
+      console.error('Failed to add customer to local store:', result ? result.msg : 'Unknown error');
     }
 
     setCustomer({
@@ -60,7 +105,7 @@ const CustomersScreen = () => {
       active: true,
     });
     setShowAdd(false);
-  }, [addCustomerToStore, customer]);
+  }, [addCustomerToStore, customer, getToken, orgId, userId]);
 
   const renderHeaderRight = () => (
     <Pressable onPress={() => setShowAdd(!showAdd)} hitSlop={10} style={styles.headerButton}>

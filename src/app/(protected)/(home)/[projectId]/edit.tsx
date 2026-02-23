@@ -1,3 +1,4 @@
+import { CustomerPicker } from '@/src/components/CustomerPicker';
 import { NumberInputField } from '@/src/components/NumberInputField';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
@@ -6,6 +7,7 @@ import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAutoSaveNavigation, useFocusManager } from '@/src/hooks/useFocusManager';
 import { ProjectData } from '@/src/models/types';
+import { CustomerData, useAllRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useProject, useUpdateProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatDate } from '@/src/utils/formatters';
 import * as Location from 'expo-location';
@@ -42,20 +44,26 @@ const EditProjectScreen = () => {
   });
 
   const currentProject = useProject(projectId);
+  const updateProject = useUpdateProjectCallback();
+  const allCustomers = useAllRows('customers');
+  const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
+  const [finishDatePickerVisible, setFinishDatePickerVisible] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
+  const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | undefined>(undefined);
 
   useEffect(() => {
     if (currentProject) {
       setProject({
         ...currentProject,
       });
+      // Set selected customer based on customerId
+      if (currentProject.customerId && allCustomers) {
+        const customer = allCustomers.find((c) => c.id === currentProject.customerId);
+        setSelectedCustomer(customer);
+      }
     }
-  }, [currentProject]);
-
-  const updateProject = useUpdateProjectCallback();
-  const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
-  const [finishDatePickerVisible, setFinishDatePickerVisible] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
-  const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
+  }, [currentProject, allCustomers]);
 
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -155,6 +163,17 @@ const EditProjectScreen = () => {
 
   const handleBackPress = useAutoSaveNavigation(processBackPress);
 
+  const handleCustomerSelected = useCallback(
+    (customer: CustomerData) => {
+      setSelectedCustomer(customer);
+      const newProject = { ...project, customerId: customer.id };
+      if (projectId) {
+        updateProject(projectId, newProject);
+      }
+    },
+    [project, projectId, updateProject],
+  );
+
   return (
     <>
       <Stack.Screen
@@ -209,6 +228,13 @@ const EditProjectScreen = () => {
             value={project.location}
             onChangeText={(text) => setProject({ ...project, location: text })}
             onBlur={handleSubmit}
+          />
+          <CustomerPicker
+            selectedCustomer={selectedCustomer}
+            onCustomerSelected={handleCustomerSelected}
+            customers={allCustomers}
+            label="Customer"
+            placeholder="Select a customer"
           />
           <View style={styles.dateContainer}>
             <TouchableOpacity activeOpacity={1} onPress={showStartDatePicker}>

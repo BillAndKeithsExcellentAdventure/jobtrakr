@@ -1,13 +1,25 @@
+import { ActionButton } from '@/src/components/ActionButton';
+import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import { TextField } from '@/src/components/TextField';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { CustomerData, useAddRowCallback } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import BottomSheetContainer from '@/src/components/BottomSheetContainer';
-import { ActionButton } from '@/src/components/ActionButton';
+import { useAuth } from '@clerk/clerk-expo';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, Keyboard, Platform, Pressable, StyleSheet, TextInput, Alert } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useCallback, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Keyboard,
+  Platform,
+  Pressable,
+  StyleSheet,
+  TextInput,
+} from 'react-native';
+import { useNetwork } from '../context/NetworkContext';
+import { addCustomer } from '../utils/quickbooksAPI';
 
 interface CustomerPickerProps {
   selectedCustomer?: CustomerData;
@@ -27,6 +39,7 @@ export const CustomerPicker = ({
   const [isPickerVisible, setIsPickerVisible] = useState(false);
   const [searchText, setSearchText] = useState<string>('');
   const [isAddCustomerModalVisible, setIsAddCustomerModalVisible] = useState(false);
+  const [isAddingCustomer, setIsAddingCustomer] = useState(false);
   const [newCustomer, setNewCustomer] = useState<CustomerData>({
     id: '',
     accountingId: '',
@@ -38,9 +51,15 @@ export const CustomerPicker = ({
   });
   const colors = useColors();
   const addCustomerToStore = useAddRowCallback('customers');
+  const { isConnectedToQuickBooks } = useNetwork();
+  const auth = useAuth();
+  const { orgId, userId, getToken } = auth;
 
   // Filter to only show active customers
-  const activeCustomers = useMemo(() => customers.filter((c) => c.active), [customers]);
+  const activeCustomers = useMemo(
+    () => customers.filter((c) => c.active).sort((a, b) => a.name.localeCompare(b.name)),
+    [customers],
+  );
 
   // Filter based on search text
   const filteredCustomers = useMemo(() => {
@@ -63,40 +82,85 @@ export const CustomerPicker = ({
     }));
   }, []);
 
-  const handleAddCustomer = useCallback(() => {
+  const handleAddCustomer = useCallback(async () => {
     if (!newCustomer.name.trim()) {
       Alert.alert('Error', 'Customer name is required');
       return;
     }
 
-    const result = addCustomerToStore(newCustomer);
+    setIsAddingCustomer(true);
+    try {
+      let accountingId = '';
 
-    if (result && result.status !== 'Success') {
-      Alert.alert('Error', `Failed to add customer: ${result.msg}`);
-      return;
+      if (isConnectedToQuickBooks) {
+        if (!orgId || !userId) {
+          console.error('Missing orgId or userId');
+          return;
+        }
+
+        const names = newCustomer.contactName.split(' ');
+        const firstName = names[0] || '';
+        const lastName = names.length > 1 ? names.slice(1).join(' ') : '';
+        const addQbCustomerResult = await addCustomer(
+          orgId,
+          userId,
+          {
+            displayName: newCustomer.name,
+            firstName: firstName,
+            lastName: lastName,
+            email: newCustomer.email,
+            phone: newCustomer.phone,
+            address: '',
+            address2: '',
+            city: '',
+            state: '',
+            zip: '',
+          },
+          getToken,
+        );
+
+        if (!addQbCustomerResult || !addQbCustomerResult.success) {
+          console.error(
+            'Failed to add customer to QuickBooks:',
+            addQbCustomerResult ? addQbCustomerResult.message : 'Unknown error',
+          );
+          return;
+        } else {
+          accountingId = addQbCustomerResult.newQBId ?? '';
+        }
+      }
+
+      const result = addCustomerToStore({ ...newCustomer, accountingId });
+
+      if (result && result.status !== 'Success') {
+        Alert.alert('Error', `Failed to add customer: ${result.msg}`);
+        return;
+      }
+
+      // The new customer was added, select it
+      const addedCustomer: CustomerData = {
+        ...newCustomer,
+        id: result.id || newCustomer.id,
+      };
+
+      onCustomerSelected(addedCustomer);
+
+      // Reset state and close both modals
+      setNewCustomer({
+        id: '',
+        accountingId: '',
+        name: '',
+        contactName: '',
+        email: '',
+        phone: '',
+        active: true,
+      });
+      setSearchText('');
+      setIsAddCustomerModalVisible(false);
+    } finally {
+      setIsAddingCustomer(false);
     }
-
-    // The new customer was added, select it
-    const addedCustomer: CustomerData = {
-      ...newCustomer,
-      id: result.id || newCustomer.id,
-    };
-
-    onCustomerSelected(addedCustomer);
-
-    // Reset state and close both modals
-    setNewCustomer({
-      id: '',
-      accountingId: '',
-      name: '',
-      contactName: '',
-      email: '',
-      phone: '',
-      active: true,
-    });
-    setSearchText('');
-    setIsAddCustomerModalVisible(false);
-  }, [newCustomer, addCustomerToStore, onCustomerSelected]);
+  }, [newCustomer, addCustomerToStore, onCustomerSelected, orgId, userId, getToken, isConnectedToQuickBooks]);
 
   const handleCustomerSelect = useCallback(
     (customer: CustomerData) => {
@@ -133,7 +197,13 @@ export const CustomerPicker = ({
       <Pressable onPress={blurAndOpen}>
         <View style={styles.pickerRow}>
           <View style={{ flex: 1, backgroundColor: 'transparent' }}>
-            <TextField label={label} placeholder={placeholder} value={displayText} editable={false} />
+            <TextField
+              label={label}
+              style={{ color: colors.text }}
+              placeholder={placeholder}
+              value={displayText}
+              editable={false}
+            />
           </View>
           <View style={styles.pickerButtonContainer}>
             <Ionicons name="ellipsis-horizontal-circle" size={36} color={colors.iconColor} />
@@ -289,12 +359,14 @@ export const CustomerPicker = ({
             style={[styles.input, { backgroundColor: colors.neutral200 }]}
             placeholder="Customer Name"
             value={newCustomer.name}
+            autoCapitalize="words"
             onChangeText={(text) => handleInputChange('name', text)}
           />
           <TextInput
             style={[styles.input, { backgroundColor: colors.neutral200 }]}
             placeholder="Contact Name"
             value={newCustomer.contactName}
+            autoCapitalize="words"
             onChangeText={(text) => handleInputChange('contactName', text)}
           />
           <TextInput
@@ -312,11 +384,18 @@ export const CustomerPicker = ({
             keyboardType="phone-pad"
             onChangeText={(text) => handleInputChange('phone', text)}
           />
-          <ActionButton
-            onPress={handleAddCustomer}
-            type={newCustomer.name.trim() ? 'action' : 'disabled'}
-            title="Add Customer"
-          />
+          {isAddingCustomer ? (
+            <View style={{ alignItems: 'center', paddingVertical: 15 }}>
+              <ActivityIndicator size="large" color={colors.tint} />
+              <Text style={{ marginTop: 10, fontSize: 16, fontWeight: '600' }}>Adding new customer...</Text>
+            </View>
+          ) : (
+            <ActionButton
+              onPress={handleAddCustomer}
+              type={newCustomer.name.trim() ? 'action' : 'disabled'}
+              title="Add Customer"
+            />
+          )}
         </View>
       </BottomSheetContainer>
     </>
