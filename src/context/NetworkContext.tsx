@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { isDevelopmentBuild } from '@/src/utils/environment';
@@ -39,6 +39,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const [networkType, setNetworkType] = useState<string | null>(null);
   const appSettings = useAppSettings();
   const [isConnectedToQuickBooks, setIsConnectedToQuickBooks] = useState<boolean>(false);
+  const isConnectedToQuickBooksRef = useRef<boolean>(false);
   const auth = useAuth();
   const lastNetworkStateRef = useRef<{
     isConnected: boolean;
@@ -103,34 +104,42 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     const checkQbConnection = async () => {
       if (!auth.isLoaded || !auth.isSignedIn) {
         console.log('Skipping QuickBooks check: auth not ready/signed in');
+        isConnectedToQuickBooksRef.current = false;
         setIsConnectedToQuickBooks(false);
         return;
       }
 
       if (!orgId || !userId) {
         console.log('Skipping QuickBooks check: missing orgId/userId');
+        isConnectedToQuickBooksRef.current = false;
         setIsConnectedToQuickBooks(false);
         return;
       }
 
       if (!isConnected || isInternetReachable === false) {
         console.log('Skipping QuickBooks check: offline');
+        isConnectedToQuickBooksRef.current = false;
         setIsConnectedToQuickBooks(false);
         return;
       }
 
-      if (!appSettings.syncWithQuickBooks && appSettings.id.length && !isConnectedToQuickBooks) {
+      if (!appSettings.syncWithQuickBooks && appSettings.id.length && !isConnectedToQuickBooksRef.current) {
         console.log('QuickBooks not connected because syncWithQuickBooks is false');
-        setIsConnectedToQuickBooks(false);
         return;
       }
 
       try {
         const connected = await testQbIsConnected(orgId, userId, getToken);
-        setIsConnectedToQuickBooks(connected);
-        console.log('QuickBooks is connected ✅');
+        if (connected !== isConnectedToQuickBooksRef.current) {
+          console.log(
+            `QuickBooks connection status changed: ${connected ? 'QuickBooks is connected ✅' : 'QuickBooks is not connected ❌'}`,
+          );
+          isConnectedToQuickBooksRef.current = connected;
+          setIsConnectedToQuickBooks(connected);
+        }
       } catch (error) {
         console.error('QuickBooks connection check failed:', error);
+        isConnectedToQuickBooksRef.current = false;
         setIsConnectedToQuickBooks(false);
       }
     };
@@ -139,7 +148,6 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   }, [
     auth.isLoaded,
     auth.isSignedIn,
-    isConnectedToQuickBooks,
     appSettings.syncWithQuickBooks,
     appSettings.id,
     orgId,
@@ -149,9 +157,10 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     getToken,
   ]);
 
-  const setQuickBooksConnected = (connected: boolean) => {
+  const setQuickBooksConnected = useCallback((connected: boolean) => {
+    isConnectedToQuickBooksRef.current = connected;
     setIsConnectedToQuickBooks(connected);
-  };
+  }, []);
 
   const value: NetworkContextType = {
     isConnected: debugForceOffline ? false : isConnected,
