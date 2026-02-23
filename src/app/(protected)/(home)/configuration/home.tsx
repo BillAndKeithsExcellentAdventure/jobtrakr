@@ -1,5 +1,5 @@
 import { ConfigurationEntry } from '@/src/components/ConfigurationEntry';
-import { View } from '@/src/components/Themed';
+import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { Stack, useRouter } from 'expo-router';
@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { Pressable } from 'react-native-gesture-handler';
 import * as Sharing from 'expo-sharing';
-import { Alert, GestureResponderEvent, Platform } from 'react-native';
+import { ActivityIndicator, Alert, GestureResponderEvent, Modal, Platform, StyleSheet } from 'react-native';
 import {
   useExportStoreDataCallback,
   useImportJsonConfigurationDataCallback,
@@ -40,6 +40,16 @@ import { sanitizeQuickBooksAccountSettings } from '@/src/utils/quickbooksAccount
 
 const Home = () => {
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
+  const [processingInfo, setProcessingInfo] = useState<{ isProcessing: boolean; label: string }>({
+    isProcessing: false,
+    label: '',
+  });
+
+  const startProcessing = useCallback(
+    (label: string) => setProcessingInfo({ isProcessing: true, label }),
+    [],
+  );
+  const stopProcessing = useCallback(() => setProcessingInfo({ isProcessing: false, label: '' }), []);
   const router = useRouter();
   const colors = useColors();
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
@@ -112,6 +122,7 @@ const Home = () => {
           {
             text: 'Export',
             onPress: async () => {
+              startProcessing('Exporting Configuration Data...');
               try {
                 const jsonData = exportConfiguration();
                 const jsonText = JSON.stringify(jsonData);
@@ -119,6 +130,7 @@ const Home = () => {
                 outputFile.write(jsonText);
                 const outputPath = outputFile.uri;
                 const isAvailable = await Sharing.isAvailableAsync();
+                stopProcessing();
                 if (isAvailable) {
                   await Sharing.shareAsync(outputPath, {
                     mimeType: 'application/json',
@@ -128,6 +140,7 @@ const Home = () => {
                 }
               } catch (err) {
                 console.log(err);
+                stopProcessing();
               }
             },
           },
@@ -150,15 +163,21 @@ const Home = () => {
                 });
 
                 if (!result.canceled && result.assets?.length > 0) {
-                  const file = result.assets[0];
-                  const fileObj = new File(file.uri);
-                  const fileText = await fileObj.text();
-                  const jsonData = JSON.parse(fileText);
-                  importConfiguration(jsonData);
+                  startProcessing('Importing Configuration Data...');
+                  try {
+                    const file = result.assets[0];
+                    const fileObj = new File(file.uri);
+                    const fileText = await fileObj.text();
+                    const jsonData = JSON.parse(fileText);
+                    importConfiguration(jsonData);
+                  } finally {
+                    stopProcessing();
+                  }
                   alert('Configuration Data Import Complete');
                 }
               } catch (error) {
                 console.error('Error picking document:', error);
+                stopProcessing();
               }
             },
           },
@@ -192,12 +211,14 @@ const Home = () => {
           {
             text: 'Export',
             onPress: async () => {
+              startProcessing('Exporting Vendors...');
               try {
                 const csvData = vendorsToCsv(allVendors);
                 const outputFile = new File(Paths.document, 'vendors.csv');
                 outputFile.write(csvData);
                 const outputPath = outputFile.uri;
                 const isAvailable = await Sharing.isAvailableAsync();
+                stopProcessing();
                 if (isAvailable) {
                   await Sharing.shareAsync(outputPath, {
                     mimeType: 'text/csv',
@@ -207,6 +228,7 @@ const Home = () => {
                 }
               } catch (err) {
                 console.error('Error exporting vendors:', err);
+                stopProcessing();
                 Alert.alert('Error', 'Failed to export vendors');
               }
             },
@@ -277,6 +299,7 @@ const Home = () => {
           return;
         }
 
+        startProcessing('Importing Vendors from QuickBooks...');
         try {
           const { addedCount } = await importVendorsFromQuickBooks(
             auth.orgId!,
@@ -294,6 +317,8 @@ const Home = () => {
         } catch (error) {
           console.error('Error importing vendors from QuickBooks:', error);
           Alert.alert('Error', 'Failed to import vendors from QuickBooks');
+        } finally {
+          stopProcessing();
         }
       } else if (menuItem === 'ImportQBAccounts') {
         // Import QuickBooks accounts
@@ -302,6 +327,7 @@ const Home = () => {
           return;
         }
 
+        startProcessing('Importing Accounts from QuickBooks...');
         try {
           const { addedCount, accounts } = await importAccountsFromQuickBooks(
             auth.orgId,
@@ -322,6 +348,8 @@ const Home = () => {
         } catch (error) {
           console.error('Error importing QuickBooks accounts:', error);
           Alert.alert('Error', 'Failed to import QuickBooks accounts');
+        } finally {
+          stopProcessing();
         }
       } else if (menuItem === 'GetQBCustomers') {
         if (!auth.orgId || !auth.userId) {
@@ -329,6 +357,7 @@ const Home = () => {
           return;
         }
 
+        startProcessing('Importing Customers from QuickBooks...');
         try {
           const { addedCount, updatedCount } = await importCustomersFromQuickBooks(
             auth.orgId,
@@ -346,6 +375,8 @@ const Home = () => {
         } catch (error) {
           console.error('Error importing customers from QuickBooks:', error);
           Alert.alert('Error', 'Failed to import customers from QuickBooks');
+        } finally {
+          stopProcessing();
         }
       } else if (menuItem === 'ImportCustomers') {
         Alert.alert('Import Customers', 'Would you like to import customers from a CSV file?', [
@@ -374,8 +405,7 @@ const Home = () => {
 
                   for (const c of importedCustomers) {
                     const existing = allCustomers.find(
-                      (ec) =>
-                        ec.name && c.name && ec.name === c.name && (!c.email || ec.email === c.email),
+                      (ec) => ec.name && c.name && ec.name === c.name && (!c.email || ec.email === c.email),
                     );
 
                     if (existing) {
@@ -409,6 +439,8 @@ const Home = () => {
       addVendorToStore,
       updateVendor,
       cleanupOrphanedWorkItems,
+      startProcessing,
+      stopProcessing,
       allAccounts,
       addAccount,
       updateAccount,
@@ -555,8 +587,42 @@ const Home = () => {
           buttons={rightHeaderMenuButtons}
         />
       )}
+      <Modal transparent animationType="fade" visible={processingInfo.isProcessing}>
+        <View style={styles.processingOverlay}>
+          <View style={styles.processingContainer}>
+            <ActivityIndicator size="large" color={colors.tint} />
+            <Text style={styles.processingLabel}>{processingInfo.label}</Text>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  processingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  processingContainer: {
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    gap: 16,
+    minWidth: 220,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  processingLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+});
 
 export default Home;
