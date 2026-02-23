@@ -11,6 +11,7 @@ import { Text, TextInput, View } from '@/src/components/Themed';
 import { API_BASE_URL } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { useAllRows as useConfigAllRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   ChangeOrder,
@@ -86,6 +87,7 @@ const DefineChangeOrderScreen = () => {
   const [changeOrderBidAmount, setChangeOrderBidAmount] = useState<number>(0);
   const appSettings = useAppSettings();
   const projectData = useProject(projectId);
+  const allCustomers = useConfigAllRows('customers');
   const auth = useAuth();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [showAddItemModal, setShowAddItemModal] = useState<boolean>(false);
@@ -129,6 +131,8 @@ const DefineChangeOrderScreen = () => {
   const changeOrderData = useMemo<ChangeOrderData | null>(() => {
     if (!changeOrder) return null;
 
+    const customer = allCustomers.find((c) => c.id === projectData?.customerId);
+
     // create changeItems array by mapping properties from changeOrderItems
     const changeItemArray = changeOrderItems.map((item) => ({
       description: item.label,
@@ -151,16 +155,10 @@ const DefineChangeOrderScreen = () => {
         logo: appSettings.companyLogo ?? '',
       },
       client: {
-        name: projectData?.ownerName ?? '',
-        address: [
-          projectData?.ownerAddress ?? '',
-          projectData?.ownerAddress2 ?? '',
-          `${projectData?.ownerCity ?? ''}${projectData?.ownerCity ? ',' : ''} ${
-            projectData?.ownerState ?? ''
-          } ${projectData?.ownerZip ?? ''}`,
-        ],
-        phone: formatPhoneNumber(projectData?.ownerPhone ?? ''),
-        email: projectData?.ownerEmail ?? '',
+        name: customer?.name ?? '',
+        address: [], // CustomerData does not include address fields; communication is via email only
+        phone: formatPhoneNumber(customer?.phone ?? ''),
+        email: customer?.email ?? '',
       },
       project: projectData?.name ?? 'unknown',
       date: formatDate(new Date()),
@@ -168,7 +166,7 @@ const DefineChangeOrderScreen = () => {
       formattedTotal: formatCurrency(changeOrder.quotedPrice, true),
       changeItems: changeItemArray,
     };
-  }, [changeOrder, projectData, appSettings, changeOrderItems]);
+  }, [changeOrder, projectData, appSettings, changeOrderItems, allCustomers]);
 
   const handleSendForApproval = useCallback(async () => {
     if (!changeOrderData) return;
@@ -179,7 +177,9 @@ const DefineChangeOrderScreen = () => {
       return;
     }
 
-    if (!projectData?.ownerEmail) {
+    const customer = allCustomers.find((c) => c.id === projectData?.customerId);
+
+    if (!customer?.email) {
       Alert.alert('Missing Client Email', 'The project does not have a client email address specified.');
       return;
     }
@@ -260,7 +260,7 @@ const DefineChangeOrderScreen = () => {
 </head>
 <body>
   <div class="content">
-    <p>Dear ${projectData?.ownerName ?? 'Client'},</p>
+    <p>Dear ${customer?.name ?? 'Client'},</p>
     
     <p>Please review the attached change order titled <strong>"${
       changeOrder?.title || 'unknown'
@@ -297,7 +297,7 @@ const DefineChangeOrderScreen = () => {
           userId: userId,
           htmlPdf: htmlOutput,
           htmlBody: msgBody,
-          toEmail: projectData?.ownerEmail ?? '',
+          toEmail: customer?.email ?? '',
           fromEmail: appSettings.email ?? '',
           fromName: appSettings.ownerName ?? '',
           changeOrderId: changeOrder?.id ?? '',
@@ -305,7 +305,7 @@ const DefineChangeOrderScreen = () => {
           accountingId: changeOrder?.accountingId ?? '',
           projectAbbr: projectData?.abbreviation,
           expirationDate: expirationDate.toString(),
-          ownerEmail: projectData?.ownerEmail ?? '',
+          ownerEmail: customer?.email ?? '',
           subject: `${appSettings.companyName} : Please review and accept change order "${
             changeOrder?.title || 'unknown'
           }"`,
@@ -340,7 +340,7 @@ const DefineChangeOrderScreen = () => {
     } finally {
       setIsSendingChangeOrder(false);
     }
-  }, [changeOrderData, changeOrder, appSettings, projectData, auth, projectId, router, updateChangeOrder]);
+  }, [changeOrderData, changeOrder, appSettings, projectData, allCustomers, auth, projectId, router, updateChangeOrder]);
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [

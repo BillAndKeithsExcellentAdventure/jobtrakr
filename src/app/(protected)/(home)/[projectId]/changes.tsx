@@ -18,6 +18,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { FlatList, StyleSheet } from 'react-native';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { useAllRows as useConfigAllRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatCurrency } from '@/src/utils/formatters';
 
@@ -71,6 +72,7 @@ const ChangeOrdersScreen = () => {
   const auth = useAuth();
   const appSettings = useAppSettings();
   const currentProject = useProject(projectId);
+  const allCustomers = useConfigAllRows('customers');
 
   useEffect(() => {
     if (projectId) {
@@ -102,7 +104,8 @@ const ChangeOrdersScreen = () => {
     appSettings.companyName?.trim() && appSettings.ownerName?.trim() && appSettings.email?.trim();
 
   // Check if required project owner info is defined
-  const isProjectOwnerInfoComplete = currentProject?.ownerName?.trim() && currentProject?.ownerEmail?.trim();
+  const customer = allCustomers.find((c) => c.id === currentProject?.customerId);
+  const isProjectOwnerInfoComplete = customer?.name?.trim() && customer?.email?.trim();
 
   const fetchStatuses = useCallback(async () => {
     try {

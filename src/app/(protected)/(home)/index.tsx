@@ -49,6 +49,7 @@ export default function ProjectHomeScreen() {
   const auth = useAuth();
   const { orgRole, orgId } = auth;
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
+  const allCustomers = useAllRows('customers');
   const { isConnectedToQuickBooks } = useNetwork();
 
   const appSettings = useAppSettings();
@@ -88,24 +89,18 @@ export default function ProjectHomeScreen() {
   useEffect(() => {
     if (allProjects.length > 0) {
       const listData: ProjectListEntryProps[] = allProjects.map((project) => {
+        const customer = allCustomers.find((c) => c.id === project.customerId);
         return {
           projectName: project.name ? project.name : 'unknown',
           isFavorite: undefined !== project.favorite ? project.favorite > 0 : false,
           projectId: project.id ?? 'unknown',
           imageUri: project.thumbnail ?? 'x',
           location: project.location,
-          ownerName: project.ownerName ?? 'Owner',
+          ownerName: customer?.name ?? '',
           startDate: `${formatDate(new Date(project.startDate ?? 0))}`,
           finishDate: `${formatDate(new Date(project.plannedFinish ?? 0))}`,
           bidPrice: project.bidPrice,
           amountSpent: project.amountSpent,
-          ownerAddress: project.ownerAddress,
-          ownerAddress2: project.ownerAddress2 ?? '',
-          ownerCity: project.ownerCity ?? '',
-          ownerState: project.ownerState ?? '',
-          ownerZip: project.ownerZip ?? '',
-          ownerPhone: project.ownerPhone ?? '',
-          ownerEmail: project.ownerEmail ?? '',
         };
       });
 
@@ -113,7 +108,7 @@ export default function ProjectHomeScreen() {
     } else {
       setProjectListEntries([]);
     }
-  }, [allProjects]);
+  }, [allProjects, allCustomers]);
 
   const onLikePressed = useCallback(
     (projId: string) => {
