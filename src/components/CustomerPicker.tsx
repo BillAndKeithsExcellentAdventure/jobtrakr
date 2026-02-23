@@ -338,6 +338,7 @@ export const CustomerPicker = ({
       </BottomSheetContainer>
 
       <BottomSheetContainer
+        keyboardVerticalOffset={100}
         isVisible={isAddCustomerModalVisible}
         onClose={() => {
           setIsAddCustomerModalVisible(false);
@@ -394,7 +395,7 @@ export const CustomerPicker = ({
               onPress={handleAddCustomer}
               type={newCustomer.name.trim() ? 'action' : 'disabled'}
               title="Add Customer"
-              triggerBlurOnPress={true}
+              triggerBlurOnPress={false}
             />
           )}
         </View>

@@ -21,6 +21,7 @@ type Props = PropsWithChildren<{
   modalHeight?: DimensionValue;
   showClose?: boolean;
   showKeyboardToolbar?: boolean;
+  keyboardVerticalOffset?: number;
 }>;
 
 export default function BottomSheetContainer({
@@ -31,6 +32,7 @@ export default function BottomSheetContainer({
   modalHeight = '40%',
   showClose = true,
   showKeyboardToolbar = true,
+  keyboardVerticalOffset = 0,
 }: Props) {
   const { top, bottom } = useSafeAreaInsets();
   const colors = useColors();
@@ -42,7 +44,7 @@ export default function BottomSheetContainer({
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={100}
+        keyboardVerticalOffset={keyboardVerticalOffset}
       >
         <TouchableWithoutFeedback onPress={() => (onClose ? onClose() : null)}>
           <View style={{ flex: 1, backgroundColor: colors.transparent }}>
