@@ -1,9 +1,17 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { createMergeableStore, NoValuesSchema } from 'tinybase/with-schemas';
+import { useStore } from 'tinybase/ui-react';
 import { useCreateClientPersisterAndStart } from '../persistence/useCreateClientPersisterAndStart';
 import { useCreateServerSynchronizerAndStart } from '../synchronization/useCreateServerSynchronizerAndStart';
 import { useProjectDetailsStoreCache } from '../../context/ProjectDetailsStoreCacheContext';
+import { useAuth } from '@clerk/clerk-expo';
+import { useProjectListStoreId } from '../listOfProjects/ListOfProjectsStore';
+import {
+  doesProjectExistInQuickBooks,
+  addProjectToQuickBooks,
+  updateProjectInQuickBooks,
+} from '../../utils/quickbooksAPI';
 
 const STORE_ID_PREFIX = 'projectDetailsStore-';
 
@@ -109,6 +117,10 @@ export const getStoreId = (projId: string) => STORE_ID_PREFIX + projId;
 // Create, persist, and sync a store containing the project and its categories.
 export default function ProjectDetailsStore({ projectId }: { projectId: string }) {
   const { addStoreToCache, removeStoreFromCache } = useProjectDetailsStoreCache();
+  const { orgId, userId, getToken } = useAuth();
+  const listStoreId = useProjectListStoreId();
+  const listStore = useStore(listStoreId);
+  const updateQbTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const storeId = getStoreId(projectId);
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
@@ -117,17 +129,78 @@ export default function ProjectDetailsStore({ projectId }: { projectId: string }
   useCreateServerSynchronizerAndStart(storeId, store);
   useProvideStore(storeId, store);
 
-  // Add store to cache when it's created
+  // Add store to cache and sync with QuickBooks when it's created
   useEffect(() => {
     if (store) {
+      let isMounted = true;
       console.log('Mounting ProjectDetailsStore for projectId:', projectId);
       addStoreToCache(projectId, store);
+
+      if (orgId && userId) {
+        const syncWithQuickBooks = async () => {
+          try {
+            const project = listStore?.getRow('projects', projectId);
+            const projectName = (project?.name as string) ?? '';
+            const customerId = (project?.customerId as string) ?? '';
+
+            const exists = await doesProjectExistInQuickBooks(orgId, projectId, userId, getToken);
+            if (isMounted && !exists) {
+              await addProjectToQuickBooks(orgId, userId, { customerId, projectName, projectId }, getToken);
+            }
+          } catch (error) {
+            if (isMounted) {
+              console.error('ProjectDetailsStore: Failed to sync project with QuickBooks:', error);
+            }
+          }
+        };
+        syncWithQuickBooks();
+      }
+
       return () => {
+        isMounted = false;
         console.log('Unmounting ProjectDetailsStore for projectId:', projectId);
         removeStoreFromCache(projectId);
       };
     }
-  }, [projectId, store, addStoreToCache, removeStoreFromCache]);
+  }, [projectId, store, addStoreToCache, removeStoreFromCache, orgId, userId, getToken, listStore]);
+
+  // Listen for customerId changes and update QuickBooks (debounced to avoid rapid-fire requests)
+  useEffect(() => {
+    if (!listStore || !orgId || !userId) return;
+
+    const listenerId = listStore.addCellListener(
+      'projects',
+      projectId,
+      'customerId',
+      (_store, _tableId, _rowId, _cellId, newCustomerId) => {
+        if (updateQbTimerRef.current) {
+          clearTimeout(updateQbTimerRef.current);
+        }
+        updateQbTimerRef.current = setTimeout(async () => {
+          const project = listStore.getRow('projects', projectId);
+          const projectName = (project?.name as string) ?? '';
+
+          try {
+            await updateProjectInQuickBooks(
+              orgId,
+              userId,
+              { customerId: newCustomerId as string, projectName, projectId },
+              getToken,
+            );
+          } catch (error) {
+            console.error('ProjectDetailsStore: Failed to update project in QuickBooks:', error);
+          }
+        }, 500);
+      },
+    );
+
+    return () => {
+      if (updateQbTimerRef.current) {
+        clearTimeout(updateQbTimerRef.current);
+      }
+      listStore.delListener(listenerId);
+    };
+  }, [projectId, listStore, orgId, userId, getToken]);
 
   return null;
 }

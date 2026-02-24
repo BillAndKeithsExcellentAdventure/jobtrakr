@@ -595,6 +595,121 @@ export async function editReceiptInQuickBooks(
   return data;
 }
 
+export interface AddProjectRequest {
+  customerId: string;
+  projectName: string;
+  projectId: string;
+}
+
+export interface AddProjectResponse {
+  success: boolean;
+  message?: string;
+  newQBId?: string;
+}
+
+export interface UpdateProjectResponse {
+  success: boolean;
+  message?: string;
+  qbId?: string;
+}
+
+/**
+ * Check if a project exists in QuickBooks.
+ *
+ * @param orgId - The organization ID
+ * @param projectId - The project ID to check
+ * @param userId - The user ID
+ * @param getToken - Function to get the authentication token
+ * @returns True if the project exists, false otherwise
+ */
+export async function doesProjectExistInQuickBooks(
+  orgId: string,
+  projectId: string,
+  userId: string,
+  getToken: () => Promise<string | null>,
+): Promise<boolean> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(
+    `${API_BASE_URL}/qbo/doesProjectExist?orgId=${orgId}&projectId=${projectId}&userId=${userId}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+
+  const data: ApiDefaultResponse = await response.json();
+  return data.success === true;
+}
+
+/**
+ * Add a project to QuickBooks as a sub-customer.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param project - The project data to add
+ * @param getToken - Function to get the authentication token
+ * @returns The response containing the new QB ID
+ */
+export async function addProjectToQuickBooks(
+  orgId: string,
+  userId: string,
+  project: AddProjectRequest,
+  getToken: () => Promise<string | null>,
+): Promise<AddProjectResponse> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/addProject?orgId=${orgId}&userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(project),
+  });
+
+  const data: AddProjectResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to add project to QuickBooks');
+  }
+
+  return data;
+}
+
+/**
+ * Update an existing project in QuickBooks.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param project - The project data to update
+ * @param getToken - Function to get the authentication token
+ * @returns The response containing the QB ID
+ */
+export async function updateProjectInQuickBooks(
+  orgId: string,
+  userId: string,
+  project: AddProjectRequest,
+  getToken: () => Promise<string | null>,
+): Promise<UpdateProjectResponse> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/updateProject?orgId=${orgId}&userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(project),
+  });
+
+  const data: UpdateProjectResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to update project in QuickBooks');
+  }
+
+  return data;
+}
+
 export async function deleteReceiptFromQuickBooks(
   orgId: string,
   userId: string,
