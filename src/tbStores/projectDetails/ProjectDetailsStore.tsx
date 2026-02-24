@@ -152,7 +152,7 @@ export default function ProjectDetailsStore({ projectId }: { projectId: string }
             const customerId = (project?.customerId as string) ?? '';
 
             const exists = await doesProjectExistInQuickBooks(orgId, projectId, userId, getToken);
-            if (isMounted && !exists) {
+            if (isMounted && !exists && customerId) {
               await addProjectToQuickBooks(orgId, userId, { customerId, projectName, projectId }, getToken);
             }
           } catch (error) {
@@ -185,7 +185,7 @@ export default function ProjectDetailsStore({ projectId }: { projectId: string }
           clearTimeout(updateQbTimerRef.current);
         }
         updateQbTimerRef.current = setTimeout(async () => {
-          if (!isConnectedToQBRef.current) return;
+          if (!isConnectedToQBRef.current || !newCustomerId) return;
           const project = listStore.getRow('projects', projectId);
           const projectName = (project?.name as string) ?? '';
 
