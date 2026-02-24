@@ -196,6 +196,7 @@ export default function ProjectDetailsStore({ projectId }: { projectId: string }
               { customerId: newCustomerId as string, projectName, projectId },
               getToken,
             );
+            console.log('QuickBooks project updated');
           } catch (error) {
             console.error('ProjectDetailsStore: Failed to update project in QuickBooks:', error);
           }
