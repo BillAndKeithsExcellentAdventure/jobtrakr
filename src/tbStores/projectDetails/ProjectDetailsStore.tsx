@@ -154,6 +154,7 @@ export default function ProjectDetailsStore({ projectId }: { projectId: string }
             const exists = await doesProjectExistInQuickBooks(orgId, projectId, userId, getToken);
             if (isMounted && !exists && customerId) {
               await addProjectToQuickBooks(orgId, userId, { customerId, projectName, projectId }, getToken);
+              console.log('Project added to QuickBooks');
             }
           } catch (error) {
             if (isMounted) {
