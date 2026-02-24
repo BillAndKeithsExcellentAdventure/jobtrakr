@@ -7,6 +7,7 @@ import { useCreateServerSynchronizerAndStart } from '../synchronization/useCreat
 import { useProjectDetailsStoreCache } from '../../context/ProjectDetailsStoreCacheContext';
 import { useAuth } from '@clerk/clerk-expo';
 import { useProjectListStoreId } from '../listOfProjects/ListOfProjectsStore';
+import { useNetwork } from '../../context/NetworkContext';
 import {
   doesProjectExistInQuickBooks,
   addProjectToQuickBooks,
@@ -118,9 +119,15 @@ export const getStoreId = (projId: string) => STORE_ID_PREFIX + projId;
 export default function ProjectDetailsStore({ projectId }: { projectId: string }) {
   const { addStoreToCache, removeStoreFromCache } = useProjectDetailsStoreCache();
   const { orgId, userId, getToken } = useAuth();
+  const { isConnectedToQuickBooks } = useNetwork();
   const listStoreId = useProjectListStoreId();
   const listStore = useStore(listStoreId);
   const updateQbTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isConnectedToQBRef = useRef(isConnectedToQuickBooks);
+
+  useEffect(() => {
+    isConnectedToQBRef.current = isConnectedToQuickBooks;
+  }, [isConnectedToQuickBooks]);
 
   const storeId = getStoreId(projectId);
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
@@ -138,6 +145,7 @@ export default function ProjectDetailsStore({ projectId }: { projectId: string }
 
       if (orgId && userId) {
         const syncWithQuickBooks = async () => {
+          if (!isConnectedToQBRef.current) return;
           try {
             const project = listStore?.getRow('projects', projectId);
             const projectName = (project?.name as string) ?? '';
@@ -177,6 +185,7 @@ export default function ProjectDetailsStore({ projectId }: { projectId: string }
           clearTimeout(updateQbTimerRef.current);
         }
         updateQbTimerRef.current = setTimeout(async () => {
+          if (!isConnectedToQBRef.current) return;
           const project = listStore.getRow('projects', projectId);
           const projectName = (project?.name as string) ?? '';
 
