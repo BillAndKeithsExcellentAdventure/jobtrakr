@@ -1971,6 +1971,151 @@ Retrieve all active projects (job customers) from QuickBooks.
 - Only returns customers marked as jobs (projects) in QuickBooks
 - Returns normalized project data for easier consumption
 
+#### GET /qbo/doesProjectExist
+
+Check if a project exists in QuickBooks for a given Project Hound project ID.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `projectId` (string): Project identifier
+- `userId` (string): User identifier
+
+**Response:**
+
+```json
+{
+  "success": true
+}
+```
+
+**Response (Not Found):**
+
+```json
+{
+  "success": false
+}
+```
+
+**Notes:**
+
+- Returns `success: true` if the project exists in the `quickbooks_projects` table
+- Returns `success: false` if the project does not exist
+- Does not require QuickBooks connection to be active (only checks local database)
+- Useful for determining if a project has been synced to QuickBooks
+
+#### POST /qbo/addProject
+
+Create a new project (sub-customer) under an existing customer in QuickBooks.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Request Body:**
+
+```json
+{
+  "customerId": "123",
+  "projectName": "Downtown Office Renovation",
+  "projectId": "proj-001"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Project created successfully",
+  "newQBId": "456"
+}
+```
+
+**Error Response (401):**
+
+```json
+{
+  "success": false,
+  "message": "Token expired and refresh failed. Please reconnect QuickBooks."
+}
+```
+
+**Notes:**
+
+- Required fields: `customerId`, `projectName`, `projectId`
+- Creates a sub-customer (job) under the specified parent customer
+- Returns the QuickBooks-assigned project ID in `newQBId` field
+- Stores the mapping between Project Hound projectId and QuickBooks project ID in local database
+- Returns 401 if token refresh fails (requires reconnection)
+- Projects are stored as customers with Job=true in QuickBooks
+- Status code: 201 Created on success, 401 if authentication fails, 500 for other errors
+
+#### POST /qbo/updateProject
+
+Update an existing project (sub-customer) in QuickBooks.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Request Body:**
+
+```json
+{
+  "customerId": "123",
+  "projectName": "Downtown Office Renovation - Updated",
+  "projectId": "proj-001"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Project updated successfully",
+  "qbId": "456"
+}
+```
+
+**Error Response (401):**
+
+```json
+{
+  "success": false,
+  "message": "Token expired and refresh failed. Please reconnect QuickBooks."
+}
+```
+
+**Error Response (404):**
+
+```json
+{
+  "success": false,
+  "message": "Project not found in QuickBooks. Please create the project first."
+}
+```
+
+**Notes:**
+
+- Required fields: `customerId`, `projectName`, `projectId`
+- Updates an existing sub-customer (job) under the specified parent customer
+- The project must already exist in QuickBooks (use `/qbo/addProject` to create new projects)
+- Returns the QuickBooks project ID in `qbId` field
+- Automatically fetches the existing customer record to retrieve SyncToken (required for updates)
+- Returns 401 if token refresh fails (requires reconnection)
+- Returns 404 if project not found in local database or QuickBooks
+- Status code: 200 OK on success, 401 if authentication fails, 404 if project not found, 500 for other errors
+
 #### POST /qbo/addCustomer
 
 Create a new customer in QuickBooks.
