@@ -160,10 +160,19 @@ const AddInvoicePage = () => {
 
       // if connected to QuickBooks add the invoice as a Bill in QuickBooks and save
       // the returned Bill.Id to the invoice as billId and the Bill.DocNumber to accountingId for future updates
-      if (isConnectedToQuickBooks && orgId && userId && getToken) {
+      if (
+        isConnectedToQuickBooks &&
+        orgId &&
+        userId &&
+        getToken &&
+        invoiceToAdd.amount &&
+        invoiceToAdd.vendorId &&
+        qbExpenseAccountId &&
+        invoiceToAdd.description
+      ) {
         const qbBill: AddBillRequest = {
           vendorRef: invoiceToAdd.vendorId,
-          dueDate: formatDate(invoiceToAdd.invoiceDate, 'yyyy-MM-dd'),
+          dueDate: formatDate(invoiceToAdd.invoiceDate),
           lineItems: [
             {
               description: invoiceToAdd.description,
@@ -209,6 +218,7 @@ const AddInvoicePage = () => {
     orgId,
     userId,
     getToken,
+    qbExpenseAccountId,
   ]);
 
   const handleCaptureImage = useCallback(async () => {
