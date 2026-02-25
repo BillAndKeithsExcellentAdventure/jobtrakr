@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { createMergeableStore, NoValuesSchema } from 'tinybase/with-schemas';
+import { useStore } from 'tinybase/ui-react';
 import { useCreateClientPersisterAndStart } from '../persistence/useCreateClientPersisterAndStart';
 import { useCreateServerSynchronizerAndStart } from '../synchronization/useCreateServerSynchronizerAndStart';
 import { useProjectDetailsStoreCache } from '../../context/ProjectDetailsStoreCacheContext';
@@ -117,16 +118,21 @@ export default function ProjectDetailsStore({ projectId }: { projectId: string }
   useCreateServerSynchronizerAndStart(storeId, store);
   useProvideStore(storeId, store);
 
-  // Add store to cache when it's created
+  // Add store to cache once when it's created - keep this effect stable
   useEffect(() => {
-    if (store) {
-      console.log('Mounting ProjectDetailsStore for projectId:', projectId);
-      addStoreToCache(projectId, store);
-      return () => {
+    if (!store) return;
+
+    let isMounted = true;
+    console.log('Mounting ProjectDetailsStore for projectId:', projectId);
+    addStoreToCache(projectId, store);
+
+    return () => {
+      if (isMounted) {
+        isMounted = false;
         console.log('Unmounting ProjectDetailsStore for projectId:', projectId);
         removeStoreFromCache(projectId);
-      };
-    }
+      }
+    };
   }, [projectId, store, addStoreToCache, removeStoreFromCache]);
 
   return null;

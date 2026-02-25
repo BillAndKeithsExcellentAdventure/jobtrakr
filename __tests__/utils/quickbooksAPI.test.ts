@@ -1,7 +1,13 @@
 /**
  * Tests for QuickBooks API utilities
  */
-import { addReceiptToQuickBooks, AddReceiptRequest } from '@/src/utils/quickbooksAPI';
+import {
+  addReceiptToQuickBooks,
+  AddReceiptRequest,
+  doesProjectExistInQuickBooks,
+  addProjectToQuickBooks,
+  updateProjectInQuickBooks,
+} from '@/src/utils/quickbooksAPI';
 import {
   mockApiSuccess,
   mockApiError,
@@ -150,6 +156,155 @@ describe('quickbooksAPI', () => {
 
       expect(result.success).toBe(true);
       expect(result.accountId).toBe('RECEIPT-TEST-001');
+    });
+  });
+
+  describe('doesProjectExistInQuickBooks', () => {
+    it('should return true when project exists', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: true });
+
+      const result = await doesProjectExistInQuickBooks('org-456', 'proj-789', 'user-123', mockGetToken);
+
+      expect(result).toBe(true);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/qbo/doesProjectExist'),
+        expect.objectContaining({ method: 'GET' }),
+      );
+    });
+
+    it('should return false when project does not exist', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: false });
+
+      const result = await doesProjectExistInQuickBooks('org-456', 'proj-789', 'user-123', mockGetToken);
+
+      expect(result).toBe(false);
+    });
+
+    it('should include orgId, projectId, and userId in query params', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: true });
+
+      await doesProjectExistInQuickBooks('org-456', 'proj-789', 'user-123', mockGetToken);
+
+      const callUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string;
+      expect(callUrl).toContain('orgId=org-456');
+      expect(callUrl).toContain('projectId=proj-789');
+      expect(callUrl).toContain('userId=user-123');
+    });
+
+    it('should return false on API error', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiError(500, 'Internal Server Error');
+
+      const result = await doesProjectExistInQuickBooks('org-456', 'proj-789', 'user-123', mockGetToken);
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('addProjectToQuickBooks', () => {
+    const mockProject = {
+      customerId: 'customer-123',
+      projectName: 'Test Project',
+      projectId: 'proj-789',
+    };
+
+    it('should successfully add a project', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      const mockResponse = { success: true, message: 'Project created successfully', newQBId: 'qb-456' };
+      mockApiSuccess(mockResponse);
+
+      const result = await addProjectToQuickBooks('org-456', 'user-123', mockProject, mockGetToken);
+
+      expect(result).toEqual(mockResponse);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/qbo/addProject'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify(mockProject),
+        }),
+      );
+    });
+
+    it('should include orgId and userId in query params', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: true, newQBId: 'qb-456' });
+
+      await addProjectToQuickBooks('org-456', 'user-123', mockProject, mockGetToken);
+
+      const callUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string;
+      expect(callUrl).toContain('orgId=org-456');
+      expect(callUrl).toContain('userId=user-123');
+    });
+
+    it('should throw error when API returns failure', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: false, message: 'Failed to add project' });
+
+      await expect(addProjectToQuickBooks('org-456', 'user-123', mockProject, mockGetToken)).rejects.toThrow(
+        'Failed to add project',
+      );
+    });
+
+    it('should handle network errors', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiError(500, 'Internal Server Error');
+
+      await expect(addProjectToQuickBooks('org-456', 'user-123', mockProject, mockGetToken)).rejects.toThrow();
+    });
+  });
+
+  describe('updateProjectInQuickBooks', () => {
+    const mockProject = {
+      customerId: 'customer-456',
+      projectName: 'Updated Project',
+      projectId: 'proj-789',
+    };
+
+    it('should successfully update a project', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      const mockResponse = { success: true, message: 'Project updated successfully', qbId: 'qb-456' };
+      mockApiSuccess(mockResponse);
+
+      const result = await updateProjectInQuickBooks('org-456', 'user-123', mockProject, mockGetToken);
+
+      expect(result).toEqual(mockResponse);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/qbo/updateProject'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify(mockProject),
+        }),
+      );
+    });
+
+    it('should include orgId and userId in query params', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: true, qbId: 'qb-456' });
+
+      await updateProjectInQuickBooks('org-456', 'user-123', mockProject, mockGetToken);
+
+      const callUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string;
+      expect(callUrl).toContain('orgId=org-456');
+      expect(callUrl).toContain('userId=user-123');
+    });
+
+    it('should throw error when project not found', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: false, message: 'Project not found in QuickBooks. Please create the project first.' });
+
+      await expect(updateProjectInQuickBooks('org-456', 'user-123', mockProject, mockGetToken)).rejects.toThrow(
+        'Project not found in QuickBooks. Please create the project first.',
+      );
+    });
+
+    it('should handle network errors', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiError(500, 'Internal Server Error');
+
+      await expect(updateProjectInQuickBooks('org-456', 'user-123', mockProject, mockGetToken)).rejects.toThrow();
     });
   });
 });
