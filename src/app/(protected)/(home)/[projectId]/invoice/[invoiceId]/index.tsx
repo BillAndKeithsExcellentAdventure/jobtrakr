@@ -59,12 +59,12 @@ const InvoiceDetailsPage = () => {
     markedComplete: false,
     paymentAccountId: '',
     billId: '',
+    qbSyncHash: '',
   });
 
   useEffect(() => {
     const match = allProjectInvoices.find((r) => r.id === invoiceId);
     if (match) {
-      console.log('InvoiceDetailsPage - match:', match);
       setInvoice({ ...match });
     }
   }, [invoiceId, allProjectInvoices]);
