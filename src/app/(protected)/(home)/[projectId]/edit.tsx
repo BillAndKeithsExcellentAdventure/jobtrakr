@@ -5,11 +5,14 @@ import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
 import { useAutoSaveNavigation, useFocusManager } from '@/src/hooks/useFocusManager';
 import { ProjectData } from '@/src/models/types';
 import { CustomerData, useAllRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useProject, useUpdateProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatDate } from '@/src/utils/formatters';
+import { updateProjectInQuickBooks } from '@/src/utils/quickbooksAPI';
+import { useAuth } from '@clerk/clerk-expo';
 import * as Location from 'expo-location';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -22,6 +25,8 @@ const EditProjectScreen = () => {
   const router = useRouter();
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const focusManager = useFocusManager();
+  const { isConnectedToQuickBooks } = useNetwork();
+  const { orgId, userId, getToken } = useAuth();
 
   const [project, setProject] = useState<ProjectData>({
     id: '',
@@ -164,14 +169,35 @@ const EditProjectScreen = () => {
   const handleBackPress = useAutoSaveNavigation(processBackPress);
 
   const handleCustomerSelected = useCallback(
-    (customer: CustomerData) => {
+    async (customer: CustomerData) => {
+      const customerIdChanged = project.customerId !== customer.id;
       setSelectedCustomer(customer);
       const newProject = { ...project, customerId: customer.id };
       if (projectId) {
         updateProject(projectId, newProject);
       }
+      if (
+        customerIdChanged &&
+        isConnectedToQuickBooks &&
+        orgId &&
+        userId &&
+        customer.accountingId &&
+        projectId
+      ) {
+        try {
+          await updateProjectInQuickBooks(
+            orgId,
+            userId,
+            { customerId: customer.accountingId, projectName: project.name, projectId },
+            getToken,
+          );
+          console.log('Updating project customer in QuickBooks');
+        } catch (error) {
+          console.error('[QB] Failed to update project customer in QuickBooks:', error);
+        }
+      }
     },
-    [project, projectId, updateProject],
+    [project, projectId, updateProject, isConnectedToQuickBooks, orgId, userId, getToken],
   );
 
   return (
