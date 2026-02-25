@@ -13,7 +13,11 @@ import {
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useDeleteProjectCallback, useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import {
+  useDeleteProjectCallback,
+  useProject,
+  useProjectListStoreId,
+} from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   useAllRows,
   useBidAmountUpdater,
@@ -26,6 +30,11 @@ import {
   useWorkItemsWithoutCosts,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
+import {
+  doesProjectExistInQuickBooks,
+  addProjectToQuickBooks,
+  updateProjectInQuickBooks,
+} from '@/src/utils/quickbooksAPI';
 import { FontAwesome5, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
 import Entypo from '@expo/vector-icons/Entypo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -35,10 +44,12 @@ import { FlashList } from '@shopify/flash-list';
 import { File, Paths } from 'expo-file-system';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '@clerk/clerk-expo';
+import { useStore } from 'tinybase/ui-react';
 
 const ProjectDetailsPage = () => {
   const router = useRouter();
@@ -50,6 +61,7 @@ const ProjectDetailsPage = () => {
   const clearProjectDetailsStore = useClearProjectDetailsStoreCallback(projectId);
   const allProjectCategories = useAllConfigRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
+  const allCustomers = useAllConfigRows('customers');
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] = useState<boolean>(false);
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
@@ -60,6 +72,13 @@ const ProjectDetailsPage = () => {
   const workItemsWithoutCosts = useWorkItemsWithoutCosts(projectId);
   const allChangeOrders = useAllRows(projectId, 'changeOrders');
   const { isConnectedToQuickBooks } = useNetwork();
+  const { orgId, userId, getToken } = useAuth();
+  const isConnectedToQBRef = useRef(isConnectedToQuickBooks);
+  const syncedProjectsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    isConnectedToQBRef.current = isConnectedToQuickBooks;
+  }, [isConnectedToQuickBooks]);
 
   useEffect(() => {
     if (projectId) {
@@ -67,9 +86,75 @@ const ProjectDetailsPage = () => {
     }
   }, [projectId, addActiveProjectIds]);
 
+  const projectCustomer = useMemo(() => {
+    return allCustomers.find((c) => c.id === projectData?.customerId);
+  }, [allCustomers, projectData]);
+
+  const projectCustomerQbId = useMemo(() => projectCustomer?.accountingId, [projectCustomer]);
+
   useEffect(() => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
   }, [projectId, activeProjectIds, isStoreReady]);
+
+  // QuickBooks sync on project details page mount
+  useEffect(() => {
+    if (!projectId || !projectData || !orgId || !userId || !getToken || !projectCustomerQbId) return;
+
+    // Prevent sync from running multiple times for the same projectId
+    if (syncedProjectsRef.current.has(projectId)) {
+      //console.log('[QBSync] Project already synced in this session:', projectId);
+      return;
+    }
+
+    const syncWithQuickBooks = async () => {
+      // Mark as synced immediately to prevent concurrent re-runs triggered by
+      // unstable dependency references (getToken, projectData, projectCustomerQbId)
+      // before any async work completes.
+      syncedProjectsRef.current.add(projectId);
+      console.log('[QBSync] Starting QB sync for project:', projectId);
+
+      if (!isConnectedToQBRef.current) {
+        console.log('[QBSync] QB not connected, skipping sync');
+        return;
+      }
+
+      try {
+        const projectName = projectData.name;
+
+        const exists = await doesProjectExistInQuickBooks(orgId, projectId, userId, getToken);
+        console.log('[QBSync] Project existence check result:', { projectId, exists });
+
+        if (exists) {
+          console.log('[QBSync] Project already exists in QuickBooks');
+          return;
+        }
+
+        console.log('[QBSync] Adding project to QB with params:', {
+          orgId,
+          userId,
+          projectId,
+          projectName,
+          customerId: projectCustomerQbId,
+        });
+
+        await addProjectToQuickBooks(
+          orgId,
+          userId,
+          { customerId: projectCustomerQbId, projectName, projectId },
+          getToken,
+        );
+        console.log('[QBSync] Project added to QuickBooks successfully');
+      } catch (error) {
+        console.error('[QBSync] Failed to sync project with QuickBooks:', error);
+        if (error instanceof Error) {
+          console.error('[QBSync] Error message:', error.message);
+          console.error('[QBSync] Error stack:', error.stack);
+        }
+      }
+    };
+
+    syncWithQuickBooks();
+  }, [projectId, orgId, userId, getToken, projectData, projectCustomerQbId]);
 
   useSeedWorkItemsIfNecessary(projectId);
   useCostUpdater(projectId);

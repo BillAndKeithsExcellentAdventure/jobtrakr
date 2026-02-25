@@ -630,6 +630,12 @@ export async function doesProjectExistInQuickBooks(
 ): Promise<boolean> {
   const apiFetch = createApiWithToken(getToken);
 
+  console.log('[QB] doesProjectExistInQuickBooks - Checking if project exists:', {
+    orgId,
+    projectId,
+    userId,
+  });
+
   const response = await apiFetch(
     `${API_BASE_URL}/qbo/doesProjectExist?orgId=${orgId}&projectId=${projectId}&userId=${userId}`,
     {
@@ -641,6 +647,11 @@ export async function doesProjectExistInQuickBooks(
   );
 
   const data: ApiDefaultResponse = await response.json();
+  console.log('[QB] doesProjectExistInQuickBooks - Response:', {
+    projectId,
+    exists: data.success === true,
+  });
+
   return data.success === true;
 }
 
@@ -661,16 +672,24 @@ export async function addProjectToQuickBooks(
 ): Promise<AddProjectResponse> {
   const apiFetch = createApiWithToken(getToken);
 
+  const requestBody = JSON.stringify(project);
+  console.log('[QB] addProjectToQuickBooks - Request body:', requestBody);
+
   const response = await apiFetch(`${API_BASE_URL}/qbo/addProject?orgId=${orgId}&userId=${userId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(project),
+    body: requestBody,
   });
 
   const data: AddProjectResponse = await response.json();
+
   if (!data.success) {
+    console.error('[QB] addProjectToQuickBooks - API returned success: false', {
+      message: data.message,
+      data,
+    });
     throw new Error(data.message || 'Failed to add project to QuickBooks');
   }
 
@@ -694,19 +713,40 @@ export async function updateProjectInQuickBooks(
 ): Promise<UpdateProjectResponse> {
   const apiFetch = createApiWithToken(getToken);
 
+  console.log('[QB] updateProjectInQuickBooks - Input parameters:', {
+    orgId,
+    userId,
+    projectId: project.projectId,
+    projectName: project.projectName,
+    customerId: project.customerId,
+    customerIdType: typeof project.customerId,
+  });
+
+  const requestBody = JSON.stringify(project);
+  console.log('[QB] updateProjectInQuickBooks - Request body:', requestBody);
+
   const response = await apiFetch(`${API_BASE_URL}/qbo/updateProject?orgId=${orgId}&userId=${userId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(project),
+    body: requestBody,
   });
 
+  console.log('[QB] updateProjectInQuickBooks - Response status:', response.status);
+
   const data: UpdateProjectResponse = await response.json();
+  console.log('[QB] updateProjectInQuickBooks - Response data:', data);
+
   if (!data.success) {
+    console.error('[QB] updateProjectInQuickBooks - API returned success: false', {
+      message: data.message,
+      data,
+    });
     throw new Error(data.message || 'Failed to update project in QuickBooks');
   }
 
+  console.log('[QB] updateProjectInQuickBooks - Successfully updated project with QB ID:', data.qbId);
   return data;
 }
 
