@@ -61,6 +61,9 @@ export const useAppSettings = (): SettingsData => {
           id: id,
         })) as SettingsData[])
       : [];
+    if (array.length > 1) {
+      array.slice(1).forEach((row) => store.delRow('settings', row.id));
+    }
     return array.length > 0 ? array[0] : INITIAL_SETTINGS;
   }, [store]);
 
@@ -87,12 +90,12 @@ export function useSetAppSettingsCallback() {
       if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
       let existing = INITIAL_SETTINGS;
       let id = randomUUID();
-      if (settings.id) {
-        const row = store.getRow('settings', settings.id);
-        if (row) {
-          existing = { id: settings.id, ...row } as SettingsData;
-          id = settings.id;
-        }
+      const table = store.getTable('settings');
+      const firstEntry = table ? Object.entries(table)[0] : undefined;
+      if (firstEntry) {
+        const [existingId, existingRow] = firstEntry;
+        existing = { id: existingId, ...existingRow } as SettingsData;
+        id = existingId;
       }
 
       const success = store.setRow('settings', id, { ...existing, ...settings });

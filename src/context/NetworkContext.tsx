@@ -1,4 +1,13 @@
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  ReactNode,
+  use,
+} from 'react';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { isDevelopmentBuild } from '@/src/utils/environment';
@@ -123,7 +132,12 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
         return;
       }
 
-      if (!appSettings.syncWithQuickBooks && appSettings.id.length && !isConnectedToQuickBooksRef.current) {
+      if (!appSettings.id) {
+        isConnectedToQuickBooksRef.current = false;
+        return;
+      }
+
+      if (!appSettings.syncWithQuickBooks) {
         console.log('QuickBooks not connected because syncWithQuickBooks is false');
         return;
       }
@@ -148,8 +162,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   }, [
     auth.isLoaded,
     auth.isSignedIn,
-    appSettings.syncWithQuickBooks,
-    appSettings.id,
+    appSettings,
     orgId,
     userId,
     isConnected,

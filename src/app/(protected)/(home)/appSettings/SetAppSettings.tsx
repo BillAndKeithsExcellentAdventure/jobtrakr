@@ -283,7 +283,7 @@ const SetAppSettingScreen = () => {
                       );
 
                       const sanitizedSettings = sanitizeQuickBooksAccountSettings(settings, importedAccounts);
-                      const updatedSettings = { ...settings, ...sanitizedSettings };
+                      const updatedSettings = { ...settings, ...sanitizedSettings, syncWithQuickBooks: true };
                       setAppSettings(updatedSettings);
                       setSettings(updatedSettings);
                       // call following after a delay to ensure settings are updated before attempting to set variable that will trigger looking at appSettings.
