@@ -118,7 +118,7 @@ const EditInvoiceDetailsPage = () => {
     <SafeAreaView style={{ flex: 1 }}>
       <Stack.Screen
         options={{
-          title: 'Edit Invoice Summary',
+          title: 'Edit Invoice Details',
           headerShown: false,
           headerBackTitle: '',
           headerBackButtonDisplayMode: 'minimal',
@@ -164,7 +164,7 @@ const EditInvoiceDetailsPage = () => {
           </View>
 
           <NumberInputField
-            style={styles.inputContainer}
+            style={{ ...styles.inputContainer, paddingLeft: 10 }}
             label="Amount"
             value={invoiceAmount}
             onChange={(value: number): void => {

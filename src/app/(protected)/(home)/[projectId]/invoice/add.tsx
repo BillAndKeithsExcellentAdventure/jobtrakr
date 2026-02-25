@@ -79,18 +79,13 @@ const AddInvoicePage = () => {
     qbSyncHash: '',
   });
 
-  const handleVendorChange = useCallback((vendor: OptionEntry) => {
-    setProjectInvoice((prevReceipt) => ({
-      ...prevReceipt,
-      vendor: vendor.label,
-      vendorId: vendor.value,
-    }));
-  }, []);
-
   const handleVendorOptionChange = (option: OptionEntry) => {
-    setPickedOption(option);
     if (option) {
-      handleVendorChange(option);
+      setProjectInvoice((prevInvoice) => ({
+        ...prevInvoice,
+        vendor: option.label,
+        vendorId: option.value,
+      }));
     }
     setIsVendorListPickerVisible(false);
   };
@@ -98,9 +93,7 @@ const AddInvoicePage = () => {
   useEffect(() => {
     if (allVendors && allVendors.length > 0) {
       const vendorOptions: OptionEntry[] = allVendors.map((vendor) => ({
-        label: `${vendor.name} ${
-          vendor.address ? ` - ${vendor.address}` : vendor.city ? ` - ${vendor.city}` : ''
-        }`,
+        label: vendor.name,
         value: vendor.id,
       }));
 
@@ -109,6 +102,11 @@ const AddInvoicePage = () => {
       setVendors([]);
     }
   }, [allVendors]);
+
+  useEffect(() => {
+    const match = vendors.find((o) => o.value === projectInvoice.vendorId);
+    setPickedOption(match);
+  }, [projectInvoice, vendors]);
 
   const colors = useColors();
 
@@ -387,7 +385,7 @@ const AddInvoicePage = () => {
           />
 
           <NumberInputField
-            style={styles.inputContainer}
+            style={{ ...styles.inputContainer, paddingLeft: 10 }}
             placeholder="Amount"
             label="Amount"
             value={projectInvoice.amount}
