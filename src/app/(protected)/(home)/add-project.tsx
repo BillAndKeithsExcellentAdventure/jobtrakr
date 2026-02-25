@@ -148,6 +148,7 @@ const AddProjectScreen = () => {
           onChangeText={(text) => setProject({ ...project, location: text })}
         />
         <CustomerPicker
+          style={{ marginBottom: 8 }}
           selectedCustomer={selectedCustomer}
           onCustomerSelected={setSelectedCustomer}
           customers={allCustomers}

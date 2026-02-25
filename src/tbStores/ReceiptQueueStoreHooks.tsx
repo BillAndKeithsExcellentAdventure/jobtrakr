@@ -1,4 +1,4 @@
-import { NoValuesSchema, Value } from 'tinybase/with-schemas';
+import { NoValuesSchema } from 'tinybase/with-schemas';
 import { TABLES_SCHEMA, useStoreId } from './ReceiptQueueStore';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { useCallback, useEffect, useState } from 'react';

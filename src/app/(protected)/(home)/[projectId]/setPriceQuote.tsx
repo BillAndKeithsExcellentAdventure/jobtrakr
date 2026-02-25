@@ -1,7 +1,7 @@
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
-import { View, Text } from '@/src/components/Themed';
+import { View } from '@/src/components/Themed';
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import { NumberInputField } from '@/src/components/NumberInputField';
 import { useFocusManager } from '@/src/hooks/useFocusManager';

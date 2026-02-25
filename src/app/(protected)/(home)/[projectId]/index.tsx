@@ -13,11 +13,7 @@ import {
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import {
-  useDeleteProjectCallback,
-  useProject,
-  useProjectListStoreId,
-} from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { useDeleteProjectCallback, useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   useAllRows,
   useBidAmountUpdater,
@@ -30,11 +26,7 @@ import {
   useWorkItemsWithoutCosts,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
-import {
-  doesProjectExistInQuickBooks,
-  addProjectToQuickBooks,
-  updateProjectInQuickBooks,
-} from '@/src/utils/quickbooksAPI';
+import { doesProjectExistInQuickBooks, addProjectToQuickBooks } from '@/src/utils/quickbooksAPI';
 import { FontAwesome5, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
 import Entypo from '@expo/vector-icons/Entypo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -49,7 +41,6 @@ import { Alert, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@clerk/clerk-expo';
-import { useStore } from 'tinybase/ui-react';
 
 const ProjectDetailsPage = () => {
   const router = useRouter();

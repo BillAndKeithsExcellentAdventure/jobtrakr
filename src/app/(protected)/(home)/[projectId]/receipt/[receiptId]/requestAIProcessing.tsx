@@ -19,7 +19,7 @@ import { createApiWithToken } from '@/src/utils/apiWithToken';
 import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React, { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
@@ -107,95 +107,6 @@ const RequestAIProcessingPage = () => {
     },
     [allProjects, receiptId],
   );
-
-  // Simulated AI result for testing
-  async function fetchSimulatedAIResult(returnSingleItem = false) {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const mockResult_original = {
-      status: 'Success',
-      response: {
-        MerchantName: { value: 'Home Depot' },
-        TransactionDate: { value: '2025-06-06T10:30:00Z' },
-        Total: { value: '165.86' },
-        TotalTax: { value: '9.39' },
-        Items: [
-          {
-            Description: { value: '2x4x8 Premium Lumber' },
-            TotalPrice: { value: '45.98' },
-          },
-          {
-            Description: { value: 'Paint Brush Set' },
-            TotalPrice: { value: '24.99' },
-          },
-          {
-            Description: { value: 'Drywall Screws 5lb Box' },
-            TotalPrice: { value: '30.94' },
-          },
-          {
-            Description: { value: 'LED Light Fixture' },
-            TotalPrice: { value: '34.99' },
-          },
-          {
-            Description: { value: 'Plumbing Tape' },
-            TotalPrice: { value: '19.57' },
-          },
-        ],
-      },
-    };
-
-    const mockResult = {
-      status: 'Success',
-      response: {
-        MerchantName: { value: 'Home Depot' },
-        TransactionDate: { value: '2025-06-06T10:30:00Z' },
-        Total: { value: '137.17' },
-        TotalTax: { value: '9.26' },
-        Items: [
-          {
-            Description: { value: '2x4x8 Premium Lumber' },
-            TotalPrice: { value: '57.90' },
-          },
-          {
-            Description: { value: 'Paint Brush Set' },
-            TotalPrice: { value: '25.98' },
-          },
-          {
-            Description: { value: 'Drywall Screws 1lb Box' },
-            TotalPrice: { value: '6.59' },
-          },
-          {
-            Description: { value: 'LED Light Fixture' },
-            TotalPrice: { value: '32.95' },
-          },
-          {
-            Description: { value: 'Plumbing Tape' },
-            TotalPrice: { value: '4.49' },
-          },
-        ],
-      },
-    };
-
-    const summary = {
-      vendor: replaceNonPrintable(mockResult.response.MerchantName.value),
-      receiptDate: Date.parse(mockResult.response.TransactionDate.value),
-      totalAmount: Number.parseFloat(mockResult.response.Total.value),
-      totalTax: Number.parseFloat(mockResult.response.TotalTax.value),
-    };
-
-    if (mockResult.response.Items.length > 0) {
-      const receiptItems = mockResult.response.Items.map((i: any) => ({
-        description: i.Description.value,
-        amount: Number.parseFloat(i.TotalPrice.value),
-      }));
-      if (returnSingleItem) setAiItems([receiptItems[0]]);
-      else setAiItems(receiptItems);
-    }
-
-    setReceiptSummary(summary);
-    setFetchingData(false);
-  }
 
   const fetchAIResult = useCallback(async () => {
     try {

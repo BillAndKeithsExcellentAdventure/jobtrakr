@@ -1,4 +1,4 @@
-import { Text, TextInput, View } from '@/src/components/Themed';
+import { Text, View } from '@/src/components/Themed';
 import { Switch } from '@/src/components/Switch';
 import { useColors } from '@/src/context/ColorsContext';
 import {

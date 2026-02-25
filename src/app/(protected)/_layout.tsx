@@ -8,7 +8,6 @@ import { WorkItemSpentSummaryProvider } from '@/src/context/WorkItemSpentSummary
 import { AuthorizedStoresProvider } from '@/src/components/AuthorizedStoresProvider';
 import ActiveProjectDetailsStoreProvider from '@/src/components/ActiveProjectDetailsStoreProvider';
 import { UploadQueueProcessor } from '@/src/components/UploadQueueProcessor';
-import { ReceiptQueueProcessor } from '@/src/components/ReceiptQueueProcessor';
 
 export const unstable_settings = {
   initialRouteName: '(home)', // anchor

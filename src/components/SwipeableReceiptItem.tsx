@@ -59,11 +59,6 @@ const SwipeableReceiptItem = React.memo<{
     [allReceiptItems],
   );
 
-  const totalOfAllReceiptItemsFormatted = useMemo(
-    () => formatCurrency(totalOfAllReceiptItems, true, true),
-    [totalOfAllReceiptItems],
-  );
-
   const paymentAccountName = useMemo(() => {
     if (!item.paymentAccountId) return '';
     return allAccounts.find((account) => account.accountingId === item.paymentAccountId)?.name ?? '';

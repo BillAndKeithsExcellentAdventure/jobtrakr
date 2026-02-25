@@ -3,8 +3,8 @@ import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { Stack } from 'expo-router';
 import React, { PropsWithChildren } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
-import { KeyboardToolbar } from 'react-native-keyboard-controller';
+import { Platform, StyleSheet } from 'react-native';
+import { KeyboardAvoidingView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '../constants/app-constants';
 

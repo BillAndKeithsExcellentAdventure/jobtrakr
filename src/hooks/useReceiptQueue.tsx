@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@clerk/clerk-expo';
 import { useNetwork } from '../context/NetworkContext';
 import {
@@ -31,7 +31,6 @@ export const useReceiptQueue = () => {
   const duplicateReceiptImage = useDuplicateReceiptImageCallback();
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
-  const intervalRef = useRef<number | null>(null);
   const { addActiveProjectIds } = useActiveProjectIds();
   const { getStoreFromCache } = useProjectDetailsStoreCache();
 

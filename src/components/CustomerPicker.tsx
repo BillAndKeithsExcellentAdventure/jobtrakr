@@ -22,6 +22,7 @@ import { useNetwork } from '../context/NetworkContext';
 import { addCustomer } from '../utils/quickbooksAPI';
 
 interface CustomerPickerProps {
+  style?: any;
   selectedCustomer?: CustomerData;
   onCustomerSelected: (customer: CustomerData) => void;
   customers: CustomerData[];
@@ -35,6 +36,7 @@ export const CustomerPicker = ({
   customers,
   label,
   placeholder = 'Select a customer',
+  style = {},
 }: CustomerPickerProps) => {
   const [isPickerVisible, setIsPickerVisible] = useState(false);
   const [searchText, setSearchText] = useState<string>('');
@@ -195,7 +197,7 @@ export const CustomerPicker = ({
   return (
     <>
       <Pressable onPress={blurAndOpen}>
-        <View style={styles.pickerRow}>
+        <View style={{ ...styles.pickerRow, ...style }}>
           <View style={{ flex: 1, backgroundColor: 'transparent' }}>
             <TextField
               label={label}
@@ -355,7 +357,7 @@ export const CustomerPicker = ({
         title="Add New Customer"
         modalHeight="70%"
       >
-        <View style={{ padding: 15, backgroundColor: colors.listBackground }}>
+        <View style={{ padding: 15, gap: 10 }}>
           <TextInput
             style={[styles.input, { backgroundColor: colors.neutral200 }]}
             placeholder="Customer Name"
@@ -429,9 +431,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   input: {
-    borderWidth: 1,
-    marginBottom: 10,
-    padding: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 6,
     borderRadius: 5,
+    alignItems: 'center',
   },
 });
