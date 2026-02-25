@@ -3,7 +3,6 @@ import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import SwipeableReceiptItem from '@/src/components/SwipeableReceiptItem';
 import { Text, View } from '@/src/components/Themed';
-import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
@@ -29,7 +28,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, TextInput } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
-import { KeyboardAvoidingView, KeyboardToolbar } from 'react-native-keyboard-controller';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Switch } from '@/src/components/Switch';
 

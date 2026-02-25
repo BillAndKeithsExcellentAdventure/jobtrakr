@@ -33,11 +33,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  ReceiptLineItem,
-  serializeReceiptLineItems,
-  useAddReceiptQueueEntryCallback,
-} from '@/src/tbStores/ReceiptQueueStoreHooks';
+import { ReceiptLineItem, useAddReceiptQueueEntryCallback } from '@/src/tbStores/ReceiptQueueStoreHooks';
 
 const ReceiptDetailsPage = () => {
   const defaultDate = new Date();

@@ -170,17 +170,25 @@ const CustomersScreen = () => {
           )}
 
           <View
-            style={[
-              styles.filterContainer,
-              {
-                backgroundColor: colors.background,
-                borderBottomColor: colors.border,
-                paddingBottom: 10,
-              },
-            ]}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+              borderWidth: 1,
+              borderRadius: 8,
+              borderColor: colors.border,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+            }}
           >
-            <Text>Show active only</Text>
-            <Switch value={showActiveOnly} onValueChange={setShowActiveOnly} size="medium" />
+            <Text text="All" style={{ fontWeight: 'bold' }} />
+            <Switch
+              value={showActiveOnly}
+              onValueChange={setShowActiveOnly}
+              switchContainerOffBackgroundColor={colors.profitFg}
+              size="medium"
+            />
+            <Text numberOfLines={1} text="Show Only Active Customers" style={{ fontWeight: 'bold' }} />
           </View>
 
           <FlatList

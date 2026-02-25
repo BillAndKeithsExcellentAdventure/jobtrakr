@@ -9,9 +9,9 @@ import {
 import { Ionicons } from '@expo/vector-icons'; // Right caret icon
 import { Stack } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { FlatList, Platform, StyleSheet, KeyboardAvoidingView } from 'react-native';
+import { FlatList, Platform, StyleSheet } from 'react-native';
+import { KeyboardAvoidingView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { Pressable } from 'react-native-gesture-handler';
-import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SwipeableProjectTemplate from '@/src/components/SwipeableProjectTemplate';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';

@@ -20,7 +20,6 @@ import {
   useUpdateRowCallback,
   useDeleteRowCallback,
   VendorData,
-  CustomerData,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { vendorsToCsv, csvToVendors, csvToCustomers } from '@/src/utils/csvUtils';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';

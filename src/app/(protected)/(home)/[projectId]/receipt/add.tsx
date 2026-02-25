@@ -31,7 +31,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { use, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { ReceiptLineItem } from '@/src/tbStores/ReceiptQueueStoreHooks';
@@ -39,7 +39,7 @@ import { ReceiptLineItem } from '@/src/tbStores/ReceiptQueueStoreHooks';
 const AddReceiptPage = () => {
   const defaultDate = useMemo(() => new Date(), []);
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
-  const { isConnected, isInternetReachable, isConnectedToQuickBooks } = useNetwork();
+  const { isConnectedToQuickBooks } = useNetwork();
   const auth = useAuth();
   const project = useProject(projectId);
   const projectAbbr = project?.abbreviation ?? '';

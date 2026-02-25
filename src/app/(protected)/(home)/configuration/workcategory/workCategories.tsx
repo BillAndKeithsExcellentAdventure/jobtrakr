@@ -13,9 +13,9 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'; // Right caret icon
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { Alert, FlatList, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-import { KeyboardToolbar } from 'react-native-keyboard-controller';
+import { KeyboardToolbar, KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 

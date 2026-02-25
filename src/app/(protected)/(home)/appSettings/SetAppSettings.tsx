@@ -29,7 +29,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import * as WebBrowser from 'expo-web-browser';
 import { Stack, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Image, Platform, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { useAuth } from '@clerk/clerk-expo';
@@ -62,7 +62,6 @@ const SetAppSettingScreen = () => {
   const colors = useColors();
   const router = useRouter();
   const auth = useAuth();
-  const { orgId, userId, getToken } = auth;
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
   const [settings, setSettings] = useState<SettingsData>(appSettings);

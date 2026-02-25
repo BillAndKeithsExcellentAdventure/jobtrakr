@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { createMergeableStore, NoValuesSchema } from 'tinybase/with-schemas';
-import { useStore } from 'tinybase/ui-react';
 import { useCreateClientPersisterAndStart } from '../persistence/useCreateClientPersisterAndStart';
 import { useCreateServerSynchronizerAndStart } from '../synchronization/useCreateServerSynchronizerAndStart';
 import { useProjectDetailsStoreCache } from '../../context/ProjectDetailsStoreCacheContext';

@@ -9,18 +9,9 @@ import {
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useAllRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { useAuth } from '@clerk/clerk-expo';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
+import { ActivityIndicator, Alert, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { OptionEntry } from '@/src/components/OptionList';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
@@ -29,14 +20,12 @@ import OptionList from '@/src/components/OptionList';
 const QBAccountsScreen = () => {
   const colors = useColors();
   const router = useRouter();
-  const auth = useAuth();
-  const { orgId, userId, getToken } = auth;
   const { isConnectedToQuickBooks } = useNetwork();
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
   const storedAccounts = useAllRows('accounts');
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [expenseAccounts, setExpenseAccounts] = useState<OptionEntry[]>([]);
   const [paymentAccounts, setPaymentAccounts] = useState<OptionEntry[]>([]);
   const [selectedExpenseAccountId, setSelectedExpenseAccountId] = useState<string>(
