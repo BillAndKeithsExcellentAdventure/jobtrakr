@@ -6,6 +6,7 @@ import { StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import Base64Image from './Base64Image';
 import { useColors } from '../context/ColorsContext';
+import { SvgImage } from './SvgImage';
 
 interface InvoiceSummaryProps {
   item: InvoiceData;
@@ -42,10 +43,17 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({ item, onShowInvo
         <Pressable onPress={() => onShowDetails(item)}>
           {item.amount ? (
             <View style={{ flex: 1, justifyContent: 'center' }}>
-              <Text>Amount: {formatCurrency(item.amount, true, true)}</Text>
-              <Text>Vendor: {item.vendor}</Text>
-              <Text>Description: {item.description}</Text>
-              {item.notes && <Text>Notes: {item.notes}</Text>}
+              {item.accountingId && (
+                <View style={{ flexDirection: 'row', gap: 20 }}>
+                  <SvgImage fileName="qb-logo" width={20} height={20} />
+                  <Text>{`${item.accountingId}`}</Text>
+                </View>
+              )}
+              {item.amount > 0 && (
+                <Text numberOfLines={1} text={`${formatCurrency(item.amount, true, true)}`} />
+              )}
+              {item.vendor && <Text numberOfLines={1} text={`${item.vendor}`} />}
+              {item.description && <Text numberOfLines={1} text={`${item.description}`} />}
             </View>
           ) : (
             <View style={{ flex: 1, justifyContent: 'center' }}>
@@ -67,5 +75,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
 });

@@ -269,14 +269,11 @@ export async function addCustomer(
 export interface LineItem {
   amount: number;
   description: string;
-  accountRef?: { value: string };
-  itemRef?: { value: string };
-  qty?: number;
-  unitPrice?: number;
+  accountRef?: string;
 }
 
 export interface AddBillRequest {
-  vendorRef: { value: string };
+  vendorRef: string;
   lineItems: LineItem[];
   txnDate?: string;
   dueDate?: string;

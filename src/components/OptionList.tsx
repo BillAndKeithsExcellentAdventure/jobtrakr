@@ -154,6 +154,7 @@ export default function OptionList({
               >
                 <Text
                   text={item.label}
+                  numberOfLines={1}
                   style={[
                     { fontWeight: 500 },
                     textStyle,

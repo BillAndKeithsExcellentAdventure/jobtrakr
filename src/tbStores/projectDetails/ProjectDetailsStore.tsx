@@ -38,6 +38,7 @@ export const TABLES_SCHEMA = {
   invoices: {
     id: { type: 'string' },
     accountingId: { type: 'string' },
+    vendor: { type: 'string' },
     vendorId: { type: 'string' }, // QuickBooks Vendor ID
     paymentStatus: { type: 'string' }, // 'pending' | 'paid'
     description: { type: 'string' },

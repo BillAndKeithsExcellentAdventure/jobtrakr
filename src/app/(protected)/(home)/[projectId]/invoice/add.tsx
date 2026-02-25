@@ -10,6 +10,7 @@ import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
+import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import {
   WorkItemDataCodeCompareAsNumber,
   useAllRows as useAllConfigurationRows,
@@ -21,7 +22,9 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
+import { addBill, AddBillRequest } from '@/src/utils/quickbooksAPI';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
+import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -30,6 +33,8 @@ import { Alert, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 const AddInvoicePage = () => {
+  const { isConnectedToQuickBooks } = useNetwork();
+  const { userId, orgId, getToken } = useAuth();
   const defaultDate = useMemo(() => new Date(), []);
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const { isConnected, isInternetReachable } = useNetwork();
@@ -41,7 +46,7 @@ const AddInvoicePage = () => {
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
   const { projectWorkItems, availableCategoriesOptions, allAvailableCostItemOptions } =
     useProjectWorkItems(projectId);
-
+  const appSettings = useAppSettings();
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
 
@@ -52,6 +57,7 @@ const AddInvoicePage = () => {
   const [canAddInvoice, setCanAddInvoice] = useState(false);
   const addPhotoImage = useAddImageCallback();
   const allVendors = useAllConfigurationRows('vendors');
+  const qbExpenseAccountId = appSettings.quickBooksExpenseAccountId;
 
   const router = useRouter();
   const [projectInvoice, setProjectInvoice] = useState<InvoiceData>({
@@ -70,19 +76,21 @@ const AddInvoicePage = () => {
     markedComplete: false,
     invoiceNumber: '',
     billId: '',
+    qbSyncHash: '',
   });
 
-  const handleVendorChange = useCallback((vendor: string) => {
+  const handleVendorChange = useCallback((vendor: OptionEntry) => {
     setProjectInvoice((prevReceipt) => ({
       ...prevReceipt,
-      vendor,
+      vendor: vendor.label,
+      vendorId: vendor.value,
     }));
   }, []);
 
   const handleVendorOptionChange = (option: OptionEntry) => {
     setPickedOption(option);
     if (option) {
-      handleVendorChange(option.label);
+      handleVendorChange(option);
     }
     setIsVendorListPickerVisible(false);
   };
@@ -132,25 +140,65 @@ const AddInvoicePage = () => {
     const result = addInvoice(invoiceToAdd);
     if (result.status !== 'Success') {
       console.log('Add Project invoice failed:', invoiceToAdd);
-    } else {
-      if (applyToSingleCostCode && !!pickedSubCategoryOption) {
-        const newLineItem: WorkItemCostEntry = {
-          id: '',
-          label: projectInvoice.description,
-          workItemId: pickedSubCategoryOption.value,
-          amount: projectInvoice.amount,
-          parentId: result.id,
-          documentationType: 'invoice',
+      Alert.alert('Error', 'Unable to add invoice. Please try again.');
+      return;
+    }
+
+    if (applyToSingleCostCode && !!pickedSubCategoryOption) {
+      const newLineItem: WorkItemCostEntry = {
+        id: '',
+        label: projectInvoice.description,
+        workItemId: pickedSubCategoryOption.value,
+        amount: projectInvoice.amount,
+        parentId: result.id,
+        documentationType: 'invoice',
+      };
+      const addLineItemResult = addLineItem(newLineItem);
+      if (addLineItemResult.status !== 'Success') {
+        Alert.alert('Error', 'Unable to add line item for invoice.');
+        console.log('Error adding line item for invoice:', addLineItemResult);
+        return;
+      }
+
+      // if connected to QuickBooks add the invoice as a Bill in QuickBooks and save
+      // the returned Bill.Id to the invoice as billId and the Bill.DocNumber to accountingId for future updates
+      if (isConnectedToQuickBooks && orgId && userId && getToken) {
+        const qbBill: AddBillRequest = {
+          vendorRef: invoiceToAdd.vendorId,
+          dueDate: formatDate(invoiceToAdd.invoiceDate, 'yyyy-MM-dd'),
+          lineItems: [
+            {
+              description: invoiceToAdd.description,
+              amount: invoiceToAdd.amount,
+              accountRef: qbExpenseAccountId,
+            },
+          ],
         };
-        const addLineItemResult = addLineItem(newLineItem);
-        if (addLineItemResult.status !== 'Success') {
-          Alert.alert('Error', 'Unable to add line item for invoice.');
-          console.log('Error adding line item for invoice:', addLineItemResult);
+
+        try {
+          const response = await addBill(orgId, userId, qbBill, getToken);
+          /*
+          // Save the QuickBooks Bill Id and DocNumber to the invoice for future reference
+          const updatedInvoice: InvoiceData = {
+            ...invoiceToAdd,
+            billId: response.id,
+            accountingId: response.docNumber,
+          };
+          const updateResult = updateInvoice(updatedInvoice, result.id);
+          */
+        } catch (error) {
+          console.error('Error adding bill to QuickBooks:', error);
+          Alert.alert(
+            'QuickBooks Sync Failed',
+            'The invoice was added successfully, but syncing with QuickBooks failed. Please check your connection and try syncing again from the invoice details screen.',
+          );
+          return;
         }
       }
+
+      console.log('Project invoice successfully added:', projectInvoice);
+      router.back();
     }
-    console.log('Project invoice successfully added:', projectInvoice);
-    router.back();
   }, [
     projectInvoice,
     canAddInvoice,
@@ -159,6 +207,10 @@ const AddInvoicePage = () => {
     applyToSingleCostCode,
     pickedSubCategoryOption,
     router,
+    isConnectedToQuickBooks,
+    orgId,
+    userId,
+    getToken,
   ]);
 
   const handleCaptureImage = useCallback(async () => {
@@ -281,6 +333,7 @@ const AddInvoicePage = () => {
       markedComplete: false,
       invoiceNumber: '',
       billId: '',
+      qbSyncHash: '',
     });
     router.back();
   }, [router, defaultDate]);
@@ -325,25 +378,13 @@ const AddInvoicePage = () => {
             onCancel={hideDatePicker}
           />
 
-          {vendors && vendors.length ? (
-            <OptionPickerItem
-              containerStyle={styles.inputContainer}
-              optionLabel={projectInvoice.vendor}
-              label="Vendor/Merchant"
-              placeholder="Vendor/Merchant"
-              onOptionLabelChange={handleVendorChange}
-              onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
-            />
-          ) : (
-            <TextField
-              containerStyle={styles.inputContainer}
-              style={[styles.input, { borderColor: colors.transparent }]}
-              placeholder="Vendor/Merchant"
-              label="Vendor/Merchant"
-              value={projectInvoice.vendor}
-              onChangeText={handleVendorChange}
-            />
-          )}
+          <OptionPickerItem
+            containerStyle={styles.inputContainer}
+            optionLabel={projectInvoice.vendor}
+            label="Vendor/Merchant"
+            placeholder="Vendor/Merchant"
+            onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
+          />
 
           <NumberInputField
             style={styles.inputContainer}
