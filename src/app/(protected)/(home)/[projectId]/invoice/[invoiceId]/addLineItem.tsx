@@ -7,10 +7,7 @@ import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import { WorkItemDataCodeCompareAsNumber } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import {
-  useAddRowCallback,
-  WorkItemCostEntry,
-} from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useAddRowCallback, WorkItemCostEntry } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
@@ -102,12 +99,14 @@ const AddInvoiceLineItemPage = () => {
   return (
     <View style={{ flex: 1, width: '100%' }}>
       <ModalScreenContainer
+        title="Add Bill Line Item"
         onSave={handleOkPress}
         onCancel={() => router.back()}
         canSave={!!itemizedEntry.label && !!itemizedEntry.amount}
       >
         <NumberInputField
-          style={styles.inputContainer}
+          labelStyle={{ marginBottom: 0 }}
+          style={{ ...styles.inputContainer, paddingLeft: 10 }}
           label="Amount"
           value={itemizedEntry.amount}
           onChange={(value: number): void => {

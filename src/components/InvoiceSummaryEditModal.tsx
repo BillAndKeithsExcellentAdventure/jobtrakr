@@ -113,7 +113,7 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
         <View style={[styles.container, { backgroundColor: colors.opaqueModalOverlayBackgroundColor }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
             <Text txtSize="title" style={styles.title}>
-              Edit Invoice Details
+              Edit Bill Details
             </Text>
 
             <View style={styles.form}>

@@ -344,6 +344,61 @@ export async function addBill(
   return data;
 }
 
+export interface UpdateBillRequest {
+  projectId: string;
+  projectAbbr: string;
+  projectName: string;
+  billId: string; // QuickBooks Bill Id. Required for updating an existing bill.
+  addAttachment: boolean;
+  imageId: string;
+  qbBillData?: QBBillData;
+}
+
+export interface UpdateBillResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    Bill: {
+      Id: string;
+      DocNumber?: string;
+    };
+  };
+}
+
+/**
+ * Update an existing bill in QuickBooks.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param bill - The bill data to update in QuickBooks, including the bill ID and updated fields
+ * @param getToken - Function to get the authentication token
+ *
+ * @returns The response containing the updated bill information
+ */
+export async function updateBill(
+  orgId: string,
+  userId: string,
+  bill: AddBillRequest,
+  getToken: () => Promise<string | null>,
+): Promise<UpdateBillResponse> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/editBill?orgId=${orgId}&userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(bill),
+  });
+
+  const data: UpdateBillResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to edit bill');
+  }
+
+  return data;
+}
+
 export async function deleteBillFromQuickBooks(
   orgId: string,
   userId: string,

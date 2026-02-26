@@ -15,7 +15,7 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 
 import { formatCurrency } from '@/src/utils/formatters';
-import { addBill, AddBillRequest } from '@/src/utils/quickbooksAPI';
+import { addBill, updateBill, AddBillRequest, UpdateBillRequest } from '@/src/utils/quickbooksAPI';
 import { getBillSyncHash } from '@/src/utils/quickbooksSyncHash';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -95,7 +95,7 @@ const InvoiceDetailsPage = () => {
           setCurrentSyncHash(hash);
         }
       } catch (error) {
-        console.error('Failed to compute invoice sync hash:', error);
+        console.error('Failed to compute bill sync hash:', error);
         if (isActive) {
           setCurrentSyncHash(null);
         }
@@ -158,31 +158,55 @@ const InvoiceDetailsPage = () => {
       accountRef: qbExpenseAccountId,
     }));
 
-    const qbBill: AddBillRequest = {
-      projectId,
-      projectAbbr: project?.abbreviation ?? '',
-      projectName: project?.name ?? '',
-      addAttachment: !!invoice.imageId,
-      imageId: invoice.imageId,
-      qbBillData: {
-        vendorRef: vendorQbId ?? '',
-        dueDate: new Date(invoice.invoiceDate).toISOString().split('T')[0],
-        lineItems: qbLineItems,
-      },
-    };
-
     try {
-      const response = await addBill(orgId!, userId!, qbBill, getToken);
-      console.log('Invoice successfully synced to QuickBooks:', response);
+      if (invoice.billId) {
+        const qbBill: UpdateBillRequest = {
+          projectId,
+          projectAbbr: project?.abbreviation ?? '',
+          projectName: project?.name ?? '',
+          billId: invoice.billId,
+          addAttachment: !!invoice.imageId,
+          imageId: invoice.imageId,
+          qbBillData: {
+            vendorRef: vendorQbId ?? '',
+            dueDate: new Date(invoice.invoiceDate).toISOString().split('T')[0],
+            lineItems: qbLineItems,
+          },
+        };
+        const response = await updateBill(orgId!, userId!, qbBill, getToken);
+        console.log('Bill successfully synced to QuickBooks:', response);
+        const hash = await getBillSyncHash(invoice, allInvoiceLineItems);
+        const updatedInvoice: InvoiceData = {
+          ...invoice,
+          qbSyncHash: hash,
+        };
+        updateInvoice(invoice.id, updatedInvoice);
+      } else {
+        const qbBill: AddBillRequest = {
+          projectId,
+          projectAbbr: project?.abbreviation ?? '',
+          projectName: project?.name ?? '',
+          addAttachment: !!invoice.imageId,
+          imageId: invoice.imageId,
+          qbBillData: {
+            vendorRef: vendorQbId ?? '',
+            dueDate: new Date(invoice.invoiceDate).toISOString().split('T')[0],
+            lineItems: qbLineItems,
+          },
+        };
 
-      const hash = await getBillSyncHash(invoice, allInvoiceLineItems);
-      const updatedInvoice: InvoiceData = {
-        ...invoice,
-        billId: response.data?.Bill?.Id ?? '',
-        accountingId: response.data?.Bill?.DocNumber ?? '',
-        qbSyncHash: hash,
-      };
-      updateInvoice(invoice.id, updatedInvoice);
+        const response = await addBill(orgId!, userId!, qbBill, getToken);
+        console.log('Bill successfully synced to QuickBooks:', response);
+
+        const hash = await getBillSyncHash(invoice, allInvoiceLineItems);
+        const updatedInvoice: InvoiceData = {
+          ...invoice,
+          billId: response.data?.Bill?.Id ?? '',
+          accountingId: response.data?.Bill?.DocNumber ?? '',
+          qbSyncHash: hash,
+        };
+        updateInvoice(invoice.id, updatedInvoice);
+      }
     } catch (error) {
       console.error('Error syncing invoice to QuickBooks:', error);
       Alert.alert(
@@ -335,7 +359,7 @@ const InvoiceDetailsPage = () => {
     <SafeAreaView onLayout={onLayout} edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
         options={{
-          title: 'Invoice Details',
+          title: 'Bill Details',
           headerShown: true,
           headerBackTitle: '',
           headerBackButtonDisplayMode: 'minimal',
@@ -435,26 +459,25 @@ const InvoiceDetailsPage = () => {
                   {isSavingToQuickBooks ? (
                     <View style={styles.savingRow}>
                       <ActivityIndicator />
-                      <Text
-                        txtSize="standard"
-                        style={styles.savingText}
-                        text="Saving Invoice to QuickBooks"
-                      />
+                      <Text txtSize="standard" style={styles.savingText} text="Saving Bill to QuickBooks" />
                     </View>
                   ) : isInvoiceUpToDate ? (
                     <></>
-                  ) : isInvoiceOutOfSync ? (
-                    <Text
-                      txtSize="xs"
-                      style={{ ...styles.quickBooksWarning, color: colors.error }}
-                      text="Invoice was modified after syncing to QuickBooks"
-                    />
                   ) : (
-                    <ActionButton
-                      onPress={handleSyncToQuickBooks}
-                      type="action"
-                      title="Save Invoice to QuickBooks"
-                    />
+                    <>
+                      {isInvoiceOutOfSync && (
+                        <Text
+                          txtSize="xs"
+                          style={{ ...styles.quickBooksWarning, color: colors.error }}
+                          text="Bill was modified after syncing to QuickBooks"
+                        />
+                      )}
+                      <ActionButton
+                        onPress={handleSyncToQuickBooks}
+                        type="action"
+                        title={invoice.billId ? 'Update Bill in QuickBooks' : 'Add Bill to QuickBooks'}
+                      />
+                    </>
                   )}
                 </View>
               ) : isConnectedToQuickBooks && allInvoiceLineItems.length > 0 ? (
@@ -464,7 +487,7 @@ const InvoiceDetailsPage = () => {
                       <Text
                         txtSize="xs"
                         style={{ ...styles.quickBooksWarning, color: colors.error }}
-                        text="Invoice amount must match line item total"
+                        text="Bill amount must match line item total"
                       />
                       <ActionButton onPress={() => editDetails(invoice)} type="cancel" title="Edit" />
                     </>
@@ -473,7 +496,7 @@ const InvoiceDetailsPage = () => {
                       <Text
                         txtSize="xs"
                         style={{ ...styles.quickBooksWarning, color: colors.error }}
-                        text="Please Edit Invoice to complete data required by QuickBooks"
+                        text="Please Edit Bill to complete data required by QuickBooks"
                       />
                       <ActionButton onPress={() => editDetails(invoice)} type="cancel" title="Edit" />
                     </>

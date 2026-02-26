@@ -123,7 +123,7 @@ Create a new organization.
 
 ### Receipt Management
 
-#### POST /addReceipt
+#### POST /qbo/addReceipt
 
 Create a receipt with metadata and auto-generated accounting ID. Optionally creates a QuickBooks purchase and can attach the receipt image.
 
@@ -340,7 +340,7 @@ Duplicate a receipt image from one project to another. Copies the receipt image 
 
 ### Invoice Management
 
-#### POST /addBill
+#### POST /qbo/addBill
 
 Create a bill/invoice with metadata and auto-generated accounting ID. Optionally creates a QuickBooks bill.
 
@@ -493,7 +493,7 @@ Upload a photo with metadata.
 
 **Content-Type:** `multipart/form-data`
 
-**Form Fields:** Same as `/addReceipt`
+**Form Fields:** Same as `/addReceiptImage`
 
 **Response:**
 
@@ -2169,54 +2169,6 @@ Create a new customer in QuickBooks.
 - Optional fields: `firstName`, `lastName`, `phone`, `email`, `address`, `address2`, `city`, `state`, `zip`
 - Returns the QuickBooks-assigned customer ID in `newQBId` field
 - Returns 401 if token refresh fails (requires reconnection)
-
-#### POST /qbo/addProject
-
-Create a new project (sub-customer) under an existing customer in QuickBooks.
-
-**Authentication:** Required
-
-**Query Parameters:**
-
-- `orgId` (string): Organization identifier
-- `userId` (string): User identifier
-
-**Request Body:**
-
-```json
-{
-  "customerId": "123",
-  "projectName": "Downtown Office Renovation",
-  "projectId": "proj-001"
-}
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Project added successfully",
-  "newQBId": "456"
-}
-```
-
-**Error Response (401):**
-
-```json
-{
-  "success": false,
-  "message": "Token expired and refresh failed. Please reconnect QuickBooks."
-}
-```
-
-**Notes:**
-
-- Required fields: `customerId`, `projectName`, `projectId`
-- Creates a sub-customer (job) under the specified parent customer
-- Returns the QuickBooks-assigned project ID in `newQBId` field
-- Returns 401 if token refresh fails (requires reconnection)
-- Projects are stored as customers with Job=true in QuickBooks
 
 #### POST /qbo/addVendor
 

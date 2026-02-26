@@ -224,7 +224,7 @@ const AddInvoicePage = () => {
           console.error('Error adding bill to QuickBooks:', error);
           Alert.alert(
             'QuickBooks Sync Failed',
-            'The invoice was added successfully, but syncing with QuickBooks failed. Please check your connection and try syncing again from the invoice details screen.',
+            'The invoice was added successfully, but syncing with QuickBooks failed. Please check your connection and try syncing again from the bill details screen.',
           );
           return;
         }
