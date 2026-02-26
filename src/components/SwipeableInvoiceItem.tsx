@@ -18,6 +18,9 @@ import { useRouter } from 'expo-router';
 import { useDeleteMediaCallback, deleteLocalMediaFile } from '../utils/images';
 import { useAllMediaToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
 import { SvgImage } from './SvgImage';
+import { useNetwork } from '../context/NetworkContext';
+import { deleteBillFromQuickBooks } from '../utils/quickbooksAPI';
+import { useAuth } from '@clerk/clerk-expo';
 
 export const ITEM_HEIGHT = 100;
 const RIGHT_ACTION_WIDTH = 100;
@@ -31,18 +34,19 @@ const RightAction = React.memo(({ onDelete }: { onDelete: () => void }) => (
 RightAction.displayName = 'RightAction';
 
 const SwipeableInvoiceItem = React.memo<{
-  orgId: string;
   projectId: string;
   item: ClassifiedInvoiceData;
-}>(({ orgId, projectId, item }) => {
+}>(({ projectId, item }) => {
   const router = useRouter();
   const colors = useColors();
+  const { userId, orgId, getToken } = useAuth();
   const deleteInvoice = useDeleteRowCallback(projectId, 'invoices');
   const deleteInvoiceLineItem = useDeleteRowCallback(projectId, 'workItemCostEntries');
   const allInvoiceLineItems = useAllRows(projectId, 'workItemCostEntries');
   const deleteMediaCallback = useDeleteMediaCallback();
   const mediaToUpload = useAllMediaToUpload();
   const store = useUploadSyncStore();
+  const { isConnectedToQuickBooks } = useNetwork();
   const textColor = item.fullyClassified ? colors.text : colors.errorText;
 
   const allInvoiceItems = useMemo(
@@ -62,61 +66,73 @@ const SwipeableInvoiceItem = React.memo<{
 
   const removeInvoice = useCallback(
     (id: string | undefined) => {
-      if (id !== undefined) {
-        // before deleting invoice, we should delete all line items associated with it
-        allInvoiceItems.forEach((lineItem) => {
-          console.log('Deleting invoice line item with id:', lineItem.id);
-          deleteInvoiceLineItem(lineItem.id);
-        });
-        // now delete the invoice itself
-        console.log('Deleting invoice with id:', id);
-        deleteInvoice(id);
+      if (!id) return;
+      // before deleting invoice, we should delete all line items associated with it
+      allInvoiceItems.forEach((lineItem) => {
+        console.log('Deleting invoice line item with id:', lineItem.id);
+        deleteInvoiceLineItem(lineItem.id);
+      });
+      // now delete the invoice itself
+      console.log('Deleting invoice with id:', id);
+      deleteInvoice(id);
 
-        if (item.imageId) {
-          // Check if this image is in the mediaToUpload queue
-          const uploadInQueue = mediaToUpload.find((upload) => upload.itemId === item.imageId);
-          if (uploadInQueue && store) {
-            // Remove from mediaToUpload table since it never made it to the server
-            console.log(`Removing invoice image ${item.imageId} from mediaToUpload queue`);
-            store.delRow('mediaToUpload', uploadInQueue.id);
-          } else {
-            // Use the new hook to delete media (will queue if offline)
-            (async () => {
-              const result = await deleteMediaCallback(projectId, [item.imageId], 'invoice');
-              if (!result.success) {
-                console.error('Failed to delete invoice media:', result.msg);
-              }
-            })();
-          }
-
-          // Delete the local media file (invoices are always photos)
+      if (item.imageId && orgId) {
+        // Check if this image is in the mediaToUpload queue
+        const uploadInQueue = mediaToUpload.find((upload) => upload.itemId === item.imageId);
+        if (uploadInQueue && store) {
+          // Remove from mediaToUpload table since it never made it to the server
+          console.log(`Removing invoice image ${item.imageId} from mediaToUpload queue`);
+          store.delRow('mediaToUpload', uploadInQueue.id);
+        } else {
+          // Use the new hook to delete media (will queue if offline)
           (async () => {
-            await deleteLocalMediaFile(orgId, projectId, item.imageId, 'photo', 'invoice');
+            const result = await deleteMediaCallback(projectId, [item.imageId], 'invoice');
+            if (!result.success) {
+              console.error('Failed to delete invoice media:', result.msg);
+            }
           })();
         }
+
+        // Delete the local media file (invoices are always photos)
+        (async () => {
+          await deleteLocalMediaFile(orgId, projectId, item.imageId, 'photo', 'invoice');
+        })();
+      }
+
+      if (item.billId && orgId && userId && isConnectedToQuickBooks) {
+        deleteBillFromQuickBooks(orgId, userId, projectId, item.billId, getToken);
       }
     },
     [
+      allInvoiceItems,
       deleteInvoice,
       deleteInvoiceLineItem,
-      allInvoiceItems,
       item.imageId,
+      item.billId,
       projectId,
       orgId,
+      userId,
+      getToken,
       deleteMediaCallback,
       store,
       mediaToUpload,
+      isConnectedToQuickBooks,
     ],
   );
 
   const handleDelete = useCallback(() => {
+    const message =
+      isConnectedToQuickBooks && item.billId
+        ? 'This invoice is connected to QuickBooks. Are you sure you want to delete it and its association line items?'
+        : 'Are you sure you want to delete this invoice and its association line items?';
+
     Alert.alert(
       'Delete Invoice',
-      'Are you sure you want to delete this invoice and any of its association line items?',
+      message,
       [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeInvoice(item.id) }],
       { cancelable: true },
     );
-  }, [item.id, removeInvoice]);
+  }, [item.id, item.billId, isConnectedToQuickBooks, removeInvoice]);
 
   const renderRightActions = useCallback(() => <RightAction onDelete={handleDelete} />, [handleDelete]);
   const photoDate = formatDate(item.pictureDate, undefined, true);
@@ -173,6 +189,7 @@ const SwipeableInvoiceItem = React.memo<{
     </SwipeableComponent>
   );
 });
+
 SwipeableInvoiceItem.displayName = 'SwipeableInvoiceItem';
 
 const styles = StyleSheet.create({

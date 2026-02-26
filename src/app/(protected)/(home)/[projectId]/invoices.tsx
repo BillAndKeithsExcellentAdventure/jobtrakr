@@ -272,9 +272,7 @@ const ProjectInvoicesPage = () => {
                     ref={listRef}
                     data={classifiedInvoices}
                     keyExtractor={(item, index) => item.id ?? index.toString()}
-                    renderItem={({ item }) => (
-                      <SwipeableInvoiceItem orgId={auth.orgId!} projectId={projectId} item={item} />
-                    )}
+                    renderItem={({ item }) => <SwipeableInvoiceItem projectId={projectId} item={item} />}
                     ListEmptyComponent={
                       <View style={{ alignItems: 'center', margin: 20 }}>
                         <Text txtSize="title" text="No bills found." />
