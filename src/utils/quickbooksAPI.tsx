@@ -2,17 +2,13 @@ import { VendorData } from '../tbStores/configurationStore/ConfigurationStoreHoo
 import { createApiWithToken } from './apiWithToken';
 import { API_BASE_URL } from '@/src/constants/app-constants';
 
+// ---------------------------------------------------------------------------
+// Internal response primitives
+// ---------------------------------------------------------------------------
+
 interface ApiDefaultResponse {
   success: boolean;
   message?: string;
-}
-
-interface QBAccountData {
-  id: string;
-  name: string;
-  classification?: string;
-  accountType?: string;
-  accountSubType?: string;
 }
 
 interface ApiDataResponse<T> extends ApiDefaultResponse {
@@ -29,6 +25,10 @@ interface ApiIsConnectedResponse extends ApiDefaultResponse {
 
 type ApiResponse<T> = ApiDataResponse<T> | ApiConnectionResponse;
 
+// ---------------------------------------------------------------------------
+// Shared QB primitives
+// ---------------------------------------------------------------------------
+
 export interface QBEmail {
   Address: string;
 }
@@ -44,6 +44,35 @@ export interface QBAddress {
 export interface QBPhone {
   FreeFormNumber: string;
 }
+
+// ---------------------------------------------------------------------------
+// Account types
+// ---------------------------------------------------------------------------
+
+/** A QuickBooks account as returned by /qbo/fetchAccounts. */
+interface QBAccountData {
+  id: string;
+  name: string;
+  classification?: string;
+  accountType?: string;
+  accountSubType?: string;
+}
+
+/** Company information returned by /qbo/fetchCompanyInfo. */
+export interface QBCompanyInfo {
+  companyName: string;
+  address: string;
+  address2: string;
+  city: string;
+  state: string;
+  zip: string;
+  email: string;
+  phone: string;
+}
+
+// ---------------------------------------------------------------------------
+// Vendor / Customer types
+// ---------------------------------------------------------------------------
 
 export interface QuickBooksVendor {
   DisplayName: string;
@@ -81,148 +110,6 @@ export interface AddVendorRequest {
   Id: string;
 }
 
-export async function connectToQuickBooks(
-  orgId: string,
-  userId: string,
-  getToken: () => Promise<string | null>,
-): Promise<{ authUrl: string }> {
-  const apiFetch = createApiWithToken(getToken);
-
-  const response = await apiFetch(`${API_BASE_URL}/auth/qbo/connect?orgId=${orgId}&userId=${userId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  const data: ApiConnectionResponse = await response.json();
-  if (!data.success) {
-    throw new Error(data.message || 'Failed to connect to QuickBooks');
-  }
-
-  if (!data.authUrl) {
-    throw new Error('No authorization URL returned from QuickBooks');
-  }
-
-  return data || { authUrl: '' };
-}
-
-export async function disconnectQuickBooks(
-  orgId: string,
-  userId: string,
-  getToken: () => Promise<string | null>,
-): Promise<void> {
-  const apiFetch = createApiWithToken(getToken);
-
-  const response = await apiFetch(`${API_BASE_URL}/auth/qbo/disconnect?orgId=${orgId}&userId=${userId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  const data: ApiResponse<unknown> = await response.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-}
-
-export async function isQuickBooksConnected(
-  orgId: string,
-  userId: string,
-  getToken: () => Promise<string | null>,
-): Promise<boolean> {
-  const apiFetch = createApiWithToken(getToken);
-
-  const response = await apiFetch(`${API_BASE_URL}/qbo/isConnected?orgId=${orgId}&userId=${userId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  const data: ApiIsConnectedResponse = await response.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-
-  return data.isConnected || false;
-}
-
-export async function fetchVendors(
-  orgId: string,
-  userId: string,
-  getToken: () => Promise<string | null>,
-): Promise<VendorData[]> {
-  const apiFetch = createApiWithToken(getToken);
-
-  const response = await apiFetch(`${API_BASE_URL}/qbo/fetchVendors?orgId=${orgId}&userId=${userId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  const data: ApiDataResponse<VendorData[]> = await response.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-
-  return data.data || [];
-}
-
-export async function fetchCustomers(
-  orgId: string,
-  userId: string,
-  getToken: () => Promise<string | null>,
-): Promise<QuickBooksCustomer[]> {
-  const apiFetch = createApiWithToken(getToken);
-
-  const response = await apiFetch(`${API_BASE_URL}/qbo/fetchCustomers?orgId=${orgId}&userId=${userId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  const data: ApiDataResponse<{ QueryResponse: { Customer: QuickBooksCustomer[] } }> = await response.json();
-  if (!data.success) {
-    throw new Error(data.message || 'Failed to fetch customers');
-  }
-
-  const customers = data.data?.QueryResponse.Customer;
-  // Ensure we always return an array
-  if (!customers || !Array.isArray(customers)) {
-    return [];
-  }
-
-  return customers;
-}
-
-export async function addVendor(
-  orgId: string,
-  userId: string,
-  QuickBooksVendor: AddVendorRequest,
-  getToken: () => Promise<string | null>,
-): Promise<QuickBooksVendor> {
-  const apiFetch = createApiWithToken(getToken);
-
-  const response = await apiFetch(`${API_BASE_URL}/qbo/addVendor?orgId=${orgId}&userId=${userId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(QuickBooksVendor),
-  });
-
-  const data: ApiDataResponse<{ QueryResponse: QuickBooksVendor }> = await response.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-
-  return data.data?.QueryResponse || ({ Id: '', DisplayName: '' } as QuickBooksVendor);
-}
-
 export interface AddCustomerRequest {
   displayName: string;
   firstName?: string;
@@ -242,41 +129,9 @@ export interface AddCustomerResponse {
   newQBId?: string;
 }
 
-export interface AddBillResponse {
-  success: boolean;
-  message?: string;
-  accountId?: string;
-  data?: {
-    Bill?: {
-      Id: string; // billId
-      DocNumber?: string; //accountingId
-    };
-  };
-}
-
-export async function addCustomer(
-  orgId: string,
-  userId: string,
-  customer: AddCustomerRequest,
-  getToken: () => Promise<string | null>,
-): Promise<AddCustomerResponse> {
-  const apiFetch = createApiWithToken(getToken);
-
-  const response = await apiFetch(`${API_BASE_URL}/qbo/addCustomer?orgId=${orgId}&userId=${userId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(customer),
-  });
-
-  const data: AddCustomerResponse = await response.json();
-  if (!data.success) {
-    throw new Error(data.message || 'Failed to add customer');
-  }
-
-  return data;
-}
+// ---------------------------------------------------------------------------
+// Bill (Invoice) types
+// ---------------------------------------------------------------------------
 
 export interface BillLineItem {
   amount: number;
@@ -301,47 +156,16 @@ export interface AddBillRequest {
   qbBillData?: QBBillData;
 }
 
-interface DeleteReceiptRequest {
-  purchaseId: string; // QuickBooks Purchase Id. Required for deleting an existing purchase.
-  orgId: string;
-  userId: string;
-  projectId: string;
-}
-
-export interface DeleteBillRequest {
-  orgId: string;
-  userId: string;
-  projectId: string;
-  accountingId: string;
-}
-
-export interface DeleteBillResponse {
-  Id: string;
-  status?: string;
-}
-
-export async function addBill(
-  orgId: string,
-  userId: string,
-  bill: AddBillRequest,
-  getToken: () => Promise<string | null>,
-): Promise<AddBillResponse> {
-  const apiFetch = createApiWithToken(getToken);
-
-  const response = await apiFetch(`${API_BASE_URL}/qbo/addBill?orgId=${orgId}&userId=${userId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(bill),
-  });
-
-  const data: AddBillResponse = await response.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-
-  return data;
+export interface AddBillResponse {
+  success: boolean;
+  message?: string;
+  accountId?: string;
+  data?: {
+    Bill?: {
+      Id: string; // billId
+      DocNumber?: string; // accountingId
+    };
+  };
 }
 
 export interface UpdateBillRequest {
@@ -365,74 +189,16 @@ export interface UpdateBillResponse {
   };
 }
 
-/**
- * Update an existing bill in QuickBooks.
- *
- * @param orgId - The organization ID
- * @param userId - The user ID
- * @param bill - The bill data to update in QuickBooks, including the bill ID and updated fields
- * @param getToken - Function to get the authentication token
- *
- * @returns The response containing the updated bill information
- */
-export async function updateBill(
-  orgId: string,
-  userId: string,
-  bill: AddBillRequest,
-  getToken: () => Promise<string | null>,
-): Promise<UpdateBillResponse> {
-  const apiFetch = createApiWithToken(getToken);
-
-  const response = await apiFetch(`${API_BASE_URL}/qbo/editBill?orgId=${orgId}&userId=${userId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(bill),
-  });
-
-  const data: UpdateBillResponse = await response.json();
-  if (!data.success) {
-    throw new Error(data.message || 'Failed to edit bill');
-  }
-
-  return data;
+interface DeleteBillRequest {
+  orgId: string;
+  userId: string;
+  projectId: string;
+  accountingId: string;
 }
 
-export async function deleteBillFromQuickBooks(
-  orgId: string,
-  userId: string,
-  projectId: string,
-  accountingId: string,
-  getToken: () => Promise<string | null>,
-): Promise<DeleteBillResponse> {
-  const apiFetch = createApiWithToken(getToken);
-
-  const response = await apiFetch(`${API_BASE_URL}/qbo/deleteBill?orgId=${orgId}&userId=${userId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ orgId, userId, projectId, accountingId } as DeleteBillRequest),
-  });
-
-  const data: ApiDataResponse<{ Bill: DeleteBillResponse }> = await response.json();
-  if (!data.success) {
-    throw new Error(data.message || 'Failed to delete bill');
-  }
-
-  return data.data?.Bill || ({ Id: '', status: 'Deleted' } as DeleteBillResponse);
-}
-
-export interface QBCompanyInfo {
-  companyName: string;
-  address: string;
-  address2: string;
-  city: string;
-  state: string;
-  zip: string;
-  email: string;
-  phone: string;
+export interface DeleteBillResponse {
+  Id: string;
+  status?: string;
 }
 
 export interface PayBillLineItem {
@@ -457,76 +223,16 @@ export interface BillPayment {
   PaymentType?: string;
 }
 
-export async function payBill(
-  orgId: string,
-  userId: string,
-  payment: PayBillRequest,
-  getToken: () => Promise<string | null>,
-): Promise<BillPayment> {
-  const apiFetch = createApiWithToken(getToken);
+// ---------------------------------------------------------------------------
+// Receipt (Purchase) types
+// ---------------------------------------------------------------------------
 
-  const response = await apiFetch(`${API_BASE_URL}/qbo/payBill?orgId=${orgId}&userId=${userId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payment),
-  });
-
-  const data: ApiDataResponse<{ BillPayment: BillPayment }> = await response.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-
-  return data.data?.BillPayment || ({ Id: '', TotalAmt: 0 } as BillPayment);
-}
-
-export async function fetchCompanyInfo(
-  orgId: string,
-  userId: string,
-  getToken: () => Promise<string | null>,
-): Promise<QBCompanyInfo> {
-  const apiFetch = createApiWithToken(getToken);
-
-  const response = await apiFetch(`${API_BASE_URL}/qbo/fetchCompanyInfo?orgId=${orgId}&userId=${userId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  const data: ApiDataResponse<QBCompanyInfo> = await response.json();
-  if (!data.success) {
-    throw new Error(data.message || 'Failed to fetch company information');
-  }
-
-  if (!data.data) {
-    throw new Error('No company information returned');
-  }
-
-  return data.data;
-}
-
-export async function fetchAccounts(
-  orgId: string,
-  userId: string,
-  getToken: () => Promise<string | null>,
-): Promise<QBAccountData[]> {
-  const apiFetch = createApiWithToken(getToken);
-
-  const response = await apiFetch(`${API_BASE_URL}/qbo/fetchAccounts?orgId=${orgId}&userId=${userId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  const data: ApiDataResponse<QBAccountData[]> = await response.json();
-  if (!data.success) {
-    throw new Error(data.message || 'Failed to fetch accounts');
-  }
-
-  return data.data || [];
+/** A line item within a QuickBooks bill/receipt. `amount` is a formatted string (e.g. "12.50"). */
+export interface QBBillLineItem {
+  amount: string;
+  description: string;
+  accountRef: string; // expense account ref
+  projectId?: string; // only set when line item belongs to a different project than the receipt
 }
 
 export interface QBReceiptLineItem {
@@ -534,12 +240,6 @@ export interface QBReceiptLineItem {
   description: string;
   accountRef: string; // expense account
   projectId?: string; // support receipts with line-items for multiple projects.
-}
-
-interface QBAccountData {
-  paymentAccountRef?: string;
-  paymentType?: 'Checking' | 'CreditCard'; // accountSubType from QuickBooks
-  checkNumber?: string;
 }
 
 export interface QBReceiptData {
@@ -571,10 +271,504 @@ export interface AddReceiptResponse {
       PaymentType: string;
       TotalAmt: number;
       TxnDate?: string;
-      DocNumber?: string; //accountingId
+      DocNumber?: string; // accountingId
     };
   };
 }
+
+export interface EditReceiptRequest {
+  orgId: string;
+  userId: string;
+  projectId: string;
+  projectName: string;
+  accountingId: string;
+  purchaseId: string;
+  projectAbbr?: string;
+  imageId?: string;
+  addAttachment: boolean;
+  qbPurchaseData: {
+    vendorRef: string;
+    txnDate: string;
+    docNumber?: string;
+    privateNote?: string;
+    paymentAccount?: {
+      paymentAccountRef: string;
+      paymentType?: string;
+      checkNumber?: string;
+    };
+    lineItems: QBBillLineItem[];
+  };
+}
+
+interface DeleteReceiptRequest {
+  purchaseId: string; // QuickBooks Purchase Id. Required for deleting an existing purchase.
+  orgId: string;
+  userId: string;
+  projectId: string;
+}
+
+// ---------------------------------------------------------------------------
+// Project types
+// ---------------------------------------------------------------------------
+
+export interface AddProjectRequest {
+  customerId: string;
+  projectName: string;
+  projectId: string;
+}
+
+export interface AddProjectResponse {
+  success: boolean;
+  message?: string;
+  newQBId?: string;
+}
+
+export interface UpdateProjectResponse {
+  success: boolean;
+  message?: string;
+  qbId?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Auth / connection functions
+// ---------------------------------------------------------------------------
+
+/**
+ * Initiate OAuth connection to QuickBooks and return the authorization URL.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param getToken - Function to get the authentication token
+ * @returns An object containing the QuickBooks authorization URL to open in a browser
+ */
+export async function connectToQuickBooks(
+  orgId: string,
+  userId: string,
+  getToken: () => Promise<string | null>,
+): Promise<{ authUrl: string }> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/auth/qbo/connect?orgId=${orgId}&userId=${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data: ApiConnectionResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to connect to QuickBooks');
+  }
+
+  if (!data.authUrl) {
+    throw new Error('No authorization URL returned from QuickBooks');
+  }
+
+  return data || { authUrl: '' };
+}
+
+/**
+ * Disconnect the current QuickBooks OAuth session for the organization.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param getToken - Function to get the authentication token
+ */
+export async function disconnectQuickBooks(
+  orgId: string,
+  userId: string,
+  getToken: () => Promise<string | null>,
+): Promise<void> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/auth/qbo/disconnect?orgId=${orgId}&userId=${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data: ApiResponse<unknown> = await response.json();
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+}
+
+/**
+ * Check whether the organization currently has an active QuickBooks connection.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param getToken - Function to get the authentication token
+ * @returns True if the organization is connected to QuickBooks
+ */
+export async function isQuickBooksConnected(
+  orgId: string,
+  userId: string,
+  getToken: () => Promise<string | null>,
+): Promise<boolean> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/isConnected?orgId=${orgId}&userId=${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data: ApiIsConnectedResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+
+  return data.isConnected || false;
+}
+
+// ---------------------------------------------------------------------------
+// Vendor / Customer functions
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch all vendors from QuickBooks for the organization.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param getToken - Function to get the authentication token
+ * @returns Array of vendor data
+ */
+export async function fetchVendors(
+  orgId: string,
+  userId: string,
+  getToken: () => Promise<string | null>,
+): Promise<VendorData[]> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/fetchVendors?orgId=${orgId}&userId=${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data: ApiDataResponse<VendorData[]> = await response.json();
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+
+  return data.data || [];
+}
+
+/**
+ * Fetch all customers from QuickBooks for the organization.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param getToken - Function to get the authentication token
+ * @returns Array of QuickBooks customer records
+ */
+export async function fetchCustomers(
+  orgId: string,
+  userId: string,
+  getToken: () => Promise<string | null>,
+): Promise<QuickBooksCustomer[]> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/fetchCustomers?orgId=${orgId}&userId=${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data: ApiDataResponse<{ QueryResponse: { Customer: QuickBooksCustomer[] } }> = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to fetch customers');
+  }
+
+  const customers = data.data?.QueryResponse.Customer;
+  // Ensure we always return an array
+  if (!customers || !Array.isArray(customers)) {
+    return [];
+  }
+
+  return customers;
+}
+
+/**
+ * Add a new vendor to QuickBooks.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param QuickBooksVendor - The vendor data to create
+ * @param getToken - Function to get the authentication token
+ * @returns The newly created QuickBooks vendor record
+ */
+export async function addVendor(
+  orgId: string,
+  userId: string,
+  QuickBooksVendor: AddVendorRequest,
+  getToken: () => Promise<string | null>,
+): Promise<QuickBooksVendor> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/addVendor?orgId=${orgId}&userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(QuickBooksVendor),
+  });
+
+  const data: ApiDataResponse<{ QueryResponse: QuickBooksVendor }> = await response.json();
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+
+  return data.data?.QueryResponse || ({ Id: '', DisplayName: '' } as QuickBooksVendor);
+}
+
+/**
+ * Add a new customer to QuickBooks.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param customer - The customer data to create
+ * @param getToken - Function to get the authentication token
+ * @returns The response containing the new QB customer ID
+ */
+export async function addCustomer(
+  orgId: string,
+  userId: string,
+  customer: AddCustomerRequest,
+  getToken: () => Promise<string | null>,
+): Promise<AddCustomerResponse> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/addCustomer?orgId=${orgId}&userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(customer),
+  });
+
+  const data: AddCustomerResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to add customer');
+  }
+
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// Bill (Invoice) functions
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a new Bill in QuickBooks for an invoice.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param bill - The bill data to create, including line items and optional attachment
+ * @param getToken - Function to get the authentication token
+ * @returns The response containing the new bill ID and doc number
+ */
+export async function addBill(
+  orgId: string,
+  userId: string,
+  bill: AddBillRequest,
+  getToken: () => Promise<string | null>,
+): Promise<AddBillResponse> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/addBill?orgId=${orgId}&userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(bill),
+  });
+
+  const data: AddBillResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+
+  return data;
+}
+
+/**
+ * Update an existing Bill in QuickBooks for an invoice.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param bill - The bill data to update, including the billId and updated fields
+ * @param getToken - Function to get the authentication token
+ * @returns The response containing the updated bill ID and doc number
+ */
+export async function updateBill(
+  orgId: string,
+  userId: string,
+  bill: AddBillRequest,
+  getToken: () => Promise<string | null>,
+): Promise<UpdateBillResponse> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/editBill?orgId=${orgId}&userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(bill),
+  });
+
+  const data: UpdateBillResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to edit bill');
+  }
+
+  return data;
+}
+
+/**
+ * Delete a Bill from QuickBooks by its accounting ID.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param projectId - The project ID the bill belongs to
+ * @param accountingId - The QuickBooks Bill DocNumber / accounting ID
+ * @param getToken - Function to get the authentication token
+ * @returns The deleted bill reference
+ */
+export async function deleteBillFromQuickBooks(
+  orgId: string,
+  userId: string,
+  projectId: string,
+  accountingId: string,
+  getToken: () => Promise<string | null>,
+): Promise<DeleteBillResponse> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/deleteBill?orgId=${orgId}&userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ orgId, userId, projectId, accountingId } as DeleteBillRequest),
+  });
+
+  const data: ApiDataResponse<{ Bill: DeleteBillResponse }> = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to delete bill');
+  }
+
+  return data.data?.Bill || ({ Id: '', status: 'Deleted' } as DeleteBillResponse);
+}
+
+/**
+ * Record a bill payment in QuickBooks.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param payment - The payment data including bill reference, account, and amount
+ * @param getToken - Function to get the authentication token
+ * @returns The created BillPayment record
+ */
+export async function payBill(
+  orgId: string,
+  userId: string,
+  payment: PayBillRequest,
+  getToken: () => Promise<string | null>,
+): Promise<BillPayment> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/payBill?orgId=${orgId}&userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payment),
+  });
+
+  const data: ApiDataResponse<{ BillPayment: BillPayment }> = await response.json();
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+
+  return data.data?.BillPayment || ({ Id: '', TotalAmt: 0 } as BillPayment);
+}
+
+// ---------------------------------------------------------------------------
+// Company / Account functions
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch the QuickBooks company profile information for the organization.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param getToken - Function to get the authentication token
+ * @returns Company information including name, address, and contact details
+ */
+export async function fetchCompanyInfo(
+  orgId: string,
+  userId: string,
+  getToken: () => Promise<string | null>,
+): Promise<QBCompanyInfo> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/fetchCompanyInfo?orgId=${orgId}&userId=${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data: ApiDataResponse<QBCompanyInfo> = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to fetch company information');
+  }
+
+  if (!data.data) {
+    throw new Error('No company information returned');
+  }
+
+  return data.data;
+}
+
+/**
+ * Fetch all chart-of-accounts entries from QuickBooks for the organization.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param getToken - Function to get the authentication token
+ * @returns Array of account data including type and sub-type classification
+ */
+export async function fetchAccounts(
+  orgId: string,
+  userId: string,
+  getToken: () => Promise<string | null>,
+): Promise<QBAccountData[]> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/fetchAccounts?orgId=${orgId}&userId=${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data: ApiDataResponse<QBAccountData[]> = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to fetch accounts');
+  }
+
+  return data.data || [];
+}
+
+// ---------------------------------------------------------------------------
+// Receipt (Purchase) functions
+// ---------------------------------------------------------------------------
 
 /**
  * Add a receipt to the backend and optionally create a QuickBooks bill.
@@ -603,30 +797,6 @@ export async function addReceiptToQuickBooks(
   }
 
   return data;
-}
-
-export interface EditReceiptRequest {
-  orgId: string;
-  userId: string;
-  projectId: string;
-  projectName: string;
-  accountingId: string;
-  purchaseId: string;
-  projectAbbr?: string;
-  imageId?: string;
-  addAttachment: boolean;
-  qbPurchaseData: {
-    vendorRef: string;
-    txnDate: string;
-    docNumber?: string;
-    privateNote?: string;
-    paymentAccount?: {
-      paymentAccountRef: string;
-      paymentType?: string;
-      checkNumber?: string;
-    };
-    lineItems: QBBillLineItem[];
-  };
 }
 
 /**
@@ -661,23 +831,9 @@ export async function editReceiptInQuickBooks(
   return data;
 }
 
-export interface AddProjectRequest {
-  customerId: string;
-  projectName: string;
-  projectId: string;
-}
-
-export interface AddProjectResponse {
-  success: boolean;
-  message?: string;
-  newQBId?: string;
-}
-
-export interface UpdateProjectResponse {
-  success: boolean;
-  message?: string;
-  qbId?: string;
-}
+// ---------------------------------------------------------------------------
+// Project functions
+// ---------------------------------------------------------------------------
 
 /**
  * Check if a project exists in QuickBooks.
@@ -816,6 +972,20 @@ export async function updateProjectInQuickBooks(
   return data;
 }
 
+// ---------------------------------------------------------------------------
+// Receipt delete
+// ---------------------------------------------------------------------------
+
+/**
+ * Delete a Purchase (receipt) from QuickBooks.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param projectId - The project ID the receipt belongs to
+ * @param purchaseId - The QuickBooks Purchase ID to delete
+ * @param getToken - Function to get the authentication token
+ * @returns The API default response indicating success or failure
+ */
 export async function deleteReceiptFromQuickBooks(
   orgId: string,
   userId: string,
