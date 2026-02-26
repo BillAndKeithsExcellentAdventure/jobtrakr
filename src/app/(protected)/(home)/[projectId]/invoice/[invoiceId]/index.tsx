@@ -2,6 +2,10 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { InvoiceSummary } from '@/src/components/InvoiceSummary';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
+import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   InvoiceData,
   useAllRows,
@@ -11,9 +15,11 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 
 import { formatCurrency } from '@/src/utils/formatters';
+import { addBill, AddBillRequest } from '@/src/utils/quickbooksAPI';
+import { getBillSyncHash } from '@/src/utils/quickbooksSyncHash';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { File } from 'expo-file-system';
 import SwipeableLineItem from '@/src/components/SwipeableLineItem';
@@ -32,8 +38,12 @@ const InvoiceDetailsPage = () => {
 
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   useCostUpdater(projectId);
+  const appSettings = useAppSettings();
+  const { isConnectedToQuickBooks } = useNetwork();
+  const project = useProject(projectId);
+  const allVendors = useAllConfigurationRows('vendors');
   const auth = useAuth();
-  const { orgId } = auth;
+  const { orgId, userId, getToken } = auth;
   const getImage = useGetImageCallback();
 
   const [allInvoiceLineItems, setAllInvoiceLineItems] = useState<WorkItemCostEntry[]>([]);
@@ -70,11 +80,62 @@ const InvoiceDetailsPage = () => {
   }, [invoiceId, allProjectInvoices]);
 
   const [itemsTotalCost, setItemsTotalCost] = useState(0);
+  const [isSavingToQuickBooks, setIsSavingToQuickBooks] = useState(false);
   const router = useRouter();
+
+  const [currentSyncHash, setCurrentSyncHash] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const computeSyncHash = async () => {
+      try {
+        const hash = await getBillSyncHash(invoice, allInvoiceLineItems);
+        if (isActive) {
+          setCurrentSyncHash(hash);
+        }
+      } catch (error) {
+        console.error('Failed to compute invoice sync hash:', error);
+        if (isActive) {
+          setCurrentSyncHash(null);
+        }
+      }
+    };
+
+    computeSyncHash();
+
+    return () => {
+      isActive = false;
+    };
+  }, [invoice, allInvoiceLineItems]);
+
+  const isInvoiceOutOfSync =
+    !!invoice.billId && currentSyncHash !== null && invoice.qbSyncHash !== currentSyncHash;
+  const isInvoiceUpToDate = !!invoice.billId && currentSyncHash !== null && !isInvoiceOutOfSync;
 
   useEffect(() => {
     setItemsTotalCost(allInvoiceLineItems.reduce((acc, item) => acc + item.amount, 0));
   }, [allInvoiceLineItems]);
+
+  const hasItemWithNoWorkItemId = useMemo(
+    () => allInvoiceLineItems.some((item) => !item.workItemId),
+    [allInvoiceLineItems],
+  );
+
+  const amountsMatch = useMemo(
+    () => parseFloat(invoice.amount.toFixed(2)) === parseFloat(itemsTotalCost.toFixed(2)),
+    [invoice.amount, itemsTotalCost],
+  );
+
+  const canSyncToQuickBooks =
+    isConnectedToQuickBooks &&
+    allInvoiceLineItems.length > 0 &&
+    invoice.amount > 0 &&
+    !!invoice.vendorId &&
+    !!userId &&
+    !!orgId &&
+    !hasItemWithNoWorkItemId &&
+    amountsMatch;
 
   const editDetails = useCallback(
     (item: InvoiceData) => {
@@ -82,6 +143,69 @@ const InvoiceDetailsPage = () => {
     },
     [projectId, router, invoiceId],
   );
+
+  const handleSyncToQuickBooks = useCallback(async () => {
+    if (!canSyncToQuickBooks || isSavingToQuickBooks) return;
+
+    setIsSavingToQuickBooks(true);
+
+    const qbExpenseAccountId = appSettings.quickBooksExpenseAccountId;
+    const vendorQbId = allVendors.find((v) => v.id === invoice.vendorId)?.accountingId;
+
+    const qbLineItems = allInvoiceLineItems.map((item) => ({
+      amount: item.amount,
+      description: item.label,
+      accountRef: qbExpenseAccountId,
+    }));
+
+    const qbBill: AddBillRequest = {
+      projectId,
+      projectAbbr: project?.abbreviation ?? '',
+      projectName: project?.name ?? '',
+      addAttachment: !!invoice.imageId,
+      imageId: invoice.imageId,
+      qbBillData: {
+        vendorRef: vendorQbId ?? '',
+        dueDate: new Date(invoice.invoiceDate).toISOString().split('T')[0],
+        lineItems: qbLineItems,
+      },
+    };
+
+    try {
+      const response = await addBill(orgId!, userId!, qbBill, getToken);
+      console.log('Invoice successfully synced to QuickBooks:', response);
+
+      const hash = await getBillSyncHash(invoice, allInvoiceLineItems);
+      const updatedInvoice: InvoiceData = {
+        ...invoice,
+        billId: response.data?.Bill?.Id ?? '',
+        accountingId: response.data?.Bill?.DocNumber ?? '',
+        qbSyncHash: hash,
+      };
+      updateInvoice(invoice.id, updatedInvoice);
+    } catch (error) {
+      console.error('Error syncing invoice to QuickBooks:', error);
+      Alert.alert(
+        'QuickBooks Sync Failed',
+        'Unable to sync invoice to QuickBooks. Please check your connection and try again.',
+      );
+    } finally {
+      setIsSavingToQuickBooks(false);
+    }
+  }, [
+    canSyncToQuickBooks,
+    isSavingToQuickBooks,
+    appSettings,
+    allVendors,
+    invoice,
+    allInvoiceLineItems,
+    projectId,
+    project,
+    orgId,
+    userId,
+    getToken,
+    updateInvoice,
+  ]);
 
   const handleAddInvoicePhoto = useCallback(async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
@@ -297,6 +421,65 @@ const InvoiceDetailsPage = () => {
                   }`}
                 />
               </View>
+              {isConnectedToQuickBooks && hasItemWithNoWorkItemId && (
+                <View style={{ paddingHorizontal: 10, paddingVertical: 8 }}>
+                  <Text
+                    txtSize="xs"
+                    style={{ color: colors.error, textAlign: 'center' }}
+                    text="All line items must be fully specified with a cost code before syncing to QuickBooks"
+                  />
+                </View>
+              )}
+              {canSyncToQuickBooks ? (
+                <View style={styles.syncButtonRow}>
+                  {isSavingToQuickBooks ? (
+                    <View style={styles.savingRow}>
+                      <ActivityIndicator />
+                      <Text
+                        txtSize="standard"
+                        style={styles.savingText}
+                        text="Saving Invoice to QuickBooks"
+                      />
+                    </View>
+                  ) : isInvoiceUpToDate ? (
+                    <></>
+                  ) : isInvoiceOutOfSync ? (
+                    <Text
+                      txtSize="xs"
+                      style={{ ...styles.quickBooksWarning, color: colors.error }}
+                      text="Invoice was modified after syncing to QuickBooks"
+                    />
+                  ) : (
+                    <ActionButton
+                      onPress={handleSyncToQuickBooks}
+                      type="action"
+                      title="Save Invoice to QuickBooks"
+                    />
+                  )}
+                </View>
+              ) : isConnectedToQuickBooks && allInvoiceLineItems.length > 0 ? (
+                <View style={styles.syncButtonRow}>
+                  {!amountsMatch ? (
+                    <>
+                      <Text
+                        txtSize="xs"
+                        style={{ ...styles.quickBooksWarning, color: colors.error }}
+                        text="Invoice amount must match line item total"
+                      />
+                      <ActionButton onPress={() => editDetails(invoice)} type="cancel" title="Edit" />
+                    </>
+                  ) : (
+                    <>
+                      <Text
+                        txtSize="xs"
+                        style={{ ...styles.quickBooksWarning, color: colors.error }}
+                        text="Please Edit Invoice to complete data required by QuickBooks"
+                      />
+                      <ActionButton onPress={() => editDetails(invoice)} type="cancel" title="Edit" />
+                    </>
+                  )}
+                </View>
+              ) : null}
             </View>
           </View>
         </>
@@ -325,5 +508,22 @@ const styles = StyleSheet.create({
   },
   rightButton: {
     flex: 1,
+  },
+  syncButtonRow: {
+    marginTop: 10,
+    height: 60,
+  },
+  savingRow: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  savingText: {
+    marginLeft: 10,
+  },
+  quickBooksWarning: {
+    textAlign: 'center',
+    marginBottom: 8,
   },
 });
