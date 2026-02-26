@@ -242,6 +242,18 @@ export interface AddCustomerResponse {
   newQBId?: string;
 }
 
+export interface AddBillResponse {
+  success: boolean;
+  message?: string;
+  accountId?: string;
+  data?: {
+    Bill?: {
+      Id: string; // billId
+      DocNumber?: string; //accountingId
+    };
+  };
+}
+
 export async function addCustomer(
   orgId: string,
   userId: string,
@@ -266,25 +278,27 @@ export async function addCustomer(
   return data;
 }
 
-export interface LineItem {
+export interface BillLineItem {
   amount: number;
   description: string;
   accountRef?: string;
 }
 
-export interface AddBillRequest {
+export interface QBBillData {
   vendorRef: string;
-  lineItems: LineItem[];
-  txnDate?: string;
   dueDate?: string;
   docNumber?: string;
   privateNote?: string;
+  lineItems: BillLineItem[];
 }
 
-export interface Bill {
-  Id: string;
-  VendorRef: { value: string };
-  TotalAmt: number;
+export interface AddBillRequest {
+  projectId: string;
+  projectAbbr: string;
+  projectName: string;
+  addAttachment: boolean;
+  imageId: string;
+  qbBillData?: QBBillData;
 }
 
 interface DeleteReceiptRequest {
@@ -311,7 +325,7 @@ export async function addBill(
   userId: string,
   bill: AddBillRequest,
   getToken: () => Promise<string | null>,
-): Promise<Bill> {
+): Promise<AddBillResponse> {
   const apiFetch = createApiWithToken(getToken);
 
   const response = await apiFetch(`${API_BASE_URL}/qbo/addBill?orgId=${orgId}&userId=${userId}`, {
@@ -322,12 +336,12 @@ export async function addBill(
     body: JSON.stringify(bill),
   });
 
-  const data: ApiDataResponse<{ Bill: Bill }> = await response.json();
+  const data: AddBillResponse = await response.json();
   if (!data.success) {
     throw new Error(data.message);
   }
 
-  return data.data?.Bill || ({ Id: '', VendorRef: { value: '' }, TotalAmt: 0 } as Bill);
+  return data;
 }
 
 export async function deleteBillFromQuickBooks(
@@ -460,7 +474,7 @@ export async function fetchAccounts(
   return data.data || [];
 }
 
-export interface QBBillLineItem {
+export interface QBReceiptLineItem {
   amount: string;
   description: string;
   accountRef: string; // expense account
@@ -473,12 +487,12 @@ interface QBAccountData {
   checkNumber?: string;
 }
 
-export interface QBBillData {
+export interface QBReceiptData {
   vendorRef: string;
   dueDate?: string;
   docNumber?: string;
   privateNote?: string;
-  lineItems: QBBillLineItem[];
+  lineItems: QBReceiptLineItem[];
 }
 
 export interface AddReceiptRequest {
@@ -489,7 +503,7 @@ export interface AddReceiptRequest {
   projectName: string;
   imageId: string;
   addAttachment: boolean;
-  qbBillData?: QBBillData;
+  qbBillData?: QBReceiptData;
 }
 
 export interface AddReceiptResponse {
@@ -520,7 +534,7 @@ export async function addReceiptToQuickBooks(
 ): Promise<AddReceiptResponse> {
   const apiFetch = createApiWithToken(getToken);
 
-  const response = await apiFetch(`${API_BASE_URL}/addReceipt`, {
+  const response = await apiFetch(`${API_BASE_URL}/qbo/addReceipt`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

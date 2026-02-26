@@ -15,21 +15,24 @@ import {
   WorkItemDataCodeCompareAsNumber,
   useAllRows as useAllConfigurationRows,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   InvoiceData,
   useAddRowCallback,
+  useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
 import { addBill, AddBillRequest } from '@/src/utils/quickbooksAPI';
+import { getBillSyncHash } from '@/src/utils/quickbooksSyncHash';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { Alert, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Alert, Image, Modal, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 const AddInvoicePage = () => {
@@ -39,6 +42,7 @@ const AddInvoicePage = () => {
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const { isConnected, isInternetReachable } = useNetwork();
   const addInvoice = useAddRowCallback(projectId, 'invoices');
+  const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
@@ -58,8 +62,18 @@ const AddInvoicePage = () => {
   const addPhotoImage = useAddImageCallback();
   const allVendors = useAllConfigurationRows('vendors');
   const qbExpenseAccountId = appSettings.quickBooksExpenseAccountId;
+  const currentProject = useProject(projectId);
 
   const router = useRouter();
+  const [processingInfo, setProcessingInfo] = useState<{ isProcessing: boolean; label: string }>({
+    isProcessing: false,
+    label: '',
+  });
+  const startProcessing = useCallback(
+    (label: string) => setProcessingInfo({ isProcessing: true, label }),
+    [],
+  );
+  const stopProcessing = useCallback(() => setProcessingInfo({ isProcessing: false, label: '' }), []);
   const [projectInvoice, setProjectInvoice] = useState<InvoiceData>({
     id: '',
     accountingId: '',
@@ -136,19 +150,19 @@ const AddInvoicePage = () => {
       markedComplete: applyToSingleCostCode && !!pickedSubCategoryOption,
     };
     const result = addInvoice(invoiceToAdd);
-    if (result.status !== 'Success') {
+    if (result.status !== 'Success' || !result.id) {
       console.log('Add Project invoice failed:', invoiceToAdd);
       Alert.alert('Error', 'Unable to add invoice. Please try again.');
       return;
     }
-
+    const newInvoiceId = result.id;
     if (applyToSingleCostCode && !!pickedSubCategoryOption) {
       const newLineItem: WorkItemCostEntry = {
         id: '',
         label: projectInvoice.description,
         workItemId: pickedSubCategoryOption.value,
         amount: projectInvoice.amount,
-        parentId: result.id,
+        parentId: newInvoiceId,
         documentationType: 'invoice',
       };
       const addLineItemResult = addLineItem(newLineItem);
@@ -170,30 +184,43 @@ const AddInvoicePage = () => {
         qbExpenseAccountId &&
         invoiceToAdd.description
       ) {
+        const vendorQbId = allVendors?.find((vendor) => vendor.id === invoiceToAdd.vendorId)?.accountingId;
         const qbBill: AddBillRequest = {
-          vendorRef: invoiceToAdd.vendorId,
-          dueDate: formatDate(invoiceToAdd.invoiceDate),
-          lineItems: [
-            {
-              description: invoiceToAdd.description,
-              amount: invoiceToAdd.amount,
-              accountRef: qbExpenseAccountId,
-            },
-          ],
+          projectId,
+          projectAbbr: currentProject?.abbreviation ?? '',
+          projectName: currentProject?.name ?? '',
+          addAttachment: !!invoiceToAdd.imageId,
+          imageId: projectInvoice.imageId,
+          qbBillData: {
+            vendorRef: vendorQbId ?? '',
+            dueDate: formatDate(invoiceToAdd.invoiceDate),
+            lineItems: [
+              {
+                description: invoiceToAdd.description,
+                amount: invoiceToAdd.amount,
+                accountRef: qbExpenseAccountId,
+              },
+            ],
+          },
         };
 
+        startProcessing('Adding Bill to QuickBooks...');
         try {
           const response = await addBill(orgId, userId, qbBill, getToken);
-          /*
+
+          const hash = await getBillSyncHash(invoiceToAdd, [newLineItem]);
           // Save the QuickBooks Bill Id and DocNumber to the invoice for future reference
           const updatedInvoice: InvoiceData = {
             ...invoiceToAdd,
-            billId: response.id,
-            accountingId: response.docNumber,
+            id: newInvoiceId,
+            billId: response.data?.Bill?.Id ?? '',
+            accountingId: response.data?.Bill?.DocNumber ?? '',
+            qbSyncHash: hash,
           };
-          const updateResult = updateInvoice(updatedInvoice, result.id);
-          */
+          const updateResult = updateInvoice(newInvoiceId, updatedInvoice);
+          stopProcessing();
         } catch (error) {
+          stopProcessing();
           console.error('Error adding bill to QuickBooks:', error);
           Alert.alert(
             'QuickBooks Sync Failed',
@@ -219,6 +246,8 @@ const AddInvoicePage = () => {
     userId,
     getToken,
     qbExpenseAccountId,
+    allVendors,
+    currentProject,
   ]);
 
   const handleCaptureImage = useCallback(async () => {
@@ -349,10 +378,10 @@ const AddInvoicePage = () => {
   return (
     <View style={{ flex: 1, width: '100%' }}>
       <ModalScreenContainer onSave={handleAddInvoice} onCancel={handleCancel} canSave={canAddInvoice}>
-        <Text txtSize="standard" style={[styles.modalTitle, { fontWeight: '600' }]} text={projectName} />
         <Text txtSize="title" style={styles.modalTitle} text="Add Invoice" />
+        <Text txtSize="xs" style={[styles.modalTitle, { fontWeight: '600' }]} text={projectName} />
 
-        <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border }}>
+        <View style={{ paddingBottom: 10, borderBottomWidth: 1, gap: 6, borderColor: colors.border }}>
           <TextField
             containerStyle={styles.inputContainer}
             style={[styles.input, { borderColor: colors.transparent }]}
@@ -368,11 +397,11 @@ const AddInvoicePage = () => {
           />
 
           <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
-            <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
+            <Text txtSize="formLabel" text="Due Date" style={styles.inputLabel} />
             <TextInput
               readOnly={true}
               style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
-              placeholder="Date"
+              placeholder="Due Date"
               onPressIn={showDatePicker}
               value={formatDate(projectInvoice.invoiceDate)}
             />
@@ -391,6 +420,7 @@ const AddInvoicePage = () => {
             optionLabel={projectInvoice.vendor}
             label="Vendor/Merchant"
             placeholder="Vendor/Merchant"
+            editable={false}
             onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
           />
 
@@ -435,15 +465,7 @@ const AddInvoicePage = () => {
               style={styles.saveButton}
               onPress={handleCaptureImage}
               type={!isConnected || isInternetReachable === false ? 'disabled' : 'action'}
-              title={
-                !isConnected || isInternetReachable === false
-                  ? projectInvoice.imageId
-                    ? 'Retake Picture (Offline)'
-                    : 'Take Picture (Offline)'
-                  : projectInvoice.imageId
-                    ? 'Retake Picture'
-                    : 'Take Picture'
-              }
+              title={projectInvoice.imageId ? 'Retake Picture' : 'Take Picture'}
             />
           </View>
 
@@ -515,6 +537,14 @@ const AddInvoicePage = () => {
           />
         </BottomSheetContainer>
       )}
+      <Modal transparent animationType="fade" visible={processingInfo.isProcessing}>
+        <View style={styles.processingOverlay}>
+          <View style={styles.processingContainer}>
+            <ActivityIndicator size="large" color={colors.tint} />
+            <Text style={styles.processingLabel}>{processingInfo.label}</Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -524,11 +554,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   inputContainer: {
-    marginTop: 6,
+    marginTop: 0,
   },
   inputLabel: {
-    marginTop: 6,
-    marginBottom: 4,
+    marginTop: 0,
+    marginBottom: 0,
   },
   input: {
     borderWidth: 1,
@@ -558,6 +588,29 @@ const styles = StyleSheet.create({
   saveButton: {
     flex: 1,
     marginRight: 5,
+  },
+  processingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  processingContainer: {
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    gap: 16,
+    minWidth: 220,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  processingLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
 

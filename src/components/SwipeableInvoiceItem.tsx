@@ -17,6 +17,7 @@ import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { useRouter } from 'expo-router';
 import { useDeleteMediaCallback, deleteLocalMediaFile } from '../utils/images';
 import { useAllMediaToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
+import { SvgImage } from './SvgImage';
 
 export const ITEM_HEIGHT = 100;
 const RIGHT_ACTION_WIDTH = 100;
@@ -151,12 +152,15 @@ const SwipeableInvoiceItem = React.memo<{
             ) : (
               <>
                 <View style={{ flex: 1, justifyContent: 'center', paddingLeft: 10 }}>
-                  <Text style={{ color: textColor }}>Amount: {formatCurrency(item.amount, true, true)}</Text>
-                  <Text style={{ color: textColor }}>Vendor: {item.vendor}</Text>
-                  <Text style={{ color: textColor }}>
-                    # Items: {allInvoiceItems.length} / ({totalOfAllInvoiceItemsFormatted})
-                  </Text>
-                  <Text style={{ color: textColor }}>Date: {formatDate(item.invoiceDate)}</Text>
+                  <View style={{ flexDirection: 'row', gap: 20 }}>
+                    {item.billId?.length > 0 && <SvgImage fileName="qb-logo" width={20} height={20} />}
+                    {item.accountingId?.length > 0 && (
+                      <Text style={{ color: textColor }}>{`${item.accountingId}`}</Text>
+                    )}
+                  </View>
+                  <Text style={{ color: textColor }}>{formatCurrency(item.amount, true, true)}</Text>
+                  <Text style={{ color: textColor }}>{item.vendor}</Text>
+                  <Text style={{ color: textColor }}>Due: {formatDate(item.invoiceDate)}</Text>
                 </View>
                 <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>
                   <Feather name="chevrons-right" size={24} color={colors.iconColor} />
