@@ -1,5 +1,6 @@
 import { CustomerPicker } from '@/src/components/CustomerPicker';
 import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField } from '@/src/components/NumericInputField';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
@@ -236,12 +237,13 @@ const EditProjectScreen = () => {
             onBlur={handleSubmit}
           />
           <View style={{ flex: 1 }}>
-            <NumberInputField
+            <NumericInputField
               label="Initial Quoted Price"
               style={{ paddingHorizontal: 10 }}
+              decimals={0}
+              maxDecimals={0}
               value={project.quotedPrice || 0}
-              focusManagerId="InitialQuotedPrice"
-              onChange={(value) => setProject({ ...project, quotedPrice: value })}
+              onChangeNumber={(value) => setProject({ ...project, quotedPrice: value ?? 0 })}
               placeholder="Initial Quoted Price"
             />
           </View>
