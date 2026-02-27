@@ -190,10 +190,8 @@ export interface UpdateBillResponse {
 }
 
 interface DeleteBillRequest {
-  orgId: string;
-  userId: string;
   projectId: string;
-  accountingId: string;
+  billId: string;
 }
 
 export interface DeleteBillResponse {
@@ -636,7 +634,7 @@ export async function updateBill(
  * @param orgId - The organization ID
  * @param userId - The user ID
  * @param projectId - The project ID the bill belongs to
- * @param accountingId - The QuickBooks Bill DocNumber / accounting ID
+ * @param billId - The QuickBooks Bill ID
  * @param getToken - Function to get the authentication token
  * @returns The deleted bill reference
  */
@@ -644,7 +642,7 @@ export async function deleteBillFromQuickBooks(
   orgId: string,
   userId: string,
   projectId: string,
-  accountingId: string,
+  billId: string,
   getToken: () => Promise<string | null>,
 ): Promise<DeleteBillResponse> {
   const apiFetch = createApiWithToken(getToken);
@@ -654,7 +652,7 @@ export async function deleteBillFromQuickBooks(
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ orgId, userId, projectId, accountingId } as DeleteBillRequest),
+    body: JSON.stringify({ projectId, billId } as DeleteBillRequest),
   });
 
   const data: ApiDataResponse<{ Bill: DeleteBillResponse }> = await response.json();

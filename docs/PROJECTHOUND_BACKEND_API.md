@@ -2278,8 +2278,6 @@ Delete an existing bill in QuickBooks.
 
 ```json
 {
-  "orgId": "org123",
-  "userId": "user456",
   "projectId": "project789",
   "billId": "789"
 }
