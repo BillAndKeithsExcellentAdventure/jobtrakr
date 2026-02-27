@@ -1,13 +1,12 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField } from '@/src/components/NumericInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
-import { useFocusManager } from '@/src/hooks/useFocusManager';
 import { WorkItemDataCodeCompareAsNumber } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   useAllRows,
@@ -19,8 +18,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const AMOUNT_FIELD_ID = 'edit-invoice-line-item-amount';
-
 const EditLineItemPage = () => {
   const { projectId, lineItemId } = useLocalSearchParams<{
     projectId: string;
@@ -29,7 +26,6 @@ const EditLineItemPage = () => {
   }>();
 
   const colors = useColors();
-  const focusManager = useFocusManager();
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const updateLineItem = useUpdateRowCallback(projectId, 'workItemCostEntries');
   const {
@@ -112,8 +108,7 @@ const EditLineItemPage = () => {
   );
 
   const handleOkPress = useCallback(async () => {
-    const currentAmount = focusManager.getFieldValue<number>(AMOUNT_FIELD_ID) ?? itemizedEntry.amount;
-    const entryToSave = { ...itemizedEntry, amount: currentAmount };
+    const entryToSave = { ...itemizedEntry };
     if (!entryToSave.label || !entryToSave.amount || !pickedSubCategoryOption) {
       Alert.alert('Error', 'Please fill in all required fields.');
       return;
@@ -128,7 +123,7 @@ const EditLineItemPage = () => {
       return;
     }
     router.back();
-  }, [itemizedEntry, pickedSubCategoryOption, updateLineItem, focusManager]);
+  }, [itemizedEntry, pickedSubCategoryOption, updateLineItem]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -141,16 +136,16 @@ const EditLineItemPage = () => {
         }}
       />
       <View style={[styles.container, { borderColor: colors.border }]}>
-        <NumberInputField
+        <NumericInputField
           labelStyle={{ marginBottom: 0 }}
-          style={{ ...styles.inputContainer, paddingLeft: 10 }}
+          inputStyle={{ paddingHorizontal: 10 }}
+          containerStyle={styles.inputContainer}
           label="Amount"
           value={itemizedEntry.amount}
-          focusManagerId={AMOUNT_FIELD_ID}
-          onChange={(value: number): void => {
+          onChangeNumber={(value: number | null): void => {
             setItemizedEntry((prevItem) => ({
               ...prevItem,
-              amount: value,
+              amount: value ?? 0,
             }));
           }}
         />

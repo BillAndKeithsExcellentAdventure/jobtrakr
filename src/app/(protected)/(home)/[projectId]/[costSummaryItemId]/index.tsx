@@ -1,5 +1,5 @@
 import { ActionButton } from '@/src/components/ActionButton';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField } from '@/src/components/NumericInputField';
 import { Switch } from '@/src/components/Switch';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
@@ -124,10 +124,10 @@ const CostItemDetails = () => {
                 }}
               >
                 <View style={{ flex: 1 }}>
-                  <NumberInputField
+                  <NumericInputField
                     label="Estimate"
                     value={itemEstimate}
-                    onChange={handleEstimateChanged}
+                    onChangeNumber={(value) => handleEstimateChanged(value ?? 0)}
                     placeholder="Estimated Amount"
                   />
                 </View>
@@ -151,12 +151,12 @@ const CostItemDetails = () => {
               </View>
 
               <View style={{ marginTop: 10 }}>
-                <NumberInputField
+                <NumericInputField
                   label="Spent"
                   value={amountSpent}
                   placeholder="Amount Spent"
-                  onChange={() => {}}
-                  readOnly
+                  onChangeNumber={() => {}}
+                  editable={false}
                 />
               </View>
               <View

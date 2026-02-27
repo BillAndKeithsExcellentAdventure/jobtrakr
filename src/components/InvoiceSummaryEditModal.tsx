@@ -6,7 +6,7 @@ import { Text, TextInput } from './Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { formatDate } from '@/src/utils/formatters';
-import { NumberInputField } from './NumberInputField';
+import { NumericInputField } from './NumericInputField';
 import { TextField } from '@/src/components/TextField';
 import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import OptionList, { OptionEntry } from './OptionList';
@@ -147,20 +147,20 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
                 />
               )}
 
-              <NumberInputField
-                style={styles.inputContainer}
+              <NumericInputField
+                containerStyle={styles.inputContainer}
                 placeholder="Amount"
                 label="Amount"
                 value={editedSummary.totalAmount}
-                onChange={(value) => setEditedSummary((prev) => ({ ...prev, totalAmount: value }))}
+                onChangeNumber={(value) => setEditedSummary((prev) => ({ ...prev, totalAmount: value ?? 0 }))}
               />
 
-              <NumberInputField
-                style={styles.inputContainer}
+              <NumericInputField
+                containerStyle={styles.inputContainer}
                 placeholder="Tax"
                 label="Tax"
                 value={editedSummary.totalTax}
-                onChange={(value) => setEditedSummary((prev) => ({ ...prev, totalTax: value }))}
+                onChangeNumber={(value) => setEditedSummary((prev) => ({ ...prev, totalTax: value ?? 0 }))}
               />
 
               <TouchableOpacity activeOpacity={1} onPress={() => setDatePickerVisible(true)}>

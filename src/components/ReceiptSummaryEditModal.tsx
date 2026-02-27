@@ -4,10 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from './ActionButton';
 import { Text, TextInput } from './Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import { useFocusManager } from '@/src/hooks/useFocusManager';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { formatDate } from '@/src/utils/formatters';
-import { NumberInputField } from './NumberInputField';
+import { NumericInputField } from './NumericInputField';
 import { TextField } from '@/src/components/TextField';
 import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import OptionList, { OptionEntry } from './OptionList';
@@ -40,7 +39,6 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
   onSave,
 }) => {
   const colors = useColors();
-  const focusManager = useFocusManager();
   const [editedSummary, setEditedSummary] = useState(receiptSummary);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
@@ -89,18 +87,9 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
   );
 
   const handleSave = useCallback(async () => {
-    // special handling for NumberInputFields
-    const totalAmount = focusManager.getFieldValue<number>('receipt-summary-amount') ?? 0;
-    const totalTax = focusManager.getFieldValue<number>('receipt-summary-tax') ?? 0;
-
-    const updatedSummary = {
-      ...editedSummary,
-      totalAmount,
-      totalTax,
-    };
-    onSave(updatedSummary);
+    onSave(editedSummary);
     onClose();
-  }, [editedSummary, onSave, onClose, focusManager]);
+  }, [editedSummary, onSave, onClose]);
 
   const handleClose = useCallback(() => {
     setEditedSummary(receiptSummary);
@@ -158,22 +147,20 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
                 />
               )}
 
-              <NumberInputField
-                focusManagerId="receipt-summary-amount"
-                style={styles.inputContainer}
+              <NumericInputField
+                containerStyle={styles.inputContainer}
                 placeholder="Amount"
                 label="Amount"
                 value={editedSummary.totalAmount}
-                onChange={(value) => setEditedSummary((prev) => ({ ...prev, totalAmount: value }))}
+                onChangeNumber={(value) => setEditedSummary((prev) => ({ ...prev, totalAmount: value ?? 0 }))}
               />
 
-              <NumberInputField
-                focusManagerId="receipt-summary-tax"
-                style={styles.inputContainer}
+              <NumericInputField
+                containerStyle={styles.inputContainer}
                 placeholder="Tax"
                 label="Tax"
                 value={editedSummary.totalTax}
-                onChange={(value) => setEditedSummary((prev) => ({ ...prev, totalTax: value }))}
+                onChangeNumber={(value) => setEditedSummary((prev) => ({ ...prev, totalTax: value ?? 0 }))}
               />
 
               <TouchableOpacity activeOpacity={1} onPress={() => setDatePickerVisible(true)}>

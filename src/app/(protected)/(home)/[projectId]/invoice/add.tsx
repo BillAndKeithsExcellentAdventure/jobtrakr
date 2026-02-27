@@ -1,7 +1,7 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField } from '@/src/components/NumericInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { Switch } from '@/src/components/Switch';
@@ -424,15 +424,16 @@ const AddInvoicePage = () => {
             onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
           />
 
-          <NumberInputField
-            style={{ ...styles.inputContainer, paddingLeft: 10 }}
+          <NumericInputField
+            containerStyle={{ marginTop: 0 }}
+            inputStyle={{ paddingHorizontal: 10 }}
             placeholder="Amount"
             label="Amount"
             value={projectInvoice.amount}
-            onChange={(amount: number) =>
+            onChangeNumber={(amount: number | null) =>
               setProjectInvoice((prevInvoice) => ({
                 ...prevInvoice,
-                amount,
+                amount: amount ?? 0,
               }))
             }
           />

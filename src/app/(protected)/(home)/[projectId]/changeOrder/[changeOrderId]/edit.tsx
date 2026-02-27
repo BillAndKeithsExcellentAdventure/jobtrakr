@@ -1,4 +1,4 @@
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField } from '@/src/components/NumericInputField';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
@@ -88,14 +88,13 @@ const EditChangeOrder = () => {
               focusManagerId="DESCRIPTION"
               onBlur={handleSubmit}
             />
-            <NumberInputField
+            <NumericInputField
               label="Customer Quoted Price"
-              style={{ ...styles.input, paddingLeft: 10 }}
+              inputStyle={{ paddingHorizontal: 10 }}
               labelStyle={{ marginBottom: 0 }}
               value={changeOrder.quotedPrice ?? 0}
-              onChange={handleQuotedPriceChange}
+              onChangeNumber={(value) => handleQuotedPriceChange(value ?? 0)}
               placeholder="Customer Quoted Price"
-              focusManagerId="CUSTOMER_QUOTED_PRICE"
             />
           </View>
         )}

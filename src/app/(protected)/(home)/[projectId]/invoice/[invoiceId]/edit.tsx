@@ -1,6 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField } from '@/src/components/NumericInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
@@ -13,18 +13,14 @@ import {
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
-import { useFocusManager } from '@/src/hooks/useFocusManager';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
-const AMOUNT_FIELD_ID = 'edit-invoice-amount';
-
 const EditInvoiceDetailsPage = () => {
   const defaultDate = new Date();
-  const focusManager = useFocusManager();
 
   const router = useRouter();
   const { projectId, invoiceId } = useLocalSearchParams<{ projectId: string; invoiceId: string }>();
@@ -112,11 +108,9 @@ const EditInvoiceDetailsPage = () => {
   const colors = useColors();
 
   const handleSubmit = useCallback(async () => {
-    const currentAmount = focusManager.getFieldValue<number>(AMOUNT_FIELD_ID) ?? invoice.amount;
-    const updatedInvoice = { ...invoice, amount: currentAmount };
-    updateInvoice(invoiceId, updatedInvoice);
+    updateInvoice(invoiceId, invoice);
     router.back();
-  }, [invoice, invoiceId, router, updateInvoice, focusManager]);
+  }, [invoice, invoiceId, router, updateInvoice]);
 
   const invoiceAmount = invoice.amount ?? 0;
 
@@ -169,15 +163,15 @@ const EditInvoiceDetailsPage = () => {
             />
           </View>
 
-          <NumberInputField
-            style={{ ...styles.inputContainer, paddingLeft: 10 }}
+          <NumericInputField
+            containerStyle={styles.inputContainer}
+            inputStyle={{ paddingHorizontal: 10 }}
             label="Amount"
             value={invoiceAmount}
-            focusManagerId={AMOUNT_FIELD_ID}
-            onChange={(value: number): void => {
+            onChangeNumber={(value: number | null): void => {
               setInvoice((prevInvoice) => ({
                 ...prevInvoice,
-                amount: value,
+                amount: value ?? 0,
               }));
             }}
           />

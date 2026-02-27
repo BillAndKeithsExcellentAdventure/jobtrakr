@@ -1,5 +1,5 @@
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField } from '@/src/components/NumericInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
@@ -266,12 +266,13 @@ const EditReceiptDetailsPage = () => {
               />
             </View>
 
-            <NumberInputField
-              style={{ ...styles.inputContainer, paddingLeft: 10, marginTop: 0 }}
+            <NumericInputField
+              containerStyle={{ marginTop: 0 }}
+              inputStyle={{ paddingHorizontal: 10 }}
               labelStyle={{ marginBottom: 2 }}
               label="Amount"
               value={receiptAmount}
-              onChange={handleAmountChange}
+              onChangeNumber={(value) => handleAmountChange(value ?? 0)}
             />
             {vendors && vendors.length ? (
               <OptionPickerItem

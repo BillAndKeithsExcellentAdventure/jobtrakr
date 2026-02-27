@@ -1,5 +1,4 @@
 import { CustomerPicker } from '@/src/components/CustomerPicker';
-import { NumberInputField } from '@/src/components/NumberInputField';
 import { NumericInputField } from '@/src/components/NumericInputField';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';

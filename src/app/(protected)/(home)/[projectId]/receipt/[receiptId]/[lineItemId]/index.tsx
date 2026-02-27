@@ -1,5 +1,5 @@
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField } from '@/src/components/NumericInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
@@ -204,16 +204,17 @@ const EditLineItemPage = () => {
         }}
       />
       <View style={styles.container}>
-        <NumberInputField
-          style={{ ...styles.inputContainer, paddingLeft: 10, marginTop: 0 }}
+        <NumericInputField
+          containerStyle={{ marginTop: 0 }}
+          inputStyle={{ paddingHorizontal: 10 }}
           labelStyle={{ marginBottom: 2 }}
           label="Amount"
           value={itemizedEntry.amount}
-          onChange={(value: number): void => {
+          onChangeNumber={(value: number | null): void => {
             isDirtyRef.current = true;
             const updatedEntry = {
               ...itemizedEntry,
-              amount: value,
+              amount: value ?? 0,
             };
             setItemizedEntry(updatedEntry);
             // autosave when change occurs with the updated entry
