@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { StyleSheet, TextInputProps, TextStyle, ViewStyle } from 'react-native';
 import { Text, TextProps, View } from './Themed';
-import { NumericInput } from './NumericInput';
+import { NumericInput, NumericInputHandle } from './NumericInput';
 import { useColors } from '../context/ColorsContext';
+
+/** Imperative handle exposed via `ref` on {@link NumericInputField}. */
+export type NumericInputFieldHandle = NumericInputHandle;
 
 /**
  * Props for the {@link NumericInputField} component.
@@ -55,6 +58,19 @@ export type NumericInputFieldProps = {
    * Any input that would exceed this limit is silently rejected.
    */
   maxDecimals?: number;
+  /**
+   * When `true`, all text in the field is automatically selected when the input
+   * receives focus, making it easy for the user to overwrite the current value.
+   *
+   * @default false
+   */
+  selectOnFocus?: boolean;
+  /**
+   * Optional identifier for the item currently represented by this input.
+   * When this value changes, all text is automatically selected.
+   * See {@link NumericInput} `itemId` for full details.
+   */
+  itemId?: string;
 } & Omit<TextInputProps, 'value' | 'onChangeText'>;
 
 /**
@@ -80,43 +96,53 @@ export type NumericInputFieldProps = {
  *   placeholder="0.00"
  * />
  */
-export const NumericInputField: React.FC<NumericInputFieldProps> = ({
-  label,
-  labelTxtSize = 'xxs',
-  labelStyle,
-  containerStyle,
-  inputStyle,
-  value,
-  onChangeNumber,
-  decimals,
-  maxDecimals,
-  style,
-  ...inputProps
-}) => {
-  const colors = useColors();
-  return (
-    <View style={[styles.container, containerStyle]}>
-      {label !== undefined && label !== '' && (
-        <Text txtSize={labelTxtSize} style={[styles.label, labelStyle]}>
-          {label}
-        </Text>
-      )}
-      <NumericInput
-        value={value}
-        onChangeNumber={onChangeNumber}
-        decimals={decimals}
-        maxDecimals={maxDecimals}
-        style={[
-          styles.input,
-          { backgroundColor: colors.neutral200, borderColor: colors.neutral400 },
-          inputStyle,
-          style,
-        ]}
-        {...inputProps}
-      />
-    </View>
-  );
-};
+export const NumericInputField = forwardRef<NumericInputFieldHandle, NumericInputFieldProps>(
+  function NumericInputField(
+    {
+      label,
+      labelTxtSize = 'xxs',
+      labelStyle,
+      containerStyle,
+      inputStyle,
+      value,
+      onChangeNumber,
+      decimals,
+      maxDecimals,
+      selectOnFocus = false,
+      itemId,
+      style,
+      ...inputProps
+    },
+    ref,
+  ) {
+    const colors = useColors();
+    return (
+      <View style={[styles.container, containerStyle]}>
+        {label !== undefined && label !== '' && (
+          <Text txtSize={labelTxtSize} style={[styles.label, labelStyle]}>
+            {label}
+          </Text>
+        )}
+        <NumericInput
+          ref={ref}
+          value={value}
+          onChangeNumber={onChangeNumber}
+          decimals={decimals}
+          maxDecimals={maxDecimals}
+          selectOnFocus={selectOnFocus}
+          itemId={itemId}
+          style={[
+            styles.input,
+            { backgroundColor: colors.neutral200, borderColor: colors.neutral400 },
+            inputStyle,
+            style,
+          ]}
+          {...inputProps}
+        />
+      </View>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   container: {

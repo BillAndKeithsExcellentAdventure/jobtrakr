@@ -1,7 +1,7 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import { KeyboardSpacer } from '@/src/components/KeyboardSpacer';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField, NumericInputFieldHandle } from '@/src/components/NumericInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { Text, TextInput, View } from '@/src/components/Themed';
@@ -25,7 +25,6 @@ import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 
 const LISTITEM_HEIGHT = 40;
-const ESTIMATE_FIELD_ID = 'estimate-input';
 
 const SetEstimatedCostsPage = () => {
   const colors = useColors();
@@ -63,7 +62,7 @@ const SetEstimatedCostsPage = () => {
   const [currentCostSummary, setCurrentCostSummary] = useState<WorkItemSummaryData | undefined | null>();
   const [currentItemIndex, setCurrentItemIndex] = useState<number>(0);
   const [currentCategory, setCurrentCategory] = useState<WorkCategoryData | null>();
-  const [itemEstimate, setItemEstimate] = useState(0);
+  const [itemEstimate, setItemEstimate] = useState<number | null>();
   const [itemNote, setItemNote] = useState('');
 
   const flatListRef = React.useRef<FlatList>(null);
@@ -117,6 +116,12 @@ const SetEstimatedCostsPage = () => {
   }, []);
 
   useEffect(() => {
+    if (amountRef.current) {
+      amountRef.current.focus(true);
+    }
+  }, [currentItemIndex]);
+
+  useEffect(() => {
     if (pickedCategoryOption) {
       setCurrentCategory(allWorkCategories.find((c) => c.id === pickedCategoryOption.value));
     }
@@ -131,19 +136,15 @@ const SetEstimatedCostsPage = () => {
 
   const updateBidEstimate = useCallback(() => {
     if (!currentCostSummary) return;
-    // Use FocusManager.getFieldValue to get the current value from the input field
-    // without waiting for blur. This solves the issue where NumberInputField only
-    // calls onChange on blur events.
-    const newValue = focusManager.getFieldValue<number>(ESTIMATE_FIELD_ID) ?? 0;
     updateWorkItemCostSummary(currentCostSummary.id, {
       ...currentCostSummary,
-      bidAmount: newValue,
+      bidAmount: itemEstimate ?? 0,
       bidNote: itemNote,
     });
     setTimeout(() => {
       setCurrentItemIndex((prev) => (prev < allAvailableCostItems.length - 1 ? prev + 1 : prev));
     }, 0);
-  }, [currentCostSummary, updateWorkItemCostSummary, focusManager, allAvailableCostItems, itemNote]);
+  }, [currentCostSummary, updateWorkItemCostSummary, allAvailableCostItems, itemNote, itemEstimate]);
   const skipToNext = useCallback(() => {
     if (!currentCostSummary) return;
     setCurrentItemIndex((prev) => (prev < allAvailableCostItems.length - 1 ? prev + 1 : prev));
@@ -161,6 +162,8 @@ const SetEstimatedCostsPage = () => {
     },
     [scrollToCurrentIndex],
   );
+
+  const amountRef = useRef<NumericInputFieldHandle>(null);
 
   return (
     <>
@@ -215,13 +218,16 @@ const SetEstimatedCostsPage = () => {
                       style={{ width: 50, marginRight: 10, textAlign: 'right' }}
                     />
                     <View style={{ flex: 1 }}>
-                      <NumberInputField
+                      <NumericInputField
+                        ref={amountRef}
                         style={{ backgroundColor: colors.background }}
-                        focusManagerId={ESTIMATE_FIELD_ID}
-                        value={itemEstimate}
-                        onChange={setItemEstimate}
+                        value={itemEstimate ?? 0}
+                        onChangeNumber={setItemEstimate}
                         placeholder="Estimated Amount"
                         autoFocus={true}
+                        decimals={2}
+                        maxDecimals={2}
+                        selectOnFocus={true}
                         itemId={currentCostSummary?.id}
                       />
                     </View>
@@ -331,11 +337,7 @@ const renderItem = (
           borderBottomWidth: StyleSheet.hairlineWidth,
         }}
       >
-        <Text
-          numberOfLines={1}
-          style={{ flex: 1, overflow: 'hidden' }}
-          text={itemLabel}
-        />
+        <Text numberOfLines={1} style={{ flex: 1, overflow: 'hidden' }} text={itemLabel} />
         <Text
           style={{ width: 100, textAlign: 'right', overflow: 'hidden' }}
           text={formatCurrency(item.bidAmount, false, true)}

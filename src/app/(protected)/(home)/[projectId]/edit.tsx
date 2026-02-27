@@ -236,6 +236,7 @@ const EditProjectScreen = () => {
               style={{ paddingHorizontal: 10 }}
               decimals={0}
               maxDecimals={0}
+              selectOnFocus={true}
               value={project.quotedPrice || 0}
               onChangeNumber={(value) => setProject({ ...project, quotedPrice: value ?? 0 })}
               placeholder="Initial Quoted Price"
