@@ -7,7 +7,6 @@ import { Text, TextInput, View } from '@/src/components/Themed';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
-import { useAutoSaveNavigation, useFocusManager } from '@/src/hooks/useFocusManager';
 import { ProjectData } from '@/src/models/types';
 import { CustomerData, useAllRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useProject, useUpdateProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
@@ -25,7 +24,6 @@ const EditProjectScreen = () => {
   const colors = useColors();
   const router = useRouter();
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
-  const focusManager = useFocusManager();
   const { isConnectedToQuickBooks } = useNetwork();
   const { orgId, userId, getToken } = useAuth();
 
@@ -145,11 +143,9 @@ const EditProjectScreen = () => {
   const handleSubmit = useCallback(async () => {
     if (!project || !projectId) return;
 
-    const quotedPrice = focusManager.getFieldValue<number>('InitialQuotedPrice') ?? project.quotedPrice ?? 0;
-    const updatedProjectData = { ...project, quotedPrice };
-    const result = updateProject(projectId, updatedProjectData);
+    const result = updateProject(projectId, project);
     if (result.status !== 'Success') {
-      console.log('Project update failed:', updatedProjectData);
+      console.log('Project update failed:', project);
     }
   }, [project, projectId, updateProject]);
 
@@ -162,12 +158,10 @@ const EditProjectScreen = () => {
     setProject((prev) => ({ ...prev, abbreviation: formattedText }));
   }, []);
 
-  const processBackPress = useCallback(() => {
+  const handleBackPress = useCallback(() => {
     handleSubmit();
     router.back();
   }, [handleSubmit, router]);
-
-  const handleBackPress = useAutoSaveNavigation(processBackPress);
 
   const handleCustomerSelected = useCallback(
     async (customer: CustomerData) => {
