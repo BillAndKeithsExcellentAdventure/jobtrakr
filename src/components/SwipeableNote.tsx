@@ -105,7 +105,6 @@ const SwipeableNote = React.memo<{
               <Text
                 style={{
                   flex: 1,
-                  textOverflow: 'ellipsis',
                   alignSelf: 'center',
                   justifyContent: 'center',
                   marginBottom: 5,

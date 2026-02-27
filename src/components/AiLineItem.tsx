@@ -90,7 +90,6 @@ const styles = StyleSheet.create({
   description: {
     flex: 1,
     overflow: 'hidden',
-    textOverflow: 'ellipsis',
   },
   amountRow: {
     flexDirection: 'row',

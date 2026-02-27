@@ -93,12 +93,10 @@ const styles = StyleSheet.create({
   },
   itemName: {
     flex: 1,
-    textOverflow: 'ellipsis',
     overflow: 'hidden',
     marginRight: 10,
   },
   itemCode: {
-    textOverflow: 'ellipsis',
     overflow: 'hidden',
     width: 100,
   },

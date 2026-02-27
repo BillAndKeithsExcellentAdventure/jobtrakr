@@ -5,6 +5,7 @@ import {
   useAddReceiptQueueEntryCallback,
   useAllReceiptQueueEntries,
 } from '@/src/tbStores/ReceiptQueueStoreHooks';
+import { Provider } from 'tinybase/ui-react';
 
 jest.mock('@clerk/clerk-expo', () => ({
   useAuth: () => ({
@@ -22,10 +23,10 @@ jest.mock('../../src/tbStores/synchronization/useCreateServerSynchronizerAndStar
 
 describe('ReceiptQueueStore', () => {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <>
+    <Provider>
       <ReceiptQueueStore />
       {children}
-    </>
+    </Provider>
   );
 
   it('initializes and allows adding queue entries', async () => {
@@ -46,6 +47,8 @@ describe('ReceiptQueueStore', () => {
         vendorId: 'vendor-1',
         vendor: 'Acme Supply Co.',
         paymentAccountId: 'account-1',
+        accountingId: '',
+        qbSyncHash: '',
         description: 'Building materials',
         receiptDate: 1700000000000,
         pictureDate: 1700000001000,

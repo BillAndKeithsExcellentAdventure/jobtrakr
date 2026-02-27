@@ -90,7 +90,6 @@ const styles = StyleSheet.create({
   },
   itemName: {
     flex: 1,
-    textOverflow: 'ellipsis',
     overflow: 'hidden',
     marginRight: 10,
   },
@@ -98,7 +97,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   itemCode: {
-    textOverflow: 'ellipsis',
     overflow: 'hidden',
     width: 100,
   },
