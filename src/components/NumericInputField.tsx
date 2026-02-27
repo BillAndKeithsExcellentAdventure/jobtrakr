@@ -62,7 +62,7 @@ export type NumericInputFieldProps = {
    * When `true`, all text in the field is automatically selected when the input
    * receives focus, making it easy for the user to overwrite the current value.
    *
-   * @default false
+   * @default true
    */
   selectOnFocus?: boolean;
   /**
@@ -108,7 +108,7 @@ export const NumericInputField = forwardRef<NumericInputFieldHandle, NumericInpu
       onChangeNumber,
       decimals,
       maxDecimals,
-      selectOnFocus = false,
+      selectOnFocus = true,
       itemId,
       style,
       ...inputProps
