@@ -634,7 +634,6 @@ const ProjectDetailsPage = () => {
               numberOfLines={1}
               style={{
                 flex: 1,
-                textOverflow: 'ellipsis',
                 overflow: 'hidden',
                 color: colors.sectionFG,
                 backgroundColor: colors.listBackground,

@@ -23,7 +23,7 @@ export const useUploadQueue = () => {
   const store = useUploadSyncStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
-  const intervalRef = useRef<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     // Wait for authentication to be ready

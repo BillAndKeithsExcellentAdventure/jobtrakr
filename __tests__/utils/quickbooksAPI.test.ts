@@ -32,14 +32,13 @@ describe('quickbooksAPI', () => {
       projectId: 'proj-789',
       projectAbbr: 'TEST',
       projectName: 'Test Project',
-      invoiceId: 'receipt-001',
       imageId: 'img-001',
       addAttachment: true,
       qbBillData: {
         vendorRef: 'vendor-123',
         lineItems: [
           {
-            amount: 100.0,
+            amount: '100.0',
             description: 'Test line item',
             accountRef: 'account-456',
           },
@@ -82,11 +81,11 @@ describe('quickbooksAPI', () => {
         success: true,
         message: 'Bill created successfully',
         data: {
-          Bill: {
+          Purchase: {
             Id: '789',
-            VendorRef: { value: '123' },
+            PaymentType: 'Check',
             TotalAmt: 100.0,
-            DueDate: '2024-02-15',
+            TxnDate: '2024-02-15',
             DocNumber: 'RECEIPT-001',
           },
         },
@@ -97,7 +96,7 @@ describe('quickbooksAPI', () => {
       const result = await addReceiptToQuickBooks(mockReceiptData, mockGetToken);
 
       expect(result).toEqual(mockResponse);
-      expect(result.data?.Bill?.Id).toBe('789');
+      expect(result.data?.Purchase?.Id).toBe('789');
     });
 
     it('should throw error when API returns failure', async () => {
@@ -137,7 +136,6 @@ describe('quickbooksAPI', () => {
         projectId: 'proj-789',
         projectAbbr: 'TEST',
         projectName: 'Test Project',
-        invoiceId: 'receipt-001',
         imageId: 'img-001',
         addAttachment: true,
       });

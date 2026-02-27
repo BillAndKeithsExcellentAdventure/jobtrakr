@@ -129,7 +129,6 @@ const CostSummaryItem = React.memo<Props>(({ item, sectionCode, projectId }) => 
                   color: balanceColor,
                   fontWeight: '700',
                   marginLeft: 10,
-                  textOverflow: 'ellipsis',
                   overflow: 'hidden',
                 }}
                 text={`${sectionCode}.${item.code} ${item.title}`}

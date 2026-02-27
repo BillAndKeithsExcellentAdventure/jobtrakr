@@ -64,7 +64,7 @@ const SwipeableProposedChangeOrderItem = React.memo<Props>(({ item, removeItem }
       <View style={styles.itemEntry}>
         <View style={styles.itemInfo}>
           <Text
-            style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
+            style={{ flex: 1, overflow: 'hidden' }}
             text={item.label}
             numberOfLines={1}
           />

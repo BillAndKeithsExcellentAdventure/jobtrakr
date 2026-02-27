@@ -130,13 +130,13 @@ const SwipeableChangeOrder = React.memo<Props>(({ item, projectId }) => {
               }}
             >
               <Text
-                style={{ textOverflow: 'ellipsis', overflow: 'hidden' }}
+                style={{ overflow: 'hidden' }}
                 text={item.title}
                 numberOfLines={1}
               />
               {item.accountingId && item.accountingId.length > 0 && (
                 <Text
-                  style={{ textOverflow: 'ellipsis', overflow: 'hidden' }}
+                  style={{ overflow: 'hidden' }}
                   text={`[${item.accountingId}]`}
                   txtSize="xs"
                   numberOfLines={1}

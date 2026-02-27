@@ -333,7 +333,7 @@ const renderItem = (
       >
         <Text
           numberOfLines={1}
-          style={{ flex: 1, textOverflow: 'ellipsis', overflow: 'hidden' }}
+          style={{ flex: 1, overflow: 'hidden' }}
           text={itemLabel}
         />
         <Text

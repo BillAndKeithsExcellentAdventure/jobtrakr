@@ -118,7 +118,6 @@ const styles = StyleSheet.create({
   },
   itemName: {
     flex: 1,
-    textOverflow: 'ellipsis',
     overflow: 'hidden',
     marginRight: 10,
   },

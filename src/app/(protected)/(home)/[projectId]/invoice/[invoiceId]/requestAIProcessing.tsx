@@ -442,6 +442,7 @@ const RequestAIProcessingPage = () => {
                           <AiLineItem
                             item={item}
                             index={index}
+                            currentProjectId={projectId}
                             showTaxToggle={invoiceItems.length > 1}
                             onTaxableChange={toggleTaxable}
                             onSelectItem={toggleSelection}
