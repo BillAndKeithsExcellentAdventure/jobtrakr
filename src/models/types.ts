@@ -84,10 +84,12 @@ export interface ReceiptSummary {
 }
 
 export interface InvoiceSummary {
+  invoiceId?: string;
   vendor: string;
-  receiptDate: number;
+  invoiceDate: number;
   totalAmount: number;
   totalTax: number;
+  terms?: string;
 }
 
 export interface ProposedChangeOrderItem {

@@ -83,7 +83,8 @@ const ProjectInvoicesPage = () => {
         if (!active) return;
         const paidBillIds = new Set(paidBills.filter((b) => b.isPaid).map((b) => b.billId));
         allProjectInvoicesRef.current.forEach((inv) => {
-          if (inv.billId && paidBillIds.has(inv.billId) && inv.paymentStatus !== 'paid') {
+          if (inv.billId && paidBillIds.has(inv.billId)) {
+            //  KMB - Removed to test:   && inv.paymentStatus !== 'paid'
             updateInvoice(inv.id, { paymentStatus: 'paid' });
           }
         });
