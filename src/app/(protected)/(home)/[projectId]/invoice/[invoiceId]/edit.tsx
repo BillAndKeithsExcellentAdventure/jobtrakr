@@ -68,7 +68,7 @@ const EditInvoiceDetailsPage = () => {
   const handleDateConfirm = useCallback((date: Date) => {
     setInvoice((prevInvoice) => ({
       ...prevInvoice,
-      date,
+      dueDate: date.getTime(),
     }));
 
     hideDatePicker();
@@ -82,6 +82,8 @@ const EditInvoiceDetailsPage = () => {
     description: '',
     amount: 0,
     invoiceDate: defaultDate.getTime(),
+    dueDate: defaultDate.getTime(),
+    paymentStatus: 'pending',
     thumbnail: '',
     pictureDate: 0,
     imageId: '',
@@ -150,12 +152,12 @@ const EditInvoiceDetailsPage = () => {
                 style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
                 placeholder="Date"
                 onPressIn={showDatePicker}
-                value={formatDate(invoice.invoiceDate)}
+                value={formatDate(invoice.dueDate)}
               />
             </TouchableOpacity>
             <DateTimePickerModal
               style={{ alignSelf: 'stretch' }}
-              date={invoice.invoiceDate ? new Date(invoice.invoiceDate) : defaultDate}
+              date={invoice.dueDate ? new Date(invoice.dueDate) : defaultDate}
               isVisible={datePickerVisible}
               mode="date"
               onConfirm={handleDateConfirm}

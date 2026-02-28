@@ -17,6 +17,7 @@ type BillSyncPayload = {
   description: string;
   vendorId: string;
   invoiceDate: number;
+  dueDate: number;
   imageId: string;
   notes: string;
   lineItems: NormalizedLineItem[];
@@ -77,6 +78,7 @@ export const getBillSyncHash = async (
     description: invoice.description,
     vendorId: invoice.vendorId,
     invoiceDate: invoice.invoiceDate,
+    dueDate: invoice.dueDate,
     imageId: invoice.imageId,
     notes: invoice.notes,
     lineItems: lineItems.map(normalizeLineItem).sort(compareLineItems),

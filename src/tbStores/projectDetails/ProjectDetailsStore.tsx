@@ -43,6 +43,7 @@ export const TABLES_SCHEMA = {
     paymentStatus: { type: 'string' }, // 'pending' | 'paid'
     description: { type: 'string' },
     amount: { type: 'number' }, // Total Amount
+    dueDate: { type: 'number' }, // Date on the invoice.
     invoiceDate: { type: 'number' }, // Date on the invoice.
     invoiceNumber: { type: 'string' }, // Vendor's invoice number
     thumbnail: { type: 'string' },

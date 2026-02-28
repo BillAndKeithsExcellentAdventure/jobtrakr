@@ -76,6 +76,7 @@ export type InvoiceData = {
   description: string;
   amount: number;
   invoiceDate: number;
+  dueDate: number;
   invoiceNumber: string;
   thumbnail: string;
   pictureDate: number;
