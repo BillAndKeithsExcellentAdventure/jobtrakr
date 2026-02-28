@@ -5,7 +5,6 @@ import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { DeleteProjectConfirmationModal } from '@/src/components/DeleteProjectConfirmationModal';
 import { ColorsProvider } from '@/src/context/ColorsContext';
-import { FocusManagerProvider } from '@/src/hooks/useFocusManager';
 
 // Mock the KeyboardToolbar component
 jest.mock('react-native-keyboard-controller', () => ({
@@ -18,9 +17,7 @@ describe('DeleteProjectConfirmationModal', () => {
   const testProjectName = 'Test Project';
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <FocusManagerProvider>
-      <ColorsProvider>{children}</ColorsProvider>
-    </FocusManagerProvider>
+    <ColorsProvider>{children}</ColorsProvider>
   );
 
   beforeEach(() => {

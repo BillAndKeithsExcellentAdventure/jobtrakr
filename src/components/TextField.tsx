@@ -5,10 +5,6 @@ import {
   Ref,
   useImperativeHandle,
   useRef,
-  useId,
-  useEffect,
-  useContext,
-  useCallback,
 } from 'react';
 import {
   ImageStyle,
@@ -21,7 +17,6 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Text, TextProps, View } from './Themed';
-import { FocusManagerContext } from '@/src/hooks/useFocusManager';
 
 export interface TextFieldAccessoryProps {
   style: StyleProp<ViewStyle | TextStyle | ImageStyle>;
@@ -80,12 +75,6 @@ export interface TextFieldProps extends Omit<TextInputProps, 'ref'> {
    * Note: It is a good idea to memoize this.
    */
   LeftAccessory?: ComponentType<TextFieldAccessoryProps>;
-  /**
-   * Optional custom ID for FocusManager registration.
-   * When provided, the field's current value can be retrieved via
-   * focusManager.getFieldValue(focusManagerId) without waiting for blur.
-   */
-  focusManagerId?: string;
 }
 
 /**
@@ -107,29 +96,11 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
     style: $inputStyleOverride,
     containerStyle: $containerStyleOverride,
     inputWrapperStyle: $inputWrapperStyleOverride,
-    focusManagerId,
     ...TextInputProps
   } = props;
   const input = useRef<TextInput>(null);
-  const autoFieldId = useId();
-  // Use custom focusManagerId if provided, otherwise use auto-generated ID
-  const fieldId = focusManagerId ?? autoFieldId;
-
-  // Try to get FocusManager context, but don't require it
-  const focusManager = useContext(FocusManagerContext);
 
   const disabled = TextInputProps.editable === false || status === 'disabled';
-
-  // Store the current input value in a ref for stable access in callbacks
-  const inputValueRef = useRef<string>(typeof TextInputProps.value === 'string' ? TextInputProps.value : '');
-  // Update the ref whenever value changes
-  if (typeof TextInputProps.value === 'string') {
-    inputValueRef.current = TextInputProps.value;
-  }
-
-  const getValueFromInput = useCallback(() => {
-    return inputValueRef.current;
-  }, []);
 
   const placeholderContent = placeholder;
 
@@ -166,28 +137,6 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
     status === 'error' && { color: colors.error },
     HelperTextProps?.style,
   ];
-
-  // Register with FocusManager - includes getCurrentValue callback for accessing input value
-  // without waiting for blur events
-  useEffect(() => {
-    if (focusManager && !disabled) {
-      focusManager.registerField(
-        fieldId,
-        () => {
-          // Call onBlur handler directly if provided to ensure blur logic executes
-          // Calling input.current?.blur() doesn't reliably trigger onBlur in React Native
-          if (TextInputProps.onBlur) {
-            TextInputProps.onBlur({} as any);
-          }
-          input.current?.blur();
-        },
-        getValueFromInput,
-      );
-      return () => {
-        focusManager.unregisterField(fieldId);
-      };
-    }
-  }, [fieldId, focusManager, disabled, getValueFromInput, TextInputProps]);
 
   function focusInput() {
     if (disabled) return;

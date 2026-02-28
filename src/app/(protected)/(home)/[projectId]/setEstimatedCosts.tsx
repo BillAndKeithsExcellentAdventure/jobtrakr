@@ -8,7 +8,6 @@ import { Text, TextInput, View } from '@/src/components/Themed';
 import { useKeyboardGradualAnimation } from '@/src/components/useKeyboardGradualAnimation';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { ColorSchemeColors, useColors } from '@/src/context/ColorsContext';
-import { useFocusManager } from '@/src/hooks/useFocusManager';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import { WorkCategoryData, WorkItemData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
@@ -34,7 +33,6 @@ const SetEstimatedCostsPage = () => {
     categoryId?: string;
   }>();
 
-  const focusManager = useFocusManager();
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
 

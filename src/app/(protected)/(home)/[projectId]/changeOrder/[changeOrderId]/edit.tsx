@@ -73,7 +73,6 @@ const EditChangeOrder = () => {
               value={changeOrder.title}
               onChangeText={(text) => setChangeOrder({ ...changeOrder, title: text })}
               onBlur={handleSubmit}
-              focusManagerId="TITLE"
             />
             <TextField
               containerStyle={styles.inputContainer}
@@ -84,7 +83,6 @@ const EditChangeOrder = () => {
               onChangeText={(text) => setChangeOrder({ ...changeOrder, description: text })}
               multiline={true}
               numberOfLines={4}
-              focusManagerId="DESCRIPTION"
               onBlur={handleSubmit}
             />
             <NumericInputField
