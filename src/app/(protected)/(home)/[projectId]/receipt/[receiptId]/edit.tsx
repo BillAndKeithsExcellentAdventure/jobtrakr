@@ -7,7 +7,6 @@ import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
-import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
@@ -226,9 +225,9 @@ const EditReceiptDetailsPage = () => {
 
   const receiptAmount = receipt.amount ?? 0;
 
-  const handleBackPress = useAutoSaveNavigation(() => {
+  const handleBackPress = () => {
     router.back();
-  });
+  };
 
   return (
     <>

@@ -3,7 +3,7 @@
  */
 import React from 'react';
 import { renderHook, act } from '@testing-library/react-native';
-import { FocusManagerProvider, useFocusManager, useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
+import { FocusManagerProvider, useFocusManager } from '@/src/hooks/useFocusManager';
 
 describe('useFocusManager', () => {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -129,36 +129,5 @@ describe('useFocusManager', () => {
 
     expect(blur1).toHaveBeenCalledTimes(1);
     expect(blur2).not.toHaveBeenCalled();
-  });
-});
-
-describe('useAutoSaveNavigation', () => {
-  const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <FocusManagerProvider>{children}</FocusManagerProvider>
-  );
-
-  it('should call onNavigateBack', async () => {
-    const onNavigateBack = jest.fn();
-
-    const { result } = renderHook(() => useAutoSaveNavigation(onNavigateBack), { wrapper });
-
-    await act(async () => {
-      await result.current();
-    });
-
-    expect(onNavigateBack).toHaveBeenCalled();
-  });
-
-  it('should still navigate even without FocusManagerProvider', async () => {
-    const onNavigateBack = jest.fn();
-
-    // Render without wrapper (no FocusManagerProvider)
-    const { result } = renderHook(() => useAutoSaveNavigation(onNavigateBack));
-
-    await act(async () => {
-      await result.current();
-    });
-
-    expect(onNavigateBack).toHaveBeenCalled();
   });
 });

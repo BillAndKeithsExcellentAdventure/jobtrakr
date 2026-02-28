@@ -5,7 +5,6 @@ import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
-import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { WorkItemDataCodeCompareAsNumber } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
@@ -187,9 +186,9 @@ const EditLineItemPage = () => {
     }
   }, [pickedCategoryOption, projectWorkItems, allAvailableCostItemOptions]);
 
-  const handleBackPress = useAutoSaveNavigation(() => {
+  const handleBackPress = () => {
     router.back();
-  });
+  };
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

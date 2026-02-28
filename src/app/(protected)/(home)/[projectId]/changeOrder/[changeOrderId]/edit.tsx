@@ -3,7 +3,6 @@ import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton'
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import {
   ChangeOrder,
   useAllRows,
@@ -41,9 +40,9 @@ const EditChangeOrder = () => {
     }
   }, [changeOrder, changeOrderId, updateChangeOrder]);
 
-  const handleBackPress = useAutoSaveNavigation(() => {
+  const handleBackPress = () => {
     router.back();
-  });
+  };
 
   const handleQuotedPriceChange = (value: number) => {
     if (changeOrder) {

@@ -68,22 +68,3 @@ export const useFocusManager = () => {
   }
   return context;
 };
-
-/**
- * Hook for components that need auto-save navigation behavior
- * Returns a function that should be called when navigation back is requested
- */
-export const useAutoSaveNavigation = (onNavigateBack: () => void) => {
-  const context = useContext(FocusManagerContext);
-
-  const handleBackPress = useCallback(async () => {
-    if (context) {
-      // If FocusManager is available, blur all fields first
-      await context.blurAllFields();
-    }
-    // Navigate back after blur is complete
-    onNavigateBack();
-  }, [context, onNavigateBack]);
-
-  return handleBackPress;
-};
