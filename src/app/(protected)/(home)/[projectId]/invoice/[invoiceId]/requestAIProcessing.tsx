@@ -22,6 +22,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { replace } from 'expo-router/build/global-state/routing';
 
 const processAIProcessing = async (
   imageId: string,
@@ -98,10 +99,12 @@ const RequestAIProcessingPage = () => {
       }
 
       const summary = {
+        invoiceId: replaceNonPrintable(result.response.InvoiceId.value ?? undefined),
         vendor: replaceNonPrintable(result.response.VendorName.value),
-        receiptDate: Date.parse(result.response.InvoiceDate.value),
+        invoiceDate: Date.parse(result.response.InvoiceDate.value),
         totalAmount: Number.parseFloat(result.response.Total.value),
         totalTax: Number.parseFloat(result.response.TotalTax.value),
+        terms: replaceNonPrintable(result.response.Terms.value ?? undefined),
       };
 
       if (Array.isArray(result.response.Items) && result.response.Items.length > 0) {
@@ -282,10 +285,12 @@ const RequestAIProcessingPage = () => {
 
   // Handler for saving edited summary
   const handleSaveInvoiceSummary = (updatedSummary: {
+    invoiceId?: string;
     vendor: string;
     totalAmount: number;
     totalTax: number;
-    receiptDate: number;
+    invoiceDate: number;
+    terms?: string;
   }) => {
     setInvoiceSummary(updatedSummary);
   };
@@ -297,7 +302,7 @@ const RequestAIProcessingPage = () => {
     const updatedInvoice = {
       ...invoice,
       amount: invoiceSummary.totalAmount,
-      invoiceDate: invoiceSummary.receiptDate,
+      invoiceDate: invoiceSummary.invoiceDate,
       vendor: invoiceSummary.vendor,
     };
     // Proceed with saving cost items
