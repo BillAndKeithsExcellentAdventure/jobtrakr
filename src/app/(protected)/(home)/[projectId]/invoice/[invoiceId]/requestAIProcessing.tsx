@@ -98,8 +98,8 @@ const RequestAIProcessingPage = () => {
       }
 
       const summary = {
-        vendor: replaceNonPrintable(result.response.MerchantName.value),
-        receiptDate: Date.parse(result.response.TransactionDate.value),
+        vendor: replaceNonPrintable(result.response.VendorName.value),
+        receiptDate: Date.parse(result.response.InvoiceDate.value),
         totalAmount: Number.parseFloat(result.response.Total.value),
         totalTax: Number.parseFloat(result.response.TotalTax.value),
       };
