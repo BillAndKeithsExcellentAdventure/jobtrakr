@@ -102,33 +102,6 @@ export const NumericInput = forwardRef<NumericInputHandle, NumericInputProps>(fu
 
   const isFocusedRef = useRef(false);
   const lastPropValue = useRef<number | null>(value);
-  const prevItemId = useRef<string | undefined>(itemId);
-
-  // When itemId changes (but not on initial mount), mark selection as pending.
-  // The actual setSelection is deferred to the text-change effect below so it
-  // runs only after the new text has been committed to the input.
-  useEffect(() => {
-    if (prevItemId.current === itemId || !selectOnFocus) return;
-    prevItemId.current = itemId;
-    const frameId = requestAnimationFrame(() => {
-      try {
-        inputRef.current?.setSelection(0, textRef.current.length);
-      } catch {}
-    });
-    return () => cancelAnimationFrame(frameId);
-  }, [itemId, selectOnFocus]);
-
-  // Apply pending select-all after the text state (and therefore the input's
-  // displayed value) has been updated.
-  useEffect(() => {
-    if (!selectOnFocus) return;
-    const frameId = requestAnimationFrame(() => {
-      try {
-        inputRef.current?.setSelection(0, textRef.current.length);
-      } catch {}
-    });
-    return () => cancelAnimationFrame(frameId);
-  }, [text, selectOnFocus]);
 
   useImperativeHandle(ref, () => ({
     focus: (selectAll?: boolean) => {
@@ -165,7 +138,12 @@ export const NumericInput = forwardRef<NumericInputHandle, NumericInputProps>(fu
     }
 
     if (value !== null && value !== undefined) {
-      setText(String(value));
+      if (maxDecimals !== undefined && value !== null) {
+        const formatted = value.toFixed(maxDecimals);
+        setText(formatted);
+      } else {
+        setText(String(value));
+      }
     } else {
       setText('');
     }
