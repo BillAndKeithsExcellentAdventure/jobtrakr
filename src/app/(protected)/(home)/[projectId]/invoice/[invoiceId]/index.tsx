@@ -18,7 +18,7 @@ import { formatCurrency } from '@/src/utils/formatters';
 import { addBill, updateBill, AddBillRequest, UpdateBillRequest } from '@/src/utils/quickbooksAPI';
 import { getBillSyncHash } from '@/src/utils/quickbooksSyncHash';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { File } from 'expo-file-system';
@@ -68,6 +68,7 @@ const InvoiceDetailsPage = () => {
     accountingId: '',
     markedComplete: false,
     paymentAccountId: '',
+    paymentStatus: '',
     billId: '',
     qbSyncHash: '',
   });

@@ -72,6 +72,7 @@ export type InvoiceData = {
   vendor: string; // Vendor name for display purposes when not connected to QuickBooks
   vendorId: string; // QuickBooks Vendor ID
   paymentAccountId: string; // QuickBooks Account ID
+  paymentStatus: string; // 'pending' | 'paid'
   description: string;
   amount: number;
   invoiceDate: number;

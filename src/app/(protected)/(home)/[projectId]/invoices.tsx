@@ -20,11 +20,14 @@ import {
   useCostUpdater,
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
+  useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { fetchPaidBills } from '@/src/utils/quickbooksAPI';
+import { useNetwork } from '@/src/context/NetworkContext';
 
 const ProjectInvoicesPage = () => {
   const router = useRouter();
@@ -58,8 +61,40 @@ const ProjectInvoicesPage = () => {
   const listRef = useRef<any>(null);
   const previousInvoiceCount = useRef(0);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
+  const { isConnectedToQuickBooks } = useNetwork();
+  const { orgId, userId, getToken } = auth;
 
   useCostUpdater(projectId);
+
+  // Keep a ref to allInvoices so the mount effect can access the latest value
+  const allProjectInvoicesRef = useRef(allInvoices);
+  useEffect(() => {
+    allProjectInvoicesRef.current = allInvoices;
+  }, [allInvoices]);
+
+  // On mount, fetch paid bill statuses from QuickBooks and mark matching invoices as paid
+  useEffect(() => {
+    if (!orgId || !userId || !isConnectedToQuickBooks) return;
+    let active = true;
+
+    fetchPaidBills(orgId, userId, projectId, getToken)
+      .then((paidBills) => {
+        if (!active) return;
+        const paidBillIds = new Set(paidBills.filter((b) => b.isPaid).map((b) => b.billId));
+        allProjectInvoicesRef.current.forEach((inv) => {
+          if (inv.billId && paidBillIds.has(inv.billId) && inv.paymentStatus !== 'paid') {
+            updateInvoice(inv.id, { paymentStatus: 'paid' });
+          }
+        });
+      })
+      .catch((err) => console.log('[InvoiceDetails] fetchPaidBills failed:', err));
+
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
 
   // return ClassifiedInvoiceData array using allInvoices where fullyClassified is true if
   // all cost items for this invoice have a valid work item id
@@ -116,6 +151,7 @@ const ProjectInvoicesPage = () => {
           paymentAccountId: '',
           billId: '',
           qbSyncHash: '',
+          paymentStatus: 'pending',
         };
 
         //console.log('Adding a new Invoice.', newInvoice);

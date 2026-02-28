@@ -221,6 +221,16 @@ export interface BillPayment {
   PaymentType?: string;
 }
 
+export interface BillPaymentStatus {
+  billId: string;
+  isPaid: boolean;
+  paymentType: string | null;
+  paymentStatus: string | null;
+  totalAmount: number;
+  paymentTotal: number;
+  updateDate: string;
+}
+
 // ---------------------------------------------------------------------------
 // Receipt (Purchase) types
 // ---------------------------------------------------------------------------
@@ -694,6 +704,39 @@ export async function payBill(
   }
 
   return data.data?.BillPayment || ({ Id: '', TotalAmt: 0 } as BillPayment);
+}
+
+/**
+ * Fetch the payment status for all bills associated with a project.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param projectId - The project ID to check bills for
+ * @param getToken - Function to get the authentication token
+ * @returns Array of bill payment statuses for all bills in the project
+ */
+export async function fetchPaidBills(
+  orgId: string,
+  userId: string,
+  projectId: string,
+  getToken: () => Promise<string | null>,
+): Promise<BillPaymentStatus[]> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/areBillsPaid?orgId=${orgId}&userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ orgId, projectId }),
+  });
+
+  const data: ApiDataResponse<BillPaymentStatus[]> = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to fetch bill payment statuses');
+  }
+
+  return data.data || [];
 }
 
 // ---------------------------------------------------------------------------

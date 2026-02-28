@@ -48,7 +48,7 @@ const SwipeableInvoiceItem = React.memo<{
   const store = useUploadSyncStore();
   const { isConnectedToQuickBooks } = useNetwork();
   const textColor = item.fullyClassified ? colors.text : colors.errorText;
-
+  const isPaid = item.paymentStatus === 'paid';
   const allInvoiceItems = useMemo(
     () => allInvoiceLineItems.filter((lineItem) => lineItem.parentId === item.id),
     [allInvoiceLineItems, item.id],
@@ -168,8 +168,10 @@ const SwipeableInvoiceItem = React.memo<{
             ) : (
               <>
                 <View style={{ flex: 1, justifyContent: 'center', paddingLeft: 10 }}>
-                  <View style={{ flexDirection: 'row', gap: 20 }}>
+                  <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
                     {item.billId?.length > 0 && <SvgImage fileName="qb-logo" width={20} height={20} />}
+                    {isPaid && <MaterialIcons name="paid" size={24} color={colors.buttonBlue} />}
+
                     {item.accountingId?.length > 0 && (
                       <Text style={{ color: textColor }}>{`${item.accountingId}`}</Text>
                     )}
