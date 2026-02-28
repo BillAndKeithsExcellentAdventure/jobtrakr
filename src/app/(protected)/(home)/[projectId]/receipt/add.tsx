@@ -1,7 +1,7 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField } from '@/src/components/NumericInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { Switch } from '@/src/components/Switch';
@@ -596,13 +596,14 @@ const AddReceiptPage = () => {
             />
           )}
 
-          <NumberInputField
-            style={{ ...styles.inputContainer, marginTop: 0, paddingLeft: 10 }}
+          <NumericInputField
+            containerStyle={{ marginTop: 0 }}
+            inputStyle={{ paddingHorizontal: 10 }}
             labelStyle={{ marginBottom: 2 }}
             placeholder="Amount"
             label="Amount"
             value={projectReceipt.amount}
-            onChange={handleAmountChange}
+            onChangeNumber={(value) => handleAmountChange(value ?? 0)}
           />
           <TextField
             containerStyle={styles.inputContainer}

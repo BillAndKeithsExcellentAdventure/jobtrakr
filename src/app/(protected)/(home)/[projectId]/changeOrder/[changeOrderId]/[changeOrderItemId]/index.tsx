@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import CostItemPickerModal from '@/src/components/CostItemPickerModal';
 import { TextField } from '@/src/components/TextField';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField } from '@/src/components/NumericInputField';
 import { useColors } from '@/src/context/ColorsContext';
 import {
   ChangeOrderItem,
@@ -153,11 +153,10 @@ const EditChangeOrderItem = () => {
             label="Item Description"
             numberOfLines={2}
           />
-          <NumberInputField
+          <NumericInputField
             label="Amount"
-            style={styles.numberInput}
             value={amount}
-            onChange={(value) => setAmount(value)}
+            onChangeNumber={(value) => setAmount(value ?? 0)}
             placeholder="Amount"
           />
           <View>

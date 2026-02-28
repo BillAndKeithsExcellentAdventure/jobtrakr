@@ -1,9 +1,8 @@
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField } from '@/src/components/NumericInputField';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import {
   ChangeOrder,
   useAllRows,
@@ -41,9 +40,9 @@ const EditChangeOrder = () => {
     }
   }, [changeOrder, changeOrderId, updateChangeOrder]);
 
-  const handleBackPress = useAutoSaveNavigation(() => {
+  const handleBackPress = () => {
     router.back();
-  });
+  };
 
   const handleQuotedPriceChange = (value: number) => {
     if (changeOrder) {
@@ -74,7 +73,6 @@ const EditChangeOrder = () => {
               value={changeOrder.title}
               onChangeText={(text) => setChangeOrder({ ...changeOrder, title: text })}
               onBlur={handleSubmit}
-              focusManagerId="TITLE"
             />
             <TextField
               containerStyle={styles.inputContainer}
@@ -85,17 +83,15 @@ const EditChangeOrder = () => {
               onChangeText={(text) => setChangeOrder({ ...changeOrder, description: text })}
               multiline={true}
               numberOfLines={4}
-              focusManagerId="DESCRIPTION"
               onBlur={handleSubmit}
             />
-            <NumberInputField
+            <NumericInputField
               label="Customer Quoted Price"
-              style={{ ...styles.input, paddingLeft: 10 }}
+              inputStyle={{ paddingHorizontal: 10 }}
               labelStyle={{ marginBottom: 0 }}
               value={changeOrder.quotedPrice ?? 0}
-              onChange={handleQuotedPriceChange}
+              onChangeNumber={(value) => handleQuotedPriceChange(value ?? 0)}
               placeholder="Customer Quoted Price"
-              focusManagerId="CUSTOMER_QUOTED_PRICE"
             />
           </View>
         )}

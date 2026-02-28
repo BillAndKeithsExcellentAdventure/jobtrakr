@@ -2,7 +2,7 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
 import CostItemPickerModal from '@/src/components/CostItemPickerModal';
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField } from '@/src/components/NumericInputField';
 import { OptionEntry } from '@/src/components/OptionList';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import SwipeableChangeOrderItem from '@/src/components/SwipeableChangeOrderItem';
@@ -595,14 +595,13 @@ const DefineChangeOrderScreen = () => {
               placeholder="Item Description"
               label="Item Description"
             />
-            <NumberInputField
+            <NumericInputField
               label="Amount"
-              style={styles.numberInput}
               value={newChangeOrderItem.amount}
-              onChange={(value) =>
+              onChangeNumber={(value) =>
                 setNewChangeOrderItem((prev) => ({
                   ...prev,
-                  amount: value,
+                  amount: value ?? 0,
                 }))
               }
               placeholder="Amount"

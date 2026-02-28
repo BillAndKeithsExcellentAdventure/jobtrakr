@@ -9,12 +9,8 @@ import {
   useImperativeHandle,
   useRef,
   useState,
-  useId,
-  useContext,
   useCallback,
 } from 'react';
-import { FocusManagerContext } from '@/src/hooks/useFocusManager';
-
 /* -------------------------------------------
  Standard Supporting React State 
  -------------------------------------------
@@ -67,12 +63,6 @@ interface OptionPickerItemProps {
   editable?: boolean;
   containerStyle?: StyleProp<ViewStyle>;
   inputStyle?: StyleProp<ViewStyle>;
-  /**
-   * Optional custom ID for FocusManager registration.
-   * When provided, the field's current value can be retrieved via
-   * focusManager.getFieldValue(focusManagerId) without waiting for blur.
-   */
-  focusManagerId?: string;
 }
 
 export type OptionPickerItemHandle = {
@@ -90,17 +80,10 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
       editable = true,
       containerStyle,
       inputStyle,
-      focusManagerId,
     },
     ref,
   ) => {
     const inputRef = useRef<TextInput | null>(null);
-    const autoFieldId = useId();
-    // Use custom focusManagerId if provided, otherwise use auto-generated ID
-    const fieldId = focusManagerId ?? autoFieldId;
-
-    // Try to get FocusManager context, but don't require it
-    const focusManager = useContext(FocusManagerContext);
 
     const [labelText, setLabelText] = useState<string | undefined>();
 
@@ -112,10 +95,6 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
     const labelTextRef = useRef<string>(labelText ?? '');
     labelTextRef.current = labelText ?? '';
 
-    const getValueFromInput = useCallback(() => {
-      return labelTextRef.current;
-    }, []);
-
     const handleOnBlur = useCallback(() => {
       //console.log('OptionPickerItem handleOnBlur called');
       onOptionLabelChange?.(labelText ?? '');
@@ -126,26 +105,6 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
         handleOnBlur();
       },
     }));
-
-    // Register with FocusManager - includes getCurrentValue callback for accessing input value
-    // without waiting for blur events (only for editable mode)
-    useEffect(() => {
-      if (focusManager && editable) {
-        focusManager.registerField(
-          fieldId,
-          () => {
-            // Call handleOnBlur directly to ensure blur logic executes
-            // Calling inputRef.current?.blur() doesn't reliably trigger onBlur in React Native
-            handleOnBlur();
-            inputRef.current?.blur();
-          },
-          getValueFromInput,
-        );
-        return () => {
-          focusManager.unregisterField(fieldId);
-        };
-      }
-    }, [fieldId, focusManager, editable, handleOnBlur, getValueFromInput]);
 
     const iconColor = useThemeColor({ light: undefined, dark: undefined }, 'iconColor');
     const textDim = useThemeColor({ light: undefined, dark: undefined }, 'textDim');

@@ -1,6 +1,5 @@
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextInput, View } from '@/src/components/Themed';
-import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import {
   useTableValue,
   useUpdateRowCallback,
@@ -40,9 +39,9 @@ const EditProjectTemplate = () => {
     }
   }, [applyTemplateUpdates, newDescription, newName, router, templateId]);
 
-  const handleBackPress = useAutoSaveNavigation(() => {
+  const handleBackPress = () => {
     handleSave();
-  });
+  };
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

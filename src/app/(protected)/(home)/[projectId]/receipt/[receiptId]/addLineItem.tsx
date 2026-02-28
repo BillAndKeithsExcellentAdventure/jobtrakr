@@ -1,6 +1,6 @@
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField } from '@/src/components/NumericInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
@@ -136,14 +136,14 @@ const AddReceiptLineItemPage = () => {
         onCancel={() => router.back()}
         canSave={!!itemizedEntry.label && !!itemizedEntry.amount}
       >
-        <NumberInputField
-          style={{ ...styles.inputContainer, marginTop: 0 }}
+        <NumericInputField
+          containerStyle={{ ...styles.inputContainer, marginTop: 0 }}
           label="Amount"
           value={itemizedEntry.amount}
-          onChange={(value: number): void => {
+          onChangeNumber={(value: number | null): void => {
             setItemizedEntry((prevItem) => ({
               ...prevItem,
-              amount: value,
+              amount: value ?? 0,
             }));
           }}
         />

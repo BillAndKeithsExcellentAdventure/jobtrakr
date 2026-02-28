@@ -1,11 +1,10 @@
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField } from '@/src/components/NumericInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
-import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { WorkItemDataCodeCompareAsNumber } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
@@ -187,9 +186,9 @@ const EditLineItemPage = () => {
     }
   }, [pickedCategoryOption, projectWorkItems, allAvailableCostItemOptions]);
 
-  const handleBackPress = useAutoSaveNavigation(() => {
+  const handleBackPress = () => {
     router.back();
-  });
+  };
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -204,16 +203,17 @@ const EditLineItemPage = () => {
         }}
       />
       <View style={styles.container}>
-        <NumberInputField
-          style={{ ...styles.inputContainer, paddingLeft: 10, marginTop: 0 }}
+        <NumericInputField
+          containerStyle={{ marginTop: 0 }}
+          inputStyle={{ paddingHorizontal: 10 }}
           labelStyle={{ marginBottom: 2 }}
           label="Amount"
           value={itemizedEntry.amount}
-          onChange={(value: number): void => {
+          onChangeNumber={(value: number | null): void => {
             isDirtyRef.current = true;
             const updatedEntry = {
               ...itemizedEntry,
-              amount: value,
+              amount: value ?? 0,
             };
             setItemizedEntry(updatedEntry);
             // autosave when change occurs with the updated entry

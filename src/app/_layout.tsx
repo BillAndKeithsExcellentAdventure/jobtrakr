@@ -3,7 +3,6 @@ import { useColorScheme } from '@/src/components/useColorScheme';
 import { Colors } from '@/src/constants/Colors';
 import { ColorsProvider } from '@/src/context/ColorsContext';
 import { NetworkProvider } from '@/src/context/NetworkContext';
-import { FocusManagerProvider } from '@/src/hooks/useFocusManager';
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -113,7 +112,6 @@ function RootLayoutNav() {
           <ClerkLoadingWrapper colorScheme={colorScheme ?? 'light'}>
             <KeyboardProvider>
               <ColorsProvider>
-                <FocusManagerProvider>
                   <SafeAreaProvider>
                     <GestureHandlerRootView>
                       <NetworkProvider>
@@ -140,7 +138,6 @@ function RootLayoutNav() {
                       </NetworkProvider>
                     </GestureHandlerRootView>
                   </SafeAreaProvider>
-                </FocusManagerProvider>
               </ColorsProvider>
             </KeyboardProvider>
           </ClerkLoadingWrapper>

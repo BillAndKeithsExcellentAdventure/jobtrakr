@@ -3,14 +3,12 @@ import { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { View } from '@/src/components/Themed';
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
-import { NumberInputField } from '@/src/components/NumberInputField';
-import { useFocusManager } from '@/src/hooks/useFocusManager';
+import { NumericInputField } from '@/src/components/NumericInputField';
 import { useProject, useUpdateProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { useColors } from '@/src/context/ColorsContext';
 
 export default function SetPriceQuoteModal() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
-  const focusManager = useFocusManager();
   const project = useProject(projectId);
   const updateProject = useUpdateProjectCallback();
   const colors = useColors();
@@ -24,13 +22,8 @@ export default function SetPriceQuoteModal() {
   }, [project]);
 
   const handleSave = () => {
-    const newValue = focusManager.getFieldValue<number>('quotedPrice') ?? 0;
-    updateProject(projectId, { quotedPrice: newValue });
+    updateProject(projectId, { quotedPrice: priceQuote ?? 0 });
     router.back();
-  };
-
-  const handleQuotedPriceChange = (value: number) => {
-    setPriceQuote(value);
   };
 
   return (
@@ -43,13 +36,12 @@ export default function SetPriceQuoteModal() {
       />
       <ModalScreenContainer title="Set Initial Quote" onSave={handleSave} onCancel={() => router.back()}>
         <View style={styles.container}>
-          <NumberInputField
+          <NumericInputField
             label="Customer Quoted Price"
-            focusManagerId="quotedPrice"
-            style={{ ...styles.input, backgroundColor: colors.background, borderColor: colors.border }}
+            inputStyle={{ backgroundColor: colors.background, borderColor: colors.border }}
             labelStyle={{ backgroundColor: colors.background, marginBottom: 0 }}
             value={priceQuote ?? 0}
-            onChange={(value) => handleQuotedPriceChange(value)}
+            onChangeNumber={(value) => setPriceQuote(value ?? 0)}
             placeholder="Customer Quoted Price"
           />
         </View>

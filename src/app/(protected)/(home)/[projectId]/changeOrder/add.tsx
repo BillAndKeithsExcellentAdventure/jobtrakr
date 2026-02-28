@@ -19,7 +19,7 @@ import { ProposedChangeOrderItem } from '@/src/models/types';
 import SwipeableProposedChangeOrderItem from '@/src/components/SwipeableProposedChangeOrderItem';
 import { ModalScreenContainerWithList } from '@/src/components/ModalScreenContainerWithList';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField } from '@/src/components/NumericInputField';
 
 export default function AddChangeOrder() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
@@ -191,12 +191,12 @@ export default function AddChangeOrder() {
               numberOfLines={4}
               multiline
             />
-            <NumberInputField
+            <NumericInputField
               label="Customer Quoted Price"
-              style={{ ...styles.input, backgroundColor: colors.background, borderColor: colors.border }}
+              inputStyle={{ backgroundColor: colors.background, borderColor: colors.border }}
               labelStyle={{ backgroundColor: colors.listBackground, marginBottom: 0 }}
               value={newChangeOrder.quotedPrice}
-              onChange={(value) => handleQuotedPriceChange(value)}
+              onChangeNumber={(value) => handleQuotedPriceChange(value ?? 0)}
               placeholder="Customer Quoted Price"
             />
           </View>

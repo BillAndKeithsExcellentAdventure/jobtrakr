@@ -8,7 +8,6 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import { ColorsProvider } from '@/src/context/ColorsContext';
-import { FocusManagerProvider } from '@/src/hooks/useFocusManager';
 import { Text } from 'react-native';
 
 jest.mock('react-native-keyboard-controller', () => ({
@@ -32,9 +31,7 @@ jest.mock('react-native-safe-area-context', () => {
 });
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <FocusManagerProvider>
-    <ColorsProvider>{children}</ColorsProvider>
-  </FocusManagerProvider>
+  <ColorsProvider>{children}</ColorsProvider>
 );
 
 describe('ModalScreenContainer', () => {

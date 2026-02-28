@@ -1,5 +1,5 @@
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
-import { NumberInputField } from '@/src/components/NumberInputField';
+import { NumericInputField } from '@/src/components/NumericInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
@@ -7,7 +7,6 @@ import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
-import { useAutoSaveNavigation } from '@/src/hooks/useFocusManager';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
@@ -226,9 +225,9 @@ const EditReceiptDetailsPage = () => {
 
   const receiptAmount = receipt.amount ?? 0;
 
-  const handleBackPress = useAutoSaveNavigation(() => {
+  const handleBackPress = () => {
     router.back();
-  });
+  };
 
   return (
     <>
@@ -266,12 +265,13 @@ const EditReceiptDetailsPage = () => {
               />
             </View>
 
-            <NumberInputField
-              style={{ ...styles.inputContainer, paddingLeft: 10, marginTop: 0 }}
+            <NumericInputField
+              containerStyle={{ marginTop: 0 }}
+              inputStyle={{ paddingHorizontal: 10 }}
               labelStyle={{ marginBottom: 2 }}
               label="Amount"
               value={receiptAmount}
-              onChange={handleAmountChange}
+              onChangeNumber={(value) => handleAmountChange(value ?? 0)}
             />
             {vendors && vendors.length ? (
               <OptionPickerItem
