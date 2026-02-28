@@ -99,12 +99,12 @@ const RequestAIProcessingPage = () => {
       }
 
       const summary = {
-        invoiceId: replaceNonPrintable(result.response.InvoiceId.value ?? undefined),
-        vendor: replaceNonPrintable(result.response.VendorName.value),
-        invoiceDate: Date.parse(result.response.InvoiceDate.value),
-        totalAmount: Number.parseFloat(result.response.Total.value),
-        totalTax: Number.parseFloat(result.response.TotalTax.value),
-        terms: replaceNonPrintable(result.response.Terms.value ?? undefined),
+        invoiceId: replaceNonPrintable(result.response?.InvoiceId?.value ?? ''),
+        vendor: replaceNonPrintable(result.response?.VendorName?.value ?? ''),
+        invoiceDate: Date.parse(result.response?.InvoiceDate?.value ?? ''),
+        totalAmount: Number.parseFloat(result.response?.Total?.value ?? '0'),
+        totalTax: Number.parseFloat(result.response?.TotalTax?.value ?? '0'),
+        terms: replaceNonPrintable(result.response?.Terms?.value ?? ''),
       };
 
       if (Array.isArray(result.response.Items) && result.response.Items.length > 0) {
