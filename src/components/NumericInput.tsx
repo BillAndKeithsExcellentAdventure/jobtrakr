@@ -165,12 +165,7 @@ export const NumericInput = forwardRef<NumericInputHandle, NumericInputProps>(fu
     }
 
     if (value !== null && value !== undefined) {
-      if (decimals !== undefined && value !== null) {
-        const formatted = value.toFixed(decimals);
-        setText(formatted);
-      } else {
-        setText(String(value));
-      }
+      setText(String(value));
     } else {
       setText('');
     }
