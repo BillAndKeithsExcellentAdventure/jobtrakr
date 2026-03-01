@@ -195,7 +195,8 @@ const AddInvoicePage = () => {
           imageId: projectInvoice.imageId,
           qbBillData: {
             vendorRef: vendorQbId ?? '',
-            dueDate: formatDate(invoiceToAdd.dueDate),
+            invoiceDate: new Date(projectInvoice.invoiceDate).toISOString().split('T')[0],
+            dueDate: new Date(projectInvoice.dueDate).toISOString().split('T')[0],
             lineItems: [
               {
                 description: invoiceToAdd.description,
@@ -401,6 +402,25 @@ const AddInvoicePage = () => {
           />
 
           <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
+            <Text txtSize="formLabel" text="Bill Date" style={styles.inputLabel} />
+            <TextInput
+              readOnly={true}
+              style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+              placeholder="Bill Date"
+              onPressIn={showDatePicker}
+              value={formatDate(projectInvoice.invoiceDate)}
+            />
+          </TouchableOpacity>
+          <DateTimePickerModal
+            style={{ alignSelf: 'stretch' }}
+            date={projectInvoice.invoiceDate ? new Date(projectInvoice.invoiceDate) : defaultDate}
+            isVisible={datePickerVisible}
+            mode="date"
+            onConfirm={handleDateConfirm}
+            onCancel={hideDatePicker}
+          />
+
+          <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
             <Text txtSize="formLabel" text="Due Date" style={styles.inputLabel} />
             <TextInput
               readOnly={true}
@@ -422,6 +442,7 @@ const AddInvoicePage = () => {
           <OptionPickerItem
             containerStyle={styles.inputContainer}
             optionLabel={projectInvoice.vendor}
+            textColor={projectInvoice.vendorId ? colors.text : colors.error}
             label="Vendor/Merchant"
             placeholder="Vendor/Merchant"
             editable={false}

@@ -144,9 +144,29 @@ const EditInvoiceDetailsPage = () => {
               }));
             }}
           />
-          <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border }}>
+          <View style={{ paddingBottom: 10 }}>
             <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
-              <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
+              <Text txtSize="formLabel" text="Bill Date" style={styles.inputLabel} />
+              <TextInput
+                readOnly={true}
+                style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                placeholder="Bill Date"
+                onPressIn={showDatePicker}
+                value={formatDate(invoice.invoiceDate)}
+              />
+            </TouchableOpacity>
+            <DateTimePickerModal
+              style={{ alignSelf: 'stretch' }}
+              date={invoice.invoiceDate ? new Date(invoice.invoiceDate) : defaultDate}
+              isVisible={datePickerVisible}
+              mode="date"
+              onConfirm={handleDateConfirm}
+              onCancel={hideDatePicker}
+            />
+          </View>
+          <View style={{ paddingBottom: 10 }}>
+            <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
+              <Text txtSize="formLabel" text="Due Date" style={styles.inputLabel} />
               <TextInput
                 readOnly={true}
                 style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
@@ -179,6 +199,7 @@ const EditInvoiceDetailsPage = () => {
           />
           <OptionPickerItem
             containerStyle={styles.inputContainer}
+            textColor={invoice.vendorId ? colors.text : colors.error}
             optionLabel={invoice.vendor}
             editable={false}
             placeholder="Vendor/Merchant"

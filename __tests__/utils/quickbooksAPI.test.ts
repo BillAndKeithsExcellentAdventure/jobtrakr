@@ -8,12 +8,7 @@ import {
   addProjectToQuickBooks,
   updateProjectInQuickBooks,
 } from '@/src/utils/quickbooksAPI';
-import {
-  mockApiSuccess,
-  mockApiError,
-  resetApiMocks,
-  createMockGetToken,
-} from '@/__mocks__/apiMocks';
+import { mockApiSuccess, mockApiError, resetApiMocks, createMockGetToken } from '@/__mocks__/apiMocks';
 
 describe('quickbooksAPI', () => {
   beforeEach(() => {
@@ -70,7 +65,7 @@ describe('quickbooksAPI', () => {
             Authorization: 'Bearer test-token',
           }),
           body: JSON.stringify(mockReceiptData),
-        })
+        }),
       );
       expect(result).toEqual(mockResponse);
     });
@@ -109,7 +104,7 @@ describe('quickbooksAPI', () => {
       mockApiSuccess(mockResponse);
 
       await expect(addReceiptToQuickBooks(mockReceiptData, mockGetToken)).rejects.toThrow(
-        'Failed to add receipt'
+        'Failed to add receipt',
       );
     });
 
@@ -250,7 +245,9 @@ describe('quickbooksAPI', () => {
       const mockGetToken = createMockGetToken('test-token');
       mockApiError(500, 'Internal Server Error');
 
-      await expect(addProjectToQuickBooks('org-456', 'user-123', mockProject, mockGetToken)).rejects.toThrow();
+      await expect(
+        addProjectToQuickBooks('org-456', 'user-123', mockProject, mockGetToken),
+      ).rejects.toThrow();
     });
   });
 
@@ -291,18 +288,23 @@ describe('quickbooksAPI', () => {
 
     it('should throw error when project not found', async () => {
       const mockGetToken = createMockGetToken('test-token');
-      mockApiSuccess({ success: false, message: 'Project not found in QuickBooks. Please create the project first.' });
+      mockApiSuccess({
+        success: false,
+        message: 'Project not found in QuickBooks. Please create the project first.',
+      });
 
-      await expect(updateProjectInQuickBooks('org-456', 'user-123', mockProject, mockGetToken)).rejects.toThrow(
-        'Project not found in QuickBooks. Please create the project first.',
-      );
+      await expect(
+        updateProjectInQuickBooks('org-456', 'user-123', mockProject, mockGetToken),
+      ).rejects.toThrow('Project not found in QuickBooks. Please create the project first.');
     });
 
     it('should handle network errors', async () => {
       const mockGetToken = createMockGetToken('test-token');
       mockApiError(500, 'Internal Server Error');
 
-      await expect(updateProjectInQuickBooks('org-456', 'user-123', mockProject, mockGetToken)).rejects.toThrow();
+      await expect(
+        updateProjectInQuickBooks('org-456', 'user-123', mockProject, mockGetToken),
+      ).rejects.toThrow();
     });
   });
 });

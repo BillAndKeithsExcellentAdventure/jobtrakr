@@ -141,6 +141,7 @@ export interface BillLineItem {
 
 export interface QBBillData {
   vendorRef: string;
+  invoiceDate?: string;
   dueDate?: string;
   docNumber?: string;
   privateNote?: string;

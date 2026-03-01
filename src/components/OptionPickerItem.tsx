@@ -3,14 +3,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleProp, StyleSheet, ViewStyle, Keyboard, TextInput } from 'react-native';
 import { useThemeColor, View } from './Themed';
 import { Pressable } from 'react-native-gesture-handler';
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-  useCallback,
-} from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useCallback } from 'react';
 /* -------------------------------------------
  Standard Supporting React State 
  -------------------------------------------
@@ -63,6 +56,7 @@ interface OptionPickerItemProps {
   editable?: boolean;
   containerStyle?: StyleProp<ViewStyle>;
   inputStyle?: StyleProp<ViewStyle>;
+  textColor?: string;
 }
 
 export type OptionPickerItemHandle = {
@@ -80,6 +74,7 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
       editable = true,
       containerStyle,
       inputStyle,
+      textColor,
     },
     ref,
   ) => {
@@ -109,7 +104,7 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
     const iconColor = useThemeColor({ light: undefined, dark: undefined }, 'iconColor');
     const textDim = useThemeColor({ light: undefined, dark: undefined }, 'textDim');
     const text = useThemeColor({ light: undefined, dark: undefined }, 'text');
-
+    const finalTextColor = textColor ?? text;
     const blurAndOpen = () => {
       const focused = TextInput.State?.currentlyFocusedInput ? TextInput.State.currentlyFocusedInput() : null;
       if (focused && TextInput.State?.blurTextInput) {
@@ -126,7 +121,7 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
           <View style={[styles.optionPickerRow, containerStyle]}>
             <View style={{ flex: 1, backgroundColor: 'transparent' }}>
               <TextField
-                style={[inputStyle, { color: text }]}
+                style={[inputStyle, { color: finalTextColor }]}
                 label={label}
                 placeholder={placeholder}
                 placeholderTextColor={textDim}
@@ -152,7 +147,7 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
         <View style={{ flex: 1 }}>
           <TextField
             ref={inputRef}
-            style={inputStyle}
+            style={[inputStyle, { color: finalTextColor }]}
             label={label}
             placeholder={placeholder}
             placeholderTextColor={textDim}

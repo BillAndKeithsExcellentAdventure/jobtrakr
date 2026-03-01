@@ -580,6 +580,7 @@ const AddReceiptPage = () => {
             <OptionPickerItem
               containerStyle={[styles.inputContainer, { marginBottom: 6 }]}
               optionLabel={projectReceipt.vendor}
+              textColor={projectReceipt.vendorId ? colors.text : colors.error}
               label="Vendor/Merchant"
               placeholder="Vendor/Merchant"
               editable={isConnectedToQuickBooks ? false : true}

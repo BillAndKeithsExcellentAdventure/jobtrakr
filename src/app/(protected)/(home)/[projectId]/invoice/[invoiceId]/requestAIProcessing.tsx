@@ -101,6 +101,7 @@ const RequestAIProcessingPage = () => {
       const summary = {
         invoiceId: replaceNonPrintable(result.response?.InvoiceId?.value ?? ''),
         vendor: replaceNonPrintable(result.response?.VendorName?.value ?? ''),
+        vendorId: replaceNonPrintable(result.response?.VendorId?.value ?? ''),
         invoiceDate: Date.parse(result.response?.InvoiceDate?.value ?? ''),
         totalAmount: Number.parseFloat(result.response?.Total?.value ?? '0'),
         totalTax: Number.parseFloat(result.response?.TotalTax?.value ?? '0'),
@@ -287,6 +288,7 @@ const RequestAIProcessingPage = () => {
   const handleSaveInvoiceSummary = (updatedSummary: {
     invoiceId?: string;
     vendor: string;
+    vendorId?: string;
     totalAmount: number;
     totalTax: number;
     invoiceDate: number;
@@ -304,6 +306,7 @@ const RequestAIProcessingPage = () => {
       amount: invoiceSummary.totalAmount,
       invoiceDate: invoiceSummary.invoiceDate,
       vendor: invoiceSummary.vendor,
+      vendorId: invoiceSummary.vendorId,
     };
     // Proceed with saving cost items
     const invoiceResult = updateInvoice(invoiceId, updatedInvoice);
