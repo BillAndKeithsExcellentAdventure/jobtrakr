@@ -83,6 +83,8 @@ const AddInvoicePage = () => {
     description: '',
     amount: 0,
     invoiceDate: defaultDate.getTime(),
+    dueDate: defaultDate.getTime(),
+    paymentStatus: 'pending',
     thumbnail: '',
     pictureDate: 0,
     imageId: '',
@@ -135,7 +137,7 @@ const AddInvoicePage = () => {
   const handleDateConfirm = useCallback((date: Date) => {
     setProjectInvoice((prevInvoice) => ({
       ...prevInvoice,
-      date,
+      dueDate: date.getTime(),
     }));
 
     hideDatePicker();
@@ -193,7 +195,7 @@ const AddInvoicePage = () => {
           imageId: projectInvoice.imageId,
           qbBillData: {
             vendorRef: vendorQbId ?? '',
-            dueDate: formatDate(invoiceToAdd.invoiceDate),
+            dueDate: formatDate(invoiceToAdd.dueDate),
             lineItems: [
               {
                 description: invoiceToAdd.description,
@@ -363,6 +365,8 @@ const AddInvoicePage = () => {
       description: '',
       amount: 0,
       invoiceDate: defaultDate.getTime(),
+      dueDate: defaultDate.getTime(),
+      paymentStatus: 'pending',
       thumbnail: '',
       pictureDate: 0,
       imageId: '',
@@ -403,12 +407,12 @@ const AddInvoicePage = () => {
               style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
               placeholder="Due Date"
               onPressIn={showDatePicker}
-              value={formatDate(projectInvoice.invoiceDate)}
+              value={formatDate(projectInvoice.dueDate)}
             />
           </TouchableOpacity>
           <DateTimePickerModal
             style={{ alignSelf: 'stretch' }}
-            date={projectInvoice.invoiceDate ? new Date(projectInvoice.invoiceDate) : defaultDate}
+            date={projectInvoice.dueDate ? new Date(projectInvoice.dueDate) : defaultDate}
             isVisible={datePickerVisible}
             mode="date"
             onConfirm={handleDateConfirm}
