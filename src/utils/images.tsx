@@ -14,6 +14,7 @@ import {
 import { API_BASE_URL } from '../constants/app-constants';
 import { useNetwork } from '../context/NetworkContext';
 import { createApiWithToken } from './apiWithToken';
+import { ImageIdAndType } from '../tbStores/projectDetails/ProjectDetailsStoreHooks';
 
 export type ImageResult = { status: 'Success' | 'Error'; id: string; uri?: string | undefined; msg: string };
 
@@ -403,7 +404,7 @@ const duplicateReceiptImage = async (
 const makePhotosPublic = async (
   userId: string,
   projectId: string,
-  imageIds: string[],
+  imageIds: ImageIdAndType[],
   getToken: () => Promise<string | null>,
 ): Promise<{ success: boolean; msg: string; inserted?: string[]; failed?: string[] }> => {
   try {
@@ -1084,7 +1085,7 @@ export const useMakePhotosPublicCallback = () => {
   const { isConnected, isInternetReachable } = useNetwork();
 
   return useCallback(
-    async (projectId: string, imageIds: string[]): Promise<{ success: boolean; msg: string }> => {
+    async (projectId: string, imageIds: ImageIdAndType[]): Promise<{ success: boolean; msg: string }> => {
       if (!userId) {
         return { success: false, msg: 'User ID not available' };
       }
