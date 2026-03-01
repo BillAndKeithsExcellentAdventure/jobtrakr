@@ -76,7 +76,6 @@ export type InvoiceData = {
   description: string;
   amount: number;
   invoiceDate: number;
-  dueDate: number;
   invoiceNumber: string;
   thumbnail: string;
   pictureDate: number;
@@ -98,6 +97,11 @@ export type WorkItemCostEntry = {
   documentationType: 'receipt' | 'invoice';
   projectId?: string; // Project ID - this is needed if cost entry is associated with another project
 };
+
+export interface ImageIdAndType {
+  imageId: string;
+  mediaType: 'photo' | 'video';
+}
 
 export interface MediaEntryData {
   id: string;

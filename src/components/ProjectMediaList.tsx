@@ -3,6 +3,7 @@ import Base64Image from '@/src/components/Base64Image';
 import { Text } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import {
+  ImageIdAndType,
   MediaEntryData,
   useDeleteRowCallback,
   useUpdateRowCallback,
@@ -198,7 +199,7 @@ export const ProjectMediaList = ({
   }, [removePhotoData, mediaItems, projectId, orgId, deleteMediaCallback, store, mediaToUpload]);
 
   const updateMediaItemsOnServer = useCallback(
-    async (publicImageIds: string[]) => {
+    async (publicImageIds: ImageIdAndType[]) => {
       if (publicImageIds.length === 0) {
         setPublicStateForSelectedMedia(projectId, []);
       } else {
@@ -212,12 +213,12 @@ export const ProjectMediaList = ({
     const selectedIds = new Set(mediaItems.filter((media) => media.isSelected).map((media) => media.id));
     if (selectedIds.size === 0) return;
 
-    const publicImageIds: string[] = [];
+    const publicImageIds: ImageIdAndType[] = [];
 
     // First, collect all non-selected public items
     mediaItems.forEach((item) => {
       if (!selectedIds.has(item.id) && item.isPublic && item.imageId) {
-        publicImageIds.push(item.imageId);
+        publicImageIds.push({ imageId: item.imageId, mediaType: item.mediaType });
       }
     });
 
@@ -230,7 +231,7 @@ export const ProjectMediaList = ({
 
       // If the new public state is true, add to publicImageIds
       if (newPublicState && item.imageId) {
-        publicImageIds.push(item.imageId);
+        publicImageIds.push({ imageId: item.imageId, mediaType: item.mediaType });
       }
     });
 
