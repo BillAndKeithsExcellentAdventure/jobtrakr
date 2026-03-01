@@ -20,12 +20,14 @@ interface InvoiceSummaryEditModalProps {
   onClose: () => void;
   invoiceSummary: {
     vendor: string;
+    vendorId?: string;
     totalAmount: number;
     totalTax: number;
     receiptDate: number;
   };
   onSave: (updatedSummary: {
     vendor: string;
+    vendorId?: string;
     totalAmount: number;
     totalTax: number;
     receiptDate: number;
@@ -68,10 +70,11 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
     }
   }, [allVendors]);
 
-  const handleVendorChange = useCallback((vendor: string) => {
+  const handleVendorChange = useCallback((vendor: string, vendorId?: string) => {
     setEditedSummary((prev) => ({
       ...prev,
       vendor,
+      vendorId,
     }));
   }, []);
 
@@ -79,7 +82,7 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
     (option: OptionEntry) => {
       setPickedVendorOption(option);
       if (option) {
-        handleVendorChange(option.label);
+        handleVendorChange(option.label, option.value);
       }
       setIsVendorListPickerVisible(false);
     },
@@ -117,36 +120,15 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
             </Text>
 
             <View style={styles.form}>
-              {vendors && vendors.length ? (
-                <OptionPickerItem
-                  containerStyle={styles.inputContainer}
-                  optionLabel={editedSummary.vendor}
-                  label="Vendor/Merchant"
-                  placeholder="Vendor/Merchant"
-                  onOptionLabelChange={(vendor: string) =>
-                    setEditedSummary((prev) => ({
-                      ...prev,
-                      vendor,
-                    }))
-                  }
-                  onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
-                />
-              ) : (
-                <TextField
-                  containerStyle={styles.inputContainer}
-                  style={[styles.input, { borderColor: colors.transparent }]}
-                  placeholder="Vendor/Merchant"
-                  label="Vendor/Merchant"
-                  value={editedSummary.vendor}
-                  onChangeText={(vendor: string) =>
-                    setEditedSummary((prev) => ({
-                      ...prev,
-                      vendor,
-                    }))
-                  }
-                />
-              )}
-
+              <OptionPickerItem
+                containerStyle={styles.inputContainer}
+                optionLabel={editedSummary.vendor}
+                textColor={editedSummary.vendorId ? colors.text : colors.error}
+                label="Vendor/Merchant"
+                placeholder="Vendor/Merchant"
+                editable={false}
+                onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
+              />
               <NumericInputField
                 containerStyle={styles.inputContainer}
                 placeholder="Amount"

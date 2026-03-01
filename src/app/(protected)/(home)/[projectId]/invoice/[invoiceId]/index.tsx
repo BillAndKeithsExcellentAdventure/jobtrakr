@@ -171,6 +171,7 @@ const InvoiceDetailsPage = () => {
           imageId: invoice.imageId,
           qbBillData: {
             vendorRef: vendorQbId ?? '',
+            invoiceDate: new Date(invoice.invoiceDate).toISOString().split('T')[0],
             dueDate: new Date(invoice.dueDate).toISOString().split('T')[0],
             lineItems: qbLineItems,
           },
@@ -192,6 +193,7 @@ const InvoiceDetailsPage = () => {
           imageId: invoice.imageId,
           qbBillData: {
             vendorRef: vendorQbId ?? '',
+            invoiceDate: new Date(invoice.invoiceDate).toISOString().split('T')[0],
             dueDate: new Date(invoice.dueDate).toISOString().split('T')[0],
             lineItems: qbLineItems,
           },

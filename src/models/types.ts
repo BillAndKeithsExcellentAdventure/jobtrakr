@@ -78,6 +78,7 @@ export interface ReceiptItem {
 
 export interface ReceiptSummary {
   vendor: string;
+  vendorId: string;
   receiptDate: number;
   totalAmount: number;
   totalTax: number;
@@ -86,6 +87,7 @@ export interface ReceiptSummary {
 export interface InvoiceSummary {
   invoiceId?: string;
   vendor: string;
+  vendorId: string;
   invoiceDate: number;
   totalAmount: number;
   totalTax: number;
