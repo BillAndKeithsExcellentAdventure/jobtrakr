@@ -33,7 +33,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { ActivityIndicator, Alert, Image, Modal, StyleSheet, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Alert, Image, Keyboard, Modal, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 const AddInvoicePage = () => {
@@ -399,6 +399,11 @@ const AddInvoicePage = () => {
     router.back();
   }, [router, defaultDate]);
 
+  const handleSetApplyToSingleCostCode = useCallback((value: boolean) => {
+    setApplyToSingleCostCode(value);
+    Keyboard.dismiss();
+  }, []);
+
   return (
     <View style={{ flex: 1, width: '100%' }}>
       <ModalScreenContainer onSave={handleAddInvoice} onCancel={handleCancel} canSave={canAddInvoice}>
@@ -518,7 +523,11 @@ const AddInvoicePage = () => {
           </View>
 
           <View style={styles.applyToSingleCostCodeRow}>
-            <Switch value={applyToSingleCostCode} onValueChange={setApplyToSingleCostCode} size="large" />
+            <Switch
+              value={applyToSingleCostCode}
+              onValueChange={handleSetApplyToSingleCostCode}
+              size="large"
+            />
             <Text text="Apply to Single Cost Code" txtSize="standard" style={{ marginLeft: 10 }} />
           </View>
 

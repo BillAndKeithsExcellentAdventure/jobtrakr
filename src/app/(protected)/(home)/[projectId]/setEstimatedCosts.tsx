@@ -261,7 +261,7 @@ const SetEstimatedCostsPage = () => {
                       onPress={updateBidEstimate}
                       type={'ok'}
                       title="Save"
-                      triggerBlurOnPress={true}
+                      triggerBlurOnPress={false}
                     />
                     <ActionButton
                       style={styles.cancelButton}

@@ -32,7 +32,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, Image, Keyboard, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { ReceiptLineItem } from '@/src/tbStores/ReceiptQueueStoreHooks';
 
@@ -541,6 +541,11 @@ const AddReceiptPage = () => {
     router.back();
   }, [router, defaultDate, appSettings.quickBooksDefaultPaymentAccountId]);
 
+  const handleSetApplyToSingleCostCode = useCallback((value: boolean) => {
+    setApplyToSingleCostCode(value);
+    Keyboard.dismiss();
+  }, []);
+
   return (
     <View style={{ flex: 1, width: '100%' }}>
       <ModalScreenContainer
@@ -647,7 +652,11 @@ const AddReceiptPage = () => {
           </View>
 
           <View style={styles.applyToSingleCostCodeRow}>
-            <Switch value={applyToSingleCostCode} onValueChange={setApplyToSingleCostCode} size="large" />
+            <Switch
+              value={applyToSingleCostCode}
+              onValueChange={handleSetApplyToSingleCostCode}
+              size="large"
+            />
             <Text text="Apply to Single Cost Code" txtSize="standard" style={{ marginLeft: 10 }} />
           </View>
 
