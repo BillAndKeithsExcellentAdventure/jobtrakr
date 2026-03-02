@@ -1,6 +1,6 @@
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Platform, Pressable, StyleProp, StyleSheet, TextInput, TextStyle } from 'react-native';
 import { ActionButton } from './ActionButton';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -45,6 +45,7 @@ export default function OptionList({
   const [isOkToSaveSelectedValue, setIsOkToSaveSelectedValue] = useState<boolean>(false);
   const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const [searchText, setSearchText] = useState<string>('');
+  const searchInputRef = useRef<TextInput>(null);
 
   const onOkSelected = useCallback(() => {
     if (pickedOption) onSelect(pickedOption);
@@ -98,30 +99,31 @@ export default function OptionList({
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 8,
                 borderWidth: 1,
                 borderRadius: 8,
                 paddingLeft: 10,
                 paddingRight: 5,
                 borderColor: colors.border,
-                justifyContent: 'space-between',
               }}
             >
-              <TextInput
-                style={[
-                  styles.searchInput,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    color: colors.text,
-                  },
-                ]}
-                placeholder={searchPlaceholder}
-                placeholderTextColor={colors.textPlaceholder}
-                value={searchText}
-                onChangeText={setSearchText}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
+              <Pressable onPress={() => searchInputRef.current?.focus()} style={{ flex: 1 }}>
+                <TextInput
+                  ref={searchInputRef}
+                  style={[
+                    styles.searchInput,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder={searchPlaceholder}
+                  placeholderTextColor={colors.textPlaceholder}
+                  value={searchText}
+                  onChangeText={setSearchText}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </Pressable>
               <Pressable onPress={() => setSearchText('')}>
                 <MaterialIcons name="clear" size={24} color={colors.iconColor} />
               </Pressable>

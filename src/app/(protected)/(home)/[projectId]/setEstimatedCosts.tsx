@@ -222,9 +222,9 @@ const SetEstimatedCostsPage = () => {
                         value={itemEstimate ?? 0}
                         onChangeNumber={setItemEstimate}
                         placeholder="Estimated Amount"
-                        autoFocus={true}
                         decimals={2}
                         maxDecimals={2}
+                        autoFocus={true}
                         selectOnFocus={true}
                         itemId={currentCostSummary?.id}
                       />

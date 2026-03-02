@@ -22,8 +22,6 @@ describe('quickbooksAPI', () => {
 
   describe('addReceiptToQuickBooks', () => {
     const mockReceiptData: AddReceiptRequest = {
-      userId: 'user-123',
-      orgId: 'org-456',
       projectId: 'proj-789',
       projectAbbr: 'TEST',
       projectName: 'Test Project',
@@ -53,7 +51,7 @@ describe('quickbooksAPI', () => {
 
       mockApiSuccess(mockResponse);
 
-      const result = await addReceiptToQuickBooks(mockReceiptData, mockGetToken);
+      const result = await addReceiptToQuickBooks(mockReceiptData, 'org-456', 'user-123', mockGetToken);
 
       expect(mockGetToken).toHaveBeenCalled();
       expect(global.fetch).toHaveBeenCalledWith(
@@ -88,7 +86,7 @@ describe('quickbooksAPI', () => {
 
       mockApiSuccess(mockResponse);
 
-      const result = await addReceiptToQuickBooks(mockReceiptData, mockGetToken);
+      const result = await addReceiptToQuickBooks(mockReceiptData, 'org-456', 'user-123', mockGetToken);
 
       expect(result).toEqual(mockResponse);
       expect(result.data?.Purchase?.Id).toBe('789');
@@ -103,9 +101,9 @@ describe('quickbooksAPI', () => {
 
       mockApiSuccess(mockResponse);
 
-      await expect(addReceiptToQuickBooks(mockReceiptData, mockGetToken)).rejects.toThrow(
-        'Failed to add receipt',
-      );
+      await expect(
+        addReceiptToQuickBooks(mockReceiptData, 'org-456', 'user-123', mockGetToken),
+      ).rejects.toThrow('Failed to add receipt');
     });
 
     it('should handle network errors', async () => {
@@ -113,14 +111,16 @@ describe('quickbooksAPI', () => {
 
       mockApiError(500, 'Internal Server Error');
 
-      await expect(addReceiptToQuickBooks(mockReceiptData, mockGetToken)).rejects.toThrow();
+      await expect(
+        addReceiptToQuickBooks(mockReceiptData, 'org-456', 'user-123', mockGetToken),
+      ).rejects.toThrow();
     });
 
     it('should include all required fields in request', async () => {
       const mockGetToken = createMockGetToken('test-token');
       mockApiSuccess({ success: true, accountId: 'RECEIPT-TEST-001' });
 
-      await addReceiptToQuickBooks(mockReceiptData, mockGetToken);
+      await addReceiptToQuickBooks(mockReceiptData, 'org-456', 'user-123', mockGetToken);
 
       const callArgs = (global.fetch as jest.Mock).mock.calls[0];
       const requestBody = JSON.parse(callArgs[1].body);
@@ -145,7 +145,7 @@ describe('quickbooksAPI', () => {
 
       mockApiSuccess({ success: true, accountId: 'RECEIPT-TEST-001' });
 
-      const result = await addReceiptToQuickBooks(receiptWithoutQB, mockGetToken);
+      const result = await addReceiptToQuickBooks(receiptWithoutQB, 'org-456', 'user-123', mockGetToken);
 
       expect(result.success).toBe(true);
       expect(result.accountId).toBe('RECEIPT-TEST-001');

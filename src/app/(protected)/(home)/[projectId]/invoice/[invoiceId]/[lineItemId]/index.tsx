@@ -13,6 +13,7 @@ import {
   useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { getVendorSearchTerm } from '@/src/utils/vendorUtils';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Alert } from 'react-native';
@@ -55,7 +56,6 @@ const EditLineItemPage = () => {
 
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
-
   const [isSubCategoryPickerVisible, setIsSubCategoryPickerVisible] = useState<boolean>(false);
   const [pickedSubCategoryOption, setPickedSubCategoryOption] = useState<OptionEntry | undefined>(undefined);
   const [subCategories, setSubCategories] = useState<OptionEntry[]>([]);
@@ -141,6 +141,8 @@ const EditLineItemPage = () => {
           inputStyle={{ paddingHorizontal: 10 }}
           containerStyle={styles.inputContainer}
           label="Amount"
+          maxDecimals={2}
+          decimals={2}
           value={itemizedEntry.amount}
           onChangeNumber={(value: number | null): void => {
             setItemizedEntry((prevItem) => ({

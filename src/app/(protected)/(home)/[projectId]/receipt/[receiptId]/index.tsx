@@ -293,8 +293,13 @@ const ReceiptDetailsPage = () => {
 
   const processAddReceiptToQuickBooks = useCallback(
     async (receiptData: AddReceiptRequest) => {
+      if (!orgId || !userId) {
+        Alert.alert('Error', 'Missing user or organization information for QuickBooks sync.');
+        return;
+      }
+
       // Create new Bill in QuickBooks
-      const response = await addReceiptToQuickBooks(receiptData, getToken);
+      const response = await addReceiptToQuickBooks(receiptData, orgId, userId, getToken);
       console.log('Receipt successfully synced to QuickBooks:', response);
 
       const updates: ReceiptData = { ...receipt };
@@ -346,12 +351,12 @@ const ReceiptDetailsPage = () => {
         );
       }
     },
-    [getToken, receipt, allReceiptLineItems, updateReceipt, addReceiptQueueEntry],
+    [getToken, receipt, allReceiptLineItems, updateReceipt, addReceiptQueueEntry, orgId, userId],
   );
 
   const updateExistingReceiptInQuickBooks = useCallback(
     async (qbLineItems: QBBillLineItem[], paymentAccountSubType: string | undefined) => {
-      if (orgId === undefined || userId === undefined) {
+      if (!orgId || !userId) {
         Alert.alert('Error', 'Missing user or organization information for QuickBooks sync.');
         return;
       }
@@ -384,7 +389,7 @@ const ReceiptDetailsPage = () => {
       };
 
       try {
-        const response = await editReceiptInQuickBooks(receiptEditData, getToken);
+        const response = await editReceiptInQuickBooks(receiptEditData, orgId, userId, getToken);
         console.log('Receipt successfully updated in QuickBooks:', response);
 
         const updates: ReceiptData = { ...receipt };
@@ -413,6 +418,11 @@ const ReceiptDetailsPage = () => {
 
   const addNewReceiptToQuickBooks = useCallback(
     async (qbLineItems: QBBillLineItem[], paymentAccountSubType: string | undefined) => {
+      if (!orgId || !userId) {
+        Alert.alert('Error', 'Missing user or organization information for QuickBooks sync.');
+        return;
+      }
+
       const receiptData = {
         userId: userId!,
         orgId: orgId!,

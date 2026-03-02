@@ -230,7 +230,7 @@ const QBAccountsScreen = () => {
             {/* Expense Account Section */}
             <View style={styles.topSection}>
               <Text txtSize="title" style={{ marginBottom: 10 }}>
-                Expense Account for Bills
+                Expense Account for Bills and Receipts
               </Text>
               <TouchableOpacity
                 style={[

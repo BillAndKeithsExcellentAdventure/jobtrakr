@@ -101,8 +101,9 @@ const RequestAIProcessingPage = () => {
       const summary = {
         invoiceId: replaceNonPrintable(result.response?.InvoiceId?.value ?? ''),
         vendor: replaceNonPrintable(result.response?.VendorName?.value ?? ''),
-        vendorId: replaceNonPrintable(result.response?.VendorId?.value ?? ''),
+        vendorId: '',
         invoiceDate: Date.parse(result.response?.InvoiceDate?.value ?? ''),
+        dueDate: Date.parse(result.response?.DueDate?.value ?? ''),
         totalAmount: Number.parseFloat(result.response?.Total?.value ?? '0'),
         totalTax: Number.parseFloat(result.response?.TotalTax?.value ?? '0'),
         terms: replaceNonPrintable(result.response?.Terms?.value ?? ''),
@@ -288,10 +289,11 @@ const RequestAIProcessingPage = () => {
   const handleSaveInvoiceSummary = (updatedSummary: {
     invoiceId?: string;
     vendor: string;
-    vendorId?: string;
+    vendorId: string;
     totalAmount: number;
     totalTax: number;
     invoiceDate: number;
+    dueDate: number;
     terms?: string;
   }) => {
     setInvoiceSummary(updatedSummary);
@@ -305,6 +307,7 @@ const RequestAIProcessingPage = () => {
       ...invoice,
       amount: invoiceSummary.totalAmount,
       invoiceDate: invoiceSummary.invoiceDate,
+      dueDate: invoiceSummary.dueDate, // default to 30 days after invoice date
       vendor: invoiceSummary.vendor,
       vendorId: invoiceSummary.vendorId,
     };

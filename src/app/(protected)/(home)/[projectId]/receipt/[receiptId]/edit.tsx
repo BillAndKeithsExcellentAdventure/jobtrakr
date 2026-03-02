@@ -15,6 +15,7 @@ import {
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
+import { getVendorSearchTerm } from '@/src/utils/vendorUtils';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
@@ -270,6 +271,8 @@ const EditReceiptDetailsPage = () => {
               inputStyle={{ paddingHorizontal: 10 }}
               labelStyle={{ marginBottom: 2 }}
               label="Amount"
+              maxDecimals={2}
+              decimals={2}
               value={receiptAmount}
               onChangeNumber={(value) => handleAmountChange(value ?? 0)}
             />
@@ -348,7 +351,11 @@ const EditReceiptDetailsPage = () => {
                 options={vendors}
                 onSelect={(option) => handleVendorOptionChange(option)}
                 selectedOption={pickedOption}
-                initialSearchText={isConnectedToQuickBooks && !receipt.vendorId ? receipt.vendor : undefined}
+                initialSearchText={
+                  isConnectedToQuickBooks && !receipt.vendorId
+                    ? getVendorSearchTerm(receipt.vendor)
+                    : undefined
+                }
                 enableSearch={
                   vendors.length > 15 || (isConnectedToQuickBooks && !receipt.vendorId && !!receipt.vendor)
                 }

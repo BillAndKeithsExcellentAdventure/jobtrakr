@@ -142,6 +142,7 @@ const ProjectInvoicesPage = () => {
           amount: 0,
           thumbnail: thumbnail ?? '',
           invoiceDate: new Date().getTime(),
+          dueDate: new Date().getTime() + 30 * 24 * 60 * 60 * 1000, // default due date to 1 month from now
           notes: '',
           markedComplete: false,
           imageId: imageAddResult.id,

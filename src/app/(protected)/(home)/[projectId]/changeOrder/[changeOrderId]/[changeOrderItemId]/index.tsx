@@ -154,7 +154,8 @@ const EditChangeOrderItem = () => {
             numberOfLines={2}
           />
           <NumericInputField
-            label="Amount"
+            maxDecimals={2}
+            decimals={2}
             value={amount}
             onChangeNumber={(value) => setAmount(value ?? 0)}
             placeholder="Amount"

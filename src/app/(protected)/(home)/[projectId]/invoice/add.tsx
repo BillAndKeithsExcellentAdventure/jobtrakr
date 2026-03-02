@@ -27,6 +27,7 @@ import { useAddImageCallback } from '@/src/utils/images';
 import { addBill, AddBillRequest } from '@/src/utils/quickbooksAPI';
 import { getBillSyncHash } from '@/src/utils/quickbooksSyncHash';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
+import { getVendorSearchTerm } from '@/src/utils/vendorUtils';
 import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
@@ -58,6 +59,7 @@ const AddInvoicePage = () => {
   const [pickedSubCategoryOption, setPickedSubCategoryOption] = useState<OptionEntry | undefined>(undefined);
   const [subCategories, setSubCategories] = useState<OptionEntry[]>([]);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [dueDatePickerVisible, setDueDatePickerVisible] = useState(false);
   const [canAddInvoice, setCanAddInvoice] = useState(false);
   const addPhotoImage = useAddImageCallback();
   const allVendors = useAllConfigurationRows('vendors');
@@ -83,7 +85,7 @@ const AddInvoicePage = () => {
     description: '',
     amount: 0,
     invoiceDate: defaultDate.getTime(),
-    dueDate: defaultDate.getTime(),
+    dueDate: defaultDate.getTime() + 30 * 24 * 60 * 60 * 1000, // default due date to 1 month from now
     paymentStatus: 'pending',
     thumbnail: '',
     pictureDate: 0,
@@ -137,10 +139,27 @@ const AddInvoicePage = () => {
   const handleDateConfirm = useCallback((date: Date) => {
     setProjectInvoice((prevInvoice) => ({
       ...prevInvoice,
-      dueDate: date.getTime(),
+      invoiceDate: date.getTime(),
     }));
 
     hideDatePicker();
+  }, []);
+
+  const showDueDatePicker = () => {
+    setDueDatePickerVisible(true);
+  };
+
+  const hideDueDatePicker = () => {
+    setDueDatePickerVisible(false);
+  };
+
+  const handleDueDateConfirm = useCallback((date: Date) => {
+    setProjectInvoice((prevInvoice) => ({
+      ...prevInvoice,
+      dueDate: date.getTime(),
+    }));
+
+    hideDueDatePicker();
   }, []);
 
   const handleAddInvoice = useCallback(async () => {
@@ -420,23 +439,23 @@ const AddInvoicePage = () => {
             onCancel={hideDatePicker}
           />
 
-          <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
+          <TouchableOpacity activeOpacity={1} onPress={showDueDatePicker}>
             <Text txtSize="formLabel" text="Due Date" style={styles.inputLabel} />
             <TextInput
               readOnly={true}
               style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
               placeholder="Due Date"
-              onPressIn={showDatePicker}
+              onPressIn={showDueDatePicker}
               value={formatDate(projectInvoice.dueDate)}
             />
           </TouchableOpacity>
           <DateTimePickerModal
             style={{ alignSelf: 'stretch' }}
             date={projectInvoice.dueDate ? new Date(projectInvoice.dueDate) : defaultDate}
-            isVisible={datePickerVisible}
+            isVisible={dueDatePickerVisible}
             mode="date"
-            onConfirm={handleDateConfirm}
-            onCancel={hideDatePicker}
+            onConfirm={handleDueDateConfirm}
+            onCancel={hideDueDatePicker}
           />
 
           <OptionPickerItem
@@ -454,6 +473,9 @@ const AddInvoicePage = () => {
             inputStyle={{ paddingHorizontal: 10 }}
             placeholder="Amount"
             label="Amount"
+            maxDecimals={2}
+            decimals={2}
+            selectOnFocus={true}
             value={projectInvoice.amount}
             onChangeNumber={(amount: number | null) =>
               setProjectInvoice((prevInvoice) => ({
@@ -531,6 +553,11 @@ const AddInvoicePage = () => {
             options={vendors}
             onSelect={(option) => handleVendorOptionChange(option)}
             selectedOption={pickedOption}
+            initialSearchText={
+              isConnectedToQuickBooks && !projectInvoice.vendorId
+                ? getVendorSearchTerm(projectInvoice.vendor)
+                : undefined
+            }
             enableSearch={vendors.length > 15}
           />
         </BottomSheetContainer>

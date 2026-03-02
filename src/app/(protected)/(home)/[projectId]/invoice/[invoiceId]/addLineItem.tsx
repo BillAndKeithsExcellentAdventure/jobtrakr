@@ -109,6 +109,8 @@ const AddInvoiceLineItemPage = () => {
           inputStyle={{ paddingHorizontal: 10 }}
           containerStyle={styles.inputContainer}
           label="Amount"
+          maxDecimals={2}
+          decimals={2}
           value={itemizedEntry.amount}
           onChangeNumber={(value: number | null): void => {
             setItemizedEntry((prevItem) => ({

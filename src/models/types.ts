@@ -89,6 +89,7 @@ export interface InvoiceSummary {
   vendor: string;
   vendorId: string;
   invoiceDate: number;
+  dueDate: number;
   totalAmount: number;
   totalTax: number;
   terms?: string;

@@ -18,6 +18,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { getVendorSearchTerm } from '@/src/utils/vendorUtils';
+import { useNetwork } from '@/src/context/NetworkContext';
 
 const EditInvoiceDetailsPage = () => {
   const defaultDate = new Date();
@@ -29,7 +31,8 @@ const EditInvoiceDetailsPage = () => {
   const allProjectInvoices = useAllRows(projectId, 'invoices');
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
   const [datePickerVisible, setDatePickerVisible] = useState(false);
-
+  const [dueDatePickerVisible, setDueDatePickerVisible] = useState(false);
+  const { isConnectedToQuickBooks } = useNetwork();
   const handleVendorOptionChange = (option: OptionEntry) => {
     if (option) {
       setInvoice((prevInvoice) => ({
@@ -65,13 +68,30 @@ const EditInvoiceDetailsPage = () => {
     setDatePickerVisible(false);
   };
 
+  const showDueDatePicker = () => {
+    setDueDatePickerVisible(true);
+  };
+
+  const hideDueDatePicker = () => {
+    setDueDatePickerVisible(false);
+  };
+
   const handleDateConfirm = useCallback((date: Date) => {
+    setInvoice((prevInvoice) => ({
+      ...prevInvoice,
+      invoiceDate: date.getTime(),
+    }));
+
+    hideDatePicker();
+  }, []);
+
+  const handleDueDateConfirm = useCallback((date: Date) => {
     setInvoice((prevInvoice) => ({
       ...prevInvoice,
       dueDate: date.getTime(),
     }));
 
-    hideDatePicker();
+    hideDueDatePicker();
   }, []);
 
   const [invoice, setInvoice] = useState<InvoiceData>({
@@ -82,7 +102,7 @@ const EditInvoiceDetailsPage = () => {
     description: '',
     amount: 0,
     invoiceDate: defaultDate.getTime(),
-    dueDate: defaultDate.getTime(),
+    dueDate: defaultDate.getTime() + 30 * 24 * 60 * 60 * 1000, // default due date to 1 month from now
     paymentStatus: 'pending',
     thumbnail: '',
     pictureDate: 0,
@@ -165,23 +185,23 @@ const EditInvoiceDetailsPage = () => {
             />
           </View>
           <View style={{ paddingBottom: 10 }}>
-            <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
+            <TouchableOpacity activeOpacity={1} onPress={showDueDatePicker}>
               <Text txtSize="formLabel" text="Due Date" style={styles.inputLabel} />
               <TextInput
                 readOnly={true}
                 style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
-                placeholder="Date"
-                onPressIn={showDatePicker}
+                placeholder="Due Date"
+                onPressIn={showDueDatePicker}
                 value={formatDate(invoice.dueDate)}
               />
             </TouchableOpacity>
             <DateTimePickerModal
               style={{ alignSelf: 'stretch' }}
               date={invoice.dueDate ? new Date(invoice.dueDate) : defaultDate}
-              isVisible={datePickerVisible}
+              isVisible={dueDatePickerVisible}
               mode="date"
-              onConfirm={handleDateConfirm}
-              onCancel={hideDatePicker}
+              onConfirm={handleDueDateConfirm}
+              onCancel={hideDueDatePicker}
             />
           </View>
 
@@ -189,6 +209,8 @@ const EditInvoiceDetailsPage = () => {
             containerStyle={styles.inputContainer}
             inputStyle={{ paddingHorizontal: 10 }}
             label="Amount"
+            maxDecimals={2}
+            decimals={2}
             value={invoiceAmount}
             onChangeNumber={(value: number | null): void => {
               setInvoice((prevInvoice) => ({
@@ -242,6 +264,9 @@ const EditInvoiceDetailsPage = () => {
               onSelect={(option) => handleVendorOptionChange(option)}
               selectedOption={pickedOption}
               enableSearch={vendors.length > 15}
+              initialSearchText={
+                isConnectedToQuickBooks && !invoice.vendorId ? getVendorSearchTerm(invoice.vendor) : undefined
+              }
             />
           </BottomSheetContainer>
         )}

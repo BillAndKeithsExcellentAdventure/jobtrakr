@@ -317,8 +317,6 @@ const AddReceiptPage = () => {
 
           // Prepare receipt data for backend
           const receiptData = {
-            userId,
-            orgId,
             projectId,
             projectAbbr,
             projectName: projectName || '',
@@ -337,7 +335,7 @@ const AddReceiptPage = () => {
           };
 
           // Create new Purchase in QuickBooks
-          const response = await addReceiptToQuickBooks(receiptData, getToken);
+          const response = await addReceiptToQuickBooks(receiptData, orgId, userId, getToken);
           console.log('Receipt successfully synced to QuickBooks:', response);
 
           const updates: ReceiptData = { ...projectReceipt };
@@ -603,6 +601,8 @@ const AddReceiptPage = () => {
             labelStyle={{ marginBottom: 2 }}
             placeholder="Amount"
             label="Amount"
+            maxDecimals={2}
+            decimals={2}
             value={projectReceipt.amount}
             onChangeNumber={(value) => handleAmountChange(value ?? 0)}
           />

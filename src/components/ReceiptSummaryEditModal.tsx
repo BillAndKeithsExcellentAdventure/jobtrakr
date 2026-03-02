@@ -7,25 +7,28 @@ import { useColors } from '@/src/context/ColorsContext';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { formatDate } from '@/src/utils/formatters';
 import { NumericInputField } from './NumericInputField';
-import { TextField } from '@/src/components/TextField';
 import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import OptionList, { OptionEntry } from './OptionList';
 import { OptionPickerItem } from './OptionPickerItem';
 import BottomSheetContainer from './BottomSheetContainer';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '../constants/app-constants';
+import { useNetwork } from '../context/NetworkContext';
+import { getVendorSearchTerm } from '../utils/vendorUtils';
 
 interface ReceiptSummaryEditModalProps {
   isVisible: boolean;
   onClose: () => void;
   receiptSummary: {
     vendor: string;
+    vendorId: string;
     totalAmount: number;
     totalTax: number;
     receiptDate: number;
   };
   onSave: (updatedSummary: {
     vendor: string;
+    vendorId: string;
     totalAmount: number;
     totalTax: number;
     receiptDate: number;
@@ -44,7 +47,7 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedVendorOption, setPickedVendorOption] = useState<OptionEntry | undefined>(undefined);
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
-
+  const { isConnectedToQuickBooks } = useNetwork();
   const allVendors = useAllConfigurationRows('vendors');
 
   useEffect(() => {
@@ -68,10 +71,11 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
     }
   }, [allVendors]);
 
-  const handleVendorChange = useCallback((vendor: string) => {
+  const handleVendorChange = useCallback((vendor: string, vendorId: string) => {
     setEditedSummary((prev) => ({
       ...prev,
       vendor,
+      vendorId,
     }));
   }, []);
 
@@ -79,7 +83,7 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
     (option: OptionEntry) => {
       setPickedVendorOption(option);
       if (option) {
-        handleVendorChange(option.label);
+        handleVendorChange(option.label, option.value);
       }
       setIsVendorListPickerVisible(false);
     },
@@ -93,7 +97,7 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
 
   const handleClose = useCallback(() => {
     setEditedSummary(receiptSummary);
-    const vendorMatch = vendors.find((v) => v.label === receiptSummary.vendor);
+    const vendorMatch = vendors.find((v) => v.value === receiptSummary.vendorId);
     setPickedVendorOption(vendorMatch);
     onClose();
   }, [receiptSummary, vendors, onClose]);
@@ -109,7 +113,7 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
 
   return (
     <Modal visible={isVisible} transparent={true} animationType="fade">
-      <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, paddingTop: 20 }}>
+      <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, paddingTop: 10 }}>
         <View style={[styles.container, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
             <Text txtSize="title" style={styles.title}>
@@ -117,40 +121,22 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
             </Text>
 
             <View style={styles.form}>
-              {vendors && vendors.length ? (
-                <OptionPickerItem
-                  containerStyle={styles.inputContainer}
-                  optionLabel={editedSummary.vendor}
-                  label="Vendor/Merchant"
-                  placeholder="Vendor/Merchant"
-                  onOptionLabelChange={(vendor: string) =>
-                    setEditedSummary((prev) => ({
-                      ...prev,
-                      vendor,
-                    }))
-                  }
-                  onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
-                />
-              ) : (
-                <TextField
-                  containerStyle={styles.inputContainer}
-                  style={[styles.input, { borderColor: colors.transparent }]}
-                  placeholder="Vendor/Merchant"
-                  label="Vendor/Merchant"
-                  value={editedSummary.vendor}
-                  onChangeText={(vendor: string) =>
-                    setEditedSummary((prev) => ({
-                      ...prev,
-                      vendor,
-                    }))
-                  }
-                />
-              )}
+              <OptionPickerItem
+                containerStyle={styles.inputContainer}
+                optionLabel={editedSummary.vendor}
+                editable={false}
+                label="Vendor/Merchant"
+                placeholder="Vendor/Merchant"
+                textColor={editedSummary.vendorId ? colors.text : colors.error}
+                onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
+              />
 
               <NumericInputField
                 containerStyle={styles.inputContainer}
                 placeholder="Amount"
                 label="Amount"
+                maxDecimals={2}
+                decimals={2}
                 value={editedSummary.totalAmount}
                 onChangeNumber={(value) => setEditedSummary((prev) => ({ ...prev, totalAmount: value ?? 0 }))}
               />
@@ -159,6 +145,8 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
                 containerStyle={styles.inputContainer}
                 placeholder="Tax"
                 label="Tax"
+                maxDecimals={2}
+                decimals={2}
                 value={editedSummary.totalTax}
                 onChangeNumber={(value) => setEditedSummary((prev) => ({ ...prev, totalTax: value ?? 0 }))}
               />
@@ -199,6 +187,11 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
               onSelect={(option) => handleVendorOptionChange(option)}
               selectedOption={pickedVendorOption}
               enableSearch={vendors.length > 15}
+              initialSearchText={
+                isConnectedToQuickBooks && !editedSummary.vendorId
+                  ? getVendorSearchTerm(editedSummary.vendor)
+                  : undefined
+              }
             />
           </BottomSheetContainer>
         )}
@@ -223,7 +216,7 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   form: {
     gap: 5,

@@ -108,7 +108,7 @@ export const NumericInputField = forwardRef<NumericInputFieldHandle, NumericInpu
       onChangeNumber,
       decimals,
       maxDecimals,
-      selectOnFocus = false,
+      selectOnFocus = true,
       itemId,
       style,
       ...inputProps

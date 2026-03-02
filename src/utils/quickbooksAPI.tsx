@@ -260,8 +260,6 @@ export interface QBReceiptData {
 }
 
 export interface AddReceiptRequest {
-  userId: string;
-  orgId: string;
   projectId: string;
   projectAbbr: string;
   projectName: string;
@@ -286,8 +284,6 @@ export interface AddReceiptResponse {
 }
 
 export interface EditReceiptRequest {
-  orgId: string;
-  userId: string;
   projectId: string;
   projectName: string;
   accountingId: string;
@@ -821,11 +817,13 @@ export async function fetchAccounts(
  */
 export async function addReceiptToQuickBooks(
   receiptData: AddReceiptRequest,
+  orgId: string,
+  userId: string,
   getToken: () => Promise<string | null>,
 ): Promise<AddReceiptResponse> {
   const apiFetch = createApiWithToken(getToken);
 
-  const response = await apiFetch(`${API_BASE_URL}/qbo/addReceipt`, {
+  const response = await apiFetch(`${API_BASE_URL}/qbo/addReceipt?orgId=${orgId}&userId=${userId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -850,20 +848,19 @@ export async function addReceiptToQuickBooks(
  */
 export async function editReceiptInQuickBooks(
   receiptData: EditReceiptRequest,
+  orgId: string,
+  userId: string,
   getToken: () => Promise<string | null>,
 ): Promise<AddReceiptResponse> {
   const apiFetch = createApiWithToken(getToken);
 
-  const response = await apiFetch(
-    `${API_BASE_URL}/qbo/editReceipt?orgId=${receiptData.orgId}&userId=${receiptData.userId}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(receiptData),
+  const response = await apiFetch(`${API_BASE_URL}/qbo/editReceipt?orgId=${orgId}&userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
     },
-  );
+    body: JSON.stringify(receiptData),
+  });
 
   const data: AddReceiptResponse = await response.json();
   if (!data.success) {

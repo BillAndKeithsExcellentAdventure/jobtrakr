@@ -139,6 +139,8 @@ const AddReceiptLineItemPage = () => {
         <NumericInputField
           containerStyle={{ ...styles.inputContainer, marginTop: 0 }}
           label="Amount"
+          maxDecimals={2}
+          decimals={2}
           value={itemizedEntry.amount}
           onChangeNumber={(value: number | null): void => {
             setItemizedEntry((prevItem) => ({

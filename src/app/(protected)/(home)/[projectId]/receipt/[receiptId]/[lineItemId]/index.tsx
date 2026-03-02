@@ -208,6 +208,8 @@ const EditLineItemPage = () => {
           inputStyle={{ paddingHorizontal: 10 }}
           labelStyle={{ marginBottom: 2 }}
           label="Amount"
+          maxDecimals={2}
+          decimals={2}
           value={itemizedEntry.amount}
           onChangeNumber={(value: number | null): void => {
             isDirtyRef.current = true;

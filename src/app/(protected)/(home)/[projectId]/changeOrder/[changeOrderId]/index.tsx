@@ -340,7 +340,17 @@ const DefineChangeOrderScreen = () => {
     } finally {
       setIsSendingChangeOrder(false);
     }
-  }, [changeOrderData, changeOrder, appSettings, projectData, allCustomers, auth, projectId, router, updateChangeOrder]);
+  }, [
+    changeOrderData,
+    changeOrder,
+    appSettings,
+    projectData,
+    allCustomers,
+    auth,
+    projectId,
+    router,
+    updateChangeOrder,
+  ]);
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
     () => [
@@ -597,6 +607,8 @@ const DefineChangeOrderScreen = () => {
             />
             <NumericInputField
               label="Amount"
+              maxDecimals={2}
+              decimals={2}
               value={newChangeOrderItem.amount}
               onChangeNumber={(value) =>
                 setNewChangeOrderItem((prev) => ({
