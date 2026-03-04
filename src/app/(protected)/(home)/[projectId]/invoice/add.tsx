@@ -557,6 +557,7 @@ const AddInvoicePage = () => {
         <BottomSheetContainer
           isVisible={isVendorListPickerVisible}
           onClose={() => setIsVendorListPickerVisible(false)}
+          modalHeight="80%"
         >
           <OptionList
             options={vendors}
@@ -567,7 +568,10 @@ const AddInvoicePage = () => {
                 ? getVendorSearchTerm(projectInvoice.vendor)
                 : undefined
             }
-            enableSearch={vendors.length > 15}
+            enableSearch={
+              vendors.length > 15 ||
+              (isConnectedToQuickBooks && !projectInvoice.vendorId && !!projectInvoice.vendor)
+            }
           />
         </BottomSheetContainer>
       )}
@@ -575,6 +579,7 @@ const AddInvoicePage = () => {
         <BottomSheetContainer
           isVisible={isCategoryPickerVisible}
           onClose={() => setIsCategoryPickerVisible(false)}
+          modalHeight="65%"
         >
           <OptionList
             options={availableCategoriesOptions}
@@ -588,6 +593,7 @@ const AddInvoicePage = () => {
         <BottomSheetContainer
           isVisible={isSubCategoryPickerVisible}
           onClose={() => setIsSubCategoryPickerVisible(false)}
+          modalHeight="80%"
         >
           <OptionList
             centerOptions={false}

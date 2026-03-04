@@ -35,16 +35,19 @@ const SetEstimatedCostsPage = () => {
 
   const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
   const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
+  const initialCategoryApplied = useRef(false);
 
   const allWorkItemCostSummaries = useAllRows(projectId, 'workItemSummaries');
   const updateWorkItemCostSummary = useUpdateRowCallback(projectId, 'workItemSummaries');
   const { availableCategoriesOptions, allWorkItems, allWorkCategories } = useProjectWorkItems(projectId);
 
   useEffect(() => {
+    if (initialCategoryApplied.current) return;
     if (categoryId && availableCategoriesOptions.length > 0) {
       const matchingOption = availableCategoriesOptions.find((o) => o.value === categoryId);
       if (matchingOption) {
         setPickedCategoryOption(matchingOption);
+        initialCategoryApplied.current = true;
       }
     }
   }, [categoryId, availableCategoriesOptions]);
@@ -80,7 +83,7 @@ const SetEstimatedCostsPage = () => {
         });
       });
     }
-  }, [currentItemIndex, allAvailableCostItems.length]);
+  }, [currentItemIndex, allAvailableCostItems]);
 
   const { height } = useKeyboardGradualAnimation();
 

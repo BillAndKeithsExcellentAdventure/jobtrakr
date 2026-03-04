@@ -13,6 +13,7 @@ import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStore
 import { isDevelopmentBuild } from '@/src/utils/environment';
 import { isQuickBooksConnected as testQbIsConnected } from '@/src/utils/quickbooksAPI';
 import { useAuth } from '@clerk/clerk-expo';
+import { Alert } from 'react-native';
 
 interface NetworkContextType {
   isConnected: boolean;
@@ -152,7 +153,10 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
           setIsConnectedToQuickBooks(connected);
         }
       } catch (error) {
-        console.error('QuickBooks connection check failed:', error);
+        Alert.alert(
+          'QuickBooks Connection Error',
+          'An error occurred while checking the QuickBooks connection. If you need to post bills or receipts, please exit the app and try again later.',
+        );
         isConnectedToQuickBooksRef.current = false;
         setIsConnectedToQuickBooks(false);
       }

@@ -36,7 +36,7 @@ export default function OptionList({
   selectedOption,
   centerOptions = true,
   boldSelectedOption = true,
-  enableSearch = true,
+  enableSearch = false,
   searchPlaceholder = 'Search...',
   initialSearchText,
   okButtonText = 'OK',

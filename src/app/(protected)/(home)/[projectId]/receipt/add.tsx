@@ -684,7 +684,7 @@ const AddReceiptPage = () => {
       </ModalScreenContainer>
       {vendors && isVendorListPickerVisible && (
         <BottomSheetContainer
-          modalHeight={'60%'}
+          modalHeight={'80%'}
           isVisible={isVendorListPickerVisible}
           onClose={() => setIsVendorListPickerVisible(false)}
           showKeyboardToolbar={false}
@@ -699,7 +699,7 @@ const AddReceiptPage = () => {
       )}
       {isCategoryPickerVisible && (
         <BottomSheetContainer
-          modalHeight={'60%'}
+          modalHeight={'65%'}
           isVisible={isCategoryPickerVisible}
           onClose={() => setIsCategoryPickerVisible(false)}
           showKeyboardToolbar={false}
@@ -716,7 +716,7 @@ const AddReceiptPage = () => {
         <BottomSheetContainer
           isVisible={isSubCategoryPickerVisible}
           onClose={() => setIsSubCategoryPickerVisible(false)}
-          modalHeight={'70%'}
+          modalHeight={'80%'}
         >
           <OptionList
             centerOptions={false}

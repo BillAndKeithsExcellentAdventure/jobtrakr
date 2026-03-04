@@ -346,6 +346,7 @@ const EditReceiptDetailsPage = () => {
             <BottomSheetContainer
               isVisible={isVendorListPickerVisible}
               onClose={() => setIsVendorListPickerVisible(false)}
+              modalHeight={'80%'}
             >
               <OptionList
                 options={vendors}

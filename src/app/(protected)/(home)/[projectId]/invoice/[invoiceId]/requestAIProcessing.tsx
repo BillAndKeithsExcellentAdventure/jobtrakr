@@ -420,7 +420,7 @@ const RequestAIProcessingPage = () => {
                       </View>
                       <View style={{ flexDirection: 'row' }}>
                         <Text style={styles.label}>Date:</Text>
-                        <Text>{formatDate(invoiceSummary.receiptDate)}</Text>
+                        <Text>{formatDate(invoiceSummary.invoiceDate)}</Text>
                       </View>
                     </View>
                     <View style={{ alignItems: 'center', justifyContent: 'center' }}>

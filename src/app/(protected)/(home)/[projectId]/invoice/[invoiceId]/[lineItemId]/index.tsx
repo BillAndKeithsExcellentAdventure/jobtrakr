@@ -203,6 +203,7 @@ const EditLineItemPage = () => {
           <BottomSheetContainer
             isVisible={isCategoryPickerVisible}
             onClose={() => setIsCategoryPickerVisible(false)}
+            modalHeight="65%"
           >
             <OptionList
               options={availableCategoriesOptions}
@@ -216,6 +217,7 @@ const EditLineItemPage = () => {
           <BottomSheetContainer
             isVisible={isSubCategoryPickerVisible}
             onClose={() => setIsSubCategoryPickerVisible(false)}
+            modalHeight="80%"
           >
             <OptionList
               centerOptions={false}

@@ -258,14 +258,17 @@ const EditInvoiceDetailsPage = () => {
           <BottomSheetContainer
             isVisible={isVendorListPickerVisible}
             onClose={() => setIsVendorListPickerVisible(false)}
+            modalHeight="80%"
           >
             <OptionList
               options={vendors}
               onSelect={(option) => handleVendorOptionChange(option)}
               selectedOption={pickedOption}
-              enableSearch={vendors.length > 15}
               initialSearchText={
                 isConnectedToQuickBooks && !invoice.vendorId ? getVendorSearchTerm(invoice.vendor) : undefined
+              }
+              enableSearch={
+                vendors.length > 15 || (isConnectedToQuickBooks && !invoice.vendorId && !!invoice.vendor)
               }
             />
           </BottomSheetContainer>

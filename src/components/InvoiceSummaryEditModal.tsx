@@ -230,11 +230,14 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
               options={vendors}
               onSelect={(option) => handleVendorOptionChange(option)}
               selectedOption={pickedVendorOption}
-              enableSearch={vendors.length > 15}
               initialSearchText={
                 isConnectedToQuickBooks && !editedSummary.vendorId
                   ? getVendorSearchTerm(editedSummary.vendor)
                   : undefined
+              }
+              enableSearch={
+                vendors.length > 15 ||
+                (isConnectedToQuickBooks && !editedSummary.vendorId && !!editedSummary.vendor)
               }
             />
           </BottomSheetContainer>

@@ -10,7 +10,14 @@ import { useColors } from '@/src/context/ColorsContext';
 export const StyledHeaderBackButton: React.FC<HeaderBackButtonProps> = (props) => {
   const colors = useColors();
 
-  return <HeaderBackButton {...props} style={[styles.backButton, props.style]} tintColor={colors.text} />;
+  return (
+    <HeaderBackButton
+      {...props}
+      style={[styles.backButton, props.style]}
+      pressColor={colors.text}
+      tintColor={colors.text}
+    />
+  );
 };
 
 const styles = StyleSheet.create({
