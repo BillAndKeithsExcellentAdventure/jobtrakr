@@ -153,10 +153,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
           setIsConnectedToQuickBooks(connected);
         }
       } catch (error) {
-        Alert.alert(
-          'QuickBooks Connection Error',
-          'An error occurred while checking the QuickBooks connection. If you need to post bills or receipts, please exit the app and try again later.',
-        );
+        console.error('QuickBooks Connection Error. Error:', error);
         isConnectedToQuickBooksRef.current = false;
         setIsConnectedToQuickBooks(false);
       }
