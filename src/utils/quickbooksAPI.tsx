@@ -110,6 +110,20 @@ export interface AddVendorRequest {
   Id: string;
 }
 
+export interface QBEditCustomerInfo {
+  customerId: string;
+  displayName: string;
+  firstName: string;
+  lastName: string;
+  address: string;
+  address2: string;
+  city: string;
+  state: string;
+  zip: string;
+  email: string;
+  phone: string;
+}
+
 export interface AddCustomerRequest {
   displayName: string;
   firstName?: string;
@@ -497,6 +511,39 @@ export async function fetchCustomers(
   }
 
   return customers;
+}
+
+/**
+ * Update an existing customer in QuickBooks.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param customer - The customer data to update
+ * @param getToken - Function to get the authentication token
+ * @returns The API default response indicating success or failure
+ */
+export async function updateCustomer(
+  orgId: string,
+  userId: string,
+  customer: QBEditCustomerInfo,
+  getToken: () => Promise<string | null>,
+): Promise<ApiDefaultResponse> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/qbo/editCustomer?orgId=${orgId}&userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(customer),
+  });
+
+  const data: ApiDefaultResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to update customer');
+  }
+
+  return data;
 }
 
 /**

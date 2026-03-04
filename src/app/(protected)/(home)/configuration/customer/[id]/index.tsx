@@ -6,16 +6,24 @@ import {
   useTypedRow,
   useUpdateRowCallback,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextField } from '@/src/components/TextField';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
+import { useNetwork } from '@/src/context/NetworkContext';
+import { useAuth } from '@clerk/clerk-expo';
+import { QBEditCustomerInfo, updateCustomer } from '@/src/utils/quickbooksAPI';
 
 const EditCustomer = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+  const { isConnectedToQuickBooks } = useNetwork();
+  const { orgId, userId, getToken } = useAuth();
+
   const applyCustomerUpdates = useUpdateRowCallback('customers');
   const colors = useColors();
   const [updatedCustomer, setUpdatedCustomer] = useState<CustomerData>({
@@ -48,10 +56,44 @@ const EditCustomer = () => {
     }));
   }, []);
 
-  const handleBlur = useCallback(() => {
-    if (!id) return;
-    applyCustomerUpdates(id, updatedCustomer);
-  }, [id, updatedCustomer, applyCustomerUpdates]);
+  const handleBackPress = useCallback(() => {
+    if (id) {
+      applyCustomerUpdates(id, updatedCustomer);
+
+      if (isConnectedToQuickBooks && updatedCustomer.accountingId && orgId) {
+        // If the customer is connected to QuickBooks, we want to make sure any updates are sent to QuickBooks.
+        // We do not want to await this call, as it could delay the navigation back, but we do want to trigger it before navigating back to ensure the most up-to-date data is sent to QuickBooks.
+        (async () => {
+          try {
+            const nameParts = updatedCustomer.contactName
+              ? updatedCustomer.contactName.split(' ')
+              : updatedCustomer.name.split(' ');
+            const firstName = nameParts[0];
+            const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+            const qbCustomer: QBEditCustomerInfo = {
+              customerId: updatedCustomer.accountingId,
+              displayName: updatedCustomer.contactName || updatedCustomer.name,
+              firstName,
+              lastName,
+              address: '',
+              address2: '',
+              city: '',
+              state: '',
+              zip: '',
+              email: updatedCustomer.email,
+              phone: updatedCustomer.phone,
+            };
+
+            await updateCustomer(orgId, userId, qbCustomer, getToken);
+          } catch (error) {
+            console.error('Error updating customer in QuickBooks:', error);
+          }
+        })();
+      }
+    }
+    router.back();
+  }, [id, updatedCustomer, applyCustomerUpdates, router, isConnectedToQuickBooks, orgId, userId, getToken]);
 
   const handleToggleActive = useCallback(() => {
     const newActive = !updatedCustomer.active;
@@ -70,13 +112,14 @@ const EditCustomer = () => {
             title: 'Edit Customer',
             headerBackTitle: '',
             headerBackButtonDisplayMode: 'minimal',
+            headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
           }}
         />
         <View style={styles.container}>
           {isFromQuickBooks && (
             <Text
               txtSize="xs"
-              text="This customer is connected to a customer in QuickBooks. Only the Contact Name and the Active status can be edited."
+              text="This customer is connected to a customer in QuickBooks. Only the Contact Name, email, and the Active status can be edited."
               style={{ marginBottom: 12, color: colors.neutral500 }}
             />
           )}
@@ -87,7 +130,6 @@ const EditCustomer = () => {
             placeholder="Customer Name"
             value={updatedCustomer.name}
             onChangeText={(text) => handleInputChange('name', text)}
-            onBlur={handleBlur}
             editable={!isFromQuickBooks}
           />
           <TextField
@@ -97,7 +139,6 @@ const EditCustomer = () => {
             placeholder="Contact Name"
             value={updatedCustomer.contactName}
             onChangeText={(text) => handleInputChange('contactName', text)}
-            onBlur={handleBlur}
           />
           <TextField
             containerStyle={styles.inputContainer}
@@ -108,8 +149,6 @@ const EditCustomer = () => {
             keyboardType="email-address"
             autoCapitalize="none"
             onChangeText={(text) => handleInputChange('email', text)}
-            onBlur={handleBlur}
-            editable={!isFromQuickBooks}
           />
           <TextField
             style={[styles.input]}
@@ -118,7 +157,6 @@ const EditCustomer = () => {
             value={updatedCustomer.phone}
             keyboardType="phone-pad"
             onChangeText={(text) => handleInputChange('phone', text)}
-            onBlur={handleBlur}
             editable={!isFromQuickBooks}
           />
           <View style={styles.activeRow}>
