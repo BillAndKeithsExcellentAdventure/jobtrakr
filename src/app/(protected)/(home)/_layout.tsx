@@ -3,7 +3,7 @@ import { Redirect, Stack } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 
 export const unstable_settings = {
-  initialRouteName: '(protected)', // anchor
+  initialRouteName: 'index',
 };
 const ProjectsLayout = () => {
   const auth = useAuth();

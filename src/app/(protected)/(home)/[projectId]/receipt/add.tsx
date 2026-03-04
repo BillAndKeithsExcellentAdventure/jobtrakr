@@ -419,6 +419,7 @@ const AddReceiptPage = () => {
     allAccounts,
     router,
     appSettings.quickBooksExpenseAccountId,
+    addReceiptQueueEntry,
   ]);
 
   const handleCaptureImage = useCallback(async () => {

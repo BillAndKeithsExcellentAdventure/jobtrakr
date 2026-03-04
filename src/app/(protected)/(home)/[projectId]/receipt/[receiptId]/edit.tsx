@@ -172,14 +172,6 @@ const EditReceiptDetailsPage = () => {
     [receipt, receiptId, updateReceipt],
   );
 
-  const handleVendorChange = useCallback(
-    (vendor: string) => {
-      const newReceipt = { ...receipt, vendor };
-      updateReceipt(receiptId, newReceipt);
-    },
-    [receipt, receiptId, updateReceipt],
-  );
-
   const handleDescriptionChange = useCallback(
     (description: string) => {
       const newReceipt = { ...receipt, description };

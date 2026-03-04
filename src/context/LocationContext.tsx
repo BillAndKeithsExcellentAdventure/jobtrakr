@@ -18,7 +18,6 @@ interface LocationHostProviderProps {
 }
 
 export const LocationHostProvider: React.FC<LocationHostProviderProps> = ({ children }) => {
-  const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
   const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
 
   useEffect(() => {
@@ -30,11 +29,10 @@ export const LocationHostProvider: React.FC<LocationHostProviderProps> = ({ chil
       // Fetch the current location after permission is granted
       const location = await Location.getCurrentPositionAsync({});
       setCurrentLocation(location);
-      setHasLocationPermission(true);
     };
 
     requestLocationPermission();
-  }, [hasLocationPermission]);
+  }, []);
 
   return (
     <LocationContext.Provider value={{ locationHost: currentLocation }}>{children}</LocationContext.Provider>
