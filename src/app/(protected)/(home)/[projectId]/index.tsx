@@ -189,6 +189,7 @@ const ProjectDetailsPage = () => {
           totalBidAmount: 0,
           totalSpentAmount: 0,
           totalBalance: 0,
+          profitOnCompletedItems: 0,
           data: [],
         };
         sections.push(section);
@@ -212,6 +213,10 @@ const ProjectDetailsPage = () => {
       section.totalBidAmount = section.data.reduce((sum, item) => sum + item.bidAmount, 0);
       section.totalSpentAmount = section.data.reduce((sum, item) => sum + item.spentAmount, 0);
       section.totalBalance = section.data.reduce((sum, item) => sum + item.balance, 0);
+      section.profitOnCompletedItems = section.data.reduce(
+        (sum, item) => sum + (item.complete ? item.bidAmount - item.spentAmount : 0),
+        0,
+      );
     });
 
     return sections.sort(CostSectionDataCodeCompareAsNumber);
@@ -220,6 +225,10 @@ const ProjectDetailsPage = () => {
   // create projectBalance by summing sectionData totalBalance
   const projectBalance = useMemo(() => {
     return sectionData.reduce((sum, section) => sum + section.totalBalance, 0);
+  }, [sectionData]);
+
+  const profitOnCompletedItems = useMemo(() => {
+    return sectionData.reduce((sum, section) => sum + section.profitOnCompletedItems, 0);
   }, [sectionData]);
 
   // get a list of unused work items not represented in allWorkItemSummaries
@@ -739,14 +748,18 @@ const ProjectDetailsPage = () => {
               <Text txtSize="title" text={projectData.name} />
               {totalQuotedPrice && totalQuotedPrice > 0 ? (
                 <>
-                  <Text text={`quote: ${formatCurrency(totalQuotedPrice, true)}`} />
+                  <Text text={`Quote: ${formatCurrency(totalQuotedPrice, true)}`} />
+                  <Text text={`Bal: ${formatCurrency(projectBalance, true)}`} />
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                    <Text text={`est: ${formatCurrency(projectData.bidPrice, true)}`} />
-                    <Text text={`bal: ${formatCurrency(projectBalance, true)}`} />
+                    <Text text={`Est: ${formatCurrency(projectData.bidPrice, true)}`} />
+                    <Text text={`Spent: ${formatCurrency(projectData.amountSpent, true)}`} />
                   </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                    <Text text={`spent: ${formatCurrency(projectData.amountSpent, true)}`} />
-                    <Text text={`complete: ${numCompletedWorkItemSummaries} of ${numWorkItemSummaries}`} />
+                    <Text text={`Complete: ${numCompletedWorkItemSummaries}/${numWorkItemSummaries}`} />
+                    <Text
+                      style={profitOnCompletedItems < 0 ? { color: colors.errorText } : undefined}
+                      text={`Completion Tot: ${formatCurrency(profitOnCompletedItems, true)}`}
+                    />
                   </View>
                 </>
               ) : (

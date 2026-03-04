@@ -101,6 +101,15 @@ const CategorySpecificCostItemsPage = () => {
     [costItemSummaries],
   );
 
+  const profitOnCompletedItems = useMemo(
+    () =>
+      costItemSummaries.reduce(
+        (sum, item) => sum + (item.complete ? item.bidAmount - item.spentAmount : 0),
+        0,
+      ),
+    [costItemSummaries],
+  );
+
   // create projectBalance by summing sectionData totalBalance
   const balance = useMemo(() => {
     return costItemSummaries.reduce((sum, item) => sum + item.balance, 0);
@@ -214,8 +223,9 @@ const CategorySpecificCostItemsPage = () => {
         ) : (
           <>
             <View style={[styles.headerContainer, { borderColor: colors.border }]}>
-              <Text txtSize="title" text={projectData.name} />
-              <Text txtSize="sub-title" text={costItemsCategory?.name} />
+              <Text txtSize="title" text={costItemsCategory?.name} />
+              <Text txtSize="xs" text={projectData.name} />
+              <Text text={`Bal: ${formatCurrency(balance, true, true)}`} />
               <View
                 style={{
                   marginTop: 5,
@@ -224,8 +234,8 @@ const CategorySpecificCostItemsPage = () => {
                   width: '100%',
                 }}
               >
-                <Text text={`est: ${formatCurrency(bidAmount, true, true)}`} />
-                <Text text={`bal: ${formatCurrency(balance, true, true)}`} />
+                <Text text={`Est: ${formatCurrency(bidAmount, true, true)}`} />
+                <Text text={`Spent: ${formatCurrency(amountSpent, true, true)}`} />
               </View>
               <View
                 style={{
@@ -235,8 +245,11 @@ const CategorySpecificCostItemsPage = () => {
                   width: '100%',
                 }}
               >
-                <Text text={`spent: ${formatCurrency(amountSpent, true, true)}`} />
-                <Text text={`complete: ${numberOfCompletedCostItems} of ${numberOfCostItems}`} />
+                <Text text={`Complete: ${numberOfCompletedCostItems}/${numberOfCostItems}`} />
+                <Text
+                  style={profitOnCompletedItems < 0 ? { color: colors.errorText } : undefined}
+                  text={`Completion Tot: ${formatCurrency(profitOnCompletedItems, true, true)}`}
+                />
               </View>
             </View>
             <View style={{ flex: 1, paddingBottom: 5 }}>

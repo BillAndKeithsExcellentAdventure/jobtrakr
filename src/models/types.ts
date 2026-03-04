@@ -53,6 +53,7 @@ export interface CostSectionData {
   title: string;
   totalBidAmount: number;
   totalSpentAmount: number;
+  profitOnCompletedItems: number;
   totalBalance: number;
   data: CostItemData[];
 }
