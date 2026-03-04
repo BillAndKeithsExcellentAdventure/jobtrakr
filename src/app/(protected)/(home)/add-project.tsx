@@ -104,10 +104,13 @@ const AddProjectScreen = () => {
     const result = addProject(project);
     if (result.status !== 'Success') {
       Alert.alert(`Project creation failed for project ${project.name}: ${result.msg}`);
+      router.back();
     } else {
       addActiveProjectIds(result.id);
+      // go to the Project Overview screen for the newly created project.
+      // This will ensures the project is registered with QuickBooks
+      router.push({ pathname: '/[projectId]', params: { projectId: result.id } });
     }
-    router.back();
   }, [
     project,
     canAddProject,
