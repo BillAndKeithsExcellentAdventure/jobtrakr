@@ -34,7 +34,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Image, Keyboard, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { ReceiptLineItem } from '@/src/tbStores/ReceiptQueueStoreHooks';
+import { ReceiptLineItem, useAddReceiptQueueEntryCallback } from '@/src/tbStores/ReceiptQueueStoreHooks';
 
 const AddReceiptPage = () => {
   const defaultDate = useMemo(() => new Date(), []);
@@ -72,6 +72,7 @@ const AddReceiptPage = () => {
   const addPhotoImage = useAddImageCallback();
   const router = useRouter();
   const colors = useColors();
+  const addReceiptQueueEntry = useAddReceiptQueueEntryCallback();
 
   const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
     setPickedSubCategoryOption(selectedSubCategory);
@@ -789,21 +790,3 @@ const styles = StyleSheet.create({
 });
 
 export default AddReceiptPage;
-function addReceiptQueueEntry(queueEntryData: {
-  purchaseId: string;
-  fromProjectId: string;
-  vendorId: string;
-  vendor: string;
-  paymentAccountId: string;
-  accountingId: string;
-  description: string;
-  receiptDate: number;
-  pictureDate: number;
-  thumbnail: string;
-  notes: string;
-  imageId: string;
-  lineItems: ReceiptLineItem[];
-  qbSyncHash: string;
-}) {
-  throw new Error('Function not implemented.');
-}

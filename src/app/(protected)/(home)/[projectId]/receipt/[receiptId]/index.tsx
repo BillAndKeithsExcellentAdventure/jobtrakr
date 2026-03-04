@@ -42,7 +42,7 @@ const ReceiptDetailsPage = () => {
   const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
   const addReceiptImage = useAddImageCallback();
   const appSettings = useAppSettings();
-  const { isQuickBooksAccessible } = useNetwork();
+  const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
   const project = useProject(projectId);
   const projectAbbr = project?.abbreviation ?? '';
   const projectName = project?.name ?? '';
@@ -662,7 +662,7 @@ const ReceiptDetailsPage = () => {
                       }`}
                     />
                   </View>
-                  {isQuickBooksAccessible && hasItemWithNoWorkItemId && (
+                  {isQuickBooksConnected && hasItemWithNoWorkItemId && (
                     <View style={{ paddingHorizontal: 10, paddingVertical: 8 }}>
                       <Text
                         txtSize="xs"
@@ -671,7 +671,7 @@ const ReceiptDetailsPage = () => {
                       />
                     </View>
                   )}
-                  {isQuickBooksAccessible && !hasLineItemForCurrentProject && (
+                  {isQuickBooksConnected && !hasLineItemForCurrentProject && (
                     <View style={{ paddingHorizontal: 10, paddingVertical: 8 }}>
                       <Text
                         txtSize="xs"
@@ -703,7 +703,7 @@ const ReceiptDetailsPage = () => {
                         />
                       )}
                     </View>
-                  ) : isQuickBooksAccessible && allReceiptLineItems.length > 0 ? (
+                  ) : isQuickBooksConnected && allReceiptLineItems.length > 0 ? (
                     <View style={styles.syncButtonRow}>
                       {!amountsMatch ? (
                         <>
