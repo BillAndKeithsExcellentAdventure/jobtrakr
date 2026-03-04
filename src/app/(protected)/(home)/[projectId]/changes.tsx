@@ -105,7 +105,7 @@ const ChangeOrdersScreen = () => {
 
   // Check if required project owner info is defined
   const customer = allCustomers.find((c) => c.id === currentProject?.customerId);
-  const isProjectOwnerInfoComplete = customer?.name?.trim() && customer?.email?.trim();
+  const isProjectCustomerInfoComplete = customer?.name?.trim() && customer?.email?.trim();
 
   const fetchStatuses = useCallback(async () => {
     try {
@@ -208,29 +208,28 @@ const ChangeOrdersScreen = () => {
               title="Edit Company Settings"
             />
           </View>
-        ) : !isProjectOwnerInfoComplete ? (
+        ) : !isProjectCustomerInfoComplete ? (
           <View style={styles.messageContainer}>
             <Text txtSize="sub-title" style={{ color: colors.text }}>
-              Before creating change orders, the name and email of the project&apos;s owner or primary contact
-              are required.
+              Before creating change orders, the name and email of the project&apos;s customer are required.
             </Text>
             <Text txtSize="sub-title" style={{ color: colors.text }}>
-              Please make sure the required data are defined in the project info to continue.
+              Please make sure the required data are defined in the project info and in the customer info to continue.
             </Text>
-            <ActionButton
-              style={{ minWidth: 200 }}
-              onPress={() =>
-                router.push({
-                  pathname: '/[projectId]/edit',
-                  params: {
-                    projectId,
-                    projectName,
+            {customer?.id && (
+              <ActionButton
+                style={{ minWidth: 200 }}
+                onPress={() =>
+                  router.push({
+                    pathname: '/configuration/customer/[id]',
+                    params: {
+                    id: customer!.id,
                   },
                 })
               }
               type={'action'}
-              title="Edit Project Info"
-            />
+              title="Edit Customer Info"
+            />}
           </View>
         ) : (
           <>
