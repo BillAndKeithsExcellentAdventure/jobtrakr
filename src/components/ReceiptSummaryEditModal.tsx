@@ -15,6 +15,8 @@ import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '../constants/app-constants';
 import { useNetwork } from '../context/NetworkContext';
 import { getVendorSearchTerm } from '../utils/vendorUtils';
+import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { TextField } from './TextField';
 
 interface ReceiptSummaryEditModalProps {
   isVisible: boolean;
@@ -25,6 +27,8 @@ interface ReceiptSummaryEditModalProps {
     totalAmount: number;
     totalTax: number;
     receiptDate: number;
+    paymentAccountId?: string;
+    notes?: string;
   };
   onSave: (updatedSummary: {
     vendor: string;
@@ -32,6 +36,8 @@ interface ReceiptSummaryEditModalProps {
     totalAmount: number;
     totalTax: number;
     receiptDate: number;
+    paymentAccountId?: string;
+    notes?: string;
   }) => void;
 }
 
@@ -47,14 +53,49 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedVendorOption, setPickedVendorOption] = useState<OptionEntry | undefined>(undefined);
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
+  const [isPaymentAccountPickerVisible, setIsPaymentAccountPickerVisible] = useState<boolean>(false);
+  const [pickedPaymentAccountOption, setPickedPaymentAccountOption] = useState<OptionEntry | undefined>(
+    undefined,
+  );
+  const [paymentAccounts, setPaymentAccounts] = useState<OptionEntry[]>([]);
   const { isConnectedToQuickBooks } = useNetwork();
   const allVendors = useAllConfigurationRows('vendors');
+  const allAccounts = useAllConfigurationRows('accounts');
+  const appSettings = useAppSettings();
 
   useEffect(() => {
     setEditedSummary(receiptSummary);
     const vendorMatch = vendors.find((v) => v.label === receiptSummary.vendor);
     setPickedVendorOption(vendorMatch);
   }, [receiptSummary, vendors]);
+
+  useEffect(() => {
+    if (allAccounts && allAccounts.length > 0) {
+      const configuredAccountIds = appSettings.quickBooksPaymentAccounts
+        ? appSettings.quickBooksPaymentAccounts.split(',').filter((id) => id.trim() !== '')
+        : [];
+
+      const paymentList = allAccounts
+        .filter((account) => configuredAccountIds.includes(account.accountingId))
+        .map((account) => ({
+          label: account.name,
+          value: account.accountingId,
+        }));
+
+      setPaymentAccounts(paymentList);
+    } else {
+      setPaymentAccounts([]);
+    }
+  }, [allAccounts, appSettings.quickBooksPaymentAccounts]);
+
+  useEffect(() => {
+    if (!paymentAccounts.length) {
+      setPickedPaymentAccountOption(undefined);
+      return;
+    }
+    const match = paymentAccounts.find((o) => o.value === editedSummary.paymentAccountId);
+    setPickedPaymentAccountOption(match);
+  }, [editedSummary.paymentAccountId, paymentAccounts]);
 
   useEffect(() => {
     if (allVendors && allVendors.length > 0) {
@@ -89,6 +130,14 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
     },
     [handleVendorChange],
   );
+
+  const handlePaymentAccountOptionChange = useCallback((option: OptionEntry) => {
+    if (option) {
+      setEditedSummary((prev) => ({ ...prev, paymentAccountId: option.value }));
+      setPickedPaymentAccountOption(option);
+    }
+    setIsPaymentAccountPickerVisible(false);
+  }, []);
 
   const handleSave = useCallback(async () => {
     onSave(editedSummary);
@@ -170,6 +219,28 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
                 onCancel={() => setDatePickerVisible(false)}
               />
 
+              {isConnectedToQuickBooks && paymentAccounts.length > 0 && (
+                <>
+                  <OptionPickerItem
+                    containerStyle={styles.inputContainer}
+                    optionLabel={pickedPaymentAccountOption?.label}
+                    label="Payment Account"
+                    placeholder="Payment Account"
+                    editable={false}
+                    onPickerButtonPress={() => setIsPaymentAccountPickerVisible(true)}
+                  />
+                  {pickedPaymentAccountOption?.label?.toLowerCase().includes('checking') && (
+                    <TextField
+                      label="Check #"
+                      containerStyle={styles.inputContainer}
+                      placeholder="Check #"
+                      value={editedSummary.notes ?? ''}
+                      onChangeText={(text) => setEditedSummary((prev) => ({ ...prev, notes: text }))}
+                    />
+                  )}
+                </>
+              )}
+
               <View style={styles.buttonContainer}>
                 <ActionButton style={styles.button} type="ok" title="Save" onPress={handleSave} />
                 <ActionButton style={styles.button} type="cancel" title="Cancel" onPress={handleClose} />
@@ -195,6 +266,21 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
                 vendors.length > 15 ||
                 (isConnectedToQuickBooks && !editedSummary.vendorId && !!editedSummary.vendor)
               }
+            />
+          </BottomSheetContainer>
+        )}
+        {isConnectedToQuickBooks && paymentAccounts.length > 0 && isPaymentAccountPickerVisible && (
+          <BottomSheetContainer
+            modalHeight={'60%'}
+            isVisible={isPaymentAccountPickerVisible}
+            onClose={() => setIsPaymentAccountPickerVisible(false)}
+            showKeyboardToolbar={false}
+          >
+            <OptionList
+              options={paymentAccounts}
+              onSelect={(option) => handlePaymentAccountOptionChange(option)}
+              selectedOption={pickedPaymentAccountOption}
+              enableSearch={false}
             />
           </BottomSheetContainer>
         )}

@@ -477,7 +477,7 @@ const RequestAIProcessingPage = () => {
                       </View>
                       <View style={{ flexDirection: 'row' }}>
                         <Text style={styles.label}>Amount:</Text>
-                        <Text>{receiptSummary.totalAmount}</Text>
+                        <Text>{formatCurrency(receiptSummary.totalAmount, false, true)}</Text>
                       </View>
                       <View style={{ flexDirection: 'row' }}>
                         <Text style={styles.label}>Tax:</Text>
