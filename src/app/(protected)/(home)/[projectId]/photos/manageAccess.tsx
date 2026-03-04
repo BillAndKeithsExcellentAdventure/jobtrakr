@@ -22,6 +22,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   RecentMediaEntryDateCompare,
   useAllRows,
+  ImageIdAndType,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 
 const SwipeableAddress = ({ item, onDelete }: { item: string; onDelete: (id: string) => void }) => {
@@ -105,11 +106,11 @@ export default function ManageAccessScreen() {
         const serverImageIds = new Set(serverResult.imageIds || []);
 
         // Get public image IDs from local store
-        const localPublicImageIds = allProjectMedia
+        const localPublicImageIds: ImageIdAndType[] = allProjectMedia
           .filter((media) => media.isPublic && media.imageId)
-          .map((media) => media.imageId!);
+          .map((media) => ({ imageId: media.imageId!, mediaType: media.mediaType }));
 
-        const localPublicSet = new Set(localPublicImageIds);
+        const localPublicSet = new Set(localPublicImageIds.map((i) => i.imageId));
 
         // Check if sets are different
         const needsSync =

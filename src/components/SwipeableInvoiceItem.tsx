@@ -46,7 +46,7 @@ const SwipeableInvoiceItem = React.memo<{
   const deleteMediaCallback = useDeleteMediaCallback();
   const mediaToUpload = useAllMediaToUpload();
   const store = useUploadSyncStore();
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
   const textColor = item.fullyClassified ? colors.text : colors.errorText;
   const isPaid = item.paymentStatus === 'paid';
   const allInvoiceItems = useMemo(
@@ -94,7 +94,7 @@ const SwipeableInvoiceItem = React.memo<{
         })();
       }
 
-      if (item.billId && orgId && userId && isConnectedToQuickBooks) {
+      if (item.billId && orgId && userId && isQuickBooksAccessible) {
         deleteBillFromQuickBooks(orgId, userId, projectId, item.billId, getToken);
       }
     },
@@ -111,13 +111,13 @@ const SwipeableInvoiceItem = React.memo<{
       deleteMediaCallback,
       store,
       mediaToUpload,
-      isConnectedToQuickBooks,
+      isQuickBooksAccessible,
     ],
   );
 
   const handleDelete = useCallback(() => {
     const message =
-      isConnectedToQuickBooks && item.billId
+      isQuickBooksAccessible && item.billId
         ? 'This invoice is connected to QuickBooks. Are you sure you want to delete it and its association line items?'
         : 'Are you sure you want to delete this invoice and its association line items?';
 
@@ -127,7 +127,7 @@ const SwipeableInvoiceItem = React.memo<{
       [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeInvoice(item.id) }],
       { cancelable: true },
     );
-  }, [item.id, item.billId, isConnectedToQuickBooks, removeInvoice]);
+  }, [item.id, item.billId, isQuickBooksAccessible, removeInvoice]);
 
   const renderRightActions = useCallback(() => <RightAction onDelete={handleDelete} />, [handleDelete]);
   const photoDate = formatDate(item.pictureDate, undefined, true);

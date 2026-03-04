@@ -19,7 +19,7 @@ import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 const QBAccountsScreen = () => {
   const colors = useColors();
   const router = useRouter();
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
   const storedAccounts = useAllRows('accounts');
@@ -132,6 +132,17 @@ const QBAccountsScreen = () => {
     });
   }, []);
 
+  // Get selected payment accounts for display, with default at the top
+  const selectedPaymentAccountsList = useMemo(() => {
+    const filtered = paymentAccounts.filter((account) => selectedPaymentAccountIds.includes(account.value));
+    // Sort so default account appears first
+    return filtered.sort((a, b) => {
+      if (a.value === defaultPaymentAccountId) return -1;
+      if (b.value === defaultPaymentAccountId) return 1;
+      return 0;
+    });
+  }, [paymentAccounts, selectedPaymentAccountIds, defaultPaymentAccountId]);
+
   // Save all changes
   const handleSave = useCallback(() => {
     const updatedSettings: Partial<SettingsData> = {
@@ -153,17 +164,6 @@ const QBAccountsScreen = () => {
     router,
   ]);
 
-  // Get selected payment accounts for display, with default at the top
-  const selectedPaymentAccountsList = useMemo(() => {
-    const filtered = paymentAccounts.filter((account) => selectedPaymentAccountIds.includes(account.value));
-    // Sort so default account appears first
-    return filtered.sort((a, b) => {
-      if (a.value === defaultPaymentAccountId) return -1;
-      if (b.value === defaultPaymentAccountId) return 1;
-      return 0;
-    });
-  }, [paymentAccounts, selectedPaymentAccountIds, defaultPaymentAccountId]);
-
   // Check if save is enabled
   const isSaveEnabled = useMemo(() => {
     // Check if any values have changed from the saved settings
@@ -182,7 +182,7 @@ const QBAccountsScreen = () => {
   }, [selectedExpenseAccountId, selectedPaymentAccountIds, defaultPaymentAccountId, appSettings]);
 
   // Show message if no accounts are available (not connected and no stored accounts)
-  if (!isConnectedToQuickBooks && storedAccounts.length === 0) {
+  if (!isQuickBooksAccessible && storedAccounts.length === 0) {
     return (
       <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
         <Stack.Screen

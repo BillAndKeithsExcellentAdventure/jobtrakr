@@ -32,7 +32,7 @@ const EditInvoiceDetailsPage = () => {
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [dueDatePickerVisible, setDueDatePickerVisible] = useState(false);
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksConnected } = useNetwork();
   const handleVendorOptionChange = (option: OptionEntry) => {
     if (option) {
       setInvoice((prevInvoice) => ({
@@ -265,10 +265,10 @@ const EditInvoiceDetailsPage = () => {
               onSelect={(option) => handleVendorOptionChange(option)}
               selectedOption={pickedOption}
               initialSearchText={
-                isConnectedToQuickBooks && !invoice.vendorId ? getVendorSearchTerm(invoice.vendor) : undefined
+                isQuickBooksConnected && !invoice.vendorId ? getVendorSearchTerm(invoice.vendor) : undefined
               }
               enableSearch={
-                vendors.length > 15 || (isConnectedToQuickBooks && !invoice.vendorId && !!invoice.vendor)
+                vendors.length > 15 || (isQuickBooksConnected && !invoice.vendorId && !!invoice.vendor)
               }
             />
           </BottomSheetContainer>

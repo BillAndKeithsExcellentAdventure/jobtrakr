@@ -50,7 +50,7 @@ export default function ProjectHomeScreen() {
   const { orgRole, orgId } = auth;
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
   const allCustomers = useAllRows('customers');
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
 
   const appSettings = useAppSettings();
 
@@ -313,7 +313,7 @@ export default function ProjectHomeScreen() {
             marginRight: Platform.OS === 'android' ? 16 : 0,
           }}
         >
-          {isConnectedToQuickBooks && <SvgImage fileName="qb-logo" width={26} height={26} />}
+          {isQuickBooksAccessible && <SvgImage fileName="qb-logo" width={26} height={26} />}
           <Pressable
             style={{ alignItems: 'center' }}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -326,7 +326,7 @@ export default function ProjectHomeScreen() {
         </View>
       ),
     };
-  }, [colors.iconColor, headerMenuModalVisible, setHeaderMenuModalVisible, isConnectedToQuickBooks]);
+  }, [colors.iconColor, headerMenuModalVisible, setHeaderMenuModalVisible, isQuickBooksAccessible]);
 
   const minConfigMet: boolean = useMemo(
     () => {

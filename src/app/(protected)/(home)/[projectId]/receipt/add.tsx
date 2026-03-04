@@ -34,12 +34,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Image, Keyboard, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { ReceiptLineItem } from '@/src/tbStores/ReceiptQueueStoreHooks';
+import { ReceiptLineItem, useAddReceiptQueueEntryCallback } from '@/src/tbStores/ReceiptQueueStoreHooks';
 
 const AddReceiptPage = () => {
   const defaultDate = useMemo(() => new Date(), []);
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
   const auth = useAuth();
   const project = useProject(projectId);
   const projectAbbr = project?.abbreviation ?? '';
@@ -72,6 +72,7 @@ const AddReceiptPage = () => {
   const addPhotoImage = useAddImageCallback();
   const router = useRouter();
   const colors = useColors();
+  const addReceiptQueueEntry = useAddReceiptQueueEntryCallback();
 
   const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
     setPickedSubCategoryOption(selectedSubCategory);
@@ -266,7 +267,7 @@ const AddReceiptPage = () => {
       const hasVendorId = !!projectReceipt.vendorId;
 
       if (
-        isConnectedToQuickBooks &&
+        isQuickBooksAccessible &&
         hasLineItems &&
         hasAmount &&
         hasPaymentAccount &&
@@ -408,7 +409,7 @@ const AddReceiptPage = () => {
     addLineItem,
     applyToSingleCostCode,
     pickedSubCategoryOption,
-    isConnectedToQuickBooks,
+    isQuickBooksAccessible,
     userId,
     orgId,
     projectId,
@@ -585,7 +586,7 @@ const AddReceiptPage = () => {
               textColor={projectReceipt.vendorId ? colors.text : colors.error}
               label="Vendor/Merchant"
               placeholder="Vendor/Merchant"
-              editable={isConnectedToQuickBooks ? false : true}
+              editable={isQuickBooksAccessible ? false : true}
               onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
             />
           ) : (
@@ -595,7 +596,7 @@ const AddReceiptPage = () => {
               placeholder="Vendor/Merchant"
               label="Vendor/Merchant"
               value={projectReceipt.vendor}
-              editable={isConnectedToQuickBooks ? false : true}
+              editable={isQuickBooksAccessible ? false : true}
             />
           )}
 
@@ -789,21 +790,3 @@ const styles = StyleSheet.create({
 });
 
 export default AddReceiptPage;
-function addReceiptQueueEntry(queueEntryData: {
-  purchaseId: string;
-  fromProjectId: string;
-  vendorId: string;
-  vendor: string;
-  paymentAccountId: string;
-  accountingId: string;
-  description: string;
-  receiptDate: number;
-  pictureDate: number;
-  thumbnail: string;
-  notes: string;
-  imageId: string;
-  lineItems: ReceiptLineItem[];
-  qbSyncHash: string;
-}) {
-  throw new Error('Function not implemented.');
-}

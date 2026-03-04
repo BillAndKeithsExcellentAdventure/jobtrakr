@@ -62,7 +62,7 @@ const ProjectInvoicesPage = () => {
   const previousInvoiceCount = useRef(0);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
   const { orgId, userId, getToken } = auth;
 
   useCostUpdater(projectId);
@@ -75,7 +75,7 @@ const ProjectInvoicesPage = () => {
 
   // On mount, fetch paid bill statuses from QuickBooks and mark matching invoices as paid
   useEffect(() => {
-    if (!orgId || !userId || !isConnectedToQuickBooks) return;
+    if (!orgId || !userId || !isQuickBooksAccessible) return;
     let active = true;
 
     fetchPaidBills(orgId, userId, projectId, getToken)

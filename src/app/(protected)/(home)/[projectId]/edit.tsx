@@ -23,7 +23,7 @@ const EditProjectScreen = () => {
   const colors = useColors();
   const router = useRouter();
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
   const { orgId, userId, getToken } = useAuth();
 
   const [project, setProject] = useState<ProjectData>({
@@ -172,7 +172,7 @@ const EditProjectScreen = () => {
       }
       if (
         customerIdChanged &&
-        isConnectedToQuickBooks &&
+        isQuickBooksAccessible &&
         orgId &&
         userId &&
         customer.accountingId &&
@@ -191,7 +191,7 @@ const EditProjectScreen = () => {
         }
       }
     },
-    [project, projectId, updateProject, isConnectedToQuickBooks, orgId, userId, getToken],
+    [project, projectId, updateProject, isQuickBooksAccessible, orgId, userId, getToken],
   );
 
   return (

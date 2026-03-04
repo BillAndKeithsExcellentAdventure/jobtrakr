@@ -50,7 +50,7 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
   const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
   const [pickedVendorOption, setPickedVendorOption] = useState<OptionEntry | undefined>(undefined);
   const [vendors, setVendors] = useState<OptionEntry[]>([]);
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
   const allVendors = useAllConfigurationRows('vendors');
 
   useEffect(() => {
@@ -231,13 +231,13 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
               onSelect={(option) => handleVendorOptionChange(option)}
               selectedOption={pickedVendorOption}
               initialSearchText={
-                isConnectedToQuickBooks && !editedSummary.vendorId
+                isQuickBooksAccessible && !editedSummary.vendorId
                   ? getVendorSearchTerm(editedSummary.vendor)
                   : undefined
               }
               enableSearch={
                 vendors.length > 15 ||
-                (isConnectedToQuickBooks && !editedSummary.vendorId && !!editedSummary.vendor)
+                (isQuickBooksAccessible && !editedSummary.vendorId && !!editedSummary.vendor)
               }
             />
           </BottomSheetContainer>

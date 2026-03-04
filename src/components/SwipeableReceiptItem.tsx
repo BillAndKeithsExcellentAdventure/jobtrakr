@@ -216,7 +216,7 @@ const SwipeableReceiptItem = React.memo<{
                   <View style={{ flexDirection: 'row', gap: 20 }}>
                     {item.purchaseId?.length > 0 && <SvgImage fileName="qb-logo" width={20} height={20} />}
                     {item.accountingId?.length > 0 && (
-                      <Text style={{ color: textColor }}>{`${item.accountingId}`}</Text>
+                      <Text numberOfLines={1} style={{ color: textColor }}>{`${item.accountingId}`}</Text>
                     )}
                   </View>
                   <Text numberOfLines={1} style={{ color: textColor }}>
@@ -227,7 +227,9 @@ const SwipeableReceiptItem = React.memo<{
                   <Text numberOfLines={1} style={{ color: textColor }}>
                     {item.vendor}
                   </Text>
-                  <Text style={{ color: textColor }}>{item.description}</Text>
+                  <Text numberOfLines={1} style={{ color: textColor }}>
+                    {item.description}
+                  </Text>
                   <Text style={{ color: textColor }}>{formatDate(item.receiptDate)}</Text>
                 </View>
                 <View style={{ width: 30, paddingLeft: 5, alignItems: 'center' }}>

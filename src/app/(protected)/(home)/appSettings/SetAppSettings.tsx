@@ -67,7 +67,7 @@ const SetAppSettingScreen = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isLoadingCompanySettings, setIsLoadingCompanySettings] = useState(false);
   const [loadingStatusMessage, setLoadingStatusMessage] = useState<string>('');
-  const { isConnected, isInternetReachable, isConnectedToQuickBooks, setQuickBooksConnected } = useNetwork();
+  const { isConnected, isInternetReachable, isQuickBooksAccessible, setQuickBooksAccessible } = useNetwork();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState(false);
 
   // Get store hooks for accounts and vendors
@@ -264,7 +264,7 @@ const SetAppSettingScreen = () => {
                       setAppSettings(updatedSettings);
                       // call following after a delay to ensure settings are updated before attempting to set variable that will trigger looking at appSettings.
                       setTimeout(() => {
-                        setQuickBooksConnected(connected);
+                        setQuickBooksAccessible(connected);
                       }, 100);
                     }
 
@@ -286,7 +286,7 @@ const SetAppSettingScreen = () => {
                       setSettings(updatedSettings);
                       // call following after a delay to ensure settings are updated before attempting to set variable that will trigger looking at appSettings.
                       setTimeout(() => {
-                        setQuickBooksConnected(connected);
+                        setQuickBooksAccessible(connected);
                       }, 100);
 
                       setLoadingStatusMessage('Loading Vendors...');
@@ -346,7 +346,7 @@ const SetAppSettingScreen = () => {
     settings,
     setSettings,
     setAppSettings,
-    setQuickBooksConnected,
+    setQuickBooksAccessible,
     isConnecting,
     handleFetchCompanyInfoFromQuickBooks,
     allAccounts,
@@ -381,7 +381,7 @@ const SetAppSettingScreen = () => {
             setAppSettings(updatedSettings);
             // call following after a delay to ensure settings are updated before attempting to set variable that will trigger looking at appSettings.
             setTimeout(() => {
-              setQuickBooksConnected(false);
+              setQuickBooksAccessible(false);
             }, 100);
 
             Alert.alert('Success', 'Successfully disconnected from QuickBooks');
@@ -393,7 +393,7 @@ const SetAppSettingScreen = () => {
         },
       },
     ]);
-  }, [auth, setQuickBooksConnected, settings, setAppSettings]);
+  }, [auth, setQuickBooksAccessible, settings, setAppSettings]);
 
   const handleHeaderMenuItemPress = useCallback(
     (menuItem: 'disconnect' | 'load') => {
@@ -488,7 +488,7 @@ const SetAppSettingScreen = () => {
           headerBackButtonDisplayMode: 'minimal',
           headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
           headerRight: () =>
-            isConnectedToQuickBooks ? (
+            isQuickBooksAccessible ? (
               <View style={{ backgroundColor: 'transparent' }}>
                 <TouchableOpacity
                   style={{ alignItems: 'center' }}
@@ -529,7 +529,7 @@ const SetAppSettingScreen = () => {
                   <Text style={{ textAlign: 'center', marginTop: 8 }} text="Connecting to QuickBooks..." />
                 </>
               ) : (
-                !isConnectedToQuickBooks && (
+                !isQuickBooksAccessible && (
                   <ActionButton
                     type="action"
                     title="Connect to QuickBooks"
