@@ -71,7 +71,7 @@ const SwipeableReceiptItem = React.memo<{
 
   const removeReceipt = useCallback(
     async (id: string | undefined) => {
-      if (id == undefined) return;
+      if (id === undefined) return;
       try {
         // before deleting receipt, we should delete all line items associated with it
         allReceiptItems.forEach((lineItem) => {
@@ -139,8 +139,11 @@ const SwipeableReceiptItem = React.memo<{
       deleteReceiptLineItem,
       allReceiptItems,
       item.imageId,
+      item.purchaseId,
       projectId,
       orgId,
+      userId,
+      getToken,
       deleteMediaCallback,
       store,
       mediaToUpload,

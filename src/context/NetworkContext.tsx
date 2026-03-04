@@ -1,19 +1,9 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  ReactNode,
-  use,
-} from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { isDevelopmentBuild } from '@/src/utils/environment';
 import { isQuickBooksConnected as testQbIsConnected } from '@/src/utils/quickbooksAPI';
 import { useAuth } from '@clerk/clerk-expo';
-import { Alert } from 'react-native';
 
 interface NetworkContextType {
   isConnected: boolean;

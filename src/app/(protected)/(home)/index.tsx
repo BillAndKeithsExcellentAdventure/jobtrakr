@@ -237,7 +237,7 @@ export default function ProjectHomeScreen() {
         await signOut();
       }
     },
-    [router, signOut, auth],
+    [router, signOut],
   );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(() => {

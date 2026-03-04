@@ -147,7 +147,7 @@ const QBAccountsScreen = () => {
   }, [
     appSettings,
     selectedExpenseAccountId,
-    selectedPaymentAccountIds,
+    selectedPaymentAccountsList,
     defaultPaymentAccountId,
     setAppSettings,
     router,

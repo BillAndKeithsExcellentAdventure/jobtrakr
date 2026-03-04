@@ -239,7 +239,7 @@ const AddInvoicePage = () => {
             accountingId: response.data?.Bill?.DocNumber ?? '',
             qbSyncHash: hash,
           };
-          const updateResult = updateInvoice(newInvoiceId, updatedInvoice);
+          updateInvoice(newInvoiceId, updatedInvoice);
           stopProcessing();
         } catch (error) {
           stopProcessing();
@@ -270,6 +270,10 @@ const AddInvoicePage = () => {
     qbExpenseAccountId,
     allVendors,
     currentProject,
+    projectId,
+    startProcessing,
+    stopProcessing,
+    updateInvoice,
   ]);
 
   const handleCaptureImage = useCallback(async () => {

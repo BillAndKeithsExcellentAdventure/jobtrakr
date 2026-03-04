@@ -63,7 +63,6 @@ const Home = () => {
   const deleteVendor = useDeleteRowCallback('vendors');
   const allAccounts = useAllRows('accounts');
   const addAccount = useAddRowCallback('accounts');
-  const updateAccount = useUpdateRowCallback('accounts');
   const deleteAccount = useDeleteRowCallback('accounts');
   const allCustomers = useAllRows('customers');
   const addCustomer = useAddRowCallback('customers');
@@ -437,12 +436,12 @@ const Home = () => {
       allVendors,
       addVendorToStore,
       updateVendor,
+      deleteVendor,
       cleanupOrphanedWorkItems,
       startProcessing,
       stopProcessing,
       allAccounts,
       addAccount,
-      updateAccount,
       deleteAccount,
       allCustomers,
       addCustomer,

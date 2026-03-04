@@ -220,7 +220,7 @@ const ProjectDetailsPage = () => {
     });
 
     return sections.sort(CostSectionDataCodeCompareAsNumber);
-  }, [allWorkItemSummaries, allActualCostItems, workItemMap, categoryMap]);
+  }, [allWorkItemSummaries, allActualCostItems, workItemMap, categoryMap, projectId]);
 
   // create projectBalance by summing sectionData totalBalance
   const projectBalance = useMemo(() => {

@@ -415,7 +415,6 @@ const AddReceiptPage = () => {
     projectAbbr,
     projectName,
     getToken,
-    projectWorkItems,
     allAccounts,
     router,
     appSettings.quickBooksExpenseAccountId,

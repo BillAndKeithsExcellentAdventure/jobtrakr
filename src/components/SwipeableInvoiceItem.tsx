@@ -59,11 +59,6 @@ const SwipeableInvoiceItem = React.memo<{
     [allInvoiceItems],
   );
 
-  const totalOfAllInvoiceItemsFormatted = useMemo(
-    () => formatCurrency(totalOfAllInvoiceItems, true, true),
-    [totalOfAllInvoiceItems],
-  );
-
   const removeInvoice = useCallback(
     (id: string | undefined) => {
       if (!id) return;

@@ -308,7 +308,7 @@ export const useCostUpdater = (projectId: string): void => {
       )
       .reduce((sum, item) => sum + item.amount, 0);
     setAmountSpent(spentAmount);
-  }, [allCostRows, setAmountSpent]);
+  }, [allCostRows, setAmountSpent, projectId]);
 };
 
 /* Watch for changes to table workItemSummaries and recalculate the total amount bid 
@@ -345,7 +345,7 @@ export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
       });
     }
     return true;
-  }, [seedWorkItems, allWorkItemSummaries, addWorkItemSummary, setSeedWorkItems]);
+  }, [seedWorkItems, allWorkItemSummaries, addWorkItemSummary]);
 
   useEffect(() => {
     if (activeProjectIds.includes(projectId)) {
@@ -357,7 +357,7 @@ export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
         }
       }
     }
-  }, [projectId, seedWorkItems, allWorkItemSummaries, activeProjectIds, seedInitialData]);
+  }, [projectId, seedWorkItems, allWorkItemSummaries, activeProjectIds, seedInitialData, setSeedWorkItems]);
 };
 
 // function to get workitems for a given project that has no costs associated with it and no bid amount

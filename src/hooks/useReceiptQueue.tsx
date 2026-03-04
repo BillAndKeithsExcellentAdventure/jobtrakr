@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@clerk/clerk-expo';
 import { useNetwork } from '../context/NetworkContext';
 import {
@@ -53,82 +53,85 @@ export const useReceiptQueue = () => {
   }, [receiptProjectIds, addActiveProjectIds]);
 
   // Helper function to create a receipt copy in a target project
-  const createReceiptCopyInProject = (
-    queuedReceipt: ReceiptQueueEntry,
-    toProjectId: string,
-    store: any,
-  ): { success: boolean; msg: string } => {
-    try {
-      if (!store) {
-        console.error(`Target project store not available for project ${toProjectId}`);
-        return { success: false, msg: 'Target project store not available' };
-      }
+  const createReceiptCopyInProject = useCallback(
+    (
+      queuedReceipt: ReceiptQueueEntry,
+      toProjectId: string,
+      store: any,
+    ): { success: boolean; msg: string } => {
+      try {
+        if (!store) {
+          console.error(`Target project store not available for project ${toProjectId}`);
+          return { success: false, msg: 'Target project store not available' };
+        }
 
-      const newReceiptId = randomUUID();
+        const newReceiptId = randomUUID();
 
-      // Create the receipt in the target project
-      const receiptData = {
-        accountingId: '',
-        vendor: queuedReceipt.vendor,
-        vendorId: queuedReceipt.vendorId,
-        paymentAccountId: queuedReceipt.paymentAccountId,
-        expenseAccountId: queuedReceipt.accountingId,
-        description: queuedReceipt.description,
-        amount: queuedReceipt.lineItems
-          .filter((item) => item.projectId === toProjectId)
-          .reduce((sum, item) => sum + item.amount, 0),
-        receiptDate: queuedReceipt.receiptDate,
-        thumbnail: queuedReceipt.thumbnail,
-        pictureDate: queuedReceipt.pictureDate,
-        imageId: queuedReceipt.imageId || '',
-        notes: queuedReceipt.notes,
-        markedComplete: false,
-        purchaseId: queuedReceipt.purchaseId,
-        qbSyncHash: queuedReceipt.qbSyncHash,
-        id: newReceiptId,
-      };
-
-      const receiptSuccess = store.setRow('receipts', newReceiptId, receiptData);
-      if (!receiptSuccess) {
-        console.error(`Failed to add receipt to project ${toProjectId}`);
-        return { success: false, msg: 'Failed to create receipt' };
-      }
-
-      console.log(`Receipt queue: Created receipt ${newReceiptId} in project ${toProjectId}`);
-
-      // Create work item cost entries for each line item belonging to this target project
-      const targetLineItems = queuedReceipt.lineItems.filter((item) => item.projectId === toProjectId);
-      for (const lineItem of targetLineItems) {
-        const costEntryId = randomUUID();
-        const costEntryData = {
-          id: costEntryId,
-          label: lineItem.itemDescription,
-          amount: lineItem.amount,
-          workItemId: lineItem.workItemId,
-          parentId: newReceiptId,
-          documentationType: 'receipt',
-          projectId: toProjectId,
+        // Create the receipt in the target project
+        const receiptData = {
+          accountingId: '',
+          vendor: queuedReceipt.vendor,
+          vendorId: queuedReceipt.vendorId,
+          paymentAccountId: queuedReceipt.paymentAccountId,
+          expenseAccountId: queuedReceipt.accountingId,
+          description: queuedReceipt.description,
+          amount: queuedReceipt.lineItems
+            .filter((item) => item.projectId === toProjectId)
+            .reduce((sum, item) => sum + item.amount, 0),
+          receiptDate: queuedReceipt.receiptDate,
+          thumbnail: queuedReceipt.thumbnail,
+          pictureDate: queuedReceipt.pictureDate,
+          imageId: queuedReceipt.imageId || '',
+          notes: queuedReceipt.notes,
+          markedComplete: false,
+          purchaseId: queuedReceipt.purchaseId,
+          qbSyncHash: queuedReceipt.qbSyncHash,
+          id: newReceiptId,
         };
 
-        const costEntrySuccess = store.setRow('workItemCostEntries', costEntryId, costEntryData);
-        if (!costEntrySuccess) {
-          console.warn(`Failed to add cost entry to receipt ${newReceiptId}`);
-        } else {
-          console.log(
-            `Receipt queue: Created cost entry for line item "${lineItem.itemDescription}" (${lineItem.amount})`,
-          );
+        const receiptSuccess = store.setRow('receipts', newReceiptId, receiptData);
+        if (!receiptSuccess) {
+          console.error(`Failed to add receipt to project ${toProjectId}`);
+          return { success: false, msg: 'Failed to create receipt' };
         }
-      }
 
-      return { success: true, msg: '' };
-    } catch (error) {
-      console.error(`Error creating receipt copy in project ${toProjectId}:`, error);
-      return {
-        success: false,
-        msg: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      };
-    }
-  };
+        console.log(`Receipt queue: Created receipt ${newReceiptId} in project ${toProjectId}`);
+
+        // Create work item cost entries for each line item belonging to this target project
+        const targetLineItems = queuedReceipt.lineItems.filter((item) => item.projectId === toProjectId);
+        for (const lineItem of targetLineItems) {
+          const costEntryId = randomUUID();
+          const costEntryData = {
+            id: costEntryId,
+            label: lineItem.itemDescription,
+            amount: lineItem.amount,
+            workItemId: lineItem.workItemId,
+            parentId: newReceiptId,
+            documentationType: 'receipt',
+            projectId: toProjectId,
+          };
+
+          const costEntrySuccess = store.setRow('workItemCostEntries', costEntryId, costEntryData);
+          if (!costEntrySuccess) {
+            console.warn(`Failed to add cost entry to receipt ${newReceiptId}`);
+          } else {
+            console.log(
+              `Receipt queue: Created cost entry for line item "${lineItem.itemDescription}" (${lineItem.amount})`,
+            );
+          }
+        }
+
+        return { success: true, msg: '' };
+      } catch (error) {
+        console.error(`Error creating receipt copy in project ${toProjectId}:`, error);
+        return {
+          success: false,
+          msg: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        };
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     // Wait for authentication to be ready
@@ -298,6 +301,7 @@ export const useReceiptQueue = () => {
     deleteQueuedReceipts,
     duplicateReceiptImage,
     getToken,
+    getStoreFromCache,
     createReceiptCopyInProject,
   ]);
 

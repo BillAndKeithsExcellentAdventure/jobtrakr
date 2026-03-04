@@ -105,7 +105,7 @@ const CustomersScreen = () => {
       active: true,
     });
     setShowAdd(false);
-  }, [addCustomerToStore, customer, getToken, orgId, userId]);
+  }, [addCustomerToStore, customer, getToken, orgId, userId, isConnectedToQuickBooks]);
 
   const renderHeaderRight = () => (
     <Pressable onPress={() => setShowAdd(!showAdd)} hitSlop={10} style={styles.headerButton}>

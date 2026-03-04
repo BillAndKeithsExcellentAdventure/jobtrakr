@@ -105,7 +105,7 @@ const RequestAIProcessingPage = () => {
         setLineItemProjectOption(option);
       }
     },
-    [allProjects, receiptId],
+    [allProjects],
   );
 
   const fetchAIResult = useCallback(async () => {
@@ -271,7 +271,7 @@ const RequestAIProcessingPage = () => {
       receiptItems.some((item) =>
         item.costWorkItem && item.costWorkItem.projectId ? item.costWorkItem.projectId === projectId : true,
       ),
-    [receiptItems],
+    [receiptItems, projectId],
   );
 
   const handleSelectCostItem = useCallback(() => {
@@ -319,7 +319,7 @@ const RequestAIProcessingPage = () => {
       setShowCostItemPicker(false);
       setLineItemProjectOption(defaultProjectOption);
     },
-    [receiptItems, lineItemProjectOption, projectId],
+    [receiptItems, lineItemProjectOption, projectId, defaultProjectOption],
   );
 
   // Handler for saving edited summary
@@ -393,7 +393,16 @@ const RequestAIProcessingPage = () => {
     });
 
     router.back();
-  }, [receiptSummary, receipt, receiptId, updateReceipt, receiptItems, addLineItem, verifyReceiptTotal]);
+  }, [
+    receiptSummary,
+    receipt,
+    receiptId,
+    updateReceipt,
+    receiptItems,
+    addLineItem,
+    verifyReceiptTotal,
+    projectId,
+  ]);
 
   const handleSaveReceiptCostItems = useCallback(() => {
     if (!someCostItemsSpecified) {
@@ -440,7 +449,7 @@ const RequestAIProcessingPage = () => {
         },
       ],
     );
-  }, [fetchingData]);
+  }, [fetchingData, receiptSummary, aiItems.length]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

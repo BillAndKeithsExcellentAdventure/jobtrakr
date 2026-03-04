@@ -13,7 +13,6 @@ import {
   useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { getVendorSearchTerm } from '@/src/utils/vendorUtils';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Alert } from 'react-native';

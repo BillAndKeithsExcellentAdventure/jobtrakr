@@ -147,24 +147,18 @@ export const NumericInput = forwardRef<NumericInputHandle, NumericInputProps>(fu
     } else {
       setText('');
     }
-  }, [value, text]);
-
-  // -------------------------
-  // Validation
-  // -------------------------
-  const isValidInput = (input: string) => {
-    if (maxDecimals !== undefined) {
-      return new RegExp(`^-?\\d*\\.?\\d{0,${maxDecimals}}$`).test(input);
-    }
-    return /^-?\d*\.?\d*$/.test(input);
-  };
+  }, [value, text, maxDecimals]);
 
   // -------------------------
   // Handle typing
   // -------------------------
   const handleChangeText = useCallback(
     (input: string) => {
-      if (!isValidInput(input)) return; // also enforces maxDecimals
+      const isValid =
+        maxDecimals !== undefined
+          ? new RegExp(`^-?\\d*\\.?\\d{0,${maxDecimals}}$`).test(input)
+          : /^-?\d*\.?\d*$/.test(input);
+      if (!isValid) return; // also enforces maxDecimals
 
       setText(input);
 

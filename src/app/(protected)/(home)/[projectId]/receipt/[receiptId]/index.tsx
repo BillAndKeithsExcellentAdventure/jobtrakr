@@ -351,7 +351,17 @@ const ReceiptDetailsPage = () => {
         );
       }
     },
-    [getToken, receipt, allReceiptLineItems, updateReceipt, addReceiptQueueEntry, orgId, userId],
+    [
+      getToken,
+      receipt,
+      allReceiptLineItems,
+      updateReceipt,
+      addReceiptQueueEntry,
+      orgId,
+      userId,
+      allCostItems,
+      projectId,
+    ],
   );
 
   const updateExistingReceiptInQuickBooks = useCallback(
@@ -522,6 +532,7 @@ const ReceiptDetailsPage = () => {
     allAccounts,
     updateExistingReceiptInQuickBooks,
     addNewReceiptToQuickBooks,
+    projectId,
   ]);
 
   const handleBackPress = useCallback(() => {
@@ -549,7 +560,7 @@ const ReceiptDetailsPage = () => {
     }
 
     router.back();
-  }, [receipt.amount, itemsTotalCost, allReceiptLineItems.length, router, receipt, updateReceipt]);
+  }, [itemsTotalCost, allReceiptLineItems.length, router, receipt, updateReceipt]);
 
   return (
     <>

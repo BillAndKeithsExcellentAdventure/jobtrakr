@@ -22,7 +22,6 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { replace } from 'expo-router/build/global-state/routing';
 
 const processAIProcessing = async (
   imageId: string,
@@ -394,7 +393,7 @@ const RequestAIProcessingPage = () => {
           <View style={{ width: '100%', gap: 20, padding: 10, alignItems: 'center' }}>
             <ActivityIndicator size="large" />
             <Text txtSize="sub-title">
-              Working on extracting data from invoice image, this shouldn't take long.
+              Working on extracting data from invoice image, this shouldn&apos;t take long.
             </Text>
           </View>
         ) : (

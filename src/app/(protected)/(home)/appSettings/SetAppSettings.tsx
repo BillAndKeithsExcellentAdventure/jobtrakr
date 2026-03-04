@@ -13,7 +13,6 @@ import {
 import {
   useAllRows,
   useAddRowCallback,
-  useUpdateRowCallback,
   useDeleteRowCallback,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { isDevelopmentBuild } from '@/src/utils/environment';
@@ -74,7 +73,6 @@ const SetAppSettingScreen = () => {
   // Get store hooks for accounts and vendors
   const allAccounts = useAllRows('accounts');
   const addAccount = useAddRowCallback('accounts');
-  const updateAccount = useUpdateRowCallback('accounts');
   const deleteAccount = useDeleteRowCallback('accounts');
   const allVendors = useAllRows('vendors');
   const addVendor = useAddRowCallback('vendors');
@@ -353,7 +351,6 @@ const SetAppSettingScreen = () => {
     handleFetchCompanyInfoFromQuickBooks,
     allAccounts,
     addAccount,
-    updateAccount,
     deleteAccount,
     allVendors,
     addVendor,

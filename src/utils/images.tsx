@@ -1003,7 +1003,7 @@ export const useAddImageCallback = () => {
         }
       }
     },
-    [userId, orgId, addMediaToUploadRecord, auth],
+    [userId, orgId, addMediaToUploadRecord],
   );
 };
 
