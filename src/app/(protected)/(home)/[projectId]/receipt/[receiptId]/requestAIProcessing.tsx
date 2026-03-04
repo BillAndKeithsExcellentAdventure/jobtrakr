@@ -124,6 +124,7 @@ const RequestAIProcessingPage = () => {
 
       const summary = {
         vendor: replaceNonPrintable(result.response.MerchantName.value),
+        vendorId: '', // AI does not provide vendorId, it can be set by user in edit modal
         receiptDate: Date.parse(result.response.TransactionDate.value),
         totalAmount: Number.parseFloat(result.response.Total.value),
         totalTax: Number.parseFloat(result.response.TotalTax.value),
@@ -324,6 +325,7 @@ const RequestAIProcessingPage = () => {
   // Handler for saving edited summary
   const handleSaveReceiptSummary = (updatedSummary: {
     vendor: string;
+    vendorId: string;
     totalAmount: number;
     totalTax: number;
     receiptDate: number;
