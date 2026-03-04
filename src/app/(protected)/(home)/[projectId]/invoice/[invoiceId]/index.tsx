@@ -39,7 +39,7 @@ const InvoiceDetailsPage = () => {
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   useCostUpdater(projectId);
   const appSettings = useAppSettings();
-  const { isQuickBooksAccessible } = useNetwork();
+  const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
   const project = useProject(projectId);
   const allVendors = useAllConfigurationRows('vendors');
   const auth = useAuth();
@@ -449,7 +449,7 @@ const InvoiceDetailsPage = () => {
                   }`}
                 />
               </View>
-              {isQuickBooksAccessible && hasItemWithNoWorkItemId && (
+              {isQuickBooksConnected && hasItemWithNoWorkItemId && (
                 <View style={{ paddingHorizontal: 10, paddingVertical: 8 }}>
                   <Text
                     txtSize="xs"
@@ -484,7 +484,7 @@ const InvoiceDetailsPage = () => {
                     </>
                   )}
                 </View>
-              ) : isQuickBooksAccessible && allInvoiceLineItems.length > 0 ? (
+              ) : isQuickBooksConnected && allInvoiceLineItems.length > 0 ? (
                 <View style={styles.syncButtonRow}>
                   {!amountsMatch ? (
                     <>

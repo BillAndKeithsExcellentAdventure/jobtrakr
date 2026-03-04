@@ -37,7 +37,7 @@ import { ActivityIndicator, Alert, Image, Keyboard, Modal, StyleSheet, Touchable
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 const AddInvoicePage = () => {
-  const { isQuickBooksAccessible } = useNetwork();
+  const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
   const { userId, orgId, getToken } = useAuth();
   const defaultDate = useMemo(() => new Date(), []);
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
@@ -568,13 +568,13 @@ const AddInvoicePage = () => {
             onSelect={(option) => handleVendorOptionChange(option)}
             selectedOption={pickedOption}
             initialSearchText={
-              isQuickBooksAccessible && !projectInvoice.vendorId
+              isQuickBooksConnected && !projectInvoice.vendorId
                 ? getVendorSearchTerm(projectInvoice.vendor)
                 : undefined
             }
             enableSearch={
               vendors.length > 15 ||
-              (isQuickBooksAccessible && !projectInvoice.vendorId && !!projectInvoice.vendor)
+              (isQuickBooksConnected && !projectInvoice.vendorId && !!projectInvoice.vendor)
             }
           />
         </BottomSheetContainer>

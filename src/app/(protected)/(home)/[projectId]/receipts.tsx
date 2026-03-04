@@ -51,7 +51,7 @@ const ProjectReceiptsPage = () => {
   const [checkNumber, setCheckNumber] = useState('');
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
-  const { isQuickBooksAccessible } = useNetwork();
+  const { isQuickBooksConnected } = useNetwork();
   const auth = useAuth();
 
   useEffect(() => {
@@ -97,7 +97,7 @@ const ProjectReceiptsPage = () => {
       };
     });
 
-    if (isQuickBooksAccessible) {
+    if (isQuickBooksConnected) {
       if (showUnsentOnly) {
         return receipts.filter((receipt) => !receipt.purchaseId);
       }
@@ -109,7 +109,7 @@ const ProjectReceiptsPage = () => {
     }
 
     return receipts;
-  }, [allReceipts, allCostItems, allWorkItems, vendorFilter, isQuickBooksAccessible, showUnsentOnly]);
+  }, [allReceipts, allCostItems, allWorkItems, vendorFilter, isQuickBooksConnected, showUnsentOnly]);
 
   const colors = useColors();
 
@@ -352,7 +352,7 @@ const ProjectReceiptsPage = () => {
 
                 <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding" keyboardVerticalOffset={100}>
                   <View style={{ backgroundColor: colors.listBackground, padding: 5 }}>
-                    {!isQuickBooksAccessible ? (
+                    {!isQuickBooksConnected ? (
                       <View
                         style={{
                           flexDirection: 'row',
