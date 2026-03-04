@@ -214,7 +214,8 @@ const ChangeOrdersScreen = () => {
               Before creating change orders, the name and email of the project&apos;s customer are required.
             </Text>
             <Text txtSize="sub-title" style={{ color: colors.text }}>
-              Please make sure the required data are defined in the project info and in the customer info to continue.
+              Please make sure the required data are defined in the project info and in the customer info to
+              continue.
             </Text>
             {customer?.id && (
               <ActionButton
@@ -223,13 +224,14 @@ const ChangeOrdersScreen = () => {
                   router.push({
                     pathname: '/configuration/customer/[id]',
                     params: {
-                    id: customer!.id,
-                  },
-                })
-              }
-              type={'action'}
-              title="Edit Customer Info"
-            />}
+                      id: customer!.id,
+                    },
+                  })
+                }
+                type={'action'}
+                title="Edit Customer Info"
+              />
+            )}
           </View>
         ) : (
           <>
