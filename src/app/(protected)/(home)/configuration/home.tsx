@@ -67,7 +67,7 @@ const Home = () => {
   const allCustomers = useAllRows('customers');
   const addCustomer = useAddRowCallback('customers');
   const updateCustomer = useUpdateRowCallback('customers');
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
   const auth = useAuth();
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
@@ -475,7 +475,7 @@ const Home = () => {
               },
             },
           ]),
-      ...(!isConnectedToQuickBooks && hasVendorData
+      ...(!isQuickBooksAccessible && hasVendorData
         ? [
             {
               icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
@@ -486,7 +486,7 @@ const Home = () => {
             },
           ]
         : []),
-      ...(!isConnectedToQuickBooks
+      ...(!isQuickBooksAccessible
         ? [
             {
               icon: <MaterialCommunityIcons name="import" size={28} color={colors.iconColor} />,
@@ -497,7 +497,7 @@ const Home = () => {
             },
           ]
         : []),
-      ...(isConnectedToQuickBooks
+      ...(isQuickBooksAccessible
         ? [
             {
               icon: <MaterialCommunityIcons name="account-supervisor" size={28} color={colors.iconColor} />,
@@ -522,7 +522,7 @@ const Home = () => {
             },
           ]
         : []),
-      ...(!isConnectedToQuickBooks
+      ...(!isQuickBooksAccessible
         ? [
             {
               icon: <MaterialCommunityIcons name="import" size={28} color={colors.iconColor} />,
@@ -535,7 +535,7 @@ const Home = () => {
         : []),
     ];
     return menuButtons;
-  }, [colors, handleMenuItemPress, hasConfigurationData, hasVendorData, isConnectedToQuickBooks]);
+  }, [colors, handleMenuItemPress, hasConfigurationData, hasVendorData, isQuickBooksAccessible]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -570,7 +570,7 @@ const Home = () => {
           description="Add and Edit Customers"
           onPress={() => router.push('/configuration/customer/customers')}
         />
-        {isConnectedToQuickBooks && (
+        {isQuickBooksAccessible && (
           <ConfigurationEntry
             label="QuickBooks Accounts"
             description="Define accounts to use"

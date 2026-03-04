@@ -58,7 +58,7 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
     undefined,
   );
   const [paymentAccounts, setPaymentAccounts] = useState<OptionEntry[]>([]);
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
   const allVendors = useAllConfigurationRows('vendors');
   const allAccounts = useAllConfigurationRows('accounts');
   const appSettings = useAppSettings();
@@ -219,7 +219,7 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
                 onCancel={() => setDatePickerVisible(false)}
               />
 
-              {isConnectedToQuickBooks && paymentAccounts.length > 0 && (
+              {isQuickBooksAccessible && paymentAccounts.length > 0 && (
                 <>
                   <OptionPickerItem
                     containerStyle={styles.inputContainer}
@@ -258,18 +258,18 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
               onSelect={(option) => handleVendorOptionChange(option)}
               selectedOption={pickedVendorOption}
               initialSearchText={
-                isConnectedToQuickBooks && !editedSummary.vendorId
+                isQuickBooksAccessible && !editedSummary.vendorId
                   ? getVendorSearchTerm(editedSummary.vendor)
                   : undefined
               }
               enableSearch={
                 vendors.length > 15 ||
-                (isConnectedToQuickBooks && !editedSummary.vendorId && !!editedSummary.vendor)
+                (isQuickBooksAccessible && !editedSummary.vendorId && !!editedSummary.vendor)
               }
             />
           </BottomSheetContainer>
         )}
-        {isConnectedToQuickBooks && paymentAccounts.length > 0 && isPaymentAccountPickerVisible && (
+        {isQuickBooksAccessible && paymentAccounts.length > 0 && isPaymentAccountPickerVisible && (
           <BottomSheetContainer
             modalHeight={'60%'}
             isVisible={isPaymentAccountPickerVisible}

@@ -62,14 +62,14 @@ const ProjectDetailsPage = () => {
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const workItemsWithoutCosts = useWorkItemsWithoutCosts(projectId);
   const allChangeOrders = useAllRows(projectId, 'changeOrders');
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
   const { orgId, userId, getToken } = useAuth();
-  const isConnectedToQBRef = useRef(isConnectedToQuickBooks);
+  const isConnectedToQBRef = useRef(isQuickBooksAccessible);
   const syncedProjectsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    isConnectedToQBRef.current = isConnectedToQuickBooks;
-  }, [isConnectedToQuickBooks]);
+    isConnectedToQBRef.current = isQuickBooksAccessible;
+  }, [isQuickBooksAccessible]);
 
   useEffect(() => {
     if (projectId) {
@@ -724,7 +724,7 @@ const ProjectDetailsPage = () => {
                 marginRight: Platform.OS === 'android' ? 16 : 0,
               }}
             >
-              {isConnectedToQuickBooks && <SvgImage fileName="qb-logo" width={26} height={26} />}
+              {isQuickBooksAccessible && <SvgImage fileName="qb-logo" width={26} height={26} />}
               <Pressable
                 style={{ alignItems: 'center' }}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}

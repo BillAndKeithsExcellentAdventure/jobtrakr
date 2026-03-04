@@ -53,7 +53,7 @@ export const CustomerPicker = ({
   });
   const colors = useColors();
   const addCustomerToStore = useAddRowCallback('customers');
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
   const auth = useAuth();
   const { orgId, userId, getToken } = auth;
 
@@ -94,7 +94,7 @@ export const CustomerPicker = ({
     try {
       let accountingId = '';
 
-      if (isConnectedToQuickBooks) {
+      if (isQuickBooksAccessible) {
         if (!orgId || !userId) {
           console.error('Missing orgId or userId');
           return;
@@ -162,7 +162,7 @@ export const CustomerPicker = ({
     } finally {
       setIsAddingCustomer(false);
     }
-  }, [newCustomer, addCustomerToStore, onCustomerSelected, orgId, userId, getToken, isConnectedToQuickBooks]);
+  }, [newCustomer, addCustomerToStore, onCustomerSelected, orgId, userId, getToken, isQuickBooksAccessible]);
 
   const handleCustomerSelect = useCallback(
     (customer: CustomerData) => {

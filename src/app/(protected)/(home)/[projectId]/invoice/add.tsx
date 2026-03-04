@@ -37,7 +37,7 @@ import { ActivityIndicator, Alert, Image, Keyboard, Modal, StyleSheet, Touchable
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 const AddInvoicePage = () => {
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
   const { userId, orgId, getToken } = useAuth();
   const defaultDate = useMemo(() => new Date(), []);
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
@@ -196,7 +196,7 @@ const AddInvoicePage = () => {
       // if connected to QuickBooks add the invoice as a Bill in QuickBooks and save
       // the returned Bill.Id to the invoice as billId and the Bill.DocNumber to accountingId for future updates
       if (
-        isConnectedToQuickBooks &&
+        isQuickBooksAccessible &&
         orgId &&
         userId &&
         getToken &&
@@ -263,7 +263,7 @@ const AddInvoicePage = () => {
     applyToSingleCostCode,
     pickedSubCategoryOption,
     router,
-    isConnectedToQuickBooks,
+    isQuickBooksAccessible,
     orgId,
     userId,
     getToken,
@@ -568,13 +568,13 @@ const AddInvoicePage = () => {
             onSelect={(option) => handleVendorOptionChange(option)}
             selectedOption={pickedOption}
             initialSearchText={
-              isConnectedToQuickBooks && !projectInvoice.vendorId
+              isQuickBooksAccessible && !projectInvoice.vendorId
                 ? getVendorSearchTerm(projectInvoice.vendor)
                 : undefined
             }
             enableSearch={
               vendors.length > 15 ||
-              (isConnectedToQuickBooks && !projectInvoice.vendorId && !!projectInvoice.vendor)
+              (isQuickBooksAccessible && !projectInvoice.vendorId && !!projectInvoice.vendor)
             }
           />
         </BottomSheetContainer>

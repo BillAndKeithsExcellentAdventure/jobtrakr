@@ -21,7 +21,7 @@ import { QBEditCustomerInfo, updateCustomer } from '@/src/utils/quickbooksAPI';
 const EditCustomer = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
   const { orgId, userId, getToken } = useAuth();
 
   const applyCustomerUpdates = useUpdateRowCallback('customers');
@@ -60,7 +60,7 @@ const EditCustomer = () => {
     if (id) {
       applyCustomerUpdates(id, updatedCustomer);
 
-      if (isConnectedToQuickBooks && updatedCustomer.accountingId && orgId) {
+      if (isQuickBooksAccessible && updatedCustomer.accountingId && orgId) {
         // If the customer is connected to QuickBooks, we want to make sure any updates are sent to QuickBooks.
         // We do not want to await this call, as it could delay the navigation back, but we do want to trigger it before navigating back to ensure the most up-to-date data is sent to QuickBooks.
         (async () => {
@@ -93,7 +93,7 @@ const EditCustomer = () => {
       }
     }
     router.back();
-  }, [id, updatedCustomer, applyCustomerUpdates, router, isConnectedToQuickBooks, orgId, userId, getToken]);
+  }, [id, updatedCustomer, applyCustomerUpdates, router, isQuickBooksAccessible, orgId, userId, getToken]);
 
   const handleToggleActive = useCallback(() => {
     const newActive = !updatedCustomer.active;

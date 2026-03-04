@@ -23,7 +23,7 @@ import { useNetwork } from '@/src/context/NetworkContext';
 const CustomersScreen = () => {
   const auth = useAuth();
   const { orgId, userId, getToken } = auth;
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
   const addCustomerToStore = useAddRowCallback('customers');
   const allCustomers = useAllRows('customers');
   const [showAdd, setShowAdd] = useState(false);
@@ -52,7 +52,7 @@ const CustomersScreen = () => {
   const handleSave = useCallback(async () => {
     let accountingId = '';
 
-    if (isConnectedToQuickBooks) {
+    if (isQuickBooksAccessible) {
       if (!orgId || !userId) {
         console.error('Missing orgId or userId');
         return;
@@ -105,7 +105,7 @@ const CustomersScreen = () => {
       active: true,
     });
     setShowAdd(false);
-  }, [addCustomerToStore, customer, getToken, orgId, userId, isConnectedToQuickBooks]);
+  }, [addCustomerToStore, customer, getToken, orgId, userId, isQuickBooksAccessible]);
 
   const renderHeaderRight = () => (
     <Pressable onPress={() => setShowAdd(!showAdd)} hitSlop={10} style={styles.headerButton}>

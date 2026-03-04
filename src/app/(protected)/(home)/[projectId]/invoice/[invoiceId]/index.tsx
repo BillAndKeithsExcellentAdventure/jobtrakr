@@ -39,7 +39,7 @@ const InvoiceDetailsPage = () => {
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   useCostUpdater(projectId);
   const appSettings = useAppSettings();
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
   const project = useProject(projectId);
   const allVendors = useAllConfigurationRows('vendors');
   const auth = useAuth();
@@ -130,7 +130,7 @@ const InvoiceDetailsPage = () => {
   );
 
   const canSyncToQuickBooks =
-    isConnectedToQuickBooks &&
+    isQuickBooksAccessible &&
     allInvoiceLineItems.length > 0 &&
     invoice.amount > 0 &&
     !!invoice.vendorId &&
@@ -449,7 +449,7 @@ const InvoiceDetailsPage = () => {
                   }`}
                 />
               </View>
-              {isConnectedToQuickBooks && hasItemWithNoWorkItemId && (
+              {isQuickBooksAccessible && hasItemWithNoWorkItemId && (
                 <View style={{ paddingHorizontal: 10, paddingVertical: 8 }}>
                   <Text
                     txtSize="xs"
@@ -484,7 +484,7 @@ const InvoiceDetailsPage = () => {
                     </>
                   )}
                 </View>
-              ) : isConnectedToQuickBooks && allInvoiceLineItems.length > 0 ? (
+              ) : isQuickBooksAccessible && allInvoiceLineItems.length > 0 ? (
                 <View style={styles.syncButtonRow}>
                   {!amountsMatch ? (
                     <>

@@ -39,7 +39,7 @@ import { ReceiptLineItem } from '@/src/tbStores/ReceiptQueueStoreHooks';
 const AddReceiptPage = () => {
   const defaultDate = useMemo(() => new Date(), []);
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
-  const { isConnectedToQuickBooks } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
   const auth = useAuth();
   const project = useProject(projectId);
   const projectAbbr = project?.abbreviation ?? '';
@@ -266,7 +266,7 @@ const AddReceiptPage = () => {
       const hasVendorId = !!projectReceipt.vendorId;
 
       if (
-        isConnectedToQuickBooks &&
+        isQuickBooksAccessible &&
         hasLineItems &&
         hasAmount &&
         hasPaymentAccount &&
@@ -408,7 +408,7 @@ const AddReceiptPage = () => {
     addLineItem,
     applyToSingleCostCode,
     pickedSubCategoryOption,
-    isConnectedToQuickBooks,
+    isQuickBooksAccessible,
     userId,
     orgId,
     projectId,
@@ -585,7 +585,7 @@ const AddReceiptPage = () => {
               textColor={projectReceipt.vendorId ? colors.text : colors.error}
               label="Vendor/Merchant"
               placeholder="Vendor/Merchant"
-              editable={isConnectedToQuickBooks ? false : true}
+              editable={isQuickBooksAccessible ? false : true}
               onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
             />
           ) : (
@@ -595,7 +595,7 @@ const AddReceiptPage = () => {
               placeholder="Vendor/Merchant"
               label="Vendor/Merchant"
               value={projectReceipt.vendor}
-              editable={isConnectedToQuickBooks ? false : true}
+              editable={isQuickBooksAccessible ? false : true}
             />
           )}
 

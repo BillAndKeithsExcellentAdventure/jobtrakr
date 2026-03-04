@@ -8,17 +8,19 @@ import { useAuth } from '@clerk/clerk-expo';
 interface NetworkContextType {
   isConnected: boolean;
   isInternetReachable: boolean | null;
-  isConnectedToQuickBooks: boolean;
+  isQuickBooksConnected: boolean;
+  isQuickBooksAccessible: boolean;
   networkType: string | null;
-  setQuickBooksConnected: (connected: boolean) => void;
+  setQuickBooksAccessible: (connected: boolean) => void;
 }
 
 const NetworkContext = createContext<NetworkContextType>({
   isConnected: true,
   isInternetReachable: null,
   networkType: null,
-  isConnectedToQuickBooks: false,
-  setQuickBooksConnected: () => {},
+  isQuickBooksConnected: false,
+  isQuickBooksAccessible: false,
+  setQuickBooksAccessible: () => {},
 });
 
 export const useNetwork = () => {
@@ -38,8 +40,8 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const [isInternetReachable, setIsInternetReachable] = useState<boolean | null>(null);
   const [networkType, setNetworkType] = useState<string | null>(null);
   const appSettings = useAppSettings();
-  const [isConnectedToQuickBooks, setIsConnectedToQuickBooks] = useState<boolean>(false);
-  const isConnectedToQuickBooksRef = useRef<boolean>(false);
+  const [isQuickBooksAccessible, setIsQuickBooksAccessible] = useState<boolean>(false);
+  const isQuickBooksAccessibleRef = useRef<boolean>(false);
   const auth = useAuth();
   const lastNetworkStateRef = useRef<{
     isConnected: boolean;
@@ -104,48 +106,48 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     const checkQbConnection = async () => {
       if (!auth.isLoaded || !auth.isSignedIn) {
         console.log('Skipping QuickBooks check: auth not ready/signed in');
-        isConnectedToQuickBooksRef.current = false;
-        setIsConnectedToQuickBooks(false);
+        isQuickBooksAccessibleRef.current = false;
+        setIsQuickBooksAccessible(false);
         return;
       }
 
       if (!orgId || !userId) {
         console.log('Skipping QuickBooks check: missing orgId/userId');
-        isConnectedToQuickBooksRef.current = false;
-        setIsConnectedToQuickBooks(false);
+        isQuickBooksAccessibleRef.current = false;
+        setIsQuickBooksAccessible(false);
         return;
       }
 
       if (!isConnected || isInternetReachable === false) {
         console.log('Skipping QuickBooks check: offline');
-        isConnectedToQuickBooksRef.current = false;
-        setIsConnectedToQuickBooks(false);
+        isQuickBooksAccessibleRef.current = false;
+        setIsQuickBooksAccessible(false);
         return;
       }
 
       if (!appSettings.id) {
-        isConnectedToQuickBooksRef.current = false;
+        isQuickBooksAccessibleRef.current = false;
         return;
       }
 
       if (!appSettings.syncWithQuickBooks) {
-        console.log('QuickBooks not connected because syncWithQuickBooks is false');
+        console.log('QuickBooks not accessible because syncWithQuickBooks is false');
         return;
       }
 
       try {
         const connected = await testQbIsConnected(orgId, userId, getToken);
-        if (connected !== isConnectedToQuickBooksRef.current) {
+        if (connected !== isQuickBooksAccessibleRef.current) {
           console.log(
-            `QuickBooks connection status changed: ${connected ? 'QuickBooks is connected ✅' : 'QuickBooks is not connected ❌'}`,
+            `QuickBooks accessibility status changed: ${connected ? 'QuickBooks is accessible ✅' : 'QuickBooks is not accessible ❌'}`,
           );
-          isConnectedToQuickBooksRef.current = connected;
-          setIsConnectedToQuickBooks(connected);
+          isQuickBooksAccessibleRef.current = connected;
+          setIsQuickBooksAccessible(connected);
         }
       } catch (error) {
         console.error('QuickBooks Connection Error. Error:', error);
-        isConnectedToQuickBooksRef.current = false;
-        setIsConnectedToQuickBooks(false);
+        isQuickBooksAccessibleRef.current = false;
+        setIsQuickBooksAccessible(false);
       }
     };
 
@@ -161,17 +163,18 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     getToken,
   ]);
 
-  const setQuickBooksConnected = useCallback((connected: boolean) => {
-    isConnectedToQuickBooksRef.current = connected;
-    setIsConnectedToQuickBooks(connected);
+  const setQuickBooksAccessible = useCallback((connected: boolean) => {
+    isQuickBooksAccessibleRef.current = connected;
+    setIsQuickBooksAccessible(connected);
   }, []);
 
   const value: NetworkContextType = {
     isConnected: debugForceOffline ? false : isConnected,
     isInternetReachable: debugForceOffline ? false : isInternetReachable,
-    isConnectedToQuickBooks: debugForceOffline ? false : isConnectedToQuickBooks,
+    isQuickBooksConnected: appSettings.syncWithQuickBooks ?? false,
+    isQuickBooksAccessible: debugForceOffline ? false : isQuickBooksAccessible,
     networkType,
-    setQuickBooksConnected,
+    setQuickBooksAccessible,
   };
 
   return <NetworkContext.Provider value={value}>{children}</NetworkContext.Provider>;
