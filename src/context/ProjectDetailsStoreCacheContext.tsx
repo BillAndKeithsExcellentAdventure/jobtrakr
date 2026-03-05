@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useCallback, useMemo, useRef } from 'react';
 
 interface ProjectDetailsStoreCacheContextType {
   addStoreToCache: (projectId: string, store: any) => void;
@@ -39,11 +39,14 @@ export const ProjectDetailsStoreCacheProvider = ({ children }: ProjectDetailsSto
     return storesCacheRef.current[projectId] || null;
   }, []);
 
-  const value: ProjectDetailsStoreCacheContextType = {
-    addStoreToCache,
-    removeStoreFromCache,
-    getStoreFromCache,
-  };
+  const value = useMemo<ProjectDetailsStoreCacheContextType>(
+    () => ({
+      addStoreToCache,
+      removeStoreFromCache,
+      getStoreFromCache,
+    }),
+    [addStoreToCache, removeStoreFromCache, getStoreFromCache],
+  );
 
   return (
     <ProjectDetailsStoreCacheContext.Provider value={value}>
