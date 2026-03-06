@@ -1,11 +1,5 @@
 import { useColors } from '@/src/context/ColorsContext';
-import {
-  ComponentType,
-  forwardRef,
-  Ref,
-  useImperativeHandle,
-  useRef,
-} from 'react';
+import { ComponentType, forwardRef, Ref, useImperativeHandle, useRef } from 'react';
 import {
   ImageStyle,
   StyleProp,
@@ -112,7 +106,7 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
   const $inputWrapperStyles = [
     {
       backgroundColor: colors.neutral200,
-      borderColor: colors.neutral400,
+      borderColor: colors.border,
     },
     styles.inputWrapperStyle,
     status === 'error' && { borderColor: colors.error },

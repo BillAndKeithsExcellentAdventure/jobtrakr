@@ -20,6 +20,7 @@ import SwipeableProposedChangeOrderItem from '@/src/components/SwipeableProposed
 import { ModalScreenContainerWithList } from '@/src/components/ModalScreenContainerWithList';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { NumericInputField } from '@/src/components/NumericInputField';
+import { TextField } from '@/src/components/TextField';
 
 export default function AddChangeOrder() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
@@ -36,7 +37,7 @@ export default function AddChangeOrder() {
     title: '',
     description: '',
     bidAmount: 0,
-    quotedPrice: 0,
+    quotedPrice: undefined, // default to undefined so placeholder shows in NumericInputField. Set to 0 when user enters a value or on submit if still undefined
     dateCreated: Date.now(),
     status: 'draft',
     accountingId: '',
@@ -59,7 +60,7 @@ export default function AddChangeOrder() {
   useEffect(() => {
     setCanAdd(
       newChangeOrder.bidAmount > 0 &&
-        newChangeOrder.quotedPrice > 0 &&
+        (newChangeOrder.quotedPrice ?? 0) > 0 &&
         !!newChangeOrder.title &&
         !!newChangeOrder.description,
     );
@@ -80,7 +81,12 @@ export default function AddChangeOrder() {
   };
 
   const handleSubmit = () => {
-    if (!newChangeOrder.title || !newChangeOrder.description || !newChangeOrder.bidAmount) {
+    if (
+      !newChangeOrder.title ||
+      !newChangeOrder.description ||
+      !(newChangeOrder.bidAmount > 0) ||
+      !((newChangeOrder.quotedPrice ?? 0) > 0)
+    ) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
@@ -168,7 +174,7 @@ export default function AddChangeOrder() {
 
           <View style={{ gap: 8, padding: 8, backgroundColor: colors.listBackground }}>
             <TextInput
-              style={[styles.input, { backgroundColor: colors.background }]}
+              style={[{ backgroundColor: colors.background }]}
               value={newChangeOrder.title}
               onChangeText={(text) =>
                 setNewChangeOrder((prev) => ({
@@ -192,10 +198,9 @@ export default function AddChangeOrder() {
               multiline
             />
             <NumericInputField
-              label="Customer Quoted Price"
               inputStyle={{ backgroundColor: colors.background, borderColor: colors.border }}
               labelStyle={{ backgroundColor: colors.listBackground, marginBottom: 0 }}
-              value={newChangeOrder.quotedPrice}
+              value={newChangeOrder.quotedPrice ?? null}
               onChangeNumber={(value) => handleQuotedPriceChange(value ?? 0)}
               placeholder="Customer Quoted Price"
             />
@@ -291,33 +296,33 @@ export default function AddChangeOrder() {
               <View style={{ alignItems: 'center', justifyContent: 'center' }}>
                 <Text txtSize="title">Add Change Order Item</Text>
               </View>
-              <Text style={styles.label}>Item Description</Text>
-              <TextInput
-                style={styles.input}
+              <TextField
+                label="Item Description"
                 value={itemLabel}
                 onChangeText={setItemLabel}
                 placeholder="Item Description"
               />
-              <Text style={styles.label}>Amount</Text>
-              <TextInput
-                style={styles.input}
+              <TextField
+                label="Amount"
                 value={itemAmount}
                 onChangeText={setItemAmount}
                 placeholder="Amount"
                 keyboardType="numeric"
               />
-              <Text style={styles.label}>Cost Item</Text>
-              <TouchableOpacity activeOpacity={1} onPress={handleShowCostItemPicker}>
-                <View style={{ marginBottom: 10 }}>
-                  <TextInput
-                    style={styles.input}
-                    value={itemWorkItemEntry.label ?? null}
-                    readOnly={true}
-                    placeholder="Select Cost Item"
-                    onPressIn={handleShowCostItemPicker}
-                  />
-                </View>
-              </TouchableOpacity>
+              <View style={{ marginBottom: 10 }}>
+                <Text txtSize="xxs">Cost Item</Text>
+                <TouchableOpacity activeOpacity={1} onPress={handleShowCostItemPicker}>
+                  <View>
+                    <TextInput
+                      style={{ ...styles.input, backgroundColor: colors.neutral200 }}
+                      value={itemWorkItemEntry.label ?? null}
+                      readOnly={true}
+                      placeholder="Select Cost Item"
+                      onPressIn={handleShowCostItemPicker}
+                    />
+                  </View>
+                </TouchableOpacity>
+              </View>
               <View style={styles.saveButtonRow}>
                 <ActionButton
                   style={styles.saveButton}
@@ -360,11 +365,6 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
   },
-  label: {
-    fontWeight: '500',
-    marginTop: 12,
-    marginBottom: 4,
-  },
   input: {
     borderWidth: 1,
     borderRadius: 6,
@@ -396,5 +396,6 @@ const styles = StyleSheet.create({
     padding: 20,
     width: '100%',
     elevation: 5,
+    gap: 8,
   },
 });

@@ -102,7 +102,8 @@ function SignInForm() {
 
       // If sign-in process is complete, set the created session as active
       // and redirect the user
-      if (signInAttempt.status === 'complete') {
+      // Note: In Clerk v5+, status may be null on completion; createdSessionId is the reliable indicator
+      if (signInAttempt.status === 'complete' || signInAttempt.createdSessionId) {
         await setActive({ session: signInAttempt.createdSessionId });
         router.replace('/');
       } else {
@@ -139,7 +140,8 @@ function SignInForm() {
 
       // If sign-in process is complete, set the created session as active
       // and redirect the user
-      if (signInAttempt.status === 'complete') {
+      // Note: In Clerk v5+, status may be null on completion; createdSessionId is the reliable indicator
+      if (signInAttempt.status === 'complete' || signInAttempt.createdSessionId) {
         await setActive({ session: signInAttempt.createdSessionId });
         router.replace('/');
       } else {

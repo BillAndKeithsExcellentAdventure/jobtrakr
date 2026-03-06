@@ -133,7 +133,7 @@ export const NumericInputField = forwardRef<NumericInputFieldHandle, NumericInpu
           itemId={itemId}
           style={[
             styles.input,
-            { backgroundColor: colors.neutral200, borderColor: colors.neutral400 },
+            { backgroundColor: colors.neutral200, borderColor: colors.border },
             inputStyle,
             style,
           ]}
@@ -147,6 +147,7 @@ export const NumericInputField = forwardRef<NumericInputFieldHandle, NumericInpu
 const styles = StyleSheet.create({
   container: {
     gap: 4,
+    backgroundColor: 'transparent',
   },
   label: {
     // intentionally minimal – callers override via labelStyle
