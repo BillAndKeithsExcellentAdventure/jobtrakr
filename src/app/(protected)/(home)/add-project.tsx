@@ -109,7 +109,7 @@ const AddProjectScreen = () => {
       addActiveProjectIds(result.id);
       // go to the Project Overview screen for the newly created project.
       // This will ensures the project is registered with QuickBooks
-      router.push({ pathname: '/[projectId]', params: { projectId: result.id } });
+      router.replace({ pathname: '/[projectId]', params: { projectId: result.id } });
     }
   }, [
     project,

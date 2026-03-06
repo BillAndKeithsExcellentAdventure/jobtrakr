@@ -8,16 +8,8 @@ import { useAuth } from '@clerk/clerk-expo';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useCallback, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Keyboard,
-  Platform,
-  Pressable,
-  StyleSheet,
-  TextInput,
-} from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Keyboard, Platform, StyleSheet, TextInput } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import { useNetwork } from '../context/NetworkContext';
 import { addCustomer } from '../utils/quickbooksAPI';
 
