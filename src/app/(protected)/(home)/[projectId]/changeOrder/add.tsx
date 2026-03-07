@@ -174,7 +174,7 @@ export default function AddChangeOrder() {
 
           <View style={{ gap: 8, padding: 8, backgroundColor: colors.listBackground }}>
             <TextInput
-              style={[{ backgroundColor: colors.background }]}
+              style={[styles.input, { borderColor: colors.border, backgroundColor: colors.background }]}
               value={newChangeOrder.title}
               onChangeText={(text) =>
                 setNewChangeOrder((prev) => ({
@@ -185,7 +185,10 @@ export default function AddChangeOrder() {
               placeholder="Title"
             />
             <TextInput
-              style={[styles.input, { backgroundColor: colors.background, maxHeight: 80 }]}
+              style={[
+                styles.input,
+                { borderColor: colors.border, backgroundColor: colors.background, maxHeight: 80 },
+              ]}
               value={newChangeOrder.description}
               onChangeText={(text) =>
                 setNewChangeOrder((prev) => ({
@@ -314,7 +317,7 @@ export default function AddChangeOrder() {
                 <TouchableOpacity activeOpacity={1} onPress={handleShowCostItemPicker}>
                   <View>
                     <TextInput
-                      style={{ ...styles.input, backgroundColor: colors.neutral200 }}
+                      style={{ ...styles.input, marginTop: 2, backgroundColor: colors.neutral200 }}
                       value={itemWorkItemEntry.label ?? null}
                       readOnly={true}
                       placeholder="Select Cost Item"
