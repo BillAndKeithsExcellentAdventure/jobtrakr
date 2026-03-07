@@ -271,7 +271,7 @@ const ChangeOrdersScreen = () => {
                 Project Change Orders
               </Text>
               <Text
-                txtSize="standard"
+                txtSize="xs"
                 style={{ marginBottom: 5 }}
                 text={`Total Approved Quotes: ${formatCurrency(totalQuotedPrice, true, false)}`}
               />

@@ -172,9 +172,9 @@ export default function AddChangeOrder() {
         >
           <Text style={styles.modalTitle}>Add Change Order</Text>
 
-          <View style={{ gap: 8, padding: 8, backgroundColor: colors.listBackground }}>
+          <View style={{ gap: 8, padding: 8 }}>
             <TextInput
-              style={[styles.input, { borderColor: colors.border, backgroundColor: colors.background }]}
+              style={{ ...styles.input, backgroundColor: colors.neutral200, maxHeight: 80 }}
               value={newChangeOrder.title}
               onChangeText={(text) =>
                 setNewChangeOrder((prev) => ({
@@ -185,10 +185,7 @@ export default function AddChangeOrder() {
               placeholder="Title"
             />
             <TextInput
-              style={[
-                styles.input,
-                { borderColor: colors.border, backgroundColor: colors.background, maxHeight: 80 },
-              ]}
+              style={{ ...styles.input, backgroundColor: colors.neutral200, maxHeight: 80 }}
               value={newChangeOrder.description}
               onChangeText={(text) =>
                 setNewChangeOrder((prev) => ({
@@ -201,8 +198,7 @@ export default function AddChangeOrder() {
               multiline
             />
             <NumericInputField
-              inputStyle={{ backgroundColor: colors.background, borderColor: colors.border }}
-              labelStyle={{ backgroundColor: colors.listBackground, marginBottom: 0 }}
+              inputStyle={{ borderColor: colors.border }}
               value={newChangeOrder.quotedPrice ?? null}
               onChangeNumber={(value) => handleQuotedPriceChange(value ?? 0)}
               placeholder="Customer Quoted Price"
