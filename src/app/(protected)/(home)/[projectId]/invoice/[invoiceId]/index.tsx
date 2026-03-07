@@ -18,7 +18,7 @@ import { formatCurrency } from '@/src/utils/formatters';
 import { addBill, updateBill, AddBillRequest, UpdateBillRequest } from '@/src/utils/quickbooksAPI';
 import { getBillSyncHash } from '@/src/utils/quickbooksSyncHash';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { File } from 'expo-file-system';
@@ -28,6 +28,28 @@ import { buildLocalMediaUri, useAddImageCallback, useGetImageCallback } from '@/
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
+import { useAllMediaToUpload } from '@/src/tbStores/UploadSyncStore';
+
+const waitForImageUpload = (
+  imageId: string,
+  getLatestMedia: () => { itemId: string }[],
+  maxWaitMs = 60000,
+): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const startTime = Date.now();
+    const check = () => {
+      if (!getLatestMedia().some((item) => item.itemId === imageId)) {
+        resolve();
+        return;
+      }
+      if (Date.now() - startTime > maxWaitMs) {
+        reject(new Error(`Timed out waiting for image ${imageId} to finish uploading`));
+        return;
+      }
+      setTimeout(check, 2000);
+    };
+    check();
+  });
 
 const InvoiceDetailsPage = () => {
   const defaultDate = new Date();
@@ -45,6 +67,11 @@ const InvoiceDetailsPage = () => {
   const auth = useAuth();
   const { orgId, userId, getToken } = auth;
   const getImage = useGetImageCallback();
+  const mediaToUpload = useAllMediaToUpload();
+  const mediaToUploadRef = useRef(mediaToUpload);
+  useEffect(() => {
+    mediaToUploadRef.current = mediaToUpload;
+  }, [mediaToUpload]);
 
   const [allInvoiceLineItems, setAllInvoiceLineItems] = useState<WorkItemCostEntry[]>([]);
 
@@ -162,6 +189,16 @@ const InvoiceDetailsPage = () => {
 
     try {
       if (invoice.billId) {
+        // Wait for image to finish uploading if it's still in the upload queue
+        if (invoice.imageId) {
+          const isInQueue = mediaToUploadRef.current.some((item) => item.itemId === invoice.imageId);
+          if (isInQueue) {
+            console.log(
+              `Image ${invoice.imageId} is in upload queue. Waiting before updating bill in QuickBooks...`,
+            );
+            await waitForImageUpload(invoice.imageId, () => mediaToUploadRef.current);
+          }
+        }
         const qbBill: UpdateBillRequest = {
           projectId,
           projectAbbr: project?.abbreviation ?? '',
@@ -185,6 +222,16 @@ const InvoiceDetailsPage = () => {
         };
         updateInvoice(invoice.id, updatedInvoice);
       } else {
+        // Wait for image to finish uploading if it's still in the upload queue
+        if (invoice.imageId) {
+          const isInQueue = mediaToUploadRef.current.some((item) => item.itemId === invoice.imageId);
+          if (isInQueue) {
+            console.log(
+              `Image ${invoice.imageId} is in upload queue. Waiting before adding bill to QuickBooks...`,
+            );
+            await waitForImageUpload(invoice.imageId, () => mediaToUploadRef.current);
+          }
+        }
         const qbBill: AddBillRequest = {
           projectId,
           projectAbbr: project?.abbreviation ?? '',

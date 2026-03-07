@@ -31,10 +31,32 @@ import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Image, Keyboard, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { ReceiptLineItem, useAddReceiptQueueEntryCallback } from '@/src/tbStores/ReceiptQueueStoreHooks';
+import { useAllMediaToUpload } from '@/src/tbStores/UploadSyncStore';
+
+const waitForImageUpload = (
+  imageId: string,
+  getLatestMedia: () => { itemId: string }[],
+  maxWaitMs = 60000,
+): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const startTime = Date.now();
+    const check = () => {
+      if (!getLatestMedia().some((item) => item.itemId === imageId)) {
+        resolve();
+        return;
+      }
+      if (Date.now() - startTime > maxWaitMs) {
+        reject(new Error(`Timed out waiting for image ${imageId} to finish uploading`));
+        return;
+      }
+      setTimeout(check, 2000);
+    };
+    check();
+  });
 
 const AddReceiptPage = () => {
   const defaultDate = useMemo(() => new Date(), []);
@@ -73,6 +95,11 @@ const AddReceiptPage = () => {
   const router = useRouter();
   const colors = useColors();
   const addReceiptQueueEntry = useAddReceiptQueueEntryCallback();
+  const mediaToUpload = useAllMediaToUpload();
+  const mediaToUploadRef = useRef(mediaToUpload);
+  useEffect(() => {
+    mediaToUploadRef.current = mediaToUpload;
+  }, [mediaToUpload]);
 
   const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
     setPickedSubCategoryOption(selectedSubCategory);
@@ -335,6 +362,16 @@ const AddReceiptPage = () => {
             },
           };
 
+          // Wait for image to finish uploading if it's still in the upload queue
+          if (projectReceipt.imageId) {
+            const isInQueue = mediaToUploadRef.current.some((item) => item.itemId === projectReceipt.imageId);
+            if (isInQueue) {
+              console.log(
+                `Image ${projectReceipt.imageId} is in upload queue. Waiting before syncing to QuickBooks...`,
+              );
+              await waitForImageUpload(projectReceipt.imageId, () => mediaToUploadRef.current);
+            }
+          }
           // Create new Purchase in QuickBooks
           const response = await addReceiptToQuickBooks(receiptData, orgId, userId, getToken);
           console.log('Receipt successfully synced to QuickBooks:', response);

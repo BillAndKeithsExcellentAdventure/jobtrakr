@@ -40,6 +40,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const appSettings = useAppSettings();
   const [isQuickBooksConnected, setIsQuickBooksConnected] = useState<boolean>(false);
   const [isQuickBooksAccessible, setIsQuickBooksAccessible] = useState<boolean>(false);
+  const previousConnectedRef = useRef<boolean | null>(null);
   const auth = useAuth();
   const lastNetworkStateRef = useRef<{
     isConnected: boolean;
@@ -136,10 +137,13 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
 
       try {
         const connected = await testQbIsConnected(orgId, userId, getToken);
-        console.log(
-          `QuickBooks accessibility: ${connected ? 'QuickBooks is accessible ✅' : 'QuickBooks is not accessible ❌'}`,
-        );
-        setIsQuickBooksAccessible(connected);
+        if (connected !== previousConnectedRef.current) {
+          console.log(
+            `QuickBooks accessibility: ${connected ? 'QuickBooks is accessible ✅' : 'QuickBooks is not accessible ❌'}`,
+          );
+          previousConnectedRef.current = connected;
+          setIsQuickBooksAccessible(connected);
+        }
       } catch (error) {
         console.error('QuickBooks Connection Error. Error:', error);
         setIsQuickBooksAccessible(false);

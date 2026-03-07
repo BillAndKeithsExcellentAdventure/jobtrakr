@@ -19,7 +19,7 @@ import { ImageIdAndType } from '../tbStores/projectDetails/ProjectDetailsStoreHo
 export type ImageResult = { status: 'Success' | 'Error'; id: string; uri?: string | undefined; msg: string };
 
 export interface ImageDetails {
-  id: string;
+  id: string; // this is the imageId for uploads
   userId: string;
   orgId: string;
   projectId: string;

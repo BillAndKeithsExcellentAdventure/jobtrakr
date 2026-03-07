@@ -32,7 +32,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import { ActivityIndicator, Alert, Image, Keyboard, Modal, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
@@ -76,6 +76,11 @@ const AddInvoicePage = () => {
     [],
   );
   const stopProcessing = useCallback(() => setProcessingInfo({ isProcessing: false, label: '' }), []);
+  const mediaToUpload = useAllMediaToUpload();
+  const mediaToUploadRef = useRef(mediaToUpload);
+  useEffect(() => {
+    mediaToUploadRef.current = mediaToUpload;
+  }, [mediaToUpload]);
   const [projectInvoice, setProjectInvoice] = useState<InvoiceData>({
     id: '',
     accountingId: '',
@@ -228,6 +233,16 @@ const AddInvoicePage = () => {
 
         startProcessing('Adding Bill to QuickBooks...');
         try {
+          // Wait for image to finish uploading if it's still in the upload queue
+          if (projectInvoice.imageId) {
+            const isInQueue = mediaToUploadRef.current.some((item) => item.itemId === projectInvoice.imageId);
+            if (isInQueue) {
+              console.log(
+                `Image ${projectInvoice.imageId} is in upload queue. Waiting before adding bill to QuickBooks...`,
+              );
+              await waitForImageUpload(projectInvoice.imageId, () => mediaToUploadRef.current);
+            }
+          }
           const response = await addBill(orgId, userId, qbBill, getToken);
 
           const hash = await getBillSyncHash(invoiceToAdd, [newLineItem]);

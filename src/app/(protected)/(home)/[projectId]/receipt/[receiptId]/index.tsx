@@ -30,10 +30,32 @@ import { File } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ReceiptLineItem, useAddReceiptQueueEntryCallback } from '@/src/tbStores/ReceiptQueueStoreHooks';
+import { useAllMediaToUpload } from '@/src/tbStores/UploadSyncStore';
+
+const waitForImageUpload = (
+  imageId: string,
+  getLatestMedia: () => { itemId: string }[],
+  maxWaitMs = 60000,
+): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const startTime = Date.now();
+    const check = () => {
+      if (!getLatestMedia().some((item) => item.itemId === imageId)) {
+        resolve();
+        return;
+      }
+      if (Date.now() - startTime > maxWaitMs) {
+        reject(new Error(`Timed out waiting for image ${imageId} to finish uploading`));
+        return;
+      }
+      setTimeout(check, 2000);
+    };
+    check();
+  });
 
 const ReceiptDetailsPage = () => {
   const defaultDate = new Date();
@@ -53,6 +75,11 @@ const ReceiptDetailsPage = () => {
   const auth = useAuth();
   const { userId, orgId, getToken } = auth;
   const getImage = useGetImageCallback();
+  const mediaToUpload = useAllMediaToUpload();
+  const mediaToUploadRef = useRef(mediaToUpload);
+  useEffect(() => {
+    mediaToUploadRef.current = mediaToUpload;
+  }, [mediaToUpload]);
 
   const [allReceiptLineItems, setAllReceiptLineItems] = useState<WorkItemCostEntry[]>([]);
 
@@ -298,6 +325,16 @@ const ReceiptDetailsPage = () => {
         return;
       }
 
+      // Wait for image to finish uploading if it's still in the upload queue
+      if (receiptData.imageId) {
+        const isInQueue = mediaToUploadRef.current.some((item) => item.itemId === receiptData.imageId);
+        if (isInQueue) {
+          console.log(
+            `Image ${receiptData.imageId} is in upload queue. Waiting before syncing to QuickBooks...`,
+          );
+          await waitForImageUpload(receiptData.imageId, () => mediaToUploadRef.current);
+        }
+      }
       // Create new Bill in QuickBooks
       const response = await addReceiptToQuickBooks(receiptData, orgId, userId, getToken);
       console.log('Receipt successfully synced to QuickBooks:', response);
@@ -399,6 +436,16 @@ const ReceiptDetailsPage = () => {
       };
 
       try {
+        // Wait for image to finish uploading if it's still in the upload queue
+        if (receipt.imageId) {
+          const isInQueue = mediaToUploadRef.current.some((item) => item.itemId === receipt.imageId);
+          if (isInQueue) {
+            console.log(
+              `Image ${receipt.imageId} is in upload queue. Waiting before updating in QuickBooks...`,
+            );
+            await waitForImageUpload(receipt.imageId, () => mediaToUploadRef.current);
+          }
+        }
         const response = await editReceiptInQuickBooks(receiptEditData, orgId, userId, getToken);
         console.log('Receipt successfully updated in QuickBooks:', response);
 
