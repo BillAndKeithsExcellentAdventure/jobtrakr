@@ -482,7 +482,7 @@ const DefineChangeOrderScreen = () => {
                 <ActionButton
                   title={`${changeOrder.status === 'approval-pending' ? 'Resend' : 'Send'} for Approval`}
                   onPress={handleSendForApproval}
-                  type={isSendingChangeOrder || changeOrder.quotedPrice <= 0 ? 'disabled' : 'action'}
+                  type={isSendingChangeOrder || (changeOrder?.quotedPrice ?? 0) <= 0 ? 'disabled' : 'action'}
                 />
                 {isSendingChangeOrder && (
                   <View style={styles.sendingRow}>
@@ -521,10 +521,10 @@ const DefineChangeOrderScreen = () => {
 
                 {changeOrder?.description && <Text text={changeOrder?.description} />}
                 <Text
-                  text={`quote: ${formatCurrency(changeOrder?.quotedPrice, true, false)}`}
+                  text={`quote: ${formatCurrency(changeOrder?.quotedPrice ?? 0, true, false)}`}
                   style={{
-                    color: changeOrder?.quotedPrice > 0 ? colors.text : colors.error,
-                    fontWeight: changeOrder?.quotedPrice > 0 ? 'normal' : '700',
+                    color: (changeOrder?.quotedPrice ?? 0) > 0 ? colors.text : colors.error,
+                    fontWeight: (changeOrder?.quotedPrice ?? 0) > 0 ? 'normal' : '700',
                   }}
                 />
               </View>
