@@ -4,7 +4,6 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { TextField } from '@/src/components/TextField';
 import {
   RecentMediaEntryDateCompare,
   useAllRows,
