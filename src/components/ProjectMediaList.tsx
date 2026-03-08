@@ -137,7 +137,7 @@ export const ProjectMediaList = ({
 
           router.push({
             pathname: '/[projectId]/photos/showImage',
-            params: { projectId, uri, projectName, photoDate: dateString },
+            params: { projectId, uri, projectName, photoDate: dateString, imageId },
           });
         }
       }

@@ -74,6 +74,7 @@ export const TABLES_SCHEMA = {
     thumbnail: { type: 'string' }, // thumbnail image.
     creationDate: { type: 'number' }, // Date the picture was taken.
     isPublic: { type: 'boolean' },
+    caption: { type: 'string' }, // caption for the media entry
   },
 
   notes: {

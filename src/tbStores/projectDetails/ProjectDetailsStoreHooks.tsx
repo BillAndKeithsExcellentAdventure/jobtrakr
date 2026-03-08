@@ -113,6 +113,7 @@ export interface MediaEntryData {
   thumbnail: string;
   creationDate: number;
   isPublic: boolean;
+  caption: string;
 }
 
 export interface NoteData {

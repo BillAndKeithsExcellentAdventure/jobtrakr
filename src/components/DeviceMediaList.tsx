@@ -204,6 +204,7 @@ export const DeviceMediaList = ({
                 thumbnail: tn ?? '',
                 creationDate: Date.now(),
                 isPublic: false,
+                caption: '', // Default empty caption, can be edited later in the image viewing screen.
               };
 
               addPhotoData(newPhoto);
@@ -243,7 +244,7 @@ export const DeviceMediaList = ({
   const handleSelectClearAllDeviceAssets = useCallback(async () => {
     if (hasSelectedDeviceAssets) {
       setDeviceMediaAssets((prevAssets) =>
-        prevAssets?.map((item) => ({ ...item, selected: false } as AssetsItem)),
+        prevAssets?.map((item) => ({ ...item, selected: false }) as AssetsItem),
       );
     } else {
       setDeviceMediaAssets((prevAssets) => prevAssets?.map((item) => ({ ...item, selected: true })));

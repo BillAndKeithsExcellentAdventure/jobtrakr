@@ -93,6 +93,7 @@ const ProjectPhotosPage = () => {
               thumbnail: thumbnail ?? '',
               creationDate: Date.now(),
               isPublic: false,
+              caption: '', // Default empty caption, can be edited later in the image viewing screen.
             };
 
             console.log(

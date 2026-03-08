@@ -1,34 +1,74 @@
 import { ZoomImageViewer } from '@/src/components/ZoomImageViewer';
-import { View, Text } from '@/src/components/Themed';
+import { View, Text, TextInput } from '@/src/components/Themed';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import React from 'react';
-import { StyleSheet } from 'react-native';
+import React, { useCallback } from 'react';
+import { Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { TextField } from '@/src/components/TextField';
+import {
+  RecentMediaEntryDateCompare,
+  useAllRows,
+  useUpdateRowCallback,
+} from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useColors } from '@/src/context/ColorsContext';
+import { KeyboardToolbar } from 'react-native-keyboard-controller';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 
 const ShowProjectPhotoPage = () => {
-  const { uri, projectName, photoDate } = useLocalSearchParams<{
+  const { uri, projectId, projectName, photoDate, imageId } = useLocalSearchParams<{
     projectId: string;
     projectName: string;
     uri: string;
     photoDate: string;
+    imageId?: string;
   }>();
+
+  const allImages = useAllRows(projectId, 'mediaEntries', RecentMediaEntryDateCompare);
+  const updateMediaEntry = useUpdateRowCallback(projectId, 'mediaEntries');
+  const colors = useColors();
+  const currentImage = imageId ? allImages.find((image) => image.imageId === imageId) : undefined;
+  const caption = currentImage?.caption || '';
+
+  const handleCaptionChange = useCallback(
+    (newCaption: string) => {
+      if (currentImage?.id) updateMediaEntry(currentImage.id, { caption: newCaption });
+    },
+    [caption, currentImage, updateMediaEntry],
+  );
+
   return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-        <Text txtSize="title" text={photoDate} />
-      </View>
-      <View style={styles.container}>
-        <Stack.Screen
-          options={{
-            title: projectName,
-            headerShown: true,
-            headerBackTitle: '',
-            headerBackButtonDisplayMode: 'minimal',
-          }}
-        />
-        <ZoomImageViewer imageUri={uri} />
-      </View>
-    </SafeAreaView>
+    <>
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+        <View>
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <Text txtSize="title" text={photoDate} />
+          </View>
+          {imageId && (
+            <TextInput
+              style={{ margin: 10, backgroundColor: colors.neutral200, padding: 8, borderRadius: 4 }}
+              placeholder="Caption"
+              value={caption}
+              multiline={true}
+              numberOfLines={2}
+              onChangeText={handleCaptionChange}
+            />
+          )}
+        </View>
+
+        <View style={styles.container}>
+          <Stack.Screen
+            options={{
+              title: projectName,
+              headerShown: true,
+              headerBackTitle: '',
+              headerBackButtonDisplayMode: 'minimal',
+            }}
+          />
+          <ZoomImageViewer imageUri={uri} />
+        </View>
+      </SafeAreaView>
+      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
+    </>
   );
 };
 
