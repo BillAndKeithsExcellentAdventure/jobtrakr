@@ -9,6 +9,7 @@ import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { CostSectionData, CostSectionDataCodeCompareAsNumber } from '@/src/models/types';
 import {
+  CustomerDataCompareName,
   useAllRows as useAllConfigRows,
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
@@ -52,7 +53,7 @@ const ProjectDetailsPage = () => {
   const clearProjectDetailsStore = useClearProjectDetailsStoreCallback(projectId);
   const allProjectCategories = useAllConfigRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
-  const allCustomers = useAllConfigRows('customers');
+  const allCustomers = useAllConfigRows('customers', CustomerDataCompareName);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] = useState<boolean>(false);
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');

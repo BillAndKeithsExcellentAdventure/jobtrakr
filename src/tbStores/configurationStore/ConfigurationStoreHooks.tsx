@@ -68,6 +68,22 @@ export interface AccountData {
   accountSubType: string; // e.g., 'Checking', 'CreditCard',
 }
 
+export function VendorDataCompareName(a: VendorData, b: VendorData) {
+  const aValue = a.name.toLowerCase();
+  const bValue = b.name.toLowerCase();
+  if (aValue < bValue) return -1;
+  if (aValue > bValue) return 1;
+  return 0;
+}
+
+export function CustomerDataCompareName(a: CustomerData, b: CustomerData) {
+  const aValue = a.name.toLowerCase();
+  const bValue = b.name.toLowerCase();
+  if (aValue < bValue) return -1;
+  if (aValue > bValue) return 1;
+  return 0;
+}
+
 export function WorkCategoryCodeCompareAsNumber(a: WorkCategoryData, b: WorkCategoryData) {
   const aValue = Number(a.code);
   const bValue = Number(b.code);
@@ -290,7 +306,7 @@ export const useTemplateWorkItemData = (templateId: string) => {
   const [templateWorkItemIds, setTemplateWorkItemIds] = useState<string[]>([]);
   const [templateWorkCategoryIds, setTemplateWorkCategoryIds] = useState<string[]>([]);
   let store = useStore(useStoreId());
-  const allWorkItems = useAllRows('workItems');
+  const allWorkItems = useAllRows('workItems', WorkItemDataCodeCompareAsNumber);
 
   const fetchTemplateWorkItemData = useCallback((): TemplateWorkItemData | null => {
     if (!store) {

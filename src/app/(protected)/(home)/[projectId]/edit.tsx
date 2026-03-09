@@ -7,7 +7,11 @@ import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { ProjectData } from '@/src/models/types';
-import { CustomerData, useAllRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  CustomerData,
+  CustomerDataCompareName,
+  useAllRows,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useProject, useUpdateProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatDate } from '@/src/utils/formatters';
 import { updateProjectInQuickBooks } from '@/src/utils/quickbooksAPI';
@@ -48,7 +52,7 @@ const EditProjectScreen = () => {
 
   const currentProject = useProject(projectId);
   const updateProject = useUpdateProjectCallback();
-  const allCustomers = useAllRows('customers');
+  const allCustomers = useAllRows('customers', CustomerDataCompareName);
   const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
   const [finishDatePickerVisible, setFinishDatePickerVisible] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);

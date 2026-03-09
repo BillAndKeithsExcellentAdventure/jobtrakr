@@ -7,7 +7,11 @@ import { TextInput, View, Text } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { ProjectData } from '@/src/models/types';
-import { useAllRows, CustomerData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  useAllRows,
+  CustomerData,
+  CustomerDataCompareName,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAddProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -43,7 +47,7 @@ const AddProjectScreen = () => {
   const router = useRouter();
   const allProjectTemplates = useAllRows('templates');
   const allTemplateWorkItems = useAllRows('templateWorkItems');
-  const allCustomers = useAllRows('customers');
+  const allCustomers = useAllRows('customers', CustomerDataCompareName);
   const [isTemplateListPickerVisible, setIsTemplateListPickerVisible] = useState<boolean>(false);
   const [pickedTemplate, setPickedTemplate] = useState<OptionEntry | undefined>(undefined);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | undefined>(undefined);

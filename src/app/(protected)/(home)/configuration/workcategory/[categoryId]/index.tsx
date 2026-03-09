@@ -14,6 +14,7 @@ import {
   useTableValue,
   useTypedRow,
   WorkItemData,
+  WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
@@ -22,7 +23,7 @@ import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 const ShowWorkCategory = () => {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
   const category = useTypedRow('categories', categoryId); // Fetch the category by ID
-  const allWorkItems = useAllRows('workItems');
+  const allWorkItems = useAllRows('workItems', WorkItemDataCodeCompareAsNumber);
   const addWorkItem = useAddRowCallback('workItems');
   const name = useTableValue('categories', categoryId, 'name');
   const code = useTableValue('categories', categoryId, 'code');

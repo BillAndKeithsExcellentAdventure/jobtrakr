@@ -20,6 +20,9 @@ import {
   useUpdateRowCallback,
   useDeleteRowCallback,
   VendorData,
+  WorkItemDataCodeCompareAsNumber,
+  CustomerDataCompareName,
+  VendorDataCompareName,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { vendorsToCsv, csvToVendors, csvToCustomers } from '@/src/utils/csvUtils';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
@@ -37,6 +40,14 @@ import {
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { sanitizeQuickBooksAccountSettings } from '@/src/utils/quickbooksAccountSettings';
 import { SvgImage } from '@/src/components/SvgImage';
+import { ActionButton } from '@/src/components/ActionButton';
+import {
+  connectToQuickBooks as qbConnect,
+  disconnectQuickBooks as qbDisconnect,
+  fetchCompanyInfo,
+  isQuickBooksConnected,
+} from '@/src/utils/quickbooksAPI';
+import * as WebBrowser from 'expo-web-browser';
 
 const Home = () => {
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
@@ -53,9 +64,9 @@ const Home = () => {
   const router = useRouter();
   const colors = useColors();
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
-  const allWorkItems = useAllRows('workItems');
+  const allWorkItems = useAllRows('workItems', WorkItemDataCodeCompareAsNumber);
   const allProjectTemplates = useAllRows('templates');
-  const allVendors = useAllRows('vendors');
+  const allVendors = useAllRows('vendors', VendorDataCompareName);
   const cleanupOrphanedWorkItems = useCleanOrphanedWorkItemsCallback();
   const exportConfiguration = useExportStoreDataCallback();
   const importConfiguration = useImportJsonConfigurationDataCallback();
@@ -65,13 +76,164 @@ const Home = () => {
   const allAccounts = useAllRows('accounts');
   const addAccount = useAddRowCallback('accounts');
   const deleteAccount = useDeleteRowCallback('accounts');
-  const allCustomers = useAllRows('customers');
+  const allCustomers = useAllRows('customers', CustomerDataCompareName);
   const addCustomer = useAddRowCallback('customers');
   const updateCustomer = useUpdateRowCallback('customers');
-  const { isQuickBooksAccessible } = useNetwork();
+  const { isQuickBooksAccessible, isQuickBooksConnected: isQBConnected } = useNetwork();
   const auth = useAuth();
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
+
+  const checkQBConnectionWithRetry = useCallback(
+    async (maxRetries = 60, retryInterval = 1000): Promise<boolean> => {
+      if (!auth.orgId || !auth.userId) {
+        console.error('Cannot check QB connection: missing orgId or userId');
+        return false;
+      }
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          await new Promise((resolve) => setTimeout(resolve, retryInterval));
+          const connected = await isQuickBooksConnected(auth.orgId, auth.userId, auth.getToken);
+          if (connected) {
+            return true;
+          }
+        } catch (error) {
+          console.error(`Error checking QB connection (attempt ${attempt + 1}/${maxRetries}):`, error);
+        }
+      }
+
+      return false;
+    },
+    [auth],
+  );
+
+  const handleConnectToQuickBooks = useCallback(async () => {
+    if (!auth.orgId || !auth.userId) {
+      Alert.alert('Error', 'Authentication required to connect to QuickBooks');
+      return;
+    }
+
+    startProcessing('Connecting to QuickBooks...');
+    try {
+      const token = await auth.getToken();
+      if (!token) {
+        Alert.alert('Error', 'Unable to obtain authentication token');
+        return;
+      }
+
+      const { authUrl } = await qbConnect(auth.orgId, auth.userId, auth.getToken);
+      if (!authUrl) {
+        Alert.alert('Error', 'No authorization URL received from server');
+        return;
+      }
+
+      const result = await WebBrowser.openBrowserAsync(authUrl);
+      if (result.type === 'cancel' || result.type === 'dismiss') {
+        const connected = await checkQBConnectionWithRetry();
+        if (connected) {
+          setAppSettings({ ...appSettings, syncWithQuickBooks: true });
+          Alert.alert(
+            'Success',
+            'Successfully connected to QuickBooks. You can now import vendors, customers, and accounts from the menu.',
+          );
+        } else {
+          Alert.alert('Not Connected', 'QuickBooks connection could not be verified.');
+        }
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      Alert.alert('Error', `Failed to connect to QuickBooks: ${errorMessage}`);
+    } finally {
+      stopProcessing();
+    }
+  }, [auth, appSettings, checkQBConnectionWithRetry, setAppSettings, startProcessing, stopProcessing]);
+
+  const handleDisconnectFromQuickBooks = useCallback(() => {
+    if (!auth.orgId || !auth.userId) {
+      Alert.alert('Error', 'Authentication required to disconnect from QuickBooks');
+      return;
+    }
+
+    Alert.alert('Disconnect QuickBooks', 'Are you sure you want to disconnect from QuickBooks?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Disconnect',
+        style: 'destructive',
+        onPress: async () => {
+          startProcessing('Disconnecting from QuickBooks...');
+          try {
+            const token = await auth.getToken();
+            if (!token) {
+              Alert.alert('Error', 'Unable to obtain authentication token');
+              return;
+            }
+
+            await qbDisconnect(auth.orgId!, auth.userId!, auth.getToken);
+            setAppSettings({ ...appSettings, syncWithQuickBooks: false });
+            Alert.alert('Success', 'Successfully disconnected from QuickBooks');
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            Alert.alert('Error', `Failed to disconnect from QuickBooks: ${errorMessage}`);
+          } finally {
+            stopProcessing();
+          }
+        },
+      },
+    ]);
+  }, [auth, appSettings, setAppSettings, startProcessing, stopProcessing]);
+
+  const handleLoadCompanyInfoFromQuickBooks = useCallback(async () => {
+    if (!auth.orgId || !auth.userId) {
+      Alert.alert('Error', 'Authentication required to fetch company information');
+      return;
+    }
+
+    startProcessing('Loading Company Settings...');
+    try {
+      let companyInfo;
+      const maxRetries = 5;
+      const retryInterval = 1000;
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          if (attempt > 0) {
+            await new Promise((resolve) => setTimeout(resolve, retryInterval));
+          }
+          companyInfo = await fetchCompanyInfo(auth.orgId, auth.userId, auth.getToken);
+          break;
+        } catch (error) {
+          if (attempt === maxRetries - 1) {
+            throw error;
+          }
+        }
+      }
+
+      if (!companyInfo) {
+        throw new Error('Failed to fetch company information after all retries');
+      }
+
+      const updatedSettings = {
+        ...appSettings,
+        companyName: companyInfo.companyName || appSettings.companyName,
+        address: companyInfo.address || appSettings.address,
+        address2: companyInfo.address2 || appSettings.address2,
+        city: companyInfo.city || appSettings.city,
+        state: companyInfo.state || appSettings.state,
+        zip: companyInfo.zip || appSettings.zip,
+        email: companyInfo.email || appSettings.email,
+        phone: companyInfo.phone || appSettings.phone,
+      };
+
+      setAppSettings(updatedSettings);
+      Alert.alert('Success', 'Company info loaded from QuickBooks.');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      Alert.alert('Error', `Failed to fetch company information: ${errorMessage}`);
+    } finally {
+      stopProcessing();
+    }
+  }, [auth, appSettings, setAppSettings, startProcessing, stopProcessing]);
 
   const hasConfigurationData: boolean = useMemo(
     () =>
@@ -431,6 +593,12 @@ const Home = () => {
           },
         ]);
         return;
+      } else if (menuItem === 'DisconnectQuickBooks') {
+        handleDisconnectFromQuickBooks();
+        return;
+      } else if (menuItem === 'LoadCompanyInfo') {
+        handleLoadCompanyInfoFromQuickBooks();
+        return;
       }
     },
     [
@@ -454,11 +622,14 @@ const Home = () => {
       auth.getToken,
       appSettings,
       setAppSettings,
+      handleDisconnectFromQuickBooks,
+      handleLoadCompanyInfoFromQuickBooks,
     ],
   );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(() => {
     const menuButtons: ActionButtonProps[] = [
+      /*
       ...(hasConfigurationData
         ? [
             {
@@ -478,28 +649,7 @@ const Home = () => {
               },
             },
           ]),
-      ...(!isQuickBooksAccessible && hasVendorData
-        ? [
-            {
-              icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
-              label: 'Export Vendors',
-              onPress: (e: GestureResponderEvent, actionContext?: any) => {
-                handleMenuItemPress('ExportVendors');
-              },
-            },
-          ]
-        : []),
-      ...(!isQuickBooksAccessible
-        ? [
-            {
-              icon: <MaterialCommunityIcons name="import" size={28} color={colors.iconColor} />,
-              label: 'Import Vendors',
-              onPress: (e: GestureResponderEvent, actionContext?: any) => {
-                handleMenuItemPress('ImportVendors');
-              },
-            },
-          ]
-        : []),
+          */
       ...(isQuickBooksAccessible
         ? [
             {
@@ -523,15 +673,47 @@ const Home = () => {
                 handleMenuItemPress('GetQBCustomers');
               },
             },
+            {
+              icon: <MaterialCommunityIcons name="link-off" size={28} color={colors.iconColor} />,
+              label: 'Disconnect from QuickBooks',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('DisconnectQuickBooks');
+              },
+            },
+            {
+              icon: <MaterialCommunityIcons name="cloud-download" size={28} color={colors.iconColor} />,
+              label: 'Load Company Info from QuickBooks',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('LoadCompanyInfo');
+              },
+            },
           ]
         : []),
-      ...(!isQuickBooksAccessible
+      ...(!isQBConnected
         ? [
+            {
+              icon: <MaterialCommunityIcons name="import" size={28} color={colors.iconColor} />,
+              label: 'Import Vendors',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('ImportVendors');
+              },
+            },
             {
               icon: <MaterialCommunityIcons name="import" size={28} color={colors.iconColor} />,
               label: 'Import Customers from CSV',
               onPress: (e: GestureResponderEvent, actionContext?: any) => {
                 handleMenuItemPress('ImportCustomers');
+              },
+            },
+          ]
+        : []),
+      ...(!isQBConnected && hasVendorData
+        ? [
+            {
+              icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
+              label: 'Export Vendors',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('ExportVendors');
               },
             },
           ]
@@ -553,6 +735,12 @@ const Home = () => {
       />
 
       <View style={{ flex: 1, width: '100%', paddingHorizontal: 10, backgroundColor: colors.listBackground }}>
+        {!isQuickBooksAccessible && (
+          <View style={{ marginBottom: 10, marginTop: 4 }}>
+            <ActionButton type="action" title="Connect to QuickBooks" onPress={handleConnectToQuickBooks} />
+          </View>
+        )}
+
         <ConfigurationEntry
           label="Company Settings"
           description="Update company profile and defaults"

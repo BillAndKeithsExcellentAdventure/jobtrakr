@@ -10,33 +10,13 @@ import {
   useAppSettings,
   useSetAppSettingsCallback,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
-import {
-  useAllRows,
-  useAddRowCallback,
-  useDeleteRowCallback,
-} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { isDevelopmentBuild } from '@/src/utils/environment';
-import {
-  isQuickBooksConnected,
-  connectToQuickBooks as qbConnect,
-  disconnectQuickBooks as qbDisconnect,
-  fetchCompanyInfo,
-} from '@/src/utils/quickbooksAPI';
-import { importAccountsFromQuickBooks, importVendorsFromQuickBooks } from '@/src/utils/quickbooksImports';
-import { sanitizeQuickBooksAccountSettings } from '@/src/utils/quickbooksAccountSettings';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
-import * as WebBrowser from 'expo-web-browser';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Platform, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Alert, Image, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
-import { useAuth } from '@clerk/clerk-expo';
-import { useNetwork } from '@/src/context/NetworkContext';
-import { ActionButton } from '@/src/components/ActionButton';
-import RightHeaderMenu from '@/src/components/RightHeaderMenu';
-import { ActionButtonProps } from '@/src/components/ButtonBar';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 async function createBase64LogoImage(
   uri: string,
@@ -60,23 +40,9 @@ async function createBase64LogoImage(
 const SetAppSettingScreen = () => {
   const colors = useColors();
   const router = useRouter();
-  const auth = useAuth();
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
   const [settings, setSettings] = useState<SettingsData>(appSettings);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [isLoadingCompanySettings, setIsLoadingCompanySettings] = useState(false);
-  const [loadingStatusMessage, setLoadingStatusMessage] = useState<string>('');
-  const { isConnected, isInternetReachable, isQuickBooksAccessible } = useNetwork();
-  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState(false);
-
-  // Get store hooks for accounts and vendors
-  const allAccounts = useAllRows('accounts');
-  const addAccount = useAddRowCallback('accounts');
-  const deleteAccount = useDeleteRowCallback('accounts');
-  const allVendors = useAllRows('vendors');
-  const addVendor = useAddRowCallback('vendors');
-  const deleteVendor = useDeleteRowCallback('vendors');
 
   // Check if we're in a development build
   const isDevelopment = isDevelopmentBuild();
@@ -119,295 +85,6 @@ const SetAppSettingScreen = () => {
       settings.phone.trim().length > 0
     );
   }, [settings]);
-
-  const checkQBConnectionWithRetry = useCallback(
-    async (maxRetries = 10, retryInterval = 1000): Promise<boolean> => {
-      // Guard check for required auth values
-      if (!auth.orgId || !auth.userId) {
-        console.error('Cannot check QB connection: missing orgId or userId');
-        return false;
-      }
-
-      for (let attempt = 0; attempt < maxRetries; attempt++) {
-        try {
-          // Wait before checking (including first attempt to give backend time to process OAuth callback)
-          await new Promise((resolve) => setTimeout(resolve, retryInterval));
-
-          console.log(`Checking QuickBooks connection (attempt ${attempt + 1}/${maxRetries})...`);
-          const connected = await isQuickBooksConnected(auth.orgId, auth.userId, auth.getToken);
-          if (connected) {
-            return true;
-          }
-        } catch (error) {
-          console.error(`Error checking QB connection (attempt ${attempt + 1}/${maxRetries}):`, error);
-        }
-      }
-
-      console.log('Max retries reached. QuickBooks connection could not be verified.');
-      return false;
-    },
-    [auth],
-  );
-
-  const handleFetchCompanyInfoFromQuickBooks = useCallback(async () => {
-    if (!auth.orgId || !auth.userId) {
-      Alert.alert('Error', 'Authentication required to fetch company information');
-      return;
-    }
-
-    try {
-      // Retry mechanism for fetching company info
-      let companyInfo;
-      const maxRetries = 5;
-      const retryInterval = 1000;
-
-      for (let attempt = 0; attempt < maxRetries; attempt++) {
-        try {
-          if (attempt > 0) {
-            await new Promise((resolve) => setTimeout(resolve, retryInterval));
-          }
-          console.log(`Fetching company info from QuickBooks (attempt ${attempt + 1}/${maxRetries})...`);
-          companyInfo = await fetchCompanyInfo(auth.orgId, auth.userId, auth.getToken);
-          console.log('Successfully fetched company info');
-          break; // Success, exit retry loop
-        } catch (error) {
-          console.error(`Error fetching company info (attempt ${attempt + 1}/${maxRetries}):`, error);
-          if (attempt === maxRetries - 1) {
-            // Last attempt failed, throw the error
-            throw error;
-          }
-        }
-      }
-
-      if (!companyInfo) {
-        throw new Error('Failed to fetch company information after all retries');
-      }
-      console.log('Fetched company info from QuickBooks:', companyInfo);
-
-      // merge settings with fetched company info
-      const companySettings = {
-        ...settings,
-        companyName: companyInfo.companyName || settings.companyName,
-        address: companyInfo.address || settings.address,
-        address2: companyInfo.address2 || settings.address2,
-        city: companyInfo.city || settings.city,
-        state: companyInfo.state || settings.state,
-        zip: companyInfo.zip || settings.zip,
-        email: companyInfo.email || settings.email,
-        phone: companyInfo.phone || settings.phone,
-      };
-
-      return companySettings;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Error fetching company info from QuickBooks:', errorMessage);
-      Alert.alert('Error', `Failed to fetch company information: ${errorMessage}`);
-    }
-  }, [auth, settings]);
-
-  const handleLoadCompanyInfoFromQuickBooks = useCallback(async () => {
-    setLoadingStatusMessage('Loading Company Settings...');
-    setIsLoadingCompanySettings(true);
-    try {
-      const companySettings = await handleFetchCompanyInfoFromQuickBooks();
-      if (companySettings) {
-        // load company info from QuickBooks and merge into settings
-        const updatedSettings = { ...settings, ...companySettings };
-        setAppSettings(updatedSettings);
-      }
-    } finally {
-      setIsLoadingCompanySettings(false);
-      setLoadingStatusMessage('');
-    }
-  }, [handleFetchCompanyInfoFromQuickBooks, setAppSettings, settings]);
-
-  const handleConnectToQuickBooks = useCallback(async () => {
-    if (isConnecting) return;
-
-    if (!auth.orgId || !auth.userId) {
-      Alert.alert('Error', 'Authentication required to connect to QuickBooks');
-      return;
-    }
-
-    setIsConnecting(true);
-    try {
-      const token = await auth.getToken();
-      if (!token) {
-        Alert.alert('Error', 'Unable to obtain authentication token');
-        return;
-      }
-
-      const { authUrl } = await qbConnect(auth.orgId, auth.userId, auth.getToken);
-      if (authUrl) {
-        const result = await WebBrowser.openBrowserAsync(authUrl);
-        // If browser was opened successfully, check connection status again
-        if (result.type === 'cancel' || result.type === 'dismiss') {
-          // User closed browser, check if they completed authentication with retry mechanism
-          const connected = await checkQBConnectionWithRetry(60, 1000);
-
-          if (connected) {
-            // after confirming connection via alert, fetch company info to update settings
-            Alert.alert('Success', 'Successfully connected to QuickBooks!', [
-              {
-                text: 'OK',
-                onPress: async () => {
-                  setLoadingStatusMessage('Loading Company Settings...');
-                  setIsLoadingCompanySettings(true);
-                  try {
-                    const companySettings = await handleFetchCompanyInfoFromQuickBooks();
-                    if (companySettings) {
-                      const updatedSettings = {
-                        ...settings,
-                        ...companySettings,
-                        syncWithQuickBooks: true,
-                      };
-                      setAppSettings(updatedSettings);
-                    }
-
-                    // Import accounts and vendors from QuickBooks
-                    try {
-                      setLoadingStatusMessage('Loading Accounts...');
-                      const { accounts: importedAccounts } = await importAccountsFromQuickBooks(
-                        auth.orgId!,
-                        auth.userId!,
-                        auth.getToken,
-                        allAccounts,
-                        addAccount,
-                        deleteAccount,
-                      );
-
-                      const sanitizedSettings = sanitizeQuickBooksAccountSettings(settings, importedAccounts);
-                      const updatedSettings = { ...settings, ...sanitizedSettings, syncWithQuickBooks: true };
-                      setAppSettings(updatedSettings);
-                      setSettings(updatedSettings);
-                      setLoadingStatusMessage('Loading Vendors...');
-
-                      const { addedCount: vendorAddedCount } = await importVendorsFromQuickBooks(
-                        auth.orgId!,
-                        auth.userId!,
-                        auth.getToken,
-                        allVendors,
-                        addVendor,
-                        deleteVendor,
-                      );
-
-                      // Show success alert after all imports complete
-                      Alert.alert(
-                        'QuickBooks Import Complete',
-                        `Successfully loaded company settings, accounts, and vendors from QuickBooks.\n\n` +
-                          `Accounts - Imported: ${importedAccounts.length}\n` +
-                          `Vendors - Imported: ${vendorAddedCount}`,
-                      );
-                    } catch (importError) {
-                      console.error('Error importing accounts and vendors:', importError);
-                      // Don't block the flow if import fails, just log it
-                      Alert.alert(
-                        'Warning',
-                        'Company settings updated successfully, but there was an issue importing accounts and vendors. You can import them manually from the Configuration screen.',
-                      );
-                    }
-                  } catch (error) {
-                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                    console.error('Error updating settings after QB connection:', errorMessage);
-                    Alert.alert('Error', `Failed to update settings: ${errorMessage}`);
-                  } finally {
-                    setIsLoadingCompanySettings(false);
-                    setLoadingStatusMessage('');
-                  }
-                },
-              },
-            ]);
-          } else {
-            Alert.alert('Not Connected', 'QuickBooks connection could not be verified.');
-          }
-        }
-      } else {
-        Alert.alert('Error', 'No authorization URL received from server');
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      //console.error('Error connecting to QuickBooks:', errorMessage);
-      Alert.alert('Error', `Failed to connect to QuickBooks: ${errorMessage}`);
-    } finally {
-      setIsConnecting(false);
-    }
-  }, [
-    auth,
-    checkQBConnectionWithRetry,
-    settings,
-    setSettings,
-    setAppSettings,
-    isConnecting,
-    handleFetchCompanyInfoFromQuickBooks,
-    allAccounts,
-    addAccount,
-    deleteAccount,
-    allVendors,
-    addVendor,
-    deleteVendor,
-  ]);
-
-  const handleDisconnectFromQuickBooks = useCallback(async () => {
-    if (!auth.orgId || !auth.userId) {
-      Alert.alert('Error', 'Authentication required to disconnect from QuickBooks');
-      return;
-    }
-
-    Alert.alert('Disconnect QuickBooks', 'Are you sure you want to disconnect from QuickBooks?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Disconnect',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            const token = await auth.getToken();
-            if (!token) {
-              Alert.alert('Error', 'Unable to obtain authentication token');
-              return;
-            }
-
-            await qbDisconnect(auth.orgId!, auth.userId!, auth.getToken);
-            const updatedSettings = { ...settings, syncWithQuickBooks: false };
-            setAppSettings(updatedSettings);
-
-            Alert.alert('Success', 'Successfully disconnected from QuickBooks');
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            //console.error('Error disconnecting from QuickBooks:', errorMessage);
-            Alert.alert('Error', `Failed to disconnect from QuickBooks: ${errorMessage}`);
-          }
-        },
-      },
-    ]);
-  }, [auth, settings, setAppSettings]);
-
-  const handleHeaderMenuItemPress = useCallback(
-    (menuItem: 'disconnect' | 'load') => {
-      setHeaderMenuModalVisible(false);
-      if (menuItem === 'disconnect') {
-        handleDisconnectFromQuickBooks();
-        return;
-      }
-      handleLoadCompanyInfoFromQuickBooks();
-    },
-    [handleDisconnectFromQuickBooks, handleLoadCompanyInfoFromQuickBooks],
-  );
-
-  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
-    () => [
-      {
-        icon: <MaterialCommunityIcons name="link-off" size={24} color={colors.iconColor} />,
-        label: 'Disconnect from QuickBooks',
-        onPress: () => handleHeaderMenuItemPress('disconnect'),
-      },
-      {
-        icon: <MaterialCommunityIcons name="cloud-download" size={24} color={colors.iconColor} />,
-        label: 'Load Company Info from QuickBooks',
-        onPress: () => handleHeaderMenuItemPress('load'),
-      },
-    ],
-    [colors.iconColor, handleHeaderMenuItemPress],
-  );
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -473,18 +150,6 @@ const SetAppSettingScreen = () => {
           headerBackTitle: '',
           headerBackButtonDisplayMode: 'minimal',
           headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
-          headerRight: () =>
-            isQuickBooksAccessible ? (
-              <View style={{ backgroundColor: 'transparent' }}>
-                <TouchableOpacity
-                  style={{ alignItems: 'center' }}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  onPress={() => setHeaderMenuModalVisible(!headerMenuModalVisible)}
-                >
-                  <MaterialCommunityIcons name="menu" size={28} color={colors.iconColor} />
-                </TouchableOpacity>
-              </View>
-            ) : null,
         }}
       />
       <KeyboardAwareScrollView
@@ -493,38 +158,6 @@ const SetAppSettingScreen = () => {
         contentContainerStyle={styles.modalContainer}
       >
         <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
-          {isConnected && isInternetReachable && (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                backgroundColor: colors.listBackground,
-              }}
-            >
-              {isLoadingCompanySettings ? (
-                <>
-                  <ActivityIndicator size="large" color={colors.text} />
-                  <Text
-                    style={{ textAlign: 'center', marginTop: 8 }}
-                    text={loadingStatusMessage || 'Loading...'}
-                  />
-                </>
-              ) : isConnecting ? (
-                <>
-                  <ActivityIndicator size="large" color={colors.text} />
-                  <Text style={{ textAlign: 'center', marginTop: 8 }} text="Connecting to QuickBooks..." />
-                </>
-              ) : (
-                !isQuickBooksAccessible && (
-                  <ActionButton
-                    type="action"
-                    title="Connect to QuickBooks"
-                    onPress={handleConnectToQuickBooks}
-                  />
-                )
-              )}
-            </View>
-          )}
           {!areAllSettingsMet && (
             <Text
               style={{
@@ -669,14 +302,6 @@ const SetAppSettingScreen = () => {
           )}
         </View>
       </KeyboardAwareScrollView>
-
-      {headerMenuModalVisible && (
-        <RightHeaderMenu
-          modalVisible={headerMenuModalVisible}
-          setModalVisible={setHeaderMenuModalVisible}
-          buttons={rightHeaderMenuButtons}
-        />
-      )}
 
       {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </>

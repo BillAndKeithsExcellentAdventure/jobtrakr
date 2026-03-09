@@ -1,28 +1,27 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import SwipeableCategory from '@/src/components/SwipeableCategory';
-import { Text, TextInput, View } from '@/src/components/Themed';
+import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
-  useAddRowCallback,
   useAllRows,
   useDeleteRowCallback,
   WorkCategoryCodeCompareAsNumber,
-  WorkCategoryData,
+  WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'; // Right caret icon
 import { Stack, useRouter } from 'expo-router';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Alert, FlatList, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-import { KeyboardToolbar, KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 
 const ListWorkCategories = () => {
-  const addWorkCategory = useAddRowCallback('categories');
+  const router = useRouter();
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
-  const allWorkItems = useAllRows('workItems');
+  const allWorkItems = useAllRows('workItems', WorkItemDataCodeCompareAsNumber);
   const removeWorkItemCallback = useDeleteRowCallback('workItems');
   const allProjects = useAllProjects();
 
@@ -37,28 +36,7 @@ const ListWorkCategories = () => {
     [allWorkItems],
   );
 
-  const [showAdd, setShowAdd] = useState(false);
-  const [category, setCategory] = useState<WorkCategoryData>({
-    id: '',
-    name: '',
-    code: '',
-    status: '',
-  });
-
-  const router = useRouter();
   const colors = useColors();
-
-  const handleInputChange = useCallback(
-    (name: keyof WorkCategoryData, value: string) => {
-      if (category) {
-        setCategory({
-          ...category,
-          [name]: value,
-        });
-      }
-    },
-    [category],
-  );
 
   const handleCleanup = useCallback(() => {
     Alert.alert(
@@ -92,26 +70,18 @@ const ListWorkCategories = () => {
             <MaterialCommunityIcons name="broom" size={24} color={colors.iconColor} />
           </Pressable>
         )}
-        <Pressable onPress={() => setShowAdd(!showAdd)} hitSlop={10} style={styles.headerButton}>
-          <Ionicons name={showAdd ? 'chevron-up-sharp' : 'add'} size={24} color={colors.iconColor} />
+        <Pressable
+          onPress={() => router.push('/configuration/workcategory/add')}
+          hitSlop={10}
+          style={styles.headerButton}
+        >
+          <Ionicons name="add" size={24} color={colors.iconColor} />
         </Pressable>
       </View>
     );
     RenderHeaderRightComponent.displayName = 'RenderHeaderRightComponent';
     return RenderHeaderRightComponent;
-  }, [orphanedWorkItemIds.length, showAdd, colors.iconColor, handleCleanup]);
-
-  const handleAddCategory = useCallback(() => {
-    if (category.name && category.code) {
-      const status = addWorkCategory(category);
-      if (status && status.status === 'Success') {
-        // Clear the input fields
-        setCategory({ name: '', code: '', id: '', status: '' });
-      } else {
-        console.log('Error adding category:', status.msg);
-      }
-    }
-  }, [category, addWorkCategory]);
+  }, [orphanedWorkItemIds.length, colors.iconColor, handleCleanup, router]);
 
   return (
     <>
@@ -125,77 +95,40 @@ const ListWorkCategories = () => {
         }}
       />
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
-        <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-          <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
-            {showAdd && (
-              <View style={{ backgroundColor: colors.listBackground }}>
-                <View style={{ padding: 10, borderRadius: 10, marginVertical: 15, marginHorizontal: 15 }}>
-                  <View style={{ flexDirection: 'row' }}>
-                    <View style={{ width: 120 }}>
-                      <TextInput
-                        style={[styles.input, { backgroundColor: colors.neutral200 }]}
-                        placeholder="Code"
-                        keyboardType="number-pad"
-                        value={category.code}
-                        onChangeText={(text) => handleInputChange('code', text)}
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <TextInput
-                        style={[styles.input, { backgroundColor: colors.neutral200, marginLeft: 5 }]}
-                        placeholder="Name"
-                        value={category.name}
-                        onChangeText={(text) => handleInputChange('name', text)}
-                      />
-                    </View>
-                  </View>
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+        <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
+          <View style={{ flex: 1 }}>
+            <FlatList
+              data={visibleCategories}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => <SwipeableCategory category={item} allowDelete={allowDelete} />}
+              ListEmptyComponent={() => (
+                <View
+                  style={{
+                    padding: 10,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text txtSize="title" text="No cost categories found." />
+                  <Text text="Use the '+' in the upper right to add one." />
                   <ActionButton
-                    style={{ zIndex: 1 }}
-                    onPress={handleAddCategory}
-                    type={category.code && category.name ? 'action' : 'disabled'}
-                    title="Add Cost Category"
+                    style={{ zIndex: 1, marginTop: 10, width: '95%' }}
+                    onPress={() => router.push(`/configuration/workcategory/importFromCsv/`)}
+                    type="action"
+                    title="Or, import from a CSV file..."
+                  />
+                  <ActionButton
+                    style={{ zIndex: 1, marginTop: 10, width: '95%' }}
+                    onPress={() => router.push(`/configuration/workcategory/seedCategoriesSelection/`)}
+                    type="action"
+                    title="Or, choose one of our defaults..."
                   />
                 </View>
-              </View>
-            )}
-            <View style={{ flex: 1 }}>
-              <FlatList
-                data={visibleCategories}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => <SwipeableCategory category={item} allowDelete={allowDelete} />}
-                ListEmptyComponent={() => (
-                  <View
-                    style={{
-                      padding: 10,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Text txtSize="title" text="No cost categories found." />
-                    <Text text="Use the '+' in the upper right to add one." />
-                    <ActionButton
-                      style={{ zIndex: 1, marginTop: 10, width: '95%' }}
-                      onPress={() => router.push(`/configuration/workcategory/importFromCsv/`)}
-                      type="action"
-                      title="Or, import from a CSV file..."
-                    />
-                    <ActionButton
-                      style={{ zIndex: 1, marginTop: 10, width: '95%' }}
-                      onPress={() => router.push(`/configuration/workcategory/seedCategoriesSelection/`)}
-                      type="action"
-                      title="Or, choose one of our defaults..."
-                    />
-                  </View>
-                )}
-              />
-            </View>
+              )}
+            />
           </View>
-        </SafeAreaView>
-      </KeyboardAvoidingView>
+        </View>
+      </SafeAreaView>
       {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </>
   );
@@ -204,24 +137,6 @@ const ListWorkCategories = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  input: {
-    height: 40,
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingLeft: 10,
-    borderRadius: 4,
-  },
-  categoryContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    padding: 8,
-    borderRadius: 8,
-  },
-  categoryName: {
-    fontSize: 18,
-    fontWeight: '600',
   },
   headerButton: {
     padding: 8,

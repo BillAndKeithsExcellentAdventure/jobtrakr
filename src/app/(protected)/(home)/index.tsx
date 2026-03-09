@@ -18,6 +18,7 @@ import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import {
+  CustomerDataCompareName,
   useAllRows,
   WorkCategoryCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
@@ -49,7 +50,7 @@ export default function ProjectHomeScreen() {
   const auth = useAuth();
   const { orgRole, orgId } = auth;
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
-  const allCustomers = useAllRows('customers');
+  const allCustomers = useAllRows('customers', CustomerDataCompareName);
   const { isQuickBooksAccessible } = useNetwork();
 
   const appSettings = useAppSettings();
