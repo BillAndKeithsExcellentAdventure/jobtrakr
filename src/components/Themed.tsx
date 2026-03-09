@@ -187,6 +187,7 @@ export function TextInput(props: TextInputProps) {
   return (
     <DefaultTextInput
       style={[{ color: colors.text, borderColor: colors.border, justifyContent: 'center' }, txtStyle, style]}
+      autoCorrect={false}
       {...otherProps}
       placeholderTextColor={colors.placeHolder}
     />
