@@ -343,7 +343,7 @@ export default function ProjectHomeScreen() {
   // Handle onboarding redirect if app settings not met
   useEffect(() => {
     if (!minAppSettingsMet && !isLoading) {
-      router.replace('/appSettings/SetAppSettings');
+      router.replace('/configuration/home');
     }
   }, [minAppSettingsMet, isLoading, router]);
 
@@ -383,9 +383,9 @@ export default function ProjectHomeScreen() {
           />
           <ActionButton
             style={{ zIndex: 1, marginTop: 20, width: '95%', maxWidth: 400, alignSelf: 'center' }}
-            onPress={() => router.push('/appSettings/SetAppSettings')}
+            onPress={() => router.push('/configuration/home')}
             type="action"
-            title="Complete Company Setup"
+            title="Complete Required Setup"
           />
         </View>
       </SafeAreaView>
