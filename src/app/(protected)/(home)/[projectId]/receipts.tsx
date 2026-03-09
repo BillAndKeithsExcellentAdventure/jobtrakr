@@ -14,7 +14,6 @@ import {
   RecentReceiptDateCompare,
   useAddRowCallback,
   useAllRows,
-  useCostUpdater,
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
@@ -72,8 +71,6 @@ const ProjectReceiptsPage = () => {
   const allWorkItems = useAllRowsConfiguration('workItems');
   const allAccounts = useAllRowsConfiguration('accounts');
   const appSettings = useAppSettings();
-
-  useCostUpdater(projectId);
 
   // return ClassifiedReceiptData array using allReceipts where fullyClassified is true if
   // all cost items for this receipt have a valid work item id

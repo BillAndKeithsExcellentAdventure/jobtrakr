@@ -5,7 +5,6 @@ import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import {
   useAllRows,
-  useBidAmountUpdater,
   useDeleteRowCallback,
   useUpdateRowCallback,
   useWorkItemSpentValue,
@@ -32,8 +31,6 @@ const CostItemDetails = () => {
   const updateBidEstimate = useUpdateRowCallback(projectId, 'workItemSummaries');
   const deleteCostSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
   const colors = useColors();
-
-  useBidAmountUpdater(projectId);
 
   const workItemSummary: WorkItemSummaryData | null = useMemo(() => {
     const workItem = allWorkItemSummaries.find((item) => item.id === costSummaryItemId);

@@ -11,7 +11,6 @@ import {
   useAddRowCallback,
   useAllRows,
   useUpdateRowCallback,
-  useBidAmountUpdater,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -31,7 +30,6 @@ const SetChangeOrderStatus = () => {
   const [changeOrder, setChangeOrder] = useState<ChangeOrder | null>(null);
   const allChangeOrderItems = useAllRows(projectId, 'changeOrderItems');
   const [changeOrderItems, setChangeOrderItems] = useState<ChangeOrderItem[]>([]);
-  useBidAmountUpdater(projectId);
 
   useEffect(() => {
     if (allChangeOrders) {

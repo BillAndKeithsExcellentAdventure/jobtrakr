@@ -10,7 +10,6 @@ import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurat
 import {
   ReceiptData,
   useAllRows,
-  useCostUpdater,
   useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
@@ -71,7 +70,6 @@ const ReceiptDetailsPage = () => {
   const allAccounts = useAllConfigurationRows('accounts');
   const addReceiptQueueEntry = useAddReceiptQueueEntryCallback();
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
-  useCostUpdater(projectId);
   const auth = useAuth();
   const { userId, orgId, getToken } = auth;
   const getImage = useGetImageCallback();

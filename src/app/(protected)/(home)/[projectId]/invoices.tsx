@@ -17,7 +17,6 @@ import {
   RecentInvoiceDateCompare,
   useAddRowCallback,
   useAllRows,
-  useCostUpdater,
   useIsStoreAvailableCallback,
   useSeedWorkItemsIfNecessary,
   useUpdateRowCallback,
@@ -64,8 +63,6 @@ const ProjectInvoicesPage = () => {
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
   const { isQuickBooksAccessible } = useNetwork();
   const { orgId, userId, getToken } = auth;
-
-  useCostUpdater(projectId);
 
   // Keep a ref to allInvoices so the mount effect can access the latest value
   const allProjectInvoicesRef = useRef(allInvoices);

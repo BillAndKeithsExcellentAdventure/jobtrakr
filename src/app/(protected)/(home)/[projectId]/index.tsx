@@ -17,13 +17,9 @@ import {
 import { useDeleteProjectCallback, useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   useAllRows,
-  useBidAmountUpdater,
   useClearProjectDetailsStoreCallback,
-  useCostUpdater,
   useDeleteRowCallback,
   useIsStoreAvailableCallback,
-  useSeedWorkItemsIfNecessary,
-  useWorkItemSpentUpdater,
   useWorkItemsWithoutCosts,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
@@ -147,11 +143,6 @@ const ProjectDetailsPage = () => {
 
     syncWithQuickBooks();
   }, [projectId, orgId, userId, getToken, projectData, projectCustomerQbId]);
-
-  useSeedWorkItemsIfNecessary(projectId);
-  useCostUpdater(projectId);
-  useBidAmountUpdater(projectId);
-  useWorkItemSpentUpdater(projectId);
 
   const numWorkItemSummaries = useMemo(() => allWorkItemSummaries.length, [allWorkItemSummaries]);
   const numCompletedWorkItemSummaries = useMemo(

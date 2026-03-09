@@ -9,7 +9,6 @@ import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   InvoiceData,
   useAllRows,
-  useCostUpdater,
   useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
@@ -59,7 +58,6 @@ const InvoiceDetailsPage = () => {
   const addInvoiceImage = useAddImageCallback();
 
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
-  useCostUpdater(projectId);
   const appSettings = useAppSettings();
   const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
   const project = useProject(projectId);

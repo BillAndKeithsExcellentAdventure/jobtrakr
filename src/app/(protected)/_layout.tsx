@@ -8,6 +8,7 @@ import { WorkItemSpentSummaryProvider } from '@/src/context/WorkItemSpentSummary
 import { AuthorizedStoresProvider } from '@/src/components/AuthorizedStoresProvider';
 import ActiveProjectDetailsStoreProvider from '@/src/components/ActiveProjectDetailsStoreProvider';
 import { UploadQueueProcessor } from '@/src/components/UploadQueueProcessor';
+import { ProjectCostSummaryUpdater } from '@/src/components/ProjectCostSummaryUpdater';
 
 export const unstable_settings = {
   initialRouteName: '(home)', // anchor
@@ -49,6 +50,7 @@ export default function ProtectedLayout() {
       <ActiveProjectIdsProvider>
         <WorkItemSpentSummaryProvider>
           <ActiveProjectDetailsStoreProvider>
+            <ProjectCostSummaryUpdater />
             <Stack screenOptions={{ headerBackButtonDisplayMode: 'minimal', headerBackTitle: '' }}>
               <Stack.Screen
                 name="(home)"
