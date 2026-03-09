@@ -170,6 +170,7 @@ export const TextField = forwardRef(function TextField(props: TextFieldProps, re
           textAlignVertical="top"
           placeholder={placeholderContent}
           placeholderTextColor={colors.textDim}
+          autoCorrect={false}
           {...TextInputProps}
           editable={!disabled}
           style={inputStyles}
