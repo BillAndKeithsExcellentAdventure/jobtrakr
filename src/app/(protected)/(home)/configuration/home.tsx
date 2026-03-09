@@ -36,6 +36,7 @@ import {
   useSetAppSettingsCallback,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { sanitizeQuickBooksAccountSettings } from '@/src/utils/quickbooksAccountSettings';
+import { SvgImage } from '@/src/components/SvgImage';
 
 const Home = () => {
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
@@ -89,11 +90,13 @@ const Home = () => {
           style={{
             minWidth: 30,
             minHeight: 30,
+            gap: 10,
             flexDirection: 'row',
             backgroundColor: 'transparent',
             marginRight: Platform.OS === 'android' ? 16 : 0,
           }}
         >
+          {isQuickBooksAccessible && <SvgImage fileName="qb-logo" width={26} height={26} />}
           <Pressable
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             onPress={() => {

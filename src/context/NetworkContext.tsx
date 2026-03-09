@@ -131,6 +131,8 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
       }
 
       if (!appSettings.syncWithQuickBooks) {
+        previousConnectedRef.current = false;
+        setIsQuickBooksAccessible(false);
         console.log('QuickBooks not accessible because syncWithQuickBooks is false');
         return;
       }
@@ -146,6 +148,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
         }
       } catch (error) {
         console.error('QuickBooks Connection Error. Error:', error);
+        previousConnectedRef.current = false;
         setIsQuickBooksAccessible(false);
       }
     };

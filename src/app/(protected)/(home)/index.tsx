@@ -297,7 +297,7 @@ export default function ProjectHomeScreen() {
           style={{
             minWidth: 30,
             minHeight: 30,
-            gap: 16,
+            gap: 10,
             alignItems: 'center',
             flexDirection: 'row',
             backgroundColor: 'transparent',
