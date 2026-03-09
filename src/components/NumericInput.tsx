@@ -101,7 +101,15 @@ export const NumericInput = forwardRef<NumericInputHandle, NumericInputProps>(fu
   const inputRef = useRef<TextInput | null>(null);
 
   const isFocusedRef = useRef(false);
-  const lastPropValue = useRef<number | null>(value);
+
+  // Treat incomplete edit states as non-numeric so they can remain visible while typing.
+  const parseEditableNumber = useCallback((input: string): number | null => {
+    if (input === '' || input === '-' || input === '.' || input === '-.' || input.endsWith('.')) {
+      return null;
+    }
+    const parsed = parseFloat(input);
+    return Number.isNaN(parsed) ? null : parsed;
+  }, []);
 
   useImperativeHandle(ref, () => ({
     focus: (selectAll?: boolean) => {
@@ -126,28 +134,15 @@ export const NumericInput = forwardRef<NumericInputHandle, NumericInputProps>(fu
   // Sync external value -> text
   // -------------------------
   useEffect(() => {
-    lastPropValue.current = value;
-
-    // 🔑 CRITICAL RULE:
-    // If focused AND numeric value matches,
-    // do NOT override text (preserve "123.")
     if (isFocusedRef.current) {
-      if (value === parseFloat(text)) {
+      const currentParsed = parseEditableNumber(textRef.current);
+      if (currentParsed === value) {
         return;
       }
     }
 
-    if (value !== null && value !== undefined) {
-      if (maxDecimals !== undefined && value !== null) {
-        const formatted = value.toFixed(maxDecimals);
-        setText(formatted);
-      } else {
-        setText(String(value));
-      }
-    } else {
-      setText('');
-    }
-  }, [value, text, maxDecimals]);
+    setText(value !== null && value !== undefined ? String(value) : '');
+  }, [value, parseEditableNumber]);
 
   // -------------------------
   // Handle typing
@@ -162,38 +157,36 @@ export const NumericInput = forwardRef<NumericInputHandle, NumericInputProps>(fu
 
       setText(input);
 
-      const parsed = parseFloat(input);
-
-      if (!isNaN(parsed)) {
-        onChangeNumber(parsed); // 🔥 Parent always updated immediately
-      } else {
-        onChangeNumber(null);
-      }
+      onChangeNumber(parseEditableNumber(input));
     },
-    [onChangeNumber, maxDecimals],
+    [onChangeNumber, maxDecimals, parseEditableNumber],
   );
 
   // -------------------------
   // Handle blur formatting
   // -------------------------
-  const handleBlur = () => {
+  const handleBlur: NonNullable<TextInputProps['onBlur']> = (event) => {
     isFocusedRef.current = false;
 
-    if (decimals !== undefined && value !== null) {
-      const formatted = value.toFixed(decimals);
+    const parsed = parseEditableNumber(textRef.current);
+    if (decimals !== undefined && parsed !== null) {
+      const formatted = parsed.toFixed(decimals);
       setText(formatted);
     }
+
+    props.onBlur?.(event);
   };
 
-  const handleFocus = () => {
+  const handleFocus: NonNullable<TextInputProps['onFocus']> = (event) => {
     isFocusedRef.current = true;
+    props.onFocus?.(event);
+
     if (selectOnFocus && inputRef.current) {
-      const frameId = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
         try {
           inputRef.current?.setSelection(0, textRef.current.length);
         } catch {}
       });
-      return () => cancelAnimationFrame(frameId);
     }
   };
 

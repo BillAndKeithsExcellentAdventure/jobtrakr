@@ -231,11 +231,6 @@ const ProjectDetailsPage = () => {
     return sectionData.reduce((sum, section) => sum + section.totalSpentAmount, 0);
   }, [sectionData]);
 
-  //if (projectData && projectData.amountSpent != projectSpent) {
-  //  // Handle discrepancy between projectData.amountSpent and calculated projectSpent
-  //  console.warn(`Discrepancy detected: projectData.amountSpent (${projectData.amountSpent}) != projectSpent (${projectSpent})`);
-  //}
-
   const profitOnCompletedItems = useMemo(() => {
     return sectionData.reduce((sum, section) => sum + section.profitOnCompletedItems, 0);
   }, [sectionData]);

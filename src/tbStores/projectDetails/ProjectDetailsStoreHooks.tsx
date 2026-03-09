@@ -304,10 +304,9 @@ export const useCostUpdater = (projectId: string): void => {
 
   useEffect(() => {
     const spentAmount = allCostRows
-      .filter(
-        (item) => item.projectId === projectId && (item.projectId ? item.projectId === projectId : true),
-      )
+      .filter((item) => (item.projectId ? item.projectId === projectId : true))
       .reduce((sum, item) => sum + item.amount, 0);
+    console.log(`[useCostUpdater] Calculated spent amount: ${spentAmount} for projectId: ${projectId}`);
     setAmountSpent(spentAmount);
   }, [allCostRows, setAmountSpent, projectId]);
 };
@@ -320,8 +319,9 @@ export const useBidAmountUpdater = (projectId: string): void => {
 
   useEffect(() => {
     const bidEstimate = allWorkItemSummaries.reduce((sum, item) => sum + item.bidAmount, 0);
+    console.log(`[useBidAmountUpdater] Calculated bid amount: ${bidEstimate} for projectId: ${projectId}`);
     setBidAmount(bidEstimate);
-  }, [allWorkItemSummaries, setBidAmount]);
+  }, [allWorkItemSummaries, setBidAmount, projectId]);
 };
 
 /* Watch for changes to table workItemSummaries and recalculate the total amount bid 
