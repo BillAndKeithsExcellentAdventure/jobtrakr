@@ -261,6 +261,8 @@ const SetAppSettingScreen = () => {
                         ...companySettings,
                         syncWithQuickBooks: true,
                       };
+                      setAppSettings(updatedSettings);
+                    }
 
                     // Import accounts and vendors from QuickBooks
                     try {
@@ -278,7 +280,6 @@ const SetAppSettingScreen = () => {
                       const updatedSettings = { ...settings, ...sanitizedSettings, syncWithQuickBooks: true };
                       setAppSettings(updatedSettings);
                       setSettings(updatedSettings);
-
                       setLoadingStatusMessage('Loading Vendors...');
 
                       const { addedCount: vendorAddedCount } = await importVendorsFromQuickBooks(
