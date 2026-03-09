@@ -208,7 +208,7 @@ export const NumericInput = forwardRef<NumericInputHandle, NumericInputProps>(fu
       onChangeText={handleChangeText}
       onFocus={handleFocus}
       onBlur={handleBlur}
-      keyboardType="decimal-pad"
+      keyboardType={decimals && decimals > 0 ? 'decimal-pad' : 'number-pad'}
       style={[{ backgroundColor: colors.inputBackground, color: colors.text, ...txtStyle }, props.style]}
       placeholderTextColor={colors.placeHolder}
     />

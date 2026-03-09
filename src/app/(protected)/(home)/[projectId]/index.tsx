@@ -227,6 +227,15 @@ const ProjectDetailsPage = () => {
     return sectionData.reduce((sum, section) => sum + section.totalBalance, 0);
   }, [sectionData]);
 
+  const projectSpent = useMemo(() => {
+    return sectionData.reduce((sum, section) => sum + section.totalSpentAmount, 0);
+  }, [sectionData]);
+
+  //if (projectData && projectData.amountSpent != projectSpent) {
+  //  // Handle discrepancy between projectData.amountSpent and calculated projectSpent
+  //  console.warn(`Discrepancy detected: projectData.amountSpent (${projectData.amountSpent}) != projectSpent (${projectSpent})`);
+  //}
+
   const profitOnCompletedItems = useMemo(() => {
     return sectionData.reduce((sum, section) => sum + section.profitOnCompletedItems, 0);
   }, [sectionData]);
@@ -752,7 +761,7 @@ const ProjectDetailsPage = () => {
                   <Text text={`Bal: ${formatCurrency(projectBalance, true)}`} />
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
                     <Text text={`Est: ${formatCurrency(projectData.bidPrice, true)}`} />
-                    <Text text={`Spent: ${formatCurrency(projectData.amountSpent, true)}`} />
+                    <Text text={`Spent: ${formatCurrency(projectSpent, true)}`} />
                   </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
                     <Text text={`Complete: ${numCompletedWorkItemSummaries}/${numWorkItemSummaries}`} />
