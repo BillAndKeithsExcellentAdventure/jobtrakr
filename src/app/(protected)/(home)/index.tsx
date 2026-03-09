@@ -227,8 +227,6 @@ export default function ProjectHomeScreen() {
         router.push('/add-project');
       } else if (item === 'Configuration') {
         router.push('/configuration/home');
-      } else if (item === 'AppSettings') {
-        router.push('/appSettings/SetAppSettings');
       } else if (item === 'Invite') {
         router.push({ pathname: '/(protected)/(home)/InviteUser' });
       } else if (item === 'About') {
@@ -256,13 +254,6 @@ export default function ProjectHomeScreen() {
             },
           ]
         : []),
-      {
-        icon: <AntDesign name="contacts" size={28} color={colors.iconColor} />,
-        label: 'Company Settings',
-        onPress: (e, actionContext) => {
-          handleMenuItemPress('AppSettings', actionContext);
-        },
-      },
       {
         icon: <FontAwesome name="gear" size={28} color={colors.iconColor} />,
         label: 'Configuration',

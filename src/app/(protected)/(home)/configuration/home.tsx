@@ -551,6 +551,12 @@ const Home = () => {
 
       <View style={{ flex: 1, width: '100%', paddingHorizontal: 10, backgroundColor: colors.listBackground }}>
         <ConfigurationEntry
+          label="Company Settings"
+          description="Update company profile and defaults"
+          onPress={() => router.push('/appSettings/SetAppSettings')}
+        />
+
+        <ConfigurationEntry
           label="Categories"
           description="Manage cost categories"
           onPress={() => router.push('/configuration/workcategory/workCategories')}

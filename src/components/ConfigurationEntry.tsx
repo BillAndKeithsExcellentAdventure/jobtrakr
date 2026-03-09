@@ -46,6 +46,6 @@ export const styles = StyleSheet.create({
     shadowOffset: { width: 2, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 15,
-    padding: 10,
+    padding: 5,
   },
 });
