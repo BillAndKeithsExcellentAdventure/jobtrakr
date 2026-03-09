@@ -67,7 +67,7 @@ const SetAppSettingScreen = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isLoadingCompanySettings, setIsLoadingCompanySettings] = useState(false);
   const [loadingStatusMessage, setLoadingStatusMessage] = useState<string>('');
-  const { isConnected, isInternetReachable, isQuickBooksAccessible, setQuickBooksAccessible } = useNetwork();
+  const { isConnected, isInternetReachable, isQuickBooksAccessible } = useNetwork();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState(false);
 
   // Get store hooks for accounts and vendors
@@ -261,12 +261,6 @@ const SetAppSettingScreen = () => {
                         ...companySettings,
                         syncWithQuickBooks: true,
                       };
-                      setAppSettings(updatedSettings);
-                      // call following after a delay to ensure settings are updated before attempting to set variable that will trigger looking at appSettings.
-                      setTimeout(() => {
-                        setQuickBooksAccessible(connected);
-                      }, 100);
-                    }
 
                     // Import accounts and vendors from QuickBooks
                     try {
@@ -284,10 +278,6 @@ const SetAppSettingScreen = () => {
                       const updatedSettings = { ...settings, ...sanitizedSettings, syncWithQuickBooks: true };
                       setAppSettings(updatedSettings);
                       setSettings(updatedSettings);
-                      // call following after a delay to ensure settings are updated before attempting to set variable that will trigger looking at appSettings.
-                      setTimeout(() => {
-                        setQuickBooksAccessible(connected);
-                      }, 100);
 
                       setLoadingStatusMessage('Loading Vendors...');
 
@@ -346,7 +336,6 @@ const SetAppSettingScreen = () => {
     settings,
     setSettings,
     setAppSettings,
-    setQuickBooksAccessible,
     isConnecting,
     handleFetchCompanyInfoFromQuickBooks,
     allAccounts,
@@ -379,10 +368,6 @@ const SetAppSettingScreen = () => {
             await qbDisconnect(auth.orgId!, auth.userId!, auth.getToken);
             const updatedSettings = { ...settings, syncWithQuickBooks: false };
             setAppSettings(updatedSettings);
-            // call following after a delay to ensure settings are updated before attempting to set variable that will trigger looking at appSettings.
-            setTimeout(() => {
-              setQuickBooksAccessible(false);
-            }, 100);
 
             Alert.alert('Success', 'Successfully disconnected from QuickBooks');
           } catch (error) {
@@ -393,7 +378,7 @@ const SetAppSettingScreen = () => {
         },
       },
     ]);
-  }, [auth, setQuickBooksAccessible, settings, setAppSettings]);
+  }, [auth, settings, setAppSettings]);
 
   const handleHeaderMenuItemPress = useCallback(
     (menuItem: 'disconnect' | 'load') => {
