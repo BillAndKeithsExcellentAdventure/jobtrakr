@@ -1,22 +1,27 @@
+import { ActionButton } from '@/src/components/ActionButton';
+import BottomSheetContainer from '@/src/components/BottomSheetContainer';
+import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { Text, View } from '@/src/components/Themed';
 import { Switch } from '@/src/components/Switch';
 import { useColors } from '@/src/context/ColorsContext';
 import {
   CustomerData,
+  CustomerDataCompareName,
+  useAllRows,
   useTypedRow,
   useUpdateRowCallback,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextField } from '@/src/components/TextField';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { useAuth } from '@clerk/clerk-expo';
-import { QBEditCustomerInfo, updateCustomer } from '@/src/utils/quickbooksAPI';
+import { addCustomer, QBEditCustomerInfo, updateCustomer } from '@/src/utils/quickbooksAPI';
 
 const EditCustomer = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,7 +30,18 @@ const EditCustomer = () => {
   const { orgId, userId, getToken } = useAuth();
 
   const applyCustomerUpdates = useUpdateRowCallback('customers');
+  const allCustomers = useAllRows('customers', CustomerDataCompareName);
   const colors = useColors();
+  const [isLinkCustomerPickerVisible, setIsLinkCustomerPickerVisible] = useState(false);
+  const [processingInfo, setProcessingInfo] = useState<{ isProcessing: boolean; label: string }>({
+    isProcessing: false,
+    label: '',
+  });
+  const startProcessing = useCallback(
+    (label: string) => setProcessingInfo({ isProcessing: true, label }),
+    [],
+  );
+  const stopProcessing = useCallback(() => setProcessingInfo({ isProcessing: false, label: '' }), []);
   const [updatedCustomer, setUpdatedCustomer] = useState<CustomerData>({
     id: '',
     accountingId: '',
@@ -48,6 +64,13 @@ const EditCustomer = () => {
   }, [customerFromStore]);
 
   const isFromQuickBooks = Boolean(updatedCustomer.accountingId);
+
+  const qbCustomerOptions: OptionEntry[] = allCustomers
+    .filter((customer) => !!customer.accountingId && customer.id !== id)
+    .map((customer) => ({
+      label: customer.contactName ? `${customer.name} - ${customer.contactName}` : customer.name,
+      value: customer.id,
+    }));
 
   const handleInputChange = useCallback((name: keyof CustomerData, value: string) => {
     setUpdatedCustomer((prev) => ({
@@ -102,6 +125,103 @@ const EditCustomer = () => {
       applyCustomerUpdates(id, { inactive: newInactive });
     }
   }, [id, updatedCustomer.inactive, applyCustomerUpdates]);
+
+  const handleLinkToQbCustomer = useCallback(
+    (option: OptionEntry) => {
+      if (!isQuickBooksAccessible) {
+        return;
+      }
+      const selectedCustomer = allCustomers.find((customer) => customer.id === option.value);
+      if (!selectedCustomer || !id) {
+        setIsLinkCustomerPickerVisible(false);
+        return;
+      }
+
+      setIsLinkCustomerPickerVisible(false);
+      Alert.alert('Confirm Copy', "Press 'Copy' to copy the customer data from the selected customer.", [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Copy',
+          onPress: () => {
+            const { id: _selectedId, ...selectedCustomerFields } = selectedCustomer;
+            applyCustomerUpdates(id, selectedCustomerFields);
+            router.back();
+          },
+        },
+      ]);
+    },
+    [isQuickBooksAccessible, allCustomers, id, applyCustomerUpdates, router],
+  );
+
+  const handleAddCustomerToQuickBooks = useCallback(() => {
+    if (!isQuickBooksAccessible) {
+      return;
+    }
+    if (!id) return;
+    if (!orgId || !userId) {
+      Alert.alert('Error', 'Missing organization or user information.');
+      return;
+    }
+
+    Alert.alert('Confirm Add', 'Do you want to add this customer to QuickBooks?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Add',
+        onPress: async () => {
+          try {
+            startProcessing('Adding Customer to QuickBooks...');
+            const nameParts = updatedCustomer.contactName
+              ? updatedCustomer.contactName.split(' ')
+              : updatedCustomer.name.split(' ');
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+            const response = await addCustomer(
+              orgId,
+              userId,
+              {
+                displayName: updatedCustomer.name || '',
+                firstName,
+                lastName,
+                email: updatedCustomer.email || '',
+                phone: updatedCustomer.phone || '',
+                address: '',
+                address2: '',
+                city: '',
+                state: '',
+                zip: '',
+              },
+              getToken,
+            );
+
+            if (!response.newQBId) {
+              Alert.alert('Error', 'QuickBooks did not return a new customer ID.');
+              return;
+            }
+
+            applyCustomerUpdates(id, { accountingId: response.newQBId });
+            setUpdatedCustomer((prev) => ({ ...prev, accountingId: response.newQBId || prev.accountingId }));
+            router.back();
+          } catch (error) {
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            Alert.alert('Error', `Failed to add customer to QuickBooks: ${message}`);
+          } finally {
+            stopProcessing();
+          }
+        },
+      },
+    ]);
+  }, [
+    isQuickBooksAccessible,
+    id,
+    orgId,
+    userId,
+    updatedCustomer,
+    getToken,
+    applyCustomerUpdates,
+    startProcessing,
+    stopProcessing,
+  ]);
 
   return (
     <>
@@ -163,8 +283,46 @@ const EditCustomer = () => {
             <Text txtSize="standard" text="Active" />
             <Switch value={!updatedCustomer.inactive} onValueChange={handleToggleActive} size="medium" />
           </View>
+          {!updatedCustomer.accountingId && isQuickBooksAccessible && (
+            <View style={styles.actionButtonRow}>
+              <ActionButton
+                style={styles.linkButton}
+                type="action"
+                title="Link to QB Customer"
+                onPress={() => setIsLinkCustomerPickerVisible(true)}
+              />
+              <ActionButton
+                style={styles.addQbButton}
+                type="action"
+                title="Add Customer to QuickBooks"
+                onPress={handleAddCustomerToQuickBooks}
+              />
+            </View>
+          )}
         </View>
       </SafeAreaView>
+      {isLinkCustomerPickerVisible && (
+        <BottomSheetContainer
+          modalHeight={'80%'}
+          isVisible={isLinkCustomerPickerVisible}
+          onClose={() => setIsLinkCustomerPickerVisible(false)}
+          showKeyboardToolbar={false}
+        >
+          <OptionList
+            options={qbCustomerOptions}
+            onSelect={handleLinkToQbCustomer}
+            enableSearch={qbCustomerOptions.length > 15}
+          />
+        </BottomSheetContainer>
+      )}
+      <Modal transparent animationType="fade" visible={processingInfo.isProcessing}>
+        <View style={styles.processingOverlay}>
+          <View style={[styles.processingContainer, { backgroundColor: colors.listBackground }]}>
+            <ActivityIndicator size="large" color={colors.tint} />
+            <Text style={styles.processingLabel}>{processingInfo.label}</Text>
+          </View>
+        </View>
+      </Modal>
       {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </>
   );
@@ -189,6 +347,35 @@ const styles = StyleSheet.create({
     marginTop: 8,
     gap: 20,
     paddingHorizontal: 4,
+  },
+  actionButtonRow: {
+    marginTop: 8,
+  },
+  linkButton: {
+    width: '100%',
+  },
+  addQbButton: {
+    width: '100%',
+    marginTop: 8,
+  },
+  processingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  processingContainer: {
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    gap: 12,
+    minWidth: 220,
+  },
+  processingLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    minWidth: 200,
   },
 });
 

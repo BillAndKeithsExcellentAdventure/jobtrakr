@@ -99,7 +99,7 @@ const EditVendor = () => {
       }
 
       setIsLinkVendorPickerVisible(false);
-      Alert.alert('Confirm Copy', "Press 'Copy' to copy the customer data from the selected customer.", [
+      Alert.alert('Confirm Copy', "Press 'Copy' to copy the vendor data from the selected vendor.", [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Copy',
@@ -117,7 +117,7 @@ const EditVendor = () => {
     [isQuickBooksAccessible, allVendors, id, applyVendorUpdates, router],
   );
 
-  const handleAddCustomerToQuickBooks = useCallback(() => {
+  const handleAddVendorToQuickBooks = useCallback(() => {
     if (!isQuickBooksAccessible) {
       return;
     }
