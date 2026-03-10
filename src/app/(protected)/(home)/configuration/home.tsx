@@ -49,6 +49,8 @@ import {
 } from '@/src/utils/quickbooksAPI';
 import * as WebBrowser from 'expo-web-browser';
 
+const isPowerUser = false;
+
 const Home = () => {
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [processingInfo, setProcessingInfo] = useState<{ isProcessing: boolean; label: string }>({
@@ -108,47 +110,6 @@ const Home = () => {
     [auth],
   );
 
-  const handleConnectToQuickBooks = useCallback(async () => {
-    if (!auth.orgId || !auth.userId) {
-      Alert.alert('Error', 'Authentication required to connect to QuickBooks');
-      return;
-    }
-
-    startProcessing('Connecting to QuickBooks...');
-    try {
-      const token = await auth.getToken();
-      if (!token) {
-        Alert.alert('Error', 'Unable to obtain authentication token');
-        return;
-      }
-
-      const { authUrl } = await qbConnect(auth.orgId, auth.userId, auth.getToken);
-      if (!authUrl) {
-        Alert.alert('Error', 'No authorization URL received from server');
-        return;
-      }
-
-      const result = await WebBrowser.openBrowserAsync(authUrl);
-      if (result.type === 'cancel' || result.type === 'dismiss') {
-        const connected = await checkQBConnectionWithRetry();
-        if (connected) {
-          setAppSettings({ ...appSettings, syncWithQuickBooks: true });
-          Alert.alert(
-            'Success',
-            'Successfully connected to QuickBooks. You can now import vendors, customers, and accounts from the menu.',
-          );
-        } else {
-          Alert.alert('Not Connected', 'QuickBooks connection could not be verified.');
-        }
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      Alert.alert('Error', `Failed to connect to QuickBooks: ${errorMessage}`);
-    } finally {
-      stopProcessing();
-    }
-  }, [auth, appSettings, checkQBConnectionWithRetry, setAppSettings, startProcessing, stopProcessing]);
-
   const handleDisconnectFromQuickBooks = useCallback(() => {
     if (!auth.orgId || !auth.userId) {
       Alert.alert('Error', 'Authentication required to disconnect from QuickBooks');
@@ -170,7 +131,7 @@ const Home = () => {
             }
 
             await qbDisconnect(auth.orgId!, auth.userId!, auth.getToken);
-            setAppSettings({ ...appSettings, syncWithQuickBooks: false });
+            setAppSettings({ syncWithQuickBooks: false });
             Alert.alert('Success', 'Successfully disconnected from QuickBooks');
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -181,59 +142,63 @@ const Home = () => {
         },
       },
     ]);
-  }, [auth, appSettings, setAppSettings, startProcessing, stopProcessing]);
+  }, [auth, setAppSettings, startProcessing, stopProcessing]);
 
-  const handleLoadCompanyInfoFromQuickBooks = useCallback(async () => {
-    if (!auth.orgId || !auth.userId) {
-      Alert.alert('Error', 'Authentication required to fetch company information');
-      return;
-    }
+  const handleLoadCompanyInfoFromQuickBooks = useCallback(
+    async (showAlert = true) => {
+      if (!auth.orgId || !auth.userId) {
+        Alert.alert('Error', 'Authentication required to fetch company information');
+        return;
+      }
 
-    startProcessing('Loading Company Settings...');
-    try {
-      let companyInfo;
-      const maxRetries = 5;
-      const retryInterval = 1000;
+      startProcessing('Loading Company Settings...');
+      try {
+        let companyInfo;
+        const maxRetries = 5;
+        const retryInterval = 1000;
 
-      for (let attempt = 0; attempt < maxRetries; attempt++) {
-        try {
-          if (attempt > 0) {
-            await new Promise((resolve) => setTimeout(resolve, retryInterval));
-          }
-          companyInfo = await fetchCompanyInfo(auth.orgId, auth.userId, auth.getToken);
-          break;
-        } catch (error) {
-          if (attempt === maxRetries - 1) {
-            throw error;
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+          try {
+            if (attempt > 0) {
+              await new Promise((resolve) => setTimeout(resolve, retryInterval));
+            }
+            companyInfo = await fetchCompanyInfo(auth.orgId, auth.userId, auth.getToken);
+            break;
+          } catch (error) {
+            if (attempt === maxRetries - 1) {
+              throw error;
+            }
           }
         }
+
+        if (!companyInfo) {
+          throw new Error('Failed to fetch company information after all retries');
+        }
+
+        setAppSettings({
+          ...(companyInfo.companyName ? { companyName: companyInfo.companyName } : {}),
+          ...(companyInfo.address ? { address: companyInfo.address } : {}),
+          ...(companyInfo.address2 ? { address2: companyInfo.address2 } : {}),
+          ...(companyInfo.city ? { city: companyInfo.city } : {}),
+          ...(companyInfo.state ? { state: companyInfo.state } : {}),
+          ...(companyInfo.zip ? { zip: companyInfo.zip } : {}),
+          ...(companyInfo.email ? { email: companyInfo.email } : {}),
+          ...(companyInfo.phone ? { phone: companyInfo.phone } : {}),
+        });
+        if (showAlert) {
+          Alert.alert('Success', 'Company info loaded from QuickBooks.');
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        if (showAlert) {
+          Alert.alert('Error', `Failed to fetch company information: ${errorMessage}`);
+        }
+      } finally {
+        stopProcessing();
       }
-
-      if (!companyInfo) {
-        throw new Error('Failed to fetch company information after all retries');
-      }
-
-      const updatedSettings = {
-        ...appSettings,
-        companyName: companyInfo.companyName || appSettings.companyName,
-        address: companyInfo.address || appSettings.address,
-        address2: companyInfo.address2 || appSettings.address2,
-        city: companyInfo.city || appSettings.city,
-        state: companyInfo.state || appSettings.state,
-        zip: companyInfo.zip || appSettings.zip,
-        email: companyInfo.email || appSettings.email,
-        phone: companyInfo.phone || appSettings.phone,
-      };
-
-      setAppSettings(updatedSettings);
-      Alert.alert('Success', 'Company info loaded from QuickBooks.');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      Alert.alert('Error', `Failed to fetch company information: ${errorMessage}`);
-    } finally {
-      stopProcessing();
-    }
-  }, [auth, appSettings, setAppSettings, startProcessing, stopProcessing]);
+    },
+    [auth, setAppSettings, startProcessing, stopProcessing],
+  );
 
   const hasConfigurationData: boolean = useMemo(
     () =>
@@ -270,358 +235,481 @@ const Home = () => {
         </View>
       ),
     };
-  }, [colors.iconColor, headerMenuModalVisible, setHeaderMenuModalVisible]);
+  }, [colors.iconColor, headerMenuModalVisible, setHeaderMenuModalVisible, isQuickBooksAccessible]);
 
-  const handleMenuItemPress = useCallback(
-    async (menuItem: string) => {
-      setHeaderMenuModalVisible(false);
+  const handleExportConfiguration = useCallback(async () => {
+    Alert.alert('Export Configuration Data', 'Would you like to export all configuration data?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Export',
+        onPress: async () => {
+          startProcessing('Exporting Configuration Data...');
+          try {
+            const jsonData = exportConfiguration();
+            const jsonText = JSON.stringify(jsonData);
+            const outputFile = new File(Paths.document, 'ProjectHoundConfig.json');
+            outputFile.write(jsonText);
+            const outputPath = outputFile.uri;
+            const isAvailable = await Sharing.isAvailableAsync();
+            stopProcessing();
+            if (isAvailable) {
+              await Sharing.shareAsync(outputPath, {
+                mimeType: 'application/json',
+                dialogTitle: 'Share Configuration Data',
+                UTI: 'public.json',
+              });
+            }
+          } catch (err) {
+            console.log(err);
+            stopProcessing();
+          }
+        },
+      },
+    ]);
+  }, [exportConfiguration, startProcessing, stopProcessing]);
 
-      if (menuItem === 'Export') {
-        Alert.alert('Export Configuration Data', 'Would you like to export all configuration data?', [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-          {
-            text: 'Export',
-            onPress: async () => {
-              startProcessing('Exporting Configuration Data...');
+  const handleImportConfiguration = useCallback(async () => {
+    Alert.alert('Import Configuration Data', 'Would you like to import configuration from a JSON file?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Import',
+        onPress: async () => {
+          try {
+            const result = await DocumentPicker.getDocumentAsync({
+              type: ['application/json', 'text/json', '*/*'],
+              copyToCacheDirectory: true,
+              multiple: false,
+            });
+
+            if (!result.canceled && result.assets?.length > 0) {
+              startProcessing('Importing Configuration Data...');
               try {
-                const jsonData = exportConfiguration();
-                const jsonText = JSON.stringify(jsonData);
-                const outputFile = new File(Paths.document, 'ProjectHoundConfig.json');
-                outputFile.write(jsonText);
-                const outputPath = outputFile.uri;
-                const isAvailable = await Sharing.isAvailableAsync();
-                stopProcessing();
-                if (isAvailable) {
-                  await Sharing.shareAsync(outputPath, {
-                    mimeType: 'application/json',
-                    dialogTitle: 'Share Configuration Data',
-                    UTI: 'public.json',
-                  });
-                }
-              } catch (err) {
-                console.log(err);
+                const file = result.assets[0];
+                const fileObj = new File(file.uri);
+                const fileText = await fileObj.text();
+                const jsonData = JSON.parse(fileText);
+                importConfiguration(jsonData);
+              } finally {
                 stopProcessing();
               }
-            },
+              alert('Configuration Data Import Complete');
+            }
+          } catch (error) {
+            console.error('Error picking document:', error);
+            stopProcessing();
+          }
+        },
+      },
+    ]);
+  }, [importConfiguration, startProcessing, stopProcessing]);
+
+  const handleCleanWorkItems = useCallback(() => {
+    Alert.alert(
+      'Clean Work Items',
+      'This processing will verify that work items are properly linked to a category. It also validates that a template does not reference a work item that no longer exist. Please confirm you want to do this clean up.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clean-up',
+          onPress: () => {
+            try {
+              cleanupOrphanedWorkItems();
+            } catch (error) {
+              console.error('Error during work item cleanup:', error);
+            }
           },
-        ]);
-        return;
-      } else if (menuItem === 'Import') {
-        Alert.alert('Import Configuration Data', 'Would you like to import configuration from a JSON file?', [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-          {
-            text: 'Import',
-            onPress: async () => {
-              try {
-                const result = await DocumentPicker.getDocumentAsync({
-                  type: ['application/json', 'text/json', '*/*'],
-                  copyToCacheDirectory: true,
-                  multiple: false,
+        },
+      ],
+    );
+  }, [cleanupOrphanedWorkItems]);
+
+  const handleExportVendors = useCallback(async () => {
+    Alert.alert('Export Vendors', 'Would you like to export all vendors to a CSV file?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Export',
+        onPress: async () => {
+          startProcessing('Exporting Vendors...');
+          try {
+            const csvData = vendorsToCsv(allVendors);
+            const outputFile = new File(Paths.document, 'vendors.csv');
+            outputFile.write(csvData);
+            const outputPath = outputFile.uri;
+            const isAvailable = await Sharing.isAvailableAsync();
+            stopProcessing();
+            if (isAvailable) {
+              await Sharing.shareAsync(outputPath, {
+                mimeType: 'text/csv',
+                dialogTitle: 'Share Vendors CSV',
+                UTI: 'public.comma-separated-values-text',
+              });
+            }
+          } catch (err) {
+            console.error('Error exporting vendors:', err);
+            stopProcessing();
+            Alert.alert('Error', 'Failed to export vendors');
+          }
+        },
+      },
+    ]);
+  }, [allVendors, startProcessing, stopProcessing]);
+
+  const handleImportVendors = useCallback(async () => {
+    Alert.alert('Import Vendors', 'Would you like to import vendors from a CSV file?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Import',
+        onPress: async () => {
+          try {
+            const result = await DocumentPicker.getDocumentAsync({
+              type: ['text/csv', 'text/comma-separated-values', '*/*'],
+              copyToCacheDirectory: true,
+              multiple: false,
+            });
+
+            if (!result.canceled && result.assets?.length > 0) {
+              const file = result.assets[0];
+              const fileObj = new File(file.uri);
+              const fileText = await fileObj.text();
+              const importedVendors = csvToVendors(fileText);
+
+              let addedCount = 0;
+              let updatedCount = 0;
+
+              for (const vendor of importedVendors) {
+                const existing = allVendors.find((v) => {
+                  const nameMatch = v.name && vendor.name && v.name === vendor.name;
+                  const addressMatch = v.address && vendor.address && v.address === vendor.address;
+                  return nameMatch && addressMatch;
                 });
 
-                if (!result.canceled && result.assets?.length > 0) {
-                  startProcessing('Importing Configuration Data...');
-                  try {
-                    const file = result.assets[0];
-                    const fileObj = new File(file.uri);
-                    const fileText = await fileObj.text();
-                    const jsonData = JSON.parse(fileText);
-                    importConfiguration(jsonData);
-                  } finally {
-                    stopProcessing();
-                  }
-                  alert('Configuration Data Import Complete');
+                if (existing) {
+                  updateVendor(existing.id, vendor);
+                  updatedCount++;
+                } else {
+                  addVendorToStore(vendor as VendorData);
+                  addedCount++;
                 }
-              } catch (error) {
-                console.error('Error picking document:', error);
-                stopProcessing();
               }
-            },
-          },
-        ]);
+
+              Alert.alert(
+                'Import Complete',
+                `Vendors imported successfully.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
+              );
+            }
+          } catch (error) {
+            console.error('Error importing vendors:', error);
+            Alert.alert('Error', 'Failed to import vendors');
+          }
+        },
+      },
+    ]);
+  }, [allVendors, addVendorToStore, updateVendor]);
+
+  const handleGetQBVendors = useCallback(
+    async (showAlert = true) => {
+      if (!auth.orgId || !auth.userId) {
+        Alert.alert('Error', 'Unable to import vendors. Please sign in again.');
         return;
-      } else if (menuItem === 'CleanWorkItems') {
-        Alert.alert(
-          'Clean Work Items',
-          'This processing will verify that work items are properly linked to a category. It also validates that a template does not reference a work item that no longer exist. Please confirm you want to do this clean up.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Clean-up',
-              onPress: () => {
-                try {
-                  cleanupOrphanedWorkItems();
-                } catch (error) {
-                  console.error('Error during work item cleanup:', error);
-                }
-              },
-            },
-          ],
+      }
+
+      startProcessing('Importing Vendors from QuickBooks...');
+      try {
+        const { addedCount } = await importVendorsFromQuickBooks(
+          auth.orgId!,
+          auth.userId!,
+          auth.getToken,
+          allVendors,
+          addVendorToStore,
+          deleteVendor,
         );
-        return;
-      } else if (menuItem === 'ExportVendors') {
-        Alert.alert('Export Vendors', 'Would you like to export all vendors to a CSV file?', [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-          {
-            text: 'Export',
-            onPress: async () => {
-              startProcessing('Exporting Vendors...');
-              try {
-                const csvData = vendorsToCsv(allVendors);
-                const outputFile = new File(Paths.document, 'vendors.csv');
-                outputFile.write(csvData);
-                const outputPath = outputFile.uri;
-                const isAvailable = await Sharing.isAvailableAsync();
-                stopProcessing();
-                if (isAvailable) {
-                  await Sharing.shareAsync(outputPath, {
-                    mimeType: 'text/csv',
-                    dialogTitle: 'Share Vendors CSV',
-                    UTI: 'public.comma-separated-values-text',
-                  });
-                }
-              } catch (err) {
-                console.error('Error exporting vendors:', err);
-                stopProcessing();
-                Alert.alert('Error', 'Failed to export vendors');
-              }
-            },
-          },
-        ]);
-        return;
-      } else if (menuItem === 'ImportVendors') {
-        Alert.alert('Import Vendors', 'Would you like to import vendors from a CSV file?', [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-          {
-            text: 'Import',
-            onPress: async () => {
-              try {
-                const result = await DocumentPicker.getDocumentAsync({
-                  type: ['text/csv', 'text/comma-separated-values', '*/*'],
-                  copyToCacheDirectory: true,
-                  multiple: false,
-                });
 
-                if (!result.canceled && result.assets?.length > 0) {
-                  const file = result.assets[0];
-                  const fileObj = new File(file.uri);
-                  const fileText = await fileObj.text();
-                  const importedVendors = csvToVendors(fileText);
-
-                  let addedCount = 0;
-                  let updatedCount = 0;
-
-                  for (const vendor of importedVendors) {
-                    // Find existing vendor with matching name and address
-                    // Ensure both name and address have meaningful values for matching
-                    const existing = allVendors.find((v) => {
-                      const nameMatch = v.name && vendor.name && v.name === vendor.name;
-                      const addressMatch = v.address && vendor.address && v.address === vendor.address;
-                      return nameMatch && addressMatch;
-                    });
-
-                    if (existing) {
-                      // Update existing vendor
-                      updateVendor(existing.id, vendor);
-                      updatedCount++;
-                    } else {
-                      // Add new vendor
-                      addVendorToStore(vendor as VendorData);
-                      addedCount++;
-                    }
-                  }
-
-                  Alert.alert(
-                    'Import Complete',
-                    `Vendors imported successfully.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
-                  );
-                }
-              } catch (error) {
-                console.error('Error importing vendors:', error);
-                Alert.alert('Error', 'Failed to import vendors');
-              }
-            },
-          },
-        ]);
-        return;
-      } else if (menuItem === 'GetQBVendors') {
-        if (!auth.orgId || !auth.userId) {
-          Alert.alert('Error', 'Unable to import vendors. Please sign in again.');
-          return;
-        }
-
-        startProcessing('Importing Vendors from QuickBooks...');
-        try {
-          const { addedCount } = await importVendorsFromQuickBooks(
-            auth.orgId!,
-            auth.userId!,
-            auth.getToken,
-            allVendors,
-            addVendorToStore,
-            deleteVendor,
-          );
-
+        if (showAlert) {
           Alert.alert(
             'QuickBooks Vendor Import Complete',
             `${addedCount} Vendors imported successfully from QuickBooks.`,
           );
-        } catch (error) {
-          console.error('Error importing vendors from QuickBooks:', error);
+        }
+      } catch (error) {
+        console.error('Error importing vendors from QuickBooks:', error);
+        if (showAlert) {
           Alert.alert('Error', 'Failed to import vendors from QuickBooks');
-        } finally {
-          stopProcessing();
         }
-      } else if (menuItem === 'ImportQBAccounts') {
-        // Import QuickBooks accounts
-        if (!auth.orgId || !auth.userId) {
-          Alert.alert('Error', 'Unable to import accounts. Please sign in again.');
-          return;
-        }
+      } finally {
+        stopProcessing();
+      }
+    },
+    [
+      auth.orgId,
+      auth.userId,
+      auth.getToken,
+      allVendors,
+      addVendorToStore,
+      deleteVendor,
+      startProcessing,
+      stopProcessing,
+    ],
+  );
 
-        startProcessing('Importing Accounts from QuickBooks...');
-        try {
-          const { addedCount, accounts } = await importAccountsFromQuickBooks(
-            auth.orgId,
-            auth.userId,
-            auth.getToken,
-            allAccounts,
-            addAccount,
-            deleteAccount,
-          );
+  const handleImportQBAccounts = useCallback(
+    async (showAlert = true) => {
+      if (!auth.orgId || !auth.userId) {
+        Alert.alert('Error', 'Unable to import accounts. Please sign in again.');
+        return;
+      }
 
-          const sanitizedSettings = sanitizeQuickBooksAccountSettings(appSettings, accounts);
-          setAppSettings({ ...appSettings, ...sanitizedSettings });
+      startProcessing('Importing Accounts from QuickBooks...');
+      try {
+        const { addedCount, accounts } = await importAccountsFromQuickBooks(
+          auth.orgId,
+          auth.userId,
+          auth.getToken,
+          allAccounts,
+          addAccount,
+          deleteAccount,
+        );
 
+        const sanitizedSettings = sanitizeQuickBooksAccountSettings(appSettings, accounts);
+        setAppSettings(sanitizedSettings);
+
+        if (showAlert) {
           Alert.alert(
             'QuickBooks Account Import Complete',
             `${addedCount} Accounts imported successfully from QuickBooks.`,
           );
-        } catch (error) {
-          console.error('Error importing QuickBooks accounts:', error);
+        }
+      } catch (error) {
+        console.error('Error importing QuickBooks accounts:', error);
+        if (showAlert) {
           Alert.alert('Error', 'Failed to import QuickBooks accounts');
-        } finally {
-          stopProcessing();
         }
-      } else if (menuItem === 'GetQBCustomers') {
-        if (!auth.orgId || !auth.userId) {
-          Alert.alert('Error', 'Unable to import customers. Please sign in again.');
-          return;
-        }
+      } finally {
+        stopProcessing();
+      }
+    },
+    [
+      auth.orgId,
+      auth.userId,
+      auth.getToken,
+      allAccounts,
+      addAccount,
+      deleteAccount,
+      appSettings,
+      setAppSettings,
+      startProcessing,
+      stopProcessing,
+    ],
+  );
 
-        startProcessing('Importing Customers from QuickBooks...');
-        try {
-          const { addedCount, updatedCount } = await importCustomersFromQuickBooks(
-            auth.orgId,
-            auth.userId,
-            auth.getToken,
-            allCustomers,
-            addCustomer,
-            updateCustomer,
-          );
+  const handleGetQBCustomers = useCallback(
+    async (showAlert = true) => {
+      if (!auth.orgId || !auth.userId) {
+        Alert.alert('Error', 'Unable to import customers. Please sign in again.');
+        return;
+      }
 
+      startProcessing('Importing Customers from QuickBooks...');
+      try {
+        const { addedCount, updatedCount } = await importCustomersFromQuickBooks(
+          auth.orgId,
+          auth.userId,
+          auth.getToken,
+          allCustomers,
+          addCustomer,
+          updateCustomer,
+        );
+
+        if (showAlert) {
           Alert.alert(
             'QuickBooks Customer Import Complete',
             `${addedCount} Customers added, ${updatedCount} updated from QuickBooks.`,
           );
-        } catch (error) {
-          console.error('Error importing customers from QuickBooks:', error);
-          Alert.alert('Error', 'Failed to import customers from QuickBooks');
-        } finally {
-          stopProcessing();
         }
-      } else if (menuItem === 'ImportCustomers') {
-        Alert.alert('Import Customers', 'Would you like to import customers from a CSV file?', [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-          {
-            text: 'Import',
-            onPress: async () => {
-              try {
-                const result = await DocumentPicker.getDocumentAsync({
-                  type: ['text/csv', 'text/comma-separated-values', '*/*'],
-                  copyToCacheDirectory: true,
-                  multiple: false,
-                });
+      } catch (error) {
+        console.error('Error importing customers from QuickBooks:', error);
+        if (showAlert) {
+          Alert.alert('Error', 'Failed to import customers from QuickBooks');
+        }
+      } finally {
+        stopProcessing();
+      }
+    },
+    [
+      auth.orgId,
+      auth.userId,
+      auth.getToken,
+      allCustomers,
+      addCustomer,
+      updateCustomer,
+      startProcessing,
+      stopProcessing,
+    ],
+  );
 
-                if (!result.canceled && result.assets?.length > 0) {
-                  const file = result.assets[0];
-                  const fileObj = new File(file.uri);
-                  const fileText = await fileObj.text();
-                  const importedCustomers = csvToCustomers(fileText);
+  const handleImportCustomers = useCallback(async () => {
+    Alert.alert('Import Customers', 'Would you like to import customers from a CSV file?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Import',
+        onPress: async () => {
+          try {
+            const result = await DocumentPicker.getDocumentAsync({
+              type: ['text/csv', 'text/comma-separated-values', '*/*'],
+              copyToCacheDirectory: true,
+              multiple: false,
+            });
 
-                  let addedCount = 0;
-                  let updatedCount = 0;
+            if (!result.canceled && result.assets?.length > 0) {
+              const file = result.assets[0];
+              const fileObj = new File(file.uri);
+              const fileText = await fileObj.text();
+              const importedCustomers = csvToCustomers(fileText);
 
-                  for (const c of importedCustomers) {
-                    const existing = allCustomers.find(
-                      (ec) => ec.name && c.name && ec.name === c.name && (!c.email || ec.email === c.email),
-                    );
+              let addedCount = 0;
+              let updatedCount = 0;
 
-                    if (existing) {
-                      updateCustomer(existing.id, c);
-                      updatedCount++;
-                    } else {
-                      addCustomer({ id: '', accountingId: '', ...c });
-                      addedCount++;
-                    }
-                  }
+              for (const c of importedCustomers) {
+                const existing = allCustomers.find(
+                  (ec) => ec.name && c.name && ec.name === c.name && (!c.email || ec.email === c.email),
+                );
 
-                  Alert.alert(
-                    'Import Complete',
-                    `Customers imported successfully.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
-                  );
+                if (existing) {
+                  updateCustomer(existing.id, c);
+                  updatedCount++;
+                } else {
+                  addCustomer({ id: '', accountingId: '', ...c });
+                  addedCount++;
                 }
-              } catch (error) {
-                console.error('Error importing customers:', error);
-                Alert.alert('Error', 'Failed to import customers');
               }
-            },
-          },
-        ]);
+
+              Alert.alert(
+                'Import Complete',
+                `Customers imported successfully.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
+              );
+            }
+          } catch (error) {
+            console.error('Error importing customers:', error);
+            Alert.alert('Error', 'Failed to import customers');
+          }
+        },
+      },
+    ]);
+  }, [allCustomers, addCustomer, updateCustomer]);
+
+  const handleConnectToQuickBooks = useCallback(async () => {
+    if (!auth.orgId || !auth.userId) {
+      Alert.alert('Error', 'Authentication required to connect to QuickBooks');
+      return;
+    }
+
+    startProcessing('Connecting to QuickBooks...');
+    try {
+      const token = await auth.getToken();
+      if (!token) {
+        Alert.alert('Error', 'Unable to obtain authentication token');
         return;
-      } else if (menuItem === 'DisconnectQuickBooks') {
+      }
+
+      const { authUrl } = await qbConnect(auth.orgId, auth.userId, auth.getToken);
+      if (!authUrl) {
+        Alert.alert('Error', 'No authorization URL received from server');
+        return;
+      }
+
+      const result = await WebBrowser.openBrowserAsync(authUrl);
+      if (result.type === 'cancel' || result.type === 'dismiss') {
+        const connected = await checkQBConnectionWithRetry();
+        if (connected) {
+          setAppSettings({ syncWithQuickBooks: true });
+          await handleLoadCompanyInfoFromQuickBooks(false);
+          await handleImportQBAccounts(false);
+          await handleGetQBVendors(false);
+          await handleGetQBCustomers(false);
+          Alert.alert(
+            'Success',
+            'Successfully connected to QuickBooks and imported company info, accounts, vendors, and customers.',
+          );
+        } else {
+          Alert.alert('Not Connected', 'QuickBooks connection could not be verified.');
+        }
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      Alert.alert('Error', `Failed to connect to QuickBooks: ${errorMessage}`);
+    } finally {
+      stopProcessing();
+    }
+  }, [
+    auth,
+    checkQBConnectionWithRetry,
+    setAppSettings,
+    startProcessing,
+    stopProcessing,
+    handleLoadCompanyInfoFromQuickBooks,
+    handleImportQBAccounts,
+    handleGetQBVendors,
+    handleGetQBCustomers,
+  ]);
+
+  const handleMenuItemPress = useCallback(
+    async (menuItem: string) => {
+      setHeaderMenuModalVisible(false);
+      if (isPowerUser) {
+        if (menuItem === 'Export') {
+          handleExportConfiguration();
+          return;
+        } else if (menuItem === 'Import') {
+          handleImportConfiguration();
+          return;
+        }
+      }
+      if (menuItem === 'CleanWorkItems') {
+        handleCleanWorkItems();
+        return;
+      }
+      if (menuItem === 'ExportVendors') {
+        handleExportVendors();
+        return;
+      }
+      if (menuItem === 'ImportVendors') {
+        handleImportVendors();
+        return;
+      }
+      if (menuItem === 'GetQBVendors') {
+        handleGetQBVendors();
+        return;
+      }
+      if (menuItem === 'ImportQBAccounts') {
+        handleImportQBAccounts();
+        return;
+      }
+      if (menuItem === 'GetQBCustomers') {
+        handleGetQBCustomers();
+        return;
+      }
+      if (menuItem === 'ImportCustomers') {
+        handleImportCustomers();
+        return;
+      }
+      if (menuItem === 'DisconnectQuickBooks') {
         handleDisconnectFromQuickBooks();
         return;
-      } else if (menuItem === 'LoadCompanyInfo') {
+      }
+      if (menuItem === 'LoadCompanyInfo') {
         handleLoadCompanyInfoFromQuickBooks();
         return;
       }
     },
     [
-      exportConfiguration,
-      importConfiguration,
-      allVendors,
-      addVendorToStore,
-      updateVendor,
-      deleteVendor,
-      cleanupOrphanedWorkItems,
-      startProcessing,
-      stopProcessing,
-      allAccounts,
-      addAccount,
-      deleteAccount,
-      allCustomers,
-      addCustomer,
-      updateCustomer,
-      auth.orgId,
-      auth.userId,
-      auth.getToken,
-      appSettings,
-      setAppSettings,
+      handleExportConfiguration,
+      handleImportConfiguration,
+      handleCleanWorkItems,
+      handleExportVendors,
+      handleImportVendors,
+      handleGetQBVendors,
+      handleImportQBAccounts,
+      handleGetQBCustomers,
+      handleImportCustomers,
       handleDisconnectFromQuickBooks,
       handleLoadCompanyInfoFromQuickBooks,
     ],
@@ -629,8 +717,7 @@ const Home = () => {
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(() => {
     const menuButtons: ActionButtonProps[] = [
-      /*
-      ...(hasConfigurationData
+      ...(hasConfigurationData && isPowerUser
         ? [
             {
               icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
@@ -640,7 +727,9 @@ const Home = () => {
               },
             },
           ]
-        : [
+        : []),
+      ...(isPowerUser
+        ? [
             {
               icon: <MaterialCommunityIcons name="import" size={28} color={colors.iconColor} />,
               label: 'Import Configuration Data',
@@ -648,22 +737,23 @@ const Home = () => {
                 handleMenuItemPress('Import');
               },
             },
-          ]),
-          */
+          ]
+        : []),
       ...(isQuickBooksAccessible
         ? [
+            {
+              icon: <MaterialCommunityIcons name="cloud-download" size={28} color={colors.iconColor} />,
+              label: 'Load Company Info from QuickBooks',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('LoadCompanyInfo');
+              },
+            },
+
             {
               icon: <MaterialCommunityIcons name="account-supervisor" size={28} color={colors.iconColor} />,
               label: 'Get Vendors from QuickBooks',
               onPress: (e: GestureResponderEvent, actionContext?: any) => {
                 handleMenuItemPress('GetQBVendors');
-              },
-            },
-            {
-              icon: <MaterialIcons name="account-balance" size={28} color={colors.iconColor} />,
-              label: 'Import Accounts from QuickBooks',
-              onPress: (e: GestureResponderEvent, actionContext?: any) => {
-                handleMenuItemPress('ImportQBAccounts');
               },
             },
             {
@@ -673,18 +763,19 @@ const Home = () => {
                 handleMenuItemPress('GetQBCustomers');
               },
             },
+
+            {
+              icon: <MaterialIcons name="account-balance" size={28} color={colors.iconColor} />,
+              label: 'Import Accounts from QuickBooks',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('ImportQBAccounts');
+              },
+            },
             {
               icon: <MaterialCommunityIcons name="link-off" size={28} color={colors.iconColor} />,
               label: 'Disconnect from QuickBooks',
               onPress: (e: GestureResponderEvent, actionContext?: any) => {
                 handleMenuItemPress('DisconnectQuickBooks');
-              },
-            },
-            {
-              icon: <MaterialCommunityIcons name="cloud-download" size={28} color={colors.iconColor} />,
-              label: 'Load Company Info from QuickBooks',
-              onPress: (e: GestureResponderEvent, actionContext?: any) => {
-                handleMenuItemPress('LoadCompanyInfo');
               },
             },
           ]
@@ -720,7 +811,14 @@ const Home = () => {
         : []),
     ];
     return menuButtons;
-  }, [colors, handleMenuItemPress, hasConfigurationData, hasVendorData, isQuickBooksAccessible]);
+  }, [
+    colors,
+    handleMenuItemPress,
+    hasConfigurationData,
+    hasVendorData,
+    isQuickBooksAccessible,
+    isQBConnected,
+  ]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>

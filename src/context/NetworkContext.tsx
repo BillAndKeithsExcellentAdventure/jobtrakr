@@ -41,6 +41,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const [isQuickBooksConnected, setIsQuickBooksConnected] = useState<boolean>(false);
   const [isQuickBooksAccessible, setIsQuickBooksAccessible] = useState<boolean>(false);
   const previousConnectedRef = useRef<boolean | null>(null);
+  const previousSyncWithQuickBooksRef = useRef<boolean | null>(null);
   const auth = useAuth();
   const lastNetworkStateRef = useRef<{
     isConnected: boolean;
@@ -55,6 +56,17 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
 
   useEffect(() => {
     setIsQuickBooksConnected(appSettings.syncWithQuickBooks);
+  }, [appSettings.syncWithQuickBooks]);
+
+  useEffect(() => {
+    const previous = previousSyncWithQuickBooksRef.current;
+    const current = appSettings.syncWithQuickBooks;
+    if (previous !== current) {
+      console.log(
+        `QuickBooks sync toggle changed: ${previous === null ? 'initial' : String(previous)} -> ${String(current)}`,
+      );
+      previousSyncWithQuickBooksRef.current = current;
+    }
   }, [appSettings.syncWithQuickBooks]);
 
   useEffect(() => {
@@ -132,11 +144,11 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
 
       if (!appSettings.syncWithQuickBooks) {
         if (false !== previousConnectedRef.current) {
-          previousConnectedRef.current = false;
-          setIsQuickBooksAccessible(false);
           console.log('QuickBooks not accessible because syncWithQuickBooks is false');
-          return;
         }
+        previousConnectedRef.current = false;
+        setIsQuickBooksAccessible(false);
+        return;
       }
 
       try {
@@ -159,7 +171,8 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   }, [
     auth.isLoaded,
     auth.isSignedIn,
-    appSettings,
+    appSettings.id,
+    appSettings.syncWithQuickBooks,
     orgId,
     userId,
     isConnected,
