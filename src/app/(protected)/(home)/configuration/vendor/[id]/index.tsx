@@ -1,19 +1,41 @@
-import { TextInput, View } from '@/src/components/Themed';
+import { ActionButton } from '@/src/components/ActionButton';
+import BottomSheetContainer from '@/src/components/BottomSheetContainer';
+import OptionList, { OptionEntry } from '@/src/components/OptionList';
+import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
 import {
+  useAllRows,
   useTypedRow,
   useUpdateRowCallback,
   VendorData,
+  VendorDataCompareName,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { addVendor } from '@/src/utils/quickbooksAPI';
+import { useAuth } from '@clerk/clerk-expo';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, Modal, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditVendor = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { orgId, userId, getToken } = useAuth();
+  const { isQuickBooksAccessible } = useNetwork();
+  const router = useRouter();
   const applyVendorUpdates = useUpdateRowCallback('vendors');
+  const allVendors = useAllRows('vendors', VendorDataCompareName);
   const colors = useColors();
+  const [isLinkVendorPickerVisible, setIsLinkVendorPickerVisible] = useState(false);
+  const [processingInfo, setProcessingInfo] = useState<{ isProcessing: boolean; label: string }>({
+    isProcessing: false,
+    label: '',
+  });
+  const startProcessing = useCallback(
+    (label: string) => setProcessingInfo({ isProcessing: true, label }),
+    [],
+  );
+  const stopProcessing = useCallback(() => setProcessingInfo({ isProcessing: false, label: '' }), []);
   const [updatedVendor, setUpdatedVendor] = useState<VendorData>({
     id: '',
     name: '',
@@ -25,6 +47,7 @@ const EditVendor = () => {
     businessPhone: '',
     notes: '',
     accountingId: '',
+    inactive: false,
   });
 
   const vendorFromStore = useTypedRow('vendors', id);
@@ -56,6 +79,104 @@ const EditVendor = () => {
     };
     applyVendorUpdates(id, vendorToSave);
   }, [id, updatedVendor, vendorFromStore?.name, applyVendorUpdates]);
+
+  const qbVendorOptions: OptionEntry[] = allVendors
+    .filter((vendor) => !!vendor.accountingId)
+    .map((vendor) => ({
+      label: `${vendor.name}${vendor.address ? ` - ${vendor.address}` : ''}`,
+      value: vendor.id,
+    }));
+
+  const handleLinkToQbVendor = useCallback(
+    (option: OptionEntry) => {
+      if (!isQuickBooksAccessible) {
+        return;
+      }
+      const selectedVendor = allVendors.find((vendor) => vendor.id === option.value);
+      if (!selectedVendor || !id) {
+        setIsLinkVendorPickerVisible(false);
+        return;
+      }
+
+      setIsLinkVendorPickerVisible(false);
+      Alert.alert('Confirm Copy', "Press 'Copy' to copy the customer data from the selected customer.", [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Copy',
+          onPress: () => {
+            const { id: _selectedId, ...selectedVendorFields } = selectedVendor;
+            applyVendorUpdates(id, {
+              ...selectedVendorFields,
+              inactive: true,
+            });
+            router.back();
+          },
+        },
+      ]);
+    },
+    [isQuickBooksAccessible, allVendors, id, applyVendorUpdates, router],
+  );
+
+  const handleAddCustomerToQuickBooks = useCallback(() => {
+    if (!isQuickBooksAccessible) {
+      return;
+    }
+    if (!id) return;
+    if (!orgId || !userId) {
+      Alert.alert('Error', 'Missing organization or user information.');
+      return;
+    }
+
+    Alert.alert('Confirm Add', 'Do you want to add this customer to QuickBooks?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Add',
+        onPress: async () => {
+          try {
+            startProcessing('Adding Vendor to QuickBooks...');
+            const response = await addVendor(
+              orgId,
+              userId,
+              {
+                name: updatedVendor.name || '',
+                mobilePhone: updatedVendor.mobilePhone || updatedVendor.businessPhone || '',
+                address: updatedVendor.address || '',
+                city: updatedVendor.city || '',
+                state: updatedVendor.state || '',
+                zip: updatedVendor.zip || '',
+                notes: updatedVendor.notes || '',
+              },
+              getToken,
+            );
+
+            if (!response.newQBId) {
+              Alert.alert('Error', 'QuickBooks did not return a new vendor ID.');
+              return;
+            }
+
+            applyVendorUpdates(id, { accountingId: response.newQBId });
+            router.back();
+          } catch (error) {
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            Alert.alert('Error', `Failed to add customer to QuickBooks: ${message}`);
+          } finally {
+            stopProcessing();
+          }
+        },
+      },
+    ]);
+  }, [
+    isQuickBooksAccessible,
+    id,
+    orgId,
+    userId,
+    updatedVendor,
+    getToken,
+    applyVendorUpdates,
+    startProcessing,
+    stopProcessing,
+    router,
+  ]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -136,7 +257,45 @@ const EditVendor = () => {
           onChangeText={(text) => handleInputChange('notes', text)}
           onBlur={handleBlur}
         />
+        {!updatedVendor.accountingId && isQuickBooksAccessible && (
+          <View style={styles.actionButtonRow}>
+            <ActionButton
+              style={styles.linkButton}
+              type="action"
+              title="Link to QB Vendor"
+              onPress={() => setIsLinkVendorPickerVisible(true)}
+            />
+            <ActionButton
+              style={styles.addQbButton}
+              type="action"
+              title="Add Customer to QuickBooks"
+              onPress={handleAddCustomerToQuickBooks}
+            />
+          </View>
+        )}
       </View>
+      {isLinkVendorPickerVisible && (
+        <BottomSheetContainer
+          modalHeight={'80%'}
+          isVisible={isLinkVendorPickerVisible}
+          onClose={() => setIsLinkVendorPickerVisible(false)}
+          showKeyboardToolbar={false}
+        >
+          <OptionList
+            options={qbVendorOptions}
+            onSelect={handleLinkToQbVendor}
+            enableSearch={qbVendorOptions.length > 15}
+          />
+        </BottomSheetContainer>
+      )}
+      <Modal transparent animationType="fade" visible={processingInfo.isProcessing}>
+        <View style={styles.processingOverlay}>
+          <View style={[styles.processingContainer, { backgroundColor: colors.listBackground }]}>
+            <ActivityIndicator size="large" color={colors.tint} />
+            <Text style={styles.processingLabel}>{processingInfo.label}</Text>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -157,6 +316,35 @@ const styles = StyleSheet.create({
   saveButton: {
     flex: 1,
     marginRight: 5,
+  },
+  actionButtonRow: {
+    marginTop: 8,
+  },
+  linkButton: {
+    width: '100%',
+  },
+  addQbButton: {
+    width: '100%',
+    marginTop: 8,
+  },
+  processingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  processingContainer: {
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    gap: 12,
+    minWidth: 220,
+  },
+  processingLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    minWidth: 200,
   },
 });
 

@@ -1,15 +1,35 @@
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import { useAddRowCallback, VendorData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useNetwork } from '@/src/context/NetworkContext';
+import {
+  useAddRowCallback,
+  useUpdateRowCallback,
+  VendorData,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { addVendor } from '@/src/utils/quickbooksAPI';
+import { useAuth } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, Modal, StyleSheet } from 'react-native';
 
 const AddVendorModal = () => {
   const router = useRouter();
   const colors = useColors();
   const addVendorToStore = useAddRowCallback('vendors');
+  const updateVendorInStore = useUpdateRowCallback('vendors');
+  const { isQuickBooksAccessible } = useNetwork();
+  const { orgId, userId, getToken } = useAuth();
+  const [processingInfo, setProcessingInfo] = useState<{ isProcessing: boolean; label: string }>({
+    isProcessing: false,
+    label: '',
+  });
+
+  const startProcessing = useCallback(
+    (label: string) => setProcessingInfo({ isProcessing: true, label }),
+    [],
+  );
+  const stopProcessing = useCallback(() => setProcessingInfo({ isProcessing: false, label: '' }), []);
   const [vendor, setVendor] = useState<VendorData>({
     id: '',
     accountingId: '',
@@ -39,8 +59,69 @@ const AddVendorModal = () => {
       return;
     }
 
-    router.back();
-  }, [addVendorToStore, vendor, router]);
+    if (!isQuickBooksAccessible) {
+      router.back();
+      return;
+    }
+
+    Alert.alert('Confirm Add', 'Do you want to add this customer to QuickBooks?', [
+      {
+        text: 'Skip',
+        style: 'cancel',
+        onPress: () => {
+          router.back();
+        },
+      },
+      {
+        text: 'Add',
+        onPress: async () => {
+          try {
+            startProcessing('Adding Vendor to QuickBooks...');
+            if (!orgId || !userId || !result?.id) {
+              router.back();
+              return;
+            }
+
+            const response = await addVendor(
+              orgId,
+              userId,
+              {
+                name: vendor.name || '',
+                mobilePhone: vendor.mobilePhone || vendor.businessPhone || '',
+                address: vendor.address || '',
+                city: vendor.city || '',
+                state: vendor.state || '',
+                zip: vendor.zip || '',
+                notes: vendor.notes || '',
+              },
+              getToken,
+            );
+
+            if (response.newQBId) {
+              updateVendorInStore(result.id, { accountingId: response.newQBId });
+            }
+          } catch (error) {
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            Alert.alert('Error', `Failed to add customer to QuickBooks: ${message}`);
+          } finally {
+            stopProcessing();
+            router.back();
+          }
+        },
+      },
+    ]);
+  }, [
+    addVendorToStore,
+    vendor,
+    isQuickBooksAccessible,
+    orgId,
+    userId,
+    getToken,
+    updateVendorInStore,
+    startProcessing,
+    stopProcessing,
+    router,
+  ]);
 
   const canSave = vendor.name.length > 0;
 
@@ -109,6 +190,14 @@ const AddVendorModal = () => {
           onChangeText={(text) => handleInputChange('notes', text)}
         />
       </ModalScreenContainer>
+      <Modal transparent animationType="fade" visible={processingInfo.isProcessing}>
+        <View style={styles.processingOverlay}>
+          <View style={[styles.processingContainer, { backgroundColor: colors.listBackground }]}>
+            <ActivityIndicator size="large" color={colors.tint} />
+            <Text style={styles.processingLabel}>{processingInfo.label}</Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -124,6 +213,24 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingLeft: 10,
     borderRadius: 4,
+  },
+  processingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  processingContainer: {
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    gap: 12,
+    minWidth: 220,
+  },
+  processingLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
 

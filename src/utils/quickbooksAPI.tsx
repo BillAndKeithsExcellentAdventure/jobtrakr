@@ -99,15 +99,19 @@ export interface QuickBooksCustomer {
 }
 
 export interface AddVendorRequest {
-  DisplayName: string;
-  CompanyName?: string;
-  GivenName?: string;
-  FamilyName?: string;
-  PrimaryEmailAddr?: QBEmail;
-  Phone?: string;
-  BillAddr?: QBAddress;
-  Active?: boolean;
-  Id: string;
+  name: string;
+  mobilePhone: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  notes: string;
+}
+
+export interface AddVendorResponse {
+  success: boolean;
+  message: string;
+  newQBId?: string;
 }
 
 export interface QBEditCustomerInfo {
@@ -560,7 +564,7 @@ export async function addVendor(
   userId: string,
   QuickBooksVendor: AddVendorRequest,
   getToken: () => Promise<string | null>,
-): Promise<QuickBooksVendor> {
+): Promise<AddVendorResponse> {
   const apiFetch = createApiWithToken(getToken);
 
   const response = await apiFetch(`${API_BASE_URL}/qbo/addVendor?orgId=${orgId}&userId=${userId}`, {
@@ -571,12 +575,12 @@ export async function addVendor(
     body: JSON.stringify(QuickBooksVendor),
   });
 
-  const data: ApiDataResponse<{ QueryResponse: QuickBooksVendor }> = await response.json();
+  const data: AddVendorResponse = await response.json();
   if (!data.success) {
     throw new Error(data.message);
   }
 
-  return data.data?.QueryResponse || ({ Id: '', DisplayName: '' } as QuickBooksVendor);
+  return data;
 }
 
 /**
