@@ -95,6 +95,7 @@ export async function importVendorsFromQuickBooks(
       mobilePhone: qbVendor.mobilePhone || '',
       businessPhone: qbVendor.businessPhone || '',
       notes: qbVendor.notes || '',
+      inactive: false,
     });
     addedCount++;
   }

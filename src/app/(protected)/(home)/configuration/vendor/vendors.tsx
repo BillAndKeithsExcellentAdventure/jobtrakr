@@ -9,8 +9,8 @@ import {
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-import React from 'react';
-import { FlatList, Platform, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { FlatList, Platform, StyleSheet, Switch } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,8 +20,11 @@ import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 const VendorsScreen = () => {
   const router = useRouter();
   const allVendors = useAllRows('vendors', VendorDataCompareName);
+  const [showInactive, setShowInactive] = useState(false);
 
   const colors = useColors();
+
+  const dataToDisplay = showInactive ? allVendors : allVendors.filter((v) => !v.inactive);
 
   const renderHeaderRight = () => (
     <Pressable
@@ -48,9 +51,13 @@ const VendorsScreen = () => {
           }}
         />
         <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
+          <View style={[styles.toggleContainer, { borderBottomColor: colors.border }]}>
+            <Text>Show Inactive Vendors</Text>
+            <Switch value={showInactive} onValueChange={setShowInactive} />
+          </View>
           <FlatList
             style={{ borderTopColor: colors.border }}
-            data={allVendors}
+            data={dataToDisplay}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => <SwipeableVendor vendor={item} />}
             ListEmptyComponent={() => (
@@ -75,6 +82,14 @@ const VendorsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
   },
   vendorItem: {
     flexDirection: 'row',

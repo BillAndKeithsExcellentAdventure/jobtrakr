@@ -1,13 +1,13 @@
-import { SwipeableComponent } from '@/src/components/SwipeableComponent';
+import { SwipeableComponent, SwipeableHandles } from '@/src/components/SwipeableComponent';
 import { Text, View } from '@/src/components/Themed';
-import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
-import { useDeleteRowCallback, VendorData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useUpdateRowCallback, VendorData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { SvgImage } from '@/src/components/SvgImage';
 
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback } from 'react';
-import { Alert, Pressable, StyleSheet } from 'react-native';
+import React, { useCallback, useRef } from 'react';
+import { Pressable, StyleSheet } from 'react-native';
 import Reanimated from 'react-native-reanimated';
 import { formatPhoneNumber } from '../utils/formatters';
 
@@ -17,38 +17,35 @@ const SWIPE_THRESHOLD_WIDTH = 50;
 const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
   const router = useRouter();
 
-  const processDelete = useDeleteRowCallback('vendors');
+  const updateVendor = useUpdateRowCallback('vendors');
+  const swipeableRef = useRef<SwipeableHandles>(null);
 
   const colors = useColors();
-  const handleDelete = useCallback(
-    (itemId: string) => {
-      Alert.alert(
-        'Delete Vendor',
-        'Are you sure you want to delete this vendor?',
-        [{ text: 'Cancel' }, { text: 'Delete', onPress: () => processDelete(itemId) }],
-        { cancelable: true },
-      );
-    },
-    [processDelete],
-  );
+  const handleToggleActive = useCallback(() => {
+    updateVendor(vendor.id, { inactive: !vendor.inactive });
+    swipeableRef.current?.close();
+  }, [updateVendor, vendor.id, vendor.inactive]);
 
   const RightAction = useCallback(() => {
     return (
       <Pressable
-        style={styles.rightAction}
-        onPress={() => {
-          handleDelete(vendor.id);
-        }}
+        style={[styles.rightAction, { backgroundColor: colors.slideMenuBackground }]}
+        onPress={handleToggleActive}
       >
         <Reanimated.View>
-          <MaterialIcons name="delete" size={32} color="white" />
+          <MaterialIcons
+            name={vendor.inactive ? 'visibility' : 'visibility-off'}
+            size={32}
+            color={colors.slideMenuForeground}
+          />
         </Reanimated.View>
       </Pressable>
     );
-  }, [vendor.id, handleDelete]);
+  }, [colors.slideMenuBackground, colors.slideMenuForeground, handleToggleActive, vendor.inactive]);
 
   return (
     <SwipeableComponent
+      ref={swipeableRef}
       key={vendor.id}
       threshold={SWIPE_THRESHOLD_WIDTH}
       actionWidth={RIGHT_ACTION_WIDTH}
@@ -65,17 +62,25 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
         >
           <View style={[styles.vendorInfo, { borderColor: colors.border, borderTopWidth: 1 }]}>
             <View style={styles.vendorSummary}>
-              <Text numberOfLines={1} style={styles.vendorName}>{`${
-                vendor.name.length > 0 ? vendor.name : 'Not Specified'
-              }`}</Text>
+              <View style={styles.nameRow}>
+                {vendor.accountingId && <SvgImage fileName="qb-logo" width={20} height={20} />}
+                <Text style={vendor.inactive ? { color: colors.textMuted } : {}} numberOfLines={1}>{`${
+                  vendor.name.length > 0 ? vendor.name : 'Not Specified'
+                }`}</Text>
+              </View>
               {(vendor.city || vendor.address) && (
                 <View style={{ flexDirection: 'row' }}>
-                  <Text>{vendor.address}</Text>
+                  <Text style={vendor.inactive ? { color: colors.textMuted } : {}}>{vendor.address}</Text>
                   {vendor.city && vendor.address && <Text>{', '}</Text>}
-                  <Text>{vendor.city}</Text>
+                  <Text style={vendor.inactive ? { color: colors.textMuted } : {}}>{vendor.city}</Text>
                 </View>
               )}
-              {vendor.businessPhone && <Text text={formatPhoneNumber(vendor.businessPhone)} />}
+              {vendor.businessPhone && (
+                <Text
+                  style={vendor.inactive ? { color: colors.textMuted } : {}}
+                  text={formatPhoneNumber(vendor.businessPhone)}
+                />
+              )}
             </View>
             <View>
               <Feather name="chevrons-right" size={24} color={colors.iconColor} />
@@ -98,6 +103,11 @@ const styles = StyleSheet.create({
   vendorSummary: {
     flex: 1,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   vendorName: {
     fontSize: 18,
     fontWeight: '600',
@@ -109,7 +119,6 @@ const styles = StyleSheet.create({
   rightAction: {
     width: RIGHT_ACTION_WIDTH,
     height: 90,
-    backgroundColor: deleteBg,
     alignItems: 'center',
     justifyContent: 'center',
   },

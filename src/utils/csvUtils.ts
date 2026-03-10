@@ -1,7 +1,4 @@
-import {
-  CustomerData,
-  VendorData,
-} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { CustomerData, VendorData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { WorkCategoryDefinition } from '../models/types';
 
 // Shared headers for vendor CSV format (excluding id and accountingId)
@@ -62,7 +59,7 @@ export function csvToVendors(csvText: string): Omit<VendorData, 'id'>[] {
 
   for (let i = 1; i < lines.length; i++) {
     const values = parseCsvLine(lines[i]);
-    const vendor: Record<string, string> = {};
+    const vendor: Record<string, any> = { inactive: false };
 
     for (let j = 0; j < headers.length; j++) {
       const header = headers[j].trim();

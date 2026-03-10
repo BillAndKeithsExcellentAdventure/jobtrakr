@@ -48,6 +48,7 @@ export interface VendorData {
   mobilePhone?: string;
   businessPhone?: string;
   notes?: string;
+  inactive?: boolean;
 }
 
 export interface CustomerData {

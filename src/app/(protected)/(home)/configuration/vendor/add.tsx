@@ -21,6 +21,7 @@ const AddVendorModal = () => {
     mobilePhone: '',
     businessPhone: '',
     notes: '',
+    inactive: false,
   });
 
   const handleInputChange = useCallback((name: keyof VendorData, value: string) => {

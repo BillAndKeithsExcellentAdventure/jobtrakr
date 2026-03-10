@@ -43,6 +43,7 @@ export const TABLES_SCHEMA = {
     mobilePhone: { type: 'string' },
     businessPhone: { type: 'string' },
     notes: { type: 'string' },
+    inactive: { type: 'boolean' },
   },
   accounts: {
     id: { type: 'string' },

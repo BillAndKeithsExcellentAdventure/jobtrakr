@@ -61,7 +61,8 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
 
   useEffect(() => {
     if (allVendors && allVendors.length > 0) {
-      const vendorOptions: OptionEntry[] = allVendors.map((vendor) => ({
+      const activeVendors = allVendors.filter((v) => !v.inactive);
+      const vendorOptions: OptionEntry[] = activeVendors.map((vendor) => ({
         label: vendor.name,
         value: vendor.id,
       }));

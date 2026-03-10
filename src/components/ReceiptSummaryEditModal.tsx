@@ -99,7 +99,8 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
 
   useEffect(() => {
     if (allVendors && allVendors.length > 0) {
-      const vendorOptions: OptionEntry[] = allVendors.map((vendor) => ({
+      const activeVendors = allVendors.filter((v) => !v.inactive);
+      const vendorOptions: OptionEntry[] = activeVendors.map((vendor) => ({
         label: `${vendor.name} ${
           vendor.address ? ` - ${vendor.address}` : vendor.city ? ` - ${vendor.city}` : ''
         }`,
