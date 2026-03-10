@@ -8,6 +8,20 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 
 /**
+ * ProjectUpdaterForSingleProject
+ *
+ * A non-rendering component that runs all cost/bid update hooks for a single project.
+ * Extracted from ProjectCostSummaryUpdater so hooks are never called inside a loop.
+ */
+const ProjectUpdaterForSingleProject: React.FC<{ projectId: string }> = ({ projectId }) => {
+  useSeedWorkItemsIfNecessary(projectId);
+  useCostUpdater(projectId);
+  useBidAmountUpdater(projectId);
+  useWorkItemSpentUpdater(projectId);
+  return null;
+};
+
+/**
  * ProjectCostSummaryUpdater
  *
  * A non-rendering component that manages automatic updates of project cost summaries
@@ -33,21 +47,11 @@ import {
 export const ProjectCostSummaryUpdater: React.FC = () => {
   const { activeProjectIds } = useActiveProjectIds();
 
-  // Run updater hooks for each active project
-  activeProjectIds.forEach((projectId) => {
-    // Seed initial work items if the project is new
-    useSeedWorkItemsIfNecessary(projectId);
-
-    // Update total amount spent in ListOfProjectsStore
-    useCostUpdater(projectId);
-
-    // Update total bid amount in ListOfProjectsStore
-    useBidAmountUpdater(projectId);
-
-    // Update per-work-item spent amounts in WorkItemSpentSummaryContext
-    useWorkItemSpentUpdater(projectId);
-  });
-
-  // This component doesn't render anything
-  return null;
+  return (
+    <>
+      {activeProjectIds.map((projectId) => (
+        <ProjectUpdaterForSingleProject key={projectId} projectId={projectId} />
+      ))}
+    </>
+  );
 };
