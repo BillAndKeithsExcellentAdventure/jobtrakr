@@ -495,6 +495,8 @@ Upload a photo with metadata.
 
 **Form Fields:** Same as `/addReceiptImage`
 
+- `caption` (string, optional): Caption stored with the photo metadata
+
 **Response:**
 
 ```json
@@ -504,6 +506,53 @@ Upload a photo with metadata.
   "data": { ... }
 }
 ```
+
+#### POST /setImageCaption
+
+Update the caption metadata for an existing photo.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `userId` (string): User identifier
+- `orgId` (string): Organization identifier
+
+**Request Body:**
+
+```json
+{
+  "imageId": "string",
+  "projectId": "string",
+  "caption": "Updated caption text"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Caption updated successfully",
+  "imageId": "img-001"
+}
+```
+
+**Error Responses:**
+
+- `404 Not Found` - Photo not found:
+
+```json
+{
+  "success": false,
+  "message": "Photo not found"
+}
+```
+
+**Notes:**
+
+- Updates caption metadata on the original photo and any existing device-optimized variants
+- Requires `imageId`, `projectId`, `caption`, plus `userId` and `orgId` in the query string
 
 #### GET /fetchProjectPhotos
 
@@ -701,7 +750,11 @@ Retrieve a list of public image IDs for a specific project.
 {
   "success": true,
   "message": "Image IDs retrieved successfully",
-  "data": ["img-001", "img-002", "img-003"]
+  "data": [
+    { "imageId": "img-001", "mediaType": "photo" },
+    { "imageId": "img-002", "mediaType": "photo" },
+    { "imageId": "vid-003", "mediaType": "video" }
+  ]
 }
 ```
 
@@ -724,10 +777,11 @@ Method not allowed
 
 **Notes:**
 
-- Returns image IDs in alphabetical order
+- Returns public media entries in alphabetical order by `imageId`
 - Queries the `public_photos` table
 - Returns an empty array if no public images are found for the project
-- Useful for retrieving the list of public images available for a project
+- Each entry includes both `imageId` and `mediaType`
+- Useful for retrieving the list of public media available for a project
 
 ##### GET /isRegisteredForPhotos
 
@@ -1186,6 +1240,8 @@ Generate a change order PDF and send it via email.
   "fromEmail": "string",
   "fromName": "string",
   "subject": "string",
+  "projectAbbr": "string",
+  "accountingId": "string",
   "changeOrderId": "string",
   "projectId": "string",
   "expirationDate": "string",
@@ -1205,6 +1261,7 @@ Generate a change order PDF and send it via email.
 
 - The `htmlBody` can contain `<[AcceptURL]>` placeholder which will be replaced with the acceptance URL
 - An acceptance link is generated with hash-based verification
+- `projectAbbr` and `accountingId` are required and are used when generating and sending the PDF attachment
 
 #### GET /AcceptChangeOrder
 
@@ -1391,7 +1448,7 @@ Complete vendor registration by setting a password.
 ```json
 {
   "email": "vendor@example.com",
-  "password": "string"
+  "newPassword": "string"
 }
 ```
 
@@ -2056,9 +2113,9 @@ Create a new project (sub-customer) under an existing customer in QuickBooks.
 - Projects are stored as customers with Job=true in QuickBooks
 - Status code: 201 Created on success, 401 if authentication fails, 500 for other errors
 
-#### POST /qbo/updateProject
+#### POST /qbo/editCustomer
 
-Update an existing project (sub-customer) in QuickBooks.
+Update an existing customer in QuickBooks.
 
 **Authentication:** Required
 
@@ -2072,8 +2129,16 @@ Update an existing project (sub-customer) in QuickBooks.
 ```json
 {
   "customerId": "123",
-  "projectName": "Downtown Office Renovation - Updated",
-  "projectId": "proj-001"
+  "displayName": "Updated Customer Name",
+  "firstName": "John",
+  "lastName": "Doe",
+  "phone": "555-1234",
+  "email": "john@example.com",
+  "address": "123 Main St",
+  "address2": "Suite 100",
+  "city": "Springfield",
+  "state": "IL",
+  "zip": "62701"
 }
 ```
 
@@ -2082,8 +2147,8 @@ Update an existing project (sub-customer) in QuickBooks.
 ```json
 {
   "success": true,
-  "message": "Project updated successfully",
-  "qbId": "456"
+  "message": "Customer edited successfully",
+  "customerId": "123"
 }
 ```
 
@@ -2096,25 +2161,14 @@ Update an existing project (sub-customer) in QuickBooks.
 }
 ```
 
-**Error Response (404):**
-
-```json
-{
-  "success": false,
-  "message": "Project not found in QuickBooks. Please create the project first."
-}
-```
-
 **Notes:**
 
-- Required fields: `customerId`, `projectName`, `projectId`
-- Updates an existing sub-customer (job) under the specified parent customer
-- The project must already exist in QuickBooks (use `/qbo/addProject` to create new projects)
-- Returns the QuickBooks project ID in `qbId` field
-- Automatically fetches the existing customer record to retrieve SyncToken (required for updates)
+- Required fields: `customerId`, `displayName`
+- Optional fields: `firstName`, `lastName`, `phone`, `email`, `address`, `address2`, `city`, `state`, `zip`
+- Automatically fetches the existing customer record to retrieve `SyncToken` before updating
+- Returns the updated QuickBooks customer ID in `customerId`
 - Returns 401 if token refresh fails (requires reconnection)
-- Returns 404 if project not found in local database or QuickBooks
-- Status code: 200 OK on success, 401 if authentication fails, 404 if project not found, 500 for other errors
+- Status code: 200 OK on success, 401 if authentication fails, 500 for other errors
 
 #### POST /qbo/addCustomer
 
