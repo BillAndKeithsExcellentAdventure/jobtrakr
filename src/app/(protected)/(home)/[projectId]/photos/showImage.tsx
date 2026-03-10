@@ -1,7 +1,7 @@
 import { ZoomImageViewer } from '@/src/components/ZoomImageViewer';
 import { View, Text, TextInput } from '@/src/components/Themed';
-import { Stack, useLocalSearchParams } from 'expo-router';
-import React, { useCallback } from 'react';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useMemo } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -12,6 +12,10 @@ import {
 import { useColors } from '@/src/context/ColorsContext';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
+import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
+import { setImageCaption } from '@/src/utils/images';
+import { useAuth } from '@clerk/clerk-expo';
+import { useNetwork } from '@/src/context/NetworkContext';
 
 const ShowProjectPhotoPage = () => {
   const { uri, projectId, projectName, photoDate, imageId } = useLocalSearchParams<{
@@ -21,13 +25,17 @@ const ShowProjectPhotoPage = () => {
     photoDate: string;
     imageId?: string;
   }>();
-
+  const { orgId, userId, getToken } = useAuth();
+  const router = useRouter();
+  const { isConnected } = useNetwork();
   const allImages = useAllRows(projectId, 'mediaEntries', RecentMediaEntryDateCompare);
   const updateMediaEntry = useUpdateRowCallback(projectId, 'mediaEntries');
   const colors = useColors();
-  const currentImage = imageId ? allImages.find((image) => image.imageId === imageId) : undefined;
+  const currentImage = useMemo(
+    () => (imageId ? allImages.find((image) => image.imageId === imageId) : undefined),
+    [imageId, allImages],
+  );
   const caption = currentImage?.caption || '';
-
   const handleCaptionChange = useCallback(
     (newCaption: string) => {
       if (currentImage?.id) updateMediaEntry(currentImage.id, { caption: newCaption });
@@ -35,8 +43,28 @@ const ShowProjectPhotoPage = () => {
     [caption, currentImage, updateMediaEntry],
   );
 
+  const handleBackPress = useCallback(async () => {
+    if (currentImage && imageId && orgId && userId && isConnected) {
+      try {
+        await setImageCaption(userId, orgId, projectId, imageId, caption, getToken);
+        console.log('Image caption on server updated successfully');
+      } catch (error) {
+        console.error('Failed to set image caption:', error);
+      }
+    }
+    router.back();
+  }, [router, currentImage, imageId, projectId, caption, orgId, userId, getToken, isConnected]);
+
   return (
     <>
+      <Stack.Screen
+        options={{
+          title: 'Edit Project',
+          headerShown: true,
+          gestureEnabled: false,
+          headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
+        }}
+      />
       <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
         <View>
           <View style={{ alignItems: 'center', justifyContent: 'center' }}>

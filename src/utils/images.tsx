@@ -243,6 +243,59 @@ export const uploadImage = async (
   }
 };
 
+export const setImageCaption = async (
+  userId: string,
+  orgId: string,
+  projectId: string,
+  imageId: string,
+  caption: string,
+  getToken: () => Promise<string | null>,
+): Promise<{ success: boolean; imageId?: string; msg: string }> => {
+  try {
+    const params = new URLSearchParams({ userId, orgId }).toString();
+    const endPointUrl = `${API_BASE_URL}/setImageCaption?${params}`;
+
+    const apiFetch = createApiWithToken(getToken);
+    const response = await apiFetch(endPointUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      } as any,
+      body: JSON.stringify({ imageId, projectId, caption }),
+    });
+
+    if (!response.ok) {
+      let errorBody = '';
+      try {
+        errorBody = await response.text();
+      } catch {
+        // ignore
+      }
+      console.error('setImageCaption failed. HTTP:', response.status, 'Body:', errorBody);
+      return {
+        success: false,
+        msg: `setImageCaption failed. HTTP ${response.status}. ${errorBody || 'No response body.'}`,
+      };
+    }
+
+    let data: any = null;
+    try {
+      data = await response.json();
+    } catch {
+      // no JSON — acceptable
+    }
+
+    console.log('setImageCaption succeeded:', data);
+    return { success: true, imageId, msg: 'Caption updated successfully' };
+  } catch (error) {
+    console.error('Error setting image caption:', error);
+    return {
+      success: false,
+      msg: `Error setting image caption: ${formatErrorMessage(error)}`,
+    };
+  }
+};
+
 export const deleteMedia = async (
   userId: string,
   organizationId: string,
