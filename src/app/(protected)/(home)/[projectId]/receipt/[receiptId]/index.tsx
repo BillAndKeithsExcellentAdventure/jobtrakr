@@ -61,6 +61,7 @@ const ReceiptDetailsPage = () => {
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
   const allProjectReceipts = useAllRows(projectId, 'receipts');
   const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
+  const allVendors = useAllConfigurationRows('vendors');
   const addReceiptImage = useAddImageCallback();
   const appSettings = useAppSettings();
   const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
@@ -303,12 +304,17 @@ const ReceiptDetailsPage = () => {
     [receipt.amount, itemsTotalCost],
   );
 
+  const vendorQbId = useMemo(
+    () => allVendors.find((v) => v.id === receipt.vendorId)?.accountingId ?? '',
+    [allVendors, receipt.vendorId],
+  );
+
   const canSyncToQuickBooks =
     isQuickBooksAccessible &&
     allReceiptLineItems.length > 0 &&
     receipt.amount > 0 &&
     !!receipt.paymentAccountId &&
-    !!receipt.vendorId &&
+    !!vendorQbId &&
     !!userId &&
     !!orgId &&
     !!projectAbbr &&
@@ -421,7 +427,7 @@ const ReceiptDetailsPage = () => {
         addAttachment: wasImageJustAdded && !!receipt.imageId,
         imageId: receipt.imageId || '',
         qbPurchaseData: {
-          vendorRef: receipt.vendorId,
+          vendorRef: vendorQbId,
           lineItems: qbLineItems,
           privateNote: receipt.notes || receipt.description || '',
           txnDate: new Date(receipt.receiptDate).toISOString().split('T')[0],
@@ -468,6 +474,7 @@ const ReceiptDetailsPage = () => {
       getToken,
       allReceiptLineItems,
       updateReceipt,
+      vendorQbId,
     ],
   );
 
@@ -487,7 +494,7 @@ const ReceiptDetailsPage = () => {
         imageId: receipt.imageId || '',
         addAttachment: !!receipt.imageId,
         qbPurchaseData: {
-          vendorRef: receipt.vendorId,
+          vendorRef: vendorQbId,
           lineItems: qbLineItems,
           txnDate: new Date(receipt.receiptDate).toISOString().split('T')[0],
           paymentAccount: {
@@ -500,7 +507,7 @@ const ReceiptDetailsPage = () => {
 
       await processAddReceiptToQuickBooks(receiptData);
     },
-    [userId, orgId, projectId, projectAbbr, projectName, receipt, processAddReceiptToQuickBooks],
+    [userId, orgId, projectId, projectAbbr, projectName, receipt, vendorQbId, processAddReceiptToQuickBooks],
   );
 
   const handleSyncToQuickBooks = useCallback(async () => {

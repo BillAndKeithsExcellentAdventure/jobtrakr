@@ -50,7 +50,7 @@ export type ReceiptData = {
   id: string;
   accountingId: string;
   vendor: string; // Vendor name for display purposes when not connected to QuickBooks
-  vendorId: string; // QuickBooks Vendor ID
+  vendorId: string; // Vendor ID from configuration - used to link to QuickBooks vendor when syncing
   paymentAccountId: string; // QuickBooks Account ID
   description: string;
   amount: number;
@@ -70,7 +70,7 @@ export type InvoiceData = {
   id: string;
   accountingId: string;
   vendor: string; // Vendor name for display purposes when not connected to QuickBooks
-  vendorId: string; // QuickBooks Vendor ID
+  vendorId: string; // Vendor ID from configuration - used to link to QuickBooks vendor when syncing
   paymentAccountId: string; // QuickBooks Account ID
   paymentStatus: string; // 'pending' | 'paid'
   description: string;

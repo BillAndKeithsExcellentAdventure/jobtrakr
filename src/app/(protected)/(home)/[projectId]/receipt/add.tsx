@@ -242,6 +242,10 @@ const AddReceiptPage = () => {
   }, []);
   */
 
+  const qbVendorId = useMemo(() => {
+    return allVendors.find((vendor) => vendor.id === projectReceipt.vendorId)?.accountingId ?? '';
+  }, [projectReceipt.vendorId, allVendors]);
+
   const handleAddReceipt = useCallback(async () => {
     if (!canAddReceipt || isSavingReceipt) return;
 
@@ -351,7 +355,7 @@ const AddReceiptPage = () => {
             imageId: projectReceipt.imageId || '',
             addAttachment: !!projectReceipt.imageId,
             qbPurchaseData: {
-              vendorRef: projectReceipt.vendorId,
+              vendorRef: qbVendorId,
               lineItems: qbLineItems,
               txnDate: new Date(projectReceipt.receiptDate).toISOString().split('T')[0],
               paymentAccount: {
@@ -456,6 +460,7 @@ const AddReceiptPage = () => {
     allAccounts,
     router,
     appSettings.quickBooksExpenseAccountId,
+    qbVendorId,
     addReceiptQueueEntry,
   ]);
 
