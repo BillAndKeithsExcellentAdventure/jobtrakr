@@ -23,7 +23,7 @@ const AddCustomerModal = () => {
     contactName: '',
     email: '',
     phone: '',
-    active: true,
+    inactive: false,
   });
 
   const handleInputChange = useCallback((name: keyof CustomerData, value: string) => {

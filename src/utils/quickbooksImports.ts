@@ -148,7 +148,7 @@ export async function importCustomersFromQuickBooks(
         name: qbCustomer.DisplayName,
         email: qbCustomer.PrimaryEmailAddr?.Address || '',
         phone: qbCustomer.PrimaryPhone?.FreeFormNumber || '',
-        active: qbCustomer.Active ?? true,
+        inactive: !(qbCustomer.Active ?? true),
         contactName,
       });
       updatedCount++;
@@ -160,7 +160,7 @@ export async function importCustomersFromQuickBooks(
         name: qbCustomer.DisplayName,
         email: qbCustomer.PrimaryEmailAddr?.Address || '',
         phone: qbCustomer.PrimaryPhone?.FreeFormNumber || '',
-        active: qbCustomer.Active ?? true,
+        inactive: !(qbCustomer.Active ?? true),
         contactName,
       });
       addedCount++;

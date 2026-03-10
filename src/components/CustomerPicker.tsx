@@ -41,7 +41,7 @@ export const CustomerPicker = ({
     contactName: '',
     email: '',
     phone: '',
-    active: true,
+    inactive: false,
   });
   const colors = useColors();
   const addCustomerToStore = useAddRowCallback('customers');
@@ -51,7 +51,7 @@ export const CustomerPicker = ({
 
   // Filter to only show active customers
   const activeCustomers = useMemo(
-    () => customers.filter((c) => c.active).sort((a, b) => a.name.localeCompare(b.name)),
+    () => customers.filter((c) => !c.inactive).sort((a, b) => a.name.localeCompare(b.name)),
     [customers],
   );
 
@@ -147,7 +147,7 @@ export const CustomerPicker = ({
         contactName: '',
         email: '',
         phone: '',
-        active: true,
+        inactive: false,
       });
       setSearchText('');
       setIsAddCustomerModalVisible(false);
@@ -343,7 +343,7 @@ export const CustomerPicker = ({
             contactName: '',
             email: '',
             phone: '',
-            active: true,
+            inactive: false,
           });
         }}
         title="Add New Customer"

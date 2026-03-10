@@ -18,11 +18,11 @@ import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 const CustomersScreen = () => {
   const router = useRouter();
   const allCustomers = useAllRows('customers', CustomerDataCompareName);
-  const [showActiveOnly, setShowActiveOnly] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
 
   const colors = useColors();
 
-  const filteredCustomers = showActiveOnly ? allCustomers.filter((c) => c.active) : allCustomers;
+  const filteredCustomers = !showInactive ? allCustomers.filter((c) => !c.inactive) : allCustomers;
 
   const renderHeaderRight = () => (
     <Pressable
@@ -47,30 +47,10 @@ const CustomersScreen = () => {
           }}
         />
         <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 10,
-              borderWidth: 1,
-              borderRadius: 8,
-              borderColor: colors.border,
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              marginHorizontal: 15,
-              marginVertical: 10,
-            }}
-          >
-            <Text text="All" style={{ fontWeight: 'bold' }} />
-            <Switch
-              value={showActiveOnly}
-              onValueChange={setShowActiveOnly}
-              switchContainerOffBackgroundColor={colors.profitFg}
-              size="medium"
-            />
-            <Text numberOfLines={1} text="Show Only Active Customers" style={{ fontWeight: 'bold' }} />
+          <View style={[styles.toggleContainer, { borderBottomColor: colors.border }]}>
+            <Text>Show Inactive Customers</Text>
+            <Switch value={showInactive} onValueChange={setShowInactive} />
           </View>
-
           <FlatList
             style={{ borderTopColor: colors.border }}
             data={filteredCustomers}
@@ -103,6 +83,14 @@ const styles = StyleSheet.create({
     padding: 8,
     paddingRight: 0,
     zIndex: 1,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
   },
 });
 

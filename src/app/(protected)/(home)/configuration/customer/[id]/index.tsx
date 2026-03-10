@@ -33,7 +33,7 @@ const EditCustomer = () => {
     contactName: '',
     email: '',
     phone: '',
-    active: true,
+    inactive: false,
   });
 
   const customerFromStore = useTypedRow('customers', id);
@@ -96,12 +96,12 @@ const EditCustomer = () => {
   }, [id, updatedCustomer, applyCustomerUpdates, router, isQuickBooksAccessible, orgId, userId, getToken]);
 
   const handleToggleActive = useCallback(() => {
-    const newActive = !updatedCustomer.active;
-    setUpdatedCustomer((prev) => ({ ...prev, active: newActive }));
+    const newInactive = !updatedCustomer.inactive;
+    setUpdatedCustomer((prev) => ({ ...prev, inactive: newInactive }));
     if (id) {
-      applyCustomerUpdates(id, { active: newActive });
+      applyCustomerUpdates(id, { inactive: newInactive });
     }
-  }, [id, updatedCustomer.active, applyCustomerUpdates]);
+  }, [id, updatedCustomer.inactive, applyCustomerUpdates]);
 
   return (
     <>
@@ -161,7 +161,7 @@ const EditCustomer = () => {
           />
           <View style={styles.activeRow}>
             <Text txtSize="standard" text="Active" />
-            <Switch value={updatedCustomer.active} onValueChange={handleToggleActive} size="medium" />
+            <Switch value={!updatedCustomer.inactive} onValueChange={handleToggleActive} size="medium" />
           </View>
         </View>
       </SafeAreaView>

@@ -21,9 +21,9 @@ const SwipeableCustomer = ({ customer }: { customer: CustomerData }) => {
   const swipeableRef = useRef<SwipeableHandles>(null);
 
   const handleToggleActive = useCallback(() => {
-    updateCustomer(customer.id, { active: !customer.active });
+    updateCustomer(customer.id, { inactive: !customer.inactive });
     swipeableRef.current?.close();
-  }, [customer.id, customer.active, updateCustomer]);
+  }, [customer.id, customer.inactive, updateCustomer]);
 
   const RightAction = useCallback(() => {
     return (
@@ -33,14 +33,14 @@ const SwipeableCustomer = ({ customer }: { customer: CustomerData }) => {
       >
         <Reanimated.View>
           <MaterialIcons
-            name={customer.active ? 'visibility-off' : 'visibility'}
+            name={customer.inactive ? 'visibility' : 'visibility-off'}
             size={32}
             color={colors.slideMenuForeground}
           />
         </Reanimated.View>
       </Pressable>
     );
-  }, [customer.active, handleToggleActive, colors.slideMenuBackground, colors.slideMenuForeground]);
+  }, [customer.inactive, handleToggleActive, colors.slideMenuBackground, colors.slideMenuForeground]);
 
   return (
     <SwipeableComponent
@@ -64,12 +64,12 @@ const SwipeableCustomer = ({ customer }: { customer: CustomerData }) => {
             <View style={styles.customerSummary}>
               <Text
                 numberOfLines={1}
-                style={[styles.customerName, !customer.active && { color: colors.textMuted }]}
+                style={[styles.customerName, customer.inactive && { color: colors.textMuted }]}
               >
                 {customer.name.length > 0 ? customer.name : 'Not Specified'}
               </Text>
               {customer.contactName ? (
-                <Text style={!customer.active && { color: colors.textMuted }}>{customer.contactName}</Text>
+                <Text style={customer.inactive && { color: colors.textMuted }}>{customer.contactName}</Text>
               ) : null}
             </View>
           </Pressable>

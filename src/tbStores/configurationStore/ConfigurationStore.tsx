@@ -59,7 +59,7 @@ export const TABLES_SCHEMA = {
     contactName: { type: 'string' },
     email: { type: 'string' },
     phone: { type: 'string' },
-    active: { type: 'boolean' },
+    inactive: { type: 'boolean' },
   },
 } as const;
 

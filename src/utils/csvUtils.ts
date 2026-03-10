@@ -172,7 +172,7 @@ export function parseWorkItemsCsvText(csvText: string): WorkCategoryDefinition[]
 }
 
 // Shared headers for customer CSV format (excluding id and accountingId)
-const CUSTOMER_CSV_HEADERS = ['name', 'contactName', 'email', 'phone', 'active'];
+const CUSTOMER_CSV_HEADERS = ['name', 'contactName', 'email', 'phone', 'inactive'];
 
 /**
  * Converts an array of customers to CSV format (excluding id and accountingId fields)
@@ -221,8 +221,11 @@ export function csvToCustomers(csvText: string): Omit<CustomerData, 'id' | 'acco
     for (let j = 0; j < headers.length; j++) {
       const header = headers[j].trim();
       const value = j < values.length ? values[j].trim() : '';
-      if (header === 'active') {
-        customer[header] = value.toLowerCase() !== 'false';
+      if (header === 'inactive') {
+        customer[header] = value.toLowerCase() === 'true';
+      } else if (header === 'active') {
+        // Backward compatibility for older CSV exports.
+        customer.inactive = value.toLowerCase() === 'false';
       } else {
         customer[header] = value;
       }
