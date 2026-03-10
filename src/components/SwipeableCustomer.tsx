@@ -1,4 +1,5 @@
 import { SwipeableComponent, SwipeableHandles } from '@/src/components/SwipeableComponent';
+import { SvgImage } from '@/src/components/SvgImage';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import {
@@ -62,12 +63,15 @@ const SwipeableCustomer = ({ customer }: { customer: CustomerData }) => {
             }}
           >
             <View style={styles.customerSummary}>
-              <Text
-                numberOfLines={1}
-                style={[styles.customerName, customer.inactive && { color: colors.textMuted }]}
-              >
-                {customer.name.length > 0 ? customer.name : 'Not Specified'}
-              </Text>
+              <View style={styles.nameRow}>
+                {customer.accountingId && <SvgImage fileName="qb-logo" width={20} height={20} />}
+                <Text
+                  numberOfLines={1}
+                  style={[styles.customerName, customer.inactive && { color: colors.textMuted }]}
+                >
+                  {customer.name.length > 0 ? customer.name : 'Not Specified'}
+                </Text>
+              </View>
               {customer.contactName ? (
                 <Text style={customer.inactive && { color: colors.textMuted }}>{customer.contactName}</Text>
               ) : null}
@@ -110,6 +114,11 @@ const styles = StyleSheet.create({
   customerName: {
     fontSize: 18,
     fontWeight: '600',
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   customerActions: {
     flexDirection: 'row',
