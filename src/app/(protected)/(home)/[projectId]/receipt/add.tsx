@@ -216,7 +216,7 @@ const AddReceiptPage = () => {
       date,
     }));
 
-    hideDatePicker();
+    setDatePickerVisible(false);
   }, []);
 
   const handleAmountChange = useCallback((amount: number) => {
@@ -295,7 +295,7 @@ const AddReceiptPage = () => {
       const hasLineItems = receiptLineItems.length > 0;
       const hasAmount = projectReceipt.amount > 0;
       const hasPaymentAccount = !!projectReceipt.paymentAccountId;
-      const hasVendorId = !!projectReceipt.vendorId;
+      const hasVendorId = !!qbVendorId;
 
       if (
         isQuickBooksAccessible &&
