@@ -121,23 +121,27 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     const checkQbConnection = async () => {
       if (!auth.isLoaded || !auth.isSignedIn) {
         console.log('Skipping QuickBooks check: auth not ready/signed in');
+        previousConnectedRef.current = false;
         setIsQuickBooksAccessible(false);
         return;
       }
 
       if (!orgId || !userId) {
         console.log('Skipping QuickBooks check: missing orgId/userId');
+        previousConnectedRef.current = false;
         setIsQuickBooksAccessible(false);
         return;
       }
 
       if (!isConnected || isInternetReachable === false) {
         console.log('Skipping QuickBooks check: offline');
+        previousConnectedRef.current = false;
         setIsQuickBooksAccessible(false);
         return;
       }
 
       if (!appSettings.id) {
+        previousConnectedRef.current = false;
         setIsQuickBooksAccessible(false);
         return;
       }
