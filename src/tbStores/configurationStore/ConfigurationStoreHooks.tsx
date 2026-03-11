@@ -132,6 +132,9 @@ export type CellIdMap = {
   [K in TableName]: keyof (typeof TABLES_SCHEMA)[K];
 };
 
+// --- Raw store access (e.g. for wrapping bulk mutations in a transaction) ---
+export const useConfigurationStore = () => useStore(useStoreId());
+
 // --- Retrieve all rows of a table ---
 export const useAllRows = <K extends keyof TableDataMap>(
   tableName: K,

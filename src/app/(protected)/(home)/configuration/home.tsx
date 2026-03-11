@@ -4,7 +4,7 @@ import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { Stack, useRouter } from 'expo-router';
 import { Paths, File } from 'expo-file-system';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { Pressable } from 'react-native-gesture-handler';
@@ -23,6 +23,7 @@ import {
   WorkItemDataCodeCompareAsNumber,
   CustomerDataCompareName,
   VendorDataCompareName,
+  useConfigurationStore,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { vendorsToCsv, csvToVendors, csvToCustomers } from '@/src/utils/csvUtils';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
@@ -58,11 +59,17 @@ const Home = () => {
     label: '',
   });
 
-  const startProcessing = useCallback(
-    (label: string) => setProcessingInfo({ isProcessing: true, label }),
-    [],
-  );
-  const stopProcessing = useCallback(() => setProcessingInfo({ isProcessing: false, label: '' }), []);
+  const isProcessingRef = useRef(false);
+  const startProcessing = useCallback((label: string) => {
+    console.log(`[Config] startProcessing: ${label}`);
+    isProcessingRef.current = true;
+    setProcessingInfo({ isProcessing: true, label });
+  }, []);
+  const stopProcessing = useCallback(() => {
+    console.log('[Config] stopProcessing');
+    isProcessingRef.current = false;
+    setProcessingInfo({ isProcessing: false, label: '' });
+  }, []);
   const router = useRouter();
   const colors = useColors();
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
@@ -81,6 +88,7 @@ const Home = () => {
   const allCustomers = useAllRows('customers', CustomerDataCompareName);
   const addCustomer = useAddRowCallback('customers');
   const updateCustomer = useUpdateRowCallback('customers');
+  const configStore = useConfigurationStore();
   const { isQuickBooksAccessible, isQuickBooksConnected: isQBConnected } = useNetwork();
   const auth = useAuth();
   const appSettings = useAppSettings();
@@ -376,22 +384,28 @@ const Home = () => {
               let addedCount = 0;
               let updatedCount = 0;
 
-              for (const vendor of importedVendors) {
-                const existing = allVendors.find((v) => {
-                  const nameMatch = v.name && vendor.name && v.name === vendor.name;
-                  const addressMatch = v.address && vendor.address && v.address === vendor.address;
-                  return nameMatch && addressMatch;
-                });
+              configStore?.startTransaction();
+              try {
+                for (const vendor of importedVendors) {
+                  const existing = allVendors.find((v) => {
+                    const nameMatch = v.name && vendor.name && v.name === vendor.name;
+                    const addressMatch = v.address && vendor.address && v.address === vendor.address;
+                    return nameMatch && addressMatch;
+                  });
 
-                if (existing) {
-                  updateVendor(existing.id, vendor);
-                  updatedCount++;
-                } else {
-                  addVendorToStore(vendor as VendorData);
-                  addedCount++;
+                  if (existing) {
+                    updateVendor(existing.id, vendor);
+                    updatedCount++;
+                  } else {
+                    addVendorToStore(vendor as VendorData);
+                    addedCount++;
+                  }
                 }
+              } finally {
+                configStore?.finishTransaction();
               }
 
+              console.log(`[CSV Import Vendors] Done — added ${addedCount}, updated ${updatedCount}`);
               Alert.alert(
                 'Import Complete',
                 `Vendors imported successfully.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
@@ -404,12 +418,16 @@ const Home = () => {
         },
       },
     ]);
-  }, [allVendors, addVendorToStore, updateVendor]);
+  }, [allVendors, addVendorToStore, updateVendor, configStore]);
 
   const handleGetQBVendors = useCallback(
     async (showAlert = true) => {
       if (!auth.orgId || !auth.userId) {
         Alert.alert('Error', 'Unable to import vendors. Please sign in again.');
+        return;
+      }
+      if (showAlert && isProcessingRef.current) {
+        console.warn('[QB Import Vendors] Skipped — already processing');
         return;
       }
 
@@ -422,6 +440,7 @@ const Home = () => {
           allVendors,
           addVendorToStore,
           deleteVendor,
+          configStore,
         );
 
         if (showAlert) {
@@ -446,6 +465,7 @@ const Home = () => {
       allVendors,
       addVendorToStore,
       deleteVendor,
+      configStore,
       startProcessing,
       stopProcessing,
     ],
@@ -455,6 +475,10 @@ const Home = () => {
     async (showAlert = true) => {
       if (!auth.orgId || !auth.userId) {
         Alert.alert('Error', 'Unable to import accounts. Please sign in again.');
+        return;
+      }
+      if (showAlert && isProcessingRef.current) {
+        console.warn('[QB Import Accounts] Skipped — already processing');
         return;
       }
 
@@ -467,6 +491,7 @@ const Home = () => {
           allAccounts,
           addAccount,
           deleteAccount,
+          configStore,
         );
 
         const sanitizedSettings = sanitizeQuickBooksAccountSettings(appSettings, accounts);
@@ -494,6 +519,7 @@ const Home = () => {
       allAccounts,
       addAccount,
       deleteAccount,
+      configStore,
       appSettings,
       setAppSettings,
       startProcessing,
@@ -507,6 +533,10 @@ const Home = () => {
         Alert.alert('Error', 'Unable to import customers. Please sign in again.');
         return;
       }
+      if (showAlert && isProcessingRef.current) {
+        console.warn('[QB Import Customers] Skipped — already processing');
+        return;
+      }
 
       startProcessing('Importing Customers from QuickBooks...');
       try {
@@ -517,6 +547,7 @@ const Home = () => {
           allCustomers,
           addCustomer,
           updateCustomer,
+          configStore,
         );
 
         if (showAlert) {
@@ -541,6 +572,7 @@ const Home = () => {
       allCustomers,
       addCustomer,
       updateCustomer,
+      configStore,
       startProcessing,
       stopProcessing,
     ],
@@ -568,20 +600,26 @@ const Home = () => {
               let addedCount = 0;
               let updatedCount = 0;
 
-              for (const c of importedCustomers) {
-                const existing = allCustomers.find(
-                  (ec) => ec.name && c.name && ec.name === c.name && (!c.email || ec.email === c.email),
-                );
+              configStore?.startTransaction();
+              try {
+                for (const c of importedCustomers) {
+                  const existing = allCustomers.find(
+                    (ec) => ec.name && c.name && ec.name === c.name && (!c.email || ec.email === c.email),
+                  );
 
-                if (existing) {
-                  updateCustomer(existing.id, c);
-                  updatedCount++;
-                } else {
-                  addCustomer({ id: '', accountingId: '', ...c });
-                  addedCount++;
+                  if (existing) {
+                    updateCustomer(existing.id, c);
+                    updatedCount++;
+                  } else {
+                    addCustomer({ id: '', accountingId: '', ...c });
+                    addedCount++;
+                  }
                 }
+              } finally {
+                configStore?.finishTransaction();
               }
 
+              console.log(`[CSV Import Customers] Done — added ${addedCount}, updated ${updatedCount}`);
               Alert.alert(
                 'Import Complete',
                 `Customers imported successfully.\nAdded: ${addedCount}\nUpdated: ${updatedCount}`,
@@ -594,7 +632,7 @@ const Home = () => {
         },
       },
     ]);
-  }, [allCustomers, addCustomer, updateCustomer]);
+  }, [allCustomers, addCustomer, updateCustomer, configStore]);
 
   const handleConnectToQuickBooks = useCallback(async () => {
     if (!auth.orgId || !auth.userId) {
