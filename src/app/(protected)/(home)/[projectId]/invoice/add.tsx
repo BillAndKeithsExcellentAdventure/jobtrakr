@@ -22,6 +22,7 @@ import {
   useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useAllMediaToUpload } from '@/src/tbStores/UploadSyncStore';
 import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
 import { addBill, AddBillRequest } from '@/src/utils/quickbooksAPI';
