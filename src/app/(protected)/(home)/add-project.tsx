@@ -163,7 +163,6 @@ const AddProjectScreen = () => {
         />
 
         <OptionPickerItem
-          containerStyle={{ backgroundColor: colors.neutral200, height: 36 }}
           optionLabel={pickedTemplate?.label}
           placeholder="Project Costs Template"
           editable={false}
