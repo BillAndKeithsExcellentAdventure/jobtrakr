@@ -268,8 +268,8 @@ const EditVendor = () => {
             <ActionButton
               style={styles.addQbButton}
               type="action"
-              title="Add Customer to QuickBooks"
-              onPress={handleAddCustomerToQuickBooks}
+              title="Add Vendor to QuickBooks"
+              onPress={handleAddVendorToQuickBooks}
             />
           </View>
         )}
