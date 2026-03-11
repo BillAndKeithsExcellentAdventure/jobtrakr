@@ -3,7 +3,7 @@ import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import { TextField } from '@/src/components/TextField';
 import { Text, View, TextInput } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import { CustomerData, useAddRowCallback } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { VendorData, useAddRowCallback } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAuth } from '@clerk/clerk-expo';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -11,78 +11,82 @@ import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Keyboard, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { useNetwork } from '../context/NetworkContext';
-import { addCustomer } from '../utils/quickbooksAPI';
+import { addVendor } from '../utils/quickbooksAPI';
 
-interface CustomerPickerProps {
+interface VendorPickerProps {
   style?: any;
-  selectedCustomer?: CustomerData;
-  onCustomerSelected: (customer: CustomerData) => void;
-  customers: CustomerData[];
+  selectedVendor?: VendorData;
+  onVendorSelected: (vendor: VendorData) => void;
+  vendors: VendorData[];
   label?: string;
   placeholder?: string;
 }
 
-export const CustomerPicker = ({
-  selectedCustomer,
-  onCustomerSelected,
-  customers,
+export const VendorPicker = ({
+  selectedVendor,
+  onVendorSelected,
+  vendors,
   label,
-  placeholder = 'Select a customer',
+  placeholder = 'Select a vendor',
   style = {},
-}: CustomerPickerProps) => {
+}: VendorPickerProps) => {
   const [isPickerVisible, setIsPickerVisible] = useState(false);
   const [searchText, setSearchText] = useState<string>('');
-  const [isAddCustomerModalVisible, setIsAddCustomerModalVisible] = useState(false);
-  const [isAddingCustomer, setIsAddingCustomer] = useState(false);
-  const [newCustomer, setNewCustomer] = useState<CustomerData>({
+  const [isAddVendorModalVisible, setIsAddVendorModalVisible] = useState(false);
+  const [isAddingVendor, setIsAddingVendor] = useState(false);
+  const [newVendor, setNewVendor] = useState<VendorData>({
     id: '',
     accountingId: '',
     name: '',
-    contactName: '',
-    email: '',
-    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: '',
+    mobilePhone: '',
+    businessPhone: '',
+    notes: '',
     inactive: false,
   });
   const colors = useColors();
-  const addCustomerToStore = useAddRowCallback('customers');
+  const addVendorToStore = useAddRowCallback('vendors');
   const { isQuickBooksAccessible } = useNetwork();
   const auth = useAuth();
   const { orgId, userId, getToken } = auth;
 
-  // Filter to only show active customers
-  const activeCustomers = useMemo(
-    () => customers.filter((c) => !c.inactive).sort((a, b) => a.name.localeCompare(b.name)),
-    [customers],
+  // Filter to only show active vendors
+  const activeVendors = useMemo(
+    () => vendors.filter((v) => !v.inactive).sort((a, b) => a.name.localeCompare(b.name)),
+    [vendors],
   );
 
   // Filter based on search text
-  const filteredCustomers = useMemo(() => {
+  const filteredVendors = useMemo(() => {
     if (!searchText.trim()) {
-      return activeCustomers;
+      return activeVendors;
     }
     const searchLower = searchText.toLowerCase();
-    return activeCustomers.filter(
-      (customer) =>
-        customer.name.toLowerCase().includes(searchLower) ||
-        customer.contactName?.toLowerCase().includes(searchLower) ||
-        customer.email?.toLowerCase().includes(searchLower),
+    return activeVendors.filter(
+      (vendor) =>
+        vendor.name.toLowerCase().includes(searchLower) ||
+        vendor.address?.toLowerCase().includes(searchLower) ||
+        vendor.notes?.toLowerCase().includes(searchLower),
     );
-  }, [activeCustomers, searchText]);
+  }, [activeVendors, searchText]);
 
-  const handleInputChange = useCallback((name: keyof CustomerData, value: string) => {
-    setNewCustomer((prev) => ({
+  const handleInputChange = useCallback((name: keyof VendorData, value: string) => {
+    setNewVendor((prev) => ({
       ...prev,
       [name]: value,
     }));
   }, []);
 
-  const handleAddCustomer = useCallback(async () => {
-    if (!newCustomer.name.trim()) {
-      Alert.alert('Error', 'Customer name is required');
+  const handleAddVendor = useCallback(async () => {
+    if (!newVendor.name.trim()) {
+      Alert.alert('Error', 'Vendor name is required');
       return;
     }
 
-    setIsAddingCustomer(true);
+    setIsAddingVendor(true);
     try {
       let accountingId = '';
 
@@ -92,77 +96,75 @@ export const CustomerPicker = ({
           return;
         }
 
-        const names = newCustomer.contactName.split(' ');
-        const firstName = names[0] || '';
-        const lastName = names.length > 1 ? names.slice(1).join(' ') : '';
-        const addQbCustomerResult = await addCustomer(
+        const addQbVendorResult = await addVendor(
           orgId,
           userId,
           {
-            displayName: newCustomer.name,
-            firstName: firstName,
-            lastName: lastName,
-            email: newCustomer.email,
-            phone: newCustomer.phone,
-            address: '',
-            address2: '',
-            city: '',
-            state: '',
-            zip: '',
+            name: newVendor.name,
+            mobilePhone: newVendor.mobilePhone || '',
+            address: newVendor.address || '',
+            city: newVendor.city || '',
+            state: newVendor.state || '',
+            zip: newVendor.zip || '',
+            notes: newVendor.notes || '',
           },
           getToken,
         );
 
-        if (!addQbCustomerResult || !addQbCustomerResult.success) {
+        if (!addQbVendorResult || !addQbVendorResult.success) {
           console.error(
-            'Failed to add customer to QuickBooks:',
-            addQbCustomerResult ? addQbCustomerResult.message : 'Unknown error',
+            'Failed to add vendor to QuickBooks:',
+            addQbVendorResult ? addQbVendorResult.message : 'Unknown error',
           );
           return;
         } else {
-          accountingId = addQbCustomerResult.newQBId ?? '';
+          accountingId = addQbVendorResult.newQBId ?? '';
         }
       }
 
-      const result = addCustomerToStore({ ...newCustomer, accountingId });
+      const result = addVendorToStore({ ...newVendor, accountingId });
 
       if (result && result.status !== 'Success') {
-        Alert.alert('Error', `Failed to add customer: ${result.msg}`);
+        Alert.alert('Error', `Failed to add vendor: ${result.msg}`);
         return;
       }
 
-      // The new customer was added, select it
-      const addedCustomer: CustomerData = {
-        ...newCustomer,
-        id: result.id || newCustomer.id,
+      // The new vendor was added, select it
+      const addedVendor: VendorData = {
+        ...newVendor,
+        id: result.id || newVendor.id,
       };
 
-      onCustomerSelected(addedCustomer);
+      onVendorSelected(addedVendor);
 
       // Reset state and close both modals
-      setNewCustomer({
+      setNewVendor({
         id: '',
         accountingId: '',
         name: '',
-        contactName: '',
-        email: '',
-        phone: '',
+        address: '',
+        city: '',
+        state: '',
+        zip: '',
+        mobilePhone: '',
+        businessPhone: '',
+        notes: '',
         inactive: false,
       });
       setSearchText('');
-      setIsAddCustomerModalVisible(false);
+      setIsAddVendorModalVisible(false);
     } finally {
-      setIsAddingCustomer(false);
+      setIsAddingVendor(false);
     }
-  }, [newCustomer, addCustomerToStore, onCustomerSelected, orgId, userId, getToken, isQuickBooksAccessible]);
+  }, [newVendor, addVendorToStore, onVendorSelected, orgId, userId, getToken, isQuickBooksAccessible]);
 
-  const handleCustomerSelect = useCallback(
-    (customer: CustomerData) => {
-      onCustomerSelected(customer);
+  const handleVendorSelect = useCallback(
+    (vendor: VendorData) => {
+      onVendorSelected(vendor);
       setIsPickerVisible(false);
       setSearchText('');
     },
-    [onCustomerSelected],
+    [onVendorSelected],
   );
 
   const toggleModalPicker = useCallback(() => {
@@ -170,14 +172,13 @@ export const CustomerPicker = ({
     setIsPickerVisible(true);
   }, []);
 
-  const displayText = selectedCustomer ? selectedCustomer.name : '';
+  const displayText = selectedVendor ? selectedVendor.name : '';
 
-  const handleAddCustomerPress = () => {
-    console.log('Add Customer Pressed');
+  const handleAddVendorPress = () => {
     setIsPickerVisible(false);
-    // delay opening the add customer modal to allow the first bottom sheet to close
+    // delay opening the add vendor modal to allow the first bottom sheet to close
     setTimeout(() => {
-      setIsAddCustomerModalVisible(true);
+      setIsAddVendorModalVisible(true);
     }, 300);
   };
 
@@ -206,7 +207,7 @@ export const CustomerPicker = ({
           setIsPickerVisible(false);
           setSearchText('');
         }}
-        title="Select Customer"
+        title="Select Vendor"
         modalHeight="75%"
       >
         <View style={{ flex: 1, backgroundColor: colors.listBackground }}>
@@ -242,7 +243,7 @@ export const CustomerPicker = ({
                       color: colors.text,
                     },
                   ]}
-                  placeholder="Search customers..."
+                  placeholder="Search vendors..."
                   placeholderTextColor={colors.textPlaceholder}
                   value={searchText}
                   onChangeText={setSearchText}
@@ -253,7 +254,7 @@ export const CustomerPicker = ({
                   <MaterialIcons name="clear" size={24} color={colors.iconColor} />
                 </Pressable>
               </View>
-              <Pressable onPress={handleAddCustomerPress}>
+              <Pressable onPress={handleAddVendorPress}>
                 <View
                   style={{
                     width: 48,
@@ -273,7 +274,7 @@ export const CustomerPicker = ({
 
           <FlatList
             showsVerticalScrollIndicator={Platform.OS === 'web'}
-            data={filteredCustomers}
+            data={filteredVendors}
             keyExtractor={(item) => item.id}
             keyboardShouldPersistTaps="handled"
             renderItem={({ item }) => (
@@ -285,17 +286,17 @@ export const CustomerPicker = ({
                     borderBottomColor: colors.separatorColor,
                     justifyContent: 'center',
                   },
-                  selectedCustomer?.id === item.id && {
+                  selectedVendor?.id === item.id && {
                     backgroundColor: colors.neutral200,
                   },
                 ]}
-                onPress={() => handleCustomerSelect(item)}
+                onPress={() => handleVendorSelect(item)}
               >
                 <View style={{ paddingHorizontal: 12, paddingVertical: 8 }}>
                   <Text
                     style={[
                       { fontWeight: 500, fontSize: 16 },
-                      selectedCustomer?.id === item.id && {
+                      selectedVendor?.id === item.id && {
                         fontWeight: 800,
                         fontSize: 16,
                       },
@@ -303,7 +304,7 @@ export const CustomerPicker = ({
                   >
                     {item.name}
                   </Text>
-                  {item.contactName ? (
+                  {item.address ? (
                     <Text
                       style={{
                         fontSize: 14,
@@ -311,7 +312,7 @@ export const CustomerPicker = ({
                         marginTop: 2,
                       }}
                     >
-                      {item.contactName}
+                      {item.address}
                     </Text>
                   ) : null}
                 </View>
@@ -319,7 +320,7 @@ export const CustomerPicker = ({
             )}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Text>No active customers found</Text>
+                <Text>No active vendors found</Text>
               </View>
             }
           />
@@ -328,62 +329,97 @@ export const CustomerPicker = ({
 
       <BottomSheetContainer
         keyboardVerticalOffset={100}
-        isVisible={isAddCustomerModalVisible}
+        isVisible={isAddVendorModalVisible}
         onClose={() => {
-          setIsAddCustomerModalVisible(false);
-          setNewCustomer({
+          setIsAddVendorModalVisible(false);
+          setNewVendor({
             id: '',
             accountingId: '',
             name: '',
-            contactName: '',
-            email: '',
-            phone: '',
+            address: '',
+            city: '',
+            state: '',
+            zip: '',
+            mobilePhone: '',
+            businessPhone: '',
+            notes: '',
             inactive: false,
           });
         }}
-        title="Add New Customer"
-        modalHeight="70%"
+        title="Add New Vendor"
+        modalHeight="80%"
       >
         <View style={{ padding: 15, gap: 10 }}>
           <TextInput
             style={[styles.input, { backgroundColor: colors.neutral200 }]}
-            placeholder="Customer Name"
-            value={newCustomer.name}
+            placeholder="Vendor Name"
+            value={newVendor.name}
             autoCapitalize="words"
             onChangeText={(text) => handleInputChange('name', text)}
           />
           <TextInput
             style={[styles.input, { backgroundColor: colors.neutral200 }]}
-            placeholder="Contact Name"
-            value={newCustomer.contactName}
+            placeholder="Address"
+            value={newVendor.address}
             autoCapitalize="words"
-            onChangeText={(text) => handleInputChange('contactName', text)}
+            onChangeText={(text) => handleInputChange('address', text)}
           />
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.neutral200, flex: 1 }]}
+              placeholder="City"
+              value={newVendor.city}
+              autoCapitalize="words"
+              onChangeText={(text) => handleInputChange('city', text)}
+            />
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.neutral200, width: 60 }]}
+              placeholder="State"
+              value={newVendor.state}
+              autoCapitalize="characters"
+              maxLength={2}
+              onChangeText={(text) => handleInputChange('state', text)}
+            />
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.neutral200, width: 90 }]}
+              placeholder="Zip"
+              value={newVendor.zip}
+              keyboardType="number-pad"
+              onChangeText={(text) => handleInputChange('zip', text)}
+            />
+          </View>
           <TextInput
             style={[styles.input, { backgroundColor: colors.neutral200 }]}
-            placeholder="Email"
-            value={newCustomer.email}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            onChangeText={(text) => handleInputChange('email', text)}
-          />
-          <TextInput
-            style={[styles.input, { backgroundColor: colors.neutral200 }]}
-            placeholder="Phone"
-            value={newCustomer.phone}
+            placeholder="Mobile Phone"
+            value={newVendor.mobilePhone}
             keyboardType="phone-pad"
-            onChangeText={(text) => handleInputChange('phone', text)}
+            onChangeText={(text) => handleInputChange('mobilePhone', text)}
           />
-          {isAddingCustomer ? (
+          <TextInput
+            style={[styles.input, { backgroundColor: colors.neutral200 }]}
+            placeholder="Business Phone"
+            value={newVendor.businessPhone}
+            keyboardType="phone-pad"
+            onChangeText={(text) => handleInputChange('businessPhone', text)}
+          />
+          <TextInput
+            style={[styles.input, { backgroundColor: colors.neutral200 }]}
+            placeholder="Notes"
+            value={newVendor.notes}
+            multiline
+            numberOfLines={2}
+            onChangeText={(text) => handleInputChange('notes', text)}
+          />
+          {isAddingVendor ? (
             <View style={{ alignItems: 'center', paddingVertical: 15 }}>
               <ActivityIndicator size="large" color={colors.tint} />
-              <Text style={{ marginTop: 10, fontSize: 16, fontWeight: '600' }}>Adding new customer...</Text>
+              <Text style={{ marginTop: 10, fontSize: 16, fontWeight: '600' }}>Adding new vendor...</Text>
             </View>
           ) : (
             <ActionButton
-              onPress={handleAddCustomer}
-              type={newCustomer.name.trim() ? 'action' : 'disabled'}
-              title="Add Customer"
+              onPress={handleAddVendor}
+              type={newVendor.name.trim() ? 'action' : 'disabled'}
+              title="Add Vendor"
               triggerBlurOnPress={false}
             />
           )}

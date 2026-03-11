@@ -37,6 +37,27 @@ import React, { useCallback, useEffect, useState, useMemo, useRef } from 'react'
 import { ActivityIndicator, Alert, Image, Keyboard, Modal, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
+const waitForImageUpload = (
+  imageId: string,
+  getLatestMedia: () => { itemId: string }[],
+  maxWaitMs = 60000,
+): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const startTime = Date.now();
+    const check = () => {
+      if (!getLatestMedia().some((item) => item.itemId === imageId)) {
+        resolve();
+        return;
+      }
+      if (Date.now() - startTime > maxWaitMs) {
+        reject(new Error(`Timed out waiting for image ${imageId} to finish uploading`));
+        return;
+      }
+      setTimeout(check, 2000);
+    };
+    check();
+  });
+
 const AddInvoicePage = () => {
   const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
   const { userId, orgId, getToken } = useAuth();
