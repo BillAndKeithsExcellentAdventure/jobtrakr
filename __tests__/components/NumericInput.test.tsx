@@ -166,13 +166,10 @@ describe('NumericInput', () => {
   });
 
   describe('blur formatting', () => {
-    it('formats the value to the specified number of decimal places on blur when the parent updates value', () => {
-      // The blur handler calls setText(value.toFixed(decimals)), but the useEffect that
-      // syncs value→text re-runs immediately afterwards (because text changed) and
-      // restores the string form of the prop value.  Formatting therefore only persists
-      // when the parent also rounds the value in its onChangeNumber handler.
-      // Here we verify the steady-state: after blur the displayed text matches the
-      // string representation of the parent's (unchanged) value.
+    it('formats the value to the specified number of decimal places on blur', () => {
+      // The blur handler calls setText(value.toFixed(decimals)) which formats the
+      // displayed text.  The sync useEffect depends on [value, parseEditableNumber],
+      // so it does NOT re-run when only text changes — the formatted text persists.
       const { getByTestId } = render(<ControlledNumericInput initialValue={3.14159} decimals={2} />, {
         wrapper,
       });
@@ -180,7 +177,7 @@ describe('NumericInput', () => {
 
       fireEvent(input, 'blur');
 
-      expect(input.props.value).toBe('3.14159');
+      expect(input.props.value).toBe('3.14');
     });
 
     it('does not change the displayed text on blur when decimals is not set', () => {

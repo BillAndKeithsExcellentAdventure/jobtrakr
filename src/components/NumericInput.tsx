@@ -104,7 +104,7 @@ export const NumericInput = forwardRef<NumericInputHandle, NumericInputProps>(fu
 
   // Treat incomplete edit states as non-numeric so they can remain visible while typing.
   const parseEditableNumber = useCallback((input: string): number | null => {
-    if (input === '' || input === '-' || input === '.' || input === '-.' || input.endsWith('.')) {
+    if (input === '' || input === '-') {
       return null;
     }
     const parsed = parseFloat(input);
