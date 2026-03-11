@@ -29,7 +29,7 @@ import { File } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ReceiptLineItem, useAddReceiptQueueEntryCallback } from '@/src/tbStores/ReceiptQueueStoreHooks';
@@ -64,7 +64,7 @@ const ReceiptDetailsPage = () => {
   const allVendors = useAllConfigurationRows('vendors');
   const addReceiptImage = useAddImageCallback();
   const appSettings = useAppSettings();
-  const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
+  const { isQuickBooksConnected } = useNetwork();
   const project = useProject(projectId);
   const projectAbbr = project?.abbreviation ?? '';
   const projectName = project?.name ?? '';

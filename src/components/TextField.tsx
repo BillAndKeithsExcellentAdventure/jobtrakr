@@ -1,240 +1,112 @@
-import { useColors } from '@/src/context/ColorsContext';
-import { ComponentType, forwardRef, Ref, useImperativeHandle, useRef } from 'react';
-import {
-  ImageStyle,
-  StyleProp,
-  StyleSheet,
-  TextInput,
-  TextInputProps,
-  TextStyle,
-  TouchableOpacity,
-  ViewStyle,
-} from 'react-native';
+import React, { forwardRef } from 'react';
+import { StyleSheet, TextInput as RNTextInput, TextInputProps, TextStyle, ViewStyle } from 'react-native';
 import { Text, TextProps, View } from './Themed';
+import { useColors } from '../context/ColorsContext';
 
-export interface TextFieldAccessoryProps {
-  style: StyleProp<ViewStyle | TextStyle | ImageStyle>;
-  status: TextFieldProps['status'];
-  multiline: boolean;
-  editable: boolean;
-}
+/** Imperative handle exposed via `ref` on {@link TextField}. */
+export type TextFieldHandle = RNTextInput;
 
-export interface TextFieldProps extends Omit<TextInputProps, 'ref'> {
+/**
+ * Props for the {@link TextField} component.
+ */
+export type TextFieldProps = {
   /**
-   * A style modifier for different input states.
-   */
-  status?: 'error' | 'disabled';
-  /**
-   * The label text to display above input.
+   * Optional label rendered above the input using the themed {@link Text} component.
+   * When omitted, no label is displayed.
    */
   label?: string;
   /**
-   * Pass any additional props directly to the label Text component.
+   * Override the label's text size. Defaults to `'xxs'`.
+   * Accepts any value supported by the themed `Text` component's `txtSize` prop.
    */
-  LabelTextProps?: TextProps;
+  labelTxtSize?: TextProps['txtSize'];
   /**
-   * The helper text to display below input.
+   * Additional styles merged into the label `Text` element.
+   * Useful for adjusting color, margin, etc.
    */
-  helper?: string;
+  labelStyle?: TextStyle;
   /**
-   * Pass any additional props directly to the helper Text component.
+   * Additional styles merged into the outer container `View`.
+   * Use this to control width, margin, padding, etc.
    */
-  HelperTextProps?: TextProps;
+  containerStyle?: ViewStyle;
   /**
-   * The placeholder text to display if not using `placeholderTx`.
+   * Additional styles merged into the {@link TextInput} element.
+   * Applied after the default input styles, so any property set here
+   * will override the built-in `borderWidth`, `borderRadius`, and padding.
+   *
+   * @example
+   * // Make the input full-width with a custom border color
+   * <TextField inputStyle={{ flex: 1, borderColor: 'blue' }} … />
    */
-  placeholder?: TextInputProps['placeholder'];
-  /**
-   * Optional placeholder options to pass to i18n. Useful for interpolation
-   * as well as explicitly setting locale or translation fallbacks.
-   */
-  style?: any;
-  /**
-   * Style overrides for the container
-   */
-  containerStyle?: StyleProp<ViewStyle>;
-  /**
-   * Style overrides for the input wrapper
-   */
-  inputWrapperStyle?: StyleProp<ViewStyle>;
-  /**
-   * An optional component to render on the right side of the input.
-   * Example: `RightAccessory={(props) => <Icon icon="ladybug" containerStyle={props.style} color={props.editable ? colors.textDim : colors.text} />}`
-   * Note: It is a good idea to memoize this.
-   */
-  RightAccessory?: ComponentType<TextFieldAccessoryProps>;
-  /**
-   * An optional component to render on the left side of the input.
-   * Example: `LeftAccessory={(props) => <Icon icon="ladybug" containerStyle={props.style} color={props.editable ? colors.textDim : colors.text} />}`
-   * Note: It is a good idea to memoize this.
-   */
-  LeftAccessory?: ComponentType<TextFieldAccessoryProps>;
-}
+  inputStyle?: TextStyle;
+} & TextInputProps;
 
 /**
- * A component that allows for the entering and editing of text.
- * @see [Documentation and Examples]{@link https://docs.infinite.red/ignite-cli/boilerplate/app/components/TextField/}
- * @param {TextFieldProps} props - The props for the `TextField` component.
- * @returns {JSX.Element} The rendered `TextField` component.
+ * A labelled text input field with automatic theming.
+ *
+ * - Renders an optional themed label above the input.
+ * - The label defaults to `txtSize='xxs'` and can be fully customized via
+ *   `labelTxtSize` and `labelStyle`.
+ * - The outer container style can be overridden via `containerStyle`.
+ * - The inner input style can be overridden via `inputStyle`.
+ * - Supports forwarding refs to the underlying React Native TextInput.
+ * - All other props are forwarded to the underlying TextInput.
+ *
+ * @example
+ * const [name, setName] = useState('');
+ *
+ * <TextField
+ *   label="Project Name"
+ *   value={name}
+ *   onChangeText={setName}
+ *   placeholder="Enter project name"
+ * />
  */
-export const TextField = forwardRef(function TextField(props: TextFieldProps, ref: Ref<TextInput>) {
-  const {
-    label,
-    placeholder,
-    helper,
-    status,
-    RightAccessory,
-    LeftAccessory,
-    HelperTextProps,
-    LabelTextProps,
-    style: $inputStyleOverride,
-    containerStyle: $containerStyleOverride,
-    inputWrapperStyle: $inputWrapperStyleOverride,
-    ...TextInputProps
-  } = props;
-  const input = useRef<TextInput>(null);
-
-  const disabled = TextInputProps.editable === false || status === 'disabled';
-
-  const placeholderContent = placeholder;
-
-  const $containerStyles = [$containerStyleOverride];
-
-  const $labelStyles = [styles.labelStyle, LabelTextProps?.style];
-
+export const TextField = forwardRef<TextFieldHandle, TextFieldProps>(function TextField(
+  { label, labelTxtSize = 'xxs', labelStyle, containerStyle, inputStyle, style, ...inputProps },
+  ref,
+) {
   const colors = useColors();
-  const $inputWrapperStyles = [
-    {
-      backgroundColor: colors.neutral200,
-      borderColor: colors.border,
-    },
-    styles.inputWrapperStyle,
-    status === 'error' && { borderColor: colors.error },
-    TextInputProps.multiline && { minHeight: 60 },
-    { paddingStart: LeftAccessory ? 4 : 0 },
-    { paddingEnd: RightAccessory ? 4 : 0 },
-    $inputWrapperStyleOverride,
-  ];
-
-  const inputStyles = [
-    {
-      color: colors.text,
-    },
-    styles.inputStyle,
-    disabled && { color: colors.textDim },
-    TextInputProps.multiline && { height: 'auto' },
-    $inputStyleOverride,
-  ];
-
-  const $helperStyles = [
-    styles.helperStyle,
-    status === 'error' && { color: colors.error },
-    HelperTextProps?.style,
-  ];
-
-  function focusInput() {
-    if (disabled) return;
-
-    input.current?.focus();
-  }
-
-  useImperativeHandle(ref, () => input.current as TextInput);
-
   return (
-    <TouchableOpacity
-      activeOpacity={1}
-      style={$containerStyles}
-      onPress={focusInput}
-      accessibilityState={{ disabled }}
-    >
-      {!!label && <Text txtSize="formLabel" text={label} style={$labelStyles} {...LabelTextProps} />}
-
-      <View style={$inputWrapperStyles}>
-        {!!LeftAccessory && (
-          <View
-            pointerEvents="none"
-            style={[(styles.leftAccessoryContainerStyle, { backgroundColor: colors.neutral200 })]}
-          >
-            <LeftAccessory
-              style={styles.leftAccessoryStyle}
-              status={status}
-              editable={!disabled}
-              multiline={TextInputProps.multiline ?? false}
-            />
-          </View>
-        )}
-
-        <TextInput
-          ref={input}
-          underlineColorAndroid={colors.transparent}
-          textAlignVertical="top"
-          placeholder={placeholderContent}
-          placeholderTextColor={colors.textDim}
-          autoCorrect={false}
-          {...TextInputProps}
-          editable={!disabled}
-          style={inputStyles}
-        />
-
-        {!!RightAccessory && (
-          <View
-            pointerEvents="none"
-            style={[styles.rightAccessoryContainerStyle, { backgroundColor: colors.neutral200 }]}
-          >
-            <RightAccessory
-              style={styles.rightAccessoryStyle}
-              status={status}
-              editable={!disabled}
-              multiline={TextInputProps.multiline ?? false}
-            />
-          </View>
-        )}
-      </View>
-
-      {!!helper && <Text txtSize="standard" text={helper} {...HelperTextProps} style={$helperStyles} />}
-    </TouchableOpacity>
+    <View style={[styles.container, containerStyle]}>
+      {label !== undefined && label !== '' && (
+        <Text txtSize={labelTxtSize} style={[styles.label, labelStyle]}>
+          {label}
+        </Text>
+      )}
+      <RNTextInput
+        ref={ref}
+        style={[
+          styles.input,
+          {
+            color: colors.text,
+            backgroundColor: colors.neutral200,
+            borderColor: colors.border,
+          },
+          inputStyle,
+          style,
+        ]}
+        placeholderTextColor={colors.placeHolder}
+        {...inputProps}
+      />
+    </View>
   );
 });
 
 const styles = StyleSheet.create({
-  labelStyle: { marginBottom: 4 },
-  inputWrapperStyle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderRadius: 4,
-    overflow: 'hidden',
-    paddingEnd: 8,
+  container: {
+    gap: 4,
+    backgroundColor: 'transparent',
   },
-  inputStyle: {
-    flex: 1,
-    alignSelf: 'stretch',
+  label: {
+    // intentionally minimal – callers override via labelStyle
+  },
+  input: {
     fontSize: 16,
-    // https://github.com/facebook/react-native/issues/21720#issuecomment-532642093
-    paddingVertical: 0,
-    paddingHorizontal: 0,
-    marginVertical: 4,
-    marginHorizontal: 10,
-  },
-  helperStyle: {
-    marginTop: 8,
-  },
-
-  rightAccessoryContainerStyle: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  rightAccessoryStyle: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  leftAccessoryContainerStyle: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  leftAccessoryStyle: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
   },
 });

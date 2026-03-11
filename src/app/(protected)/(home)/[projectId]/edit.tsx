@@ -1,7 +1,7 @@
 import { CustomerPicker } from '@/src/components/CustomerPicker';
+import { TextField } from '@/src/components/TextField';
 import { NumericInputField } from '@/src/components/NumericInputField';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
-import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';

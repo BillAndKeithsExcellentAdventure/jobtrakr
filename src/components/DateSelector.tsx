@@ -3,7 +3,7 @@ import { formatDate } from '@/src/utils/formatters';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useCallback, useState } from 'react';
 import { Platform, StyleSheet, TouchableOpacity } from 'react-native';
-import { TextField } from './TextField';
+import { TextField } from './TextField_old';
 import { Text, View } from './Themed';
 
 export const DateSelector = ({
@@ -23,13 +23,16 @@ export const DateSelector = ({
 
   const colors = useColors();
 
-  const handleDateChange = useCallback((event: any, selectedDate: Date | undefined) => {
-    if (Platform.OS !== 'ios') setShowDatePicker(false);
+  const handleDateChange = useCallback(
+    (event: any, selectedDate: Date | undefined) => {
+      if (Platform.OS !== 'ios') setShowDatePicker(false);
 
-    if (selectedDate) {
-      setSelectedDate(selectedDate);
-    }
-  }, [setSelectedDate]);
+      if (selectedDate) {
+        setSelectedDate(selectedDate);
+      }
+    },
+    [setSelectedDate],
+  );
 
   return (
     <View style={[styles.input, { flexDirection: 'row' }]}>
@@ -78,5 +81,4 @@ const styles = StyleSheet.create({
   dateButtonText: {
     color: 'white',
   },
-
 });

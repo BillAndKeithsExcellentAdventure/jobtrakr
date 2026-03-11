@@ -18,7 +18,7 @@ import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '../constants/app-constants';
 import { useNetwork } from '../context/NetworkContext';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
-import { TextField } from './TextField';
+import { TextField } from './TextField_old';
 import { VendorPicker } from './VendorPicker';
 
 interface ReceiptSummaryEditModalProps {
