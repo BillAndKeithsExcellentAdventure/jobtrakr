@@ -46,6 +46,7 @@ export const VendorPicker = ({
     businessPhone: '',
     notes: '',
     inactive: false,
+    matchCompareString: '',
   });
   const colors = useColors();
   const addVendorToStore = useAddRowCallback('vendors');
@@ -153,6 +154,7 @@ export const VendorPicker = ({
         businessPhone: '',
         notes: '',
         inactive: false,
+        matchCompareString: '',
       });
       setSearchText('');
       setIsAddVendorModalVisible(false);

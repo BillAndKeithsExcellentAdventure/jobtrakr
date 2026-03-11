@@ -48,6 +48,7 @@ const EditVendor = () => {
     notes: '',
     accountingId: '',
     inactive: false,
+    matchCompareString: '',
   });
 
   const vendorFromStore = useTypedRow('vendors', id);
@@ -196,6 +197,13 @@ const EditVendor = () => {
           numberOfLines={2}
           multiline
           onChangeText={(text) => handleInputChange('name', text)}
+          onBlur={handleBlur}
+        />
+        <TextInput
+          style={[styles.input, { backgroundColor: colors.neutral200 }]}
+          placeholder="Match Pattern (e.g. home?depot or home*depot)"
+          value={updatedVendor.matchCompareString}
+          onChangeText={(text) => handleInputChange('matchCompareString', text)}
           onBlur={handleBlur}
         />
         <TextInput

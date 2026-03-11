@@ -44,7 +44,6 @@ export const DateSelector = ({
               placeholder={label}
               label={label}
               editable={false}
-              inputWrapperStyle={{ borderColor: colors.transparent, alignSelf: 'stretch' }}
               style={{ borderColor: colors.transparent, alignSelf: 'stretch' }}
             />
           </View>

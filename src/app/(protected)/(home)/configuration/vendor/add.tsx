@@ -42,6 +42,7 @@ const AddVendorModal = () => {
     businessPhone: '',
     notes: '',
     inactive: false,
+    matchCompareString: '',
   });
 
   const handleInputChange = useCallback((name: keyof VendorData, value: string) => {
@@ -138,6 +139,12 @@ const AddVendorModal = () => {
           placeholder="Vendor/Merchant Name"
           value={vendor.name}
           onChangeText={(text) => handleInputChange('name', text)}
+        />
+        <TextInput
+          style={[styles.input, { backgroundColor: colors.neutral200 }]}
+          placeholder="Match Pattern (e.g. home?depot or home*depot)"
+          value={vendor.matchCompareString}
+          onChangeText={(text) => handleInputChange('matchCompareString', text)}
         />
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}

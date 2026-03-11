@@ -1,7 +1,7 @@
 import { NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { TABLES_SCHEMA, useStoreId } from './ConfigurationStore';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import { CrudResult } from '@/src/models/types';
 import { exportTinyBaseStore, importFromJson } from '@/src/utils/tinybase-json';
@@ -49,6 +49,8 @@ export interface VendorData {
   businessPhone?: string;
   notes?: string;
   inactive?: boolean;
+  matchCompareString?: string; // string used when processing receipt/invoice photo to determine if the vendor returned from processing is this vendor.
+  // e.g. home*depot could be used to match 'Home.Depot' or 'Home...Depot', while 'home?depot' would match 'Home Depot' or 'Home.Depot'
 }
 
 export interface CustomerData {
@@ -514,4 +516,54 @@ export function useCreateTemplateWithAllWorkItemsCallback() {
     },
     [store, addRow],
   );
+}
+
+/**
+ * Converts a matchCompareString pattern into a RegExp.
+ * '?' matches any single character, '*' matches any number of characters.
+ * The pattern is searched for anywhere within the target string (not anchored).
+ */
+function matchPatternToRegExp(pattern: string): RegExp {
+  const escaped = pattern.replace(/[-\\^$+.()|[\]{}]/g, '\\$&');
+  const withWildcards = escaped.replace(/\?/g, '.').replace(/\*/g, '.*');
+  return new RegExp(withWildcards, 'i');
+}
+
+/**
+ * Hook that provides all vendors and a callback to find the first vendor
+ * whose matchCompareString pattern matches the given vendor name.
+ * @param requireAccountingId When true, only vendors with an accountingId and not inactive are included.
+ */
+export function useVendorMatch(requireAccountingId = false) {
+  const allVendors = useAllRows('vendors', VendorDataCompareName);
+
+  const vendors = useMemo(
+    () => (requireAccountingId ? allVendors.filter((v) => !!v.accountingId && !v.inactive) : allVendors),
+    [allVendors, requireAccountingId],
+  );
+
+  const vendorPatternsWithMatch = useMemo(
+    () =>
+      vendors
+        .filter((v) => !!v.matchCompareString)
+        .map((v) => ({ vendor: v, regex: matchPatternToRegExp(v.matchCompareString!) })),
+    [vendors],
+  );
+
+  const vendorsWithoutMatch = useMemo(() => vendors.filter((v) => !v.matchCompareString), [vendors]);
+
+  const findFirstVendorMatch = useCallback(
+    (vendorName: string): VendorData | undefined => {
+      if (!vendorName) return undefined;
+      // Pass 1: check vendors with an explicit matchCompareString pattern
+      const patternMatch = vendorPatternsWithMatch.find(({ regex }) => regex.test(vendorName))?.vendor;
+      if (patternMatch) return patternMatch;
+      // Pass 2: case-insensitive substring search against vendor.name
+      const lowerName = vendorName.toLowerCase();
+      return vendorsWithoutMatch.find((v) => lowerName.includes(v.name.toLowerCase()));
+    },
+    [vendorPatternsWithMatch, vendorsWithoutMatch],
+  );
+
+  return { vendors, findFirstVendorMatch };
 }

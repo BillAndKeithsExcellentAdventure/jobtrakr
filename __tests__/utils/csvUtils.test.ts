@@ -19,6 +19,7 @@ describe('csvUtils', () => {
           mobilePhone: '555-0101',
           businessPhone: '555-0102',
           notes: 'Test vendor',
+          matchCompareString: '',
         },
         {
           id: '2',
@@ -31,12 +32,13 @@ describe('csvUtils', () => {
           mobilePhone: '555-0201',
           businessPhone: '555-0202',
           notes: 'Another vendor',
+          matchCompareString: '',
         },
       ];
 
       const csv = vendorsToCsv(vendors);
       const lines = csv.split('\n');
-      
+
       expect(lines).toHaveLength(3); // header + 2 data rows
       expect(lines[0]).toBe('name,address,city,state,zip,mobilePhone,businessPhone,notes');
       expect(lines[1]).toContain('Vendor One');
@@ -56,6 +58,7 @@ describe('csvUtils', () => {
           mobilePhone: '555-0101',
           businessPhone: '555-0102',
           notes: 'Test vendor',
+          matchCompareString: '',
         },
       ];
 
@@ -76,6 +79,7 @@ describe('csvUtils', () => {
           mobilePhone: '555-0101',
           businessPhone: '555-0102',
           notes: 'Test vendor',
+          matchCompareString: '',
         },
       ];
 
@@ -96,6 +100,7 @@ describe('csvUtils', () => {
           mobilePhone: '555-0101',
           businessPhone: '555-0102',
           notes: 'Test\nvendor',
+          matchCompareString: '',
         },
       ];
 
@@ -122,12 +127,13 @@ describe('csvUtils', () => {
           mobilePhone: '',
           businessPhone: '',
           notes: '',
+          matchCompareString: '',
         },
       ];
 
       const csv = vendorsToCsv(vendors);
       const lines = csv.split('\n');
-      
+
       expect(lines).toHaveLength(2); // header + 1 data row
       expect(lines[1]).toContain('Vendor One');
     });
@@ -145,6 +151,7 @@ describe('csvUtils', () => {
           mobilePhone: '555-0101',
           businessPhone: '555-0102',
           notes: 'Test vendor',
+          matchCompareString: '',
         },
       ];
 

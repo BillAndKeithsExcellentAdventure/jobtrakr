@@ -16,6 +16,8 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/formatters';
 import { createApiWithToken } from '@/src/utils/apiWithToken';
+import { useVendorMatch } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useNetwork } from '@/src/context/NetworkContext';
 import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
@@ -82,6 +84,8 @@ const RequestAIProcessingPage = () => {
   const invoice = useTypedRow(projectId, 'invoices', invoiceId);
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
+  const { isQuickBooksConnected } = useNetwork();
+  const { findFirstVendorMatch } = useVendorMatch(isQuickBooksConnected);
 
   const fetchAIResult = useCallback(async () => {
     try {
@@ -97,10 +101,14 @@ const RequestAIProcessingPage = () => {
         return;
       }
 
+      // try to find a vendor
+      const vendorNameFromAI = replaceNonPrintable(result.response?.VendorName?.value ?? '');
+      const vendorMatch = findFirstVendorMatch(vendorNameFromAI);
+
       const summary = {
         invoiceId: replaceNonPrintable(result.response?.InvoiceId?.value ?? ''),
-        vendor: replaceNonPrintable(result.response?.VendorName?.value ?? ''),
-        vendorId: '',
+        vendor: vendorMatch ? vendorMatch.name : vendorNameFromAI,
+        vendorId: vendorMatch ? vendorMatch.id : '',
         invoiceDate: Date.parse(result.response?.InvoiceDate?.value ?? ''),
         dueDate: Date.parse(result.response?.DueDate?.value ?? ''),
         totalAmount: Number.parseFloat(result.response?.Total?.value ?? '0'),
@@ -135,7 +143,7 @@ const RequestAIProcessingPage = () => {
     } finally {
       setFetchingData(false);
     }
-  }, [imageId, projectId, userId, orgId, auth.getToken]);
+  }, [imageId, projectId, userId, orgId, auth.getToken, findFirstVendorMatch]);
 
   useEffect(() => {
     // reset fetch flag when navigating to a different invoice image
@@ -313,7 +321,7 @@ const RequestAIProcessingPage = () => {
     // Proceed with saving cost items
     const invoiceResult = updateInvoice(invoiceId, updatedInvoice);
     if (invoiceResult.status !== 'Success') {
-      alert('Error updating Invoice with summary info.');
+      alert('Error updating Bill with summary info.');
       return;
     }
 
@@ -393,7 +401,7 @@ const RequestAIProcessingPage = () => {
           <View style={{ width: '100%', gap: 20, padding: 10, alignItems: 'center' }}>
             <ActivityIndicator size="large" />
             <Text txtSize="sub-title">
-              Working on extracting data from invoice image, this shouldn&apos;t take long.
+              Working on extracting data from bill image, this should not take long.
             </Text>
           </View>
         ) : (

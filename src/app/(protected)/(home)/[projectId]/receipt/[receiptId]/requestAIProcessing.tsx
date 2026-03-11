@@ -23,6 +23,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { useVendorMatch } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useNetwork } from '@/src/context/NetworkContext';
 
 const processAIProcessing = async (
   imageId: string,
@@ -88,9 +90,12 @@ const RequestAIProcessingPage = () => {
     [allProjects],
   );
   const defaultProjectOption = projectPickerOptions.find((option) => option.value === projectId);
+  const { isQuickBooksConnected } = useNetwork();
   const [lineItemProjectOption, setLineItemProjectOption] = useState<OptionEntry | undefined>(
     defaultProjectOption,
   );
+
+  const { findFirstVendorMatch } = useVendorMatch(isQuickBooksConnected);
 
   useEffect(() => {
     if (defaultProjectOption) {
@@ -122,9 +127,13 @@ const RequestAIProcessingPage = () => {
         return;
       }
 
+      // try to find a vendor
+      const vendorNameFromAI = replaceNonPrintable(result.response.MerchantName?.value);
+      const vendorMatch = findFirstVendorMatch(vendorNameFromAI);
+
       const summary = {
-        vendor: replaceNonPrintable(result.response.MerchantName.value),
-        vendorId: '', // AI does not provide vendorId, it can be set by user in edit modal
+        vendor: vendorMatch ? vendorMatch.name : vendorNameFromAI,
+        vendorId: vendorMatch ? vendorMatch.id : '',
         receiptDate: Date.parse(result.response.TransactionDate.value),
         totalAmount: Number.parseFloat(result.response.Total.value),
         totalTax: Number.parseFloat(result.response.TotalTax.value),
@@ -157,13 +166,13 @@ const RequestAIProcessingPage = () => {
     } finally {
       setFetchingData(false);
     }
-  }, [imageId, projectId, userId, orgId, auth.getToken]);
+  }, [imageId, projectId, userId, orgId, auth.getToken, findFirstVendorMatch]);
 
   useEffect(() => {
     // reset fetch flag when navigating to a different receipt image
     hasFetched.current = false;
     setFetchingData(true);
-  }, [imageId, projectId]);
+  }, [imageId, projectId, receiptId]);
 
   useEffect(() => {
     if (hasFetched.current) return;
