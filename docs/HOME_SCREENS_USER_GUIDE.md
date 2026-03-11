@@ -65,6 +65,7 @@ After email verification, you must create an organization. An organization is yo
    - You're redirected to the Projects Home Screen to begin setup
 
 **Important Notes:**
+
 - Organization names should be unique and descriptive
 - You are the owner and first administrator of the organization
 - Only organization administrators can invite other users and manage team roles
@@ -99,6 +100,7 @@ The Projects Home Screen is the main landing page when you open ProjectHound. It
 ### Screen Layout
 
 **When you have no projects yet:**
+
 - A welcome message appears: "Welcome to ProjectHound!"
 - You'll see options to either import default cost codes or set up your own configuration
 - Two buttons are available:
@@ -106,6 +108,7 @@ The Projects Home Screen is the main landing page when you open ProjectHound. It
   - **Go To Configuration** - Takes you to the Configuration screen to set up custom codes
 
 **When you have projects:**
+
 - Projects are displayed in a scrollable grid layout
 - Each project card shows:
   - Project thumbnail image (if set)
@@ -121,7 +124,7 @@ The Projects Home Screen is the main landing page when you open ProjectHound. It
 
 Each project card has a button bar at the bottom with six quick action buttons:
 
-1. **Like (Heart Icon)** 
+1. **Like (Heart Icon)**
    - Tap to mark/unmark a project as a favorite
    - Favorited projects are automatically tracked for quick access
    - The heart icon fills in when a project is favorited
@@ -158,6 +161,7 @@ Each project card has a button bar at the bottom with six quick action buttons:
 ### Opening a Project
 
 To view full project details:
+
 - Tap anywhere on a project card (outside the action buttons)
 - This opens the detailed project view with complete budget tracking and cost item breakdowns
 
@@ -166,14 +170,17 @@ To view full project details:
 Tap the **menu icon** (three horizontal lines) in the top-right corner to access:
 
 #### Always Available:
+
 - **Company Settings** - Edit company name, address, logo, and contact information
 - **Configuration** - Navigate to the Configuration Home Screen
 - **Logout** - Sign out of the application
 
 #### When Projects Exist:
+
 - **Add Project** - Create a new project (only appears after initial configuration is complete)
 
 #### For Organization Admins:
+
 - **Manage Team** - Invite team members and manage user roles (only visible to organization administrators)
 
 ## Add Project
@@ -190,10 +197,12 @@ Note: This option only appears after you've set up at least one cost category in
 ### Project Information Fields
 
 **Required Fields:**
+
 - **Project Name** - The name of the project
 - **Project Template** - Select which template to use for seeding cost items
 
 **Optional Fields:**
+
 - **Location** - Street address or description
 - **Owner Name** - Client or property owner name
 - **Owner Contact Information:**
@@ -209,6 +218,7 @@ Note: This option only appears after you've set up at least one cost category in
 ### Project Templates
 
 Templates define which cost items are included in a project. When you select a template:
+
 - All associated cost items are automatically added to the project
 - Each cost item includes the cost code, description, and bid amount
 - You can modify these after project creation
@@ -228,15 +238,18 @@ The Configuration Home Screen is your central hub for managing the building bloc
 ### Accessing Configuration
 
 **From the Projects Home Screen:**
+
 1. Tap the **menu icon** (three lines) in the top-right
 2. Select **Configuration**
 
 **From the welcome screen (first time setup):**
+
 - Tap **Go To Configuration** button
 
 ### Screen Layout
 
 The Configuration screen displays:
+
 - App version number at the top
 - Four main configuration sections (detailed below)
 - A menu icon in the top-right for import/export operations
@@ -248,6 +261,7 @@ The Configuration screen displays:
 **Purpose:** Define the major cost categories for tracking project costs (e.g., Foundation, Framing, Electrical, Plumbing).
 
 **What you can do:**
+
 - View all cost categories
 - Add new categories with custom codes and names
 - Edit existing categories
@@ -261,6 +275,7 @@ The Configuration screen displays:
 **Purpose:** Create reusable templates that define which cost items are included in different types of projects.
 
 **What you can do:**
+
 - View all project templates
 - Create new templates
 - Add/remove cost items from templates
@@ -269,37 +284,40 @@ The Configuration screen displays:
 
 **Accessing:** Tap **Project Templates** → "Define Project-specific Cost Items"
 
-#### 3. Vendors/Merchants
+#### 3. Vendors
 
 **Purpose:** Maintain a list of vendors where you purchase materials (e.g., hardware stores, lumber yards, material suppliers).
 
 **What you can do:**
+
 - Add new vendors with contact information
 - Edit vendor details (name, address, phone, notes)
 - Import vendors from CSV files
 - Export vendors to CSV files
 - Associate vendors with receipts
 
-**Accessing:** Tap **Vendors/Merchants** → "Add and Edit Vendors/Merchants"
+**Accessing:** Tap **Vendors** → "Add and Edit Vendors"
 
-#### 4. Vendors/Merchants
+#### 4. Vendors
 
 **Purpose:** Maintain a list of suppliers and subcontractors who provide services (e.g., electricians, plumbers, HVAC contractors).
 
 **What you can do:**
+
 - Add new suppliers with contact information
 - Edit supplier details (name, address, phone, notes)
 - Import suppliers from CSV files
 - Export suppliers to CSV files
 - Associate suppliers with invoices
 
-**Accessing:** Tap **Vendors/Merchants** → "Add and Edit Vendors/Merchants"
+**Accessing:** Tap **Vendors** → "Add and Edit Vendors"
 
 ### Configuration Menu (Top-Right)
 
 Tap the **menu icon** (three horizontal lines) in the top-right to access data management tools:
 
 #### When Configuration Data Exists:
+
 - **Export Configuration Data** - Export all categories, cost items, and templates to a JSON file
 - **Export Vendors** - Export all vendor data to a CSV file (only appears when vendors exist)
 - **Import Vendors** - Import vendors from a CSV file
@@ -307,6 +325,7 @@ Tap the **menu icon** (three horizontal lines) in the top-right to access data m
 - **Import Suppliers** - Import suppliers from a CSV file
 
 #### When No Configuration Data Exists:
+
 - **Import Configuration Data** - Import categories, cost items, and templates from a JSON file
 
 See the [Vendor and Supplier CSV Import/Export documentation](VENDOR_SUPPLIER_CSV_IMPORT_EXPORT.md) for detailed information on CSV import/export.
@@ -346,6 +365,7 @@ Manage your company information that appears on change orders and other generate
 ### Available Settings
 
 **Company Information:**
+
 - **Company Name** - Your business name
 - **Address** - Street address (multi-line)
 - **City** - City name
@@ -356,6 +376,7 @@ Manage your company information that appears on change orders and other generate
 - **Website** - Company website URL
 
 **Branding:**
+
 - **Company Logo** - Upload a logo image from your device
   - Tap the image area to select a photo
   - Image is automatically resized to 200px height
@@ -379,10 +400,12 @@ Invite team members to collaborate on projects and manage user roles within your
 ### Accessing Team Management
 
 **Prerequisites:**
+
 - You must be an organization administrator
 - The feature only appears if you have admin permissions
 
 **To access:**
+
 1. From the Projects Home Screen, tap the **menu icon** (three lines)
 2. Select **Manage Team**
 
@@ -419,6 +442,7 @@ The invited user receives an email with instructions to join your organization. 
 4. **Access organization data** - They can now view and work on organization projects
 
 **Important Notes:**
+
 - Invited users start as regular members (not administrators)
 - You can promote members to administrators after they join
 - Invitations are sent via email through the Clerk authentication system
@@ -428,6 +452,7 @@ The invited user receives an email with instructions to join your organization. 
 ### Managing Existing Members
 
 The screen displays a list of all current organization members, showing:
+
 - User name
 - Email address
 - Current role (Member or Admin)
@@ -436,6 +461,7 @@ The screen displays a list of all current organization members, showing:
 ### Changing Member Roles
 
 **To promote a member to admin:**
+
 1. Find the member in the list
 2. Tap **Make Admin** button next to their name
 3. Confirm the action
@@ -443,12 +469,14 @@ The screen displays a list of all current organization members, showing:
 5. They gain access to admin features like Team Management
 
 **To remove admin privileges:**
+
 1. Find the admin in the list
 2. Tap **Remove Admin** button
 3. Confirm the action
 4. The user's role reverts to regular member ("org:member")
 
 **Important Notes:**
+
 - You cannot remove your own admin status if you're the last admin
 - At least one admin must remain in the organization
 - Role changes take effect immediately
@@ -456,6 +484,7 @@ The screen displays a list of all current organization members, showing:
 ### Member Removal
 
 **To remove a member from the organization:**
+
 1. Find the member in the list
 2. Tap **Remove** button next to their name
 3. Confirm the removal
@@ -463,6 +492,7 @@ The screen displays a list of all current organization members, showing:
 5. They lose access to all organization projects and data
 
 **Restrictions:**
+
 - You cannot remove yourself from the organization
 - Organization owners (the person who created the organization) cannot be removed
 
@@ -471,16 +501,19 @@ The screen displays a list of all current organization members, showing:
 ### Common Navigation Flows
 
 **From Projects to Configuration:**
+
 1. Projects Home → Menu → Configuration
 2. Make configuration changes
 3. Back button → Returns to Projects Home
 
 **Adding a Project:**
+
 1. Projects Home → Menu → Add Project
 2. Fill in project details
 3. Tap Create Project → Returns to Projects Home with new project visible
 
 **Managing Data:**
+
 1. Projects Home → Menu → Configuration
 2. Configuration Home → Menu → Export/Import options
 3. Select desired operation
@@ -490,6 +523,7 @@ The screen displays a list of all current organization members, showing:
 ### Back Button Behavior
 
 The back button in the top-left corner:
+
 - Saves any pending changes (auto-save)
 - Returns to the previous screen
 - Follows the navigation history
@@ -497,6 +531,7 @@ The back button in the top-left corner:
 ### Bottom Tab Navigation
 
 When viewing projects, you may see tabs at the bottom for:
+
 - Projects (home)
 - Other views (depending on app configuration)
 
@@ -505,6 +540,7 @@ When viewing projects, you may see tabs at the bottom for:
 ### First Time Load
 
 When opening the app for the first time:
+
 1. "Loading..." appears briefly
 2. If no configuration exists: Welcome screen with import/setup options
 3. If configuration exists: Projects Home Screen loads
@@ -512,6 +548,7 @@ When opening the app for the first time:
 ### Configuration Check
 
 The app verifies minimum configuration requirements:
+
 - At least one cost category must exist with cost items added to it
 - At least one project template must exist
 - If requirements aren't met, the welcome screen appears
@@ -519,6 +556,7 @@ The app verifies minimum configuration requirements:
 ### Data Synchronization
 
 The app automatically synchronizes data:
+
 - Real-time sync across multiple devices
 - Offline changes sync when connection returns
 - Loading indicator appears during heavy sync operations
@@ -526,27 +564,32 @@ The app automatically synchronizes data:
 ## Tips and Best Practices
 
 ### Getting Started
+
 1. Start with importing default categories if you're building homes
 2. Review and customize the imported categories to match your needs
 3. Create 2-3 project templates for your common project types
 4. Add your most-used vendors and suppliers before creating projects
 
 ### Project Organization
+
 1. Use favorites (heart icon) for active projects you check frequently
 2. Set project thumbnails from the Photos screen to make projects easier to identify
 3. Keep owner contact information complete for easy reference
 
 ### Configuration Management
+
 1. Export your configuration after initial setup as a backup
 2. Use templates to maintain consistency across similar projects
 3. Regularly review and clean up unused cost items and categories
 
 ### Team Collaboration
+
 1. Invite team members early so they can access project data
 2. Give admin role to trusted team leads who need to manage users
 3. Keep the member list current by removing users who leave
 
 ### Data Management
+
 1. Export vendors and suppliers periodically as backup
 2. Use CSV import to bulk-add vendors/suppliers from other systems
 3. Export configuration data before making major changes
@@ -558,6 +601,7 @@ The app automatically synchronizes data:
 **Cause:** No minimum configuration exists yet
 
 **Solution:**
+
 1. Tap **Import Defaults** to use pre-configured categories, OR
 2. Tap **Go To Configuration** to set up custom categories and templates
 
@@ -566,6 +610,7 @@ The app automatically synchronizes data:
 **Cause:** Configuration requirements not met
 
 **Solution:**
+
 1. Navigate to Configuration
 2. Add at least one cost category
 3. Create at least one project template
@@ -576,6 +621,7 @@ The app automatically synchronizes data:
 **Cause:** You're not an organization admin
 
 **Solution:**
+
 - Ask your organization administrator to promote you to admin role
 - This option is only visible to users with admin permissions
 
@@ -584,6 +630,7 @@ The app automatically synchronizes data:
 **Cause:** Menu options are contextual based on existing data
 
 **Solution:**
+
 - Export options only appear when data exists to export
 - Add some data first (categories, vendors, suppliers)
 - The export options will then appear
@@ -593,6 +640,7 @@ The app automatically synchronizes data:
 **Cause:** Navigation before blur/save completes
 
 **Note:** The app uses auto-save - changes save automatically when you:
+
 - Tap outside a field
 - Press the back button
 - Navigate to another screen
@@ -608,6 +656,7 @@ If changes seem lost, ensure you tap outside input fields before navigating.
 ## Summary
 
 The home screens in ProjectHound serve as your command center:
+
 - **Projects Home** manages all your projects with quick access to details, notes, media, receipts, invoices, and changes
 - **Configuration Home** manages the foundational data (categories, templates, vendors, suppliers)
 - **Company Settings** maintains your business information for documents

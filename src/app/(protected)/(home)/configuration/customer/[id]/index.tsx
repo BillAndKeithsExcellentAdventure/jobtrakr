@@ -288,7 +288,7 @@ const EditCustomer = () => {
               <ActionButton
                 style={styles.linkButton}
                 type="action"
-                title="Link to QB Customer"
+                title="Link to QuickBooks Customer"
                 onPress={() => setIsLinkCustomerPickerVisible(true)}
               />
               <ActionButton

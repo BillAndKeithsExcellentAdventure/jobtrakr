@@ -44,7 +44,7 @@ const VendorsScreen = () => {
         <Stack.Screen
           options={{
             headerShown: true,
-            title: 'Vendors/Merchants',
+            title: 'Vendors',
             headerRight: renderHeaderRight,
             headerBackTitle: '',
             headerBackButtonDisplayMode: 'minimal',

@@ -471,14 +471,14 @@ const Home = () => {
     ],
   );
 
-  const handleImportQBAccounts = useCallback(
+  const handleGetQBAccounts = useCallback(
     async (showAlert = true) => {
       if (!auth.orgId || !auth.userId) {
-        Alert.alert('Error', 'Unable to import accounts. Please sign in again.');
+        Alert.alert('Error', 'Unable to get accounts. Please sign in again.');
         return;
       }
       if (showAlert && isProcessingRef.current) {
-        console.warn('[QB Import Accounts] Skipped — already processing');
+        console.warn('[QB Get Accounts] Skipped — already processing');
         return;
       }
 
@@ -660,7 +660,7 @@ const Home = () => {
         if (connected) {
           setAppSettings({ syncWithQuickBooks: true });
           await handleLoadCompanyInfoFromQuickBooks(false);
-          await handleImportQBAccounts(false);
+          await handleGetQBAccounts(false);
           await handleGetQBVendors(false);
           await handleGetQBCustomers(false);
           Alert.alert(
@@ -684,7 +684,7 @@ const Home = () => {
     startProcessing,
     stopProcessing,
     handleLoadCompanyInfoFromQuickBooks,
-    handleImportQBAccounts,
+    handleGetQBAccounts,
     handleGetQBVendors,
     handleGetQBCustomers,
   ]);
@@ -717,8 +717,8 @@ const Home = () => {
         handleGetQBVendors();
         return;
       }
-      if (menuItem === 'ImportQBAccounts') {
-        handleImportQBAccounts();
+      if (menuItem === 'GetQBAccounts') {
+        handleGetQBAccounts();
         return;
       }
       if (menuItem === 'GetQBCustomers') {
@@ -745,7 +745,7 @@ const Home = () => {
       handleExportVendors,
       handleImportVendors,
       handleGetQBVendors,
-      handleImportQBAccounts,
+      handleGetQBAccounts,
       handleGetQBCustomers,
       handleImportCustomers,
       handleDisconnectFromQuickBooks,
@@ -804,9 +804,9 @@ const Home = () => {
 
             {
               icon: <MaterialIcons name="account-balance" size={28} color={colors.iconColor} />,
-              label: 'Import Accounts from QuickBooks',
+              label: 'Get Accounts from QuickBooks',
               onPress: (e: GestureResponderEvent, actionContext?: any) => {
-                handleMenuItemPress('ImportQBAccounts');
+                handleMenuItemPress('GetQBAccounts');
               },
             },
             {
@@ -894,8 +894,8 @@ const Home = () => {
           onPress={() => router.push('/configuration/template/templates')}
         />
         <ConfigurationEntry
-          label="Vendors/Merchants"
-          description="Add and Edit Vendors/Merchants"
+          label="Vendors"
+          description="Add and Edit Vendors"
           onPress={() => router.push('/configuration/vendor/vendors')}
         />
         <ConfigurationEntry

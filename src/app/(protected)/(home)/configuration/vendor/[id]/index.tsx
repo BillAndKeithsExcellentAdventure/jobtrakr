@@ -262,7 +262,7 @@ const EditVendor = () => {
             <ActionButton
               style={styles.linkButton}
               type="action"
-              title="Link to QB Vendor"
+              title="Link to QuickBooks Vendor"
               onPress={() => setIsLinkVendorPickerVisible(true)}
             />
             <ActionButton
