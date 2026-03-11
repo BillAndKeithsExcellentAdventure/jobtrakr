@@ -1,14 +1,14 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import { TextField } from '@/src/components/TextField';
-import { Text, View } from '@/src/components/Themed';
+import { Text, View, TextInput } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { CustomerData, useAddRowCallback } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAuth } from '@clerk/clerk-expo';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Keyboard, Platform, StyleSheet, TextInput } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Keyboard, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { useNetwork } from '../context/NetworkContext';
 import { addCustomer } from '../utils/quickbooksAPI';
