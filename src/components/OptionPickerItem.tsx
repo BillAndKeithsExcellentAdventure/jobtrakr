@@ -1,6 +1,6 @@
 import { TextField } from '@/src/components/TextField';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { StyleProp, StyleSheet, ViewStyle, Keyboard, TextInput } from 'react-native';
+import { StyleProp, StyleSheet, ViewStyle, TextStyle, Keyboard, TextInput } from 'react-native';
 import { useThemeColor, View } from './Themed';
 import { Pressable } from 'react-native-gesture-handler';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useCallback } from 'react';
@@ -55,7 +55,7 @@ interface OptionPickerItemProps {
   placeholder?: string;
   editable?: boolean;
   containerStyle?: StyleProp<ViewStyle>;
-  inputStyle?: StyleProp<ViewStyle>;
+  inputStyle?: StyleProp<TextStyle>;
   textColor?: string;
 }
 
@@ -124,7 +124,6 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
                 style={[inputStyle, { color: finalTextColor }]}
                 label={label}
                 placeholder={placeholder}
-                placeholderTextColor={textDim}
                 value={labelText}
                 editable={editable}
               />

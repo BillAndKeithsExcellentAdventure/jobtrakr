@@ -3,7 +3,7 @@ import { formatDate } from '@/src/utils/formatters';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useCallback, useState } from 'react';
 import { Platform, StyleSheet, TouchableOpacity } from 'react-native';
-import { TextField } from './TextField_old';
+import { TextField } from './TextField';
 import { Text, View } from './Themed';
 
 export const DateSelector = ({

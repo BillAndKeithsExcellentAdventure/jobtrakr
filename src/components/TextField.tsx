@@ -88,6 +88,7 @@ export const TextField = forwardRef<TextFieldHandle, TextFieldProps>(function Te
           style,
         ]}
         placeholderTextColor={colors.placeHolder}
+        autoCorrect={false}
         {...inputProps}
       />
     </View>

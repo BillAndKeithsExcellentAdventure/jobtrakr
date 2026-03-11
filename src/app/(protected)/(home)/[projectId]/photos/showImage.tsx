@@ -1,21 +1,22 @@
+import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
+import { TextField } from '@/src/components/TextField';
+import { Text, View } from '@/src/components/Themed';
 import { ZoomImageViewer } from '@/src/components/ZoomImageViewer';
-import { View, Text, TextInput } from '@/src/components/Themed';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useMemo } from 'react';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
+import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
 import {
   RecentMediaEntryDateCompare,
   useAllRows,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { useColors } from '@/src/context/ColorsContext';
-import { KeyboardToolbar } from 'react-native-keyboard-controller';
-import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
-import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { setImageCaption } from '@/src/utils/images';
 import { useAuth } from '@clerk/clerk-expo';
-import { useNetwork } from '@/src/context/NetworkContext';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useMemo } from 'react';
+import { Platform, StyleSheet } from 'react-native';
+import { KeyboardToolbar } from 'react-native-keyboard-controller';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ShowProjectPhotoPage = () => {
   const { uri, projectId, projectName, photoDate, imageId } = useLocalSearchParams<{
@@ -59,7 +60,7 @@ const ShowProjectPhotoPage = () => {
     <>
       <Stack.Screen
         options={{
-          title: 'Edit Project',
+          title: 'Project Photo',
           headerShown: true,
           gestureEnabled: false,
           headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
@@ -71,7 +72,7 @@ const ShowProjectPhotoPage = () => {
             <Text txtSize="title" text={photoDate} />
           </View>
           {imageId && (
-            <TextInput
+            <TextField
               style={{ margin: 10, backgroundColor: colors.neutral200, padding: 8, borderRadius: 4 }}
               placeholder="Caption"
               value={caption}

@@ -3,6 +3,7 @@ import { CustomerPicker } from '@/src/components/CustomerPicker';
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
+import { TextField } from '@/src/components/TextField';
 import { TextInput, View, Text } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
@@ -132,14 +133,14 @@ const AddProjectScreen = () => {
       <ModalScreenContainer onSave={handleSubmit} onCancel={() => router.back()} canSave={canAddProject}>
         <Text style={styles.modalTitle}>Create New Project</Text>
 
-        <TextInput
+        <TextField
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Project Name"
           value={project.name}
           onChangeText={(text) => setProject({ ...project, name: text })}
         />
         {/* Abbreviation is optional but if entered should be max 10 characters */}
-        <TextInput
+        <TextField
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Abbreviation for Receipts and Bills"
           autoCapitalize="characters"
@@ -148,7 +149,7 @@ const AddProjectScreen = () => {
           value={project.abbreviation}
           onChangeText={(text) => setProject({ ...project, abbreviation: text })}
         />
-        <TextInput
+        <TextField
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Location"
           value={project.location}
