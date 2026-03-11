@@ -5,19 +5,22 @@ import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
+import { VendorPicker } from '@/src/components/VendorPicker';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
-import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  VendorData,
+  useAllRows as useAllConfigurationRows,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   ReceiptData,
   useAllRows,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
-import { getVendorSearchTerm } from '@/src/utils/vendorUtils';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,8 +29,6 @@ const EditReceiptDetailsPage = () => {
   const defaultDate = new Date();
   const router = useRouter();
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
-  const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
-  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const [isPaymentAccountPickerVisible, setIsPaymentAccountPickerVisible] = useState<boolean>(false);
   const [pickedPaymentAccountOption, setPickedPaymentAccountOption] = useState<OptionEntry | undefined>(
     undefined,
@@ -47,23 +48,7 @@ const EditReceiptDetailsPage = () => {
 
   const allVendors = useAllConfigurationRows('vendors');
   const allAccounts = useAllConfigurationRows('accounts');
-  const [vendors, setVendors] = useState<OptionEntry[]>([]);
   const [paymentAccounts, setPaymentAccounts] = useState<OptionEntry[]>([]);
-
-  useEffect(() => {
-    if (allVendors && allVendors.length > 0) {
-      const vendorOptions: OptionEntry[] = allVendors.map((vendor) => ({
-        label: `${vendor.name} ${
-          vendor.address ? ` - ${vendor.address}` : vendor.city ? ` - ${vendor.city}` : ''
-        }`,
-        value: vendor.accountingId,
-      }));
-
-      setVendors(vendorOptions);
-    } else {
-      setVendors([]);
-    }
-  }, [allVendors]);
 
   useEffect(() => {
     if (allAccounts && allAccounts.length > 0) {
@@ -108,13 +93,6 @@ const EditReceiptDetailsPage = () => {
       setReceipt({ ...match });
     }
   }, [receiptId, allProjectReceipts]);
-
-  useEffect(() => {
-    const match = isQuickBooksConnected
-      ? vendors.find((o) => o.value === receipt.vendorId)
-      : vendors.find((o) => o.label === receipt.vendor);
-    setPickedOption(match);
-  }, [receipt, vendors, isQuickBooksConnected]);
 
   useEffect(() => {
     if (!paymentAccounts.length) {
@@ -180,27 +158,21 @@ const EditReceiptDetailsPage = () => {
     [receipt, receiptId, updateReceipt],
   );
 
-  const handleVendorLabelChange = useCallback(
-    (vendor: string) => {
-      const newReceipt = { ...receipt, vendor };
+  const handleVendorSelected = useCallback(
+    (vendor: VendorData) => {
+      const newReceipt = {
+        ...receipt,
+        vendor: vendor.name,
+        vendorId: vendor.id,
+      };
       updateReceipt(receiptId, newReceipt);
     },
     [receipt, receiptId, updateReceipt],
   );
 
-  const handleVendorOptionChange = useCallback(
-    (option: OptionEntry) => {
-      if (option) {
-        const newReceipt = {
-          ...receipt,
-          vendor: option.label,
-          vendorId: option.value ?? '',
-        };
-        updateReceipt(receiptId, newReceipt);
-      }
-      setIsVendorListPickerVisible(false);
-    },
-    [receipt, receiptId, updateReceipt],
+  const selectedVendor = useMemo(
+    () => allVendors.find((v) => v.id === receipt.vendorId),
+    [allVendors, receipt.vendorId],
   );
 
   const handlePaymentAccountOptionChange = useCallback(
@@ -267,14 +239,12 @@ const EditReceiptDetailsPage = () => {
               value={receiptAmount}
               onChangeNumber={(value) => handleAmountChange(value ?? 0)}
             />
-            <OptionPickerItem
-              containerStyle={styles.inputContainer}
-              optionLabel={isQuickBooksConnected && !receipt.vendorId ? '' : receipt.vendor}
-              placeholder="Vendor/Merchant"
+            <VendorPicker
+              selectedVendor={selectedVendor}
+              onVendorSelected={handleVendorSelected}
+              vendors={allVendors}
               label="Vendor/Merchant"
-              editable={!isQuickBooksConnected}
-              onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
-              onOptionLabelChange={!isQuickBooksConnected ? handleVendorLabelChange : undefined}
+              placeholder="Vendor/Merchant"
             />
 
             <TextField
@@ -318,25 +288,6 @@ const EditReceiptDetailsPage = () => {
               </>
             )}
           </View>
-          {vendors && isVendorListPickerVisible && (
-            <BottomSheetContainer
-              isVisible={isVendorListPickerVisible}
-              onClose={() => setIsVendorListPickerVisible(false)}
-              modalHeight={'80%'}
-            >
-              <OptionList
-                options={vendors}
-                onSelect={(option) => handleVendorOptionChange(option)}
-                selectedOption={pickedOption}
-                initialSearchText={
-                  isQuickBooksConnected && !receipt.vendorId ? getVendorSearchTerm(receipt.vendor) : undefined
-                }
-                enableSearch={
-                  vendors.length > 15 || (isQuickBooksConnected && !receipt.vendorId && !!receipt.vendor)
-                }
-              />
-            </BottomSheetContainer>
-          )}
           {isQuickBooksConnected && paymentAccounts && isPaymentAccountPickerVisible && (
             <BottomSheetContainer
               modalHeight={'60%'}

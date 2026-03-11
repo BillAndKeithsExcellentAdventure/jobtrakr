@@ -1,14 +1,7 @@
 import { useColors } from '@/src/context/ColorsContext';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { PropsWithChildren } from 'react';
-import {
-  DimensionValue,
-  Modal,
-  Pressable,
-  StyleSheet,
-  TouchableWithoutFeedback,
-  Platform,
-} from 'react-native';
+import { DimensionValue, Modal, Pressable, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, View } from './Themed';
 import { KeyboardToolbar, KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -46,43 +39,51 @@ export default function BottomSheetContainer({
         style={{ flex: 1 }}
         keyboardVerticalOffset={keyboardVerticalOffset}
       >
-        <TouchableWithoutFeedback onPress={() => (onClose ? onClose() : null)}>
-          <View style={{ flex: 1, backgroundColor: colors.transparent }}>
-            <View
-              style={{
-                flex: 1,
-                marginTop: top,
-                marginBottom: bottom,
-                backgroundColor: colors.modalOverlayBackgroundColor,
-              }}
-            >
-              <View style={[styles.modalContent, { bottom: 0, height: modalHeight }]}>
-                {title ? (
-                  <View
-                    style={[
-                      styles.titleContainer,
-                      {
-                        backgroundColor: colors.bottomSheetBackground,
-                        borderBottomWidth: 2,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                  >
-                    <Text txtSize="standard" style={[{ fontWeight: '600' }]} text={title} />
-                    {showClose && (
-                      <Pressable onPress={() => onClose()}>
-                        <MaterialIcons name="close" color={colors.iconColor} size={22} />
-                      </Pressable>
-                    )}
-                  </View>
-                ) : (
-                  <View style={{ height: 10 }} />
-                )}
-                {children}
-              </View>
+        <View style={{ flex: 1 }}>
+          <Pressable
+            style={{
+              ...StyleSheet.absoluteFillObject,
+              marginTop: top,
+              marginBottom: bottom,
+              backgroundColor: colors.modalOverlayBackgroundColor,
+            }}
+            onPress={() => onClose()}
+          />
+          <View
+            style={{
+              flex: 1,
+              marginTop: top,
+              marginBottom: bottom,
+              backgroundColor: colors.transparent,
+            }}
+            pointerEvents="box-none"
+          >
+            <View style={[styles.modalContent, { bottom: 0, height: modalHeight }]}>
+              {title ? (
+                <View
+                  style={[
+                    styles.titleContainer,
+                    {
+                      backgroundColor: colors.bottomSheetBackground,
+                      borderBottomWidth: 2,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Text txtSize="standard" style={[{ fontWeight: '600' }]} text={title} />
+                  {showClose && (
+                    <Pressable onPress={() => onClose()}>
+                      <MaterialIcons name="close" color={colors.iconColor} size={22} />
+                    </Pressable>
+                  )}
+                </View>
+              ) : (
+                <View style={{ height: 10 }} />
+              )}
+              {children}
             </View>
           </View>
-        </TouchableWithoutFeedback>
+        </View>
       </KeyboardAvoidingView>
       {Platform.OS === 'ios' && showKeyboardToolbar && (
         <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />

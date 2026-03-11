@@ -49,14 +49,17 @@ export const VendorPicker = ({
   });
   const colors = useColors();
   const addVendorToStore = useAddRowCallback('vendors');
-  const { isQuickBooksAccessible } = useNetwork();
+  const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
   const auth = useAuth();
   const { orgId, userId, getToken } = auth;
 
-  // Filter to only show active vendors
+  // Filter to only show active vendors; when connected to QuickBooks, only show vendors with an accountingId
   const activeVendors = useMemo(
-    () => vendors.filter((v) => !v.inactive).sort((a, b) => a.name.localeCompare(b.name)),
-    [vendors],
+    () =>
+      vendors
+        .filter((v) => !v.inactive && (!isQuickBooksConnected || !!v.accountingId))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [vendors, isQuickBooksConnected],
   );
 
   // Filter based on search text

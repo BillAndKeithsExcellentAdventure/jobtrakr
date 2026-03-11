@@ -2,11 +2,7 @@
 
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import {
-  useAllRows,
-  VendorData,
-  VendorDataCompareName,
-} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useAllRows, VendorDataCompareName } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';

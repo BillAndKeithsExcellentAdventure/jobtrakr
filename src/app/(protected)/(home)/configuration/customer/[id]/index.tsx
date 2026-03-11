@@ -221,6 +221,7 @@ const EditCustomer = () => {
     applyCustomerUpdates,
     startProcessing,
     stopProcessing,
+    router,
   ]);
 
   return (

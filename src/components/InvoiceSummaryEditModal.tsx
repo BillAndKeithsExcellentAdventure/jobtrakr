@@ -1,20 +1,19 @@
 import { useColors } from '@/src/context/ColorsContext';
-import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  VendorData,
+  useAllRows as useAllConfigurationRows,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '../constants/app-constants';
 import { ActionButton } from './ActionButton';
-import BottomSheetContainer from './BottomSheetContainer';
 import { NumericInputField } from './NumericInputField';
-import OptionList, { OptionEntry } from './OptionList';
-import { OptionPickerItem } from './OptionPickerItem';
 import { Text, TextInput } from './Themed';
-import { getVendorSearchTerm } from '../utils/vendorUtils';
-import { useNetwork } from '../context/NetworkContext';
+import { VendorPicker } from './VendorPicker';
 
 interface InvoiceSummaryEditModalProps {
   isVisible: boolean;
@@ -47,50 +46,11 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
   const [editedSummary, setEditedSummary] = useState(invoiceSummary);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [dueDatePickerVisible, setDueDatePickerVisible] = useState(false);
-  const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
-  const [pickedVendorOption, setPickedVendorOption] = useState<OptionEntry | undefined>(undefined);
-  const [vendors, setVendors] = useState<OptionEntry[]>([]);
-  const { isQuickBooksAccessible } = useNetwork();
   const allVendors = useAllConfigurationRows('vendors');
 
   useEffect(() => {
     setEditedSummary(invoiceSummary);
-    const vendorMatch = vendors.find((v) => v.label === invoiceSummary.vendor);
-    setPickedVendorOption(vendorMatch);
-  }, [invoiceSummary, vendors]);
-
-  useEffect(() => {
-    if (allVendors && allVendors.length > 0) {
-      const activeVendors = allVendors.filter((v) => !v.inactive);
-      const vendorOptions: OptionEntry[] = activeVendors.map((vendor) => ({
-        label: vendor.name,
-        value: vendor.id,
-      }));
-
-      setVendors(vendorOptions);
-    } else {
-      setVendors([]);
-    }
-  }, [allVendors]);
-
-  const handleVendorChange = useCallback((vendor: string, vendorId: string) => {
-    setEditedSummary((prev) => ({
-      ...prev,
-      vendor,
-      vendorId,
-    }));
-  }, []);
-
-  const handleVendorOptionChange = useCallback(
-    (option: OptionEntry) => {
-      setPickedVendorOption(option);
-      if (option) {
-        handleVendorChange(option.label, option.value);
-      }
-      setIsVendorListPickerVisible(false);
-    },
-    [handleVendorChange],
-  );
+  }, [invoiceSummary]);
 
   const handleSave = useCallback(() => {
     onSave(editedSummary);
@@ -99,14 +59,25 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
 
   const handleClose = useCallback(() => {
     setEditedSummary(invoiceSummary);
-    const vendorMatch = vendors.find((v) => v.label === invoiceSummary.vendor);
-    setPickedVendorOption(vendorMatch);
     onClose();
-  }, [invoiceSummary, vendors, onClose]);
+  }, [invoiceSummary, onClose]);
 
   const showDatePicker = () => {
     setDatePickerVisible(true);
   };
+
+  const handleVendorSelected = useCallback((vendor: VendorData) => {
+    setEditedSummary((prev) => ({
+      ...prev,
+      vendor: vendor.name,
+      vendorId: vendor.id,
+    }));
+  }, []);
+
+  const selectedVendor = useMemo(
+    () => allVendors.find((v) => v.id === editedSummary.vendorId),
+    [allVendors, editedSummary.vendorId],
+  );
 
   const hideDatePicker = () => {
     setDatePickerVisible(false);
@@ -148,14 +119,12 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
             </Text>
 
             <View style={styles.form}>
-              <OptionPickerItem
-                containerStyle={styles.inputContainer}
-                optionLabel={editedSummary.vendor}
-                textColor={editedSummary.vendorId ? colors.text : colors.error}
+              <VendorPicker
+                selectedVendor={selectedVendor}
+                onVendorSelected={handleVendorSelected}
+                vendors={allVendors}
                 label="Vendor/Merchant"
                 placeholder="Vendor/Merchant"
-                editable={false}
-                onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
               />
               <NumericInputField
                 containerStyle={styles.inputContainer}
@@ -222,27 +191,6 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
             </View>
           </View>
         </View>
-        {vendors && isVendorListPickerVisible && (
-          <BottomSheetContainer
-            isVisible={isVendorListPickerVisible}
-            onClose={() => setIsVendorListPickerVisible(false)}
-          >
-            <OptionList
-              options={vendors}
-              onSelect={(option) => handleVendorOptionChange(option)}
-              selectedOption={pickedVendorOption}
-              initialSearchText={
-                isQuickBooksAccessible && !editedSummary.vendorId
-                  ? getVendorSearchTerm(editedSummary.vendor)
-                  : undefined
-              }
-              enableSearch={
-                vendors.length > 15 ||
-                (isQuickBooksAccessible && !editedSummary.vendorId && !!editedSummary.vendor)
-              }
-            />
-          </BottomSheetContainer>
-        )}
       </SafeAreaView>
       {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </Modal>

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from './ActionButton';
@@ -7,16 +7,19 @@ import { useColors } from '@/src/context/ColorsContext';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { formatDate } from '@/src/utils/formatters';
 import { NumericInputField } from './NumericInputField';
-import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  VendorData,
+  useAllRows as useAllConfigurationRows,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import OptionList, { OptionEntry } from './OptionList';
 import { OptionPickerItem } from './OptionPickerItem';
 import BottomSheetContainer from './BottomSheetContainer';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '../constants/app-constants';
 import { useNetwork } from '../context/NetworkContext';
-import { getVendorSearchTerm } from '../utils/vendorUtils';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { TextField } from './TextField';
+import { VendorPicker } from './VendorPicker';
 
 interface ReceiptSummaryEditModalProps {
   isVisible: boolean;
@@ -50,9 +53,6 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
   const colors = useColors();
   const [editedSummary, setEditedSummary] = useState(receiptSummary);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
-  const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
-  const [pickedVendorOption, setPickedVendorOption] = useState<OptionEntry | undefined>(undefined);
-  const [vendors, setVendors] = useState<OptionEntry[]>([]);
   const [isPaymentAccountPickerVisible, setIsPaymentAccountPickerVisible] = useState<boolean>(false);
   const [pickedPaymentAccountOption, setPickedPaymentAccountOption] = useState<OptionEntry | undefined>(
     undefined,
@@ -65,9 +65,7 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
 
   useEffect(() => {
     setEditedSummary(receiptSummary);
-    const vendorMatch = vendors.find((v) => v.label === receiptSummary.vendor);
-    setPickedVendorOption(vendorMatch);
-  }, [receiptSummary, vendors]);
+  }, [receiptSummary]);
 
   useEffect(() => {
     if (allAccounts && allAccounts.length > 0) {
@@ -97,41 +95,6 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
     setPickedPaymentAccountOption(match);
   }, [editedSummary.paymentAccountId, paymentAccounts]);
 
-  useEffect(() => {
-    if (allVendors && allVendors.length > 0) {
-      const activeVendors = allVendors.filter((v) => !v.inactive);
-      const vendorOptions: OptionEntry[] = activeVendors.map((vendor) => ({
-        label: `${vendor.name} ${
-          vendor.address ? ` - ${vendor.address}` : vendor.city ? ` - ${vendor.city}` : ''
-        }`,
-        value: vendor.id,
-      }));
-
-      setVendors(vendorOptions);
-    } else {
-      setVendors([]);
-    }
-  }, [allVendors]);
-
-  const handleVendorChange = useCallback((vendor: string, vendorId: string) => {
-    setEditedSummary((prev) => ({
-      ...prev,
-      vendor,
-      vendorId,
-    }));
-  }, []);
-
-  const handleVendorOptionChange = useCallback(
-    (option: OptionEntry) => {
-      setPickedVendorOption(option);
-      if (option) {
-        handleVendorChange(option.label, option.value);
-      }
-      setIsVendorListPickerVisible(false);
-    },
-    [handleVendorChange],
-  );
-
   const handlePaymentAccountOptionChange = useCallback((option: OptionEntry) => {
     if (option) {
       setEditedSummary((prev) => ({ ...prev, paymentAccountId: option.value }));
@@ -147,10 +110,8 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
 
   const handleClose = useCallback(() => {
     setEditedSummary(receiptSummary);
-    const vendorMatch = vendors.find((v) => v.value === receiptSummary.vendorId);
-    setPickedVendorOption(vendorMatch);
     onClose();
-  }, [receiptSummary, vendors, onClose]);
+  }, [receiptSummary, onClose]);
 
   const handleDateConfirm = useCallback((date: Date) => {
     setEditedSummary((prev) => ({
@@ -160,6 +121,19 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
 
     setDatePickerVisible(false);
   }, []);
+
+  const handleVendorSelected = useCallback((vendor: VendorData) => {
+    setEditedSummary((prev) => ({
+      ...prev,
+      vendor: vendor.name,
+      vendorId: vendor.id,
+    }));
+  }, []);
+
+  const selectedVendor = useMemo(
+    () => allVendors.find((v) => v.id === editedSummary.vendorId),
+    [allVendors, editedSummary.vendorId],
+  );
 
   return (
     <Modal visible={isVisible} transparent={true} animationType="fade">
@@ -171,14 +145,12 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
             </Text>
 
             <View style={styles.form}>
-              <OptionPickerItem
-                containerStyle={styles.inputContainer}
-                optionLabel={editedSummary.vendor}
-                editable={false}
+              <VendorPicker
+                selectedVendor={selectedVendor}
+                onVendorSelected={handleVendorSelected}
+                vendors={allVendors}
                 label="Vendor/Merchant"
                 placeholder="Vendor/Merchant"
-                textColor={editedSummary.vendorId ? colors.text : colors.error}
-                onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
               />
 
               <NumericInputField
@@ -249,27 +221,6 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
             </View>
           </View>
         </View>
-        {vendors && isVendorListPickerVisible && (
-          <BottomSheetContainer
-            isVisible={isVendorListPickerVisible}
-            onClose={() => setIsVendorListPickerVisible(false)}
-          >
-            <OptionList
-              options={vendors}
-              onSelect={(option) => handleVendorOptionChange(option)}
-              selectedOption={pickedVendorOption}
-              initialSearchText={
-                isQuickBooksAccessible && !editedSummary.vendorId
-                  ? getVendorSearchTerm(editedSummary.vendor)
-                  : undefined
-              }
-              enableSearch={
-                vendors.length > 15 ||
-                (isQuickBooksAccessible && !editedSummary.vendorId && !!editedSummary.vendor)
-              }
-            />
-          </BottomSheetContainer>
-        )}
         {isQuickBooksAccessible && paymentAccounts.length > 0 && isPaymentAccountPickerVisible && (
           <BottomSheetContainer
             modalHeight={'60%'}

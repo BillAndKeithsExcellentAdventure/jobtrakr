@@ -7,11 +7,13 @@ import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { Switch } from '@/src/components/Switch';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
+import { VendorPicker } from '@/src/components/VendorPicker';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import {
+  VendorData,
   WorkItemDataCodeCompareAsNumber,
   useAllRows as useAllConfigurationRows,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
@@ -28,7 +30,6 @@ import { useAddImageCallback } from '@/src/utils/images';
 import { addBill, AddBillRequest } from '@/src/utils/quickbooksAPI';
 import { getBillSyncHash } from '@/src/utils/quickbooksSyncHash';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
-import { getVendorSearchTerm } from '@/src/utils/vendorUtils';
 import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
@@ -59,16 +60,13 @@ const waitForImageUpload = (
   });
 
 const AddInvoicePage = () => {
-  const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
+  const { isQuickBooksAccessible } = useNetwork();
   const { userId, orgId, getToken } = useAuth();
   const defaultDate = useMemo(() => new Date(), []);
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const { isConnected, isInternetReachable } = useNetwork();
   const addInvoice = useAddRowCallback(projectId, 'invoices');
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
-  const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
-  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
-  const [vendors, setVendors] = useState<OptionEntry[]>([]);
   const [applyToSingleCostCode, setApplyToSingleCostCode] = useState(false);
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
   const { projectWorkItems, availableCategoriesOptions, allAvailableCostItemOptions } =
@@ -124,34 +122,18 @@ const AddInvoicePage = () => {
     qbSyncHash: '',
   });
 
-  const handleVendorOptionChange = (option: OptionEntry) => {
-    if (option) {
-      setProjectInvoice((prevInvoice) => ({
-        ...prevInvoice,
-        vendor: option.label,
-        vendorId: option.value,
-      }));
-    }
-    setIsVendorListPickerVisible(false);
-  };
+  const handleVendorSelected = useCallback((vendor: VendorData) => {
+    setProjectInvoice((prevInvoice) => ({
+      ...prevInvoice,
+      vendor: vendor.name,
+      vendorId: vendor.id,
+    }));
+  }, []);
 
-  useEffect(() => {
-    if (allVendors && allVendors.length > 0) {
-      const vendorOptions: OptionEntry[] = allVendors.map((vendor) => ({
-        label: vendor.name,
-        value: vendor.id,
-      }));
-
-      setVendors(vendorOptions);
-    } else {
-      setVendors([]);
-    }
-  }, [allVendors]);
-
-  useEffect(() => {
-    const match = vendors.find((o) => o.value === projectInvoice.vendorId);
-    setPickedOption(match);
-  }, [projectInvoice, vendors]);
+  const selectedVendor = useMemo(
+    () => allVendors.find((v) => v.id === projectInvoice.vendorId),
+    [allVendors, projectInvoice.vendorId],
+  );
 
   const colors = useColors();
 
@@ -504,14 +486,12 @@ const AddInvoicePage = () => {
             onCancel={hideDueDatePicker}
           />
 
-          <OptionPickerItem
-            containerStyle={styles.inputContainer}
-            optionLabel={projectInvoice.vendor}
-            textColor={projectInvoice.vendorId ? colors.text : colors.error}
+          <VendorPicker
+            selectedVendor={selectedVendor}
+            onVendorSelected={handleVendorSelected}
+            vendors={allVendors}
             label="Vendor/Merchant"
             placeholder="Vendor/Merchant"
-            editable={false}
-            onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
           />
 
           <NumericInputField
@@ -594,28 +574,6 @@ const AddInvoicePage = () => {
           )}
         </View>
       </ModalScreenContainer>
-      {vendors && isVendorListPickerVisible && (
-        <BottomSheetContainer
-          isVisible={isVendorListPickerVisible}
-          onClose={() => setIsVendorListPickerVisible(false)}
-          modalHeight="80%"
-        >
-          <OptionList
-            options={vendors}
-            onSelect={(option) => handleVendorOptionChange(option)}
-            selectedOption={pickedOption}
-            initialSearchText={
-              isQuickBooksConnected && !projectInvoice.vendorId
-                ? getVendorSearchTerm(projectInvoice.vendor)
-                : undefined
-            }
-            enableSearch={
-              vendors.length > 15 ||
-              (isQuickBooksConnected && !projectInvoice.vendorId && !!projectInvoice.vendor)
-            }
-          />
-        </BottomSheetContainer>
-      )}
       {isCategoryPickerVisible && (
         <BottomSheetContainer
           isVisible={isCategoryPickerVisible}

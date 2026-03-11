@@ -126,14 +126,17 @@ describe('quickbooksAPI', () => {
       const requestBody = JSON.parse(callArgs[1].body);
 
       expect(requestBody).toMatchObject({
-        userId: 'user-123',
-        orgId: 'org-456',
         projectId: 'proj-789',
         projectAbbr: 'TEST',
         projectName: 'Test Project',
         imageId: 'img-001',
         addAttachment: true,
       });
+
+      // userId and orgId should be in the URL query params, not in the body
+      const callUrl = callArgs[0] as string;
+      expect(callUrl).toContain('userId=user-123');
+      expect(callUrl).toContain('orgId=org-456');
     });
 
     it('should handle receipt without qbBillData', async () => {

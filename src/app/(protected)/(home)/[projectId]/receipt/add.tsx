@@ -7,11 +7,13 @@ import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { Switch } from '@/src/components/Switch';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
+import { VendorPicker } from '@/src/components/VendorPicker';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import {
+  VendorData,
   useAllRows as useAllConfigurationRows,
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
@@ -69,9 +71,7 @@ const AddReceiptPage = () => {
   const appSettings = useAppSettings();
   const addReceiptToLocalStore = useAddRowCallback(projectId, 'receipts');
   const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
-  const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
-  const [pickedVendorOption, setPickedVendorOption] = useState<OptionEntry | undefined>(undefined);
-  const [vendors, setVendors] = useState<OptionEntry[]>([]);
+
   const [applyToSingleCostCode, setApplyToSingleCostCode] = useState(false);
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
   const { projectWorkItems, availableCategoriesOptions, allAvailableCostItemOptions } =
@@ -134,32 +134,18 @@ const AddReceiptPage = () => {
     setIsPaymentAccountPickerVisible(false);
   };
 
-  const handleVendorOptionChange = (option: OptionEntry) => {
-    setPickedVendorOption(option);
-    if (option) {
-      setProjectReceipt((prevReceipt) => ({
-        ...prevReceipt,
-        vendor: option.label,
-        vendorId: option.value,
-      }));
-    }
-    setIsVendorListPickerVisible(false);
-  };
+  const handleVendorSelected = useCallback((vendor: VendorData) => {
+    setProjectReceipt((prevReceipt) => ({
+      ...prevReceipt,
+      vendor: vendor.name,
+      vendorId: vendor.id,
+    }));
+  }, []);
 
-  useEffect(() => {
-    if (allVendors && allVendors.length > 0) {
-      const vendorOptions: OptionEntry[] = allVendors.map((vendor) => ({
-        label: `${vendor.name} ${
-          vendor.address ? ` - ${vendor.address}` : vendor.city ? ` - ${vendor.city}` : ''
-        }`,
-        value: vendor.accountingId, // need the id used in QuickBooks
-      }));
-
-      setVendors(vendorOptions);
-    } else {
-      setVendors([]);
-    }
-  }, [allVendors]);
+  const selectedVendor = useMemo(
+    () => allVendors.find((v) => v.id === projectReceipt.vendorId),
+    [allVendors, projectReceipt.vendorId],
+  );
 
   // Load payment accounts from configuration store
   useEffect(() => {
@@ -622,26 +608,14 @@ const AddReceiptPage = () => {
             onCancel={hideDatePicker}
           />
 
-          {vendors && vendors.length ? (
-            <OptionPickerItem
-              containerStyle={[styles.inputContainer, { marginBottom: 6 }]}
-              optionLabel={projectReceipt.vendor}
-              textColor={projectReceipt.vendorId ? colors.text : colors.error}
-              label="Vendor/Merchant"
-              placeholder="Vendor/Merchant"
-              editable={isQuickBooksAccessible ? false : true}
-              onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
-            />
-          ) : (
-            <TextField
-              containerStyle={styles.inputContainer}
-              style={[styles.input, { borderColor: colors.transparent }]}
-              placeholder="Vendor/Merchant"
-              label="Vendor/Merchant"
-              value={projectReceipt.vendor}
-              editable={isQuickBooksAccessible ? false : true}
-            />
-          )}
+          <VendorPicker
+            style={{ marginBottom: 6 }}
+            selectedVendor={selectedVendor}
+            onVendorSelected={handleVendorSelected}
+            vendors={allVendors}
+            label="Vendor/Merchant"
+            placeholder="Vendor/Merchant"
+          />
 
           <NumericInputField
             containerStyle={{ marginTop: 0 }}
@@ -725,21 +699,6 @@ const AddReceiptPage = () => {
           )}
         </View>
       </ModalScreenContainer>
-      {vendors && isVendorListPickerVisible && (
-        <BottomSheetContainer
-          modalHeight={'80%'}
-          isVisible={isVendorListPickerVisible}
-          onClose={() => setIsVendorListPickerVisible(false)}
-          showKeyboardToolbar={false}
-        >
-          <OptionList
-            options={vendors}
-            onSelect={(option) => handleVendorOptionChange(option)}
-            selectedOption={pickedVendorOption}
-            enableSearch={vendors.length > 15}
-          />
-        </BottomSheetContainer>
-      )}
       {isCategoryPickerVisible && (
         <BottomSheetContainer
           modalHeight={'65%'}

@@ -40,7 +40,7 @@ const ShowProjectPhotoPage = () => {
     (newCaption: string) => {
       if (currentImage?.id) updateMediaEntry(currentImage.id, { caption: newCaption });
     },
-    [caption, currentImage, updateMediaEntry],
+    [currentImage, updateMediaEntry],
   );
 
   const handleBackPress = useCallback(async () => {

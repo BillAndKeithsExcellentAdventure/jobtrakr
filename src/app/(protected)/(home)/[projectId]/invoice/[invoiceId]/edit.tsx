@@ -1,12 +1,13 @@
 import { ActionButton } from '@/src/components/ActionButton';
-import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import { NumericInputField } from '@/src/components/NumericInputField';
-import OptionList, { OptionEntry } from '@/src/components/OptionList';
-import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
+import { VendorPicker } from '@/src/components/VendorPicker';
 import { useColors } from '@/src/context/ColorsContext';
-import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  VendorData,
+  useAllRows as useAllConfigurationRows,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   InvoiceData,
   useAllRows,
@@ -14,52 +15,29 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { getVendorSearchTerm } from '@/src/utils/vendorUtils';
-import { useNetwork } from '@/src/context/NetworkContext';
 
 const EditInvoiceDetailsPage = () => {
   const defaultDate = new Date();
 
   const router = useRouter();
   const { projectId, invoiceId } = useLocalSearchParams<{ projectId: string; invoiceId: string }>();
-  const [isVendorListPickerVisible, setIsVendorListPickerVisible] = useState<boolean>(false);
-  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
   const allProjectInvoices = useAllRows(projectId, 'invoices');
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [dueDatePickerVisible, setDueDatePickerVisible] = useState(false);
-  const { isQuickBooksConnected } = useNetwork();
-  const handleVendorOptionChange = (option: OptionEntry) => {
-    if (option) {
-      setInvoice((prevInvoice) => ({
-        ...prevInvoice,
-        vendor: option.label,
-        vendorId: option.value,
-      }));
-    }
-    setIsVendorListPickerVisible(false);
-  };
+  const handleVendorSelected = useCallback((vendor: VendorData) => {
+    setInvoice((prevInvoice) => ({
+      ...prevInvoice,
+      vendor: vendor.name,
+      vendorId: vendor.id,
+    }));
+  }, []);
 
   const allVendors = useAllConfigurationRows('vendors');
-  const [vendors, setVendors] = useState<OptionEntry[]>([]);
-
-  useEffect(() => {
-    if (allVendors && allVendors.length > 0) {
-      const activeVendors = allVendors.filter((v) => !v.inactive);
-      const vendorOptions: OptionEntry[] = activeVendors.map((vendor) => ({
-        label: vendor.name,
-        value: vendor.id,
-      }));
-
-      setVendors(vendorOptions);
-    } else {
-      setVendors([]);
-    }
-  }, [allVendors]);
 
   const showDatePicker = () => {
     setDatePickerVisible(true);
@@ -123,11 +101,6 @@ const EditInvoiceDetailsPage = () => {
     }
   }, [invoiceId, allProjectInvoices]);
 
-  useEffect(() => {
-    const match = vendors.find((o) => o.value === invoice.vendorId);
-    setPickedOption(match);
-  }, [invoice, vendors]);
-
   const colors = useColors();
 
   const handleSubmit = useCallback(async () => {
@@ -136,6 +109,11 @@ const EditInvoiceDetailsPage = () => {
   }, [invoice, invoiceId, router, updateInvoice]);
 
   const invoiceAmount = invoice.amount ?? 0;
+
+  const selectedVendor = useMemo(
+    () => allVendors.find((v) => v.id === invoice.vendorId),
+    [allVendors, invoice.vendorId],
+  );
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -220,14 +198,12 @@ const EditInvoiceDetailsPage = () => {
               }));
             }}
           />
-          <OptionPickerItem
-            containerStyle={styles.inputContainer}
-            textColor={invoice.vendorId ? colors.text : colors.error}
-            optionLabel={invoice.vendor}
-            editable={false}
-            placeholder="Vendor/Merchant"
+          <VendorPicker
+            selectedVendor={selectedVendor}
+            onVendorSelected={handleVendorSelected}
+            vendors={allVendors}
             label="Vendor/Merchant"
-            onPickerButtonPress={() => setIsVendorListPickerVisible(true)}
+            placeholder="Vendor/Merchant"
           />
 
           <TextField
@@ -255,25 +231,6 @@ const EditInvoiceDetailsPage = () => {
             />
           </View>
         </View>
-        {vendors && isVendorListPickerVisible && (
-          <BottomSheetContainer
-            isVisible={isVendorListPickerVisible}
-            onClose={() => setIsVendorListPickerVisible(false)}
-            modalHeight="80%"
-          >
-            <OptionList
-              options={vendors}
-              onSelect={(option) => handleVendorOptionChange(option)}
-              selectedOption={pickedOption}
-              initialSearchText={
-                isQuickBooksConnected && !invoice.vendorId ? getVendorSearchTerm(invoice.vendor) : undefined
-              }
-              enableSearch={
-                vendors.length > 15 || (isQuickBooksConnected && !invoice.vendorId && !!invoice.vendor)
-              }
-            />
-          </BottomSheetContainer>
-        )}
       </View>
     </SafeAreaView>
   );

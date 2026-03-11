@@ -29,7 +29,7 @@ import { File } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, LayoutChangeEvent, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ReceiptLineItem, useAddReceiptQueueEntryCallback } from '@/src/tbStores/ReceiptQueueStoreHooks';
@@ -309,18 +309,35 @@ const ReceiptDetailsPage = () => {
     [allVendors, receipt.vendorId],
   );
 
-  const canSyncToQuickBooks =
-    isQuickBooksAccessible &&
-    allReceiptLineItems.length > 0 &&
-    receipt.amount > 0 &&
-    !!receipt.paymentAccountId &&
-    !!vendorQbId &&
-    !!userId &&
-    !!orgId &&
-    !!projectAbbr &&
-    !hasItemWithNoWorkItemId &&
-    hasLineItemForCurrentProject &&
-    amountsMatch;
+  const unableToSyncReason = useMemo(() => {
+    if (!isQuickBooksConnected) return 'QuickBooks is not connected';
+    if (allReceiptLineItems.length === 0) return 'No line items added to receipt';
+    if (receipt.amount <= 0) return 'Receipt total must be greater than $0';
+    if (!receipt.paymentAccountId) return 'No payment account selected';
+    if (!vendorQbId) return 'Receipt vendor is not linked to a QuickBooks vendor';
+    if (!userId || !orgId) return 'Missing user or organization information';
+    if (!projectAbbr) return 'Project is missing abbreviation';
+    if (hasItemWithNoWorkItemId) return 'All line items must be linked to a work item';
+    if (!hasLineItemForCurrentProject) return 'At least one line item must be linked to the current project';
+    if (!amountsMatch) return 'Receipt total does not match sum of line item totals';
+    return null;
+  }, [
+    isQuickBooksConnected,
+    allReceiptLineItems,
+    receipt.amount,
+    receipt.paymentAccountId,
+    vendorQbId,
+    userId,
+    orgId,
+    projectAbbr,
+    hasItemWithNoWorkItemId,
+    hasLineItemForCurrentProject,
+    amountsMatch,
+  ]);
+
+  const canSyncToQuickBooks = useMemo(() => {
+    return !unableToSyncReason;
+  }, [unableToSyncReason]);
 
   const processAddReceiptToQuickBooks = useCallback(
     async (receiptData: AddReceiptRequest) => {
@@ -771,7 +788,7 @@ const ReceiptDetailsPage = () => {
                           <Text
                             txtSize="xs"
                             style={{ ...styles.quickBooksWarning, color: colors.error }}
-                            text="Please Edit Receipt to complete data required by QuickBooks"
+                            text={unableToSyncReason ?? ''}
                           />
                           <ActionButton onPress={() => editDetails(receipt)} type="cancel" title="Edit" />
                         </>
