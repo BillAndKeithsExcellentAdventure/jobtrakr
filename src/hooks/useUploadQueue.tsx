@@ -24,6 +24,22 @@ export const useUploadQueue = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastLoggedQueueSignatureRef = useRef<string>('');
+
+  useEffect(() => {
+    const queueSignature = `${mediaToUpload.length}:${serverMediaToDelete.length}`;
+    if (queueSignature === lastLoggedQueueSignatureRef.current) {
+      return;
+    }
+
+    lastLoggedQueueSignatureRef.current = queueSignature;
+
+    if (mediaToUpload.length > 0 || serverMediaToDelete.length > 0) {
+      console.log(
+        `Queue status: ${mediaToUpload.length} media queued for upload, ${serverMediaToDelete.length} queued for deletion.`,
+      );
+    }
+  }, [mediaToUpload.length, serverMediaToDelete.length]);
 
   useEffect(() => {
     // Wait for authentication to be ready

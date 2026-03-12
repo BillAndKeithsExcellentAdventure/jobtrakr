@@ -92,9 +92,6 @@ export const useAllMediaToUpload = () => {
         itemId: row.itemId ?? '',
         uploadDate: row.uploadDate ?? 0,
       }));
-      if (items.length > 0) {
-        console.log(`Fetched ${items.length} media items queued for upload`);
-      }
       return [...items].sort((a, b) => (b.uploadDate ?? 0) - (a.uploadDate ?? 0));
     }
     return [];
@@ -173,7 +170,6 @@ export const useAllServerMediaToDelete = () => {
         imageType: row.imageType ?? '',
         deleteDate: row.deleteDate ?? 0,
       }));
-      console.log(`Fetched ${items.length} server media items queued for deletion`);
       return [...items].sort((a, b) => (b.deleteDate ?? 0) - (a.deleteDate ?? 0));
     }
     return [];
