@@ -20,17 +20,13 @@ const ActiveProjectDetailsStoreProvider = ({ children }: PropsWithChildren) => {
     return allAvailableProjectIds.filter((id) => activeProjectIds.includes(id));
   }, [activeProjectIds, allAvailableProjectIds]);
 
-  if (projectDetailsStoresToBuild.length === 0) {
-    return <ProjectDetailsStoreCacheProvider>{children}</ProjectDetailsStoreCacheProvider>;
-  }
-
-  // Render ProjectDetailsStore components for each project
+  // Keep a stable children position to avoid remounting screens when active IDs change.
   return (
     <ProjectDetailsStoreCacheProvider>
+      {children}
       {projectDetailsStoresToBuild.map((id) => (
         <ProjectDetailsStore projectId={id} key={id} />
       ))}
-      {children}
     </ProjectDetailsStoreCacheProvider>
   );
 };

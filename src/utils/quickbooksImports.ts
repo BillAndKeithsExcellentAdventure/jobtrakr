@@ -168,11 +168,17 @@ export async function importCustomersFromQuickBooks(
 
   let addedCount = 0;
   let updatedCount = 0;
+  let unchangedCount = 0;
+
+  // Build an O(1) lookup map once; avoids repeated O(n) find() calls per customer.
+  const existingByAccountingId = new Map(
+    allCustomers.map((customer) => [customer.accountingId, customer] as const),
+  );
 
   store?.startTransaction();
   try {
     for (const qbCustomer of qbCustomers) {
-      const existing = allCustomers.find((c) => c.accountingId === qbCustomer.Id);
+      const existing = existingByAccountingId.get(qbCustomer.Id);
 
       // Use QuickBooks contact name if available, otherwise preserve existing contact name, or default to empty string
       const contactName =
@@ -180,13 +186,30 @@ export async function importCustomersFromQuickBooks(
         existing?.contactName ||
         '';
 
+      const nextName = qbCustomer.DisplayName;
+      const nextEmail = qbCustomer.PrimaryEmailAddr?.Address || '';
+      const nextPhone = qbCustomer.PrimaryPhone?.FreeFormNumber || '';
+      const nextInactive = !(qbCustomer.Active ?? true);
+
       if (existing) {
-        // Update existing customer, preserving contactName
+        // Skip no-op writes to reduce downstream listener work and UI churn.
+        const hasChanges =
+          existing.name !== nextName ||
+          existing.email !== nextEmail ||
+          existing.phone !== nextPhone ||
+          existing.inactive !== nextInactive ||
+          (existing.contactName || '') !== contactName;
+
+        if (!hasChanges) {
+          unchangedCount++;
+          continue;
+        }
+
         updateCustomer(existing.id, {
-          name: qbCustomer.DisplayName,
-          email: qbCustomer.PrimaryEmailAddr?.Address || '',
-          phone: qbCustomer.PrimaryPhone?.FreeFormNumber || '',
-          inactive: !(qbCustomer.Active ?? true),
+          name: nextName,
+          email: nextEmail,
+          phone: nextPhone,
+          inactive: nextInactive,
           contactName,
         });
         updatedCount++;
@@ -195,10 +218,10 @@ export async function importCustomersFromQuickBooks(
         addCustomer({
           id: '', // empty id for new customers, replaced with UUID by the add callback
           accountingId: qbCustomer.Id,
-          name: qbCustomer.DisplayName,
-          email: qbCustomer.PrimaryEmailAddr?.Address || '',
-          phone: qbCustomer.PrimaryPhone?.FreeFormNumber || '',
-          inactive: !(qbCustomer.Active ?? true),
+          name: nextName,
+          email: nextEmail,
+          phone: nextPhone,
+          inactive: nextInactive,
           contactName,
         });
         addedCount++;
@@ -208,6 +231,8 @@ export async function importCustomersFromQuickBooks(
     store?.finishTransaction();
   }
 
-  console.log(`[QB Import Customers] Done — added ${addedCount}, updated ${updatedCount}`);
+  console.log(
+    `[QB Import Customers] Done — added ${addedCount}, updated ${updatedCount}, unchanged ${unchangedCount}`,
+  );
   return { addedCount, updatedCount };
 }

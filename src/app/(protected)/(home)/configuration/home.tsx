@@ -4,7 +4,7 @@ import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { Stack, useRouter } from 'expo-router';
 import { Paths, File } from 'expo-file-system';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { Pressable } from 'react-native-gesture-handler';
@@ -49,6 +49,7 @@ import {
   isQuickBooksConnected,
 } from '@/src/utils/quickbooksAPI';
 import * as WebBrowser from 'expo-web-browser';
+import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 
 const isPowerUser = false;
 
@@ -58,18 +59,67 @@ const Home = () => {
     isProcessing: false,
     label: '',
   });
+  const [pendingAlert, setPendingAlert] = useState<{ title: string; message: string } | null>(null);
+  const [pendingMenuItem, setPendingMenuItem] = useState<string | null>(null);
 
   const isProcessingRef = useRef(false);
+  const processingDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startProcessing = useCallback((label: string) => {
     console.log(`[Config] startProcessing: ${label}`);
     isProcessingRef.current = true;
-    setProcessingInfo({ isProcessing: true, label });
+    if (processingDelayTimerRef.current) {
+      clearTimeout(processingDelayTimerRef.current);
+      processingDelayTimerRef.current = null;
+    }
+
+    setProcessingInfo((current) => ({
+      isProcessing: current.isProcessing,
+      label,
+    }));
+
+    processingDelayTimerRef.current = setTimeout(() => {
+      processingDelayTimerRef.current = null;
+      if (isProcessingRef.current) {
+        setProcessingInfo({ isProcessing: true, label });
+      }
+    }, 500);
   }, []);
   const stopProcessing = useCallback(() => {
     console.log('[Config] stopProcessing');
     isProcessingRef.current = false;
+    if (processingDelayTimerRef.current) {
+      clearTimeout(processingDelayTimerRef.current);
+      processingDelayTimerRef.current = null;
+    }
     setProcessingInfo({ isProcessing: false, label: '' });
   }, []);
+  const queuePostProcessingAlert = useCallback((title: string, message: string) => {
+    setPendingAlert({ title, message });
+  }, []);
+  const flushPendingAlert = useCallback(() => {
+    if (!pendingAlert) {
+      return;
+    }
+
+    const { title, message } = pendingAlert;
+    setPendingAlert(null);
+    Alert.alert(title, message);
+  }, [pendingAlert]);
+  const handleProcessingModalDismiss = useCallback(() => {
+    flushPendingAlert();
+  }, [flushPendingAlert]);
+  useEffect(() => {
+    if (processingInfo.isProcessing || !pendingAlert) {
+      return;
+    }
+
+    // Backup path for platforms where Modal onDismiss can be skipped.
+    const fallbackTimer = setTimeout(() => {
+      flushPendingAlert();
+    }, 150);
+
+    return () => clearTimeout(fallbackTimer);
+  }, [processingInfo.isProcessing, pendingAlert, flushPendingAlert]);
   const router = useRouter();
   const colors = useColors();
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
@@ -93,6 +143,19 @@ const Home = () => {
   const auth = useAuth();
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
+  const { clearAllProjectIds } = useActiveProjectIds();
+
+  useEffect(() => {
+    clearAllProjectIds();
+  }, [clearAllProjectIds]);
+
+  useEffect(() => {
+    return () => {
+      if (processingDelayTimerRef.current) {
+        clearTimeout(processingDelayTimerRef.current);
+      }
+    };
+  }, []);
 
   const checkQBConnectionWithRetry = useCallback(
     async (maxRetries = 60, retryInterval = 1000): Promise<boolean> => {
@@ -160,6 +223,8 @@ const Home = () => {
       }
 
       startProcessing('Loading Company Settings...');
+      let alertTitle = '';
+      let alertMessage = '';
       try {
         let companyInfo;
         const maxRetries = 5;
@@ -194,18 +259,23 @@ const Home = () => {
           ...(companyInfo.phone ? { phone: companyInfo.phone } : {}),
         });
         if (showAlert) {
-          Alert.alert('Success', 'Company info loaded from QuickBooks.');
+          alertTitle = 'Success';
+          alertMessage = 'Company info loaded from QuickBooks.';
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         if (showAlert) {
-          Alert.alert('Error', `Failed to fetch company information: ${errorMessage}`);
+          alertTitle = 'Error';
+          alertMessage = `Failed to fetch company information: ${errorMessage}`;
         }
       } finally {
         stopProcessing();
       }
+      if (showAlert && alertTitle) {
+        queuePostProcessingAlert(alertTitle, alertMessage);
+      }
     },
-    [auth, setAppSettings, startProcessing, stopProcessing],
+    [auth, setAppSettings, startProcessing, stopProcessing, queuePostProcessingAlert],
   );
 
   const hasConfigurationData: boolean = useMemo(
@@ -432,6 +502,8 @@ const Home = () => {
       }
 
       startProcessing('Importing Vendors from QuickBooks...');
+      let alertTitle = '';
+      let alertMessage = '';
       try {
         const { addedCount } = await importVendorsFromQuickBooks(
           auth.orgId!,
@@ -444,18 +516,20 @@ const Home = () => {
         );
 
         if (showAlert) {
-          Alert.alert(
-            'QuickBooks Vendor Import Complete',
-            `${addedCount} Vendors imported successfully from QuickBooks.`,
-          );
+          alertTitle = 'QuickBooks Vendor Import Complete';
+          alertMessage = `${addedCount} Vendors imported successfully from QuickBooks.`;
         }
       } catch (error) {
         console.error('Error importing vendors from QuickBooks:', error);
         if (showAlert) {
-          Alert.alert('Error', 'Failed to import vendors from QuickBooks');
+          alertTitle = 'Error';
+          alertMessage = 'Failed to import vendors from QuickBooks';
         }
       } finally {
         stopProcessing();
+      }
+      if (showAlert && alertTitle) {
+        queuePostProcessingAlert(alertTitle, alertMessage);
       }
     },
     [
@@ -468,6 +542,7 @@ const Home = () => {
       configStore,
       startProcessing,
       stopProcessing,
+      queuePostProcessingAlert,
     ],
   );
 
@@ -483,6 +558,8 @@ const Home = () => {
       }
 
       startProcessing('Importing Accounts from QuickBooks...');
+      let alertTitle = '';
+      let alertMessage = '';
       try {
         const { addedCount, accounts } = await importAccountsFromQuickBooks(
           auth.orgId,
@@ -498,18 +575,20 @@ const Home = () => {
         setAppSettings(sanitizedSettings);
 
         if (showAlert) {
-          Alert.alert(
-            'QuickBooks Account Import Complete',
-            `${addedCount} Accounts imported successfully from QuickBooks.`,
-          );
+          alertTitle = 'QuickBooks Account Import Complete';
+          alertMessage = `${addedCount} Accounts imported successfully from QuickBooks.`;
         }
       } catch (error) {
         console.error('Error importing QuickBooks accounts:', error);
         if (showAlert) {
-          Alert.alert('Error', 'Failed to import QuickBooks accounts');
+          alertTitle = 'Error';
+          alertMessage = 'Failed to import QuickBooks accounts';
         }
       } finally {
         stopProcessing();
+      }
+      if (showAlert && alertTitle) {
+        queuePostProcessingAlert(alertTitle, alertMessage);
       }
     },
     [
@@ -524,6 +603,7 @@ const Home = () => {
       setAppSettings,
       startProcessing,
       stopProcessing,
+      queuePostProcessingAlert,
     ],
   );
 
@@ -539,6 +619,8 @@ const Home = () => {
       }
 
       startProcessing('Importing Customers from QuickBooks...');
+      let alertTitle = '';
+      let alertMessage = '';
       try {
         const { addedCount, updatedCount } = await importCustomersFromQuickBooks(
           auth.orgId,
@@ -551,18 +633,20 @@ const Home = () => {
         );
 
         if (showAlert) {
-          Alert.alert(
-            'QuickBooks Customer Import Complete',
-            `${addedCount} Customers added, ${updatedCount} updated from QuickBooks.`,
-          );
+          alertTitle = 'QuickBooks Customer Import Complete';
+          alertMessage = `${addedCount} Customers added, ${updatedCount} updated from QuickBooks.`;
         }
       } catch (error) {
         console.error('Error importing customers from QuickBooks:', error);
         if (showAlert) {
-          Alert.alert('Error', 'Failed to import customers from QuickBooks');
+          alertTitle = 'Error';
+          alertMessage = 'Failed to import customers from QuickBooks';
         }
       } finally {
         stopProcessing();
+      }
+      if (showAlert && alertTitle) {
+        queuePostProcessingAlert(alertTitle, alertMessage);
       }
     },
     [
@@ -575,6 +659,7 @@ const Home = () => {
       configStore,
       startProcessing,
       stopProcessing,
+      queuePostProcessingAlert,
     ],
   );
 
@@ -689,14 +774,14 @@ const Home = () => {
     handleGetQBCustomers,
   ]);
 
-  const handleMenuItemPress = useCallback(
-    async (menuItem: string) => {
-      setHeaderMenuModalVisible(false);
+  const executeMenuItemAction = useCallback(
+    (menuItem: string) => {
       if (isPowerUser) {
         if (menuItem === 'Export') {
           handleExportConfiguration();
           return;
-        } else if (menuItem === 'Import') {
+        }
+        if (menuItem === 'Import') {
           handleImportConfiguration();
           return;
         }
@@ -735,7 +820,6 @@ const Home = () => {
       }
       if (menuItem === 'LoadCompanyInfo') {
         handleLoadCompanyInfoFromQuickBooks();
-        return;
       }
     },
     [
@@ -751,6 +835,41 @@ const Home = () => {
       handleDisconnectFromQuickBooks,
       handleLoadCompanyInfoFromQuickBooks,
     ],
+  );
+
+  const flushPendingMenuAction = useCallback(() => {
+    if (!pendingMenuItem) {
+      return;
+    }
+
+    const menuItem = pendingMenuItem;
+    setPendingMenuItem(null);
+    executeMenuItemAction(menuItem);
+  }, [pendingMenuItem, executeMenuItemAction]);
+
+  const handleHeaderMenuDismiss = useCallback(() => {
+    flushPendingMenuAction();
+  }, [flushPendingMenuAction]);
+
+  useEffect(() => {
+    if (headerMenuModalVisible || !pendingMenuItem) {
+      return;
+    }
+
+    // Backup path for platforms where Modal onDismiss can be skipped.
+    const fallbackTimer = setTimeout(() => {
+      flushPendingMenuAction();
+    }, 150);
+
+    return () => clearTimeout(fallbackTimer);
+  }, [headerMenuModalVisible, pendingMenuItem, flushPendingMenuAction]);
+
+  const handleMenuItemPress = useCallback(
+    (menuItem: string) => {
+      setPendingMenuItem(menuItem);
+      setHeaderMenuModalVisible(false);
+    },
+    [setHeaderMenuModalVisible],
   );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(() => {
@@ -916,9 +1035,15 @@ const Home = () => {
           modalVisible={headerMenuModalVisible}
           setModalVisible={setHeaderMenuModalVisible}
           buttons={rightHeaderMenuButtons}
+          onDismiss={handleHeaderMenuDismiss}
         />
       )}
-      <Modal transparent animationType="fade" visible={processingInfo.isProcessing}>
+      <Modal
+        transparent
+        animationType="fade"
+        visible={processingInfo.isProcessing}
+        onDismiss={handleProcessingModalDismiss}
+      >
         <View style={styles.processingOverlay}>
           <View style={styles.processingContainer}>
             <ActivityIndicator size="large" color={colors.tint} />

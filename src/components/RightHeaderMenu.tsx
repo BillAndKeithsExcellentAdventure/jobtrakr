@@ -9,11 +9,13 @@ const RightHeaderMenu = ({
   setModalVisible,
   buttons,
   actionContext,
+  onDismiss,
 }: {
   modalVisible: boolean;
   setModalVisible: (val: boolean) => void;
   buttons: ActionButtonProps[];
   actionContext?: any;
+  onDismiss?: () => void;
 }) => {
   const colors = useColors();
   const topMargin = Platform.OS === 'ios' ? 102 : 50;
@@ -26,6 +28,7 @@ const RightHeaderMenu = ({
       transparent={true}
       visible={modalVisible}
       onRequestClose={() => setModalVisible(false)} // Close on back press
+      onDismiss={onDismiss}
     >
       <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
         <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlayBackgroundColor }]}>

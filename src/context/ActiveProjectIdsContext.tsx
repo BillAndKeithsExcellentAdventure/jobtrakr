@@ -5,6 +5,7 @@ type ActiveProjectIdsContextType = {
   activeProjectIds: string[];
   addActiveProjectIds: (ids: string | string[]) => void;
   removeActiveProjectId: (id: string) => void;
+  clearAllProjectIds: () => void;
 };
 
 // Create the context with an initial undefined value
@@ -41,11 +42,15 @@ export const ActiveProjectIdsProvider: React.FC<ActiveProjectIdsProviderProps> =
     });
   }, []);
 
+  const clearAllProjectIds = useCallback(() => {
+    setActiveProjectIds([]);
+  }, []);
+
   // console.log('rendering ActiveProjectIdsContext');
 
   return (
     <ActiveProjectIdsContext.Provider
-      value={{ activeProjectIds, addActiveProjectIds, removeActiveProjectId }}
+      value={{ activeProjectIds, addActiveProjectIds, removeActiveProjectId, clearAllProjectIds }}
     >
       {children}
     </ActiveProjectIdsContext.Provider>
