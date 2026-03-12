@@ -137,7 +137,7 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
 
   return (
     <Modal visible={isVisible} transparent={true} animationType="fade">
-      <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, paddingTop: 10 }}>
+      <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
         <View style={[styles.container, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
             <Text txtSize="title" style={styles.title}>

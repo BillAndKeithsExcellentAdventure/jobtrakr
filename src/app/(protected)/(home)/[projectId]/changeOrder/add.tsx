@@ -287,10 +287,7 @@ export default function AddChangeOrder() {
         onRequestClose={handleAddItemCancel}
       >
         <View style={[styles.modalOverlay, { backgroundColor: colors.opaqueModalOverlayBackgroundColor }]}>
-          <SafeAreaView
-            edges={['top']}
-            style={[styles.modalSafeArea, Platform.OS === 'ios' && { marginTop: 60 }]}
-          >
+          <SafeAreaView edges={['top']} style={styles.modalSafeArea}>
             <View style={styles.modalContent}>
               <View style={{ alignItems: 'center', justifyContent: 'center' }}>
                 <Text txtSize="title">Add Change Order Item</Text>
