@@ -1,6 +1,7 @@
 import { useColors } from '@/src/context/ColorsContext';
 import {
   VendorData,
+  VendorDataCompareName,
   useAllRows as useAllConfigurationRows,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
@@ -14,6 +15,7 @@ import { ActionButton } from './ActionButton';
 import { NumericInputField } from './NumericInputField';
 import { Text, TextInput } from './Themed';
 import { VendorPicker } from './VendorPicker';
+import { useNetwork } from '../context/NetworkContext';
 
 interface InvoiceSummaryEditModalProps {
   isVisible: boolean;
@@ -46,7 +48,24 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
   const [editedSummary, setEditedSummary] = useState(invoiceSummary);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [dueDatePickerVisible, setDueDatePickerVisible] = useState(false);
-  const allVendors = useAllConfigurationRows('vendors');
+  const allVendors = useAllConfigurationRows('vendors', VendorDataCompareName);
+  const { isQuickBooksConnected } = useNetwork();
+
+  const availableVendors = useMemo(() => {
+    // include the currently selected vendor in the list even if it's inactive, so that it can be re-selected if needed
+    const currentVendor = allVendors.find((v) => v.id === editedSummary.vendorId);
+    return currentVendor
+      ? [
+          currentVendor,
+          ...allVendors.filter(
+            (v) =>
+              v.id !== editedSummary.vendorId &&
+              !v.inactive &&
+              (isQuickBooksConnected ? !!v.accountingId : true),
+          ),
+        ]
+      : allVendors.filter((v) => !v.inactive);
+  }, [allVendors, editedSummary.vendorId, isQuickBooksConnected]);
 
   useEffect(() => {
     setEditedSummary(invoiceSummary);
@@ -122,9 +141,9 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
               <VendorPicker
                 selectedVendor={selectedVendor}
                 onVendorSelected={handleVendorSelected}
-                vendors={allVendors}
-                label="Vendor/Merchant"
-                placeholder="Vendor/Merchant"
+                vendors={availableVendors}
+                label="Vendor"
+                placeholder="Vendor"
               />
               <NumericInputField
                 containerStyle={styles.inputContainer}
