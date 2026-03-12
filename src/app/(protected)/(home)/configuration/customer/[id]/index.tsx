@@ -17,7 +17,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextField } from '@/src/components/TextField';
-import { KeyboardToolbar } from 'react-native-keyboard-controller';
+import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { useAuth } from '@clerk/clerk-expo';
@@ -236,7 +236,15 @@ const EditCustomer = () => {
             headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
           }}
         />
-        <View style={styles.container}>
+        <KeyboardAwareScrollView
+          bottomOffset={IOS_KEYBOARD_TOOLBAR_OFFSET + 52}
+          keyboardShouldPersistTaps="handled"
+          style={{ flex: 1, backgroundColor: colors.background }}
+          contentContainerStyle={[
+            styles.container,
+            { backgroundColor: colors.background, paddingBottom: Platform.OS === 'ios' ? 90 : 24 },
+          ]}
+        >
           {isFromQuickBooks && (
             <Text
               txtSize="xs"
@@ -300,7 +308,7 @@ const EditCustomer = () => {
               />
             </View>
           )}
-        </View>
+        </KeyboardAwareScrollView>
       </SafeAreaView>
       {isLinkCustomerPickerVisible && (
         <BottomSheetContainer
@@ -331,7 +339,6 @@ const EditCustomer = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 16,
     gap: 8,
   },

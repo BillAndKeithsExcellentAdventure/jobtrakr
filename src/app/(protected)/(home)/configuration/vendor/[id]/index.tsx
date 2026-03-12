@@ -1,7 +1,9 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
-import { Text, TextInput, View } from '@/src/components/Themed';
+import { TextField } from '@/src/components/TextField';
+import { Text, View } from '@/src/components/Themed';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import {
@@ -15,7 +17,8 @@ import { addVendor } from '@/src/utils/quickbooksAPI';
 import { useAuth } from '@clerk/clerk-expo';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Platform, StyleSheet } from 'react-native';
+import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditVendor = () => {
@@ -180,146 +183,154 @@ const EditVendor = () => {
   ]);
 
   return (
-    <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: 'Edit Vendor',
-          headerBackTitle: '',
-          headerBackButtonDisplayMode: 'minimal',
-        }}
-      />
-      <View style={styles.container}>
-        <TextInput
-          style={[styles.input, { height: 'auto', backgroundColor: colors.neutral200, paddingBottom: 8 }]}
-          placeholder="Name"
-          value={updatedVendor.name}
-          numberOfLines={2}
-          multiline
-          onChangeText={(text) => handleInputChange('name', text)}
-          onBlur={handleBlur}
+    <>
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            title: 'Edit Vendor',
+            headerBackTitle: '',
+            headerBackButtonDisplayMode: 'minimal',
+          }}
         />
-        <TextInput
-          style={[styles.input, { backgroundColor: colors.neutral200 }]}
-          placeholder="Match Pattern (e.g. home?depot or home*depot)"
-          value={updatedVendor.matchCompareString}
-          onChangeText={(text) => handleInputChange('matchCompareString', text)}
-          onBlur={handleBlur}
-        />
-        <TextInput
-          style={[styles.input, { height: 'auto', backgroundColor: colors.neutral200, paddingBottom: 8 }]}
-          placeholder="Address"
-          value={updatedVendor.address}
-          numberOfLines={2}
-          multiline
-          onChangeText={(text) => handleInputChange('address', text)}
-          onBlur={handleBlur}
-        />
-        <View style={{ flexDirection: 'row' }}>
-          <TextInput
-            style={[styles.input, { flex: 1, marginRight: 8, backgroundColor: colors.neutral200 }]}
-            placeholder="City"
-            value={updatedVendor.city}
-            onChangeText={(text) => handleInputChange('city', text)}
-            onBlur={handleBlur}
-          />
-          <TextInput
-            style={[styles.input, { width: 75, marginRight: 8, backgroundColor: colors.neutral200 }]}
-            placeholder="State"
-            value={updatedVendor.state}
-            onChangeText={(text) => handleInputChange('state', text)}
-            onBlur={handleBlur}
-          />
-          <TextInput
-            style={[styles.input, { width: 80, backgroundColor: colors.neutral200 }]}
-            placeholder="Zip"
-            value={updatedVendor.zip}
-            keyboardType="number-pad"
-            onChangeText={(text) => handleInputChange('zip', text)}
-            onBlur={handleBlur}
-          />
-        </View>
-        <View style={{ flexDirection: 'row' }}>
-          <TextInput
-            style={[styles.input, { flex: 1, marginRight: 8, backgroundColor: colors.neutral200 }]}
-            placeholder="Mobile Phone"
-            keyboardType="phone-pad"
-            value={updatedVendor.mobilePhone}
-            onChangeText={(text) => handleInputChange('mobilePhone', text)}
-            onBlur={handleBlur}
-          />
-          <TextInput
-            style={[styles.input, { flex: 1, backgroundColor: colors.neutral200 }]}
-            placeholder="Business Phone"
-            value={updatedVendor.businessPhone}
-            keyboardType="phone-pad"
-            onChangeText={(text) => handleInputChange('businessPhone', text)}
-            onBlur={handleBlur}
-          />
-        </View>
-        <TextInput
-          style={[styles.input, { backgroundColor: colors.neutral200 }]}
-          placeholder="Notes"
-          value={updatedVendor.notes}
-          multiline
-          onChangeText={(text) => handleInputChange('notes', text)}
-          onBlur={handleBlur}
-        />
-        {!updatedVendor.accountingId && isQuickBooksAccessible && (
-          <View style={styles.actionButtonRow}>
-            <ActionButton
-              style={styles.linkButton}
-              type="action"
-              title="Link to QuickBooks Vendor"
-              onPress={() => setIsLinkVendorPickerVisible(true)}
-            />
-            <ActionButton
-              style={styles.addQbButton}
-              type="action"
-              title="Add Vendor to QuickBooks"
-              onPress={handleAddVendorToQuickBooks}
-            />
-          </View>
-        )}
-      </View>
-      {isLinkVendorPickerVisible && (
-        <BottomSheetContainer
-          modalHeight={'80%'}
-          isVisible={isLinkVendorPickerVisible}
-          onClose={() => setIsLinkVendorPickerVisible(false)}
-          showKeyboardToolbar={false}
+        <KeyboardAwareScrollView
+          bottomOffset={IOS_KEYBOARD_TOOLBAR_OFFSET + 52}
+          keyboardShouldPersistTaps="handled"
+          style={{ flex: 1, backgroundColor: colors.background }}
+          contentContainerStyle={[
+            styles.container,
+            { backgroundColor: colors.background, paddingBottom: Platform.OS === 'ios' ? 90 : 24 },
+          ]}
         >
-          <OptionList
-            options={qbVendorOptions}
-            onSelect={handleLinkToQbVendor}
-            enableSearch={qbVendorOptions.length > 15}
+          <TextField
+            placeholder="Name"
+            label="Name"
+            value={updatedVendor.name}
+            numberOfLines={2}
+            multiline
+            onChangeText={(text) => handleInputChange('name', text)}
+            onBlur={handleBlur}
           />
-        </BottomSheetContainer>
-      )}
-      <Modal transparent animationType="fade" visible={processingInfo.isProcessing}>
-        <View style={styles.processingOverlay}>
-          <View style={[styles.processingContainer, { backgroundColor: colors.listBackground }]}>
-            <ActivityIndicator size="large" color={colors.tint} />
-            <Text style={styles.processingLabel}>{processingInfo.label}</Text>
+          <TextField
+            placeholder="Match Pattern (e.g. lowe*s)"
+            label="Match Pattern for Photo Processing"
+            value={updatedVendor.matchCompareString}
+            onChangeText={(text) => handleInputChange('matchCompareString', text)}
+            onBlur={handleBlur}
+          />
+          <TextField
+            placeholder="Address"
+            label="Address"
+            value={updatedVendor.address}
+            numberOfLines={2}
+            multiline
+            onChangeText={(text) => handleInputChange('address', text)}
+            onBlur={handleBlur}
+          />
+          <View style={{ flexDirection: 'row', gap: 8, alignSelf: 'stretch' }}>
+            <TextField
+              placeholder="City"
+              label="City"
+              containerStyle={{ flex: 1 }}
+              value={updatedVendor.city}
+              onChangeText={(text) => handleInputChange('city', text)}
+              onBlur={handleBlur}
+            />
+            <TextField
+              placeholder="State"
+              label="State"
+              containerStyle={{ width: 80 }}
+              value={updatedVendor.state}
+              onChangeText={(text) => handleInputChange('state', text)}
+              onBlur={handleBlur}
+            />
+            <TextField
+              placeholder="Zip"
+              label="Zip"
+              containerStyle={{ width: 80 }}
+              value={updatedVendor.zip}
+              keyboardType="number-pad"
+              onChangeText={(text) => handleInputChange('zip', text)}
+              onBlur={handleBlur}
+            />
           </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+          <View style={{ flexDirection: 'row', gap: 8, alignSelf: 'stretch' }}>
+            <TextField
+              placeholder="Mobile Phone"
+              label="Mobile Phone"
+              keyboardType="phone-pad"
+              containerStyle={{ flex: 1 }}
+              value={updatedVendor.mobilePhone}
+              onChangeText={(text) => handleInputChange('mobilePhone', text)}
+              onBlur={handleBlur}
+            />
+            <TextField
+              placeholder="Business Phone"
+              label="Business Phone"
+              containerStyle={{ flex: 1 }}
+              value={updatedVendor.businessPhone}
+              keyboardType="phone-pad"
+              onChangeText={(text) => handleInputChange('businessPhone', text)}
+              onBlur={handleBlur}
+            />
+          </View>
+          <TextField
+            placeholder="Notes"
+            label="Notes"
+            value={updatedVendor.notes}
+            multiline
+            onChangeText={(text) => handleInputChange('notes', text)}
+            onBlur={handleBlur}
+          />
+          {!updatedVendor.accountingId && isQuickBooksAccessible && (
+            <View style={styles.actionButtonRow}>
+              <ActionButton
+                style={styles.linkButton}
+                type="action"
+                title="Link to QuickBooks Vendor"
+                onPress={() => setIsLinkVendorPickerVisible(true)}
+              />
+              <ActionButton
+                style={styles.addQbButton}
+                type="action"
+                title="Add Vendor to QuickBooks"
+                onPress={handleAddVendorToQuickBooks}
+              />
+            </View>
+          )}
+        </KeyboardAwareScrollView>
+        {isLinkVendorPickerVisible && (
+          <BottomSheetContainer
+            modalHeight={'80%'}
+            isVisible={isLinkVendorPickerVisible}
+            onClose={() => setIsLinkVendorPickerVisible(false)}
+            showKeyboardToolbar={false}
+          >
+            <OptionList
+              options={qbVendorOptions}
+              onSelect={handleLinkToQbVendor}
+              enableSearch={qbVendorOptions.length > 15}
+            />
+          </BottomSheetContainer>
+        )}
+        <Modal transparent animationType="fade" visible={processingInfo.isProcessing}>
+          <View style={styles.processingOverlay}>
+            <View style={[styles.processingContainer, { backgroundColor: colors.listBackground }]}>
+              <ActivityIndicator size="large" color={colors.tint} />
+              <Text style={styles.processingLabel}>{processingInfo.label}</Text>
+            </View>
+          </View>
+        </Modal>
+      </SafeAreaView>
+      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 16,
-  },
-  input: {
-    height: 40,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    marginBottom: 12,
-    paddingLeft: 8,
-    borderRadius: 4,
+    gap: 8,
   },
   saveButton: {
     flex: 1,

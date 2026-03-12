@@ -23,7 +23,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
-import { useVendorMatch } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  useAllRows,
+  useVendorMatch,
+  VendorDataCompareName,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useNetwork } from '@/src/context/NetworkContext';
 
 const processAIProcessing = async (
@@ -91,11 +95,23 @@ const RequestAIProcessingPage = () => {
   );
   const defaultProjectOption = projectPickerOptions.find((option) => option.value === projectId);
   const { isQuickBooksConnected } = useNetwork();
+  const allVendors = useAllRows('vendors', VendorDataCompareName);
+  const matchableVendors = useMemo(
+    () =>
+      isQuickBooksConnected
+        ? allVendors.filter((v) => !!v.accountingId && !v.inactive)
+        : allVendors.filter((v) => !v.inactive),
+    [allVendors, isQuickBooksConnected],
+  );
   const [lineItemProjectOption, setLineItemProjectOption] = useState<OptionEntry | undefined>(
     defaultProjectOption,
   );
 
-  const { findFirstVendorMatch } = useVendorMatch(isQuickBooksConnected);
+  const { findFirstVendorMatch } = useVendorMatch(matchableVendors);
+  const findFirstVendorMatchRef = useRef(findFirstVendorMatch);
+  useEffect(() => {
+    findFirstVendorMatchRef.current = findFirstVendorMatch;
+  }, [findFirstVendorMatch]);
 
   useEffect(() => {
     if (defaultProjectOption) {
@@ -129,7 +145,7 @@ const RequestAIProcessingPage = () => {
 
       // try to find a vendor
       const vendorNameFromAI = replaceNonPrintable(result.response.MerchantName?.value);
-      const vendorMatch = findFirstVendorMatch(vendorNameFromAI);
+      const vendorMatch = findFirstVendorMatchRef.current(vendorNameFromAI);
 
       const summary = {
         vendor: vendorMatch ? vendorMatch.name : vendorNameFromAI,
@@ -166,7 +182,7 @@ const RequestAIProcessingPage = () => {
     } finally {
       setFetchingData(false);
     }
-  }, [imageId, projectId, userId, orgId, auth.getToken, findFirstVendorMatch]);
+  }, [imageId, projectId, userId, orgId, auth.getToken]);
 
   useEffect(() => {
     // reset fetch flag when navigating to a different receipt image

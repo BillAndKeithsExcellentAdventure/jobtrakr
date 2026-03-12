@@ -16,7 +16,11 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/formatters';
 import { createApiWithToken } from '@/src/utils/apiWithToken';
-import { useVendorMatch } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  useAllRows,
+  useVendorMatch,
+  VendorDataCompareName,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -85,7 +89,19 @@ const RequestAIProcessingPage = () => {
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
   const { isQuickBooksConnected } = useNetwork();
-  const { findFirstVendorMatch } = useVendorMatch(isQuickBooksConnected);
+  const allVendors = useAllRows('vendors', VendorDataCompareName);
+  const matchableVendors = useMemo(
+    () =>
+      isQuickBooksConnected
+        ? allVendors.filter((v) => !!v.accountingId && !v.inactive)
+        : allVendors.filter((v) => !v.inactive),
+    [allVendors, isQuickBooksConnected],
+  );
+  const { findFirstVendorMatch } = useVendorMatch(matchableVendors);
+  const findFirstVendorMatchRef = useRef(findFirstVendorMatch);
+  useEffect(() => {
+    findFirstVendorMatchRef.current = findFirstVendorMatch;
+  }, [findFirstVendorMatch]);
 
   const fetchAIResult = useCallback(async () => {
     try {
@@ -103,7 +119,7 @@ const RequestAIProcessingPage = () => {
 
       // try to find a vendor
       const vendorNameFromAI = replaceNonPrintable(result.response?.VendorName?.value ?? '');
-      const vendorMatch = findFirstVendorMatch(vendorNameFromAI);
+      const vendorMatch = findFirstVendorMatchRef.current(vendorNameFromAI);
 
       const summary = {
         invoiceId: replaceNonPrintable(result.response?.InvoiceId?.value ?? ''),
@@ -143,7 +159,7 @@ const RequestAIProcessingPage = () => {
     } finally {
       setFetchingData(false);
     }
-  }, [imageId, projectId, userId, orgId, auth.getToken, findFirstVendorMatch]);
+  }, [imageId, projectId, userId, orgId, auth.getToken]);
 
   useEffect(() => {
     // reset fetch flag when navigating to a different invoice image

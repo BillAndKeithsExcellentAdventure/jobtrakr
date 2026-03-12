@@ -520,28 +520,20 @@ export function useCreateTemplateWithAllWorkItemsCallback() {
 
 /**
  * Converts a matchCompareString pattern into a RegExp.
- * '?' matches any single character, '*' matches any number of characters.
+ * '*' matches any number of characters.
  * The pattern is searched for anywhere within the target string (not anchored).
  */
 function matchPatternToRegExp(pattern: string): RegExp {
-  const escaped = pattern.replace(/[-\\^$+.()|[\]{}]/g, '\\$&');
-  const withWildcards = escaped.replace(/\?/g, '.').replace(/\*/g, '.*');
+  const escaped = pattern.replace(/[-\\^$+.()|[\]{}?]/g, '\\$&');
+  const withWildcards = escaped.replace(/\*/g, '.*');
   return new RegExp(withWildcards, 'i');
 }
 
 /**
- * Hook that provides all vendors and a callback to find the first vendor
+ * Hook that provides a callback to find the first vendor
  * whose matchCompareString pattern matches the given vendor name.
- * @param requireAccountingId When true, only vendors with an accountingId and not inactive are included.
  */
-export function useVendorMatch(requireAccountingId = false) {
-  const allVendors = useAllRows('vendors', VendorDataCompareName);
-
-  const vendors = useMemo(
-    () => (requireAccountingId ? allVendors.filter((v) => !!v.accountingId && !v.inactive) : allVendors),
-    [allVendors, requireAccountingId],
-  );
-
+export function useVendorMatch(vendors: VendorData[]) {
   const vendorPatternsWithMatch = useMemo(
     () =>
       vendors
@@ -565,5 +557,5 @@ export function useVendorMatch(requireAccountingId = false) {
     [vendorPatternsWithMatch, vendorsWithoutMatch],
   );
 
-  return { vendors, findFirstVendorMatch };
+  return { findFirstVendorMatch };
 }
