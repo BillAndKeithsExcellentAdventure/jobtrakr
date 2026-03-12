@@ -77,7 +77,7 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
 
         {/* Video container */}
         <Pressable style={styles.videoContainer} onPress={handleVideoPress}>
-          <VideoView style={styles.video} player={player} allowsFullscreen />
+          <VideoView style={styles.video} player={player} fullscreenOptions={{ enable: true }} />
         </Pressable>
 
         {/* Play/Pause button - bottom center */}

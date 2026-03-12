@@ -104,40 +104,41 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const resolvedColorScheme = colorScheme === 'dark' ? 'dark' : 'light';
   return (
     <ClerkProvider tokenCache={tokenCache} publishableKey={CLERK_PUBLISHABLE_KEY}>
       <StatusBar style="auto" />
       <TinyBaseProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <ClerkLoadingWrapper colorScheme={colorScheme ?? 'light'}>
+        <ThemeProvider value={resolvedColorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <ClerkLoadingWrapper colorScheme={resolvedColorScheme}>
             <KeyboardProvider>
               <ColorsProvider>
-                  <SafeAreaProvider>
-                    <GestureHandlerRootView>
-                      <NetworkProvider>
-                        {/* NetworkProvider also initializes AppSettingsStore */}
+                <SafeAreaProvider>
+                  <GestureHandlerRootView>
+                    <NetworkProvider>
+                      {/* NetworkProvider also initializes AppSettingsStore */}
 
-                        <Stack screenOptions={{ headerShown: false }}>
-                          <Stack.Screen
-                            name="(auth)"
-                            options={{
-                              animation: 'none',
-                              headerBackTitle: '',
-                              headerBackButtonDisplayMode: 'minimal',
-                            }}
-                          />
-                          <Stack.Screen
-                            name="(protected)"
-                            options={{
-                              animation: 'none',
-                              headerBackTitle: '',
-                              headerBackButtonDisplayMode: 'minimal',
-                            }}
-                          />
-                        </Stack>
-                      </NetworkProvider>
-                    </GestureHandlerRootView>
-                  </SafeAreaProvider>
+                      <Stack screenOptions={{ headerShown: false }}>
+                        <Stack.Screen
+                          name="(auth)"
+                          options={{
+                            animation: 'none',
+                            headerBackTitle: '',
+                            headerBackButtonDisplayMode: 'minimal',
+                          }}
+                        />
+                        <Stack.Screen
+                          name="(protected)"
+                          options={{
+                            animation: 'none',
+                            headerBackTitle: '',
+                            headerBackButtonDisplayMode: 'minimal',
+                          }}
+                        />
+                      </Stack>
+                    </NetworkProvider>
+                  </GestureHandlerRootView>
+                </SafeAreaProvider>
               </ColorsProvider>
             </KeyboardProvider>
           </ClerkLoadingWrapper>
