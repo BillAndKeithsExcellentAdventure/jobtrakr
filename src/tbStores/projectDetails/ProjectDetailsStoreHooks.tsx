@@ -1,13 +1,12 @@
-import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
+import { useProjectDetailsStoreCache } from '@/src/context/ProjectDetailsStoreCacheContext';
 import { useWorkItemSpentSummary } from '@/src/context/WorkItemSpentSummaryContext';
-import * as UiReact from 'tinybase/ui-react/with-schemas';
-import { NoValuesSchema, Value } from 'tinybase/with-schemas';
-import { getStoreId, TABLES_SCHEMA } from './ProjectDetailsStore';
 import { CrudResult } from '@/src/models/types';
 import { randomUUID } from 'expo-crypto';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import * as UiReact from 'tinybase/ui-react/with-schemas';
+import { NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { useProjectValue } from '../listOfProjects/ListOfProjectsStore';
-import { useProjectDetailsStoreCache } from '@/src/context/ProjectDetailsStoreCacheContext';
+import { getStoreId, TABLES_SCHEMA } from './ProjectDetailsStore';
 
 const { useCell, useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
@@ -395,11 +394,16 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
   const allWorkItemCostEntries = useAllRows(projectId, 'workItemCostEntries');
   const { setWorkItemSpentAmount } = useWorkItemSpentSummary();
 
+  // filter cost entries for the current project - this is needed because cost entries can be associated with other projects
+  const projectCostEntries = allWorkItemCostEntries.filter((entry) =>
+    entry.projectId ? entry.projectId === projectId : true,
+  );
+
   useEffect(() => {
     // Group cost entries by workItemId and calculate total spent per work item
     const spentByWorkItem = new Map<string, number>();
 
-    for (const costEntry of allWorkItemCostEntries) {
+    for (const costEntry of projectCostEntries) {
       spentByWorkItem.set(
         costEntry.workItemId,
         (spentByWorkItem.get(costEntry.workItemId) ?? 0) + costEntry.amount,
@@ -411,7 +415,7 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
     for (const [workItemId, spentAmount] of spentByWorkItem) {
       setWorkItemSpentAmount(projectId, workItemId, spentAmount);
     }
-  }, [allWorkItemCostEntries, projectId, setWorkItemSpentAmount]);
+  }, [projectCostEntries, projectId, setWorkItemSpentAmount]);
 };
 
 /**
