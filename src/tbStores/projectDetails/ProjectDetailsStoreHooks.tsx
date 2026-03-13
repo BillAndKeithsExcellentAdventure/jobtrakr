@@ -5,8 +5,9 @@ import { NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { getStoreId, TABLES_SCHEMA } from './ProjectDetailsStore';
 import { CrudResult } from '@/src/models/types';
 import { randomUUID } from 'expo-crypto';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useProjectValue } from '../listOfProjects/ListOfProjectsStore';
+import { useProjectDetailsStoreCache } from '@/src/context/ProjectDetailsStoreCacheContext';
 
 const { useCell, useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
@@ -330,7 +331,7 @@ export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
   const [seedWorkItems, setSeedWorkItems] = useProjectValue(projectId, 'seedWorkItems');
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const addWorkItemSummary = useAddRowCallback(projectId, 'workItemSummaries');
-  const { activeProjectIds } = useActiveProjectIds();
+  const { getStoreFromCache } = useProjectDetailsStoreCache();
 
   const seedInitialData = useCallback((): boolean => {
     if (allWorkItemSummaries.length > 0 || !seedWorkItems) return false;
@@ -349,7 +350,9 @@ export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
   }, [seedWorkItems, allWorkItemSummaries, addWorkItemSummary]);
 
   useEffect(() => {
-    if (activeProjectIds.includes(projectId)) {
+    const isStoreAvailable = !!getStoreFromCache(projectId);
+
+    if (isStoreAvailable) {
       if (projectId && seedWorkItems && allWorkItemSummaries.length === 0) {
         console.log('Seeding initial data for project', projectId);
         if (seedInitialData()) {
@@ -358,7 +361,7 @@ export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
         }
       }
     }
-  }, [projectId, seedWorkItems, allWorkItemSummaries, activeProjectIds, seedInitialData, setSeedWorkItems]);
+  }, [projectId, seedWorkItems, allWorkItemSummaries, getStoreFromCache, seedInitialData, setSeedWorkItems]);
 };
 
 // function to get workitems for a given project that has no costs associated with it and no bid amount

@@ -1,5 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
-import { Text, TextInput, View } from '@/src/components/Themed';
+import { TextField } from '@/src/components/TextField';
+import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
 import {
@@ -101,16 +102,14 @@ const ProjectNotes = () => {
                 {/* Show Add Note Section only if no note is being edited */}
                 {!editingNote && (
                   <View style={{ backgroundColor: colors.listBackground }}>
-                    <TextInput
+                    <TextField
                       value={newNoteTitle}
                       onChangeText={setNewNoteTitle}
                       placeholder="Enter note"
                       multiline
                       numberOfLines={3}
-                      style={{
-                        borderWidth: 1,
-                        padding: 8,
-                        marginBottom: 10,
+                      containerStyle={{ marginBottom: 10 }}
+                      inputStyle={{
                         minHeight: 40,
                         maxHeight: 100,
                         textAlignVertical: 'top',
@@ -128,16 +127,14 @@ const ProjectNotes = () => {
                 {/* Editing Note Section */}
                 {editingNote && (
                   <View style={{ backgroundColor: colors.listBackground }}>
-                    <TextInput
+                    <TextField
                       value={editingNote.task ?? ''}
                       onChangeText={(title) => setEditingNote({ ...editingNote, task: title })}
                       placeholder="Edit note title"
                       multiline
                       numberOfLines={3}
-                      style={{
-                        borderWidth: 1,
-                        padding: 8,
-                        marginBottom: 10,
+                      containerStyle={{ marginBottom: 10 }}
+                      inputStyle={{
                         minHeight: 40,
                         maxHeight: 100,
                         textAlignVertical: 'top',

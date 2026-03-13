@@ -4,7 +4,7 @@ import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
-import { Text, TextInput, View } from '@/src/components/Themed';
+import { Text, View } from '@/src/components/Themed';
 import { VendorPicker } from '@/src/components/VendorPicker';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
@@ -211,8 +211,8 @@ const EditReceiptDetailsPage = () => {
             <View style={{ paddingBottom: 8 }}>
               <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
                 <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
-                <TextInput
-                  readOnly={true}
+                <TextField
+                  editable={false}
                   style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
                   placeholder="Date"
                   onPressIn={showDatePicker}

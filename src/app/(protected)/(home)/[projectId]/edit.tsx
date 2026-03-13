@@ -2,7 +2,7 @@ import { CustomerPicker } from '@/src/components/CustomerPicker';
 import { TextField } from '@/src/components/TextField';
 import { NumericInputField } from '@/src/components/NumericInputField';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
-import { Text, TextInput, View } from '@/src/components/Themed';
+import { Text, View } from '@/src/components/Themed';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
@@ -265,8 +265,8 @@ const EditProjectScreen = () => {
           <View style={styles.dateContainer}>
             <TouchableOpacity activeOpacity={1} onPress={showStartDatePicker}>
               <Text txtSize="formLabel" text="Start Date" style={styles.inputLabel} />
-              <TextInput
-                readOnly={true}
+              <TextField
+                editable={false}
                 style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
                 placeholder="Start Date"
                 onPressIn={showStartDatePicker}
@@ -284,8 +284,8 @@ const EditProjectScreen = () => {
 
             <TouchableOpacity activeOpacity={1} onPress={showFinishDatePicker}>
               <Text txtSize="formLabel" text="Finish Date" style={styles.inputLabel} />
-              <TextInput
-                readOnly={true}
+              <TextField
+                editable={false}
                 style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
                 placeholder="Finish Date"
                 onPressIn={showFinishDatePicker}
