@@ -105,5 +105,8 @@
     "ts-jest": "^29.4.6",
     "typescript": "~5.9.2"
   },
+  "optionalDependencies": {
+    "utf-8-validate": "5.0.10"
+  },
   "private": true
 }
