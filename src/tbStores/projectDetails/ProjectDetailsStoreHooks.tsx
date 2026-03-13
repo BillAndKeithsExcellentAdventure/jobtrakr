@@ -330,38 +330,35 @@ export const useBidAmountUpdater = (projectId: string): void => {
 export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
   const [seedWorkItems, setSeedWorkItems] = useProjectValue(projectId, 'seedWorkItems');
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
-  const addWorkItemSummary = useAddRowCallback(projectId, 'workItemSummaries');
   const { getStoreFromCache } = useProjectDetailsStoreCache();
 
   const seedInitialData = useCallback((): boolean => {
     if (allWorkItemSummaries.length > 0 || !seedWorkItems) return false;
 
-    const workItemIds = seedWorkItems.split(',');
-    for (const workItemId of workItemIds) {
-      if (!workItemId) continue;
-      addWorkItemSummary({
-        id: '',
-        workItemId,
-        bidAmount: 0,
-        complete: false,
-      });
-    }
+    const workItemIds = seedWorkItems.split(',').filter(Boolean);
+    if (workItemIds.length === 0) return false;
+
+    const store = getStoreFromCache(projectId);
+    if (!store) return false;
+
+    store.transaction(() => {
+      for (const workItemId of workItemIds) {
+        const id = randomUUID();
+        store.setRow('workItemSummaries', id, { id, workItemId, bidAmount: 0, complete: false } as any);
+      }
+    });
     return true;
-  }, [seedWorkItems, allWorkItemSummaries, addWorkItemSummary]);
+  }, [seedWorkItems, allWorkItemSummaries, getStoreFromCache, projectId]);
 
   useEffect(() => {
-    const isStoreAvailable = !!getStoreFromCache(projectId);
-
-    if (isStoreAvailable) {
-      if (projectId && seedWorkItems && allWorkItemSummaries.length === 0) {
-        console.log('Seeding initial data for project', projectId);
-        if (seedInitialData()) {
-          console.log('Initial data seeded for project', projectId);
-          setSeedWorkItems(''); // Clear the seedWorkItems after seeding
-        }
+    if (projectId && seedWorkItems && allWorkItemSummaries.length === 0) {
+      console.log('Seeding initial data for project', projectId);
+      if (seedInitialData()) {
+        console.log('Initial data seeded for project', projectId);
+        setSeedWorkItems(''); // Clear the seedWorkItems after seeding
       }
     }
-  }, [projectId, seedWorkItems, allWorkItemSummaries, getStoreFromCache, seedInitialData, setSeedWorkItems]);
+  }, [projectId, seedWorkItems, allWorkItemSummaries, seedInitialData, setSeedWorkItems]);
 };
 
 // function to get workitems for a given project that has no costs associated with it and no bid amount
