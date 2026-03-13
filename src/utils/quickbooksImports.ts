@@ -144,7 +144,7 @@ export async function importVendorsFromQuickBooks(
  * @param allCustomers - Existing customers in the store
  * @param addCustomer - Callback to add a new customer to the store
  * @param updateCustomer - Callback to update an existing customer in the store
- * @returns Object with counts of added and updated customers
+ * @returns Object with counts of added, updated, and unchanged customers
  */
 export async function importCustomersFromQuickBooks(
   orgId: string,
@@ -154,7 +154,7 @@ export async function importCustomersFromQuickBooks(
   addCustomer: (customer: CustomerData) => void,
   updateCustomer: (id: string, updates: Partial<CustomerData>) => void,
   store?: StoreWithTransaction,
-): Promise<{ addedCount: number; updatedCount: number }> {
+): Promise<{ addedCount: number; updatedCount: number; unchangedCount: number }> {
   console.log('[QB Import Customers] Fetching customers from QuickBooks...');
   const qbCustomers = await fetchCustomers(orgId, userId, getToken);
   console.log(
@@ -163,7 +163,7 @@ export async function importCustomersFromQuickBooks(
 
   if (qbCustomers.length === 0) {
     Alert.alert('No Customers Found', 'No customers were found in QuickBooks to import.');
-    return { addedCount: 0, updatedCount: 0 };
+    return { addedCount: 0, updatedCount: 0, unchangedCount: 0 };
   }
 
   let addedCount = 0;
@@ -234,5 +234,5 @@ export async function importCustomersFromQuickBooks(
   console.log(
     `[QB Import Customers] Done — added ${addedCount}, updated ${updatedCount}, unchanged ${unchangedCount}`,
   );
-  return { addedCount, updatedCount };
+  return { addedCount, updatedCount, unchangedCount };
 }

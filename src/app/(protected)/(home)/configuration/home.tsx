@@ -622,7 +622,7 @@ const Home = () => {
       let alertTitle = '';
       let alertMessage = '';
       try {
-        const { addedCount, updatedCount } = await importCustomersFromQuickBooks(
+        const { addedCount, updatedCount, unchangedCount } = await importCustomersFromQuickBooks(
           auth.orgId,
           auth.userId,
           auth.getToken,
@@ -634,7 +634,7 @@ const Home = () => {
 
         if (showAlert) {
           alertTitle = 'QuickBooks Customer Import Complete';
-          alertMessage = `${addedCount} Customers added, ${updatedCount} updated from QuickBooks.`;
+          alertMessage = `${addedCount} Customers added, ${updatedCount} updated, ${unchangedCount} unchanged from QuickBooks.`;
         }
       } catch (error) {
         console.error('Error importing customers from QuickBooks:', error);

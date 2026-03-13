@@ -13,7 +13,7 @@ import {
 import { setImageCaption } from '@/src/utils/images';
 import { useAuth } from '@clerk/clerk-expo';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,6 +36,26 @@ const ShowProjectPhotoPage = () => {
     () => (imageId ? allImages.find((image) => image.imageId === imageId) : undefined),
     [imageId, allImages],
   );
+  const initialCaptionRef = useRef<{ imageId: string; caption: string } | null>(null);
+
+  useEffect(() => {
+    if (!imageId) {
+      initialCaptionRef.current = null;
+      return;
+    }
+
+    if (!currentImage) {
+      return;
+    }
+
+    if (initialCaptionRef.current?.imageId !== imageId) {
+      initialCaptionRef.current = {
+        imageId,
+        caption: currentImage.caption || '',
+      };
+    }
+  }, [imageId, currentImage]);
+
   const caption = currentImage?.caption || '';
   const handleCaptionChange = useCallback(
     (newCaption: string) => {
@@ -44,14 +64,19 @@ const ShowProjectPhotoPage = () => {
     [currentImage, updateMediaEntry],
   );
 
-  const handleBackPress = useCallback(async () => {
-    if (currentImage && imageId && orgId && userId && isConnected) {
-      try {
-        await setImageCaption(userId, orgId, projectId, imageId, caption, getToken);
-        console.log('Image caption on server updated successfully');
-      } catch (error) {
-        console.error('Failed to set image caption:', error);
-      }
+  const handleBackPress = useCallback(() => {
+    const initialCaption =
+      imageId && initialCaptionRef.current?.imageId === imageId ? initialCaptionRef.current.caption : '';
+    const captionChanged = caption !== initialCaption;
+
+    if (currentImage && imageId && orgId && userId && isConnected && captionChanged) {
+      void setImageCaption(userId, orgId, projectId, imageId, caption, getToken)
+        .then(() => {
+          console.log(`Image caption on server updated successfully to "${caption}" for imageId: ${imageId}`);
+        })
+        .catch((error) => {
+          console.error('Failed to set image caption:', error);
+        });
     }
     router.back();
   }, [router, currentImage, imageId, projectId, caption, orgId, userId, getToken, isConnected]);
