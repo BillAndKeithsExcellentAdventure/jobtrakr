@@ -75,9 +75,7 @@ export const useReceiptQueue = () => {
           paymentAccountId: queuedReceipt.paymentAccountId,
           expenseAccountId: queuedReceipt.accountingId,
           description: queuedReceipt.description,
-          amount: queuedReceipt.lineItems
-            .filter((item) => item.projectId === toProjectId)
-            .reduce((sum, item) => sum + item.amount, 0),
+          amount: queuedReceipt.lineItems.reduce((sum, item) => sum + item.amount, 0), // total amount from all line items
           receiptDate: queuedReceipt.receiptDate,
           thumbnail: queuedReceipt.thumbnail,
           pictureDate: queuedReceipt.pictureDate,
@@ -97,9 +95,8 @@ export const useReceiptQueue = () => {
 
         console.log(`Receipt queue: Created receipt ${newReceiptId} in project ${toProjectId}`);
 
-        // Create work item cost entries for each line item belonging to this target project
-        const targetLineItems = queuedReceipt.lineItems.filter((item) => item.projectId === toProjectId);
-        for (const lineItem of targetLineItems) {
+        // Create work item cost entries for each line item and if item belongs to this target project set projectId to undefined (since it's the same project)
+        for (const lineItem of queuedReceipt.lineItems) {
           const costEntryId = randomUUID();
           const costEntryData = {
             id: costEntryId,
@@ -108,7 +105,7 @@ export const useReceiptQueue = () => {
             workItemId: lineItem.workItemId,
             parentId: newReceiptId,
             documentationType: 'receipt',
-            projectId: toProjectId,
+            projectId: lineItem.projectId === toProjectId ? undefined : lineItem.projectId,
           };
 
           const costEntrySuccess = store.setRow('workItemCostEntries', costEntryId, costEntryData);
@@ -179,7 +176,6 @@ export const useReceiptQueue = () => {
           }
 
           const targetProjectIds = Array.from(targetProjectIdSet);
-          const processedProjectIds: string[] = [];
 
           if (targetProjectIds.length === 0) {
             console.log(
@@ -191,56 +187,45 @@ export const useReceiptQueue = () => {
             continue;
           }
 
-          let storeNotFoundCount = 0;
-          while (targetProjectIds.length > 0) {
-            for (const toProjectId of targetProjectIds) {
-              console.log(
-                `Receipt queue: Processing receipt ${queuedReceipt.purchaseId} for target project ${toProjectId}`,
-              );
+          const missingProjectIds = targetProjectIds.filter((toProjectId) => !getStoreFromCache(toProjectId));
+          if (missingProjectIds.length > 0) {
+            console.warn(
+              `Receipt queue: Waiting for target stores to load for receipt ${queuedReceipt.purchaseId}: ${missingProjectIds.join(', ')}`,
+            );
+            continue;
+          }
 
-              // Get the store for this specific project from the cache
-              const store = getStoreFromCache(toProjectId);
+          for (const toProjectId of targetProjectIds) {
+            console.log(
+              `Receipt queue: Processing receipt ${queuedReceipt.purchaseId} for target project ${toProjectId}`,
+            );
 
-              if (!store) {
-                console.warn(
-                  `Receipt queue: Store not yet loaded for project ${toProjectId}. Will retry in next cycle.`,
-                );
-                storeNotFoundCount++;
-                if (storeNotFoundCount > 5) {
-                  throw new Error(
-                    `Store not found for project ${toProjectId} after multiple attempts. Skipping this project for now.`,
-                  ); // Avoid infinite retries for this project
-                }
-                continue;
-              }
-
-              const result = createReceiptCopyInProject(queuedReceipt, toProjectId, store);
-              if (result.success) {
-                processedProjectIds.push(toProjectId);
-                if (queuedReceipt.imageId) {
-                  const duplicateResult = await duplicateReceiptImage(
-                    queuedReceipt.fromProjectId,
-                    toProjectId,
-                    queuedReceipt.imageId,
-                  );
-                  if (!duplicateResult.success) {
-                    console.warn(
-                      `Receipt queue: Image duplication failed for receipt ${queuedReceipt.purchaseId}: ${duplicateResult.msg}`,
-                    );
-                  } else {
-                    console.log(
-                      `Receipt queue: Successfully duplicated image for receipt ${queuedReceipt.purchaseId} to target project ${toProjectId}`,
-                    );
-                  }
-                }
-              }
+            const store = getStoreFromCache(toProjectId);
+            if (!store) {
+              throw new Error(`Store unexpectedly unavailable for project ${toProjectId} during processing.`);
             }
 
-            // Remove project IDs that were successfully processed
-            for (const processedProjectId of processedProjectIds) {
-              const index = targetProjectIds.indexOf(processedProjectId);
-              if (index !== -1) {
-                targetProjectIds.splice(index, 1);
+            const result = createReceiptCopyInProject(queuedReceipt, toProjectId, store);
+            if (!result.success) {
+              throw new Error(
+                result.msg || `Failed to process receipt ${queuedReceipt.purchaseId} for ${toProjectId}`,
+              );
+            }
+
+            if (queuedReceipt.imageId) {
+              const duplicateResult = await duplicateReceiptImage(
+                queuedReceipt.fromProjectId,
+                toProjectId,
+                queuedReceipt.imageId,
+              );
+              if (!duplicateResult.success) {
+                console.warn(
+                  `Receipt queue: Image duplication failed for receipt ${queuedReceipt.purchaseId}: ${duplicateResult.msg}`,
+                );
+              } else {
+                console.log(
+                  `Receipt queue: Successfully duplicated image for receipt ${queuedReceipt.purchaseId} to target project ${toProjectId}`,
+                );
               }
             }
           }
