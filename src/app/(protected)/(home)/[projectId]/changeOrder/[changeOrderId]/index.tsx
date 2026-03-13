@@ -28,7 +28,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { AntDesign, Entypo, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Keyboard, StyleSheet, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Alert, Keyboard, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -454,21 +454,24 @@ const DefineChangeOrderScreen = () => {
           headerBackTitle: '',
           headerBackButtonDisplayMode: 'minimal',
           headerRight: () => (
-            <View style={{ marginRight: 0 }}>
+            <View
+              style={{
+                minWidth: 30,
+                minHeight: 30,
+                gap: 10,
+                alignItems: 'center',
+                backgroundColor: 'transparent',
+                marginRight: Platform.OS === 'android' ? 16 : 0,
+              }}
+            >
               <Pressable
-                style={{ marginRight: 0 }}
+                style={{ alignItems: 'center' }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 onPress={() => {
                   setHeaderMenuModalVisible(!headerMenuModalVisible);
                 }}
               >
-                {({ pressed }) => (
-                  <MaterialCommunityIcons
-                    name="menu"
-                    size={28}
-                    color={colors.iconColor}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
+                <MaterialCommunityIcons name="menu" size={28} color={colors.iconColor} />
               </Pressable>
             </View>
           ),

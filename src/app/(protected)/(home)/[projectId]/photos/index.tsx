@@ -1,6 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
-import { ProjectCameraView, CapturedMedia } from '@/src/components/CameraView';
+import { CapturedMedia, ProjectCameraView } from '@/src/components/CameraView';
 import { ProjectMediaList } from '@/src/components/ProjectMediaList';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import { Text, View } from '@/src/components/Themed';
@@ -16,11 +16,11 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
-import { Entypo, Ionicons } from '@expo/vector-icons';
+import { Entypo, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -168,20 +168,26 @@ const ProjectPhotosPage = () => {
           headerBackTitle: '',
           headerBackButtonDisplayMode: 'minimal',
           headerRight: () => (
-            <Pressable
-              onPress={() => {
-                setHeaderMenuModalVisible(!headerMenuModalVisible);
+            <View
+              style={{
+                minWidth: 30,
+                minHeight: 30,
+                gap: 10,
+                alignItems: 'center',
+                backgroundColor: 'transparent',
+                marginRight: Platform.OS === 'android' ? 16 : 0,
               }}
             >
-              {({ pressed }) => (
-                <Ionicons
-                  name="menu-outline"
-                  size={24}
-                  color={colors.iconColor}
-                  style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                />
-              )}
-            </Pressable>
+              <Pressable
+                style={{ alignItems: 'center' }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                onPress={() => {
+                  setHeaderMenuModalVisible(!headerMenuModalVisible);
+                }}
+              >
+                <MaterialCommunityIcons name="menu" size={28} color={colors.iconColor} />
+              </Pressable>
+            </View>
           ),
         }}
       />

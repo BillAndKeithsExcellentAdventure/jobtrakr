@@ -14,7 +14,7 @@ import {
 import { FontAwesome5, FontAwesome6, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CostItemData, CostItemDataCodeCompareAsNumber } from '@/src/models/types';
@@ -198,21 +198,26 @@ const CategorySpecificCostItemsPage = () => {
           headerBackTitle: '',
           headerBackButtonDisplayMode: 'minimal',
           headerRight: () => (
-            <Pressable
-              style={{ marginRight: 0 }}
-              onPress={() => {
-                setHeaderMenuModalVisible(!headerMenuModalVisible);
+            <View
+              style={{
+                minWidth: 30,
+                minHeight: 30,
+                gap: 10,
+                alignItems: 'center',
+                backgroundColor: 'transparent',
+                marginRight: Platform.OS === 'android' ? 16 : 0,
               }}
             >
-              {({ pressed }) => (
-                <MaterialCommunityIcons
-                  name="menu"
-                  size={28}
-                  color={colors.iconColor}
-                  style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                />
-              )}
-            </Pressable>
+              <Pressable
+                style={{ alignItems: 'center' }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                onPress={() => {
+                  setHeaderMenuModalVisible(!headerMenuModalVisible);
+                }}
+              >
+                <MaterialCommunityIcons name="menu" size={28} color={colors.iconColor} />
+              </Pressable>
+            </View>
           ),
         }}
       />

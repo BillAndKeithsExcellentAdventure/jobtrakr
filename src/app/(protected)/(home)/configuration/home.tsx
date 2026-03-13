@@ -296,6 +296,7 @@ const Home = () => {
             minWidth: 30,
             minHeight: 30,
             gap: 10,
+            alignItems: 'center',
             flexDirection: 'row',
             backgroundColor: 'transparent',
             marginRight: Platform.OS === 'android' ? 16 : 0,
@@ -303,6 +304,7 @@ const Home = () => {
         >
           {isQuickBooksAccessible && <SvgImage fileName="qb-logo" width={26} height={26} />}
           <Pressable
+            style={{ alignItems: 'center' }}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             onPress={() => {
               setHeaderMenuModalVisible(!headerMenuModalVisible);
