@@ -165,6 +165,7 @@ export const VendorPicker = ({
 
   const handleVendorSelect = useCallback(
     (vendor: VendorData) => {
+      Keyboard.dismiss();
       onVendorSelected(vendor);
       setIsPickerVisible(false);
       setSearchText('');
@@ -180,6 +181,7 @@ export const VendorPicker = ({
   const displayText = selectedVendor ? selectedVendor.name : '';
 
   const handleAddVendorPress = () => {
+    Keyboard.dismiss();
     setIsPickerVisible(false);
     // delay opening the add vendor modal to allow the first bottom sheet to close
     setTimeout(() => {
@@ -209,6 +211,7 @@ export const VendorPicker = ({
       <BottomSheetContainer
         isVisible={isPickerVisible}
         onClose={() => {
+          Keyboard.dismiss();
           setIsPickerVisible(false);
           setSearchText('');
         }}
@@ -336,6 +339,7 @@ export const VendorPicker = ({
         keyboardVerticalOffset={100}
         isVisible={isAddVendorModalVisible}
         onClose={() => {
+          Keyboard.dismiss();
           setIsAddVendorModalVisible(false);
           setNewVendor({
             id: '',

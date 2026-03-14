@@ -1,7 +1,7 @@
 import { useColors } from '@/src/context/ColorsContext';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { PropsWithChildren } from 'react';
-import { DimensionValue, Modal, Pressable, StyleSheet, Platform } from 'react-native';
+import { PropsWithChildren, useCallback, useEffect } from 'react';
+import { DimensionValue, Keyboard, Modal, Pressable, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, View } from './Themed';
 import { KeyboardToolbar, KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -30,10 +30,26 @@ export default function BottomSheetContainer({
   const { top, bottom } = useSafeAreaInsets();
   const colors = useColors();
 
+  const closeWithKeyboardDismiss = useCallback(() => {
+    Keyboard.dismiss();
+    onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!isVisible) {
+      Keyboard.dismiss();
+    }
+  }, [isVisible]);
+
   if (!isVisible) return null;
 
   return (
-    <Modal animationType="slide" transparent={true} visible={isVisible} onRequestClose={() => onClose()}>
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={isVisible}
+      onRequestClose={closeWithKeyboardDismiss}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -47,7 +63,7 @@ export default function BottomSheetContainer({
               marginBottom: bottom,
               backgroundColor: colors.modalOverlayBackgroundColor,
             }}
-            onPress={() => onClose()}
+            onPress={closeWithKeyboardDismiss}
           />
           <View
             style={{
@@ -72,7 +88,7 @@ export default function BottomSheetContainer({
                 >
                   <Text txtSize="standard" style={[{ fontWeight: '600' }]} text={title} />
                   {showClose && (
-                    <Pressable onPress={() => onClose()}>
+                    <Pressable onPress={closeWithKeyboardDismiss}>
                       <MaterialIcons name="close" color={colors.iconColor} size={22} />
                     </Pressable>
                   )}
