@@ -1,5 +1,27 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useMemo } from 'react';
 
+/**
+ * WorkItemSpentSummary context/provider
+ *
+ * Where this provider is mounted:
+ * - src/app/(protected)/_layout.tsx wraps protected routes with WorkItemSpentSummaryProvider.
+ * - It is intentionally placed high in the protected tree so all project screens share one
+ *   in-memory view of per-work-item spent amounts.
+ *
+ * How this provider is populated and consumed:
+ * - src/components/ProjectCostSummaryUpdater.tsx runs useWorkItemSpentUpdater(projectId) for each
+ *   active project.
+ * - useWorkItemSpentUpdater (in src/tbStores/projectDetails/ProjectDetailsStoreHooks.tsx)
+ *   aggregates workItemCostEntries and calls setWorkItemSpentAmount(projectId, workItemId, amount).
+ * - UI code reads the cached values via useWorkItemSpentValue/useWorkItemSpentSummary, which calls
+ *   getWorkItemSpentAmount(projectId, workItemId).
+ *
+ * Why this exists:
+ * - Keeps per-work-item spent totals centralized and cheap to read without recalculating on every
+ *   screen render.
+ * - Returns 0 when no summary exists for a work item, which keeps consumers simple.
+ */
+
 // Define the WorkItemSpentSummary type
 // IMPORTANT - workItemId is the workItemId NOT the id of the WorkItemSummaryData.
 // This is because the receipts are linked to the workItem and category.
