@@ -1,4 +1,5 @@
 import { useColors } from '@/src/context/ColorsContext';
+import { Image } from 'expo-image';
 import React, { useState, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -8,6 +9,8 @@ import { Text, View } from './Themed';
 interface ZoomImageViewerProps {
   imageUri: string;
 }
+
+const AnimatedExpoImage = Animated.createAnimatedComponent(Image);
 
 export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = React.memo(({ imageUri }) => {
   const [containerWidth, setContainerWidth] = useState(0);
@@ -67,10 +70,10 @@ export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = React.memo(({ ima
                 },
               ]}
             >
-              <Animated.Image
+              <AnimatedExpoImage
                 source={{ uri: imageUri }}
                 style={[styles.image, animatedStyle]}
-                resizeMode="contain"
+                contentFit="contain"
               />
             </Animated.View>
           </GestureDetector>

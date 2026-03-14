@@ -1,5 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
-import { Text, TextInput, View } from '@/src/components/Themed';
+import { TextField } from '@/src/components/TextField';
+import { Text, View } from '@/src/components/Themed';
 import { API_BASE_URL } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { createApiWithToken } from '@/src/utils/apiWithToken';
@@ -149,8 +150,8 @@ export default function CreateOrganization() {
 
       <View style={styles.container}>
         <Text txtSize="xl" text="Create Organization" style={{ marginBottom: 20 }} />
-        <TextInput
-          style={{ ...styles.input, backgroundColor: colors.neutral200 }}
+        <TextField
+          style={styles.input}
           autoCapitalize="none"
           value={organizationName}
           placeholderTextColor={colors.text}
@@ -183,7 +184,6 @@ const styles = {
   },
   input: {
     height: 40,
-    borderWidth: 1,
     marginBottom: 10,
     paddingLeft: 10,
     borderRadius: 4,

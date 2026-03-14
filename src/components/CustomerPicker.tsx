@@ -7,7 +7,7 @@ import { CustomerData, useAddRowCallback } from '@/src/tbStores/configurationSto
 import { useAuth } from '@clerk/clerk-expo';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { ActivityIndicator, Alert, FlatList, Keyboard, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { useNetwork } from '../context/NetworkContext';
@@ -48,6 +48,7 @@ export const CustomerPicker = ({
   const { isQuickBooksAccessible } = useNetwork();
   const auth = useAuth();
   const { orgId, userId, getToken } = auth;
+  const openPickerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Filter to only show active customers
   const activeCustomers = useMemo(
@@ -158,6 +159,7 @@ export const CustomerPicker = ({
 
   const handleCustomerSelect = useCallback(
     (customer: CustomerData) => {
+      Keyboard.dismiss();
       onCustomerSelected(customer);
       setIsPickerVisible(false);
       setSearchText('');
@@ -167,13 +169,26 @@ export const CustomerPicker = ({
 
   const toggleModalPicker = useCallback(() => {
     Keyboard.dismiss();
-    setIsPickerVisible(true);
+    if (openPickerTimeoutRef.current) {
+      clearTimeout(openPickerTimeoutRef.current);
+    }
+    openPickerTimeoutRef.current = setTimeout(() => {
+      setIsPickerVisible(true);
+    }, 120);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (openPickerTimeoutRef.current) {
+        clearTimeout(openPickerTimeoutRef.current);
+      }
+    };
   }, []);
 
   const displayText = selectedCustomer ? selectedCustomer.name : '';
 
   const handleAddCustomerPress = () => {
-    console.log('Add Customer Pressed');
+    Keyboard.dismiss();
     setIsPickerVisible(false);
     // delay opening the add customer modal to allow the first bottom sheet to close
     setTimeout(() => {
@@ -202,7 +217,9 @@ export const CustomerPicker = ({
 
       <BottomSheetContainer
         isVisible={isPickerVisible}
+        showKeyboardToolbar={false}
         onClose={() => {
+          Keyboard.dismiss();
           setIsPickerVisible(false);
           setSearchText('');
         }}
@@ -330,6 +347,7 @@ export const CustomerPicker = ({
         keyboardVerticalOffset={100}
         isVisible={isAddCustomerModalVisible}
         onClose={() => {
+          Keyboard.dismiss();
           setIsAddCustomerModalVisible(false);
           setNewCustomer({
             id: '',

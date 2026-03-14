@@ -102,7 +102,7 @@ const CostItemPickerModal = ({
 
   return (
     <Modal visible={isVisible} transparent={true} animationType="fade">
-      <SafeAreaView edges={['top']} style={[{ flex: 1 }, Platform.OS === 'ios' && { marginTop: 60 }]}>
+      <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
         <View style={[styles.container, styles.modalBackground, { backgroundColor: colors.listBackground }]}>
           <View style={[styles.modalContainer]}>
             <Text txtSize="title" style={styles.modalTitle} text="Select Cost Item" />

@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Modal, Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from './ActionButton';
-import { Text, TextInput } from './Themed';
+import { TextField } from './TextField';
+import { Text } from './Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '../constants/app-constants';
@@ -63,8 +64,8 @@ export const DeleteProjectConfirmationModal: React.FC<DeleteProjectConfirmationM
                 Project: {projectName}
               </Text>
 
-              <TextInput
-                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+              <TextField
+                style={styles.input}
                 placeholder='Type "delete" to confirm'
                 value={deleteText}
                 onChangeText={setDeleteText}
@@ -121,7 +122,6 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-    borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 12,
     paddingVertical: 10,

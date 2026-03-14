@@ -1,7 +1,7 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { NumericInputField } from '@/src/components/NumericInputField';
 import { TextField } from '@/src/components/TextField';
-import { Text, TextInput, View } from '@/src/components/Themed';
+import { Text, View } from '@/src/components/Themed';
 import { VendorPicker } from '@/src/components/VendorPicker';
 import { useColors } from '@/src/context/ColorsContext';
 import {
@@ -146,8 +146,8 @@ const EditInvoiceDetailsPage = () => {
           <View style={{ paddingBottom: 10 }}>
             <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
               <Text txtSize="formLabel" text="Bill Date" style={styles.inputLabel} />
-              <TextInput
-                readOnly={true}
+              <TextField
+                editable={false}
                 style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
                 placeholder="Bill Date"
                 onPressIn={showDatePicker}
@@ -166,8 +166,8 @@ const EditInvoiceDetailsPage = () => {
           <View style={{ paddingBottom: 10 }}>
             <TouchableOpacity activeOpacity={1} onPress={showDueDatePicker}>
               <Text txtSize="formLabel" text="Due Date" style={styles.inputLabel} />
-              <TextInput
-                readOnly={true}
+              <TextField
+                editable={false}
                 style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
                 placeholder="Due Date"
                 onPressIn={showDueDatePicker}

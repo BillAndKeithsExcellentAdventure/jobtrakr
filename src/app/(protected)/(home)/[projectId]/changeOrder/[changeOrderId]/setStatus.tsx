@@ -226,8 +226,7 @@ const SetChangeOrderStatus = () => {
         {changeOrder && (
           <View style={{ padding: 10, gap: 6 }}>
             <TextField
-              inputWrapperStyle={{ borderColor: colors.transparent }}
-              style={[styles.input, { borderColor: colors.transparent }]}
+              inputStyle={[styles.input, { borderColor: colors.transparent }]}
               label="Change Order"
               placeholder="Title"
               readOnly
@@ -235,10 +234,9 @@ const SetChangeOrderStatus = () => {
               onChangeText={(text) => setChangeOrder({ ...changeOrder, title: text })}
             />
             <TextField
-              inputWrapperStyle={{ borderColor: colors.transparent }}
               containerStyle={styles.inputContainer}
               readOnly
-              style={[styles.input, { borderColor: colors.transparent }]}
+              inputStyle={[styles.input, { borderColor: colors.transparent }]}
               placeholder="Unknown Status"
               label="Current Status"
               value={currentStatusOption?.label}

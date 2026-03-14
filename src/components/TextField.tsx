@@ -1,5 +1,12 @@
 import React, { forwardRef } from 'react';
-import { StyleSheet, TextInput as RNTextInput, TextInputProps, TextStyle, ViewStyle } from 'react-native';
+import {
+  StyleProp,
+  StyleSheet,
+  TextInput as RNTextInput,
+  TextInputProps,
+  TextStyle,
+  ViewStyle,
+} from 'react-native';
 import { Text, TextProps, View } from './Themed';
 import { useColors } from '../context/ColorsContext';
 
@@ -24,12 +31,12 @@ export type TextFieldProps = {
    * Additional styles merged into the label `Text` element.
    * Useful for adjusting color, margin, etc.
    */
-  labelStyle?: TextStyle;
+  labelStyle?: StyleProp<TextStyle>;
   /**
    * Additional styles merged into the outer container `View`.
    * Use this to control width, margin, padding, etc.
    */
-  containerStyle?: ViewStyle;
+  containerStyle?: StyleProp<ViewStyle>;
   /**
    * Additional styles merged into the {@link TextInput} element.
    * Applied after the default input styles, so any property set here
@@ -39,7 +46,7 @@ export type TextFieldProps = {
    * // Make the input full-width with a custom border color
    * <TextField inputStyle={{ flex: 1, borderColor: 'blue' }} … />
    */
-  inputStyle?: TextStyle;
+  inputStyle?: StyleProp<TextStyle>;
 } & TextInputProps;
 
 /**

@@ -3,7 +3,7 @@ import { useEventListener } from 'expo';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useCallback, useEffect, useState } from 'react';
 import { Dimensions, Modal, Pressable, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface VideoPlayerModalProps {
   isVisible: boolean;
@@ -14,6 +14,7 @@ interface VideoPlayerModalProps {
 export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, videoUri, onClose }) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [showControls, setShowControls] = useState(true);
+  const insets = useSafeAreaInsets();
   const player = useVideoPlayer(videoUri, (player) => {
     player.loop = true;
   });
@@ -70,19 +71,23 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
       <SafeAreaView style={styles.container}>
         {/* Close button - top right */}
         {showControls && (
-          <Pressable onPress={handleClose} style={styles.closeButton} hitSlop={8}>
+          <Pressable onPress={handleClose} style={[styles.closeButton, { top: insets.top + 8 }]} hitSlop={8}>
             <Ionicons name="close-circle" size={40} color="white" />
           </Pressable>
         )}
 
         {/* Video container */}
         <Pressable style={styles.videoContainer} onPress={handleVideoPress}>
-          <VideoView style={styles.video} player={player} allowsFullscreen />
+          <VideoView style={styles.video} player={player} fullscreenOptions={{ enable: true }} />
         </Pressable>
 
         {/* Play/Pause button - bottom center */}
         {showControls && (
-          <Pressable onPress={handlePlayPause} style={styles.playPauseButton} hitSlop={8}>
+          <Pressable
+            onPress={handlePlayPause}
+            style={[styles.playPauseButton, { bottom: insets.bottom + 16 }]}
+            hitSlop={8}
+          >
             <Ionicons name={isPlaying ? 'pause-circle' : 'play-circle'} size={64} color="white" />
           </Pressable>
         )}
@@ -98,7 +103,6 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: 50,
     right: 20,
     zIndex: 10,
     padding: 8,
@@ -116,7 +120,6 @@ const styles = StyleSheet.create({
   },
   playPauseButton: {
     position: 'absolute',
-    bottom: 40,
     alignSelf: 'center',
     padding: 8,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',

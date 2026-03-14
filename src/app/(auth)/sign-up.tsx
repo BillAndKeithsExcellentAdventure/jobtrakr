@@ -1,4 +1,5 @@
-import { Text, TextInput, View } from '@/src/components/Themed';
+import { TextField } from '@/src/components/TextField';
+import { Text, View } from '@/src/components/Themed';
 import * as React from 'react';
 import { ActivityIndicator, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 
@@ -175,8 +176,8 @@ export default function SignUpScreen() {
             style={{ marginBottom: 20, backgroundColor: colors.listBackground }}
             text="If you don't see code quickly, check your junk mail folder."
           />
-          <TextInput
-            style={{ ...styles.input, backgroundColor: colors.neutral200 }}
+          <TextField
+            style={styles.input}
             value={code}
             placeholder="Enter your verification code"
             onChangeText={(code) => setCode(code)}
@@ -211,8 +212,8 @@ export default function SignUpScreen() {
           style={{ marginBottom: 20, backgroundColor: colors.listBackground }}
           text="Sign Up"
         />
-        <TextInput
-          style={{ ...styles.input, backgroundColor: colors.neutral200 }}
+        <TextField
+          style={styles.input}
           autoCapitalize="none"
           value={emailAddress}
           placeholderTextColor={colors.text}
@@ -228,8 +229,9 @@ export default function SignUpScreen() {
             { borderColor: colors.neutral400, backgroundColor: colors.neutral200 },
           ]}
         >
-          <TextInput
-            style={{ ...styles.passwordInput, color: colors.text }}
+          <TextField
+            containerStyle={styles.passwordFieldContainer}
+            style={styles.passwordInput}
             value={password}
             placeholderTextColor={colors.text}
             placeholder="Password (min. 8 characters)"
@@ -288,7 +290,6 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderWidth: 1,
     marginBottom: 10,
     paddingLeft: 10,
     borderRadius: 4,
@@ -304,8 +305,13 @@ const styles = StyleSheet.create({
   passwordInput: {
     flex: 1,
     height: 40,
+    borderWidth: 0,
+    backgroundColor: 'transparent',
     paddingLeft: 10,
     paddingRight: 10,
+  },
+  passwordFieldContainer: {
+    flex: 1,
   },
   eyeIcon: {
     padding: 8,

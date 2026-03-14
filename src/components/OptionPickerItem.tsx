@@ -112,7 +112,9 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
       } else {
         Keyboard.dismiss();
       }
-      onPickerButtonPress();
+      setTimeout(() => {
+        onPickerButtonPress();
+      }, 50);
     };
 
     if (!editable) {

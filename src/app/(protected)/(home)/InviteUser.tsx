@@ -3,10 +3,11 @@ import { Alert, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-na
 import { useOrganization, useUser } from '@clerk/clerk-expo';
 import { inviteUserToOrganization } from '@/src/utils/organization';
 import { ActionButton } from '@/src/components/ActionButton';
+import { TextField } from '@/src/components/TextField';
 import { useColors } from '@/src/context/ColorsContext';
 import { Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { TextInput, View, Text } from '@/src/components/Themed';
+import { View, Text } from '@/src/components/Themed';
 
 export const InviteUser = () => {
   const colors = useColors();
@@ -164,8 +165,8 @@ export const InviteUser = () => {
         </View>
       ) : (
         <>
-          <TextInput
-            style={[styles.input, { borderColor: colors.border }]}
+          <TextField
+            style={styles.input}
             value={email}
             onChangeText={setEmail}
             placeholder="Email address of user to invite"
@@ -243,7 +244,6 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderWidth: 1,
     marginBottom: 10,
     paddingLeft: 10,
     borderRadius: 4,

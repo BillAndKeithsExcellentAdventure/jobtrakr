@@ -1,12 +1,12 @@
-import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
+import { useProjectDetailsStoreCache } from '@/src/context/ProjectDetailsStoreCacheContext';
 import { useWorkItemSpentSummary } from '@/src/context/WorkItemSpentSummaryContext';
-import * as UiReact from 'tinybase/ui-react/with-schemas';
-import { NoValuesSchema, Value } from 'tinybase/with-schemas';
-import { getStoreId, TABLES_SCHEMA } from './ProjectDetailsStore';
 import { CrudResult } from '@/src/models/types';
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useEffect, useState } from 'react';
+import * as UiReact from 'tinybase/ui-react/with-schemas';
+import { NoValuesSchema, Value } from 'tinybase/with-schemas';
 import { useProjectValue } from '../listOfProjects/ListOfProjectsStore';
+import { getStoreId, TABLES_SCHEMA } from './ProjectDetailsStore';
 
 const { useCell, useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
 
@@ -329,36 +329,35 @@ export const useBidAmountUpdater = (projectId: string): void => {
 export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
   const [seedWorkItems, setSeedWorkItems] = useProjectValue(projectId, 'seedWorkItems');
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
-  const addWorkItemSummary = useAddRowCallback(projectId, 'workItemSummaries');
-  const { activeProjectIds } = useActiveProjectIds();
+  const { getStoreFromCache } = useProjectDetailsStoreCache();
 
   const seedInitialData = useCallback((): boolean => {
     if (allWorkItemSummaries.length > 0 || !seedWorkItems) return false;
 
-    const workItemIds = seedWorkItems.split(',');
-    for (const workItemId of workItemIds) {
-      if (!workItemId) continue;
-      addWorkItemSummary({
-        id: '',
-        workItemId,
-        bidAmount: 0,
-        complete: false,
-      });
-    }
+    const workItemIds = seedWorkItems.split(',').filter(Boolean);
+    if (workItemIds.length === 0) return false;
+
+    const store = getStoreFromCache(projectId);
+    if (!store) return false;
+
+    store.transaction(() => {
+      for (const workItemId of workItemIds) {
+        const id = randomUUID();
+        store.setRow('workItemSummaries', id, { id, workItemId, bidAmount: 0, complete: false } as any);
+      }
+    });
     return true;
-  }, [seedWorkItems, allWorkItemSummaries, addWorkItemSummary]);
+  }, [seedWorkItems, allWorkItemSummaries, getStoreFromCache, projectId]);
 
   useEffect(() => {
-    if (activeProjectIds.includes(projectId)) {
-      if (projectId && seedWorkItems && allWorkItemSummaries.length === 0) {
-        console.log('Seeding initial data for project', projectId);
-        if (seedInitialData()) {
-          console.log('Initial data seeded for project', projectId);
-          setSeedWorkItems(''); // Clear the seedWorkItems after seeding
-        }
+    if (projectId && seedWorkItems && allWorkItemSummaries.length === 0) {
+      console.log('Seeding initial data for project', projectId);
+      if (seedInitialData()) {
+        console.log('Initial data seeded for project', projectId);
+        setSeedWorkItems(''); // Clear the seedWorkItems after seeding
       }
     }
-  }, [projectId, seedWorkItems, allWorkItemSummaries, activeProjectIds, seedInitialData, setSeedWorkItems]);
+  }, [projectId, seedWorkItems, allWorkItemSummaries, seedInitialData, setSeedWorkItems]);
 };
 
 // function to get workitems for a given project that has no costs associated with it and no bid amount
@@ -395,11 +394,16 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
   const allWorkItemCostEntries = useAllRows(projectId, 'workItemCostEntries');
   const { setWorkItemSpentAmount } = useWorkItemSpentSummary();
 
+  // filter cost entries for the current project - this is needed because cost entries can be associated with other projects
+  const projectCostEntries = allWorkItemCostEntries.filter((entry) =>
+    entry.projectId ? entry.projectId === projectId : true,
+  );
+
   useEffect(() => {
     // Group cost entries by workItemId and calculate total spent per work item
     const spentByWorkItem = new Map<string, number>();
 
-    for (const costEntry of allWorkItemCostEntries) {
+    for (const costEntry of projectCostEntries) {
       spentByWorkItem.set(
         costEntry.workItemId,
         (spentByWorkItem.get(costEntry.workItemId) ?? 0) + costEntry.amount,
@@ -411,7 +415,7 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
     for (const [workItemId, spentAmount] of spentByWorkItem) {
       setWorkItemSpentAmount(projectId, workItemId, spentAmount);
     }
-  }, [allWorkItemCostEntries, projectId, setWorkItemSpentAmount]);
+  }, [projectCostEntries, projectId, setWorkItemSpentAmount]);
 };
 
 /**

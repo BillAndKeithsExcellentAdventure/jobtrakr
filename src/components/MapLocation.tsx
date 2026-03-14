@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { StyleSheet, Alert, Platform } from 'react-native';
 import { AppleMaps, GoogleMaps } from 'expo-maps';
 import { ActionButton } from './ActionButton';
@@ -46,7 +46,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const [googleMarkers, setGoogleMarkers] = useState<GoogleMarkerLocation[]>([]);
   const [appleMarkers, setAppleMarkers] = useState<AppleMarkerLocation[]>([]);
   const router = useRouter();
-  const ref = useRef<AppleMaps.MapView>(null);
   useEffect(() => {
     const location = selectedLocation ?? projectLocation;
     setMarkerLocation({ ...location });
@@ -150,7 +149,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
         <View style={{ flex: 1 }}>
           {Platform.OS === 'android' && (
             <GoogleMaps.View
-              ref={ref}
               style={StyleSheet.absoluteFill}
               cameraPosition={cameraPosition}
               properties={{
@@ -171,7 +169,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
           )}
           {Platform.OS === 'ios' && (
             <AppleMaps.View
-              ref={ref}
               style={StyleSheet.absoluteFill}
               cameraPosition={cameraPosition}
               properties={{

@@ -1,5 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
-import { Text, TextInput, View } from '@/src/components/Themed';
+import { TextField } from '@/src/components/TextField';
+import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { isClerkAPIResponseError, SignedIn, SignedOut, useAuth, useSignIn } from '@clerk/clerk-expo';
 import { Link, Redirect, Stack, useRouter } from 'expo-router';
@@ -187,8 +188,8 @@ function SignInForm() {
           style={{ marginBottom: 20, backgroundColor: colors.listBackground }}
           text="Sign In"
         />
-        <TextInput
-          style={{ ...styles.input, backgroundColor: colors.neutral200 }}
+        <TextField
+          style={styles.input}
           autoCapitalize="none"
           value={emailAddress}
           placeholder="Email"
@@ -203,8 +204,9 @@ function SignInForm() {
             { borderColor: colors.neutral400, backgroundColor: colors.neutral200 },
           ]}
         >
-          <TextInput
-            style={{ ...styles.passwordInput, color: colors.text }}
+          <TextField
+            containerStyle={styles.passwordFieldContainer}
+            style={styles.passwordInput}
             value={password}
             placeholder={showResetCode ? 'New Password (min 8 chars)' : 'Password'}
             placeholderTextColor={colors.text}
@@ -220,8 +222,8 @@ function SignInForm() {
           </TouchableOpacity>
         </View>
         {showResetCode && (
-          <TextInput
-            style={{ ...styles.input, color: colors.text }}
+          <TextField
+            style={styles.input}
             value={resetCode}
             placeholder="Reset Code"
             placeholderTextColor={colors.text}
@@ -290,7 +292,6 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderWidth: 1,
     marginBottom: 10,
     paddingLeft: 10,
     borderRadius: 4,
@@ -306,8 +307,13 @@ const styles = StyleSheet.create({
   passwordInput: {
     flex: 1,
     height: 40,
+    borderWidth: 0,
+    backgroundColor: 'transparent',
     paddingLeft: 10,
     paddingRight: 10,
+  },
+  passwordFieldContainer: {
+    flex: 1,
   },
   eyeIcon: {
     padding: 8,

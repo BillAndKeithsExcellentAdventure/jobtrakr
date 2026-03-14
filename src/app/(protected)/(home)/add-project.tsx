@@ -4,7 +4,7 @@ import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
-import { TextInput, View, Text } from '@/src/components/Themed';
+import { View, Text } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { ProjectData } from '@/src/models/types';

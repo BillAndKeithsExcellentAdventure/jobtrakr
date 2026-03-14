@@ -792,7 +792,11 @@ const ProjectDetailsPage = () => {
                 data={sectionData}
                 renderItem={({ item }) => renderItem(item, projectId)}
                 keyExtractor={(item) => item.categoryId}
-                ListEmptyComponent={<Text>No data available</Text>}
+                ListEmptyComponent={
+                  <View style={{ alignItems: 'center', padding: 10 }}>
+                    <Text txtSize="sub-title">No Cost Item Data Available</Text>
+                  </View>
+                }
               />
             </View>
             {projectData && (
