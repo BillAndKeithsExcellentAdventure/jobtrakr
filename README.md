@@ -17,7 +17,6 @@ ProjectHound is a mobile-first application designed to help contractors and cons
   - Project status (active, on-hold, completed)
   - Geographic location with map integration
   - Favorite projects for quick access
-  
 - **Project Templates**: Create reusable project templates with predefined cost items to speed up project setup
 
 - **Cost Items & Categories**: Organize project costs into customizable categories and line items with:
@@ -28,7 +27,7 @@ ProjectHound is a mobile-first application designed to help contractors and cons
 
 ### 💰 Financial Management
 
-- **Receipt Tracking**: 
+- **Receipt Tracking**:
   - Capture receipt images using the device camera
   - AI-powered line item extraction from receipt images
   - Associate receipt items with specific cost items
@@ -184,23 +183,20 @@ ProjectHound integrates with **QuickBooks Online** to keep your project financia
 - **Authentication**: @clerk/clerk-expo
 - **Navigation**: expo-router with typed routes
 - **State Management**: TinyBase with mergeable stores
-- **UI Components**: 
+- **UI Components**:
   - @shopify/flash-list for performant lists
   - react-native-reanimated for animations
   - expo-blur for visual effects
-  
-- **Media**: 
+- **Media**:
   - expo-camera for photo/video capture
   - expo-image-picker for gallery access
   - expo-video for video playback
   - expo-image-manipulator for image processing
-  
 - **Maps**: expo-maps (Google Maps + Apple Maps)
-- **File Management**: 
+- **File Management**:
   - expo-file-system for file operations
   - jszip for archive creation
   - expo-sharing for file sharing
-  
 - **Utilities**:
   - mustache for templating
   - react-native-share for social sharing
@@ -241,6 +237,7 @@ For detailed testing information, see [Testing Guide](docs/TESTING_GUIDE.md).
 ### Environment Configuration
 
 The app supports multiple variants:
+
 - **Production**: `com.projecthound.app`
 - **Development**: `com.projecthound.app.dev`
 - **Preview**: `com.projecthound.app.preview`
@@ -263,12 +260,21 @@ All stores use TinyBase's mergeable store pattern for conflict-free replication 
 ### Auto-Save System
 
 The application implements a centralized FocusManager system that:
+
 - Tracks all focusable input fields globally
 - Ensures all fields are properly blurred before navigation
 - Automatically saves data on blur events
 - Prevents data loss during navigation
 
 See `docs/AUTO_SAVE_IMPLEMENTATION.md` for detailed documentation.
+
+### Project Cost Maintenance
+
+Project cost totals (spent, balance, and completion totals) are maintained through
+shared updater hooks and WorkItemSpentSummaryContext.
+
+See [Maintaining Project Costs](docs/MAINTAINING_PROJECT_COSTS.md) for architecture,
+data flow, and maintenance guidance.
 
 ## QuickBooks Integration
 

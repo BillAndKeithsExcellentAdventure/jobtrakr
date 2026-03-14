@@ -390,8 +390,9 @@ export const useWorkItemSpentValue = (projectId: string, workItemId: string): nu
  * - Auto-created summary rows are initialized with bidAmount = 0 and complete = false.
  *
  * Note:
- * - The context's setWorkItemSpentAmount method checks if values have changed
- *   before updating state, preventing unnecessary re-renders.
+ * - The context's setProjectWorkItemSpentAmounts method replaces the project's
+ *   spent map in one update, clearing removed work items and skipping updates
+ *   when values are unchanged.
  * - Work items with no cost entries will not be in the map, and will return 0
  *   from getWorkItemSpentAmount (handled by the context getter).
  */
@@ -399,7 +400,7 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
   const allWorkItemCostEntries = useAllRows(projectId, 'workItemCostEntries');
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const store = useStore(getStoreId(projectId));
-  const { setWorkItemSpentAmount } = useWorkItemSpentSummary();
+  const { setProjectWorkItemSpentAmounts } = useWorkItemSpentSummary();
 
   // filter cost entries for the current project - this is needed because cost entries can be associated with other projects
   const projectCostEntries = allWorkItemCostEntries.filter((entry) =>
@@ -441,12 +442,9 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
       );
     }
 
-    // Update the context with all spent amounts
-    // The setWorkItemSpentAmount method will skip updates if the value hasn't changed
-    for (const [workItemId, spentAmount] of spentByWorkItem) {
-      setWorkItemSpentAmount(projectId, workItemId, spentAmount);
-    }
-  }, [allWorkItemSummaries, projectCostEntries, projectId, setWorkItemSpentAmount, store]);
+    // Replace the project's spent map in one update so removed work items are cleared.
+    setProjectWorkItemSpentAmounts(projectId, spentByWorkItem);
+  }, [allWorkItemSummaries, projectCostEntries, projectId, setProjectWorkItemSpentAmounts, store]);
 };
 
 /**

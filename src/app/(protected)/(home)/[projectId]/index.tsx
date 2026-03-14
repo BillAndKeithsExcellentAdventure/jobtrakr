@@ -7,6 +7,7 @@ import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
+import { useWorkItemSpentSummary } from '@/src/context/WorkItemSpentSummaryContext';
 import { CostSectionData, CostSectionDataCodeCompareAsNumber } from '@/src/models/types';
 import {
   CustomerDataCompareName,
@@ -54,6 +55,7 @@ const ProjectDetailsPage = () => {
   const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] = useState<boolean>(false);
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
+  const { getProjectWorkItemSpentAmounts } = useWorkItemSpentSummary();
   const removeWorkItemSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
@@ -158,6 +160,11 @@ const ProjectDetailsPage = () => {
     return new Map(allProjectCategories.map((c) => [c.id, c]));
   }, [allProjectCategories]);
 
+  const projectSpentByWorkItem = useMemo(
+    () => getProjectWorkItemSpentAmounts(projectId),
+    [getProjectWorkItemSpentAmounts, projectId],
+  );
+
   const sectionData = useMemo(() => {
     const sections: CostSectionData[] = [];
 
@@ -168,9 +175,7 @@ const ProjectDetailsPage = () => {
       const category = categoryMap.get(workItem.categoryId);
       if (!category) continue;
 
-      const spentAmount = allActualCostItems
-        .filter((i) => i.workItemId === workItem.id && (i.projectId ? i.projectId === projectId : true))
-        .reduce((sum, item) => sum + item.amount, 0);
+      const spentAmount = projectSpentByWorkItem.get(workItem.id) ?? 0;
 
       let section = sections.find((sec) => sec.categoryId === category.id);
       if (!section) {
@@ -212,7 +217,7 @@ const ProjectDetailsPage = () => {
     });
 
     return sections.sort(CostSectionDataCodeCompareAsNumber);
-  }, [allWorkItemSummaries, allActualCostItems, workItemMap, categoryMap, projectId]);
+  }, [allWorkItemSummaries, projectSpentByWorkItem, workItemMap, categoryMap]);
 
   // create projectBalance by summing sectionData totalBalance
   const projectBalance = useMemo(() => {
