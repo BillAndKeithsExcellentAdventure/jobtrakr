@@ -304,7 +304,7 @@ export const useCostUpdater = (projectId: string): void => {
 
   useEffect(() => {
     const spentAmount = allCostRows
-      .filter((item) => (item.projectId ? item.projectId === projectId : true))
+      .filter((item) => item.projectId === undefined || item.projectId === projectId)
       .reduce((sum, item) => sum + item.amount, 0);
     console.log(`[useCostUpdater] Calculated spent amount: ${spentAmount} for projectId: ${projectId}`);
     setAmountSpent(spentAmount);
@@ -367,7 +367,12 @@ export const useWorkItemsWithoutCosts = (projectId: string): WorkItemSummaryData
 
   return allWorkItemSummaries.filter(
     (wis) =>
-      wis.bidAmount === 0 && !allWorkItemCostEntries.some((wice) => wice.workItemId === wis.workItemId),
+      wis.bidAmount === 0 &&
+      !allWorkItemCostEntries.some(
+        (wice) =>
+          wice.workItemId === wis.workItemId &&
+          (wice.projectId === undefined || wice.projectId === projectId),
+      ),
   );
 };
 
@@ -402,9 +407,9 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
   const store = useStore(getStoreId(projectId));
   const { setProjectWorkItemSpentAmounts } = useWorkItemSpentSummary();
 
-  // filter cost entries for the current project - this is needed because cost entries can be associated with other projects
-  const projectCostEntries = allWorkItemCostEntries.filter((entry) =>
-    entry.projectId ? entry.projectId === projectId : true,
+  // filter cost entries for the current project - cost entries can be associated with other projects via cross-project receipts
+  const projectCostEntries = allWorkItemCostEntries.filter(
+    (entry) => entry.projectId === undefined || entry.projectId === projectId,
   );
 
   useEffect(() => {

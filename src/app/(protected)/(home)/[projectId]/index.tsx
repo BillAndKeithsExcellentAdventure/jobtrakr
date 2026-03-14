@@ -277,7 +277,11 @@ const ProjectDetailsPage = () => {
           const category = categoryMap.get(workItem.categoryId);
           const workItemSummary = allWorkItemSummaries.find((summary) => summary.workItemId === workItem.id);
           const costs = allActualCostItems
-            .filter((cost) => cost.workItemId === workItem.id)
+            .filter(
+              (cost) =>
+                cost.workItemId === workItem.id &&
+                (cost.projectId === undefined || cost.projectId === projectId),
+            )
             .map((c) => ({
               amount: parseFloat(c.amount.toFixed(2)),
               documentationType: c.documentationType || '',
