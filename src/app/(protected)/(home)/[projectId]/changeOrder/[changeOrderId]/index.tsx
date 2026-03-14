@@ -318,6 +318,7 @@ const DefineChangeOrderScreen = () => {
         const updatedChangeOrder: ChangeOrder = {
           ...changeOrder,
           accountingId: accountingId,
+          status: 'approval-pending',
         };
         updateChangeOrder(changeOrder!.id, updatedChangeOrder);
         setChangeOrder(updatedChangeOrder);
