@@ -49,6 +49,11 @@ const CategorySpecificCostItemsPage = () => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
   }, [projectId, activeProjectIds, isStoreReady]);
 
+  const allActualProjectCostItems = useMemo(
+    () => allActualCostItems.filter((i) => i.projectId === undefined || i.projectId === projectId),
+    [allActualCostItems, projectId],
+  );
+
   const projectData = useProject(projectId);
 
   // All hooks must be called before any conditional returns
@@ -64,7 +69,7 @@ const CategorySpecificCostItemsPage = () => {
       const workItem = workItemMap.get(costItem.workItemId);
       if (!workItem || workItem.categoryId !== categoryId) continue;
 
-      const spentAmount = allActualCostItems
+      const spentAmount = allActualProjectCostItems
         .filter((i) => i.workItemId === workItem.id)
         .reduce((sum, item) => sum + item.amount, 0);
 
@@ -83,7 +88,7 @@ const CategorySpecificCostItemsPage = () => {
     }
 
     return costItems.sort(CostItemDataCodeCompareAsNumber);
-  }, [allWorkItemSummaries, allWorkItems, allActualCostItems, categoryId]);
+  }, [allWorkItemSummaries, allWorkItems, allActualProjectCostItems, categoryId]);
 
   const numberOfCostItems = useMemo(() => costItemSummaries.length, [costItemSummaries]);
   const numberOfCompletedCostItems = useMemo(
