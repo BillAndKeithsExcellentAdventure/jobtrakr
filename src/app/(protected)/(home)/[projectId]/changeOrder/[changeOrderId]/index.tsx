@@ -518,7 +518,7 @@ const DefineChangeOrderScreen = () => {
               )}
               <View style={{ gap: 6 }}>
                 <Text text={changeOrder?.title} txtSize="title" />
-                {changeOrder.accountingId.length > 0 && (
+                {changeOrder.accountingId?.length > 0 && (
                   <Text text={`[${changeOrder.accountingId}]`} txtSize="xs" />
                 )}
 
