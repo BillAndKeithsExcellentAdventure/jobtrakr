@@ -328,7 +328,7 @@ Tap the **menu icon** (three horizontal lines) in the top-right to access data m
 
 - **Import Configuration Data** - Import categories, cost items, and templates from a JSON file
 
-See the [Vendor and Supplier CSV Import/Export documentation](VENDOR_SUPPLIER_CSV_IMPORT_EXPORT.md) for detailed information on CSV import/export.
+See the [Vendor CSV Import/Export documentation](VENDOR_CSV_IMPORT_EXPORT.md) for detailed information on CSV import/export.
 
 ### Initial Setup Workflow
 
@@ -649,7 +649,7 @@ If changes seem lost, ensure you tap outside input fields before navigating.
 
 ## Related Documentation
 
-- [Vendor and Supplier CSV Import/Export](VENDOR_SUPPLIER_CSV_IMPORT_EXPORT.md) - Detailed CSV format and import/export procedures
+- [Vendor CSV Import/Export](VENDOR_CSV_IMPORT_EXPORT.md) - Detailed CSV format and import/export procedures
 - [Auto-Save Implementation](AUTO_SAVE_IMPLEMENTATION.md) - Technical details on how auto-save works
 - [README](../README.md) - Full application overview and technical stack
 

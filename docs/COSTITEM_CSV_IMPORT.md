@@ -163,6 +163,5 @@ Uses `expo-document-picker` with:
 
 ## Related Documentation
 
-- [Configuration Store](./CONFIGURATION_STORE.md)
-- [Cost Items Overview](./COST_ITEMS.md)
-- [CSV Export](./CSV_EXPORT.md)
+- [Home Screens User Guide](./HOME_SCREENS_USER_GUIDE.md)
+- [Vendor CSV Import/Export](./VENDOR_CSV_IMPORT_EXPORT.md)

@@ -55,52 +55,27 @@ Provides utilities for mocking API calls:
 
 Simple mock for static file imports (images, etc.)
 
-### 4. Example Tests
+### 4. Current Test Suites (Repository Snapshot)
 
-The following test files were created as examples:
+The repository currently includes tests under:
 
-#### **tests**/utils/formatters.test.ts (36 tests)
+- `__tests__/components/`
+  - `DeleteProjectConfirmationModal.test.tsx`
+  - `ModalScreenContainer.test.tsx`
+  - `NumericInput.test.tsx`
+  - `NumericInputField.test.tsx`
+- `__tests__/tbStores/`
+  - `projectAbbreviation.test.ts`
+  - `ReceiptQueueStore.test.tsx`
+  - `useVendorMatch.test.ts`
+- `__tests__/utils/`
+  - `apiWithToken.test.ts`
+  - `array.test.ts`
+  - `csvUtils.test.ts`
+  - `formatters.test.ts`
+  - `quickbooksAPI.test.ts`
 
-Tests for date and currency formatting functions:
-
-- `formatDate()` - Various date format scenarios
-- `formatCurrency()` - Currency formatting with different options
-- `formatNumber()` - Number formatting with decimal places
-- `replaceNonPrintable()` - String sanitization
-
-#### **tests**/utils/array.test.ts (12 tests)
-
-Tests for array manipulation utilities:
-
-- `createItemsArray()` with 'include' action
-- `createItemsArray()` with 'exclude' action
-- Edge cases and error handling
-
-#### **tests**/utils/csvUtils.test.ts (13 tests)
-
-Tests for CSV import/export functions:
-
-- `vendorsToCsv()` - Converting vendors to CSV format
-- `vendorsToCsv()` - Converting vendors to CSV format
-- CSV escaping for special characters
-
-#### **tests**/utils/apiWithToken.test.ts (8 tests)
-
-Tests for authenticated API calls:
-
-- Token injection in requests
-- Header preservation
-- Error handling
-- Timeout handling
-
-#### **tests**/hooks/useFocusManager.test.tsx (12 tests)
-
-Tests for the FocusManager custom hook:
-
-- Field registration and unregistration
-- Blurring all fields
-- Getting field values
-- Auto-save navigation
+For exact per-suite test counts, run `npm test -- --no-watchAll`.
 
 ### 5. Documentation
 
@@ -132,21 +107,18 @@ Added three test scripts:
 
 ## Test Results
 
-All 72 tests pass successfully:
+Test counts and coverage are expected to evolve over time.
 
+Run the following to view current status:
+
+```bash
+npm test -- --no-watchAll
+npm test -- --coverage --no-watchAll
 ```
-Test Suites: 5 passed, 5 total
-Tests:       72 passed, 72 total
-Snapshots:   0 total
-```
 
-### Current Test Coverage
+### Current Coverage Policy
 
-- **utils/formatters.ts**: 100% coverage
-- **utils/array.ts**: 100% coverage
-- **utils/apiWithToken.ts**: 90% coverage
-- **utils/csvUtils.ts**: 20.9% coverage (only vendor/supplier export tested)
-- **hooks/useFocusManager.tsx**: 100% coverage
+The project enforces a minimum coverage threshold of 50% for statements, branches, functions, and lines (configured in `jest.config.js`).
 
 ## How to Use
 

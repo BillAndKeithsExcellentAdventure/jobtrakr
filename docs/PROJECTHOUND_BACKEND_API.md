@@ -1649,9 +1649,10 @@ Fetch all invoices for a specific vendor in an organization.
 The API provides comprehensive integration with QuickBooks Online (QBO) for accounting operations including:
 
 - **Authentication & Connection Management**: OAuth2-based connection flow with automatic token refresh
-- **Data Retrieval**: Fetch vendors, chart of accounts, and company information
-- **Vendor Management**: Create and manage vendor records
-- **Bill Processing**: Create bills with optional image attachments and track payment status
+- **Data Retrieval**: Fetch vendors, customers, chart of accounts, and company information
+- **Vendor/Customer Management**: Create and manage vendor and customer records
+- **Project Sync**: Create and update Project Hound projects as QuickBooks jobs (sub-customers)
+- **Bill/Receipt Processing**: Create or update bills and receipts with optional image attachments
 - **Payment Processing**: Process bill payments and track payment records
 
 **Key Features:**
@@ -1782,7 +1783,7 @@ Retrieve all vendors from QuickBooks.
   "success": true,
   "data": [
     {
-      "acctId": "123",
+      "accountingId": "123",
       "name": "Vendor Name",
       "address": "123 Main St",
       "city": "Springfield",
@@ -1954,16 +1955,17 @@ Retrieve all customers from QuickBooks.
 {
   "success": true,
   "data": {
-    "QueryResponse": [
-      {
-        "id": "123",
-        "displayName": "Acme Construction",
-        "email": "contact@acme.com",
-        "phone": "555-1234",
-        "active": true
-      }
-    ],
-    "time": "2024-02-15T10:30:00Z"
+    "QueryResponse": {
+      "Customer": [
+        {
+          "Id": "123",
+          "DisplayName": "Acme Construction",
+          "PrimaryEmailAddr": { "Address": "contact@acme.com" },
+          "PrimaryPhone": { "FreeFormNumber": "555-1234" },
+          "Active": true
+        }
+      ]
+    }
   }
 }
 ```
@@ -1981,7 +1983,7 @@ Retrieve all customers from QuickBooks.
 
 - Automatically refreshes expired tokens
 - Returns 401 if token refresh fails (requires reconnection)
-- Returns all customers in the QuickBooks instance
+- Returns customers in QuickBooks `QueryResponse.Customer` format
 
 #### GET /qbo/fetchProjects
 
@@ -2112,6 +2114,54 @@ Create a new project (sub-customer) under an existing customer in QuickBooks.
 - Returns 401 if token refresh fails (requires reconnection)
 - Projects are stored as customers with Job=true in QuickBooks
 - Status code: 201 Created on success, 401 if authentication fails, 500 for other errors
+
+#### POST /qbo/updateProject
+
+Update an existing QuickBooks project mapping for a Project Hound project.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Request Body:**
+
+```json
+{
+  "customerId": "123",
+  "projectName": "Downtown Office Renovation",
+  "projectId": "proj-001"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Project updated successfully",
+  "qbId": "456"
+}
+```
+
+**Error Response (401):**
+
+```json
+{
+  "success": false,
+  "message": "Token expired and refresh failed. Please reconnect QuickBooks."
+}
+```
+
+**Notes:**
+
+- Required fields: `customerId`, `projectName`, `projectId`
+- Updates the QuickBooks job/customer associated with the Project Hound project
+- Returns the QuickBooks project/customer ID in `qbId`
+- Returns 401 if token refresh fails (requires reconnection)
+- Status code: 200 OK on success, 401 if authentication fails, 500 for other errors
 
 #### POST /qbo/editCustomer
 

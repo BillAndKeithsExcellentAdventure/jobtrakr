@@ -384,6 +384,11 @@ export const useWorkItemSpentValue = (projectId: string, workItemId: string): nu
  * Hook that watches workItemCostEntries and updates the WorkItemSpentSummary context
  * This replaces the old useSetWorkItemSpentSummaryCallback hook
  *
+ * It also ensures data integrity between workItemCostEntries and workItemSummaries:
+ * - If a cost entry references a workItemId that does not exist in workItemSummaries,
+ *   a new summary row is created automatically.
+ * - Auto-created summary rows are initialized with bidAmount = 0 and complete = false.
+ *
  * Note:
  * - The context's setWorkItemSpentAmount method checks if values have changed
  *   before updating state, preventing unnecessary re-renders.
@@ -392,6 +397,8 @@ export const useWorkItemSpentValue = (projectId: string, workItemId: string): nu
  */
 export const useWorkItemSpentUpdater = (projectId: string): void => {
   const allWorkItemCostEntries = useAllRows(projectId, 'workItemCostEntries');
+  const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
+  const store = useStore(getStoreId(projectId));
   const { setWorkItemSpentAmount } = useWorkItemSpentSummary();
 
   // filter cost entries for the current project - this is needed because cost entries can be associated with other projects
@@ -400,6 +407,30 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
   );
 
   useEffect(() => {
+    const summaryWorkItemIds = new Set(allWorkItemSummaries.map((summary) => summary.workItemId));
+
+    // Ensure every cost entry work item has a matching workItemSummary row.
+    const missingWorkItemIds = new Set<string>();
+    for (const costEntry of projectCostEntries) {
+      if (!summaryWorkItemIds.has(costEntry.workItemId)) {
+        missingWorkItemIds.add(costEntry.workItemId);
+      }
+    }
+
+    if (store && missingWorkItemIds.size > 0) {
+      store.transaction(() => {
+        for (const workItemId of missingWorkItemIds) {
+          const id = randomUUID();
+          store.setRow('workItemSummaries', id, {
+            id,
+            workItemId,
+            bidAmount: 0,
+            complete: false,
+          } as any);
+        }
+      });
+    }
+
     // Group cost entries by workItemId and calculate total spent per work item
     const spentByWorkItem = new Map<string, number>();
 
@@ -415,7 +446,7 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
     for (const [workItemId, spentAmount] of spentByWorkItem) {
       setWorkItemSpentAmount(projectId, workItemId, spentAmount);
     }
-  }, [projectCostEntries, projectId, setWorkItemSpentAmount]);
+  }, [allWorkItemSummaries, projectCostEntries, projectId, setWorkItemSpentAmount, store]);
 };
 
 /**

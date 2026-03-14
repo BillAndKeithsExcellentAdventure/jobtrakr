@@ -98,4 +98,4 @@ Simply toggle the switch back to off in the App Settings screen.
 ## Related Documentation
 
 - [NetInfo Integration](./NETINFO_INTEGRATION.md) - Details about network state management
-- [Upload Sync](./UPLOAD_SYNC_FIX.md) - Information about upload queue functionality
+- [Deferred Media Processing](./DEFERRED_MEDIA_PROCESSING.md) - Information about upload queue functionality
