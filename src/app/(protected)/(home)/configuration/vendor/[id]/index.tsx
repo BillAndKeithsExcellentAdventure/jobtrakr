@@ -46,6 +46,7 @@ const EditVendor = () => {
     city: '',
     state: '',
     zip: '',
+    email: '',
     mobilePhone: '',
     businessPhone: '',
     notes: '',
@@ -149,6 +150,7 @@ const EditVendor = () => {
                 state: updatedVendor.state || '',
                 zip: updatedVendor.zip || '',
                 notes: updatedVendor.notes || '',
+                email: updatedVendor.email || '',
               },
               getToken,
             );
@@ -274,6 +276,15 @@ const EditVendor = () => {
               onBlur={handleBlur}
             />
           </View>
+          <TextField
+            placeholder="Email"
+            label="Email"
+            value={updatedVendor.email}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            onChangeText={(text) => handleInputChange('email', text)}
+            onBlur={handleBlur}
+          />
           <TextField
             placeholder="Notes"
             label="Notes"

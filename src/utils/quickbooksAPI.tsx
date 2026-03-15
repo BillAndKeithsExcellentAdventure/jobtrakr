@@ -106,6 +106,7 @@ export interface AddVendorRequest {
   state: string;
   zip: string;
   notes: string;
+  email: string;
 }
 
 export interface AddVendorResponse {
