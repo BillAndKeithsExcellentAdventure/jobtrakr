@@ -269,7 +269,7 @@ const ProjectDetailsPage = () => {
 
     try {
       // Create CSV header
-      const header = 'Code,Category,Work Item,Estimate,Cost,Cost Type\n';
+      const header = 'Code,Category,Work Item,Estimate,Cost,Cost Type,Completed\n';
 
       // Group work items by category and work item, then sort
       const sortedWorkItems = allWorkItems
@@ -294,6 +294,7 @@ const ProjectDetailsPage = () => {
             category: (category?.name || '').replace(/,/g, ' '),
             workItem: workItem.name.replace(/,/g, ' '),
             estimate: workItemSummary?.bidAmount || 0,
+            complete: workItemSummary?.complete || '',
             costs,
           };
         })
@@ -309,13 +310,19 @@ const ProjectDetailsPage = () => {
       const csvRows: string[] = [];
 
       sortedWorkItems.forEach((item) => {
+        // Skip work items without an estimate
+        // Check with Bill if there is a better way to handle this.
+        if (!(item.estimate > 0)) {
+          return;
+        }
+
         const totalCost = item.costs.reduce((sum, cost) => sum + cost.amount, 0);
 
         // First row for this work item with all details and total cost
         csvRows.push(
           `'${item.code}',${item.category},${item.workItem},${item.estimate.toFixed(2)},${totalCost.toFixed(
             2,
-          )},`,
+          )},,${item.complete}`,
         );
 
         // Subsequent rows for individual costs (if there are multiple costs)
