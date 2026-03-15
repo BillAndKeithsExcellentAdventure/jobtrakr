@@ -1,6 +1,7 @@
 import { Text, View } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
+import { useWorkItemSpentSummary } from '@/src/context/WorkItemSpentSummaryContext';
 import {
   useAllRows as useAllConfigRows,
   WorkCategoryCodeCompareAsNumber,
@@ -35,9 +36,9 @@ const CategorySpecificCostItemsPage = () => {
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
-  const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
   const allProjectCategories = useAllConfigRows('categories', WorkCategoryCodeCompareAsNumber);
   const allWorkItems = useAllConfigRows('workItems', WorkItemDataCodeCompareAsNumber);
+  const { getProjectWorkItemSpentAmounts } = useWorkItemSpentSummary();
 
   useEffect(() => {
     if (projectId) {
@@ -49,9 +50,9 @@ const CategorySpecificCostItemsPage = () => {
     setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
   }, [projectId, activeProjectIds, isStoreReady]);
 
-  const allActualProjectCostItems = useMemo(
-    () => allActualCostItems.filter((i) => i.projectId === undefined || i.projectId === projectId),
-    [allActualCostItems, projectId],
+  const projectSpentByWorkItem = useMemo(
+    () => getProjectWorkItemSpentAmounts(projectId),
+    [getProjectWorkItemSpentAmounts, projectId],
   );
 
   const projectData = useProject(projectId);
@@ -69,9 +70,7 @@ const CategorySpecificCostItemsPage = () => {
       const workItem = workItemMap.get(costItem.workItemId);
       if (!workItem || workItem.categoryId !== categoryId) continue;
 
-      const spentAmount = allActualProjectCostItems
-        .filter((i) => i.workItemId === workItem.id)
-        .reduce((sum, item) => sum + item.amount, 0);
+      const spentAmount = projectSpentByWorkItem.get(workItem.id) ?? 0;
 
       const balance = costItem.complete ? 0 : costItem.bidAmount - spentAmount;
 
@@ -88,7 +87,7 @@ const CategorySpecificCostItemsPage = () => {
     }
 
     return costItems.sort(CostItemDataCodeCompareAsNumber);
-  }, [allWorkItemSummaries, allWorkItems, allActualProjectCostItems, categoryId]);
+  }, [allWorkItemSummaries, allWorkItems, projectSpentByWorkItem, categoryId]);
 
   const numberOfCostItems = useMemo(() => costItemSummaries.length, [costItemSummaries]);
   const numberOfCompletedCostItems = useMemo(

@@ -59,6 +59,19 @@ const SwipeableReceiptItem = React.memo<{
     [allReceiptItems],
   );
 
+  const hasMultiProjectItems = useMemo(
+    () => allReceiptItems.some((lineItem) => lineItem.projectId && lineItem.projectId !== projectId),
+    [allReceiptItems, projectId],
+  );
+
+  const projectTotalOfReceiptItems = useMemo(
+    () =>
+      allReceiptItems
+        .filter((lineItem) => lineItem.projectId === undefined || lineItem.projectId === projectId)
+        .reduce((acc, lineItem) => acc + lineItem.amount, 0),
+    [allReceiptItems, projectId],
+  );
+
   const paymentAccountName = useMemo(() => {
     if (!item.paymentAccountId) return '';
     return allAccounts.find((account) => account.accountingId === item.paymentAccountId)?.name ?? '';
@@ -220,7 +233,7 @@ const SwipeableReceiptItem = React.memo<{
                     )}
                   </View>
                   <Text numberOfLines={1} style={{ color: textColor }}>
-                    {`${formatCurrency(item.amount, true, true)}${
+                    {`${hasMultiProjectItems ? `${formatCurrency(projectTotalOfReceiptItems, true, true)} / ${formatCurrency(item.amount, true, true)}` : formatCurrency(item.amount, true, true)}${
                       paymentAccountLabel ? ` - ${paymentAccountLabel}` : ''
                     }`}
                   </Text>

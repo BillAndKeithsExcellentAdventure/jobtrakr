@@ -42,6 +42,7 @@ export const VendorPicker = ({
     city: '',
     state: '',
     zip: '',
+    email: '',
     mobilePhone: '',
     businessPhone: '',
     notes: '',
@@ -106,6 +107,7 @@ export const VendorPicker = ({
           {
             name: newVendor.name,
             mobilePhone: newVendor.mobilePhone || '',
+            email: newVendor.email || '',
             address: newVendor.address || '',
             city: newVendor.city || '',
             state: newVendor.state || '',
@@ -349,6 +351,7 @@ export const VendorPicker = ({
             city: '',
             state: '',
             zip: '',
+            email: '',
             mobilePhone: '',
             businessPhone: '',
             notes: '',
@@ -410,6 +413,14 @@ export const VendorPicker = ({
             value={newVendor.businessPhone}
             keyboardType="phone-pad"
             onChangeText={(text) => handleInputChange('businessPhone', text)}
+          />
+          <TextInput
+            style={[styles.input, { backgroundColor: colors.neutral200 }]}
+            placeholder="Email"
+            value={newVendor.email}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            onChangeText={(text) => handleInputChange('email', text)}
           />
           <TextInput
             style={[styles.input, { backgroundColor: colors.neutral200 }]}

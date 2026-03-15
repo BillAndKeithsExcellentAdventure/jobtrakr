@@ -44,6 +44,7 @@ export const TABLES_SCHEMA = {
     businessPhone: { type: 'string' },
     notes: { type: 'string' },
     inactive: { type: 'boolean' },
+    email: { type: 'string' },
     matchCompareString: { type: 'string' }, // string used when processing receipt/invoice photo to determine if the vendor returned from processing is this vendor.
   },
   accounts: {

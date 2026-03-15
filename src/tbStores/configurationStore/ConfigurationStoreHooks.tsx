@@ -45,6 +45,7 @@ export interface VendorData {
   city?: string;
   state?: string;
   zip?: string;
+  email?: string;
   mobilePhone?: string;
   businessPhone?: string;
   notes?: string;

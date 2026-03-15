@@ -123,6 +123,7 @@ export async function importVendorsFromQuickBooks(
         businessPhone: qbVendor.businessPhone || '',
         notes: qbVendor.notes || '',
         inactive: false,
+        email: qbVendor.email || '',
       });
       addedCount++;
     }

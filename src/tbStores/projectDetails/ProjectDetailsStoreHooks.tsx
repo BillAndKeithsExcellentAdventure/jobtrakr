@@ -304,7 +304,7 @@ export const useCostUpdater = (projectId: string): void => {
 
   useEffect(() => {
     const spentAmount = allCostRows
-      .filter((item) => (item.projectId ? item.projectId === projectId : true))
+      .filter((item) => item.projectId === undefined || item.projectId === projectId)
       .reduce((sum, item) => sum + item.amount, 0);
     console.log(`[useCostUpdater] Calculated spent amount: ${spentAmount} for projectId: ${projectId}`);
     setAmountSpent(spentAmount);
@@ -367,7 +367,12 @@ export const useWorkItemsWithoutCosts = (projectId: string): WorkItemSummaryData
 
   return allWorkItemSummaries.filter(
     (wis) =>
-      wis.bidAmount === 0 && !allWorkItemCostEntries.some((wice) => wice.workItemId === wis.workItemId),
+      wis.bidAmount === 0 &&
+      !allWorkItemCostEntries.some(
+        (wice) =>
+          wice.workItemId === wis.workItemId &&
+          (wice.projectId === undefined || wice.projectId === projectId),
+      ),
   );
 };
 
@@ -390,8 +395,9 @@ export const useWorkItemSpentValue = (projectId: string, workItemId: string): nu
  * - Auto-created summary rows are initialized with bidAmount = 0 and complete = false.
  *
  * Note:
- * - The context's setWorkItemSpentAmount method checks if values have changed
- *   before updating state, preventing unnecessary re-renders.
+ * - The context's setProjectWorkItemSpentAmounts method replaces the project's
+ *   spent map in one update, clearing removed work items and skipping updates
+ *   when values are unchanged.
  * - Work items with no cost entries will not be in the map, and will return 0
  *   from getWorkItemSpentAmount (handled by the context getter).
  */
@@ -399,11 +405,11 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
   const allWorkItemCostEntries = useAllRows(projectId, 'workItemCostEntries');
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const store = useStore(getStoreId(projectId));
-  const { setWorkItemSpentAmount } = useWorkItemSpentSummary();
+  const { setProjectWorkItemSpentAmounts } = useWorkItemSpentSummary();
 
-  // filter cost entries for the current project - this is needed because cost entries can be associated with other projects
-  const projectCostEntries = allWorkItemCostEntries.filter((entry) =>
-    entry.projectId ? entry.projectId === projectId : true,
+  // filter cost entries for the current project - cost entries can be associated with other projects via cross-project receipts
+  const projectCostEntries = allWorkItemCostEntries.filter(
+    (entry) => entry.projectId === undefined || entry.projectId === projectId,
   );
 
   useEffect(() => {
@@ -441,12 +447,9 @@ export const useWorkItemSpentUpdater = (projectId: string): void => {
       );
     }
 
-    // Update the context with all spent amounts
-    // The setWorkItemSpentAmount method will skip updates if the value hasn't changed
-    for (const [workItemId, spentAmount] of spentByWorkItem) {
-      setWorkItemSpentAmount(projectId, workItemId, spentAmount);
-    }
-  }, [allWorkItemSummaries, projectCostEntries, projectId, setWorkItemSpentAmount, store]);
+    // Replace the project's spent map in one update so removed work items are cleared.
+    setProjectWorkItemSpentAmounts(projectId, spentByWorkItem);
+  }, [allWorkItemSummaries, projectCostEntries, projectId, setProjectWorkItemSpentAmounts, store]);
 };
 
 /**

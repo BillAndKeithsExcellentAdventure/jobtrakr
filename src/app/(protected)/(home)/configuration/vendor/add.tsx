@@ -38,6 +38,7 @@ const AddVendorModal = () => {
     city: '',
     state: '',
     zip: '',
+    email: '',
     mobilePhone: '',
     businessPhone: '',
     notes: '',
@@ -94,6 +95,7 @@ const AddVendorModal = () => {
                 state: vendor.state || '',
                 zip: vendor.zip || '',
                 notes: vendor.notes || '',
+                email: vendor.email || '',
               },
               getToken,
             );
@@ -189,6 +191,14 @@ const AddVendorModal = () => {
             onChangeText={(text) => handleInputChange('businessPhone', text)}
           />
         </View>
+        <TextInput
+          style={[styles.input, { backgroundColor: colors.neutral200 }]}
+          placeholder="Email"
+          value={vendor.email}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          onChangeText={(text) => handleInputChange('email', text)}
+        />
         <TextInput
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
           placeholder="Notes"

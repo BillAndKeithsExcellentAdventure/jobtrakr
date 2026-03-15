@@ -8,6 +8,7 @@ A Cloudflare Workers-based backend API for managing construction project media, 
 - [Setup](#setup)
 - [Authentication](#authentication)
 - [API Endpoints](#api-endpoints)
+  - [Email Verification](#email-verification)
   - [Organization Management](#organization-management)
   - [Receipt Management](#receipt-management)
   - [Invoice Management](#invoice-management)
@@ -89,6 +90,74 @@ The JWT token must:
 - Not be expired
 
 ## API Endpoints
+
+### Email Verification
+
+The API includes an email verification system used to validate email addresses before allowing email sending operations. Several endpoints require email verification before they can send notifications:
+
+- `/grantPhotoAccess` (when `fromEmail` and `fromName` are provided)
+- `/grantVendorAccess` (vendor email must be verified)
+- `/sendChangeOrderEmail` (both sender and recipient must be verified)
+
+**Special Case:** `admin@projecthound.biz` is always treated as verified.
+
+**Verification Flow:**
+
+1. Call `/sendVerificationEmail` to save the email and send a verification link
+2. User clicks the link in the email, which calls `/acceptVerifiedEmail`
+3. Email is marked as verified in the database
+4. Verified status is checked automatically when sending emails
+
+#### POST /sendVerificationEmail
+
+Save an email address and send a verification email with a clickable link.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+- `emailId` (string): Email address to verify
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Verification email sent successfully"
+}
+```
+
+**Notes:**
+
+- Stores the email in the `email_verification` table (uses INSERT OR REPLACE)
+- Sends an HTML email via SMTP2GO containing a verification button/link
+- The verification link points to `/acceptVerifiedEmail?email=<emailId>`
+
+#### GET /acceptVerifiedEmail
+
+Mark an email address as verified when the user clicks the verification link.
+
+**Authentication:** Not required (public endpoint, accessed via email link)
+
+**Query Parameters:**
+
+- `email` (string): Email address to verify
+
+**Response:** HTML page (not JSON)
+
+- **Success (200):** Renders an HTML page with "Email Verified" confirmation
+- **Not Found (404):** Renders an HTML page indicating the email was not found or already processed
+- **Error (400):** Renders an HTML page with error details
+
+**Notes:**
+
+- This endpoint returns `Content-Type: text/html` unlike other endpoints
+- Updates `isVerified = 1` in the `email_verification` table
+- Intended to be called by clicking the link in the verification email
+
+---
 
 ### Organization Management
 
@@ -635,7 +704,7 @@ Mark specific photos as public within a project.
 
 ##### POST /grantPhotoAccess
 
-Grant a user access to view public photos in a specific project.
+Grant a user access to view public photos in a specific project. Optionally sends a notification email with a link to the photo portal.
 
 **Authentication:** Required (⚠️ Note: Currently bypassed in code for testing - should be enabled in production)
 
@@ -647,7 +716,9 @@ Grant a user access to view public photos in a specific project.
   "emailId": "string",
   "projectId": "string",
   "projectName": "string",
-  "orgId": "string"
+  "orgId": "string",
+  "fromEmail": "string (optional)",
+  "fromName": "string (optional)"
 }
 ```
 
@@ -665,6 +736,15 @@ Grant a user access to view public photos in a specific project.
   }
 }
 ```
+
+**Email Notification:**
+
+When both `fromEmail` and `fromName` are provided and non-empty:
+
+- Both the sender (`fromEmail`) and recipient (`emailId`) must have verified email addresses
+- Returns 403 if either email is not verified
+- Sends an HTML email to `emailId` with a link to `https://photos.projecthound.biz/?email={emailId}`
+- Email subject: "Access to Photos for Project: {projectName}"
 
 ##### POST /revokePhotoAccess
 
@@ -1649,10 +1729,9 @@ Fetch all invoices for a specific vendor in an organization.
 The API provides comprehensive integration with QuickBooks Online (QBO) for accounting operations including:
 
 - **Authentication & Connection Management**: OAuth2-based connection flow with automatic token refresh
-- **Data Retrieval**: Fetch vendors, customers, chart of accounts, and company information
-- **Vendor/Customer Management**: Create and manage vendor and customer records
-- **Project Sync**: Create and update Project Hound projects as QuickBooks jobs (sub-customers)
-- **Bill/Receipt Processing**: Create or update bills and receipts with optional image attachments
+- **Data Retrieval**: Fetch vendors, chart of accounts, and company information
+- **Vendor Management**: Create and manage vendor records
+- **Bill Processing**: Create bills with optional image attachments and track payment status
 - **Payment Processing**: Process bill payments and track payment records
 
 **Key Features:**
@@ -1791,6 +1870,7 @@ Retrieve all vendors from QuickBooks.
       "zip": "62701",
       "mobilePhone": "5551234",
       "businessPhone": "5551234",
+      "email": "vendor@example.com",
       "notes": "Optional notes"
     }
   ]
@@ -1810,6 +1890,8 @@ Retrieve all vendors from QuickBooks.
 
 - Automatically refreshes expired tokens
 - Returns 401 if token refresh fails (requires reconnection)
+- Response includes `email` field (from QuickBooks `PrimaryEmailAddr.Address`) when available
+- Vendor data is normalized from QuickBooks format using multiple field name mappings
 
 #### GET /qbo/fetchAccounts
 
@@ -1955,17 +2037,16 @@ Retrieve all customers from QuickBooks.
 {
   "success": true,
   "data": {
-    "QueryResponse": {
-      "Customer": [
-        {
-          "Id": "123",
-          "DisplayName": "Acme Construction",
-          "PrimaryEmailAddr": { "Address": "contact@acme.com" },
-          "PrimaryPhone": { "FreeFormNumber": "555-1234" },
-          "Active": true
-        }
-      ]
-    }
+    "QueryResponse": [
+      {
+        "id": "123",
+        "displayName": "Acme Construction",
+        "email": "contact@acme.com",
+        "phone": "555-1234",
+        "active": true
+      }
+    ],
+    "time": "2024-02-15T10:30:00Z"
   }
 }
 ```
@@ -1983,7 +2064,7 @@ Retrieve all customers from QuickBooks.
 
 - Automatically refreshes expired tokens
 - Returns 401 if token refresh fails (requires reconnection)
-- Returns customers in QuickBooks `QueryResponse.Customer` format
+- Returns all customers in the QuickBooks instance
 
 #### GET /qbo/fetchProjects
 
@@ -2115,54 +2196,6 @@ Create a new project (sub-customer) under an existing customer in QuickBooks.
 - Projects are stored as customers with Job=true in QuickBooks
 - Status code: 201 Created on success, 401 if authentication fails, 500 for other errors
 
-#### POST /qbo/updateProject
-
-Update an existing QuickBooks project mapping for a Project Hound project.
-
-**Authentication:** Required
-
-**Query Parameters:**
-
-- `orgId` (string): Organization identifier
-- `userId` (string): User identifier
-
-**Request Body:**
-
-```json
-{
-  "customerId": "123",
-  "projectName": "Downtown Office Renovation",
-  "projectId": "proj-001"
-}
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Project updated successfully",
-  "qbId": "456"
-}
-```
-
-**Error Response (401):**
-
-```json
-{
-  "success": false,
-  "message": "Token expired and refresh failed. Please reconnect QuickBooks."
-}
-```
-
-**Notes:**
-
-- Required fields: `customerId`, `projectName`, `projectId`
-- Updates the QuickBooks job/customer associated with the Project Hound project
-- Returns the QuickBooks project/customer ID in `qbId`
-- Returns 401 if token refresh fails (requires reconnection)
-- Status code: 200 OK on success, 401 if authentication fails, 500 for other errors
-
 #### POST /qbo/editCustomer
 
 Update an existing customer in QuickBooks.
@@ -2291,6 +2324,7 @@ Create a new vendor in QuickBooks.
 {
   "name": "Acme Supplies Inc.",
   "mobilePhone": "555-1234",
+  "email": "acme@example.com",
   "address": "123 Main St",
   "city": "Springfield",
   "state": "IL",
@@ -2312,8 +2346,64 @@ Create a new vendor in QuickBooks.
 **Notes:**
 
 - Required fields: `name`
-- Optional fields: `mobilePhone`, `address`, `city`, `state`, `zip`, `notes`
+- Optional fields: `mobilePhone`, `email`, `address`, `city`, `state`, `zip`, `notes`
+- The `email` field is stored as `PrimaryEmailAddr` in QuickBooks
 - Returns the QuickBooks-assigned vendor ID in `newQBId` field
+
+#### POST /qbo/editVendor
+
+Update an existing vendor in QuickBooks.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Request Body:**
+
+```json
+{
+  "vendorId": "456",
+  "name": "Acme Supplies Inc.",
+  "mobilePhone": "555-1234",
+  "email": "acme@example.com",
+  "address": "123 Main St",
+  "city": "Springfield",
+  "state": "IL",
+  "zip": "62701",
+  "notes": "Updated supplier notes"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Vendor edited successfully",
+  "vendorId": "456"
+}
+```
+
+**Error Response (401):**
+
+```json
+{
+  "success": false,
+  "message": "Token expired and refresh failed. Please reconnect QuickBooks."
+}
+```
+
+**Notes:**
+
+- Required fields: `vendorId`, `name`
+- Optional fields: `mobilePhone`, `email`, `address`, `city`, `state`, `zip`, `notes`
+- The `email` field is stored as `PrimaryEmailAddr` in QuickBooks
+- Automatically fetches the existing vendor record to retrieve `SyncToken` before updating
+- Only provided fields are updated; omitted fields retain their existing values
+- Returns 401 if token refresh fails (requires reconnection)
 
 #### POST /qbo/editBill
 
@@ -2761,18 +2851,27 @@ All endpoints return error responses in the following format:
 ```
 src/
 ├── index.ts                    # Main API router
-├── receipts.ts                 # Receipt management
-├── invoices.ts                 # Invoice management
-├── photos.ts                   # Photo management
-├── organization.ts             # Organization management
-├── receiptIntelligence.ts      # Receipt AI processing
-├── invoiceIntelligence.ts      # Invoice AI processing
-├── transformChangeOrder.ts     # Change order AI generation
+├── access.ts                   # Photo access management (grant/revoke)
+├── accounts.ts                 # Account management utilities
+├── calculatehash.ts            # Hash generation for verification
 ├── changeOrders.ts             # Change order workflow
-├── pdfService.ts              # PDF generation
-├── calculatehash.ts           # Hash generation for verification
-├── imageUtils.ts              # Image processing utilities
-└── types.d.ts                 # TypeScript type definitions
+├── documentIntelligence.ts     # Azure Document Intelligence integration
+├── email.ts                    # Email verification & sending
+├── images.ts                   # Image storage & retrieval
+├── imageUtils.ts               # Image processing utilities
+├── invoiceIntelligence.ts      # Invoice AI processing
+├── invoices.ts                 # Invoice management
+├── notification.ts             # Push notification support
+├── organization.ts             # Organization management
+├── pdfService.ts               # PDF generation
+├── photos.ts                   # Photo management
+├── QuickBooks.ts               # QuickBooks Online integration
+├── receiptIntelligence.ts      # Receipt AI processing
+├── receipts.ts                 # Receipt management
+├── transformChangeOrder.ts     # Change order AI generation
+├── types.d.ts                  # TypeScript type definitions
+├── vendorAccess.ts             # Vendor access management (grant/revoke)
+└── vendors.ts                  # Vendor data & email utilities
 ```
 
 ### Running Tests
