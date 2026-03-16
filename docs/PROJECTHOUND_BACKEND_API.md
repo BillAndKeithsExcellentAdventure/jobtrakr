@@ -157,6 +157,33 @@ Mark an email address as verified when the user clicks the verification link.
 - Updates `isVerified = 1` in the `email_verification` table
 - Intended to be called by clicking the link in the verification email
 
+#### GET /isEmailValidated
+
+Check whether an email address has been verified.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+- `email` (string): Email address to check
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "isEmailValidated": true
+}
+```
+
+**Notes:**
+
+- Returns `isEmailValidated: true` if the email has been verified, `false` otherwise
+- `admin@projecthound.biz` is always treated as validated
+- Validates email format before checking
+
 ---
 
 ### Organization Management
@@ -2163,7 +2190,8 @@ Create a new project (sub-customer) under an existing customer in QuickBooks.
 {
   "customerId": "123",
   "projectName": "Downtown Office Renovation",
-  "projectId": "proj-001"
+  "projectId": "proj-001",
+  "projectAbbr": "DOR"
 }
 ```
 
@@ -2173,7 +2201,8 @@ Create a new project (sub-customer) under an existing customer in QuickBooks.
 {
   "success": true,
   "message": "Project created successfully",
-  "newQBId": "456"
+  "newQBId": "456",
+  "projectAbbr": "DOR"
 }
 ```
 
@@ -2188,9 +2217,11 @@ Create a new project (sub-customer) under an existing customer in QuickBooks.
 
 **Notes:**
 
-- Required fields: `customerId`, `projectName`, `projectId`
+- Required fields: `customerId`, `projectName`, `projectId`, `projectAbbr`
 - Creates a sub-customer (job) under the specified parent customer
 - Returns the QuickBooks-assigned project ID in `newQBId` field
+- `projectAbbr` is used as the project abbreviation for accounting IDs; if already in use, a numeric suffix is appended automatically (e.g. `DOR-1`)
+- Returns the final `projectAbbr` in the response (may differ from input if deduplication occurred)
 - Stores the mapping between Project Hound projectId and QuickBooks project ID in local database
 - Returns 401 if token refresh fails (requires reconnection)
 - Projects are stored as customers with Job=true in QuickBooks
