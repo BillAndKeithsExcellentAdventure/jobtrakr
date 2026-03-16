@@ -4,7 +4,7 @@ import { TextField } from '@/src/components/TextField';
 import { Text, View } from '@/src/components/Themed';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
-
+import { isEmailVerified, sendVerificationEmail } from '@/src/utils/quickbooksAPI';
 import {
   SettingsData,
   useAppSettings,
@@ -17,6 +17,8 @@ import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Image, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
+import { useAuth } from '@clerk/clerk-expo';
+import { useNetwork } from '@/src/context/NetworkContext';
 
 async function createBase64LogoImage(
   uri: string,
@@ -43,7 +45,9 @@ const SetAppSettingScreen = () => {
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
   const [settings, setSettings] = useState<SettingsData>(appSettings);
-
+  const [emailHasBeenVerified, setEmailHasBeenVerified] = useState(true); // Assume true initially to avoid showing the verify button unnecessarily while we check the actual status
+  const { userId, orgId, getToken } = useAuth();
+  const { isConnected } = useNetwork();
   // Check if we're in a development build
   const isDevelopment = isDevelopmentBuild();
 
@@ -51,6 +55,20 @@ const SetAppSettingScreen = () => {
   useEffect(() => {
     setSettings(appSettings);
   }, [appSettings]);
+
+  useEffect(() => {
+    // Check if the user's email is verified
+    const checkEmailVerification = async () => {
+      // Simulate an API call or logic to check email verification status
+      // Replace this with your actual implementation
+      const emailVerified = await isEmailVerified(orgId!, userId!, appSettings.email, getToken);
+      setEmailHasBeenVerified(emailVerified);
+    };
+
+    if (appSettings.email && orgId && userId && isConnected) {
+      checkEmailVerification();
+    }
+  }, [appSettings.email, orgId, userId, getToken, isConnected]);
 
   const handleChange = (key: keyof SettingsData, value: string) => {
     setSettings((prev) => ({
@@ -157,7 +175,7 @@ const SetAppSettingScreen = () => {
         style={[{ backgroundColor: colors.modalOverlayBackgroundColor, flex: 1 }]}
         contentContainerStyle={styles.modalContainer}
       >
-        <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
+        <View style={[styles.container]}>
           {!areAllSettingsMet && (
             <Text
               style={{
@@ -204,8 +222,8 @@ const SetAppSettingScreen = () => {
             autoCapitalize="none"
             autoCorrect={false}
           />
-          <View style={{ flexDirection: 'row', backgroundColor: colors.listBackground, gap: 8 }}>
-            <View style={{ marginBottom: 4, backgroundColor: colors.listBackground, flex: 1 }}>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <View style={{ marginBottom: 4, flex: 1 }}>
               <TextField
                 label="State*"
                 placeholder="State"
@@ -216,7 +234,7 @@ const SetAppSettingScreen = () => {
                 autoCorrect={false}
               />
             </View>
-            <View style={{ marginBottom: 4, width: 150, backgroundColor: colors.listBackground }}>
+            <View style={{ marginBottom: 4, width: 150 }}>
               <TextField
                 label="Zip*"
                 placeholder="Zip"
@@ -248,29 +266,61 @@ const SetAppSettingScreen = () => {
             autoCapitalize="none"
             autoCorrect={false}
           />
-          <TextField
-            label="Email*"
-            placeholder="Email"
-            keyboardType="email-address"
-            value={String(settings.email ?? '')}
-            onChangeText={(text) => handleChange('email', text)}
-            onBlur={handleSave}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
           <View
-            style={{ flexDirection: 'row', marginBottom: 4, gap: 10, backgroundColor: colors.listBackground }}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+            }}
           >
+            <TextField
+              containerStyle={{ flex: 1 }}
+              label="Email*"
+              placeholder="Email"
+              keyboardType="email-address"
+              value={String(settings.email ?? '')}
+              onChangeText={(text) => handleChange('email', text)}
+              onBlur={handleSave}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {!emailHasBeenVerified && settings.email.trim().length > 0 && (
+              <TouchableOpacity
+                onPress={async () => {
+                  try {
+                    await sendVerificationEmail(orgId!, userId!, settings.email, getToken);
+                    Alert.alert(
+                      'Verification Email Sent',
+                      'A verification email has been sent to your email address. Please check your inbox and click the verification link.',
+                    );
+                  } catch (error) {
+                    console.error('Error sending verification email:', error);
+                    Alert.alert(
+                      'Error',
+                      'There was an error sending the verification email. Please try again later.',
+                    );
+                  }
+                }}
+                style={{
+                  backgroundColor: colors.buttonBlue,
+                  borderRadius: 4,
+                  alignSelf: 'flex-end',
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                }}
+              >
+                <Text style={{ color: '#fff' }} text="Verify" />
+              </TouchableOpacity>
+            )}
+          </View>
+          <View style={{ flexDirection: 'row', marginBottom: 4, gap: 10 }}>
             <TouchableOpacity
-              style={[
-                styles.button,
-                { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background },
-              ]}
+              style={[styles.button, { backgroundColor: colors.buttonBlue }]}
               onPress={pickImage}
             >
-              <Text>Select</Text>
-              <Text>Company</Text>
-              <Text>Logo</Text>
+              <Text style={{ color: '#fff' }}>Select</Text>
+              <Text style={{ color: '#fff' }}>Company</Text>
+              <Text style={{ color: '#fff' }}>Logo</Text>
             </TouchableOpacity>
             {settings.companyLogo && (
               <Image
@@ -285,7 +335,6 @@ const SetAppSettingScreen = () => {
                 flexDirection: 'row',
                 marginBottom: 8,
                 marginTop: 8,
-                backgroundColor: colors.listBackground,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}

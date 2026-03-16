@@ -7,6 +7,8 @@ import {
   doesProjectExistInQuickBooks,
   addProjectToQuickBooks,
   updateProjectInQuickBooks,
+  isEmailVerified,
+  sendVerificationEmail,
 } from '@/src/utils/quickbooksAPI';
 import { mockApiSuccess, mockApiError, resetApiMocks, createMockGetToken } from '@/__mocks__/apiMocks';
 
@@ -200,11 +202,100 @@ describe('quickbooksAPI', () => {
     });
   });
 
+  describe('isEmailVerified', () => {
+    it('should return true when email is validated', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: true, isEmailValidated: true });
+
+      const result = await isEmailVerified('org-456', 'user-123', 'test@example.com', mockGetToken);
+
+      expect(result).toBe(true);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/isEmailValidated'),
+        expect.objectContaining({ method: 'GET' }),
+      );
+    });
+
+    it('should return false when email is not validated', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: true, isEmailValidated: false });
+
+      const result = await isEmailVerified('org-456', 'user-123', 'test@example.com', mockGetToken);
+
+      expect(result).toBe(false);
+    });
+
+    it('should include orgId, userId, and encoded email in query params', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: true, isEmailValidated: true });
+
+      await isEmailVerified('org-456', 'user-123', 'first.last+tag@example.com', mockGetToken);
+
+      const callUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string;
+      expect(callUrl).toContain('orgId=org-456');
+      expect(callUrl).toContain('userId=user-123');
+      expect(callUrl).toContain('email=first.last%2Btag%40example.com');
+    });
+
+    it('should throw error when API returns failure', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: false, message: 'Unable to validate email' });
+
+      await expect(isEmailVerified('org-456', 'user-123', 'test@example.com', mockGetToken)).rejects.toThrow(
+        'Unable to validate email',
+      );
+    });
+  });
+
+  describe('sendVerificationEmail', () => {
+    it('should successfully request verification email', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      const mockResponse = { success: true, message: 'Verification email sent successfully' };
+      mockApiSuccess(mockResponse);
+
+      const result = await sendVerificationEmail('org-456', 'user-123', 'test@example.com', mockGetToken);
+
+      expect(result).toEqual(mockResponse);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/sendVerificationEmail'),
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer test-token',
+          }),
+        }),
+      );
+    });
+
+    it('should include orgId, userId, and encoded emailId in query params', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: true, message: 'Verification email sent successfully' });
+
+      await sendVerificationEmail('org-456', 'user-123', 'first.last+tag@example.com', mockGetToken);
+
+      const callUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string;
+      expect(callUrl).toContain('orgId=org-456');
+      expect(callUrl).toContain('userId=user-123');
+      expect(callUrl).toContain('emailId=first.last%2Btag%40example.com');
+    });
+
+    it('should throw error when API returns failure', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: false, message: 'Unable to send verification email' });
+
+      await expect(
+        sendVerificationEmail('org-456', 'user-123', 'test@example.com', mockGetToken),
+      ).rejects.toThrow('Unable to send verification email');
+    });
+  });
+
   describe('addProjectToQuickBooks', () => {
     const mockProject = {
       customerId: 'customer-123',
       projectName: 'Test Project',
       projectId: 'proj-789',
+      projectAbbr: 'TEST',
     };
 
     it('should successfully add a project', async () => {
@@ -259,6 +350,7 @@ describe('quickbooksAPI', () => {
       customerId: 'customer-456',
       projectName: 'Updated Project',
       projectId: 'proj-789',
+      projectAbbr: 'TEST',
     };
 
     it('should successfully update a project', async () => {

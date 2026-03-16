@@ -15,7 +15,11 @@ import {
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useDeleteProjectCallback, useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import {
+  useDeleteProjectCallback,
+  useProject,
+  useUpdateProjectCallback,
+} from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   useAllRows,
   useClearProjectDetailsStoreCallback,
@@ -65,6 +69,7 @@ const ProjectDetailsPage = () => {
   const { orgId, userId, getToken } = useAuth();
   const isConnectedToQBRef = useRef(isQuickBooksAccessible);
   const syncedProjectsRef = useRef<Set<string>>(new Set());
+  const updateProject = useUpdateProjectCallback();
 
   useEffect(() => {
     isConnectedToQBRef.current = isQuickBooksAccessible;
@@ -127,13 +132,28 @@ const ProjectDetailsPage = () => {
           customerId: projectCustomerQbId,
         });
 
-        await addProjectToQuickBooks(
+        const result = await addProjectToQuickBooks(
           orgId,
           userId,
           { customerId: projectCustomerQbId, projectName, projectId, projectAbbr: projectData.abbreviation },
           getToken,
         );
         console.log('[QBSync] Project added to QuickBooks successfully');
+
+        if (result.success && result.projectAbbr) {
+          if (projectData.abbreviation !== result.projectAbbr) {
+            console.log(
+              `[QBSync] Updating project abbreviation from "${projectData.abbreviation}" to "${result.projectAbbr}"`,
+            );
+            // Update the project abbreviation in the local store to match what was created in QuickBooks
+            // This ensures that future syncs can reliably identify the project in QuickBooks by its abbreviation
+            updateProject(projectId, { abbreviation: result.projectAbbr });
+            Alert.alert(
+              'Project Abbreviation Updated',
+              `The project abbreviation has been updated to "${result.projectAbbr}" to match QuickBooks.`,
+            );
+          }
+        }
       } catch (error) {
         console.error('[QBSync] Failed to sync project with QuickBooks:', error);
         if (error instanceof Error) {

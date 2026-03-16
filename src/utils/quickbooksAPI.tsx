@@ -23,6 +23,10 @@ interface ApiIsConnectedResponse extends ApiDefaultResponse {
   isConnected: boolean;
 }
 
+interface ApiIsEmailValidatedResponse extends ApiDefaultResponse {
+  isEmailValidated: boolean;
+}
+
 type ApiResponse<T> = ApiDataResponse<T> | ApiConnectionResponse;
 
 // ---------------------------------------------------------------------------
@@ -352,6 +356,7 @@ export interface AddProjectResponse {
   success: boolean;
   message?: string;
   newQBId?: string;
+  projectAbbr?: string;
 }
 
 export interface UpdateProjectResponse {
@@ -453,6 +458,75 @@ export async function isQuickBooksConnected(
   }
 
   return data.isConnected || false;
+}
+
+/**
+ * Check whether an email has been verified for this organization/user context.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param email - The email address to check
+ * @param getToken - Function to get the authentication token
+ * @returns True if the email has been validated
+ */
+export async function isEmailVerified(
+  orgId: string,
+  userId: string,
+  email: string,
+  getToken: () => Promise<string | null>,
+): Promise<boolean> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(
+    `${API_BASE_URL}/isEmailValidated?orgId=${orgId}&userId=${userId}&email=${encodeURIComponent(email)}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+
+  const data: ApiIsEmailValidatedResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to check email verification status');
+  }
+
+  return data.isEmailValidated || false;
+}
+
+/**
+ * Trigger a verification email for the supplied email address.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param email - The email address to verify
+ * @param getToken - Function to get the authentication token
+ */
+export async function sendVerificationEmail(
+  orgId: string,
+  userId: string,
+  email: string,
+  getToken: () => Promise<string | null>,
+): Promise<ApiDefaultResponse> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(
+    `${API_BASE_URL}/sendVerificationEmail?orgId=${orgId}&userId=${userId}&emailId=${encodeURIComponent(email)}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+
+  const data: ApiDefaultResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to send verification email');
+  }
+
+  return data;
 }
 
 // ---------------------------------------------------------------------------
