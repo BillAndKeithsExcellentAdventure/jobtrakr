@@ -6,17 +6,17 @@ import { SvgImage } from '@/src/components/SvgImage';
 
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import Reanimated from 'react-native-reanimated';
-import { formatPhoneNumber } from '../utils/formatters';
+import { useNetwork } from '@/src/context/NetworkContext';
 
 const RIGHT_ACTION_WIDTH = 100;
 const SWIPE_THRESHOLD_WIDTH = 50;
 
 const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
   const router = useRouter();
-
+  const { verifiedEmailAddresses, isConnected } = useNetwork();
   const updateVendor = useUpdateRowCallback('vendors');
   const swipeableRef = useRef<SwipeableHandles>(null);
 
@@ -25,6 +25,11 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
     updateVendor(vendor.id, { inactive: !vendor.inactive });
     swipeableRef.current?.close();
   }, [updateVendor, vendor.id, vendor.inactive]);
+
+  const isEmailVerified = useMemo(
+    () => (vendor.email && isConnected ? verifiedEmailAddresses.includes(vendor.email) : true),
+    [vendor.email, isConnected, verifiedEmailAddresses],
+  );
 
   const RightAction = useCallback(() => {
     return (
@@ -75,11 +80,13 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
                   <Text style={vendor.inactive ? { color: colors.textMuted } : {}}>{vendor.city}</Text>
                 </View>
               )}
-              {vendor.businessPhone && (
-                <Text
-                  style={vendor.inactive ? { color: colors.textMuted } : {}}
-                  text={formatPhoneNumber(vendor.businessPhone)}
-                />
+              {vendor.email && (
+                <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                  <Text style={vendor.inactive ? { color: colors.textMuted } : {}} text={vendor.email} />
+                  {isEmailVerified && (
+                    <MaterialIcons name="verified-user" size={28} color={colors.profitFg} />
+                  )}
+                </View>
               )}
             </View>
             <View>

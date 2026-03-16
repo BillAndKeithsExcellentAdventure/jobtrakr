@@ -13,20 +13,26 @@ import {
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Platform, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Modal, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextField } from '@/src/components/TextField';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { useAuth } from '@clerk/clerk-expo';
-import { addCustomer, QBEditCustomerInfo, updateCustomer } from '@/src/utils/quickbooksAPI';
+import {
+  addCustomer,
+  QBEditCustomerInfo,
+  sendVerificationEmail,
+  updateCustomer,
+} from '@/src/utils/quickbooksAPI';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const EditCustomer = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { isQuickBooksAccessible } = useNetwork();
+  const { isQuickBooksAccessible, verifiedEmailAddresses, isConnected } = useNetwork();
   const { orgId, userId, getToken } = useAuth();
 
   const applyCustomerUpdates = useUpdateRowCallback('customers');
@@ -64,6 +70,12 @@ const EditCustomer = () => {
   }, [customerFromStore]);
 
   const isFromQuickBooks = Boolean(updatedCustomer.accountingId);
+
+  const isEmailVerified = useMemo(
+    () =>
+      updatedCustomer.email && isConnected ? verifiedEmailAddresses.includes(updatedCustomer.email) : true,
+    [updatedCustomer.email, isConnected, verifiedEmailAddresses],
+  );
 
   const qbCustomerOptions: OptionEntry[] = allCustomers
     .filter((customer) => !!customer.accountingId && customer.id !== id)
@@ -269,16 +281,52 @@ const EditCustomer = () => {
             value={updatedCustomer.contactName}
             onChangeText={(text) => handleInputChange('contactName', text)}
           />
-          <TextField
-            containerStyle={styles.inputContainer}
-            style={[styles.input]}
-            label="Email"
-            placeholder="Email"
-            value={updatedCustomer.email}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            onChangeText={(text) => handleInputChange('email', text)}
-          />
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+            <TextField
+              containerStyle={[styles.inputContainer, { flex: 1 }]}
+              style={[styles.input]}
+              label="Email"
+              placeholder="Email"
+              value={updatedCustomer.email}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              onChangeText={(text) => handleInputChange('email', text)}
+            />
+            {isEmailVerified ? (
+              <MaterialIcons name="verified-user" size={28} color={colors.profitFg} />
+            ) : (
+              <>
+                {updatedCustomer.email && updatedCustomer.email.trim().length > 0 && (
+                  <TouchableOpacity
+                    onPress={async () => {
+                      try {
+                        await sendVerificationEmail(orgId!, userId!, updatedCustomer.email!, getToken);
+                        Alert.alert(
+                          'Verification Email Sent',
+                          'A verification email has been sent to customer. Please ask them to check their inbox and click the verification link.',
+                        );
+                      } catch (error) {
+                        console.error('Error sending verification email:', error);
+                        Alert.alert(
+                          'Error',
+                          'There was an error sending the verification email. Please try again later.',
+                        );
+                      }
+                    }}
+                    style={{
+                      backgroundColor: colors.buttonBlue,
+                      borderRadius: 4,
+                      alignSelf: 'flex-end',
+                      paddingVertical: 8,
+                      paddingHorizontal: 12,
+                    }}
+                  >
+                    <Text style={{ color: '#fff' }} text="Verify" />
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
+          </View>
           <TextField
             style={[styles.input]}
             label="Phone"

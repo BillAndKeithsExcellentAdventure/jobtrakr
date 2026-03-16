@@ -139,7 +139,11 @@ const Home = () => {
   const addCustomer = useAddRowCallback('customers');
   const updateCustomer = useUpdateRowCallback('customers');
   const configStore = useConfigurationStore();
-  const { isQuickBooksAccessible, isQuickBooksConnected: isQBConnected } = useNetwork();
+  const {
+    isQuickBooksAccessible,
+    isQuickBooksConnected: isQBConnected,
+    refreshVerifiedEmailAddresses,
+  } = useNetwork();
   const auth = useAuth();
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
@@ -150,6 +154,7 @@ const Home = () => {
   }, [clearAllProjectIds]);
 
   useEffect(() => {
+    refreshVerifiedEmailAddresses(); // Refresh verified email addresses on mount to ensure we have the latest data for email verification status
     return () => {
       if (processingDelayTimerRef.current) {
         clearTimeout(processingDelayTimerRef.current);

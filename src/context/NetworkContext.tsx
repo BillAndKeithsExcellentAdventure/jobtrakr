@@ -1,8 +1,11 @@
-import React, { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { isDevelopmentBuild } from '@/src/utils/environment';
-import { isQuickBooksConnected as testQbIsConnected } from '@/src/utils/quickbooksAPI';
+import {
+  getVerifiedEmailAddresses,
+  isQuickBooksConnected as testQbIsConnected,
+} from '@/src/utils/quickbooksAPI';
 import { useAuth } from '@clerk/clerk-expo';
 
 interface NetworkContextType {
@@ -11,6 +14,8 @@ interface NetworkContextType {
   isQuickBooksConnected: boolean;
   isQuickBooksAccessible: boolean;
   networkType: string | null;
+  verifiedEmailAddresses: string[];
+  refreshVerifiedEmailAddresses: () => Promise<void>;
 }
 
 const NetworkContext = createContext<NetworkContextType>({
@@ -19,6 +24,8 @@ const NetworkContext = createContext<NetworkContextType>({
   networkType: null,
   isQuickBooksConnected: false,
   isQuickBooksAccessible: false,
+  verifiedEmailAddresses: [],
+  refreshVerifiedEmailAddresses: async () => Promise.resolve(),
 });
 
 export const useNetwork = () => {
@@ -40,8 +47,10 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const appSettings = useAppSettings();
   const [isQuickBooksConnected, setIsQuickBooksConnected] = useState<boolean>(false);
   const [isQuickBooksAccessible, setIsQuickBooksAccessible] = useState<boolean>(false);
+  const [verifiedEmailAddresses, setVerifiedEmailAddresses] = useState<string[]>([]);
   const previousConnectedRef = useRef<boolean | null>(null);
   const previousSyncWithQuickBooksRef = useRef<boolean | null>(null);
+  const verifiedEmailAddressesRef = useRef<string[]>([]);
   const auth = useAuth();
   const lastNetworkStateRef = useRef<{
     isConnected: boolean;
@@ -50,6 +59,31 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   } | null>(null);
 
   const { userId, orgId, getToken } = auth;
+
+  const refreshVerifiedEmailAddresses = useCallback(async (): Promise<void> => {
+    if (!auth.isLoaded || !auth.isSignedIn || !orgId || !userId || !isInternetReachable) {
+      if (verifiedEmailAddressesRef.current.length > 0) {
+        verifiedEmailAddressesRef.current = [];
+        setVerifiedEmailAddresses([]);
+      }
+      return;
+    }
+
+    try {
+      const nextAddresses = await getVerifiedEmailAddresses(orgId, userId, getToken);
+      const currentAddresses = verifiedEmailAddressesRef.current;
+      const hasChanged =
+        currentAddresses.length !== nextAddresses.length ||
+        currentAddresses.some((address, index) => address !== nextAddresses[index]);
+
+      if (hasChanged) {
+        verifiedEmailAddressesRef.current = nextAddresses;
+        setVerifiedEmailAddresses(nextAddresses);
+      }
+    } catch (error) {
+      console.error('Failed to refresh verified email addresses:', error);
+    }
+  }, [auth.isLoaded, auth.isSignedIn, getToken, orgId, userId, isInternetReachable]);
 
   // Check if we're in a development build and debug offline mode is enabled
   const debugForceOffline = isDevelopmentBuild() && appSettings.debugForceOffline;
@@ -68,6 +102,10 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
       previousSyncWithQuickBooksRef.current = current;
     }
   }, [appSettings.syncWithQuickBooks]);
+
+  useEffect(() => {
+    void refreshVerifiedEmailAddresses();
+  }, [refreshVerifiedEmailAddresses]);
 
   useEffect(() => {
     if (debugForceOffline) {
@@ -190,6 +228,8 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     isQuickBooksConnected: isQuickBooksConnected,
     isQuickBooksAccessible: debugForceOffline ? false : isQuickBooksAccessible,
     networkType,
+    verifiedEmailAddresses,
+    refreshVerifiedEmailAddresses,
   };
 
   return <NetworkContext.Provider value={value}>{children}</NetworkContext.Provider>;

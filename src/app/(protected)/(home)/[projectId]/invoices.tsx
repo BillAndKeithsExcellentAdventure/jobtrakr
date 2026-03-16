@@ -5,7 +5,7 @@ import { useColors } from '@/src/context/ColorsContext';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 
@@ -61,8 +61,14 @@ const ProjectInvoicesPage = () => {
   const previousInvoiceCount = useRef(0);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
-  const { isQuickBooksAccessible } = useNetwork();
+  const { isQuickBooksAccessible, refreshVerifiedEmailAddresses } = useNetwork();
   const { orgId, userId, getToken } = auth;
+
+  useEffect(() => {
+    if (refreshVerifiedEmailAddresses) {
+      refreshVerifiedEmailAddresses(); // Refresh verified email addresses on mount to ensure we have the latest data for email verification status
+    }
+  }, [refreshVerifiedEmailAddresses]);
 
   // Keep a ref to allInvoices so the mount effect can access the latest value
   const allProjectInvoicesRef = useRef(allInvoices);

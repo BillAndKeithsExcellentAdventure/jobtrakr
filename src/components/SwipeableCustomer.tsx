@@ -8,15 +8,17 @@ import {
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import Reanimated from 'react-native-reanimated';
+import { useNetwork } from '@/src/context/NetworkContext';
 
 const RIGHT_ACTION_WIDTH = 100;
 const SWIPE_THRESHOLD_WIDTH = 50;
 
 const SwipeableCustomer = ({ customer }: { customer: CustomerData }) => {
   const router = useRouter();
+  const { verifiedEmailAddresses, isConnected } = useNetwork();
   const updateCustomer = useUpdateRowCallback('customers');
   const colors = useColors();
   const swipeableRef = useRef<SwipeableHandles>(null);
@@ -25,6 +27,11 @@ const SwipeableCustomer = ({ customer }: { customer: CustomerData }) => {
     updateCustomer(customer.id, { inactive: !customer.inactive });
     swipeableRef.current?.close();
   }, [customer.id, customer.inactive, updateCustomer]);
+
+  const isEmailVerified = useMemo(
+    () => (customer.email && isConnected ? verifiedEmailAddresses.includes(customer.email) : true),
+    [customer.email, isConnected, verifiedEmailAddresses],
+  );
 
   const RightAction = useCallback(() => {
     return (
@@ -74,6 +81,14 @@ const SwipeableCustomer = ({ customer }: { customer: CustomerData }) => {
               </View>
               {customer.contactName ? (
                 <Text style={customer.inactive && { color: colors.textMuted }}>{customer.contactName}</Text>
+              ) : null}
+              {customer.email ? (
+                <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                  <Text style={customer.inactive && { color: colors.textMuted }}>{customer.email}</Text>
+                  {isEmailVerified && (
+                    <MaterialIcons name="verified-user" size={28} color={colors.profitFg} />
+                  )}
+                </View>
               ) : null}
             </View>
           </Pressable>

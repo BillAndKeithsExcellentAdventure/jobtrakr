@@ -19,6 +19,7 @@ import { Alert, Image, Platform, StyleSheet, TouchableOpacity } from 'react-nati
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { useAuth } from '@clerk/clerk-expo';
 import { useNetwork } from '@/src/context/NetworkContext';
+import { MaterialIcons } from '@expo/vector-icons';
 
 async function createBase64LogoImage(
   uri: string,
@@ -45,9 +46,8 @@ const SetAppSettingScreen = () => {
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
   const [settings, setSettings] = useState<SettingsData>(appSettings);
-  const [emailHasBeenVerified, setEmailHasBeenVerified] = useState(true); // Assume true initially to avoid showing the verify button unnecessarily while we check the actual status
   const { userId, orgId, getToken } = useAuth();
-  const { isConnected } = useNetwork();
+  const { isConnected, verifiedEmailAddresses } = useNetwork();
   // Check if we're in a development build
   const isDevelopment = isDevelopmentBuild();
 
@@ -56,19 +56,10 @@ const SetAppSettingScreen = () => {
     setSettings(appSettings);
   }, [appSettings]);
 
-  useEffect(() => {
-    // Check if the user's email is verified
-    const checkEmailVerification = async () => {
-      // Simulate an API call or logic to check email verification status
-      // Replace this with your actual implementation
-      const emailVerified = await isEmailVerified(orgId!, userId!, appSettings.email, getToken);
-      setEmailHasBeenVerified(emailVerified);
-    };
-
-    if (appSettings.email && orgId && userId && isConnected) {
-      checkEmailVerification();
-    }
-  }, [appSettings.email, orgId, userId, getToken, isConnected]);
+  const emailHasBeenVerified = useMemo(
+    () => (appSettings.email && isConnected ? verifiedEmailAddresses.includes(appSettings.email) : true),
+    [appSettings.email, isConnected, verifiedEmailAddresses],
+  );
 
   const handleChange = (key: keyof SettingsData, value: string) => {
     setSettings((prev) => ({
@@ -278,13 +269,14 @@ const SetAppSettingScreen = () => {
               label="Email*"
               placeholder="Email"
               keyboardType="email-address"
+              numberOfLines={1}
               value={String(settings.email ?? '')}
               onChangeText={(text) => handleChange('email', text)}
               onBlur={handleSave}
               autoCapitalize="none"
               autoCorrect={false}
             />
-            {!emailHasBeenVerified && settings.email.trim().length > 0 && (
+            {!emailHasBeenVerified && settings.email.trim().length > 0 ? (
               <TouchableOpacity
                 onPress={async () => {
                   try {
@@ -311,6 +303,10 @@ const SetAppSettingScreen = () => {
               >
                 <Text style={{ color: '#fff' }} text="Verify" />
               </TouchableOpacity>
+            ) : (
+              <View style={{ alignSelf: 'flex-end', paddingVertical: 4 }}>
+                <MaterialIcons name="verified-user" size={28} color={colors.profitFg} />
+              </View>
             )}
           </View>
           <View style={{ flexDirection: 'row', marginBottom: 4, gap: 10 }}>

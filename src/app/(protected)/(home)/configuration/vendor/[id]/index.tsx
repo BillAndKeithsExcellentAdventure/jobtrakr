@@ -13,18 +13,19 @@ import {
   VendorData,
   VendorDataCompareName,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { addVendor } from '@/src/utils/quickbooksAPI';
+import { addVendor, sendVerificationEmail } from '@/src/utils/quickbooksAPI';
 import { useAuth } from '@clerk/clerk-expo';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Platform, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Modal, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditVendor = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { orgId, userId, getToken } = useAuth();
-  const { isQuickBooksAccessible } = useNetwork();
+  const { isQuickBooksAccessible, verifiedEmailAddresses, isConnected } = useNetwork();
   const router = useRouter();
   const applyVendorUpdates = useUpdateRowCallback('vendors');
   const allVendors = useAllRows('vendors', VendorDataCompareName);
@@ -54,6 +55,11 @@ const EditVendor = () => {
     inactive: false,
     matchCompareString: '',
   });
+
+  const isEmailVerified = useMemo(
+    () => (updatedVendor.email && isConnected ? verifiedEmailAddresses.includes(updatedVendor.email) : true),
+    [updatedVendor.email, isConnected, verifiedEmailAddresses],
+  );
 
   const vendorFromStore = useTypedRow('vendors', id);
 
@@ -276,15 +282,52 @@ const EditVendor = () => {
               onBlur={handleBlur}
             />
           </View>
-          <TextField
-            placeholder="Email"
-            label="Email"
-            value={updatedVendor.email}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            onChangeText={(text) => handleInputChange('email', text)}
-            onBlur={handleBlur}
-          />
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+            <TextField
+              containerStyle={{ flex: 1 }}
+              placeholder="Email"
+              label="Email"
+              value={updatedVendor.email}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              onChangeText={(text) => handleInputChange('email', text)}
+              onBlur={handleBlur}
+            />
+            {isEmailVerified ? (
+              <MaterialIcons name="verified-user" size={28} color={colors.profitFg} />
+            ) : (
+              <>
+                {updatedVendor.email && updatedVendor.email.trim().length > 0 && (
+                  <TouchableOpacity
+                    onPress={async () => {
+                      try {
+                        await sendVerificationEmail(orgId!, userId!, updatedVendor.email!, getToken);
+                        Alert.alert(
+                          'Verification Email Sent',
+                          'A verification email has been sent to vendor. Please ask them to check their inbox and click the verification link.',
+                        );
+                      } catch (error) {
+                        console.error('Error sending verification email:', error);
+                        Alert.alert(
+                          'Error',
+                          'There was an error sending the verification email. Please try again later.',
+                        );
+                      }
+                    }}
+                    style={{
+                      backgroundColor: colors.buttonBlue,
+                      borderRadius: 4,
+                      alignSelf: 'flex-end',
+                      paddingVertical: 8,
+                      paddingHorizontal: 12,
+                    }}
+                  >
+                    <Text style={{ color: '#fff' }} text="Verify" />
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
+          </View>
           <TextField
             placeholder="Notes"
             label="Notes"
