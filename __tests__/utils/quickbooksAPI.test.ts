@@ -9,6 +9,7 @@ import {
   updateProjectInQuickBooks,
   isEmailVerified,
   sendVerificationEmail,
+  getVerifiedEmailAddresses,
 } from '@/src/utils/quickbooksAPI';
 import { mockApiSuccess, mockApiError, resetApiMocks, createMockGetToken } from '@/__mocks__/apiMocks';
 
@@ -287,6 +288,54 @@ describe('quickbooksAPI', () => {
       await expect(
         sendVerificationEmail('org-456', 'user-123', 'test@example.com', mockGetToken),
       ).rejects.toThrow('Unable to send verification email');
+    });
+  });
+
+  describe('getVerifiedEmailAddresses', () => {
+    it('should return verified email addresses when API succeeds', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      const mockResponse = {
+        success: true,
+        emails: ['verified1@example.com', 'verified2@example.com'],
+      };
+      mockApiSuccess(mockResponse);
+
+      const result = await getVerifiedEmailAddresses('org-456', 'user-123', mockGetToken);
+
+      expect(result).toEqual(['verified1@example.com', 'verified2@example.com']);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/getVerifiedEmailAddresses'),
+        expect.objectContaining({ method: 'GET' }),
+      );
+    });
+
+    it('should include orgId and userId in query params', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: true, emails: [] });
+
+      await getVerifiedEmailAddresses('org-456', 'user-123', mockGetToken);
+
+      const callUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string;
+      expect(callUrl).toContain('orgId=org-456');
+      expect(callUrl).toContain('userId=user-123');
+    });
+
+    it('should return empty array when emails is missing', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: true });
+
+      const result = await getVerifiedEmailAddresses('org-456', 'user-123', mockGetToken);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should throw error when API returns failure', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: false, message: 'Unable to fetch verified emails' });
+
+      await expect(getVerifiedEmailAddresses('org-456', 'user-123', mockGetToken)).rejects.toThrow(
+        'Unable to fetch verified emails',
+      );
     });
   });
 

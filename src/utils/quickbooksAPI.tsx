@@ -27,6 +27,10 @@ interface ApiIsEmailValidatedResponse extends ApiDefaultResponse {
   isEmailValidated: boolean;
 }
 
+interface ApiVerifiedEmailAddressesResponse extends ApiDefaultResponse {
+  emails?: string[];
+}
+
 type ApiResponse<T> = ApiDataResponse<T> | ApiConnectionResponse;
 
 // ---------------------------------------------------------------------------
@@ -460,6 +464,10 @@ export async function isQuickBooksConnected(
   return data.isConnected || false;
 }
 
+// ---------------------------------------------------------------------------
+// Verified email functions
+// ---------------------------------------------------------------------------
+
 /**
  * Check whether an email has been verified for this organization/user context.
  *
@@ -527,6 +535,39 @@ export async function sendVerificationEmail(
   }
 
   return data;
+}
+
+/**
+ * Fetch all verified email addresses for this organization/user context.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param getToken - Function to get the authentication token
+ * @returns Array of verified email addresses
+ */
+export async function getVerifiedEmailAddresses(
+  orgId: string,
+  userId: string,
+  getToken: () => Promise<string | null>,
+): Promise<string[]> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(
+    `${API_BASE_URL}/getVerifiedEmailAddresses?orgId=${orgId}&userId=${userId}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+
+  const data: ApiVerifiedEmailAddressesResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to fetch verified email addresses');
+  }
+
+  return data.emails || [];
 }
 
 // ---------------------------------------------------------------------------

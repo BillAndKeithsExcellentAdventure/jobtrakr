@@ -184,6 +184,31 @@ Check whether an email address has been verified.
 - `admin@projecthound.biz` is always treated as validated
 - Validates email format before checking
 
+#### GET /getVerifiedEmailAddresses
+
+Return all verified email addresses from the email verification table.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "emails": ["verified1@example.com", "verified2@example.com"]
+}
+```
+
+**Notes:**
+
+- Returns only rows where `isVerified = 1`
+- Response field `emails` is an array of email strings
+
 ---
 
 ### Organization Management
