@@ -335,10 +335,17 @@ interface DeleteReceiptRequest {
 // Project types
 // ---------------------------------------------------------------------------
 
+export interface UpdateProjectRequest {
+  customerId: string;
+  projectName: string;
+  projectId: string;
+}
+
 export interface AddProjectRequest {
   customerId: string;
   projectName: string;
   projectId: string;
+  projectAbbr: string;
 }
 
 export interface AddProjectResponse {
@@ -1021,7 +1028,7 @@ export async function addProjectToQuickBooks(
 export async function updateProjectInQuickBooks(
   orgId: string,
   userId: string,
-  project: AddProjectRequest,
+  project: UpdateProjectRequest,
   getToken: () => Promise<string | null>,
 ): Promise<UpdateProjectResponse> {
   const apiFetch = createApiWithToken(getToken);
