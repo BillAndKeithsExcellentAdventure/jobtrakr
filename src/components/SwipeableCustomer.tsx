@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   customerInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 70,
+    minHeight: 90,
     width: '100%',
     borderBottomWidth: 1,
     paddingVertical: 8,
@@ -127,8 +127,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   customerName: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '500',
   },
   nameRow: {
     flexDirection: 'row',
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   },
   rightAction: {
     width: RIGHT_ACTION_WIDTH,
-    minHeight: 70,
+    minHeight: 90,
     alignItems: 'center',
     justifyContent: 'center',
   },

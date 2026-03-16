@@ -69,9 +69,10 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
             <View style={styles.vendorSummary}>
               <View style={styles.nameRow}>
                 {vendor.accountingId && <SvgImage fileName="qb-logo" width={20} height={20} />}
-                <Text style={vendor.inactive ? { color: colors.textMuted } : {}} numberOfLines={1}>{`${
-                  vendor.name.length > 0 ? vendor.name : 'Not Specified'
-                }`}</Text>
+                <Text
+                  style={[styles.vendorName, vendor.inactive && { color: colors.textMuted }]}
+                  numberOfLines={1}
+                >{`${vendor.name.length > 0 ? vendor.name : 'Not Specified'}`}</Text>
               </View>
               {(vendor.city || vendor.address) && (
                 <View style={{ flexDirection: 'row' }}>
@@ -116,8 +117,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   vendorName: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '500',
   },
   itemEntry: {
     width: '100%',
