@@ -130,7 +130,7 @@ const ProjectDetailsPage = () => {
         await addProjectToQuickBooks(
           orgId,
           userId,
-          { customerId: projectCustomerQbId, projectName, projectId },
+          { customerId: projectCustomerQbId, projectName, projectId, projectAbbr: projectData.abbreviation },
           getToken,
         );
         console.log('[QBSync] Project added to QuickBooks successfully');
