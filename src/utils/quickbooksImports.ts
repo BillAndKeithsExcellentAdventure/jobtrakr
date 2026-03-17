@@ -111,20 +111,27 @@ export async function importVendorsFromQuickBooks(
     }
 
     for (const qbVendor of qbVendors) {
-      addVendor({
-        id: '', // empty id for new vendors, replaced with UUID by the add callback
-        accountingId: qbVendor.accountingId,
-        name: qbVendor.name,
-        address: qbVendor.address || '',
-        city: qbVendor.city || '',
-        state: qbVendor.state || '',
-        zip: qbVendor.zip || '',
-        mobilePhone: qbVendor.mobilePhone || '',
-        businessPhone: qbVendor.businessPhone || '',
-        notes: qbVendor.notes || '',
-        inactive: false,
-        email: qbVendor.email || '',
-      });
+      let email = qbVendor.email;
+      // if qbVendor.email contains a ',' then split it and take the first email as the primary email
+      if (qbVendor.email && qbVendor.email.includes(',')) {
+        email = qbVendor.email.split(',')[0].trim();
+      }
+
+      if (qbVendor.email)
+        addVendor({
+          id: '', // empty id for new vendors, replaced with UUID by the add callback
+          accountingId: qbVendor.accountingId,
+          name: qbVendor.name,
+          address: qbVendor.address || '',
+          city: qbVendor.city || '',
+          state: qbVendor.state || '',
+          zip: qbVendor.zip || '',
+          mobilePhone: qbVendor.mobilePhone || '',
+          businessPhone: qbVendor.businessPhone || '',
+          notes: qbVendor.notes || '',
+          inactive: false,
+          email: email || '',
+        });
       addedCount++;
     }
   } finally {

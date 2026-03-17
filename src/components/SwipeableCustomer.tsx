@@ -86,7 +86,7 @@ const SwipeableCustomer = ({ customer }: { customer: CustomerData }) => {
                 <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
                   <Text style={customer.inactive && { color: colors.textMuted }}>{customer.email}</Text>
                   {isEmailVerified && (
-                    <MaterialIcons name="verified-user" size={28} color={colors.profitFg} />
+                    <MaterialIcons name="verified-user" size={18} color={colors.profitFg} />
                   )}
                 </View>
               ) : null}

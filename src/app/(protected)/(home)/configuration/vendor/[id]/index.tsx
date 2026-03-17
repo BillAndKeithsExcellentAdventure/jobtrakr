@@ -6,6 +6,7 @@ import { Text, View } from '@/src/components/Themed';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
+import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import {
   useAllRows,
   useTypedRow,
@@ -13,9 +14,14 @@ import {
   VendorData,
   VendorDataCompareName,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { addVendor, sendVerificationEmail } from '@/src/utils/quickbooksAPI';
+import {
+  addVendor,
+  grantVendorAccess,
+  sendVerificationEmail,
+  VendorGrantedAccess,
+} from '@/src/utils/quickbooksAPI';
 import { useAuth } from '@clerk/clerk-expo';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, Platform, StyleSheet, TouchableOpacity } from 'react-native';
@@ -25,7 +31,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const EditVendor = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { orgId, userId, getToken } = useAuth();
-  const { isQuickBooksAccessible, verifiedEmailAddresses, isConnected } = useNetwork();
+  const appSettings = useAppSettings();
+
+  const { isQuickBooksAccessible, verifiedEmailAddresses, vendorsGrantedAccess, isConnected } = useNetwork();
   const router = useRouter();
   const applyVendorUpdates = useUpdateRowCallback('vendors');
   const allVendors = useAllRows('vendors', VendorDataCompareName);
@@ -35,6 +43,7 @@ const EditVendor = () => {
     isProcessing: false,
     label: '',
   });
+  const [isSendingVerificationEmail, setIsSendingVerificationEmail] = useState(false);
   const startProcessing = useCallback(
     (label: string) => setProcessingInfo({ isProcessing: true, label }),
     [],
@@ -56,8 +65,10 @@ const EditVendor = () => {
     matchCompareString: '',
   });
 
+  const isGrantedAccess = false; // TODO: Implement access control and replace with actual permission check
+
   const isEmailVerified = useMemo(
-    () => (updatedVendor.email && isConnected ? verifiedEmailAddresses.includes(updatedVendor.email) : true),
+    () => (updatedVendor.email && isConnected ? verifiedEmailAddresses.includes(updatedVendor.email) : false),
     [updatedVendor.email, isConnected, verifiedEmailAddresses],
   );
 
@@ -127,6 +138,37 @@ const EditVendor = () => {
     },
     [isQuickBooksAccessible, allVendors, id, applyVendorUpdates, router],
   );
+
+  const grantVendorAccessRequest = useMemo(() => {
+    if (!updatedVendor.email || !orgId || !userId || !updatedVendor.accountingId || !updatedVendor.name)
+      return null;
+    return {
+      orgId,
+      userId,
+      vendorEmail: updatedVendor.email,
+      vendorId: updatedVendor.accountingId || '', // accountingId is used as a proxy for vendor ID in QuickBooks, but this may need to be adjusted based on actual data structure
+      vendorName: updatedVendor.name,
+      organizationName: appSettings.companyName || '',
+      fromEmail: appSettings.email || '',
+      fromName: appSettings.ownerName || '',
+    };
+  }, [
+    updatedVendor.email,
+    updatedVendor.accountingId,
+    updatedVendor.name,
+    appSettings.email,
+    appSettings.ownerName,
+    appSettings.companyName,
+    orgId,
+    userId,
+  ]);
+
+  const vendorAccess: VendorGrantedAccess | undefined = useMemo(() => {
+    if (updatedVendor.email && isConnected) {
+      return vendorsGrantedAccess.find((v) => v.vendor_email === updatedVendor.email);
+    }
+    return undefined;
+  }, [updatedVendor.email, isConnected, vendorsGrantedAccess]);
 
   const handleAddVendorToQuickBooks = useCallback(() => {
     if (!isQuickBooksAccessible) {
@@ -294,12 +336,75 @@ const EditVendor = () => {
               onBlur={handleBlur}
             />
             {isEmailVerified ? (
-              <MaterialIcons name="verified-user" size={28} color={colors.profitFg} />
+              <View
+                style={{
+                  flexDirection: 'row',
+                  gap: 8,
+                  alignItems: 'flex-end',
+                  alignSelf: 'flex-end',
+                  paddingBottom: 8,
+                }}
+              >
+                <MaterialIcons name="verified-user" size={28} color={colors.profitFg} />
+                {vendorAccess ? (
+                  <MaterialCommunityIcons
+                    name="shield-key"
+                    size={28}
+                    color={vendorAccess.isRegistered ? colors.profitFg : colors.textMuted}
+                  />
+                ) : (
+                  <>
+                    {grantVendorAccessRequest && (
+                      <TouchableOpacity
+                        onPress={async () => {
+                          if (isSendingVerificationEmail) {
+                            return;
+                          }
+
+                          setIsSendingVerificationEmail(true);
+                          try {
+                            await grantVendorAccess(orgId!, userId!, grantVendorAccessRequest, getToken);
+                            Alert.alert(
+                              'Access Granted',
+                              'Vendor access has been granted. Please ask them to check their inbox and click the verification link.',
+                            );
+                          } catch (error) {
+                            console.error('Error granting vendor access:', error);
+                            Alert.alert(
+                              'Error',
+                              'There was an error granting vendor access. Please try again later.',
+                            );
+                          } finally {
+                            setIsSendingVerificationEmail(false);
+                          }
+                        }}
+                        disabled={isSendingVerificationEmail}
+                        style={{
+                          backgroundColor: colors.buttonBlue,
+                          borderRadius: 4,
+                          alignSelf: 'flex-end',
+                          paddingVertical: 8,
+                          paddingHorizontal: 12,
+                          opacity: isSendingVerificationEmail ? 0.7 : 1,
+                        }}
+                      >
+                        <Text style={{ color: '#fff' }} text="Grant" />
+                        <Text style={{ color: '#fff' }} text="Access" />
+                      </TouchableOpacity>
+                    )}
+                  </>
+                )}
+              </View>
             ) : (
               <>
                 {updatedVendor.email && updatedVendor.email.trim().length > 0 && (
                   <TouchableOpacity
                     onPress={async () => {
+                      if (isSendingVerificationEmail) {
+                        return;
+                      }
+
+                      setIsSendingVerificationEmail(true);
                       try {
                         await sendVerificationEmail(orgId!, userId!, updatedVendor.email!, getToken);
                         Alert.alert(
@@ -312,14 +417,18 @@ const EditVendor = () => {
                           'Error',
                           'There was an error sending the verification email. Please try again later.',
                         );
+                      } finally {
+                        setIsSendingVerificationEmail(false);
                       }
                     }}
+                    disabled={isSendingVerificationEmail}
                     style={{
                       backgroundColor: colors.buttonBlue,
                       borderRadius: 4,
                       alignSelf: 'flex-end',
                       paddingVertical: 8,
                       paddingHorizontal: 12,
+                      opacity: isSendingVerificationEmail ? 0.7 : 1,
                     }}
                   >
                     <Text style={{ color: '#fff' }} text="Verify" />

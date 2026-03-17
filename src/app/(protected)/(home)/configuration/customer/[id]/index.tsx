@@ -43,6 +43,7 @@ const EditCustomer = () => {
     isProcessing: false,
     label: '',
   });
+  const [isSendingVerificationEmail, setIsSendingVerificationEmail] = useState(false);
   const startProcessing = useCallback(
     (label: string) => setProcessingInfo({ isProcessing: true, label }),
     [],
@@ -299,6 +300,11 @@ const EditCustomer = () => {
                 {updatedCustomer.email && updatedCustomer.email.trim().length > 0 && (
                   <TouchableOpacity
                     onPress={async () => {
+                      if (isSendingVerificationEmail) {
+                        return;
+                      }
+
+                      setIsSendingVerificationEmail(true);
                       try {
                         await sendVerificationEmail(orgId!, userId!, updatedCustomer.email!, getToken);
                         Alert.alert(
@@ -311,14 +317,18 @@ const EditCustomer = () => {
                           'Error',
                           'There was an error sending the verification email. Please try again later.',
                         );
+                      } finally {
+                        setIsSendingVerificationEmail(false);
                       }
                     }}
+                    disabled={isSendingVerificationEmail}
                     style={{
                       backgroundColor: colors.buttonBlue,
                       borderRadius: 4,
                       alignSelf: 'flex-end',
                       paddingVertical: 8,
                       paddingHorizontal: 12,
+                      opacity: isSendingVerificationEmail ? 0.7 : 1,
                     }}
                   >
                     <Text style={{ color: '#fff' }} text="Verify" />

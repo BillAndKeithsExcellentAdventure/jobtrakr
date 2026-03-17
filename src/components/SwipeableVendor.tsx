@@ -4,19 +4,20 @@ import { useColors } from '@/src/context/ColorsContext';
 import { useUpdateRowCallback, VendorData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { SvgImage } from '@/src/components/SvgImage';
 
-import { Feather, MaterialIcons } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useRef } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import Reanimated from 'react-native-reanimated';
 import { useNetwork } from '@/src/context/NetworkContext';
+import { VendorGrantedAccess } from '../utils/quickbooksAPI';
 
 const RIGHT_ACTION_WIDTH = 100;
 const SWIPE_THRESHOLD_WIDTH = 50;
 
 const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
   const router = useRouter();
-  const { verifiedEmailAddresses, isConnected } = useNetwork();
+  const { verifiedEmailAddresses, vendorsGrantedAccess, isConnected } = useNetwork();
   const updateVendor = useUpdateRowCallback('vendors');
   const swipeableRef = useRef<SwipeableHandles>(null);
 
@@ -30,6 +31,13 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
     () => (vendor.email && isConnected ? verifiedEmailAddresses.includes(vendor.email) : true),
     [vendor.email, isConnected, verifiedEmailAddresses],
   );
+
+  const vendorAccess: VendorGrantedAccess | undefined = useMemo(() => {
+    if (vendor.email && isConnected) {
+      return vendorsGrantedAccess.find((v) => v.vendor_email === vendor.email);
+    }
+    return undefined;
+  }, [vendor.email, isConnected, vendorsGrantedAccess]);
 
   const RightAction = useCallback(() => {
     return (
@@ -83,9 +91,20 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
               )}
               {vendor.email && (
                 <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-                  <Text style={vendor.inactive ? { color: colors.textMuted } : {}} text={vendor.email} />
+                  <Text
+                    numberOfLines={1}
+                    style={vendor.inactive ? { color: colors.textMuted } : {}}
+                    text={vendor.email}
+                  />
                   {isEmailVerified && (
-                    <MaterialIcons name="verified-user" size={28} color={colors.profitFg} />
+                    <MaterialIcons name="verified-user" size={21} color={colors.profitFg} />
+                  )}
+                  {vendorAccess && (
+                    <MaterialCommunityIcons
+                      name="shield-key"
+                      size={22}
+                      color={vendorAccess.isRegistered ? colors.profitFg : colors.textMuted}
+                    />
                   )}
                 </View>
               )}

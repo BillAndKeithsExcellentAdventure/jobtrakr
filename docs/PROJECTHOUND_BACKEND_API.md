@@ -1697,6 +1697,42 @@ Grant a vendor access to an organization.
 - Validates email format
 - All fields are required
 
+#### GET /getVendorsGrantedAccess
+
+Get list of vendor emails that have been granted access for an organization, including registration status.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization identifier
+- `userId` (string): User identifier
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Vendors granted access retrieved successfully",
+  "data": [
+    {
+      "vendor_email": "vendor1@example.com",
+      "isRegistered": true
+    },
+    {
+      "vendor_email": "vendor2@example.com",
+      "isRegistered": false
+    }
+  ]
+}
+```
+
+**Notes:**
+
+- Requires a valid JWT token in the `Authorization` header
+- Returns all vendor access entries for the specified organization
+- Results are ordered by vendor name and email
+
 #### POST /getGrantedVendorOrganizations
 
 Get list of organizations a vendor has access to.

@@ -10,6 +10,8 @@ import {
   isEmailVerified,
   sendVerificationEmail,
   getVerifiedEmailAddresses,
+  getVendorsGrantedAccess,
+  grantVendorAccess,
 } from '@/src/utils/quickbooksAPI';
 import { mockApiSuccess, mockApiError, resetApiMocks, createMockGetToken } from '@/__mocks__/apiMocks';
 
@@ -335,6 +337,121 @@ describe('quickbooksAPI', () => {
 
       await expect(getVerifiedEmailAddresses('org-456', 'user-123', mockGetToken)).rejects.toThrow(
         'Unable to fetch verified emails',
+      );
+    });
+  });
+
+  describe('getVendorsGrantedAccess', () => {
+    it('should return vendor access entries when API succeeds', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      const mockResponse = {
+        success: true,
+        data: [
+          { vendor_email: 'vendor1@example.com', isRegistered: true },
+          { vendor_email: 'vendor2@example.com', isRegistered: false },
+        ],
+      };
+      mockApiSuccess(mockResponse);
+
+      const result = await getVendorsGrantedAccess('org-456', 'user-123', mockGetToken);
+
+      expect(result).toEqual([
+        { vendor_email: 'vendor1@example.com', isRegistered: true },
+        { vendor_email: 'vendor2@example.com', isRegistered: false },
+      ]);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/getVendorsGrantedAccess'),
+        expect.objectContaining({ method: 'GET' }),
+      );
+    });
+
+    it('should include orgId and userId in query params', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: true, data: [] });
+
+      await getVendorsGrantedAccess('org-456', 'user-123', mockGetToken);
+
+      const callUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string;
+      expect(callUrl).toContain('orgId=org-456');
+      expect(callUrl).toContain('userId=user-123');
+    });
+
+    it('should return empty array when data is missing', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: true });
+
+      const result = await getVendorsGrantedAccess('org-456', 'user-123', mockGetToken);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should throw error when API returns failure', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: false, message: 'Unable to fetch granted vendor access' });
+
+      await expect(getVendorsGrantedAccess('org-456', 'user-123', mockGetToken)).rejects.toThrow(
+        'Unable to fetch granted vendor access',
+      );
+    });
+  });
+
+  describe('grantVendorAccess', () => {
+    const mockGrantRequest = {
+      vendorEmail: 'vendor@example.com',
+      vendorId: 'vendor-456',
+      vendorName: 'ABC Supplies',
+      organizationName: 'Acme Construction',
+      fromEmail: 'admin@acme.com',
+      fromName: 'Admin Name',
+    };
+
+    it('should grant vendor access when API succeeds', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      const mockResponse = {
+        success: true,
+        message: 'Vendor access granted successfully',
+        data: {
+          vendor_email: 'vendor@example.com',
+          vendor_id: 'vendor-456',
+          vendor_name: 'ABC Supplies',
+          organization_name: 'Acme Construction',
+          org_id: 'org-456',
+        },
+      };
+      mockApiSuccess(mockResponse);
+
+      const result = await grantVendorAccess('org-456', 'user-123', mockGrantRequest, mockGetToken);
+
+      expect(result).toEqual(mockResponse);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/grantVendorAccess'),
+        expect.objectContaining({ method: 'POST' }),
+      );
+    });
+
+    it('should include orgId and userId in query params and body', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: true, data: {} });
+
+      await grantVendorAccess('org-456', 'user-123', mockGrantRequest, mockGetToken);
+
+      const callArgs = (global.fetch as jest.Mock).mock.calls[0];
+      const callUrl = callArgs[0] as string;
+      const requestBody = JSON.parse(callArgs[1].body);
+
+      expect(callUrl).toContain('orgId=org-456');
+      expect(callUrl).toContain('userId=user-123');
+      expect(requestBody.orgId).toBe('org-456');
+      expect(requestBody.userId).toBe('user-123');
+      expect(requestBody.vendorEmail).toBe('vendor@example.com');
+    });
+
+    it('should throw error when API returns failure', async () => {
+      const mockGetToken = createMockGetToken('test-token');
+      mockApiSuccess({ success: false, message: 'Unable to grant vendor access' });
+
+      await expect(grantVendorAccess('org-456', 'user-123', mockGrantRequest, mockGetToken)).rejects.toThrow(
+        'Unable to grant vendor access',
       );
     });
   });

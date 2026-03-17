@@ -149,7 +149,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         locationPermission: 'Allow $(PRODUCT_NAME) to use your location.',
       },
     ],
-
+    'expo-sharing',
     'expo-router',
     'expo-secure-store',
     'expo-video',

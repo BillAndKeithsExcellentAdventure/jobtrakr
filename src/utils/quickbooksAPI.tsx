@@ -31,6 +31,10 @@ interface ApiVerifiedEmailAddressesResponse extends ApiDefaultResponse {
   emails?: string[];
 }
 
+interface ApiVendorsGrantedAccessResponse extends ApiDefaultResponse {
+  data?: VendorGrantedAccess[];
+}
+
 type ApiResponse<T> = ApiDataResponse<T> | ApiConnectionResponse;
 
 // ---------------------------------------------------------------------------
@@ -121,6 +125,32 @@ export interface AddVendorResponse {
   success: boolean;
   message: string;
   newQBId?: string;
+}
+
+export interface GrantVendorAccessRequest {
+  vendorEmail: string;
+  vendorId: string;
+  vendorName: string;
+  organizationName: string;
+  fromEmail: string;
+  fromName: string;
+}
+
+export interface GrantVendorAccessResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    vendor_email: string;
+    vendor_id: string;
+    vendor_name: string;
+    organization_name: string;
+    org_id: string;
+  };
+}
+
+export interface VendorGrantedAccess {
+  vendor_email: string;
+  isRegistered: boolean;
 }
 
 export interface QBEditCustomerInfo {
@@ -568,6 +598,76 @@ export async function getVerifiedEmailAddresses(
   }
 
   return data.emails || [];
+}
+// ---------------------------------------------------------------------------
+// Vendor Access functions
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch vendors that were granted access to view their bill and invoice status.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param getToken - Function to get the authentication token
+ * @returns Array of vendor access entries with registration state
+ */
+export async function getVendorsGrantedAccess(
+  orgId: string,
+  userId: string,
+  getToken: () => Promise<string | null>,
+): Promise<VendorGrantedAccess[]> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/getVendorsGrantedAccess?orgId=${orgId}&userId=${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data: ApiVendorsGrantedAccessResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to fetch vendors granted access');
+  }
+
+  return data.data || [];
+}
+
+/**
+ * Grant a vendor access to view bill and invoice status for an organization.
+ *
+ * @param orgId - The organization ID
+ * @param userId - The user ID
+ * @param vendorAccess - Vendor access payload
+ * @param getToken - Function to get the authentication token
+ * @returns The created/updated vendor access record
+ */
+export async function grantVendorAccess(
+  orgId: string,
+  userId: string,
+  vendorAccess: GrantVendorAccessRequest,
+  getToken: () => Promise<string | null>,
+): Promise<GrantVendorAccessResponse> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/grantVendorAccess?orgId=${orgId}&userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      ...vendorAccess,
+      orgId,
+      userId,
+    }),
+  });
+
+  const data: GrantVendorAccessResponse = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Failed to grant vendor access');
+  }
+
+  return data;
 }
 
 // ---------------------------------------------------------------------------

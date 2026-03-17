@@ -4,7 +4,9 @@ import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStore
 import { isDevelopmentBuild } from '@/src/utils/environment';
 import {
   getVerifiedEmailAddresses,
+  getVendorsGrantedAccess,
   isQuickBooksConnected as testQbIsConnected,
+  VendorGrantedAccess,
 } from '@/src/utils/quickbooksAPI';
 import { useAuth } from '@clerk/clerk-expo';
 
@@ -16,6 +18,8 @@ interface NetworkContextType {
   networkType: string | null;
   verifiedEmailAddresses: string[];
   refreshVerifiedEmailAddresses: () => Promise<void>;
+  vendorsGrantedAccess: VendorGrantedAccess[];
+  refreshVendorsGrantedAccess: () => Promise<void>;
 }
 
 const NetworkContext = createContext<NetworkContextType>({
@@ -26,6 +30,8 @@ const NetworkContext = createContext<NetworkContextType>({
   isQuickBooksAccessible: false,
   verifiedEmailAddresses: [],
   refreshVerifiedEmailAddresses: async () => Promise.resolve(),
+  vendorsGrantedAccess: [],
+  refreshVendorsGrantedAccess: async () => Promise.resolve(),
 });
 
 export const useNetwork = () => {
@@ -48,9 +54,11 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const [isQuickBooksConnected, setIsQuickBooksConnected] = useState<boolean>(false);
   const [isQuickBooksAccessible, setIsQuickBooksAccessible] = useState<boolean>(false);
   const [verifiedEmailAddresses, setVerifiedEmailAddresses] = useState<string[]>([]);
+  const [vendorsGrantedAccess, setVendorsGrantedAccess] = useState<VendorGrantedAccess[]>([]);
   const previousConnectedRef = useRef<boolean | null>(null);
   const previousSyncWithQuickBooksRef = useRef<boolean | null>(null);
   const verifiedEmailAddressesRef = useRef<string[]>([]);
+  const vendorsGrantedAccessRef = useRef<VendorGrantedAccess[]>([]);
   const auth = useAuth();
   const lastNetworkStateRef = useRef<{
     isConnected: boolean;
@@ -85,6 +93,36 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     }
   }, [auth.isLoaded, auth.isSignedIn, getToken, orgId, userId, isInternetReachable]);
 
+  const refreshVendorsGrantedAccess = useCallback(async (): Promise<void> => {
+    if (!auth.isLoaded || !auth.isSignedIn || !orgId || !userId || !isInternetReachable) {
+      if (vendorsGrantedAccessRef.current.length > 0) {
+        vendorsGrantedAccessRef.current = [];
+        setVendorsGrantedAccess([]);
+      }
+      return;
+    }
+
+    try {
+      const nextVendorsGrantedAccess = await getVendorsGrantedAccess(orgId, userId, getToken);
+      const currentVendorsGrantedAccess = vendorsGrantedAccessRef.current;
+      const hasChanged =
+        currentVendorsGrantedAccess.length !== nextVendorsGrantedAccess.length ||
+        currentVendorsGrantedAccess.some((entry, index) => {
+          const nextEntry = nextVendorsGrantedAccess[index];
+          return (
+            entry.vendor_email !== nextEntry?.vendor_email || entry.isRegistered !== nextEntry?.isRegistered
+          );
+        });
+
+      if (hasChanged) {
+        vendorsGrantedAccessRef.current = nextVendorsGrantedAccess;
+        setVendorsGrantedAccess(nextVendorsGrantedAccess);
+      }
+    } catch (error) {
+      console.error('Failed to refresh vendors granted access:', error);
+    }
+  }, [auth.isLoaded, auth.isSignedIn, getToken, orgId, userId, isInternetReachable]);
+
   // Check if we're in a development build and debug offline mode is enabled
   const debugForceOffline = isDevelopmentBuild() && appSettings.debugForceOffline;
 
@@ -106,6 +144,10 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   useEffect(() => {
     void refreshVerifiedEmailAddresses();
   }, [refreshVerifiedEmailAddresses]);
+
+  useEffect(() => {
+    void refreshVendorsGrantedAccess();
+  }, [refreshVendorsGrantedAccess]);
 
   useEffect(() => {
     if (debugForceOffline) {
@@ -230,6 +272,8 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     networkType,
     verifiedEmailAddresses,
     refreshVerifiedEmailAddresses,
+    vendorsGrantedAccess,
+    refreshVendorsGrantedAccess,
   };
 
   return <NetworkContext.Provider value={value}>{children}</NetworkContext.Provider>;

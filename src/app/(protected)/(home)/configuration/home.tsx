@@ -143,6 +143,7 @@ const Home = () => {
     isQuickBooksAccessible,
     isQuickBooksConnected: isQBConnected,
     refreshVerifiedEmailAddresses,
+    refreshVendorsGrantedAccess,
   } = useNetwork();
   const auth = useAuth();
   const appSettings = useAppSettings();
@@ -155,6 +156,7 @@ const Home = () => {
 
   useEffect(() => {
     refreshVerifiedEmailAddresses(); // Refresh verified email addresses on mount to ensure we have the latest data for email verification status
+    refreshVendorsGrantedAccess(); // Refresh vendors granted access on mount to ensure we have the latest data
     return () => {
       if (processingDelayTimerRef.current) {
         clearTimeout(processingDelayTimerRef.current);
