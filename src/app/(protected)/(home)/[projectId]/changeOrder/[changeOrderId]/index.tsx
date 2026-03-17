@@ -33,6 +33,7 @@ import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface SendPdfParams {
+  orgId: string;
   userId: string;
   htmlPdf: string;
   htmlBody: string;
@@ -197,6 +198,7 @@ const DefineChangeOrderScreen = () => {
     const htmlOutput = renderChangeOrderTemplate(templateHTMLString, changeOrderData);
     if (!htmlOutput) return;
 
+    const orgId = auth.orgId;
     const userId = auth.userId;
     if (!userId) {
       Alert.alert('Error', 'User ID not found.');
@@ -294,6 +296,7 @@ const DefineChangeOrderScreen = () => {
       // Generate and send PDF with HTML email body
       const accountingId = await generateAndSendPdf(
         {
+          orgId: orgId ?? '',
           userId: userId,
           htmlPdf: htmlOutput,
           htmlBody: msgBody,
