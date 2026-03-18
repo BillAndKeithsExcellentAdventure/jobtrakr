@@ -84,13 +84,13 @@ Once your organization is created:
 ProjectHound has two main home screens that serve as the primary navigation hubs:
 
 1. **Projects Home Screen** - Your main dashboard for viewing and managing all projects
-2. **Configuration Home Screen** - The central location for managing categories, templates, vendors, and suppliers
+2. **Configuration Home Screen** - The central location for managing company settings, categories, templates, vendors, customers, and QuickBooks setup
 
 This guide explains how to use both home screens and their associated features.
 
 ## Projects Home Screen
 
-The Projects Home Screen is the main landing page when you open ProjectHound. It displays all your projects and provides quick access to project details, notes, photos, receipts, invoices, and change orders.
+The Projects Home Screen is the main landing page when you open ProjectHound. It displays all your projects and provides quick access to project details, notes, photos, receipts, bills, and change orders.
 
 ### Accessing the Projects Home Screen
 
@@ -145,12 +145,16 @@ Each project card has a button bar at the bottom with six quick action buttons:
    - Track expenses with receipt images
    - Use AI to extract line items from receipts
    - Associate costs with specific cost items
+   - When QuickBooks is connected, receipt line items can be assigned to different projects
+   - If a receipt contains line items for multiple projects, the receipt is copied to those other projects so each project can track its own portion
 
-5. **Invoices**
-   - Opens the invoices screen
-   - Manage vendor invoices
-   - Track invoice line items
-   - Link invoices to project costs
+5. **Bills**
+   - Opens the bills screen
+   - Manage vendor bills
+   - Track bill line items
+   - Link bills to project costs
+   - If QuickBooks is connected, bills are sent to QuickBooks
+   - If QuickBooks marks a bill as paid, a paid status badge appears in ProjectHound
 
 6. **Changes**
    - Opens the change orders screen
@@ -204,6 +208,7 @@ Note: This option only appears after you've set up at least one cost category in
 **Optional Fields:**
 
 - **Location** - Street address or description
+- **Customer** - Select using the CustomerPicker search/list control
 - **Owner Name** - Client or property owner name
 - **Owner Contact Information:**
   - Address and Address 2
@@ -214,6 +219,13 @@ Note: This option only appears after you've set up at least one cost category in
 - **Start Date** - When the project begins
 - **Planned Finish Date** - Expected completion date (defaults to 9 months from start)
 - **Project Status** - Active, On-hold, or Completed
+
+### CustomerPicker in Add/Edit Project
+
+- The project flow now uses **CustomerPicker** for customer selection
+- You can search and select from existing active customers
+- You can add a new customer directly from the picker
+- If QuickBooks is connected, adding a customer from the picker also creates the customer in QuickBooks and stores the linked accounting ID
 
 ### Project Templates
 
@@ -233,7 +245,7 @@ Templates define which cost items are included in a project. When you select a t
 
 ## Configuration Home Screen
 
-The Configuration Home Screen is your central hub for managing the building blocks of your project tracking system: categories, cost items, templates, vendors, and suppliers.
+The Configuration Home Screen is your central hub for managing the building blocks of your project tracking system, plus QuickBooks integration and company defaults.
 
 ### Accessing Configuration
 
@@ -251,7 +263,9 @@ The Configuration Home Screen is your central hub for managing the building bloc
 The Configuration screen displays:
 
 - App version number at the top
-- Four main configuration sections (detailed below)
+- A **Connect to QuickBooks** action when QuickBooks is not connected
+- Core configuration sections (detailed below)
+- Additional QuickBooks options when connected
 - A menu icon in the top-right for import/export operations
 
 ### Configuration Sections
@@ -294,39 +308,69 @@ The Configuration screen displays:
 - Edit vendor details (name, address, phone, notes)
 - Import vendors from CSV files
 - Export vendors to CSV files
-- Associate vendors with receipts
+- Associate vendors with receipts and bills
+- Link an existing vendor to a QuickBooks vendor from the vendor edit screen
+- Add a vendor to QuickBooks from the vendor edit screen
+
+**QuickBooks-linked vendor behavior:**
+
+- In receipt/bill flows, **VendorPicker** is used to select vendors
+- When QuickBooks is connected, vendors shown for QuickBooks posting must be linked to a QuickBooks `accountingId`
+- You can add a new vendor directly from VendorPicker; when QuickBooks is connected, the vendor is also created in QuickBooks
 
 **Accessing:** Tap **Vendors** → "Add and Edit Vendors"
 
-#### 4. Vendors
+#### 4. Customers
 
-**Purpose:** Maintain a list of suppliers and subcontractors who provide services (e.g., electricians, plumbers, HVAC contractors).
+**Purpose:** Maintain a list of project customers/owners used for project assignment and QuickBooks project/customer mapping.
 
 **What you can do:**
 
-- Add new suppliers with contact information
-- Edit supplier details (name, address, phone, notes)
-- Import suppliers from CSV files
-- Export suppliers to CSV files
-- Associate suppliers with invoices
+- Add new customers with contact details
+- Edit customer details
+- Import customers from CSV files (when QuickBooks is not connected)
+- Link an existing customer to a QuickBooks customer from the customer edit screen
+- Add a customer to QuickBooks from the customer edit screen
 
-**Accessing:** Tap **Vendors** → "Add and Edit Vendors"
+**Accessing:** Tap **Customers** → "Add and Edit Customers"
+
+#### 5. QuickBooks Accounts (Visible when QuickBooks is connected)
+
+**Purpose:** Define which QuickBooks accounts are used for syncing receipts and bills.
+
+**What you can do:**
+
+- View imported QuickBooks accounts
+- Configure default expense and payment account usage for accounting sync
+
+**Accessing:** Tap **QuickBooks Accounts** → "Define accounts to use"
 
 ### Configuration Menu (Top-Right)
 
 Tap the **menu icon** (three horizontal lines) in the top-right to access data management tools:
 
-#### When Configuration Data Exists:
-
-- **Export Configuration Data** - Export all categories, cost items, and templates to a JSON file
-- **Export Vendors** - Export all vendor data to a CSV file (only appears when vendors exist)
-- **Import Vendors** - Import vendors from a CSV file
-- **Export Suppliers** - Export all supplier data to a CSV file (only appears when suppliers exist)
-- **Import Suppliers** - Import suppliers from a CSV file
-
-#### When No Configuration Data Exists:
+#### Always Available (Power Users):
 
 - **Import Configuration Data** - Import categories, cost items, and templates from a JSON file
+- **Export Configuration Data** - Export all categories, cost items, and templates to a JSON file (when configuration data exists)
+
+#### When QuickBooks Is Not Connected:
+
+- **Import Vendors** - Import vendors from a CSV file
+- **Export Vendors** - Export all vendor data to a CSV file (only appears when vendors exist)
+- **Import Customers from CSV** - Import customers from a CSV file
+
+#### When QuickBooks Is Connected:
+
+- **Load Company Info from QuickBooks** - Pull company profile defaults from QuickBooks
+- **Get Vendors from QuickBooks** - Import/sync vendors from QuickBooks
+- **Get Customers from QuickBooks** - Import/sync customers from QuickBooks
+- **Get Accounts from QuickBooks** - Import/sync chart of accounts used by QuickBooks account mapping
+- **Disconnect from QuickBooks** - Disconnect your QuickBooks integration
+
+#### Legacy/Offline Data Tools:
+
+- CSV import/export options are context-sensitive and may be hidden while QuickBooks-connected sync options are active
 
 See the [Vendor CSV Import/Export documentation](VENDOR_CSV_IMPORT_EXPORT.md) for detailed information on CSV import/export.
 
@@ -349,9 +393,14 @@ When using ProjectHound for the first time:
    - Add the cost items that apply to each type of project
    - Templates speed up project creation by pre-selecting cost items
 
-4. **Add Vendors and Suppliers (Optional):**
-   - Add frequently used vendors and suppliers
-   - This makes it faster to assign costs to receipts and invoices
+4. **Add Vendors and Customers (Optional):**
+   - Add frequently used vendors and customers
+   - This makes it faster to assign costs to receipts/bills and map projects/customers for QuickBooks
+
+5. **Connect QuickBooks (Optional but recommended for accounting sync):**
+   - Use **Connect to QuickBooks** on the Configuration screen
+   - After connecting, import company info, vendors, customers, and accounts
+   - Configure QuickBooks account defaults before posting receipts/bills
 
 ## Company Settings
 
@@ -568,7 +617,7 @@ The app automatically synchronizes data:
 1. Start with importing default categories if you're building homes
 2. Review and customize the imported categories to match your needs
 3. Create 2-3 project templates for your common project types
-4. Add your most-used vendors and suppliers before creating projects
+4. Add your most-used vendors and customers before creating projects
 
 ### Project Organization
 
@@ -590,8 +639,8 @@ The app automatically synchronizes data:
 
 ### Data Management
 
-1. Export vendors and suppliers periodically as backup
-2. Use CSV import to bulk-add vendors/suppliers from other systems
+1. Export vendors and customers periodically as backup
+2. Use CSV import to bulk-add vendors/customers from other systems
 3. Export configuration data before making major changes
 
 ## Troubleshooting
@@ -632,7 +681,7 @@ The app automatically synchronizes data:
 **Solution:**
 
 - Export options only appear when data exists to export
-- Add some data first (categories, vendors, suppliers)
+- Add some data first (categories, vendors, customers)
 - The export options will then appear
 
 ### Changes Not Saving
@@ -657,8 +706,8 @@ If changes seem lost, ensure you tap outside input fields before navigating.
 
 The home screens in ProjectHound serve as your command center:
 
-- **Projects Home** manages all your projects with quick access to details, notes, media, receipts, invoices, and changes
-- **Configuration Home** manages the foundational data (categories, templates, vendors, suppliers)
+- **Projects Home** manages all your projects with quick access to details, notes, media, receipts, bills, and changes
+- **Configuration Home** manages foundational data plus QuickBooks setup (company settings, categories, templates, vendors, customers, accounts)
 - **Company Settings** maintains your business information for documents
 - **Team Management** handles user access and permissions
 
