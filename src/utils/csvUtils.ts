@@ -10,6 +10,7 @@ const ENTITY_CSV_HEADERS = [
   'zip',
   'mobilePhone',
   'businessPhone',
+  'email',
   'notes',
 ];
 

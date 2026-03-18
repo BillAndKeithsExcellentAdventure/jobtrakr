@@ -293,6 +293,7 @@ Tapping on a project card (outside the action buttons) opens the Project Details
 **Cost Summary Table:**
 
 Lists all cost categories with three columns:
+
 - **Estimate $** – Planned budget for the category
 - **Spent $** – Actual costs posted to that category
 - **Balance $** – Remaining (Estimate − Spent)
@@ -324,16 +325,16 @@ Access this screen from the Project Details three-dot menu → **Edit Project In
 
 ### Fields
 
-| Field | Description |
-|-------|-------------|
-| **Project Name** | The full name of the project |
-| **Abbreviation** | Short uppercase identifier (max 10 alphanumeric characters); auto-converted to uppercase |
-| **Initial Quoted Price** | The original bid price (before change orders) |
-| **Location** | Street address or description of the job site |
-| **Customer** | Search and select from your customer list using CustomerPicker |
-| **Start Date** | Project start date (tap to open date picker) |
-| **Planned Finish Date** | Expected completion date (tap to open date picker) |
-| **GPS Coordinates** | Latitude/longitude shown in decimal degrees |
+| Field                    | Description                                                                              |
+| ------------------------ | ---------------------------------------------------------------------------------------- |
+| **Project Name**         | The full name of the project                                                             |
+| **Abbreviation**         | Short uppercase identifier (max 10 alphanumeric characters); auto-converted to uppercase |
+| **Initial Quoted Price** | The original bid price (before change orders)                                            |
+| **Location**             | Street address or description of the job site                                            |
+| **Customer**             | Search and select from your customer list using CustomerPicker                           |
+| **Start Date**           | Project start date (tap to open date picker)                                             |
+| **Planned Finish Date**  | Expected completion date (tap to open date picker)                                       |
+| **GPS Coordinates**      | Latitude/longitude shown in decimal degrees                                              |
 
 **GPS Actions:**
 
@@ -388,6 +389,7 @@ Receipts track material and supply expenses. Access by tapping **Receipts** on t
 **Receipt List Items:**
 
 Each receipt in the list displays:
+
 - Vendor name
 - Date
 - Total amount
@@ -411,6 +413,7 @@ Tap a receipt in the list to open its details.
 **Line Items Section:**
 
 Lists all cost items charged to this receipt:
+
 - Amount
 - Description
 - Work item assignment
@@ -445,14 +448,14 @@ A receipt can only be synced to QuickBooks when:
 
 Edit a receipt's header information.
 
-| Field | Description |
-|-------|-------------|
-| **Date** | Receipt date (tap to open date picker) |
-| **Amount** | Total receipt amount |
+| Field               | Description                                     |
+| ------------------- | ----------------------------------------------- |
+| **Date**            | Receipt date (tap to open date picker)          |
+| **Amount**          | Total receipt amount                            |
 | **Vendor/Merchant** | Select from your vendor list using VendorPicker |
-| **Description** | Optional memo or description |
-| **Payment Account** | (QuickBooks only) Which account to charge |
-| **Check #** | (Checking accounts only) Optional check number |
+| **Description**     | Optional memo or description                    |
+| **Payment Account** | (QuickBooks only) Which account to charge       |
+| **Check #**         | (Checking accounts only) Optional check number  |
 
 All fields auto-save when you tap away from them.
 
@@ -460,12 +463,12 @@ All fields auto-save when you tap away from them.
 
 Manually add a cost line item to a receipt.
 
-| Field | Description |
-|-------|-------------|
-| **Amount** | Dollar amount for this line item |
-| **Description** | What was purchased |
-| **Work Item** | Which project cost item to charge |
-| **Project** | Which project (used for multi-project receipts) |
+| Field           | Description                                     |
+| --------------- | ----------------------------------------------- |
+| **Amount**      | Dollar amount for this line item                |
+| **Description** | What was purchased                              |
+| **Work Item**   | Which project cost item to charge               |
+| **Project**     | Which project (used for multi-project receipts) |
 
 **AI Processing:** If a receipt photo is available and no line items have been added yet, tap **Load from Photo** on the Receipt Details screen to have AI analyze the image and automatically create line items. You can then review and edit the AI-suggested items.
 
@@ -483,6 +486,7 @@ Bills track vendor invoices that need to be paid. Access by tapping **Bills** on
 **Bill List Items:**
 
 Each bill displays:
+
 - Vendor name
 - Invoice number
 - Due date
@@ -533,15 +537,15 @@ A bill can be synced to QuickBooks when:
 
 Edit a bill's header information.
 
-| Field | Description |
-|-------|-------------|
-| **Date** | Bill/invoice date (tap to open date picker) |
-| **Due Date** | Payment due date (defaults to 30 days from bill date) |
-| **Amount** | Total bill amount |
-| **Invoice Number** | Vendor's invoice number |
-| **Vendor** | Select from vendor list using VendorPicker |
-| **Description** | Optional memo |
-| **Payment Account** | (QuickBooks only) Account to use for payment |
+| Field               | Description                                           |
+| ------------------- | ----------------------------------------------------- |
+| **Date**            | Bill/invoice date (tap to open date picker)           |
+| **Due Date**        | Payment due date (defaults to 30 days from bill date) |
+| **Amount**          | Total bill amount                                     |
+| **Invoice Number**  | Vendor's invoice number                               |
+| **Vendor**          | Select from vendor list using VendorPicker            |
+| **Description**     | Optional memo                                         |
+| **Payment Account** | (QuickBooks only) Account to use for payment          |
 
 ## Project Change Orders
 
@@ -591,6 +595,7 @@ Tap a change order to view its full details.
 **Line Items List:**
 
 Lists all items included in the change order:
+
 - Item description
 - Cost amount
 
@@ -677,16 +682,16 @@ Configure your company information that appears on generated documents. Access f
 
 **Company Information:**
 
-| Field | Description |
-|-------|-------------|
-| **Company Name** | Your business name |
-| **Address** | Street address (multi-line) |
-| **City** | City name |
-| **State** | State abbreviation |
-| **Zip** | ZIP/Postal code |
-| **Phone** | Business phone number |
-| **Email** | Business email address |
-| **Website** | Company website URL |
+| Field            | Description                 |
+| ---------------- | --------------------------- |
+| **Company Name** | Your business name          |
+| **Address**      | Street address (multi-line) |
+| **City**         | City name                   |
+| **State**        | State abbreviation          |
+| **Zip**          | ZIP/Postal code             |
+| **Phone**        | Business phone number       |
+| **Email**        | Business email address      |
+| **Website**      | Company website URL         |
 
 **Branding:**
 
@@ -753,14 +758,15 @@ The Configuration screen displays:
 
 #### 3. Vendors
 
-**Purpose:** Maintain a list of vendors where you purchase materials (e.g., hardware stores, lumber yards, material suppliers).
+**Purpose:** Maintain a list of vendors where you purchase materials (e.g., hardware stores, lumber yards, material providers).
 
 **What you can do:**
 
 - Add new vendors with contact information
 - Edit vendor details (name, address, phone, notes)
-- Import vendors from CSV files
-- Export vendors to CSV files
+- Import vendors from CSV files (when QuickBooks is not connected)
+- Export vendors to CSV files (when QuickBooks is not connected)
+- Vendor CSV import/export includes vendor email values
 - Associate vendors with receipts and bills
 - Link an existing vendor to a QuickBooks vendor from the vendor edit screen
 - Add a vendor to QuickBooks from the vendor edit screen

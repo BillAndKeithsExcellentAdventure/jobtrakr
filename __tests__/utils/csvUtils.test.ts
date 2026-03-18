@@ -1,7 +1,7 @@
 /**
  * Tests for CSV utility functions
  */
-import { vendorsToCsv } from '@/src/utils/csvUtils';
+import { vendorsToCsv, csvToVendors } from '@/src/utils/csvUtils';
 import { VendorData } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 
 describe('csvUtils', () => {
@@ -40,7 +40,7 @@ describe('csvUtils', () => {
       const lines = csv.split('\n');
 
       expect(lines).toHaveLength(3); // header + 2 data rows
-      expect(lines[0]).toBe('name,address,city,state,zip,mobilePhone,businessPhone,notes');
+      expect(lines[0]).toBe('name,address,city,state,zip,mobilePhone,businessPhone,email,notes');
       expect(lines[1]).toContain('Vendor One');
       expect(lines[2]).toContain('Vendor Two');
     });
@@ -160,6 +160,21 @@ describe('csvUtils', () => {
       expect(csv).not.toContain('also-should-not-appear');
       expect(csv).not.toContain('id');
       expect(csv).not.toContain('accountingId');
+    });
+  });
+
+  describe('csvToVendors', () => {
+    it('should parse vendor email from CSV', () => {
+      const csvText =
+        'name,address,city,state,zip,mobilePhone,businessPhone,email,notes\n' +
+        'Acme,123 Main,Seattle,WA,98101,555-1111,555-2222,orders@acme.com,Preferred';
+
+      const result = csvToVendors(csvText);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].email).toBe('orders@acme.com');
+      expect(result[0].name).toBe('Acme');
+      expect(result[0].address).toBe('123 Main');
     });
   });
 });

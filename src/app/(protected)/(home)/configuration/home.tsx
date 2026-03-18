@@ -411,6 +411,11 @@ const Home = () => {
   }, [cleanupOrphanedWorkItems]);
 
   const handleExportVendors = useCallback(async () => {
+    if (isQBConnected) {
+      Alert.alert('Unavailable', 'Vendor CSV export is only available when QuickBooks is not connected.');
+      return;
+    }
+
     Alert.alert('Export Vendors', 'Would you like to export all vendors to a CSV file?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -439,9 +444,14 @@ const Home = () => {
         },
       },
     ]);
-  }, [allVendors, startProcessing, stopProcessing]);
+  }, [allVendors, isQBConnected, startProcessing, stopProcessing]);
 
   const handleImportVendors = useCallback(async () => {
+    if (isQBConnected) {
+      Alert.alert('Unavailable', 'Vendor CSV import is only available when QuickBooks is not connected.');
+      return;
+    }
+
     Alert.alert('Import Vendors', 'Would you like to import vendors from a CSV file?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -497,7 +507,7 @@ const Home = () => {
         },
       },
     ]);
-  }, [allVendors, addVendorToStore, updateVendor, configStore]);
+  }, [allVendors, addVendorToStore, updateVendor, configStore, isQBConnected]);
 
   const handleGetQBVendors = useCallback(
     async (showAlert = true) => {

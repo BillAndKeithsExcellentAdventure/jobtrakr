@@ -13,25 +13,27 @@ The import/export functionality is available from the Configuration home screen:
 1. Navigate to **Configuration** from the main menu
 2. Tap the **menu icon** (three dots) in the top-right corner
 3. Select one of the following options:
-   - **Import Vendors** - Always available
-   - **Export Vendors** - Only appears when vendor data exists
+   - **Import Vendors** - Available only when QuickBooks is **not** connected
+   - **Export Vendors** - Available only when QuickBooks is **not** connected and vendor data exists
 
 ### Exporting Data
 
 **To export vendors:**
 
 1. From the Configuration screen, tap the menu icon
-2. Select **"Export Vendors"** or **"Export Vendors"**
+2. Select **"Export Vendors"**
 3. Confirm the export in the dialog that appears
 4. The system creates a CSV file and opens the share dialog
 5. Choose where to save or share the file (email, cloud storage, etc.)
 
 **What gets exported:**
+
 - All vendor records in the database
 - All fields except the internal `id` field
-- Fields included: `name`, `address`, `city`, `state`, `zip`, `mobilePhone`, `businessPhone`, `notes`
+- Fields included: `name`, `address`, `city`, `state`, `zip`, `mobilePhone`, `businessPhone`, `email`, `notes`
 
 **File naming:**
+
 - Vendors are exported to: `vendors.csv`
 
 ### Importing Data
@@ -47,6 +49,7 @@ The import/export functionality is available from the Configuration home screen:
    - Number of records updated (existing entries)
 
 **Import behavior:**
+
 - **Matching logic**: Records are matched by comparing both `name` AND `address` fields
 - **Update existing**: If a match is found, the existing record is updated with the new data
 - **Add new**: If no match is found, a new record is created
@@ -59,32 +62,33 @@ The import/export functionality is available from the Configuration home screen:
 The CSV file uses a standard comma-separated format with the following columns:
 
 ```csv
-name,address,city,state,zip,mobilePhone,businessPhone,notes
+name,address,city,state,zip,mobilePhone,businessPhone,email,notes
 ```
 
 ### Example
 
 ```csv
-name,address,city,state,zip,mobilePhone,businessPhone,notes
-"Acme Hardware","123 Main St","Seattle","WA","98101","555-1234","555-5678","Preferred vendor for hardware"
-"Bob's Lumber","456 Oak Ave","Portland","OR","97201","555-8765","555-4321","Good prices on lumber"
-"City Electric","789 Pine Rd","Tacoma","WA","98402","555-2468","","Fast delivery"
+name,address,city,state,zip,mobilePhone,businessPhone,email,notes
+"Acme Hardware","123 Main St","Seattle","WA","98101","555-1234","555-5678","orders@acmehardware.com","Preferred vendor for hardware"
+"Bob's Lumber","456 Oak Ave","Portland","OR","97201","555-8765","555-4321","sales@bobslumber.com","Good prices on lumber"
+"City Electric","789 Pine Rd","Tacoma","WA","98402","555-2468","","","Fast delivery"
 ```
 
 ### Field Descriptions
 
-| Field | Description | Required | Notes |
-|-------|-------------|----------|-------|
-| `name` | Vendor/Merchant name | Yes* | Used for matching during import |
-| `address` | Street address | Yes* | Used for matching during import |
-| `city` | City name | No | Optional field |
-| `state` | State abbreviation | No | Optional field (e.g., WA, CA, OR) |
-| `zip` | ZIP/Postal code | No | Optional field |
-| `mobilePhone` | Mobile phone number | No | Optional field |
-| `businessPhone` | Business phone number | No | Optional field |
-| `notes` | Additional notes | No | Optional field |
+| Field           | Description           | Required | Notes                             |
+| --------------- | --------------------- | -------- | --------------------------------- |
+| `name`          | Vendor/Merchant name  | Yes\*    | Used for matching during import   |
+| `address`       | Street address        | Yes\*    | Used for matching during import   |
+| `city`          | City name             | No       | Optional field                    |
+| `state`         | State abbreviation    | No       | Optional field (e.g., WA, CA, OR) |
+| `zip`           | ZIP/Postal code       | No       | Optional field                    |
+| `mobilePhone`   | Mobile phone number   | No       | Optional field                    |
+| `businessPhone` | Business phone number | No       | Optional field                    |
+| `email`         | Vendor email address  | No       | Optional field                    |
+| `notes`         | Additional notes      | No       | Optional field                    |
 
-*Both `name` and `address` are required for matching during import. Records without these values will be added as new entries.
+\*Both `name` and `address` are required for matching during import. Records without these values will be added as new entries.
 
 ### Special Characters
 
@@ -95,9 +99,10 @@ The CSV format properly handles special characters:
 - **Newlines**: Fields containing line breaks are wrapped in quotes
 
 **Example with special characters:**
+
 ```csv
-name,address,city,state,zip,mobilePhone,businessPhone,notes
-"Johnson's ""Quality"" Supplies","123 Main St, Suite 200","Seattle","WA","98101","555-1234","555-5678","Note: 
+name,address,city,state,zip,mobilePhone,businessPhone,email,notes
+"Johnson's ""Quality"" Supplies","123 Main St, Suite 200","Seattle","WA","98101","555-1234","555-5678","","Note:
 Special pricing available"
 ```
 
@@ -107,18 +112,19 @@ When importing data, the system uses the following logic to determine whether to
 
 ```
 For each record in the CSV:
-  1. Check if a vendor/supplier exists with:
+   1. Check if a vendor exists with:
      - Matching name (non-empty)
      - AND matching address (non-empty)
-  
+
   2. If match found:
      - Update the existing record with all fields from CSV
-  
+
   3. If no match found:
      - Create a new record with data from CSV
 ```
 
 **Important notes:**
+
 - Both name and address must be present and match exactly for an update to occur
 - Matching is case-sensitive
 - If either name or address is empty/missing, the record will always be added as new
@@ -144,22 +150,26 @@ For each record in the CSV:
 ### Common Use Cases
 
 **Initial setup:**
-- Create a spreadsheet with all your vendors/suppliers
+
+- Create a spreadsheet with all your vendors
 - Export to CSV
 - Import into the app
 
 **Bulk updates:**
+
 - Export current data
 - Open in spreadsheet program
 - Make changes (update addresses, phone numbers, etc.)
 - Save and re-import
 
 **Data migration:**
+
 - Export from another system as CSV
 - Ensure column headers match the expected format
 - Import into the app
 
 **Sharing across devices:**
+
 - Export from one device
 - Share the CSV file (email, cloud storage)
 - Import on another device
@@ -168,47 +178,61 @@ For each record in the CSV:
 
 ### Import Issues
 
-**"Failed to import vendors/suppliers"**
+**"Failed to import vendors"**
+
 - Ensure the CSV file has the correct headers
 - Check that the file is not corrupted
 - Verify the file is in CSV format (not Excel .xlsx)
 
 **Records not matching as expected**
+
 - Verify that name and address match exactly (case-sensitive)
 - Check for extra spaces or special characters
 - Ensure both fields have values
 
 **Some fields not importing**
-- Verify column headers match exactly: `name`, `address`, `city`, `state`, `zip`, `mobilePhone`, `businessPhone`, `notes`
+
+- Verify column headers match exactly: `name`, `address`, `city`, `state`, `zip`, `mobilePhone`, `businessPhone`, `email`, `notes`
 - Check for typos in header names
 
 ### Export Issues
 
 **"No export option available"**
-- The export option only appears when you have data to export
+
+- The export option only appears when QuickBooks is not connected and you have data to export
 - Add at least one vendor first
 
+**"Import/Export Vendors not available"**
+
+- Vendor CSV import/export is intentionally disabled while QuickBooks is connected
+- Disconnect QuickBooks to use CSV-based vendor import/export
+
 **File not appearing in share dialog**
+
 - Ensure you have granted storage permissions to the app
 - Try restarting the app and exporting again
 
 ## Technical Details
 
 ### File Location
+
 - Temporary CSV files are created in the app's document directory
 - Files are named: `vendors.csv`
 
 ### CSV Parser
+
 - Custom CSV parser handles quoted fields and escaped characters
 - Supports standard RFC 4180 CSV format
 - Gracefully handles malformed files with error reporting
 
 ### Data Validation
+
 - Basic validation ensures required fields are present
 - Type checking ensures data integrity
 - Invalid rows are skipped with error logging
 
 ### Security
+
 - No sensitive data is logged
 - Files are stored in app-sandboxed storage
 - Standard platform sharing mechanisms are used
