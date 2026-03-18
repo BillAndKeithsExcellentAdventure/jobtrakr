@@ -289,7 +289,8 @@ const ProjectDetailsPage = () => {
 
     try {
       // Create CSV header
-      const header = 'Code,Category,Work Item,Estimate,Cost,Cost Type,Completed\n';
+      const header =
+        'Code,Category,Work Item,Estimate,Category Total,Item Cost,Description,Cost Type,Completed\n';
 
       // Group work items by category and work item, then sort
       const sortedWorkItems = allWorkItems
@@ -305,6 +306,7 @@ const ProjectDetailsPage = () => {
             .map((c) => ({
               amount: parseFloat(c.amount.toFixed(2)),
               documentationType: c.documentationType || '',
+              description: c.label || '',
             }));
 
           return {
@@ -330,29 +332,24 @@ const ProjectDetailsPage = () => {
       const csvRows: string[] = [];
 
       sortedWorkItems.forEach((item) => {
-        // Skip work items without an estimate
-        // Check with Bill if there is a better way to handle this.
-        if (!(item.estimate > 0)) {
-          return;
-        }
-
         const totalCost = item.costs.reduce((sum, cost) => sum + cost.amount, 0);
 
+        // Skip work items without an estimate and without costs to reduce clutter in the export
+        if (!(item.estimate > 0) && item.costs.length === 0) {
+          return;
+        }
         // First row for this work item with all details and total cost
         csvRows.push(
           `'${item.code}',${item.category},${item.workItem},${item.estimate.toFixed(2)},${totalCost.toFixed(
             2,
-          )},,${item.complete}`,
+          )},${item.costs.length === 1 ? item.costs[0].amount.toFixed(2) : ''},${item.costs.length === 1 ? item.costs[0].description : ''},${item.costs.length === 1 ? item.costs[0].documentationType : ''},${item.complete}`,
         );
 
         // Subsequent rows for individual costs (if there are multiple costs)
         if (item.costs.length > 1) {
           item.costs.forEach((cost) => {
-            csvRows.push(`,,,,${cost.amount.toFixed(2)},${cost.documentationType}`);
+            csvRows.push(`,,,,,${cost.amount.toFixed(2)},${cost.description},${cost.documentationType}`);
           });
-        } else if (item.costs.length === 1) {
-          // Update the first row to include cost type if there's only one cost
-          csvRows[csvRows.length - 1] = csvRows[csvRows.length - 1] + item.costs[0].documentationType;
         }
       });
 
