@@ -354,7 +354,7 @@ const EditVendor = () => {
                   />
                 ) : (
                   <>
-                    {grantVendorAccessRequest && (
+                    {isQuickBooksAccessible && grantVendorAccessRequest && (
                       <TouchableOpacity
                         onPress={async () => {
                           if (isSendingVerificationEmail) {
