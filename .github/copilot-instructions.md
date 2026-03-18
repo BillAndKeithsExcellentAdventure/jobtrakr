@@ -112,18 +112,18 @@ The application uses **TinyBase mergeable stores** for conflict-free replication
 
 ### Auto-Save System
 
-The app uses a centralized **FocusManager** system for auto-save functionality:
+The app uses `onBlur`-based auto-save functionality:
 
-- All input fields register with `useFocusManager()` hook
-- Fields auto-save on blur events
-- `useAutoSaveNavigation()` ensures all fields blur before navigation
+- Input fields receive an `onBlur` callback from the parent screen
+- Fields auto-save when the user taps away (blur event)
+- Saving is handled at the screen level — each screen passes its own `onBlur` handler to input components
 - See `docs/AUTO_SAVE_IMPLEMENTATION.md` for detailed documentation
 
 **When creating new input components**:
 
-1. Use `useFocusManager()` to register the field
-2. Provide a blur function that saves data
-3. Unregister on unmount
+1. Accept an `onBlur` prop (forwarded from `TextInputProps`)
+2. Pass `onBlur` through to the underlying `TextInput`
+3. The parent screen is responsible for providing the save callback
 
 ### Navigation
 
@@ -131,7 +131,7 @@ The app uses a centralized **FocusManager** system for auto-save functionality:
 - Path parameters are strongly typed
 - Protected routes require Clerk authentication
 - Use `router.back()` or `router.push()` for navigation
-- Wrap back navigation with `useAutoSaveNavigation()` for auto-save
+- Ensure data is saved before navigating away from edit screens (via `onBlur` handlers or explicit Save buttons)
 
 ## Code Style and Conventions
 
@@ -158,7 +158,7 @@ The app uses a centralized **FocusManager** system for auto-save functionality:
 - **Variables/Functions**: camelCase
 - **Types/Interfaces**: PascalCase
 - **Constants**: UPPER_SNAKE_CASE for true constants
-- **Hooks**: Start with `use` prefix (e.g., `useFocusManager`)
+- **Hooks**: Start with `use` prefix (e.g., `useProjectWorkItems`)
 
 ### Import Organization
 
@@ -209,18 +209,17 @@ Themed components automatically:
 All input components should:
 
 1. Accept `onBlur` callback for auto-save
-2. Register with FocusManager when focusable
-3. Handle disabled/editable states
-4. Use controlled components pattern
+2. Handle disabled/editable states
+3. Use controlled components pattern
 
-Example from `TextField.tsx` and `NumberInputField.tsx`.
+Example from `TextField.tsx` and `NumericInputField.tsx`.
 
 #### Screen Components
 
 Screen components should:
 
 1. Use expo-router's `Stack.Screen` for configuration
-2. Implement `useAutoSaveNavigation()` for back button handling
+2. Pass `onBlur` handlers to input fields for auto-save
 3. Use appropriate TinyBase hooks for data access
 4. Handle loading and error states
 
@@ -268,7 +267,7 @@ const project = store.getRow('projects', projectId);
 - ❌ DON'T use `FlatList` for large lists - prefer `@shopify/flash-list`
 
 **Navigation**:
-- ❌ DON'T navigate away from edit screens without implementing `useAutoSaveNavigation()`
+- ❌ DON'T navigate away from edit screens before ensuring pending field changes are saved
 - ❌ DON'T use imperative navigation when declarative routing is available
 - ❌ DON'T bypass authentication checks on protected routes
 
@@ -289,7 +288,7 @@ const project = store.getRow('projects', projectId);
 
 ### Common Mistakes
 
-1. **Forgetting to register input fields** with `useFocusManager()` - leads to lost data on navigation
+1. **Not providing `onBlur` handlers** on input fields in edit screens — leads to unsaved data on navigation
 2. **Not using themed components** - breaks dark mode and color consistency
 3. **Accessing stores without hooks** - breaks reactivity and causes stale data
 4. **Skipping TypeScript types** - reduces code quality and IDE support
@@ -327,7 +326,7 @@ const project = store.getRow('projects', projectId);
 
 1. Add file in appropriate `src/app/` directory following expo-router conventions
 2. Use `Stack.Screen` for header configuration
-3. Implement `useAutoSaveNavigation()` if editing data
+3. Pass `onBlur` callbacks to input fields for auto-save if editing data
 4. Use TinyBase hooks for data access
 5. Handle authentication if needed (protected routes)
 
@@ -431,17 +430,13 @@ Use these contexts via their respective hooks rather than accessing directly.
 
 Key custom hooks available in `src/hooks/`:
 
-- **useFocusManager**: Register input fields for auto-save functionality
-  - Returns methods to register/unregister blur handlers
-  - Essential for any editable screen
-  
-- **useAutoSaveNavigation**: Handle back navigation with auto-save
-  - Ensures all fields are blurred before navigating back
-  - Use in all edit/create screens
-  
 - **useProjectWorkItems**: Access project work items and cost categories
   - Provides categorized work items for a project
   - Includes filtering and sorting logic
+
+- **useReceiptQueue**: Manage receipt processing queue
+  - Track receipt processing status
+  - Handle multi-project receipt splitting
 
 - **useUploadQueue**: Manage file upload queue
   - Track upload status and progress
@@ -508,9 +503,9 @@ Key custom hooks available in `src/hooks/`:
 - Review `src/tbStores/synchronization/` for sync configuration
 
 ### Auto-Save Not Working
-- Ensure fields are registered with `useFocusManager()`
-- Verify `useAutoSaveNavigation()` is implemented on the screen
-- Check that blur handlers are properly configured
+- Ensure input fields have `onBlur` handlers that write to the TinyBase store
+- Check that the `onBlur` callback is correctly updating the store cell/row
+- Consider adding an explicit Save button for screens where blur before navigation is critical
 
 ### Testing Issues
 - Review mock configurations in `jest.setup.js`

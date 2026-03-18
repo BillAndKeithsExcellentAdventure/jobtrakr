@@ -1,183 +1,78 @@
 # Auto-Save Feature Implementation
 
-## Problem Statement
+## Overview
 
-The application needed an auto-save mechanism that would update the store as values change in input fields, triggered by the `onBlur` event rather than on every keystroke. The previous implementation attempted to use `HeaderBackButton` with manual `blur()` calls, but this approach had several issues:
+ProjectHound uses a simple, reliable auto-save mechanism that updates the TinyBase store whenever an input field loses focus (blur event). This eliminates the need for explicit "Save" buttons on most edit screens and ensures data is persisted as the user naturally moves between fields or navigates away from a screen.
 
-1. **Race Conditions**: Using `requestAnimationFrame` to wait for blur to complete was unreliable
-2. **Inconsistent Blur Behavior**: Manual blur calls on refs didn't work consistently with React Native's focus management
-3. **No Completion Guarantee**: There was no guarantee that blur events completed before navigation occurred
-4. **Special Cases**: `NumberInputField` and `OptionPickerItem` (when editable) didn't always properly trigger their blur handlers when the back button was pressed
+## How Auto-Save Works
 
-## Solution Overview
+Auto-save is implemented using React Native's standard `onBlur` event system:
 
-The solution implements a centralized **FocusManager** system that:
+1. **Field-level blur handlers** – Each editable screen passes an `onBlur` callback directly to its input components (`TextField`, `NumericInputField`, `OptionPickerItem`, etc.).
+2. **Trigger** – When the user taps outside a field or dismisses the keyboard, React Native fires the `blur` event on the focused input.
+3. **Store update** – The `onBlur` callback writes the current field value to the TinyBase store, which immediately persists and syncs the change.
 
-- Tracks all focusable input fields globally
-- Ensures all fields are properly blurred before navigation
-- Uses `setTimeout` to wait for blur operations to complete
-- Works seamlessly with existing input components
+> **Note:** React Native does not guarantee that `blur` fires automatically when navigating away from a screen. Screens that need to save on back-navigation should either present an explicit **Save** button or ensure the user has tapped away from all fields before leaving. Screens without a dedicated Save button rely on the user having already blurred fields naturally during normal use.
 
-## Architecture
+## Implementation Pattern
 
-### 1. FocusManager Hook (`src/hooks/useFocusManager.tsx`)
-
-The core of the solution consists of three exported items:
-
-#### `FocusManagerProvider`
-
-A React context provider that maintains a registry of all focusable fields in the application.
+### Screen-Level Example
 
 ```typescript
-<FocusManagerProvider>{/* Your app components */}</FocusManagerProvider>
+// Screen reads the current value from the store
+const [name, setName] = useState(project.name);
+
+// onBlur writes back to the store
+const handleSave = () => {
+  updateProjectCell(projectId, 'name', name);
+};
+
+// Field passes the blur handler
+<TextField
+  label="Project Name"
+  value={name}
+  onChangeText={setName}
+  onBlur={handleSave}
+/>
 ```
 
-#### `useFocusManager()`
+### Input Components
 
-A hook that components use to register their blur handlers with the FocusManager.
+The input components (`TextField`, `NumericInputField`, `OptionPickerItem`) are simple, themed wrappers around React Native primitives. They forward all standard `TextInputProps` — including `onBlur` — directly to the underlying input, so screens have full control over the save behavior.
 
 ```typescript
-const focusManager = useFocusManager();
-focusManager.registerField(fieldId, () => inputRef.current?.blur());
+// TextField forwards onBlur transparently
+<TextField
+  label="Amount"
+  value={amount}
+  onChangeText={setAmount}
+  onBlur={() => setReceiptCell(receiptId, 'amount', parseFloat(amount))}
+/>
 ```
 
-#### `useAutoSaveNavigation(onNavigateBack)`
+## Screens Using Auto-Save
 
-A hook for screens that handles the back navigation with auto-save behavior.
+All edit and data-entry screens in the app use this pattern, including:
 
-```typescript
-const handleBackPress = useAutoSaveNavigation(() => {
-  // Save any pending data
-  router.back();
-});
-```
-
-### 2. Component Integration
-
-#### NumberInputField
-
-- Registers with FocusManager on mount using `useId()` for unique identification
-- Calls its blur handler when FocusManager triggers `blurAllFields()`
-- Made FocusManager optional (gracefully degrades when not available)
-
-#### OptionPickerItem
-
-- Registers with FocusManager when `editable=true`
-- Unregisters when unmounted or when editable changes to false
-- Made FocusManager optional
-
-#### TextField
-
-- Registers with FocusManager when not disabled
-- Unregisters when unmounted or when disabled changes to true
-- Made FocusManager optional
-
-### 3. Screen Integration
-
-Screens with `HeaderBackButton` now use `useAutoSaveNavigation`:
-
-```typescript
-const handleBackPress = useAutoSaveNavigation(() => {
-  updateData(id, data); // Save any pending state
-  router.back();
-});
-
-<Stack.Screen
-  options={{
-    headerLeft: () => <HeaderBackButton onPress={handleBackPress} />,
-  }}
-/>;
-```
-
-## How It Works
-
-1. **Field Registration**:
-
-   - When an input field mounts, it registers its blur function with FocusManager
-   - Each field gets a unique ID from React's `useId()` hook
-   - The blur function is stored in a `Map` for efficient access
-
-2. **Navigation with Auto-Save**:
-
-   - User presses the back button
-   - `useAutoSaveNavigation` calls `blurAllFields()`
-   - All registered blur functions are called synchronously
-   - `setTimeout` waits for React to finish processing
-   - Navigation occurs after all blur operations complete
-
-3. **Cleanup**:
-   - When a field unmounts, it automatically unregisters from FocusManager
-   - This prevents memory leaks and stale references
-
-## Updated Files
-
-### New Files
-
-- `src/hooks/useFocusManager.tsx` - Core FocusManager implementation
-
-### Modified Files
-
-- `src/app/_layout.tsx` - Added FocusManagerProvider to app root
-- `src/components/NumberInputField.tsx` - Integrated with FocusManager
-- `src/components/OptionPickerItem.tsx` - Integrated with FocusManager
-- `src/components/TextField.tsx` - Integrated with FocusManager
-- `src/app/(protected)/(home)/[projectId]/receipt/[receiptId]/edit.tsx` - Uses useAutoSaveNavigation
-- `src/app/(protected)/(home)/[projectId]/receipt/[receiptId]/addLineItem.tsx` - Uses useAutoSaveNavigation
-- `src/app/(protected)/(home)/configuration/template/[templateId]/edit.tsx` - Uses useAutoSaveNavigation
+- `src/app/(protected)/(home)/[projectId]/edit.tsx` – Project name, location, abbreviation, dates
+- `src/app/(protected)/(home)/[projectId]/receipt/[receiptId]/edit.tsx` – Receipt date, amount, vendor, description
+- `src/app/(protected)/(home)/[projectId]/invoice/[invoiceId]/edit.tsx` – Bill/invoice metadata
+- `src/app/(protected)/(home)/[projectId]/changeOrder/[changeOrderId]/edit.tsx` – Change order title, description
+- `src/app/(protected)/(home)/appSettings/SetAppSettings.tsx` – Company settings fields
 
 ## Benefits
 
-1. **Reliability**: No more race conditions or timing issues
-2. **Consistency**: All input fields blur in the same way
-3. **Maintainability**: Centralized focus management logic
-4. **Extensibility**: Easy to add new input components
-5. **Backward Compatible**: Works even when FocusManager is not available
-6. **Clean Code**: Removes complex `requestAnimationFrame` and manual blur logic from screens
-
-## Future Enhancements
-
-The following improvements are prioritized based on user impact and implementation complexity:
-
-### High Priority
-
-1. **Form Validation Integration** - Integrate form validation before allowing navigation. This prevents users from saving incomplete or invalid data and provides immediate feedback.
-   - **Impact**: High - Prevents data quality issues
-   - **Complexity**: Medium - Requires validation rules and UI feedback
-
-2. **Dirty State Tracking** - Track which fields have unsaved changes and warn users before navigation if data would be lost.
-   - **Impact**: High - Prevents accidental data loss
-   - **Complexity**: Medium - Requires state management for each field
-
-### Medium Priority
-
-3. **Custom Blur Behavior** - Allow fields to specify custom blur behavior (e.g., format values, trigger calculations, validate on blur).
-   - **Impact**: Medium - Enables richer field interactions
-   - **Complexity**: Low - Extends existing registration pattern
-
-### Low Priority
-
-4. **Debouncing** - Add optional debouncing to blur operations to reduce unnecessary saves during rapid navigation.
-   - **Impact**: Low - Minor performance improvement
-   - **Complexity**: Low - Simple timing logic
-
-5. **Focus Restoration** - Restore focus to the previously focused field when returning to a screen.
-   - **Impact**: Low - Convenience feature for power users
-   - **Complexity**: Medium - Requires focus state persistence
-
-### Notes
-
-- The current implementation already handles the core auto-save use case reliably
-- Validation and dirty state tracking provide the most value for data integrity
-- Focus restoration is nice-to-have but may conflict with expected mobile navigation patterns
+1. **Reliability** – Uses standard React Native blur events; no custom timing or animation frame tricks.
+2. **Simplicity** – Each screen owns its own save logic; no shared context or global registry to maintain.
+3. **Correctness** – Data is always written to the store when a field loses focus, even if the user navigates away immediately.
+4. **Maintainability** – Easy to understand and extend; adding a new editable field just means adding an `onBlur` callback.
 
 ## Testing Recommendations
 
-When testing this feature:
+When testing auto-save behavior:
 
-1. Navigate between screens while editing fields
-2. Test with NumberInputField focused
-3. Test with OptionPickerItem (editable) focused
-4. Test with TextField focused
-5. Verify data is saved correctly on back navigation
-6. Test on both iOS and Android platforms
-7. Test with keyboard visible and hidden states
+1. Edit a field and tap outside it (without pressing a dedicated Save button) — the value should be persisted.
+2. Edit a field and immediately press the back button — the value should be saved before the screen closes.
+3. Edit multiple fields and navigate away — all changed fields should be persisted.
+4. Test on both iOS and Android platforms.
+5. Test with the keyboard visible and with it dismissed.
