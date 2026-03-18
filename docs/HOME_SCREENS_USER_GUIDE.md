@@ -1,5 +1,31 @@
 # Home Screens User Guide
 
+## Table of Contents
+
+- [Getting Started](#getting-started-with-projecthound)
+  - [Signing Up](#signing-up-with-clerk)
+  - [Email Verification](#receiving-and-entering-a-verification-code)
+  - [Creating Your Organization](#defining-your-organization)
+- [Projects Home Screen](#projects-home-screen)
+- [Add Project](#add-project)
+- [Project Details Screen](#project-details-screen)
+- [Edit Project Screen](#edit-project-screen)
+- [Cost Items (Work Items)](#cost-items-work-items)
+- [Project Receipts](#project-receipts)
+- [Project Bills (Invoices)](#project-bills-invoices)
+- [Project Change Orders](#project-change-orders)
+- [Project Photos](#project-photos)
+- [Project Notes](#project-notes)
+- [App Settings (Company Settings)](#app-settings-company-settings)
+- [Configuration Home Screen](#configuration-home-screen)
+- [Team Management](#team-management-organization-admins-only)
+- [Navigation Patterns](#navigation-patterns)
+- [Loading States](#loading-states)
+- [Tips and Best Practices](#tips-and-best-practices)
+- [Troubleshooting](#troubleshooting)
+
+---
+
 ## Getting Started with ProjectHound
 
 Before you can use ProjectHound, you need to create an account and set up your organization. This section guides you through the initial setup process.
@@ -243,6 +269,433 @@ Templates define which cost items are included in a project. When you select a t
 4. Tap **Create Project** at the bottom
 5. The new project appears on the Projects Home Screen
 
+## Project Details Screen
+
+Tapping on a project card (outside the action buttons) opens the Project Details screen — the financial command center for a single project.
+
+### Screen Layout
+
+**Header:**
+
+- Project name
+- Total quoted price (original bid + sum of all approved change orders)
+- QuickBooks logo (if QuickBooks is connected)
+- Three-dot menu for project management actions
+
+**Financial Summary:**
+
+- **Quoted Price** – The project bid price including approved change orders
+- **Spent** – Total actual costs entered so far
+- **Balance** – Remaining budget (Quoted − Spent)
+- **Estimated Costs** – Sum of per-item cost estimates
+- **Completion Summary** – Number of work items marked complete, profit/loss on completed work (shown in red if negative)
+
+**Cost Summary Table:**
+
+Lists all cost categories with three columns:
+- **Estimate $** – Planned budget for the category
+- **Spent $** – Actual costs posted to that category
+- **Balance $** – Remaining (Estimate − Spent)
+
+Each row is tappable and opens a detail view for that category's work items.
+
+**Bottom Action Bar:**
+
+- **Notes** – Open project notes/tasks
+- **Photos** – Open the project photo gallery
+- **Receipts** – Open the receipts list
+- **Bills** – Open the bills/invoices list
+- **Changes** – Open the change orders list
+
+### Project Menu (Three-Dot Icon)
+
+Tap the three-dot icon in the header to access project management options:
+
+- **Edit Project Info** – Change the project name, dates, location, customer, bid price, and GPS coordinates
+- **Add Cost Category** – Add an existing category (from your configured list) to this project (only shown if unused categories are available)
+- **Set Estimate Costs** – Bulk-set estimated cost amounts across work items (only shown if work items exist)
+- **Delete Project** – Permanently delete the project; requires typing a confirmation phrase to proceed
+- **Cost Item Cleanup** – Remove work items that have no estimate and no actual costs
+- **Export Cost Items** – Export the project's cost data to a CSV file and share it
+
+## Edit Project Screen
+
+Access this screen from the Project Details three-dot menu → **Edit Project Info**.
+
+### Fields
+
+| Field | Description |
+|-------|-------------|
+| **Project Name** | The full name of the project |
+| **Abbreviation** | Short uppercase identifier (max 10 alphanumeric characters); auto-converted to uppercase |
+| **Initial Quoted Price** | The original bid price (before change orders) |
+| **Location** | Street address or description of the job site |
+| **Customer** | Search and select from your customer list using CustomerPicker |
+| **Start Date** | Project start date (tap to open date picker) |
+| **Planned Finish Date** | Expected completion date (tap to open date picker) |
+| **GPS Coordinates** | Latitude/longitude shown in decimal degrees |
+
+**GPS Actions:**
+
+- **Use Current** – Sets GPS coordinates to your device's current location (requires location permission)
+- **Select on Map** – Opens a map screen to tap and set the project location
+
+### Saving
+
+All fields auto-save when you tap away from them (blur). Tap the back button to return to Project Details; all changes are already saved.
+
+## Cost Items (Work Items)
+
+Within the Project Details cost summary table, tap any category row to open its cost item list.
+
+### Cost Items List Screen
+
+Displays all work items within the selected category:
+
+- **Item Code** – Unique identifier for the cost item
+- **Description** – Name of the work item
+- **Estimate** – Budget amount set for this item
+- **Spent** – Actual cost posted against this item
+- **Balance** – Remaining (Estimate − Spent)
+- **Complete indicator** – Checkmark if the item is marked complete
+
+Tap an item to view its detailed breakdown. Use the **Add Cost Items** button to add pre-configured cost items from your category definition.
+
+### Cost Item Detail Screen
+
+Shows the full financial history for a single work item:
+
+- Total estimated amount
+- Total spent
+- List of individual transactions (receipts, bills, manual entries) that have been charged to this item
+
+## Project Receipts
+
+Receipts track material and supply expenses. Access by tapping **Receipts** on the project action bar.
+
+### Receipts List Screen
+
+**Adding Receipts:**
+
+- **Add Photo** – Opens the camera to capture an image of a physical receipt. If multiple QuickBooks payment accounts are configured, you will be prompted to select which account to charge. For checking accounts, you can enter a check number.
+- **Add Manual** – Opens a blank receipt form for manual data entry without a photo.
+
+**Filtering Receipts:**
+
+- Without QuickBooks: A text filter bar lets you search receipts by vendor name (case-insensitive, with a clear button).
+- With QuickBooks: A toggle switch lets you view **All** receipts or only those **Not posted to QuickBooks**.
+
+**Receipt List Items:**
+
+Each receipt in the list displays:
+- Vendor name
+- Date
+- Total amount
+- Posting status (if QuickBooks is connected)
+
+Swipe a receipt item to **Delete** it.
+
+### Receipt Details Screen
+
+Tap a receipt in the list to open its details.
+
+**Summary Box:**
+
+- Thumbnail of the receipt image (tap to view full image)
+- Vendor name
+- Receipt date
+- Total amount
+- **Edit Details** button – Opens the receipt edit screen
+- **Show Image** button – Opens the full-size receipt photo
+
+**Line Items Section:**
+
+Lists all cost items charged to this receipt:
+- Amount
+- Description
+- Work item assignment
+- Swipe an item to delete or edit it
+
+**Status Warnings:**
+
+- ⚠ Items with no work item assignment
+- ⚠ Items assigned to a different project
+- ⚠ Line item total does not match the receipt total
+
+**Actions:**
+
+- **Add Line Item** – Navigate to the add line item screen
+- **Load from Photo** – If no line items exist, tap to request AI processing of the receipt image to automatically extract line items
+- **Save Receipt to QuickBooks** / **Update Receipt in QuickBooks** – Sync the receipt to QuickBooks when all conditions are met (see QuickBooks Sync Requirements below)
+
+**QuickBooks Sync Requirements:**
+
+A receipt can only be synced to QuickBooks when:
+
+1. QuickBooks is connected
+2. The receipt has at least one line item
+3. The total amount is greater than $0
+4. A payment account is selected
+5. The vendor is linked to a QuickBooks vendor
+6. All line items have a work item assignment
+7. At least one line item is assigned to the current project
+8. The sum of line items matches the receipt total
+
+### Receipt Edit Screen
+
+Edit a receipt's header information.
+
+| Field | Description |
+|-------|-------------|
+| **Date** | Receipt date (tap to open date picker) |
+| **Amount** | Total receipt amount |
+| **Vendor/Merchant** | Select from your vendor list using VendorPicker |
+| **Description** | Optional memo or description |
+| **Payment Account** | (QuickBooks only) Which account to charge |
+| **Check #** | (Checking accounts only) Optional check number |
+
+All fields auto-save when you tap away from them.
+
+### Add Line Item Screen
+
+Manually add a cost line item to a receipt.
+
+| Field | Description |
+|-------|-------------|
+| **Amount** | Dollar amount for this line item |
+| **Description** | What was purchased |
+| **Work Item** | Which project cost item to charge |
+| **Project** | Which project (used for multi-project receipts) |
+
+**AI Processing:** If a receipt photo is available and no line items have been added yet, tap **Load from Photo** on the Receipt Details screen to have AI analyze the image and automatically create line items. You can then review and edit the AI-suggested items.
+
+## Project Bills (Invoices)
+
+Bills track vendor invoices that need to be paid. Access by tapping **Bills** on the project action bar.
+
+### Bills List Screen
+
+**Adding Bills:**
+
+- **Add Photo** – Opens the camera to capture an image of a vendor invoice or bill.
+- **Add Manual** – Opens a blank bill form for manual data entry.
+
+**Bill List Items:**
+
+Each bill displays:
+- Vendor name
+- Invoice number
+- Due date
+- Total amount
+- Paid status badge (updated from QuickBooks when connected)
+
+Swipe a bill item to **Delete** it.
+
+The app checks QuickBooks for payment status updates automatically when this screen loads (if QuickBooks is connected).
+
+### Bill Details Screen
+
+Tap a bill in the list to view its details.
+
+**Summary Box:**
+
+- Thumbnail of the bill image
+- Vendor name
+- Invoice number
+- Invoice date and due date
+- Total amount
+- Paid/Unpaid status badge
+- **Edit Details** button
+- **Show Image** button
+
+**Line Items Section:**
+
+Lists all cost items on this bill with swipe-to-edit/delete.
+
+**Actions:**
+
+- **Add Line Item** – Add a cost item to the bill
+- **Load from Photo** – Request AI extraction from the bill image (when no items exist)
+- **Add Bill to QuickBooks** / **Update Bill in QuickBooks** – Sync to QuickBooks when all conditions are met
+
+**QuickBooks Sync Requirements:**
+
+A bill can be synced to QuickBooks when:
+
+1. QuickBooks is connected
+2. The bill has at least one line item
+3. The total amount is greater than $0
+4. A vendor is selected
+5. All line items have a work item assignment
+6. The sum of line items matches the bill total
+
+### Bill Edit Screen
+
+Edit a bill's header information.
+
+| Field | Description |
+|-------|-------------|
+| **Date** | Bill/invoice date (tap to open date picker) |
+| **Due Date** | Payment due date (defaults to 30 days from bill date) |
+| **Amount** | Total bill amount |
+| **Invoice Number** | Vendor's invoice number |
+| **Vendor** | Select from vendor list using VendorPicker |
+| **Description** | Optional memo |
+| **Payment Account** | (QuickBooks only) Account to use for payment |
+
+## Project Change Orders
+
+Change orders document approved additions to the original project scope. Access by tapping **Changes** on the project action bar.
+
+### Change Orders List Screen
+
+Displays all change orders for the project.
+
+**Header Information:**
+
+- **Total Approved** – Sum of all change orders with "Approved" status
+- **Add Change Order** button (appears when both company settings and customer information are complete)
+
+**Before Creating Change Orders:**
+
+You must have complete information in two places before you can create a change order:
+
+1. **Company Settings** – Company name, address, phone, and email must be filled in
+2. **Customer Information** – The project must have a customer with a name and email address
+
+If either is incomplete, the screen shows a message explaining what needs to be configured, with a button to navigate directly to that settings screen.
+
+**Change Order Status Icons:**
+
+- 💡 **Draft** – Being prepared, not yet sent
+- 👓 **Pending Approval** – Sent to customer, awaiting response
+- ✓ **Approved** – Customer has approved
+- ✗ **Cancelled** – Cancelled or rejected
+
+**Change Order List Items:**
+
+Each change order displays the title, status icon, and quoted amount. Swipe to delete.
+
+### Change Order Details Screen
+
+Tap a change order to view its full details.
+
+**Header Section:**
+
+- Status icon
+- Change order title
+- Accounting ID (assigned after sending)
+- Description
+- Quoted price
+
+**Line Items List:**
+
+Lists all items included in the change order:
+- Item description
+- Cost amount
+
+Footer shows the total.
+
+**Three-Dot Menu:**
+
+- **Edit Change Order Info** – Modify the title, description, and quoted price
+- **Add Change Order Item** – Add a new line item (description, amount, associated work item)
+- **Set Change Order Status** – Manually set the status (Draft, Pending Approval, Approved, Cancelled)
+
+**Sending for Approval:**
+
+When the change order has items and a total greater than $0, a **Send for Approval** (or **Resend**) button appears. Tapping it:
+
+1. Generates a professional HTML document using your company branding
+2. Sends the document to the customer's email address with an acceptance link
+3. The acceptance link is valid for 48 hours
+4. The change order status is updated to "Pending Approval"
+
+## Project Photos
+
+Manage project photos and videos. Access by tapping **Photos** on the project action bar.
+
+### Photos Screen
+
+Displays all media captured or imported for the project in a gallery view.
+
+**Capturing Media:**
+
+- Tap **Take Picture/Video** to launch the camera
+- Supports both photos and videos
+- Thumbnails are generated automatically
+- The media is stored in the app and associated with the project
+
+**Header Menu:**
+
+- **Import Photos** – Select multiple photos from your device's photo library to add to the project
+- **Manage Photo Access** – Control which photos can be shared publicly (useful for customer-facing reports)
+
+**Viewing Media:**
+
+- Tap a photo to view it full-screen with zoom support
+- Tap a video to play it in the video player
+
+**Upload Indicator:**
+
+A "Uploading photo..." spinner appears while media is being processed and synced to the server.
+
+## Project Notes
+
+Track project tasks and observations. Access by tapping **Notes** on the project action bar.
+
+### Notes Screen
+
+**Adding a Note:**
+
+1. Type your note text in the input field at the top (multi-line, up to 100 characters)
+2. Tap **Add Note**
+3. The note appears in the list immediately
+
+**Editing a Note:**
+
+- Swipe a note item to reveal the **Edit** action
+- The input field switches to edit mode showing the note's current text
+- Modify the text and tap **Save**, or tap **Cancel** to discard changes
+
+**Completing a Note:**
+
+- Swipe a note item to reveal the **Complete** / **Incomplete** toggle
+- Completed notes appear at the bottom of the list, visually distinguished
+
+**Deleting a Note:**
+
+- Swipe a note item to reveal the **Delete** action
+
+Notes are sorted so incomplete items appear first, with completed items at the bottom.
+
+## App Settings (Company Settings)
+
+Configure your company information that appears on generated documents. Access from the Projects Home Screen menu → **Company Settings**.
+
+### Available Settings
+
+**Company Information:**
+
+| Field | Description |
+|-------|-------------|
+| **Company Name** | Your business name |
+| **Address** | Street address (multi-line) |
+| **City** | City name |
+| **State** | State abbreviation |
+| **Zip** | ZIP/Postal code |
+| **Phone** | Business phone number |
+| **Email** | Business email address |
+| **Website** | Company website URL |
+
+**Branding:**
+
+- **Company Logo** – Tap the logo area to select an image from your device. The logo is automatically resized and appears on generated change order documents.
+
+### Saving
+
+All fields auto-save when you tap away from them. Tap **Save** at the bottom to explicitly confirm all changes and return to the previous screen.
+
 ## Configuration Home Screen
 
 The Configuration Home Screen is your central hub for managing the building blocks of your project tracking system, plus QuickBooks integration and company defaults.
@@ -401,46 +854,6 @@ When using ProjectHound for the first time:
    - Use **Connect to QuickBooks** on the Configuration screen
    - After connecting, import company info, vendors, customers, and accounts
    - Configure QuickBooks account defaults before posting receipts/bills
-
-## Company Settings
-
-Manage your company information that appears on change orders and other generated documents.
-
-### Accessing Company Settings
-
-1. From the Projects Home Screen, tap the **menu icon** (three lines)
-2. Select **Company Settings**
-
-### Available Settings
-
-**Company Information:**
-
-- **Company Name** - Your business name
-- **Address** - Street address (multi-line)
-- **City** - City name
-- **State** - State abbreviation
-- **Zip** - ZIP/Postal code
-- **Phone** - Business phone number
-- **Email** - Business email address
-- **Website** - Company website URL
-
-**Branding:**
-
-- **Company Logo** - Upload a logo image from your device
-  - Tap the image area to select a photo
-  - Image is automatically resized to 200px height
-  - Logo appears on generated change order documents
-
-### Saving Changes
-
-1. Make your changes to any fields
-2. Tap **Save** at the bottom
-3. Settings are immediately applied
-4. You're returned to the previous screen
-
-### Auto-Save Note
-
-Company Settings uses the auto-save system - if you tap the back button, your changes are automatically saved before navigating away.
 
 ## Team Management (Organization Admins Only)
 
@@ -661,9 +1074,9 @@ The app automatically synchronizes data:
 **Solution:**
 
 1. Navigate to Configuration
-2. Add at least one cost category
+2. Add at least one cost category with cost items
 3. Create at least one project template
-4. Return to Projects Home - Add Project will now appear
+4. Return to Projects Home — Add Project will now appear
 
 ### Can't See Manage Team Option
 
@@ -686,15 +1099,69 @@ The app automatically synchronizes data:
 
 ### Changes Not Saving
 
-**Cause:** Navigation before blur/save completes
+**Note:** The app uses auto-save — changes save automatically when you:
 
-**Note:** The app uses auto-save - changes save automatically when you:
-
-- Tap outside a field
+- Tap outside a field (blur)
 - Press the back button
 - Navigate to another screen
 
-If changes seem lost, ensure you tap outside input fields before navigating.
+If changes seem lost, ensure you tap outside input fields before navigating away from a screen.
+
+### Receipt or Bill Won't Sync to QuickBooks
+
+**Cause:** One or more sync requirements are not met
+
+**Checklist:**
+
+1. QuickBooks is connected (check Configuration screen)
+2. The receipt/bill has at least one line item
+3. The total amount is greater than $0
+4. A payment account is selected (receipts only)
+5. The vendor is selected and linked to a QuickBooks vendor
+6. All line items have a work item assignment
+7. At least one line item is assigned to the current project (receipts)
+8. The sum of line items matches the header total
+
+The Receipt/Bill Details screen shows warnings for each unmet condition.
+
+### Can't Send Change Order for Approval
+
+**Cause:** Missing company or customer information
+
+**Solution:**
+
+1. Go to **Company Settings** (Projects menu → Company Settings) and fill in: Company Name, Address, Phone, and Email
+2. Go to **Edit Project** and assign a customer; ensure the customer has a name and email address
+3. Return to Change Orders — the **Add Change Order** and send buttons will now be available
+
+### Change Order Not Marked as Approved
+
+**Cause:** The acceptance link may have expired, or the customer email wasn't received
+
+**Solution:**
+
+- Open the Change Order Details screen and tap **Resend** to send a new approval email with a fresh 48-hour acceptance link
+- Manually set the status to Approved via the three-dot menu → **Set Change Order Status** if the customer verbally approved
+
+### AI Photo Processing Not Working
+
+**Cause:** The receipt/bill must have a photo attached before AI extraction can be used
+
+**Solution:**
+
+1. Ensure the receipt or bill was created with **Add Photo** (not **Add Manual**)
+2. Wait for any in-progress uploads to complete (spinner indicator)
+3. Open the Receipt/Bill Details screen and tap **Load from Photo**
+
+### Verification Code Not Received
+
+**Cause:** Email delivery delay or spam filtering
+
+**Solution:**
+
+1. Wait a few minutes and check your email again
+2. Check your spam or junk mail folder
+3. If the code has expired, return to the sign-up screen and restart registration to receive a new code
 
 ## Related Documentation
 
@@ -704,11 +1171,24 @@ If changes seem lost, ensure you tap outside input fields before navigating.
 
 ## Summary
 
-The home screens in ProjectHound serve as your command center:
+ProjectHound screens are organized into two main areas:
 
-- **Projects Home** manages all your projects with quick access to details, notes, media, receipts, bills, and changes
-- **Configuration Home** manages foundational data plus QuickBooks setup (company settings, categories, templates, vendors, customers, accounts)
-- **Company Settings** maintains your business information for documents
-- **Team Management** handles user access and permissions
+**Project Management:**
+
+- **Projects Home** — Your dashboard; view all projects with quick-action buttons
+- **Project Details** — Financial overview with cost tracking by category
+- **Edit Project** — Modify project name, dates, location, customer, and bid price
+- **Cost Items** — Drill into individual work items and their financial history
+- **Receipts** — Track material and supply expenses; sync to QuickBooks
+- **Bills** — Manage vendor invoices; sync to QuickBooks
+- **Change Orders** — Document and send scope additions for customer approval
+- **Photos** — Capture and organize project media
+- **Notes** — Create and track project tasks and observations
+
+**Configuration & Settings:**
+
+- **Configuration Home** — Hub for categories, templates, vendors, customers, and QuickBooks
+- **App Settings / Company Settings** — Business information used on generated documents
+- **Team Management** — Invite users and manage organization roles (admins only)
 
 Master these screens to efficiently manage your construction projects from start to finish.
