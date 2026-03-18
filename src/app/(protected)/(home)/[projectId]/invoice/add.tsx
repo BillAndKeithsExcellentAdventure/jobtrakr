@@ -224,7 +224,9 @@ const AddInvoicePage = () => {
           qbBillData: {
             vendorRef: vendorQbId ?? '',
             invoiceDate: new Date(projectInvoice.invoiceDate).toISOString().split('T')[0],
-            dueDate: new Date(projectInvoice.dueDate).toISOString().split('T')[0],
+            dueDate: projectInvoice.dueDate
+              ? new Date(projectInvoice.dueDate).toISOString().split('T')[0]
+              : '',
             lineItems: [
               {
                 description: invoiceToAdd.description,
