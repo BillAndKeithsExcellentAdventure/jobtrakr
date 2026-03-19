@@ -76,6 +76,7 @@ export const ProjectMediaList = ({
       const asset = mediaItems.find((asset) => asset.id === selectedIds[0]);
       if (asset) {
         setThumbnail(asset.thumbnail);
+        Alert.alert('Thumbnail Updated', 'The project thumbnail has been updated to the selected photo.');
       }
     }
   }, [mediaItems, setThumbnail]);
