@@ -806,8 +806,7 @@ const Home = () => {
 
   const handleConnectToQuickBooksFromMenu = useCallback(() => {
     setAppSettings({ noQuickBooksInterest: false });
-    void handleConnectToQuickBooks();
-  }, [handleConnectToQuickBooks, setAppSettings]);
+  }, [setAppSettings]);
 
   const executeMenuItemAction = useCallback(
     (menuItem: string) => {
@@ -857,7 +856,7 @@ const Home = () => {
         handleLoadCompanyInfoFromQuickBooks();
         return;
       }
-      if (menuItem === 'ConnectQuickBooks') {
+      if (menuItem === 'AllowConnectQuickBooks') {
         handleConnectToQuickBooksFromMenu();
         return;
       }
@@ -993,17 +992,6 @@ const Home = () => {
             },
           ]
         : []),
-      ...(!isQuickBooksAccessible && isInternetReachable && appSettings.noQuickBooksInterest
-        ? [
-            {
-              icon: <MaterialCommunityIcons name="link-variant" size={28} color={colors.iconColor} />,
-              label: 'Connect to QuickBooks',
-              onPress: (e: GestureResponderEvent, actionContext?: any) => {
-                handleMenuItemPress('ConnectQuickBooks');
-              },
-            },
-          ]
-        : []),
       ...(!isQBConnected
         ? [
             {
@@ -1029,6 +1017,17 @@ const Home = () => {
               label: 'Export Vendors',
               onPress: (e: GestureResponderEvent, actionContext?: any) => {
                 handleMenuItemPress('ExportVendors');
+              },
+            },
+          ]
+        : []),
+      ...(!isQuickBooksAccessible && isInternetReachable && appSettings.noQuickBooksInterest
+        ? [
+            {
+              icon: <MaterialCommunityIcons name="link-variant" size={28} color={colors.iconColor} />,
+              label: 'Allow Connect to QuickBooks',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('AllowConnectQuickBooks');
               },
             },
           ]
@@ -1162,6 +1161,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 8,
     paddingHorizontal: 4,
   },
 });
