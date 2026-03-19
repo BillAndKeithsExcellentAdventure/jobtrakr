@@ -245,17 +245,19 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
     // Camera permissions are not granted yet.
     return (
       <View style={styles.container}>
-        <Text style={styles.message}>We need your permission to show the camera</Text>
+        <Text style={styles.message}>We need your permission to use the camera</Text>
         <ActionButton type="action" onPress={requestPermission} title="Grant Permission" />
       </View>
     );
   }
 
   if (!micPermission.granted) {
-    // Camera permissions are not granted yet.
+    // Microphone permissions are not granted yet.
     return (
       <View style={styles.container}>
-        <Text style={styles.message}>We need your permission to show the camera</Text>
+        <Text style={styles.message}>
+          We need your permission to use the microphone when recording videos
+        </Text>
         <ActionButton type="action" onPress={requestMicPermission} title="Grant Permission" />
       </View>
     );
