@@ -51,6 +51,7 @@ import {
 } from '@/src/utils/quickbooksAPI';
 import * as WebBrowser from 'expo-web-browser';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
+import { AntDesign } from '@expo/vector-icons';
 
 const isPowerUser = false;
 
@@ -151,6 +152,7 @@ const Home = () => {
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
   const { clearAllProjectIds } = useActiveProjectIds();
+  const showManageTeam = !!auth.orgId && !!auth.orgRole && auth.orgRole.includes('admin');
 
   useEffect(() => {
     clearAllProjectIds();
@@ -857,6 +859,10 @@ const Home = () => {
       }
       if (menuItem === 'ConnectQuickBooks') {
         handleConnectToQuickBooksFromMenu();
+        return;
+      }
+      if (menuItem === 'ManageTeam') {
+        router.push({ pathname: '/(protected)/(home)/InviteUser' });
       }
     },
     [
@@ -872,6 +878,7 @@ const Home = () => {
       handleDisconnectFromQuickBooks,
       handleLoadCompanyInfoFromQuickBooks,
       handleConnectToQuickBooksFromMenu,
+      router,
     ],
   );
 
@@ -930,6 +937,17 @@ const Home = () => {
               label: 'Import Configuration Data',
               onPress: (e: GestureResponderEvent, actionContext?: any) => {
                 handleMenuItemPress('Import');
+              },
+            },
+          ]
+        : []),
+      ...(showManageTeam
+        ? [
+            {
+              icon: <AntDesign name="user-add" size={28} color={colors.iconColor} />,
+              label: 'Manage Team',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('ManageTeam');
               },
             },
           ]
@@ -1022,6 +1040,7 @@ const Home = () => {
     handleMenuItemPress,
     hasConfigurationData,
     hasVendorData,
+    showManageTeam,
     isQuickBooksAccessible,
     isInternetReachable,
     appSettings.noQuickBooksInterest,

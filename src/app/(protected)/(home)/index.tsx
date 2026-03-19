@@ -22,7 +22,7 @@ import {
   useAllRows,
   WorkCategoryCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useAuth, useClerk } from '@clerk/clerk-expo';
+import { useClerk } from '@clerk/clerk-expo';
 import { AntDesign } from '@expo/vector-icons';
 import { ActionButton } from '@/src/components/ActionButton';
 import { DOCS_URL } from '@/src/constants/app-constants';
@@ -47,8 +47,6 @@ export default function ProjectHomeScreen() {
   const { signOut } = useClerk();
   const colors = useColors();
   const colorScheme = useColorScheme();
-  const auth = useAuth();
-  const { orgRole, orgId } = auth;
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
   const allCustomers = useAllRows('customers', CustomerDataCompareName);
   const { isQuickBooksAccessible } = useNetwork();
@@ -228,8 +226,6 @@ export default function ProjectHomeScreen() {
         router.push('/add-project');
       } else if (item === 'Configuration') {
         router.push('/configuration/home');
-      } else if (item === 'Invite') {
-        router.push({ pathname: '/(protected)/(home)/InviteUser' });
       } else if (item === 'About') {
         router.push({ pathname: '/(protected)/(home)/about' });
       } else if (item === 'Logout') {
@@ -240,7 +236,6 @@ export default function ProjectHomeScreen() {
   );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(() => {
-    const showInvite = orgId && orgRole.includes('admin');
     const showAddProject = allCategories.length > 0;
 
     const menuButtons: ActionButtonProps[] = [
@@ -262,17 +257,6 @@ export default function ProjectHomeScreen() {
           handleMenuItemPress('Configuration', actionContext);
         },
       },
-      ...(showInvite
-        ? [
-            {
-              icon: <AntDesign name="user-add" size={28} color={colors.iconColor} />,
-              label: 'Manage Team',
-              onPress: (e, actionContext) => {
-                handleMenuItemPress('Invite', actionContext);
-              },
-            } as ActionButtonProps,
-          ]
-        : []),
       {
         icon: <AntDesign name="info-circle" size={28} color={colors.iconColor} />,
         label: 'About',
@@ -289,7 +273,7 @@ export default function ProjectHomeScreen() {
       },
     ];
     return menuButtons;
-  }, [colors, handleMenuItemPress, allCategories, orgId, orgRole]);
+  }, [colors, handleMenuItemPress, allCategories]);
 
   const headerRightComponent = useMemo(() => {
     return {

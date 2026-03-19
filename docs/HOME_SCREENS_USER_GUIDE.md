@@ -211,7 +211,7 @@ Tap the **menu icon** (three horizontal lines) in the top-right corner to access
 
 #### For Organization Admins:
 
-- **Manage Team** - Invite team members and manage user roles (only visible to organization administrators)
+- **Manage Team** has moved to the **Configuration** screen menu (only visible to organization administrators)
 
 ## Add Project
 
@@ -722,6 +722,9 @@ The Configuration screen displays:
 
 - App version number at the top
 - A **Connect to QuickBooks** action when QuickBooks is not connected
+- A **Don't show connect button** switch directly under the connect action
+  - Turning this switch on hides the main connect button
+  - If hidden, you can still connect later from the Configuration top-right menu via **Connect to QuickBooks**
 - Core configuration sections (detailed below)
 - Additional QuickBooks options when connected
 - A menu icon in the top-right for import/export operations
@@ -815,9 +818,14 @@ Tap the **menu icon** (three horizontal lines) in the top-right to access data m
 
 #### When QuickBooks Is Not Connected:
 
+- **Connect to QuickBooks** - Available in the menu when the main connect button is hidden using the **Don't show connect button** switch
 - **Import Vendors** - Import vendors from a CSV file
 - **Export Vendors** - Export all vendor data to a CSV file (only appears when vendors exist)
 - **Import Customers from CSV** - Import customers from a CSV file
+
+#### For Organization Admins:
+
+- **Manage Team** - Invite team members and manage user roles
 
 #### When QuickBooks Is Connected:
 
@@ -875,7 +883,9 @@ Invite team members to collaborate on projects and manage user roles within your
 **To access:**
 
 1. From the Projects Home Screen, tap the **menu icon** (three lines)
-2. Select **Manage Team**
+2. Select **Configuration**
+3. On Configuration, tap the **menu icon** (three lines)
+4. Select **Manage Team**
 
 ### Inviting Users
 
@@ -1091,7 +1101,7 @@ The app automatically synchronizes data:
 **Solution:**
 
 - Ask your organization administrator to promote you to admin role
-- This option is only visible to users with admin permissions
+- This option is only visible to users with admin permissions and appears in the **Configuration** menu
 
 ### Configuration Menu Options Not Showing
 
