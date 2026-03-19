@@ -21,6 +21,7 @@ export interface SettingsData {
   companyLogo: string;
   changeOrderTemplateFileName: string;
   syncWithQuickBooks: boolean;
+  noQuickBooksInterest: boolean;
   debugForceOffline: boolean;
   quickBooksExpenseAccountId: string;
   quickBooksPaymentAccounts: string; // Comma-separated list of account IDs
@@ -41,6 +42,7 @@ const INITIAL_SETTINGS: SettingsData = {
   companyLogo: '',
   changeOrderTemplateFileName: '',
   syncWithQuickBooks: false,
+  noQuickBooksInterest: false,
   debugForceOffline: false,
   quickBooksExpenseAccountId: '',
   quickBooksPaymentAccounts: '',

@@ -22,6 +22,7 @@ export const TABLES_SCHEMA = {
     changeOrderTemplateFileName: { type: 'string' },
     debugForceOffline: { type: 'boolean', default: false },
     syncWithQuickBooks: { type: 'boolean', default: false },
+    noQuickBooksInterest: { type: 'boolean', default: false },
     quickBooksExpenseAccountId: { type: 'string' },
     quickBooksPaymentAccounts: { type: 'string' }, // Comma-separated list of account IDs
     quickBooksDefaultPaymentAccountId: { type: 'string' },

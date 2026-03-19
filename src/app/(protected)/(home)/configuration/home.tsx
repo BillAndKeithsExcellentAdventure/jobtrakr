@@ -42,6 +42,7 @@ import {
 import { sanitizeQuickBooksAccountSettings } from '@/src/utils/quickbooksAccountSettings';
 import { SvgImage } from '@/src/components/SvgImage';
 import { ActionButton } from '@/src/components/ActionButton';
+import { Switch } from '@/src/components/Switch';
 import {
   connectToQuickBooks as qbConnect,
   disconnectQuickBooks as qbDisconnect,
@@ -794,6 +795,18 @@ const Home = () => {
     handleGetQBCustomers,
   ]);
 
+  const handleSetNoQuickBooksInterest = useCallback(
+    (value: boolean) => {
+      setAppSettings({ noQuickBooksInterest: value });
+    },
+    [setAppSettings],
+  );
+
+  const handleConnectToQuickBooksFromMenu = useCallback(() => {
+    setAppSettings({ noQuickBooksInterest: false });
+    void handleConnectToQuickBooks();
+  }, [handleConnectToQuickBooks, setAppSettings]);
+
   const executeMenuItemAction = useCallback(
     (menuItem: string) => {
       if (isPowerUser) {
@@ -840,6 +853,10 @@ const Home = () => {
       }
       if (menuItem === 'LoadCompanyInfo') {
         handleLoadCompanyInfoFromQuickBooks();
+        return;
+      }
+      if (menuItem === 'ConnectQuickBooks') {
+        handleConnectToQuickBooksFromMenu();
       }
     },
     [
@@ -854,6 +871,7 @@ const Home = () => {
       handleImportCustomers,
       handleDisconnectFromQuickBooks,
       handleLoadCompanyInfoFromQuickBooks,
+      handleConnectToQuickBooksFromMenu,
     ],
   );
 
@@ -957,6 +975,17 @@ const Home = () => {
             },
           ]
         : []),
+      ...(!isQuickBooksAccessible && isInternetReachable && appSettings.noQuickBooksInterest
+        ? [
+            {
+              icon: <MaterialCommunityIcons name="link-variant" size={28} color={colors.iconColor} />,
+              label: 'Connect to QuickBooks',
+              onPress: (e: GestureResponderEvent, actionContext?: any) => {
+                handleMenuItemPress('ConnectQuickBooks');
+              },
+            },
+          ]
+        : []),
       ...(!isQBConnected
         ? [
             {
@@ -994,6 +1023,8 @@ const Home = () => {
     hasConfigurationData,
     hasVendorData,
     isQuickBooksAccessible,
+    isInternetReachable,
+    appSettings.noQuickBooksInterest,
     isQBConnected,
   ]);
 
@@ -1010,9 +1041,17 @@ const Home = () => {
       />
 
       <View style={{ flex: 1, width: '100%', paddingHorizontal: 10, backgroundColor: colors.listBackground }}>
-        {!isQuickBooksAccessible && isInternetReachable && (
+        {!isQuickBooksAccessible && isInternetReachable && !appSettings.noQuickBooksInterest && (
           <View style={{ marginBottom: 10, marginTop: 4 }}>
             <ActionButton type="action" title="Connect to QuickBooks" onPress={handleConnectToQuickBooks} />
+            <View style={styles.quickBooksInterestRow}>
+              <Text>Don't show connect button</Text>
+              <Switch
+                value={!!appSettings.noQuickBooksInterest}
+                onValueChange={handleSetNoQuickBooksInterest}
+                size="medium"
+              />
+            </View>
           </View>
         )}
 
@@ -1098,6 +1137,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  quickBooksInterestRow: {
+    marginTop: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 4,
   },
 });
 
