@@ -166,7 +166,7 @@ export const InviteUser = () => {
       ) : (
         <>
           <TextField
-            style={styles.input}
+            style={{ ...styles.input, backgroundColor: colors.background }}
             value={email}
             onChangeText={setEmail}
             placeholder="Email address of user to invite"
