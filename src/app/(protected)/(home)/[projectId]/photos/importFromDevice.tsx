@@ -16,7 +16,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ImportDevicePhotosPage = () => {
   const router = useRouter();
-
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const [useProjectLocation, setUseProjectLocation] = useState(false);
   const [projectIsReady, setProjectIsReady] = useState(false);
@@ -49,6 +48,22 @@ const ImportDevicePhotosPage = () => {
   const allProjectMedia = useAllRows(projectId, 'mediaEntries');
   const [isVideoPlayerVisible, setIsVideoPlayerVisible] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+
+  const handleDeviceMediaListClose = useCallback(() => {
+    console.log('[ImportDevicePhotosPage] DeviceMediaList onClose received', {
+      projectId,
+      projectName,
+      useProjectLocation,
+      projectIsReady,
+    });
+
+    try {
+      router.back();
+      console.log('[ImportDevicePhotosPage] router.back() invoked from DeviceMediaList onClose');
+    } catch (error) {
+      console.error('[ImportDevicePhotosPage] router.back() failed from DeviceMediaList onClose', error);
+    }
+  }, [projectId, projectIsReady, projectName, router, useProjectLocation]);
 
   const playVideo = (videoUri: string) => {
     setSelectedVideo(videoUri);
@@ -97,7 +112,7 @@ const ImportDevicePhotosPage = () => {
                 projectId={projectId}
                 projectName={projectName}
                 allProjectMedia={allProjectMedia}
-                onClose={() => router.back}
+                onClose={handleDeviceMediaListClose}
                 playVideo={playVideo}
                 useProjectLocation={useProjectLocation}
                 setUseProjectLocation={setUseProjectLocation}

@@ -1,9 +1,29 @@
 import * as MediaLibrary from 'expo-media-library';
+import { Platform } from 'react-native';
 
 export type MediaAssetPage = {
   assets: MediaLibrary.Asset[];
   endCursor?: string;
   hasNextPage: boolean;
+};
+
+export const resolveMediaLibraryUriForDisplay = async (uri: string, assetId?: string): Promise<string> => {
+  if (!uri) {
+    return uri;
+  }
+
+  if (Platform.OS !== 'ios' || !uri.startsWith('ph://')) {
+    return uri;
+  }
+
+  try {
+    const resolvedAssetId = assetId ?? uri.replace('ph://', '');
+    const assetInfo = await MediaLibrary.getAssetInfoAsync(resolvedAssetId);
+    return assetInfo.localUri ?? assetInfo.uri ?? uri;
+  } catch (error) {
+    console.error('Unable to resolve iOS ph:// URI for display:', error);
+    return uri;
+  }
 };
 
 export class MediaAssetsHelper {

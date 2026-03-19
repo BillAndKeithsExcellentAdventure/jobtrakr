@@ -11,6 +11,7 @@ import {
   useAddServerMediaToDeleteCallback,
   useAllMediaToUpload,
 } from '@/src/tbStores/UploadSyncStore';
+import { resolveMediaLibraryUriForDisplay } from '@/src/utils/mediaAssetsHelper';
 import { API_BASE_URL } from '../constants/app-constants';
 import { useNetwork } from '../context/NetworkContext';
 import { createApiWithToken } from './apiWithToken';
@@ -884,8 +885,8 @@ const copyToLocalFolder = async (
 
   try {
     // Request asset info to ensure we have permissions (especially on iOS)
-    const phUri = imageUri.startsWith('ph://') ? imageUri.replace('ph://', '') : undefined;
-    if (phUri) {
+    const isPhUri = imageUri.startsWith('ph://');
+    if (isPhUri) {
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
         return {
@@ -897,17 +898,17 @@ const copyToLocalFolder = async (
         //console.log('Media library permissions granted');
       }
 
-      const asset = await MediaLibrary.getAssetInfoAsync(phUri);
-      if (asset.localUri) {
-        localImageUri = asset.localUri;
-        // console.log('Resolved ph:// URI to local URI:', localImageUri);
-      } else {
+      const resolvedUri = await resolveMediaLibraryUriForDisplay(imageUri);
+      if (!resolvedUri || resolvedUri.startsWith('ph://')) {
         return {
           status: 'Error',
           id: details.id,
           msg: 'Could not resolve ph:// URI to local URI',
         };
       }
+
+      localImageUri = resolvedUri;
+      // console.log('Resolved ph:// URI to local URI:', localImageUri);
     }
 
     // Ensure directory exists

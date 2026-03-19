@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { View, Text } from '@/src/components/Themed';
 import { ActionButton } from '@/src/components/ActionButton';
 import * as MediaLibrary from 'expo-media-library';
-import { MediaAssetsHelper } from '@/src/utils/mediaAssetsHelper';
+import { MediaAssetsHelper, resolveMediaLibraryUriForDisplay } from '@/src/utils/mediaAssetsHelper';
 import { MediaEntryData, useAddRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { useRouter } from 'expo-router';
@@ -16,6 +16,7 @@ export type AssetsItem = {
   _id: string;
   selected: boolean;
   asset: MediaLibrary.Asset;
+  displayUri: string;
 };
 
 interface DeviceMediaListProps {
@@ -60,6 +61,26 @@ export const DeviceMediaList = ({
     setFetchStatus(status);
   }, []);
 
+  const resolveAssetDisplayUri = useCallback(async (asset: MediaLibrary.Asset): Promise<string> => {
+    return resolveMediaLibraryUriForDisplay(asset.uri, asset.id);
+  }, []);
+
+  const createSelectionList = useCallback(
+    async (assets: MediaLibrary.Asset[], defaultSelected: boolean): Promise<AssetsItem[]> => {
+      const resolved = await Promise.all(
+        assets.map(async (asset) => ({
+          _id: asset.id ?? '',
+          selected: defaultSelected,
+          asset,
+          displayUri: await resolveAssetDisplayUri(asset),
+        })),
+      );
+
+      return resolved;
+    },
+    [resolveAssetDisplayUri],
+  );
+
   const loadPhotosNearestToProject = useCallback(async () => {
     Alert.alert(
       'Find Pictures Near Project',
@@ -75,52 +96,83 @@ export const DeviceMediaList = ({
         {
           text: 'Ok',
           onPress: async () => {
+            const startedAt = Date.now();
             try {
+              console.log('[DeviceMediaList] Starting nearest photo fetch', {
+                projectId,
+                projectName,
+                useProjectLocation,
+              });
+              setFetchStatus('Starting nearest-photos search...');
               setLoadingNearest(true);
               const lat = currentProject?.latitude;
               const long = currentProject?.longitude;
-              if (lat !== 0 && long !== 0) {
-                const page = await mediaTools.current?.getAssetsNearLocationWithInfo(
-                  long!,
-                  lat!,
-                  100, // Need to make this configurable
-                  {
-                    pageSize: 100,
-                    statusFunction: onStatusUpdate,
-                  },
+              if (lat === 0 || long === 0 || lat === undefined || long === undefined) {
+                console.warn('[DeviceMediaList] Nearest photo fetch skipped: missing project location', {
+                  lat,
+                  long,
+                });
+                setFetchStatus('Project location is not set. Showing all photos instead.');
+                setUseProjectLocation(false);
+                return;
+              }
+
+              const page = await mediaTools.current?.getAssetsNearLocationWithInfo(
+                long,
+                lat,
+                100, // Need to make this configurable
+                {
+                  pageSize: 100,
+                  statusFunction: onStatusUpdate,
+                },
+              );
+
+              if (page) {
+                // Filter out assets that are already in projectAssets
+                const filteredAssets = page.assets.filter(
+                  (foundAsset) =>
+                    !allProjectMedia?.some((projectAsset) => projectAsset.assetId === foundAsset.id),
                 );
 
-                if (page) {
-                  // Filter out assets that are already in projectAssets
-                  const filteredAssets = page.assets.filter(
-                    (foundAsset) =>
-                      !allProjectMedia?.some((projectAsset) => projectAsset.assetId === foundAsset.id),
-                  );
+                const selectionList = await createSelectionList(filteredAssets, true);
 
-                  const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
-                    _id: asset.id ?? '',
-                    selected: true,
-                    asset: asset,
-                  }));
+                setDeviceMediaAssets(selectionList);
+                setPagingCursor(page.endCursor);
+                setHasNextPage(page.hasNextPage);
 
-                  setDeviceMediaAssets(selectionList);
-                  setPagingCursor(page.endCursor);
-                  setHasNextPage(page.hasNextPage);
+                const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
+                onStatusUpdate(filteredStatus);
 
-                  const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
-                  onStatusUpdate(filteredStatus);
-                }
+                console.log('[DeviceMediaList] Completed nearest photo fetch', {
+                  totalFetched: page.assets.length,
+                  totalFiltered: filteredAssets.length,
+                  elapsedMs: Date.now() - startedAt,
+                });
+              } else {
+                console.warn('[DeviceMediaList] Nearest photo fetch returned no page', {
+                  elapsedMs: Date.now() - startedAt,
+                });
               }
-              setLoadingNearest(false);
-            } catch {
+            } catch (error) {
+              console.error('[DeviceMediaList] Error while finding nearest pictures', error);
               alert('An error while finding pictures.');
+            } finally {
               setLoadingNearest(false);
             }
           },
         },
       ],
     );
-  }, [allProjectMedia, currentProject, setUseProjectLocation, onStatusUpdate]);
+  }, [
+    allProjectMedia,
+    createSelectionList,
+    currentProject,
+    onStatusUpdate,
+    projectId,
+    projectName,
+    setUseProjectLocation,
+    useProjectLocation,
+  ]);
 
   const LoadAllPhotos = useCallback(async () => {
     if (!mediaTools.current) return;
@@ -129,18 +181,14 @@ export const DeviceMediaList = ({
     const filteredAssets = page.assets.filter(
       (foundAsset) => !allProjectMedia?.some((projectAsset) => projectAsset.assetId === foundAsset.id),
     );
-    const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
-      _id: asset.id ?? '',
-      selected: false,
-      asset: asset,
-    }));
+    const selectionList = await createSelectionList(filteredAssets, false);
     setDeviceMediaAssets(selectionList);
     setPagingCursor(page.endCursor);
     setHasNextPage(page.hasNextPage);
 
     const filteredStatus = `Set ${filteredAssets.length} assets into assetItems`;
     onStatusUpdate(filteredStatus);
-  }, [allProjectMedia, onStatusUpdate]);
+  }, [allProjectMedia, onStatusUpdate, createSelectionList]);
 
   const onLoadPhotosClicked = useCallback(
     async (useNewProjectLocation: boolean) => {
@@ -168,18 +216,14 @@ export const DeviceMediaList = ({
     const filteredAssets = page.assets.filter(
       (foundAsset) => !allProjectMedia?.some((projectAsset) => projectAsset.assetId === foundAsset.id),
     );
-    const selectionList: AssetsItem[] = filteredAssets.map((asset) => ({
-      _id: asset.id ?? '',
-      selected: false,
-      asset: asset,
-    }));
+    const selectionList = await createSelectionList(filteredAssets, false);
     setDeviceMediaAssets((prev) => [...prev, ...selectionList]);
     setPagingCursor(page.endCursor);
     setHasNextPage(page.hasNextPage);
 
     const filteredStatus = `Added ${filteredAssets.length} assets into assetItems`;
     onStatusUpdate(filteredStatus);
-  }, [allProjectMedia, onStatusUpdate, pagingCursor, hasNextPage]);
+  }, [allProjectMedia, onStatusUpdate, pagingCursor, hasNextPage, createSelectionList]);
 
   const importDeviceAssetToProject = useCallback(async () => {
     if (deviceMediaAssets) {
@@ -251,6 +295,25 @@ export const DeviceMediaList = ({
     }
   }, [hasSelectedDeviceAssets]);
 
+  const handleClosePress = useCallback(() => {
+    const selectedCount = deviceMediaAssets.filter((asset) => asset.selected).length;
+    console.log('[DeviceMediaList] Close pressed', {
+      loadingNearest,
+      hasSelectedDeviceAssets,
+      selectedCount,
+      totalAssets: deviceMediaAssets.length,
+      hasNextPage,
+      pagingCursor,
+    });
+
+    try {
+      onClose();
+      console.log('[DeviceMediaList] onClose callback completed');
+    } catch (error) {
+      console.error('[DeviceMediaList] onClose callback threw an error', error);
+    }
+  }, [deviceMediaAssets, hasSelectedDeviceAssets, hasNextPage, loadingNearest, onClose, pagingCursor]);
+
   const handleImageLongPress = useCallback(
     (uri: string, type: 'video' | 'photo', photoDate: string) => {
       if (type === 'video') {
@@ -284,7 +347,7 @@ export const DeviceMediaList = ({
             }
           >
             <View style={{ borderRadius: 8 }}>
-              <Image source={{ uri: item.asset.uri }} style={styles.thumbnail} />
+              <Image source={{ uri: item.displayUri }} style={styles.thumbnail} />
               <Text style={styles.dateOverlay}>{photoDate}</Text>
               {item.asset.mediaType === 'video' && (
                 <View style={styles.playButtonOverlay}>
@@ -317,6 +380,9 @@ export const DeviceMediaList = ({
         <View style={styles.loadingContainer}>
           <Text>Loading...{fetchStatus}</Text>
           <ActivityIndicator size="large" color="#007AFF" style={styles.loadingIndicator} />
+          <View style={styles.loadingActions}>
+            <ActionButton title="Close" onPress={handleClosePress} type="action" />
+          </View>
         </View>
       ) : (
         <>
@@ -347,7 +413,7 @@ export const DeviceMediaList = ({
                 </View>
               )}
               <View style={styles.buttonWrapper}>
-                <ActionButton title="Close" onPress={onClose} type="action" />
+                <ActionButton title="Close" onPress={handleClosePress} type="action" />
               </View>
             </View>
           </View>
@@ -403,6 +469,10 @@ const styles = StyleSheet.create({
   },
   loadingIndicator: {
     marginTop: 10,
+  },
+  loadingActions: {
+    width: '100%',
+    marginTop: 16,
   },
   footer: {
     padding: 10,

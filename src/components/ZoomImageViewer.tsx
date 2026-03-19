@@ -1,7 +1,8 @@
 import { useColors } from '@/src/context/ColorsContext';
+import { resolveMediaLibraryUriForDisplay } from '@/src/utils/mediaAssetsHelper';
 import { Image } from 'expo-image';
-import React, { useState, useMemo } from 'react';
-import { StyleSheet } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { ActivityIndicator, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { Text, View } from './Themed';
@@ -15,6 +16,8 @@ const AnimatedExpoImage = Animated.createAnimatedComponent(Image);
 export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = React.memo(({ imageUri }) => {
   const [containerWidth, setContainerWidth] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
+  const [resolvedImageUri, setResolvedImageUri] = useState(imageUri);
+  const [isResolvingUri, setIsResolvingUri] = useState(false);
   const colors = useColors();
 
   // Shared values for zoom and pan
@@ -41,6 +44,46 @@ export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = React.memo(({ ima
     transform: [{ scale: scale.value }, { translateX: offsetX.value }, { translateY: offsetY.value }],
   }));
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const resolveImageUri = async () => {
+      if (!imageUri) {
+        if (isMounted) {
+          setResolvedImageUri('');
+        }
+        return;
+      }
+
+      if (isMounted) {
+        setIsResolvingUri(true);
+      }
+
+      try {
+        const displayUri = await resolveMediaLibraryUriForDisplay(imageUri);
+
+        if (isMounted) {
+          setResolvedImageUri(displayUri);
+        }
+      } catch (error) {
+        console.error('Failed to resolve iOS photo URI for display:', error);
+        if (isMounted) {
+          setResolvedImageUri(imageUri);
+        }
+      } finally {
+        if (isMounted) {
+          setIsResolvingUri(false);
+        }
+      }
+    };
+
+    void resolveImageUri();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [imageUri]);
+
   if (!imageUri) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -59,6 +102,7 @@ export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = React.memo(({ ima
   return (
     <View style={[styles.container, { backgroundColor: colors.opaqueModalOverlayBackgroundColor }]}>
       <View style={styles.overlay} onLayout={onLayout}>
+        {isResolvingUri && <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />}
         {containerWidth > 0 && containerHeight > 0 && (
           <GestureDetector gesture={combinedGesture}>
             <Animated.View
@@ -71,7 +115,7 @@ export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = React.memo(({ ima
               ]}
             >
               <AnimatedExpoImage
-                source={{ uri: imageUri }}
+                source={{ uri: resolvedImageUri }}
                 style={[styles.image, animatedStyle]}
                 contentFit="contain"
               />
@@ -93,6 +137,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loader: {
+    position: 'absolute',
+    zIndex: 1,
   },
   imageContainer: {
     overflow: 'hidden',
