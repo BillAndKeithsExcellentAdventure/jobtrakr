@@ -219,14 +219,12 @@ const AddReceiptPage = () => {
     }));
   }, []);
 
-  /*
   const handleNotesChange = useCallback((notes: string) => {
     setProjectReceipt((prevReceipt) => ({
       ...prevReceipt,
       notes,
     }));
   }, []);
-  */
 
   const qbVendorId = useMemo(() => {
     return allVendors.find((vendor) => vendor.id === projectReceipt.vendorId)?.accountingId ?? '';
@@ -582,7 +580,6 @@ const AddReceiptPage = () => {
         onCancel={handleCancel}
         canSave={canAddReceipt}
         isSaving={isSavingReceipt}
-        useKeyboardToolbar={false}
         savingLabel="Saving Receipt to QuickBooks"
       >
         <Text txtSize="standard" style={[styles.modalTitle, { fontWeight: '600' }]} text={projectName} />
@@ -638,14 +635,31 @@ const AddReceiptPage = () => {
           />
 
           {paymentAccounts && paymentAccounts.length > 0 && (
-            <OptionPickerItem
-              containerStyle={styles.inputContainer}
-              optionLabel={pickedPaymentAccountOption?.label}
-              label="Payment Account"
-              placeholder="Payment Account"
-              editable={false}
-              onPickerButtonPress={() => setIsPaymentAccountPickerVisible(true)}
-            />
+            <>
+              <OptionPickerItem
+                containerStyle={styles.inputContainer}
+                optionLabel={pickedPaymentAccountOption?.label}
+                label="Payment Account"
+                placeholder="Payment Account"
+                editable={false}
+                onPickerButtonPress={() => setIsPaymentAccountPickerVisible(true)}
+              />
+              {pickedPaymentAccountOption?.label?.toLowerCase().includes('checking') && (
+                <TextField
+                  label="Check #"
+                  containerStyle={styles.inputContainer}
+                  placeholder="Check #"
+                  value={projectReceipt.notes}
+                  onChangeText={(text): void => {
+                    setProjectReceipt((prevReceipt) => ({
+                      ...prevReceipt,
+                      notes: text,
+                    }));
+                  }}
+                  onBlur={() => handleNotesChange(projectReceipt.notes)}
+                />
+              )}
+            </>
           )}
 
           {projectReceipt.thumbnail && (

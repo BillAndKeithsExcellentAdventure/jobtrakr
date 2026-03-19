@@ -21,9 +21,10 @@ import {
 import { formatDate } from '@/src/utils/formatters';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 
 const EditReceiptDetailsPage = () => {
   const defaultDate = new Date();
@@ -205,106 +206,111 @@ const EditReceiptDetailsPage = () => {
           headerLeft: () => <StyledHeaderBackButton onPress={handleBackPress} />,
         }}
       />
-      <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
-        <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
-          <View style={styles.editContainer}>
-            <View style={{ paddingBottom: 8 }}>
-              <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
-                <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
-                <TextField
-                  editable={false}
-                  style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
-                  placeholder="Date"
-                  onPressIn={showDatePicker}
-                  value={formatDate(receipt.receiptDate)}
-                />
-              </TouchableOpacity>
-              <DateTimePickerModal
-                style={{ alignSelf: 'stretch' }}
-                date={receipt.receiptDate ? new Date(receipt.receiptDate) : defaultDate}
-                isVisible={datePickerVisible}
-                mode="date"
-                onConfirm={handleDateConfirm}
-                onCancel={hideDatePicker}
+      <KeyboardAwareScrollView
+        bottomOffset={62}
+        keyboardShouldPersistTaps="handled"
+        style={[styles.container, { backgroundColor: colors.listBackground }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: Platform.OS === 'ios' ? 90 : 20 }]}
+      >
+        <View style={styles.editContainer}>
+          <View style={{ paddingBottom: 8 }}>
+            <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
+              <Text txtSize="formLabel" text="Date" style={styles.inputLabel} />
+              <TextField
+                editable={false}
+                style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                placeholder="Date"
+                onPressIn={showDatePicker}
+                value={formatDate(receipt.receiptDate)}
               />
-            </View>
-
-            <NumericInputField
-              containerStyle={{ marginTop: 0 }}
-              inputStyle={{ paddingHorizontal: 10 }}
-              labelStyle={{ marginBottom: 2 }}
-              label="Amount"
-              maxDecimals={2}
-              decimals={2}
-              value={receiptAmount}
-              onChangeNumber={(value) => handleAmountChange(value ?? 0)}
+            </TouchableOpacity>
+            <DateTimePickerModal
+              style={{ alignSelf: 'stretch' }}
+              date={receipt.receiptDate ? new Date(receipt.receiptDate) : defaultDate}
+              isVisible={datePickerVisible}
+              mode="date"
+              onConfirm={handleDateConfirm}
+              onCancel={hideDatePicker}
             />
-            <VendorPicker
-              selectedVendor={selectedVendor}
-              onVendorSelected={handleVendorSelected}
-              vendors={allVendors}
-              label="Vendor/Merchant"
-              placeholder="Vendor/Merchant"
-            />
-
-            <TextField
-              containerStyle={styles.inputContainer}
-              placeholder="Description"
-              label="Description"
-              value={receipt.description}
-              onChangeText={(text): void => {
-                setReceipt((prevReceipt) => ({
-                  ...prevReceipt,
-                  description: text,
-                }));
-              }}
-              onBlur={() => handleDescriptionChange(receipt.description)}
-            />
-            {isQuickBooksConnected && paymentAccounts && paymentAccounts.length > 0 && (
-              <>
-                <OptionPickerItem
-                  containerStyle={styles.inputContainer}
-                  optionLabel={pickedPaymentAccountOption?.label}
-                  label="Payment Account"
-                  placeholder="Payment Account"
-                  editable={false}
-                  onPickerButtonPress={() => setIsPaymentAccountPickerVisible(true)}
-                />
-                {pickedPaymentAccountOption?.label?.toLowerCase().includes('checking') && (
-                  <TextField
-                    label="Check #"
-                    containerStyle={styles.inputContainer}
-                    placeholder="Check #"
-                    value={receipt.notes}
-                    onChangeText={(text): void => {
-                      setReceipt((prevReceipt) => ({
-                        ...prevReceipt,
-                        notes: text,
-                      }));
-                    }}
-                    onBlur={() => handleNotesChange(receipt.notes)}
-                  />
-                )}
-              </>
-            )}
           </View>
-          {isQuickBooksConnected && paymentAccounts && isPaymentAccountPickerVisible && (
-            <BottomSheetContainer
-              modalHeight={'60%'}
-              isVisible={isPaymentAccountPickerVisible}
-              onClose={() => setIsPaymentAccountPickerVisible(false)}
-              showKeyboardToolbar={false}
-            >
-              <OptionList
-                options={paymentAccounts}
-                onSelect={(option) => handlePaymentAccountOptionChange(option)}
-                selectedOption={pickedPaymentAccountOption}
-                enableSearch={false}
+
+          <NumericInputField
+            containerStyle={{ marginTop: 0 }}
+            inputStyle={{ paddingHorizontal: 10 }}
+            labelStyle={{ marginBottom: 2 }}
+            label="Amount"
+            maxDecimals={2}
+            decimals={2}
+            value={receiptAmount}
+            onChangeNumber={(value) => handleAmountChange(value ?? 0)}
+          />
+          <VendorPicker
+            selectedVendor={selectedVendor}
+            onVendorSelected={handleVendorSelected}
+            vendors={allVendors}
+            label="Vendor/Merchant"
+            placeholder="Vendor/Merchant"
+          />
+
+          <TextField
+            containerStyle={styles.inputContainer}
+            placeholder="Description"
+            label="Description"
+            value={receipt.description}
+            onChangeText={(text): void => {
+              setReceipt((prevReceipt) => ({
+                ...prevReceipt,
+                description: text,
+              }));
+            }}
+            onBlur={() => handleDescriptionChange(receipt.description)}
+          />
+          {isQuickBooksConnected && paymentAccounts && paymentAccounts.length > 0 && (
+            <>
+              <OptionPickerItem
+                containerStyle={styles.inputContainer}
+                optionLabel={pickedPaymentAccountOption?.label}
+                label="Payment Account"
+                placeholder="Payment Account"
+                editable={false}
+                onPickerButtonPress={() => setIsPaymentAccountPickerVisible(true)}
               />
-            </BottomSheetContainer>
+              {pickedPaymentAccountOption?.label?.toLowerCase().includes('checking') && (
+                <TextField
+                  label="Check #"
+                  containerStyle={styles.inputContainer}
+                  placeholder="Check #"
+                  keyboardType="numbers-and-punctuation"
+                  value={receipt.notes}
+                  onChangeText={(text): void => {
+                    setReceipt((prevReceipt) => ({
+                      ...prevReceipt,
+                      notes: text,
+                    }));
+                  }}
+                  onBlur={() => handleNotesChange(receipt.notes)}
+                />
+              )}
+            </>
           )}
         </View>
-      </SafeAreaView>
+      </KeyboardAwareScrollView>
+      {isQuickBooksConnected && paymentAccounts && isPaymentAccountPickerVisible && (
+        <BottomSheetContainer
+          modalHeight={'60%'}
+          isVisible={isPaymentAccountPickerVisible}
+          onClose={() => setIsPaymentAccountPickerVisible(false)}
+          showKeyboardToolbar={false}
+        >
+          <OptionList
+            options={paymentAccounts}
+            onSelect={(option) => handlePaymentAccountOptionChange(option)}
+            selectedOption={pickedPaymentAccountOption}
+            enableSearch={false}
+          />
+        </BottomSheetContainer>
+      )}
+      {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </>
   );
 };
@@ -318,6 +324,9 @@ const styles = StyleSheet.create({
   },
   editContainer: {
     padding: 20,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   inputContainer: {
     marginTop: 6,

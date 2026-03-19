@@ -207,6 +207,7 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
                       label="Check #"
                       containerStyle={styles.inputContainer}
                       placeholder="Check #"
+                      keyboardType="numbers-and-punctuation"
                       value={editedSummary.notes ?? ''}
                       onChangeText={(text) => setEditedSummary((prev) => ({ ...prev, notes: text }))}
                     />
