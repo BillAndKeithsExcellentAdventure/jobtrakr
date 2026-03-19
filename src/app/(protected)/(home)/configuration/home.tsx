@@ -142,6 +142,7 @@ const Home = () => {
   const {
     isQuickBooksAccessible,
     isQuickBooksConnected: isQBConnected,
+    isInternetReachable,
     refreshVerifiedEmailAddresses,
     refreshVendorsGrantedAccess,
   } = useNetwork();
@@ -1009,7 +1010,7 @@ const Home = () => {
       />
 
       <View style={{ flex: 1, width: '100%', paddingHorizontal: 10, backgroundColor: colors.listBackground }}>
-        {!isQuickBooksAccessible && (
+        {!isQuickBooksAccessible && isInternetReachable && (
           <View style={{ marginBottom: 10, marginTop: 4 }}>
             <ActionButton type="action" title="Connect to QuickBooks" onPress={handleConnectToQuickBooks} />
           </View>
