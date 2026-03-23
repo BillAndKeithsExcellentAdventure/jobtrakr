@@ -15,6 +15,7 @@ import {
 
 import { formatCurrency } from '@/src/utils/formatters';
 import { addBill, updateBill, AddBillRequest, UpdateBillRequest } from '@/src/utils/quickbooksAPI';
+import { resolveQuickBooksExpenseAccountIdForWorkItem } from '@/src/utils/quickbooksWorkItemAccounts';
 import { getBillSyncHash } from '@/src/utils/quickbooksSyncHash';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -62,6 +63,8 @@ const InvoiceDetailsPage = () => {
   const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
   const project = useProject(projectId);
   const allVendors = useAllConfigurationRows('vendors');
+  const allAccounts = useAllConfigurationRows('accounts');
+  const allWorkItems = useAllConfigurationRows('workItems');
   const auth = useAuth();
   const { orgId, userId, getToken } = auth;
   const getImage = useGetImageCallback();
@@ -176,14 +179,37 @@ const InvoiceDetailsPage = () => {
 
     setIsSavingToQuickBooks(true);
 
-    const qbExpenseAccountId = appSettings.quickBooksExpenseAccountId;
     const vendorQbId = allVendors.find((v) => v.id === invoice.vendorId)?.accountingId;
 
-    const qbLineItems = allInvoiceLineItems.map((item) => ({
-      amount: item.amount,
-      description: item.label,
-      accountRef: qbExpenseAccountId,
-    }));
+    const qbLineItems = allInvoiceLineItems
+      .map((item) => {
+        const resolvedExpenseAccountId = resolveQuickBooksExpenseAccountIdForWorkItem({
+          workItemId: item.workItemId,
+          workItems: allWorkItems,
+          accounts: allAccounts,
+          defaultExpenseAccountId: appSettings.quickBooksExpenseAccountId,
+        });
+
+        if (!resolvedExpenseAccountId) {
+          return null;
+        }
+
+        return {
+          amount: item.amount,
+          description: item.label,
+          accountRef: resolvedExpenseAccountId,
+        };
+      })
+      .filter((item) => item !== null);
+
+    if (qbLineItems.length === 0) {
+      Alert.alert(
+        'QuickBooks Sync Skipped',
+        'Cannot sync to QuickBooks because none of the line items have a valid expense account mapping or default expense account.',
+      );
+      setIsSavingToQuickBooks(false);
+      return;
+    }
 
     try {
       if (invoice.billId) {
@@ -270,6 +296,8 @@ const InvoiceDetailsPage = () => {
     isSavingToQuickBooks,
     appSettings,
     allVendors,
+    allAccounts,
+    allWorkItems,
     invoice,
     allInvoiceLineItems,
     projectId,

@@ -28,6 +28,7 @@ import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { addReceiptToQuickBooks, QBBillLineItem } from '@/src/utils/quickbooksAPI';
+import { resolveQuickBooksExpenseAccountIdForWorkItem } from '@/src/utils/quickbooksWorkItemAccounts';
 import { getReceiptSyncHash } from '@/src/utils/quickbooksSyncHash';
 import { useAuth } from '@clerk/clerk-expo';
 import * as ImagePicker from 'expo-image-picker';
@@ -295,16 +296,21 @@ const AddReceiptPage = () => {
           // Build line items for QuickBooks bill
           const qbLineItems: QBBillLineItem[] = [];
           const skippedLineItems: string[] = [];
-          const qbExpenseAccountId = appSettings.quickBooksExpenseAccountId;
-          //         const account = (allAccounts || []).find((acc) => acc.id === workItem?.accountId);
 
           for (const lineItem of receiptLineItems) {
+            const resolvedExpenseAccountId = resolveQuickBooksExpenseAccountIdForWorkItem({
+              workItemId: lineItem.workItemId,
+              workItems: projectWorkItems,
+              accounts: allAccounts,
+              defaultExpenseAccountId: appSettings.quickBooksExpenseAccountId,
+            });
+
             // Only include line items with valid account references
-            if (qbExpenseAccountId) {
+            if (resolvedExpenseAccountId) {
               qbLineItems.push({
                 amount: lineItem.amount.toFixed(2),
                 description: lineItem.label,
-                accountRef: qbExpenseAccountId,
+                accountRef: resolvedExpenseAccountId,
                 projectId: lineItem.projectId,
               });
             } else {
@@ -442,6 +448,7 @@ const AddReceiptPage = () => {
     projectName,
     getToken,
     allAccounts,
+    projectWorkItems,
     router,
     appSettings.quickBooksExpenseAccountId,
     qbVendorId,

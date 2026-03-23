@@ -28,6 +28,7 @@ import { useAllMediaToUpload } from '@/src/tbStores/UploadSyncStore';
 import { formatDate } from '@/src/utils/formatters';
 import { useAddImageCallback } from '@/src/utils/images';
 import { addBill, AddBillRequest } from '@/src/utils/quickbooksAPI';
+import { resolveQuickBooksExpenseAccountIdForWorkItem } from '@/src/utils/quickbooksWorkItemAccounts';
 import { getBillSyncHash } from '@/src/utils/quickbooksSyncHash';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useAuth } from '@clerk/clerk-expo';
@@ -83,7 +84,7 @@ const AddInvoicePage = () => {
   const [canAddInvoice, setCanAddInvoice] = useState(false);
   const addPhotoImage = useAddImageCallback();
   const allVendors = useAllConfigurationRows('vendors');
-  const qbExpenseAccountId = appSettings.quickBooksExpenseAccountId;
+  const allAccounts = useAllConfigurationRows('accounts');
   const currentProject = useProject(projectId);
 
   const router = useRouter();
@@ -204,6 +205,13 @@ const AddInvoicePage = () => {
 
       // if connected to QuickBooks add the invoice as a Bill in QuickBooks and save
       // the returned Bill.Id to the invoice as billId and the Bill.DocNumber to accountingId for future updates
+      const resolvedExpenseAccountId = resolveQuickBooksExpenseAccountIdForWorkItem({
+        workItemId: newLineItem.workItemId,
+        workItems: projectWorkItems,
+        accounts: allAccounts,
+        defaultExpenseAccountId: appSettings.quickBooksExpenseAccountId,
+      });
+
       if (
         isQuickBooksAccessible &&
         orgId &&
@@ -211,7 +219,7 @@ const AddInvoicePage = () => {
         getToken &&
         invoiceToAdd.amount &&
         invoiceToAdd.vendorId &&
-        qbExpenseAccountId &&
+        resolvedExpenseAccountId &&
         invoiceToAdd.description
       ) {
         const vendorQbId = allVendors?.find((vendor) => vendor.id === invoiceToAdd.vendorId)?.accountingId;
@@ -231,7 +239,7 @@ const AddInvoicePage = () => {
               {
                 description: invoiceToAdd.description,
                 amount: invoiceToAdd.amount,
-                accountRef: qbExpenseAccountId,
+                accountRef: resolvedExpenseAccountId,
               },
             ],
           },
@@ -288,10 +296,12 @@ const AddInvoicePage = () => {
     orgId,
     userId,
     getToken,
-    qbExpenseAccountId,
+    allAccounts,
     allVendors,
     currentProject,
     projectId,
+    projectWorkItems,
+    appSettings.quickBooksExpenseAccountId,
     startProcessing,
     stopProcessing,
     updateInvoice,

@@ -19,6 +19,7 @@ export const TABLES_SCHEMA = {
     categoryId: { type: 'string' },
     code: { type: 'string' },
     name: { type: 'string' },
+    accountingId: { type: 'string' },
     status: { type: 'string' },
     hidden: { type: 'boolean' },
   },

@@ -23,6 +23,7 @@ import {
   editReceiptInQuickBooks,
   QBBillLineItem,
 } from '@/src/utils/quickbooksAPI';
+import { resolveQuickBooksExpenseAccountIdForWorkItem } from '@/src/utils/quickbooksWorkItemAccounts';
 import { getReceiptSyncHash } from '@/src/utils/quickbooksSyncHash';
 import { useAuth } from '@clerk/clerk-expo';
 import { File } from 'expo-file-system';
@@ -69,6 +70,7 @@ const ReceiptDetailsPage = () => {
   const projectAbbr = project?.abbreviation ?? '';
   const projectName = project?.name ?? '';
   const allAccounts = useAllConfigurationRows('accounts');
+  const allWorkItems = useAllConfigurationRows('workItems');
   const addReceiptQueueEntry = useAddReceiptQueueEntryCallback();
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const auth = useAuth();
@@ -534,15 +536,25 @@ const ReceiptDetailsPage = () => {
 
     const qbLineItems: QBBillLineItem[] = [];
     const skippedLineItems: string[] = [];
-    const qbExpenseAccountId = appSettings.quickBooksExpenseAccountId;
 
     for (const lineItem of allReceiptLineItems) {
-      qbLineItems.push({
-        amount: lineItem.amount.toFixed(2),
-        description: lineItem.label,
-        accountRef: qbExpenseAccountId,
-        projectId: lineItem.projectId === projectId ? undefined : lineItem.projectId, // only include projectId if it's different from the receipt's project
+      const resolvedExpenseAccountId = resolveQuickBooksExpenseAccountIdForWorkItem({
+        workItemId: lineItem.workItemId,
+        workItems: allWorkItems,
+        accounts: allAccounts,
+        defaultExpenseAccountId: appSettings.quickBooksExpenseAccountId,
       });
+
+      if (resolvedExpenseAccountId) {
+        qbLineItems.push({
+          amount: lineItem.amount.toFixed(2),
+          description: lineItem.label,
+          accountRef: resolvedExpenseAccountId,
+          projectId: lineItem.projectId === projectId ? undefined : lineItem.projectId,
+        });
+      } else {
+        skippedLineItems.push(lineItem.label);
+      }
     }
 
     if (qbLineItems.length === 0) {
@@ -599,6 +611,7 @@ const ReceiptDetailsPage = () => {
     receipt.purchaseId,
     appSettings.quickBooksExpenseAccountId,
     allAccounts,
+    allWorkItems,
     updateExistingReceiptInQuickBooks,
     addNewReceiptToQuickBooks,
     projectId,

@@ -86,9 +86,15 @@ const QBAccountsScreen = () => {
       return;
     }
 
-    // Filter expense accounts (accountType === 'Expense')
+    // Filter expense accounts (accountType === 'Expense' or 'Cost of Goods Sold')
     const expenseList = storedAccounts
-      .filter((account) => account.accountType === 'Expense')
+      .filter((account) => account.accountType === 'Expense' || account.accountType === 'Cost of Goods Sold')
+      .sort((a, b) => {
+        const typeOrder = (type: string) => (type === 'Cost of Goods Sold' ? 0 : 1);
+        const typeCompare = typeOrder(a.accountType) - typeOrder(b.accountType);
+        if (typeCompare !== 0) return typeCompare;
+        return a.name.localeCompare(b.name);
+      })
       .map((account) => ({
         label: account.name,
         value: account.accountingId,
@@ -99,6 +105,7 @@ const QBAccountsScreen = () => {
     // Filter payment accounts (Bank, Credit Card, Other Current Asset)
     const paymentList = storedAccounts
       .filter((account) => account.accountSubType === 'Checking' || account.accountSubType === 'CreditCard')
+      .sort((a, b) => a.name.localeCompare(b.name))
       .map((account) => ({
         label: account.name,
         value: account.accountingId,
@@ -229,7 +236,7 @@ const QBAccountsScreen = () => {
             {/* Expense Account Section */}
             <View style={styles.topSection}>
               <Text txtSize="title" style={{ marginBottom: 10 }}>
-                Expense Account for Bills and Receipts
+                Default Expense Account for Bills and Receipts
               </Text>
               <TouchableOpacity
                 style={[
@@ -243,6 +250,12 @@ const QBAccountsScreen = () => {
                 </View>
                 <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
               </TouchableOpacity>
+              <ActionButton
+                style={styles.topSectionActionButton}
+                onPress={() => router.push('/configuration/quickbooks/setCostItemExpenseAccounts')}
+                type="action"
+                title="Set Expense Acct for Cost Items"
+              />
             </View>
 
             {/* Payment Accounts Section */}
@@ -374,6 +387,9 @@ const styles = StyleSheet.create({
   },
   topSection: {
     marginBottom: 24,
+  },
+  topSectionActionButton: {
+    marginTop: 12,
   },
   section: {
     marginBottom: 24,

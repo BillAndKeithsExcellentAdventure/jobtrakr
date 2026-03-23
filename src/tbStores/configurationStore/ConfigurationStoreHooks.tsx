@@ -21,6 +21,7 @@ export interface WorkItemData {
   categoryId: string; // id of WorkCategoryData
   code: string;
   name: string;
+  accountingId?: string; // QuickBooks Account Id used for expense sync override
   status: string;
   hidden?: boolean;
 }
@@ -204,6 +205,34 @@ export function useUpdateRowCallback<K extends CONFIGURATION_TABLES>(tableId: K)
         : { status: 'Error', id: '0', msg: 'Failed to update' };
     },
     [store, tableId],
+  );
+}
+
+export function useSetWorkItemAccountingIdsCallback() {
+  const store = useStore(useStoreId());
+  return useCallback(
+    (workItemIds: string[], accountingId?: string): CrudResult => {
+      if (!store) return { status: 'Error', id: '0', msg: 'Store not found' };
+      if (workItemIds.length === 0) return { status: 'Error', id: '0', msg: 'No work items selected' };
+
+      for (const workItemId of workItemIds) {
+        const existing = store.getRow('workItems', workItemId);
+        if (!existing) {
+          return { status: 'Error', id: workItemId, msg: 'Row not found' };
+        }
+
+        if (accountingId && accountingId.length > 0) {
+          store.setRow('workItems', workItemId, { ...existing, accountingId });
+          continue;
+        }
+
+        const { accountingId: _removed, ...rowWithoutAccountingId } = existing;
+        store.setRow('workItems', workItemId, rowWithoutAccountingId);
+      }
+
+      return { status: 'Success', id: workItemIds[0], msg: '' };
+    },
+    [store],
   );
 }
 
