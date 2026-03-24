@@ -500,7 +500,7 @@ const ProjectDetailsPage = () => {
           handleMenuItemPress('Edit', actionContext);
         },
       },
-      ...(unusedCategories.length > 0
+      ...(!projectData?.isCompanyExpenseProject && unusedCategories.length > 0
         ? [
             {
               icon: <FontAwesome6 name="circle-dollar-to-slot" size={28} color={colors.iconColor} />,
@@ -511,7 +511,7 @@ const ProjectDetailsPage = () => {
             } as ActionButtonProps,
           ]
         : []),
-      ...(allWorkItemSummaries.length > 0
+      ...(!projectData?.isCompanyExpenseProject && allWorkItemSummaries.length > 0
         ? [
             {
               icon: <FontAwesome5 name="search-dollar" size={28} color={colors.iconColor} />,
@@ -529,7 +529,7 @@ const ProjectDetailsPage = () => {
           handleMenuItemPress('Delete', actionContext);
         },
       },
-      ...(workItemsWithoutCosts.length > 0
+      ...(!projectData?.isCompanyExpenseProject && workItemsWithoutCosts.length > 0
         ? [
             {
               icon: <FontAwesome5 name="broom" size={28} color={colors.iconColor} />,
@@ -540,7 +540,7 @@ const ProjectDetailsPage = () => {
             } as ActionButtonProps,
           ]
         : []),
-      ...(allWorkItemSummaries.length > 0
+      ...(!projectData?.isCompanyExpenseProject && allWorkItemSummaries.length > 0
         ? [
             {
               icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
@@ -552,84 +552,76 @@ const ProjectDetailsPage = () => {
           ]
         : []),
     ],
-    [colors, allWorkItemSummaries, handleMenuItemPress, unusedCategories, workItemsWithoutCosts],
+    [colors, allWorkItemSummaries, handleMenuItemPress, unusedCategories, workItemsWithoutCosts, projectData],
   );
 
-  const projectActionButtons: ActionButtonProps[] = useMemo(
-    () => [
+  const projectActionButtons: ActionButtonProps[] = useMemo(() => {
+    const receiptsButton: ActionButtonProps = {
+      icon: <Ionicons name="receipt-outline" size={24} color={colors.iconColor} />,
+      label: 'Receipts',
+      onPress: () => {
+        if (projectId && projectData)
+          router.push({
+            pathname: '/[projectId]/receipts',
+            params: { projectId, projectName: projectData.name },
+          });
+      },
+    };
+
+    const billsButton: ActionButtonProps = {
+      icon: <Entypo name="text-document" size={24} color={colors.iconColor} />,
+      label: 'Bills',
+      onPress: () => {
+        if (projectId && projectData)
+          router.push({
+            pathname: '/[projectId]/invoices',
+            params: { projectId, projectName: projectData.name },
+          });
+      },
+    };
+
+    if (projectData?.isCompanyExpenseProject) {
+      return [receiptsButton, billsButton];
+    }
+
+    return [
       {
         icon: <FontAwesome name="sticky-note-o" size={24} color={colors.iconColor} />,
         label: 'Notes',
-        onPress: (e, actionContext) => {
+        onPress: () => {
           if (projectId && projectData)
             router.push({
               pathname: '/[projectId]/notes',
-              params: {
-                projectId: projectId,
-                projectName: projectData.name,
-              },
+              params: { projectId, projectName: projectData.name },
             });
         },
       },
       {
         icon: <FontAwesome name="photo" size={24} color={colors.iconColor} />,
         label: 'Photos',
-        onPress: (e, actionContext) => {
+        onPress: () => {
           if (projectId && projectData)
             router.push({
               pathname: '/[projectId]/photos',
-              params: {
-                projectId: projectId,
-                projectName: projectData.name,
-              },
+              params: { projectId, projectName: projectData.name },
             });
         },
       },
-      {
-        icon: <Ionicons name="receipt-outline" size={24} color={colors.iconColor} />,
-        label: 'Receipts',
-        onPress: (e, actionContext) => {
-          if (projectId && projectData)
-            router.push({
-              pathname: '/[projectId]/receipts',
-              params: {
-                projectId: projectId,
-                projectName: projectData.name,
-              },
-            });
-        },
-      },
-      {
-        icon: <Entypo name="text-document" size={24} color={colors.iconColor} />,
-        label: 'Bills',
-        onPress: (e, actionContext) => {
-          if (projectId && projectData)
-            router.push({
-              pathname: '/[projectId]/invoices',
-              params: {
-                projectId: projectId,
-                projectName: projectData.name,
-              },
-            });
-        },
-      },
+      receiptsButton,
+      billsButton,
       {
         icon: <MaterialCommunityIcons name="lightbulb-on-outline" size={24} color={colors.iconColor} />,
         label: 'Changes',
-        onPress: (e, actionContext) => {
+        onPress: () => {
           if (projectId && projectData)
             router.push({
               pathname: '/[projectId]/changes',
-              params: {
-                projectId: projectId,
-                projectName: projectData.name,
-              },
+              params: { projectId, projectName: projectData.name },
             });
         },
       },
-    ],
-    [colors, router, projectId, projectData],
-  );
+    ];
+  }, [colors, router, projectId, projectData]);
 
   const handleSetPriceQuotePress = useCallback(() => {
     if (projectId && projectData)

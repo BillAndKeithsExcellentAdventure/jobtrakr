@@ -18,6 +18,7 @@ export interface ProjectListEntryProps {
   bidPrice: number;
   amountSpent: number;
   isFavorite?: boolean;
+  isCompanyExpenseProject?: boolean;
 }
 
 export function ProjectList({
@@ -27,7 +28,7 @@ export function ProjectList({
 }: {
   data: ProjectListEntryProps[];
   onPress: (item: ProjectListEntryProps) => void;
-  buttons: ActionButtonProps[] | null | undefined;
+  buttons: ActionButtonProps[] | ((item: ProjectListEntryProps) => ActionButtonProps[]) | null | undefined;
 }) {
   let showsVerticalScrollIndicator = false;
   if (Platform.OS === 'web') {
@@ -47,7 +48,10 @@ export function ProjectList({
         data={data}
         showsVerticalScrollIndicator={showsVerticalScrollIndicator}
         keyExtractor={(item) => item.projectId}
-        renderItem={({ item }) => <ProjectListEntry item={item} onPress={onPress} buttons={buttons} />}
+        renderItem={({ item }) => {
+          const resolvedButtons = typeof buttons === 'function' ? buttons(item) : buttons;
+          return <ProjectListEntry item={item} onPress={onPress} buttons={resolvedButtons} />;
+        }}
       />
     </View>
   );

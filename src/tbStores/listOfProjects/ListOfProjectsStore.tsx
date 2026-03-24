@@ -38,6 +38,7 @@ const TABLES_SCHEMA = {
     thumbnail: { type: 'string' },
     status: { type: 'string' },
     seedWorkItems: { type: 'string' }, // comma separated list of workItemIds
+    isCompanyExpenseProject: { type: 'boolean', default: false },
   },
 } as const;
 
@@ -75,7 +76,12 @@ export const useAllProjects = () => {
           }) as ProjectData,
       );
 
-      return [...projects].sort((a, b) => (b.favorite ?? 0) - (a.favorite ?? 0));
+      return [...projects].sort((a, b) => {
+        const aIsCE = a.isCompanyExpenseProject ? 1 : 0;
+        const bIsCE = b.isCompanyExpenseProject ? 1 : 0;
+        if (aIsCE !== bIsCE) return aIsCE - bIsCE;
+        return (b.favorite ?? 0) - (a.favorite ?? 0);
+      });
     }
 
     return [];
@@ -213,6 +219,15 @@ export const useToggleFavoriteCallback = () => {
       }
     },
     [store],
+  );
+};
+
+// Returns true if there is already an active Company Expense project.
+export const useHasActiveCompanyExpenseProject = () => {
+  const allProjects = useAllProjects();
+  return useMemo(
+    () => allProjects.some((p) => p.isCompanyExpenseProject === true && p.status === 'active'),
+    [allProjects],
   );
 };
 
