@@ -112,6 +112,7 @@ export default function ProjectHomeScreen() {
           finishDate: `${formatDate(new Date(project.plannedFinish ?? 0))}`,
           bidPrice: project.bidPrice,
           amountSpent: project.amountSpent,
+          isCompanyExpenseProject: project.isCompanyExpenseProject ?? false,
         };
       });
 
@@ -128,74 +129,69 @@ export default function ProjectHomeScreen() {
     [toggleFavorite],
   );
 
+  const likeButton: ActionButtonProps = useMemo(
+    () => ({
+      icon: <FontAwesome name="heart-o" size={24} color={colors.iconColor} />,
+      favoriteIcon: <FontAwesome name="heart" size={24} color={colors.iconColor} />,
+      label: 'Like',
+      onPress: (e, actionContext) => {
+        if (isEntry(actionContext) && actionContext.projectId) onLikePressed(actionContext.projectId);
+      },
+    }),
+    [colors, onLikePressed],
+  );
+
+  const receiptsButton: ActionButtonProps = useMemo(
+    () => ({
+      icon: <Ionicons name="receipt-outline" size={24} color={colors.iconColor} />,
+      label: 'Receipts',
+      onPress: (e, actionContext) => {
+        if (isEntry(actionContext) && actionContext.projectId)
+          router.push({
+            pathname: '/[projectId]/receipts',
+            params: {
+              projectId: actionContext.projectId,
+              projectName: actionContext.projectName,
+            },
+          });
+      },
+    }),
+    [colors, router],
+  );
+
+  const billsButton: ActionButtonProps = useMemo(
+    () => ({
+      icon: <Entypo name="text-document" size={24} color={colors.iconColor} />,
+      label: 'Bills',
+      onPress: (e, actionContext) => {
+        if (isEntry(actionContext) && actionContext.projectId)
+          router.push({
+            pathname: '/[projectId]/invoices',
+            params: {
+              projectId: actionContext.projectId,
+              projectName: actionContext.projectName,
+            },
+          });
+      },
+    }),
+    [colors, router],
+  );
+
+  const companyExpenseProjectActionButtons: ActionButtonProps[] = useMemo(
+    () => [likeButton, receiptsButton, billsButton],
+    [likeButton, receiptsButton, billsButton],
+  );
+
   const projectActionButtons: ActionButtonProps[] = useMemo(
     () => [
-      {
-        icon: <FontAwesome name="heart-o" size={24} color={colors.iconColor} />,
-        favoriteIcon: <FontAwesome name="heart" size={24} color={colors.iconColor} />,
-        label: 'Like',
-        onPress: (e, actionContext) => {
-          if (isEntry(actionContext)) {
-            if (actionContext && actionContext.projectId) onLikePressed(actionContext.projectId);
-          }
-        },
-      },
+      likeButton,
       {
         icon: <FontAwesome name="sticky-note-o" size={24} color={colors.iconColor} />,
         label: 'Notes',
         onPress: (e, actionContext) => {
-          if (isEntry(actionContext)) {
-            if (actionContext && actionContext.projectId)
-              router.push({
-                pathname: '/[projectId]/notes',
-                params: {
-                  projectId: actionContext.projectId,
-                  projectName: actionContext.projectName,
-                },
-              });
-          }
-        },
-      },
-      {
-        icon: <FontAwesome name="photo" size={24} color={colors.iconColor} />,
-        label: 'Photos',
-        onPress: (e, actionContext) => {
-          if (isEntry(actionContext)) {
-            if (actionContext && actionContext.projectId)
-              router.push({
-                pathname: '/[projectId]/photos',
-                params: {
-                  projectId: actionContext.projectId,
-                  projectName: actionContext.projectName,
-                },
-              });
-          }
-        },
-      },
-      {
-        icon: <Ionicons name="receipt-outline" size={24} color={colors.iconColor} />,
-        label: 'Receipts',
-        onPress: (e, actionContext) => {
-          if (isEntry(actionContext)) {
-            if (actionContext && actionContext.projectId)
-              router.push({
-                pathname: '/[projectId]/receipts',
-                params: {
-                  projectId: actionContext.projectId,
-                  projectName: actionContext.projectName,
-                },
-              });
-          }
-        },
-      },
-
-      {
-        icon: <Entypo name="text-document" size={24} color={colors.iconColor} />,
-        label: 'Bills',
-        onPress: (e, actionContext) => {
-          if (actionContext && actionContext.projectId)
+          if (isEntry(actionContext) && actionContext.projectId)
             router.push({
-              pathname: '/[projectId]/invoices',
+              pathname: '/[projectId]/notes',
               params: {
                 projectId: actionContext.projectId,
                 projectName: actionContext.projectName,
@@ -204,10 +200,26 @@ export default function ProjectHomeScreen() {
         },
       },
       {
+        icon: <FontAwesome name="photo" size={24} color={colors.iconColor} />,
+        label: 'Photos',
+        onPress: (e, actionContext) => {
+          if (isEntry(actionContext) && actionContext.projectId)
+            router.push({
+              pathname: '/[projectId]/photos',
+              params: {
+                projectId: actionContext.projectId,
+                projectName: actionContext.projectName,
+              },
+            });
+        },
+      },
+      receiptsButton,
+      billsButton,
+      {
         icon: <MaterialCommunityIcons name="lightbulb-on-outline" size={24} color={colors.iconColor} />,
         label: 'Changes',
         onPress: (e, actionContext) => {
-          if (actionContext && actionContext.projectId)
+          if (isEntry(actionContext) && actionContext.projectId)
             router.push({
               pathname: '/[projectId]/changes',
               params: {
@@ -218,7 +230,14 @@ export default function ProjectHomeScreen() {
         },
       },
     ],
-    [colors, onLikePressed, router],
+    [colors, likeButton, receiptsButton, billsButton, router],
+  );
+
+  const getProjectButtons = useCallback(
+    (item: ProjectListEntryProps): ActionButtonProps[] => {
+      return item.isCompanyExpenseProject ? companyExpenseProjectActionButtons : projectActionButtons;
+    },
+    [companyExpenseProjectActionButtons, projectActionButtons],
   );
 
   const handleSelection = useCallback(
@@ -236,6 +255,8 @@ export default function ProjectHomeScreen() {
       setHeaderMenuModalVisible(false);
       if (item === 'AddProject') {
         router.push('/add-project');
+      } else if (item === 'AddCompanyExpenseProject') {
+        router.push('/add-company-expense-project');
       } else if (item === 'Configuration') {
         router.push('/configuration/home');
       } else if (item === 'About') {
@@ -262,6 +283,13 @@ export default function ProjectHomeScreen() {
             },
           ]
         : []),
+      {
+        icon: <Entypo name="briefcase" size={28} color={colors.iconColor} />,
+        label: 'Add Company Expense',
+        onPress: (e: GestureResponderEvent, actionContext?: any) => {
+          handleMenuItemPress('AddCompanyExpenseProject', actionContext);
+        },
+      },
       {
         icon: <FontAwesome name="gear" size={28} color={colors.iconColor} />,
         label: 'Configuration',
@@ -426,7 +454,7 @@ export default function ProjectHomeScreen() {
       <View style={{ flex: 1, width: '100%' }}>
         {visibleProjects.length > 0 ? (
           <View style={[styles.twoColListContainer, { backgroundColor: colors.background }]}>
-            <ProjectList data={visibleProjects} onPress={handleSelection} buttons={projectActionButtons} />
+            <ProjectList data={visibleProjects} onPress={handleSelection} buttons={getProjectButtons} />
           </View>
         ) : (
           <View style={[styles.container, { padding: 10, backgroundColor: colors.background }]}>

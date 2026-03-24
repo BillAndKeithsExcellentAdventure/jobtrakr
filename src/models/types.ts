@@ -22,6 +22,7 @@ export interface ProjectData {
   thumbnail: string;
   status: string; // 'active', 'on-hold'  or 'completed'
   seedWorkItems: string; // comma separated list of workItemIds
+  isCompanyExpenseProject?: boolean; // true if this project tracks company expenses only
 }
 
 export function CostItemDataCodeCompareAsNumber(a: CostItemData, b: CostItemData) {
