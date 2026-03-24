@@ -3,6 +3,7 @@ import { CustomerPicker } from '@/src/components/CustomerPicker';
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
+import { Switch } from '@/src/components/Switch';
 import { TextField } from '@/src/components/TextField';
 import { View, Text } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
@@ -13,7 +14,10 @@ import {
   CustomerData,
   CustomerDataCompareName,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useAddProjectCallback } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import {
+  useAddProjectCallback,
+  useHasActiveCompanyExpenseProject,
+} from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
@@ -41,6 +45,7 @@ const AddProjectScreen = () => {
     seedWorkItems: '', // comma separated list of workItemIds
     startDate: defaultStart.getTime(),
     plannedFinish: defaultFinish.getTime(),
+    isCompanyExpenseProject: false,
   });
 
   const addProject = useAddProjectCallback();
@@ -52,6 +57,8 @@ const AddProjectScreen = () => {
   const [isTemplateListPickerVisible, setIsTemplateListPickerVisible] = useState<boolean>(false);
   const [pickedTemplate, setPickedTemplate] = useState<OptionEntry | undefined>(undefined);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | undefined>(undefined);
+  const [isCompanyExpenseProject, setIsCompanyExpenseProject] = useState<boolean>(false);
+  const hasActiveCompanyExpenseProject = useHasActiveCompanyExpenseProject();
   const [templateOptions, setTemplateOptions] = useState<OptionEntry[]>([]);
   const [canAddProject, setCanAddProject] = useState(false);
   const { addActiveProjectIds } = useActiveProjectIds();
@@ -82,9 +89,9 @@ const AddProjectScreen = () => {
       project.name.length > 0 &&
         undefined !== pickedTemplate &&
         project.abbreviation.length > 0 &&
-        undefined !== selectedCustomer,
+        (isCompanyExpenseProject || undefined !== selectedCustomer),
     );
-  }, [project, pickedTemplate, selectedCustomer]);
+  }, [project, pickedTemplate, selectedCustomer, isCompanyExpenseProject]);
 
   const handleSubmit = useCallback(async () => {
     if (!canAddProject) {
@@ -105,6 +112,8 @@ const AddProjectScreen = () => {
     if (selectedCustomer) {
       project.customerId = selectedCustomer.id;
     }
+
+    project.isCompanyExpenseProject = isCompanyExpenseProject;
 
     const result = addProject(project);
     if (result.status !== 'Success') {
@@ -149,19 +158,29 @@ const AddProjectScreen = () => {
           value={project.abbreviation}
           onChangeText={(text) => setProject({ ...project, abbreviation: text })}
         />
-        <TextField
-          style={[styles.input, { backgroundColor: colors.neutral200 }]}
-          placeholder="Location"
-          value={project.location}
-          onChangeText={(text) => setProject({ ...project, location: text })}
-        />
-        <CustomerPicker
-          style={{ marginBottom: 8 }}
-          selectedCustomer={selectedCustomer}
-          onCustomerSelected={setSelectedCustomer}
-          customers={allCustomers}
-          placeholder="Select a customer"
-        />
+        {!hasActiveCompanyExpenseProject && (
+          <View style={styles.switchContainer}>
+            <Text style={styles.switchLabel}>Office Expense Project</Text>
+            <Switch size="large" value={isCompanyExpenseProject} onValueChange={setIsCompanyExpenseProject} />
+          </View>
+        )}
+        {!isCompanyExpenseProject && (
+          <>
+            <TextField
+              style={[styles.input, { backgroundColor: colors.neutral200 }]}
+              placeholder="Location"
+              value={project.location}
+              onChangeText={(text) => setProject({ ...project, location: text })}
+            />
+            <CustomerPicker
+              style={{ marginBottom: 8 }}
+              selectedCustomer={selectedCustomer}
+              onCustomerSelected={setSelectedCustomer}
+              customers={allCustomers}
+              placeholder="Select a customer"
+            />
+          </>
+        )}
 
         <OptionPickerItem
           optionLabel={pickedTemplate?.label}
@@ -194,6 +213,17 @@ const styles = StyleSheet.create({
     padding: 4,
     borderRadius: 5,
     alignItems: 'center',
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingHorizontal: 4,
+  },
+  switchLabel: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   modalTitle: {
     fontSize: 18,

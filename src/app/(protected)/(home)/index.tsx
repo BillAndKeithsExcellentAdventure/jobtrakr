@@ -178,8 +178,8 @@ export default function ProjectHomeScreen() {
   );
 
   const companyExpenseProjectActionButtons: ActionButtonProps[] = useMemo(
-    () => [likeButton, receiptsButton, billsButton],
-    [likeButton, receiptsButton, billsButton],
+    () => [receiptsButton, billsButton],
+    [receiptsButton, billsButton],
   );
 
   const projectActionButtons: ActionButtonProps[] = useMemo(
@@ -255,8 +255,6 @@ export default function ProjectHomeScreen() {
       setHeaderMenuModalVisible(false);
       if (item === 'AddProject') {
         router.push('/add-project');
-      } else if (item === 'AddCompanyExpenseProject') {
-        router.push('/add-company-expense-project');
       } else if (item === 'Configuration') {
         router.push('/configuration/home');
       } else if (item === 'About') {
@@ -284,13 +282,6 @@ export default function ProjectHomeScreen() {
           ]
         : []),
       {
-        icon: <Entypo name="briefcase" size={28} color={colors.iconColor} />,
-        label: 'Add Company Expense',
-        onPress: (e: GestureResponderEvent, actionContext?: any) => {
-          handleMenuItemPress('AddCompanyExpenseProject', actionContext);
-        },
-      },
-      {
         icon: <FontAwesome name="gear" size={28} color={colors.iconColor} />,
         label: 'Configuration',
         onPress: (e, actionContext) => {
@@ -306,11 +297,7 @@ export default function ProjectHomeScreen() {
       },
       {
         icon: (
-          <Ionicons
-            name={showActiveProjects ? 'eye-off-outline' : 'eye-outline'}
-            size={28}
-            color={colors.iconColor}
-          />
+          <Ionicons name={showActiveProjects ? 'eye' : 'eye-outline'} size={28} color={colors.iconColor} />
         ),
         label: showActiveProjects ? 'Show All Projects' : 'Show Active Only',
         onPress: () => {

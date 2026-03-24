@@ -767,31 +767,32 @@ const ProjectDetailsPage = () => {
           <>
             <View style={styles.headerContainer}>
               <Text txtSize="title" text={projectData.name} />
-              {totalQuotedPrice && totalQuotedPrice > 0 ? (
-                <>
-                  <Text text={`Quote: ${formatCurrency(totalQuotedPrice, true)}`} />
-                  <Text text={`Bal: ${formatCurrency(projectBalance, true)}`} />
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                    <Text text={`Est: ${formatCurrency(projectData.bidPrice, true)}`} />
-                    <Text text={`Spent: ${formatCurrency(projectSpent, true)}`} />
-                  </View>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                    <Text text={`Complete: ${numCompletedWorkItemSummaries}/${numWorkItemSummaries}`} />
-                    <Text
-                      style={profitOnCompletedItems < 0 ? { color: colors.errorText } : undefined}
-                      text={`Completion Tot: ${formatCurrency(profitOnCompletedItems, true)}`}
+              {!projectData.isCompanyExpenseProject &&
+                (totalQuotedPrice && totalQuotedPrice > 0 ? (
+                  <>
+                    <Text text={`Quote: ${formatCurrency(totalQuotedPrice, true)}`} />
+                    <Text text={`Bal: ${formatCurrency(projectBalance, true)}`} />
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                      <Text text={`Est: ${formatCurrency(projectData.bidPrice, true)}`} />
+                      <Text text={`Spent: ${formatCurrency(projectSpent, true)}`} />
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                      <Text text={`Complete: ${numCompletedWorkItemSummaries}/${numWorkItemSummaries}`} />
+                      <Text
+                        style={profitOnCompletedItems < 0 ? { color: colors.errorText } : undefined}
+                        text={`Completion Tot: ${formatCurrency(profitOnCompletedItems, true)}`}
+                      />
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <ActionButton
+                      title="Set Initial Price Quote"
+                      onPress={handleSetPriceQuotePress}
+                      type={'action'}
                     />
-                  </View>
-                </>
-              ) : (
-                <>
-                  <ActionButton
-                    title="Set Initial Price Quote"
-                    onPress={handleSetPriceQuotePress}
-                    type={'action'}
-                  />
-                </>
-              )}
+                  </>
+                ))}
             </View>
             <View style={{ flex: 1, paddingBottom: 5 }}>
               <View style={{ marginBottom: 5, alignItems: 'center' }}>

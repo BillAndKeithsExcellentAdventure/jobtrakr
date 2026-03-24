@@ -83,24 +83,26 @@ export function ProjectListEntry({ item, onPress, buttons }: ProjectListEntryCom
                 fillColor={colors.percentCompleteBackground}
               />
             </View>
-            <View style={styles.subtitleRow}>
-              <View style={styles.subtitleColumn}>
-                <Text
-                  style={[styles.subtitleTextLeft]}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                  text={`Start: ${item.startDate}`}
-                />
+            {!item.isCompanyExpenseProject && (
+              <View style={styles.subtitleRow}>
+                <View style={styles.subtitleColumn}>
+                  <Text
+                    style={[styles.subtitleTextLeft]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    text={`Start: ${item.startDate}`}
+                  />
+                </View>
+                <View style={styles.subtitleColumn}>
+                  <Text
+                    style={[styles.subtitleTextRight]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    text={`Finish: ${item.finishDate}`}
+                  />
+                </View>
               </View>
-              <View style={styles.subtitleColumn}>
-                <Text
-                  style={[styles.subtitleTextRight]}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                  text={`Finish: ${item.finishDate}`}
-                />
-              </View>
-            </View>
+            )}
           </View>
         </View>
       </Pressable>
