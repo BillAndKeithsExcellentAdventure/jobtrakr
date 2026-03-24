@@ -2,6 +2,9 @@ import { CustomerPicker } from '@/src/components/CustomerPicker';
 import { TextField } from '@/src/components/TextField';
 import { NumericInputField } from '@/src/components/NumericInputField';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
+import BottomSheetContainer from '@/src/components/BottomSheetContainer';
+import OptionList, { OptionEntry } from '@/src/components/OptionList';
+import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { Text, View } from '@/src/components/Themed';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
@@ -58,6 +61,25 @@ const EditProjectScreen = () => {
   const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
   const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | undefined>(undefined);
+  const [isStatusPickerVisible, setIsStatusPickerVisible] = useState<boolean>(false);
+
+  const STATUS_OPTIONS: OptionEntry[] = [
+    { label: 'Active', value: 'active' },
+    { label: 'On Hold', value: 'on-hold' },
+    { label: 'Completed', value: 'completed' },
+  ];
+
+  const currentStatusOption = STATUS_OPTIONS.find((o) => o.value === project.status);
+
+  const handleStatusSelected = useCallback(
+    (option: OptionEntry) => {
+      const newProject = { ...project, status: option.value as string };
+      setProject(newProject);
+      if (projectId) updateProject(projectId, newProject);
+      setIsStatusPickerVisible(false);
+    },
+    [project, projectId, updateProject],
+  );
 
   useEffect(() => {
     if (currentProject) {
@@ -301,6 +323,13 @@ const EditProjectScreen = () => {
               onCancel={hideFinishDatePicker}
             />
           </View>
+          <OptionPickerItem
+            label="Project Status"
+            placeholder="Select project status"
+            optionLabel={currentStatusOption?.label}
+            editable={false}
+            onPickerButtonPress={() => setIsStatusPickerVisible(true)}
+          />
           {project.latitude && project.longitude ? (
             <Text style={styles.inputLabel}>{`GPS Coordinates  (${project.latitude.toFixed(
               4,
@@ -328,6 +357,18 @@ const EditProjectScreen = () => {
       </KeyboardAwareScrollView>
 
       {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
+      {isStatusPickerVisible && (
+        <BottomSheetContainer
+          isVisible={isStatusPickerVisible}
+          onClose={() => setIsStatusPickerVisible(false)}
+        >
+          <OptionList
+            options={STATUS_OPTIONS}
+            onSelect={handleStatusSelected}
+            selectedOption={currentStatusOption}
+          />
+        </BottomSheetContainer>
+      )}
     </>
   );
 };

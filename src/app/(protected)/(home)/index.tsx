@@ -42,6 +42,7 @@ export default function ProjectHomeScreen() {
   const toggleFavorite = useToggleFavoriteCallback();
   const [projectListEntries, setProjectListEntries] = useState<ProjectListEntryProps[]>([]);
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
+  const [showActiveProjects, setShowActiveProjects] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const { signOut } = useClerk();
@@ -67,6 +68,17 @@ export default function ProjectHomeScreen() {
   }, [appSettings]);
 
   const allVisibleCategories = useMemo(() => allCategories.filter((c) => !c.hidden), [allCategories]);
+
+  const visibleProjects = useMemo(
+    () =>
+      showActiveProjects
+        ? projectListEntries.filter((entry) => {
+            const project = allProjects.find((p) => p.id === entry.projectId);
+            return project?.status === 'active';
+          })
+        : projectListEntries,
+    [showActiveProjects, projectListEntries, allProjects],
+  );
 
   const splashImage = useMemo(
     () =>
@@ -265,6 +277,20 @@ export default function ProjectHomeScreen() {
         },
       },
       {
+        icon: (
+          <Ionicons
+            name={showActiveProjects ? 'eye-off-outline' : 'eye-outline'}
+            size={28}
+            color={colors.iconColor}
+          />
+        ),
+        label: showActiveProjects ? 'Show All Projects' : 'Show Active Only',
+        onPress: () => {
+          setShowActiveProjects((prev) => !prev);
+          setHeaderMenuModalVisible(false);
+        },
+      },
+      {
         icon: <Entypo name="log-out" size={28} color={colors.iconColor} />,
         label: 'Logout',
         onPress: async (e, actionContext) => {
@@ -273,7 +299,7 @@ export default function ProjectHomeScreen() {
       },
     ];
     return menuButtons;
-  }, [colors, handleMenuItemPress, allCategories]);
+  }, [colors, handleMenuItemPress, allCategories, showActiveProjects]);
 
   const headerRightComponent = useMemo(() => {
     return {
@@ -398,9 +424,9 @@ export default function ProjectHomeScreen() {
         }}
       />
       <View style={{ flex: 1, width: '100%' }}>
-        {projectListEntries.length > 0 ? (
+        {visibleProjects.length > 0 ? (
           <View style={[styles.twoColListContainer, { backgroundColor: colors.background }]}>
-            <ProjectList data={projectListEntries} onPress={handleSelection} buttons={projectActionButtons} />
+            <ProjectList data={visibleProjects} onPress={handleSelection} buttons={projectActionButtons} />
           </View>
         ) : (
           <View style={[styles.container, { padding: 10, backgroundColor: colors.background }]}>

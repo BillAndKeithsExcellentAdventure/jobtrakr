@@ -19,7 +19,7 @@ export const TABLES_SCHEMA = {
     categoryId: { type: 'string' },
     code: { type: 'string' },
     name: { type: 'string' },
-    accountingId: { type: 'string' },
+    accountingId: { type: 'string' }, // The accountingId of the expense account to use for this work item when adding bills and receipts.
     status: { type: 'string' },
     hidden: { type: 'boolean' },
   },
