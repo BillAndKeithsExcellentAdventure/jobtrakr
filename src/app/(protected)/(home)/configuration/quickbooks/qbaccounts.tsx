@@ -235,8 +235,22 @@ const QBAccountsScreen = () => {
           <View style={{ flex: 1 }}>
             {/* Expense Account Section */}
             <View style={styles.topSection}>
-              <Text txtSize="title" style={{ marginBottom: 10 }}>
-                Default Expense Account for Bills and Receipts
+              <Text txtSize="title" style={{ marginBottom: 8 }}>
+                Expense Accounts
+              </Text>
+              <Text txtSize="xs" style={{ marginBottom: 4, color: colors.neutral600 }}>
+                You can select an expense account for specific cost items when adding bills and receipts. You
+                can assign a default expense account to use when the cost item does not have a specific
+                expense account assigned.
+              </Text>
+              <ActionButton
+                style={styles.topSectionActionButton}
+                onPress={() => router.push('/configuration/quickbooks/setCostItemExpenseAccounts')}
+                type="action"
+                title="Assign Expense Acct for Cost Items"
+              />
+              <Text txtSize="xs" style={{ marginTop: 16, marginBottom: 4, color: colors.neutral600 }}>
+                Default Expense Account
               </Text>
               <TouchableOpacity
                 style={[
@@ -250,30 +264,30 @@ const QBAccountsScreen = () => {
                 </View>
                 <MaterialIcons name="chevron-right" size={24} color={colors.iconColor} />
               </TouchableOpacity>
-              <ActionButton
-                style={styles.topSectionActionButton}
-                onPress={() => router.push('/configuration/quickbooks/setCostItemExpenseAccounts')}
-                type="action"
-                title="Set Expense Acct for Cost Items"
-              />
             </View>
 
             {/* Payment Accounts Section */}
             <View style={styles.section}>
-              <Text txtSize="title" style={{ marginBottom: 10 }}>
-                Payment Accounts
-              </Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 8,
+                }}
+              >
+                <Text txtSize="title">Payment Accounts</Text>
+                <TouchableOpacity
+                  style={[styles.addButton, { backgroundColor: colors.background }]}
+                  onPress={() => setIsPaymentAccountPickerVisible(true)}
+                >
+                  <MaterialIcons name="add" size={24} color={colors.buttonBlue} />
+                </TouchableOpacity>
+              </View>
               <Text txtSize="xs" style={{ marginBottom: 10, color: colors.neutral600 }}>
-                Select one or more payment accounts to be used when adding receipts. You can set a default
+                Add one or more payment accounts to be used when adding receipts. You can set a default
                 payment account by tapping on it in the list below.
               </Text>
-              <TouchableOpacity
-                style={[styles.addButton, { backgroundColor: colors.background, borderColor: colors.border }]}
-                onPress={() => setIsPaymentAccountPickerVisible(true)}
-              >
-                <MaterialIcons name="add" size={24} color={colors.iconColor} />
-                <Text style={{ color: colors.iconColor, marginLeft: 8 }}>Add Payment Account</Text>
-              </TouchableOpacity>
 
               {selectedPaymentAccountsList.length > 0 && (
                 <View style={{ flex: 1 }}>
@@ -389,7 +403,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   topSectionActionButton: {
-    marginTop: 12,
+    marginTop: 8,
   },
   section: {
     marginBottom: 24,
@@ -406,14 +420,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
   },
   paymentAccountItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    padding: 8,
     borderRadius: 8,
     borderWidth: 1,
     marginBottom: 8,
