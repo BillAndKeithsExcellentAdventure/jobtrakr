@@ -70,6 +70,7 @@ export type ColorSchemeColors = {
   lossFg: string;
   slideMenuBackground: string;
   slideMenuForeground: string;
+  altSlideMenuBackground: string;
 };
 
 const ColorsContext = createContext<ColorSchemeColors | null>(null);

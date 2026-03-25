@@ -7,7 +7,7 @@ import { SvgImage } from '@/src/components/SvgImage';
 import { Feather, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useRef } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Linking, Pressable, StyleSheet } from 'react-native';
 import Reanimated from 'react-native-reanimated';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { VendorGrantedAccess } from '../utils/quickbooksAPI';
@@ -20,12 +20,31 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
   const { verifiedEmailAddresses, vendorsGrantedAccess, isConnected } = useNetwork();
   const updateVendor = useUpdateRowCallback('vendors');
   const swipeableRef = useRef<SwipeableHandles>(null);
+  const hasMobilePhone = !!vendor.mobilePhone?.trim();
+  const rightActionWidth = hasMobilePhone ? RIGHT_ACTION_WIDTH * 2 : RIGHT_ACTION_WIDTH;
 
   const colors = useColors();
   const handleToggleActive = useCallback(() => {
     updateVendor(vendor.id, { inactive: !vendor.inactive });
     swipeableRef.current?.close();
   }, [updateVendor, vendor.id, vendor.inactive]);
+
+  const handleCall = useCallback(async () => {
+    if (!vendor.mobilePhone?.trim()) return;
+    const sanitized = vendor.mobilePhone.replace(/[^0-9+]/g, '');
+    const phoneNumber = sanitized || vendor.mobilePhone.trim();
+    const telUrl = `tel:${phoneNumber}`;
+
+    try {
+      const canOpen = await Linking.canOpenURL(telUrl);
+      if (!canOpen) return;
+      await Linking.openURL(telUrl);
+    } catch (error) {
+      console.warn('Failed to open phone dialer for vendor', error);
+    } finally {
+      swipeableRef.current?.close();
+    }
+  }, [vendor.mobilePhone]);
 
   const isEmailVerified = useMemo(
     () => (vendor.email && isConnected ? verifiedEmailAddresses.includes(vendor.email) : true),
@@ -41,27 +60,45 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
 
   const RightAction = useCallback(() => {
     return (
-      <Pressable
-        style={[styles.rightAction, { backgroundColor: colors.slideMenuBackground }]}
-        onPress={handleToggleActive}
-      >
-        <Reanimated.View>
+      <Reanimated.View style={styles.rightActionsContainer}>
+        <Pressable
+          style={[styles.rightAction, { backgroundColor: colors.altSlideMenuBackground }]}
+          onPress={handleToggleActive}
+        >
           <MaterialIcons
             name={vendor.inactive ? 'visibility' : 'visibility-off'}
             size={32}
             color={colors.slideMenuForeground}
           />
-        </Reanimated.View>
-      </Pressable>
+        </Pressable>
+
+        {hasMobilePhone && (
+          <Pressable
+            style={[styles.rightAction, { backgroundColor: colors.slideMenuBackground }]}
+            onPress={handleCall}
+          >
+            <Reanimated.View>
+              <MaterialIcons name="phone" size={32} color={colors.slideMenuForeground} />
+            </Reanimated.View>
+          </Pressable>
+        )}
+      </Reanimated.View>
     );
-  }, [colors.slideMenuBackground, colors.slideMenuForeground, handleToggleActive, vendor.inactive]);
+  }, [
+    colors.slideMenuBackground,
+    colors.slideMenuForeground,
+    handleCall,
+    handleToggleActive,
+    hasMobilePhone,
+    vendor.inactive,
+  ]);
 
   return (
     <SwipeableComponent
       ref={swipeableRef}
       key={vendor.id}
       threshold={SWIPE_THRESHOLD_WIDTH}
-      actionWidth={RIGHT_ACTION_WIDTH}
+      actionWidth={rightActionWidth}
       renderRightActions={RightAction}
     >
       <View style={styles.itemEntry}>
@@ -148,6 +185,10 @@ const styles = StyleSheet.create({
     height: 90,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  rightActionsContainer: {
+    flexDirection: 'row',
+    height: 90,
   },
 });
 

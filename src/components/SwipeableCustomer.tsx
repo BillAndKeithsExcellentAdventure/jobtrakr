@@ -9,7 +9,7 @@ import {
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useRef } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Linking, Pressable, StyleSheet } from 'react-native';
 import Reanimated from 'react-native-reanimated';
 import { useNetwork } from '@/src/context/NetworkContext';
 
@@ -22,11 +22,30 @@ const SwipeableCustomer = ({ customer }: { customer: CustomerData }) => {
   const updateCustomer = useUpdateRowCallback('customers');
   const colors = useColors();
   const swipeableRef = useRef<SwipeableHandles>(null);
+  const hasPhone = !!customer.phone?.trim();
+  const rightActionWidth = hasPhone ? RIGHT_ACTION_WIDTH * 2 : RIGHT_ACTION_WIDTH;
 
   const handleToggleActive = useCallback(() => {
     updateCustomer(customer.id, { inactive: !customer.inactive });
     swipeableRef.current?.close();
   }, [customer.id, customer.inactive, updateCustomer]);
+
+  const handleCall = useCallback(async () => {
+    if (!customer.phone?.trim()) return;
+    const sanitized = customer.phone.replace(/[^0-9+]/g, '');
+    const phoneNumber = sanitized || customer.phone.trim();
+    const telUrl = `tel:${phoneNumber}`;
+
+    try {
+      const canOpen = await Linking.canOpenURL(telUrl);
+      if (!canOpen) return;
+      await Linking.openURL(telUrl);
+    } catch (error) {
+      console.warn('Failed to open phone dialer for customer', error);
+    } finally {
+      swipeableRef.current?.close();
+    }
+  }, [customer.phone]);
 
   const isEmailVerified = useMemo(
     () => (customer.email && isConnected ? verifiedEmailAddresses.includes(customer.email) : true),
@@ -35,27 +54,47 @@ const SwipeableCustomer = ({ customer }: { customer: CustomerData }) => {
 
   const RightAction = useCallback(() => {
     return (
-      <Pressable
-        style={[styles.rightAction, { backgroundColor: colors.slideMenuBackground }]}
-        onPress={handleToggleActive}
-      >
-        <Reanimated.View>
-          <MaterialIcons
-            name={customer.inactive ? 'visibility' : 'visibility-off'}
-            size={32}
-            color={colors.slideMenuForeground}
-          />
-        </Reanimated.View>
-      </Pressable>
+      <Reanimated.View style={styles.rightActionsContainer}>
+        <Pressable
+          style={[styles.rightAction, { backgroundColor: colors.altSlideMenuBackground }]}
+          onPress={handleToggleActive}
+        >
+          <Reanimated.View>
+            <MaterialIcons
+              name={customer.inactive ? 'visibility' : 'visibility-off'}
+              size={32}
+              color={colors.slideMenuForeground}
+            />
+          </Reanimated.View>
+        </Pressable>
+
+        {hasPhone && (
+          <Pressable
+            style={[styles.rightAction, { backgroundColor: colors.slideMenuBackground }]}
+            onPress={handleCall}
+          >
+            <Reanimated.View>
+              <MaterialIcons name="phone" size={32} color={colors.slideMenuForeground} />
+            </Reanimated.View>
+          </Pressable>
+        )}
+      </Reanimated.View>
     );
-  }, [customer.inactive, handleToggleActive, colors.slideMenuBackground, colors.slideMenuForeground]);
+  }, [
+    customer.inactive,
+    handleCall,
+    handleToggleActive,
+    hasPhone,
+    colors.slideMenuBackground,
+    colors.slideMenuForeground,
+  ]);
 
   return (
     <SwipeableComponent
       ref={swipeableRef}
       key={customer.id}
       threshold={SWIPE_THRESHOLD_WIDTH}
-      actionWidth={RIGHT_ACTION_WIDTH}
+      actionWidth={rightActionWidth}
       renderRightActions={RightAction}
     >
       <View style={styles.itemEntry}>
@@ -150,6 +189,10 @@ const styles = StyleSheet.create({
     minHeight: 90,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  rightActionsContainer: {
+    flexDirection: 'row',
+    minHeight: 90,
   },
 });
 

@@ -1,4 +1,5 @@
 export const tintColorLight = '#2f95dc';
+export const altTintColorLight = '#0F9D58';
 export const tintColorDark = '#fff';
 export const saveButtonBg = '#28a745';
 export const cancelButtonBg = '#dc3545';
@@ -43,6 +44,7 @@ export const Colors = {
     overlay50: 'rgba(25, 16, 21, 0.5)',
 
     slideMenuBackground: tintColorLight,
+    altSlideMenuBackground: altTintColorLight,
     slideMenuForeground: tintColorDark,
     text: '#000',
     background: '#fff',
@@ -119,6 +121,8 @@ export const Colors = {
 
     slideMenuBackground: tintColorLight,
     slideMenuForeground: tintColorDark,
+    altSlideMenuBackground: altTintColorLight,
+
     text: '#fff',
     background: '#000',
     tint: tintColorDark,
