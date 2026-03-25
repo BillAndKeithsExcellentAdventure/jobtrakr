@@ -184,7 +184,7 @@ export const SeedProjectWorkItems: SeedProjectWorkItemsType = [
       },
       {
         name: 'Company Operating Expenses',
-        code: 70,
+        code: 100,
         workItems: [
           { name: 'Payroll & Administrative', code: 5 },
           { name: 'Office & General', code: 10 },
