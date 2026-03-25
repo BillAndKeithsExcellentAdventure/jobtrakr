@@ -634,7 +634,7 @@ const AddReceiptPage = () => {
           />
           <TextField
             containerStyle={styles.inputContainer}
-            style={[styles.input, { borderColor: colors.transparent }]}
+            style={[styles.input]}
             placeholder="Description"
             label="Description"
             value={projectReceipt.description}

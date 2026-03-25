@@ -237,7 +237,7 @@ const EditProjectScreen = () => {
       >
         <View style={{ padding: 10, gap: 6 }}>
           <TextField
-            style={[styles.input, { borderColor: colors.transparent }]}
+            style={[styles.input]}
             label="Project Name"
             placeholder="Project Name"
             value={project.name}
@@ -246,7 +246,7 @@ const EditProjectScreen = () => {
           />
           <TextField
             containerStyle={styles.inputContainer}
-            style={[styles.input, { borderColor: colors.transparent }]}
+            style={[styles.input]}
             placeholder="Abbreviation for Receipts and Bills"
             label="Abbreviation for Receipts and Bills"
             value={project.abbreviation}
@@ -255,74 +255,77 @@ const EditProjectScreen = () => {
             onChangeText={handleAbbreviationChange}
             onBlur={handleSubmit}
           />
-          <View style={{ flex: 1 }}>
-            <NumericInputField
-              label="Initial Quoted Price"
-              style={{ paddingHorizontal: 10 }}
-              decimals={0}
-              maxDecimals={0}
-              selectOnFocus={true}
-              value={project.quotedPrice === 0 ? null : project.quotedPrice}
-              onChangeNumber={(value) => setProject({ ...project, quotedPrice: value ?? 0 })}
-              placeholder="Initial Quoted Price"
-            />
-          </View>
-
-          <TextField
-            containerStyle={styles.inputContainer}
-            style={[styles.input, { borderColor: colors.transparent }]}
-            placeholder="Location"
-            label="Location"
-            value={project.location}
-            onChangeText={(text) => setProject({ ...project, location: text })}
-            onBlur={handleSubmit}
-          />
-          <CustomerPicker
-            selectedCustomer={selectedCustomer}
-            onCustomerSelected={handleCustomerSelected}
-            customers={allCustomers}
-            label="Customer"
-            placeholder="Select a customer"
-          />
-          <View style={styles.dateContainer}>
-            <TouchableOpacity activeOpacity={1} onPress={showStartDatePicker}>
-              <Text txtSize="formLabel" text="Start Date" style={styles.inputLabel} />
+          {!project.isCompanyExpenseProject && (
+            <>
+              <View style={{ flex: 1 }}>
+                <NumericInputField
+                  label="Initial Quoted Price"
+                  style={{ paddingHorizontal: 10 }}
+                  decimals={0}
+                  maxDecimals={0}
+                  selectOnFocus={true}
+                  value={project.quotedPrice === 0 ? null : project.quotedPrice}
+                  onChangeNumber={(value) => setProject({ ...project, quotedPrice: value ?? 0 })}
+                  placeholder="Initial Quoted Price"
+                />
+              </View>
               <TextField
-                editable={false}
-                style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
-                placeholder="Start Date"
-                onPressIn={showStartDatePicker}
-                value={project.startDate ? formatDate(project.startDate) : 'No date selected'}
+                containerStyle={styles.inputContainer}
+                style={[styles.input]}
+                placeholder="Location"
+                label="Location"
+                value={project.location}
+                onChangeText={(text) => setProject({ ...project, location: text })}
+                onBlur={handleSubmit}
               />
-            </TouchableOpacity>
-            <DateTimePickerModal
-              style={{ alignSelf: 'stretch' }}
-              date={new Date(project.startDate)}
-              isVisible={startDatePickerVisible}
-              mode="date"
-              onConfirm={handleStartDateConfirm}
-              onCancel={hideStartDatePicker}
-            />
+              <CustomerPicker
+                selectedCustomer={selectedCustomer}
+                onCustomerSelected={handleCustomerSelected}
+                customers={allCustomers}
+                label="Customer"
+                placeholder="Select a customer"
+              />
+              <View style={styles.dateContainer}>
+                <TouchableOpacity activeOpacity={1} onPress={showStartDatePicker}>
+                  <Text txtSize="formLabel" text="Start Date" style={styles.inputLabel} />
+                  <TextField
+                    editable={false}
+                    style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                    placeholder="Start Date"
+                    onPressIn={showStartDatePicker}
+                    value={project.startDate ? formatDate(project.startDate) : 'No date selected'}
+                  />
+                </TouchableOpacity>
+                <DateTimePickerModal
+                  style={{ alignSelf: 'stretch' }}
+                  date={new Date(project.startDate)}
+                  isVisible={startDatePickerVisible}
+                  mode="date"
+                  onConfirm={handleStartDateConfirm}
+                  onCancel={hideStartDatePicker}
+                />
 
-            <TouchableOpacity activeOpacity={1} onPress={showFinishDatePicker}>
-              <Text txtSize="formLabel" text="Finish Date" style={styles.inputLabel} />
-              <TextField
-                editable={false}
-                style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
-                placeholder="Finish Date"
-                onPressIn={showFinishDatePicker}
-                value={project.plannedFinish ? formatDate(project.plannedFinish) : 'No date selected'}
-              />
-            </TouchableOpacity>
-            <DateTimePickerModal
-              style={{ alignSelf: 'stretch', height: 200 }}
-              date={new Date(project.plannedFinish)}
-              isVisible={finishDatePickerVisible}
-              mode="date"
-              onConfirm={handleFinishDateConfirm}
-              onCancel={hideFinishDatePicker}
-            />
-          </View>
+                <TouchableOpacity activeOpacity={1} onPress={showFinishDatePicker}>
+                  <Text txtSize="formLabel" text="Finish Date" style={styles.inputLabel} />
+                  <TextField
+                    editable={false}
+                    style={[styles.dateInput, { backgroundColor: colors.neutral200 }]}
+                    placeholder="Finish Date"
+                    onPressIn={showFinishDatePicker}
+                    value={project.plannedFinish ? formatDate(project.plannedFinish) : 'No date selected'}
+                  />
+                </TouchableOpacity>
+                <DateTimePickerModal
+                  style={{ alignSelf: 'stretch', height: 200 }}
+                  date={new Date(project.plannedFinish)}
+                  isVisible={finishDatePickerVisible}
+                  mode="date"
+                  onConfirm={handleFinishDateConfirm}
+                  onCancel={hideFinishDatePicker}
+                />
+              </View>
+            </>
+          )}
           <OptionPickerItem
             label="Project Status"
             placeholder="Select project status"
@@ -330,29 +333,33 @@ const EditProjectScreen = () => {
             editable={false}
             onPickerButtonPress={() => setIsStatusPickerVisible(true)}
           />
-          {project.latitude && project.longitude ? (
-            <Text style={styles.inputLabel}>{`GPS Coordinates  (${project.latitude.toFixed(
-              4,
-            )}/${project.longitude.toFixed(4)})`}</Text>
-          ) : (
-            <Text style={styles.inputLabel}>GPS Coordinates</Text>
+          {!project.isCompanyExpenseProject && (
+            <>
+              {project.latitude && project.longitude ? (
+                <Text style={styles.inputLabel}>{`GPS Coordinates  (${project.latitude.toFixed(
+                  4,
+                )}/${project.longitude.toFixed(4)})`}</Text>
+              ) : (
+                <Text style={styles.inputLabel}>GPS Coordinates</Text>
+              )}
+              <View style={styles.gpsButtonContainer}>
+                {hasLocationPermission && (
+                  <TouchableOpacity
+                    style={[styles.gpsButton, styles.gpsButtonLeft, { borderColor: colors.buttonBlue }]}
+                    onPress={handleSetCurrentGpsLocation}
+                  >
+                    <Text style={[styles.gpsButtonText, { color: colors.buttonBlue }]}>Use Current</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={[styles.gpsButton, styles.gpsButtonRight, { borderColor: colors.buttonBlue }]}
+                  onPress={handlePickGpsLocation}
+                >
+                  <Text style={[styles.gpsButtonText, { color: colors.buttonBlue }]}>Select on Map</Text>
+                </TouchableOpacity>
+              </View>
+            </>
           )}
-          <View style={styles.gpsButtonContainer}>
-            {hasLocationPermission && (
-              <TouchableOpacity
-                style={[styles.gpsButton, styles.gpsButtonLeft, { borderColor: colors.buttonBlue }]}
-                onPress={handleSetCurrentGpsLocation}
-              >
-                <Text style={[styles.gpsButtonText, { color: colors.buttonBlue }]}>Use Current</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              style={[styles.gpsButton, styles.gpsButtonRight, { borderColor: colors.buttonBlue }]}
-              onPress={handlePickGpsLocation}
-            >
-              <Text style={[styles.gpsButtonText, { color: colors.buttonBlue }]}>Select on Map</Text>
-            </TouchableOpacity>
-          </View>
         </View>
       </KeyboardAwareScrollView>
 
