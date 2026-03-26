@@ -102,7 +102,7 @@ export const ZoomImageViewer: React.FC<ZoomImageViewerProps> = React.memo(({ ima
   return (
     <View style={[styles.container, { backgroundColor: colors.opaqueModalOverlayBackgroundColor }]}>
       <View style={styles.overlay} onLayout={onLayout}>
-        {isResolvingUri && <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />}
+        {isResolvingUri && <ActivityIndicator size="large" color={colors.tint} style={styles.loader} />}
         {containerWidth > 0 && containerHeight > 0 && (
           <GestureDetector gesture={combinedGesture}>
             <Animated.View

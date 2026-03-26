@@ -58,7 +58,7 @@ export const ModalScreenContainer: React.FC<ModalScreenContainerProps> = ({
 
             {isSaving ? (
               <View style={styles.savingRow}>
-                <ActivityIndicator />
+                <ActivityIndicator size="large" color={colors.tint} />
                 <Text txtSize="standard" style={styles.savingText} text={savingLabel} />
               </View>
             ) : (

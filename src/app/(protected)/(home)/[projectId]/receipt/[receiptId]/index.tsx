@@ -766,7 +766,7 @@ const ReceiptDetailsPage = () => {
                     <View style={styles.syncButtonRow}>
                       {isSavingToQuickBooks ? (
                         <View style={styles.savingRow}>
-                          <ActivityIndicator />
+                          <ActivityIndicator color={colors.tint} />
                           <Text
                             txtSize="standard"
                             style={styles.savingText}

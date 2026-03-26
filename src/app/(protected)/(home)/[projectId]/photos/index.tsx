@@ -206,7 +206,7 @@ const ProjectPhotosPage = () => {
           </View>
           {isPhotoUploading && (
             <View style={styles.uploadingContainer}>
-              <ActivityIndicator size="large" color={colors.iconColor} />
+              <ActivityIndicator size="large" color={colors.tint} />
               <Text style={styles.uploadingText}>Uploading photo...</Text>
             </View>
           )}

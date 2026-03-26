@@ -228,7 +228,7 @@ const QBAccountsScreen = () => {
       <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
         {isLoading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.iconColor} />
+            <ActivityIndicator size="large" color={colors.tint} />
             <Text style={{ marginTop: 10 }}>Loading QuickBooks accounts...</Text>
           </View>
         ) : (

@@ -293,7 +293,7 @@ const ProjectInvoicesPage = () => {
 
               {isProcessingImage && (
                 <View style={{ padding: 10, alignItems: 'center' }}>
-                  <ActivityIndicator size="large" color={colors.text} />
+                  <ActivityIndicator size="large" color={colors.tint} />
                   <Text
                     text="Processing bill image, this should only take a moment..."
                     style={{ marginTop: 10 }}

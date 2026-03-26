@@ -376,7 +376,7 @@ export default function ProjectHomeScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.iconColor} />
+        <ActivityIndicator size="large" color={colors.tint} />
         <Text txtSize="title" style={{ marginTop: 16 }}>
           Loading configuration...
         </Text>

@@ -415,7 +415,7 @@ const RequestAIProcessingPage = () => {
       <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
         {fetchingData ? (
           <View style={{ width: '100%', gap: 20, padding: 10, alignItems: 'center' }}>
-            <ActivityIndicator size="large" />
+            <ActivityIndicator size="large" color={colors.tint} />
             <Text txtSize="sub-title">
               Working on extracting data from bill image, this should not take long.
             </Text>

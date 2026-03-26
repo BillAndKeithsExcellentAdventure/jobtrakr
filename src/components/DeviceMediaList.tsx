@@ -11,6 +11,7 @@ import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { useRouter } from 'expo-router';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
+import { useColors } from '../context/ColorsContext';
 
 export type AssetsItem = {
   _id: string;
@@ -56,7 +57,7 @@ export const DeviceMediaList = ({
   const router = useRouter();
   const addPhotoImage = useAddImageCallback();
   const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
-
+  const colors = useColors();
   const onStatusUpdate = useCallback((status: string) => {
     setFetchStatus(status);
   }, []);
@@ -379,7 +380,7 @@ export const DeviceMediaList = ({
       {loadingNearest ? (
         <View style={styles.loadingContainer}>
           <Text>Loading...{fetchStatus}</Text>
-          <ActivityIndicator size="large" color="#007AFF" style={styles.loadingIndicator} />
+          <ActivityIndicator size="large" color={colors.tint} style={styles.loadingIndicator} />
           <View style={styles.loadingActions}>
             <ActionButton title="Close" onPress={handleClosePress} type="action" />
           </View>

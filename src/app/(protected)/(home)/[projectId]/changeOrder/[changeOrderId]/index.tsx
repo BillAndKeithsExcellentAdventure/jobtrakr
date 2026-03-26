@@ -493,7 +493,7 @@ const DefineChangeOrderScreen = () => {
                 />
                 {isSendingChangeOrder && (
                   <View style={styles.sendingRow}>
-                    <ActivityIndicator size="small" color={colors.iconColor} />
+                    <ActivityIndicator size="small" color={colors.tint} />
                     <Text style={styles.sendingText}>Sending Change Order Email...</Text>
                   </View>
                 )}

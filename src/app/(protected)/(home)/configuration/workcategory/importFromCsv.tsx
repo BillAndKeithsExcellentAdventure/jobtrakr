@@ -4,13 +4,18 @@ import * as DocumentPicker from 'expo-document-picker';
 import { parseWorkItemsCsvText } from '@/src/utils/csvUtils';
 import {
   useAddRowCallback,
+  useAllRows,
   useCreateTemplateWithAllWorkItemsCallback,
+  WorkCategoryCodeCompareAsNumber,
+  WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { WorkCategoryDefinition } from '@/src/models/types';
 import { useRouter, Stack } from 'expo-router';
 import { Text, View } from '@/src/components/Themed';
+import { useColors } from '@/src/context/ColorsContext';
 
 export default function ImportFromCsvScreen() {
+  const colors = useColors();
   const [workCategories, setWorkCategories] = useState<WorkCategoryDefinition[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
@@ -18,6 +23,8 @@ export default function ImportFromCsvScreen() {
   const addWorkItem = useAddRowCallback('workItems');
   const router = useRouter();
   const createTemplateWithAllWorkItems = useCreateTemplateWithAllWorkItemsCallback();
+  const existingCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
+  const existingWorkItems = useAllRows('workItems', WorkItemDataCodeCompareAsNumber);
 
   const handleSelectFile = useCallback(async () => {
     try {
@@ -55,34 +62,89 @@ export default function ImportFromCsvScreen() {
   const handleSave = useCallback(async () => {
     try {
       setLoading(true);
-      for (const category of workCategories) {
-        const workCategory = {
-          name: category.name,
-          code: category.code.toString(),
-          status: 'active',
-          id: '',
-        };
+      let categoriesAdded = 0;
+      let categoriesSkipped = 0;
+      let workItemsAdded = 0;
+      let workItemsSkipped = 0;
 
-        const result = addWorkCategory(workCategory);
-        if (result && result.id) {
-          const workItems = category.workItems.map((item) => ({
+      for (const category of workCategories) {
+        // Check if a category with the same code and name already exists
+        const existingCategory = existingCategories.find(
+          (c) => c.code === category.code.toString() && c.name === category.name && !c.hidden,
+        );
+
+        let categoryId: string;
+
+        if (existingCategory) {
+          // Use existing category's id for adding new work items
+          categoryId = existingCategory.id;
+          categoriesSkipped++;
+        } else {
+          const workCategory = {
+            name: category.name,
+            code: category.code.toString(),
+            status: 'active',
+            id: '',
+          };
+          const result = addWorkCategory(workCategory);
+          if (!result || result.status !== 'Success') {
+            console.error(`Failed to add category: ${category.name}`);
+            continue;
+          }
+          categoryId = result.id;
+          categoriesAdded++;
+        }
+
+        // Get existing work items for this category to check for duplicates
+        const existingItemsForCategory = existingWorkItems.filter(
+          (w) => w.categoryId === categoryId && !w.hidden,
+        );
+
+        for (const item of category.workItems) {
+          // Check if a work item with the same code and name already exists in this category
+          const existingItem = existingItemsForCategory.find(
+            (w) => w.code === item.code.toString() && w.name === item.name,
+          );
+
+          if (existingItem) {
+            workItemsSkipped++;
+            continue;
+          }
+
+          const workItem = {
             name: item.name,
             code: item.code.toString(),
             status: 'active',
             id: '',
-            categoryId: result.id,
-          }));
-          for (const workItem of workItems) {
-            const itemResult = addWorkItem(workItem);
-            if (itemResult.status !== 'Success') {
-              console.error(`Failed to add cost item: ${workItem.name} ${itemResult.msg}`);
-            }
+            categoryId,
+          };
+          const itemResult = addWorkItem(workItem);
+          if (itemResult.status !== 'Success') {
+            console.error(`Failed to add cost item: ${workItem.name} ${itemResult.msg}`);
+          } else {
+            workItemsAdded++;
           }
         }
       }
 
       createTemplateWithAllWorkItems();
-      Alert.alert('Success', 'Cost items imported successfully');
+
+      const summaryLines: string[] = [];
+      if (categoriesAdded > 0)
+        summaryLines.push(`${categoriesAdded} categor${categoriesAdded === 1 ? 'y' : 'ies'} added`);
+      if (categoriesSkipped > 0)
+        summaryLines.push(
+          `${categoriesSkipped} categor${categoriesSkipped === 1 ? 'y' : 'ies'} already existed`,
+        );
+      if (workItemsAdded > 0)
+        summaryLines.push(`${workItemsAdded} cost item${workItemsAdded === 1 ? '' : 's'} added`);
+      if (workItemsSkipped > 0)
+        summaryLines.push(
+          `${workItemsSkipped} cost item${workItemsSkipped === 1 ? '' : 's'} already existed`,
+        );
+
+      const summary = summaryLines.length > 0 ? summaryLines.join('\n') : 'No new items to import.';
+      Alert.alert('Import Complete', summary);
       setWorkCategories([]);
     } catch {
       Alert.alert('Error', 'Failed to save cost items');
@@ -90,7 +152,15 @@ export default function ImportFromCsvScreen() {
       setLoading(false);
       router.back();
     }
-  }, [workCategories, addWorkCategory, addWorkItem, createTemplateWithAllWorkItems, router]);
+  }, [
+    workCategories,
+    addWorkCategory,
+    addWorkItem,
+    createTemplateWithAllWorkItems,
+    router,
+    existingCategories,
+    existingWorkItems,
+  ]);
 
   return (
     <View style={styles.container}>
@@ -109,17 +179,20 @@ export default function ImportFromCsvScreen() {
       {workCategories.length > 0 && (
         <>
           <Text style={styles.previewTitle}>Preview</Text>
-          <ScrollView style={styles.scrollView}>
+          <ScrollView style={{ ...styles.scrollView, borderColor: colors.border }}>
             {workCategories.map((category) => (
-              <View key={category.code.toString()} style={styles.categoryContainer}>
+              <View
+                key={category.code.toString()}
+                style={{ ...styles.categoryContainer, borderBottomColor: colors.border }}
+              >
                 <TouchableOpacity
                   onPress={() => toggleCategory(category.code.toString())}
                   style={styles.categoryHeader}
                 >
-                  <Text style={styles.categoryName}>{category.name}</Text>
-                  <View
-                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}
-                  >
+                  <Text numberOfLines={1} ellipsizeMode="tail" style={styles.categoryName}>
+                    {category.name}
+                  </Text>
+                  <View style={styles.categoryMeta}>
                     <Text style={styles.categoryCount}> ({category.workItems?.length || 0})</Text>
 
                     <Text style={styles.categoryExpandToggle}>
@@ -145,7 +218,11 @@ export default function ImportFromCsvScreen() {
           </ScrollView>
 
           <TouchableOpacity onPress={handleSave} disabled={loading} style={styles.saveButton}>
-            {loading ? <ActivityIndicator color="white" /> : <Text style={styles.saveButtonText}>Save</Text>}
+            {loading ? (
+              <ActivityIndicator color={colors.tint} />
+            ) : (
+              <Text style={styles.saveButtonText}>Save</Text>
+            )}
           </TouchableOpacity>
         </>
       )}
@@ -187,7 +264,6 @@ const styles = StyleSheet.create({
   categoryContainer: {
     marginBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
     paddingBottom: 8,
   },
   categoryHeader: {
@@ -196,9 +272,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
   },
+  categoryMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 8,
+    flexShrink: 0,
+  },
   categoryName: {
     fontSize: 18,
     fontWeight: '600',
+    flex: 1,
+    minWidth: 0,
   },
   categoryCount: {
     fontSize: 14,

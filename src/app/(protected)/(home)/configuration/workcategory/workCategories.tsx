@@ -71,6 +71,13 @@ const ListWorkCategories = () => {
           </Pressable>
         )}
         <Pressable
+          onPress={() => router.push('/configuration/workcategory/importFromCsv/')}
+          hitSlop={10}
+          style={styles.headerButton}
+        >
+          <MaterialCommunityIcons name="file-import-outline" size={24} color={colors.iconColor} />
+        </Pressable>
+        <Pressable
           onPress={() => router.push('/configuration/workcategory/add')}
           hitSlop={10}
           style={styles.headerButton}
