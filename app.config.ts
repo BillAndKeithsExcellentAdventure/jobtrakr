@@ -1,7 +1,7 @@
 import { ConfigContext, ExpoConfig } from 'expo/config';
 
 const IS_DEV = process.env.APP_VARIANT === 'development';
-const IS_PREVIEW = false; //process.env.APP_VARIANT === 'preview';
+const IS_PREVIEW = process.env.APP_VARIANT === 'preview';
 
 const getUniqueIdentifier = () => {
   if (IS_DEV) {
@@ -175,6 +175,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   updates: {
     url: 'https://u.expo.dev/0d1178cf-26f4-4ce6-8014-1a3b95e0f7e5',
+    enabled: true,
+    checkAutomatically: 'ON_LOAD',
+    fallbackToCacheTimeout: 0,
     requestHeaders: {
       'expo-channel-name': getChannel(),
     },
