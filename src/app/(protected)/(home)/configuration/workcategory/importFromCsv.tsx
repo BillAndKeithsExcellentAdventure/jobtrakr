@@ -178,7 +178,10 @@ export default function ImportFromCsvScreen() {
 
       {workCategories.length > 0 && (
         <>
-          <Text style={styles.previewTitle}>Preview</Text>
+          <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center', marginBottom: 16 }}>
+            <Text style={styles.previewTitle}>Preview</Text>
+            <Text txtSize="xs">Tap category to expand/collapse</Text>
+          </View>
           <ScrollView style={{ ...styles.scrollView, borderColor: colors.border }}>
             {workCategories.map((category) => (
               <View
@@ -248,12 +251,12 @@ const styles = StyleSheet.create({
   },
   selectButtonText: {
     textAlign: 'center',
+    color: '#ffffff',
     fontWeight: '600',
   },
   previewTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 16,
   },
   scrollView: {
     flex: 1,
