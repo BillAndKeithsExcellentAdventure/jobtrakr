@@ -47,7 +47,7 @@ const SwipeableVendor = ({ vendor }: { vendor: VendorData }) => {
   }, [vendor.mobilePhone]);
 
   const isEmailVerified = useMemo(
-    () => (vendor.email && isConnected ? verifiedEmailAddresses.includes(vendor.email) : true),
+    () => (vendor.email && isConnected ? verifiedEmailAddresses.includes(vendor.email) : false),
     [vendor.email, isConnected, verifiedEmailAddresses],
   );
 

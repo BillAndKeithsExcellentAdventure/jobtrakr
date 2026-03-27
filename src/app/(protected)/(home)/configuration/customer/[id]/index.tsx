@@ -74,7 +74,7 @@ const EditCustomer = () => {
 
   const isEmailVerified = useMemo(
     () =>
-      updatedCustomer.email && isConnected ? verifiedEmailAddresses.includes(updatedCustomer.email) : true,
+      updatedCustomer.email && isConnected ? verifiedEmailAddresses.includes(updatedCustomer.email) : false,
     [updatedCustomer.email, isConnected, verifiedEmailAddresses],
   );
 
@@ -91,6 +91,15 @@ const EditCustomer = () => {
       [name]: value,
     }));
   }, []);
+
+  const handleFieldBlur = useCallback(
+    (fieldName: keyof CustomerData) => {
+      if (id) {
+        applyCustomerUpdates(id, { [fieldName]: updatedCustomer[fieldName] });
+      }
+    },
+    [id, updatedCustomer, applyCustomerUpdates],
+  );
 
   const handleBackPress = useCallback(() => {
     if (id) {
@@ -261,7 +270,7 @@ const EditCustomer = () => {
           {isFromQuickBooks && (
             <Text
               txtSize="xs"
-              text="This customer is connected to a customer in QuickBooks. Only the Contact Name, email, and the Active status can be edited."
+              text="This customer is connected to a customer in QuickBooks. Only the Contact Name, email, phone, and the Active status can be edited."
               style={{ marginBottom: 12, color: colors.neutral500 }}
             />
           )}
@@ -272,6 +281,7 @@ const EditCustomer = () => {
             placeholder="Customer Name"
             value={updatedCustomer.name}
             onChangeText={(text) => handleInputChange('name', text)}
+            onBlur={() => handleFieldBlur('name')}
             editable={!isFromQuickBooks}
           />
           <TextField
@@ -281,8 +291,9 @@ const EditCustomer = () => {
             placeholder="Contact Name"
             value={updatedCustomer.contactName}
             onChangeText={(text) => handleInputChange('contactName', text)}
+            onBlur={() => handleFieldBlur('contactName')}
           />
-          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-end' }}>
             <TextField
               containerStyle={[styles.inputContainer, { flex: 1 }]}
               style={[styles.input]}
@@ -292,9 +303,16 @@ const EditCustomer = () => {
               keyboardType="email-address"
               autoCapitalize="none"
               onChangeText={(text) => handleInputChange('email', text)}
+              onBlur={() => handleFieldBlur('email')}
             />
             {isEmailVerified ? (
-              <MaterialIcons name="verified-user" size={28} color={colors.profitFg} />
+              <View
+                style={{
+                  paddingBottom: 4,
+                }}
+              >
+                <MaterialIcons name="verified-user" size={28} color={colors.profitFg} />
+              </View>
             ) : (
               <>
                 {updatedCustomer.email && updatedCustomer.email.trim().length > 0 && (
@@ -344,7 +362,7 @@ const EditCustomer = () => {
             value={updatedCustomer.phone}
             keyboardType="phone-pad"
             onChangeText={(text) => handleInputChange('phone', text)}
-            editable={!isFromQuickBooks}
+            onBlur={() => handleFieldBlur('phone')}
           />
           <View style={styles.activeRow}>
             <Text txtSize="standard" text="Active" />

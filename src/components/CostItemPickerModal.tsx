@@ -5,8 +5,7 @@ import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
-import { WorkItemDataCodeCompareAsNumber } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Modal, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -32,43 +31,14 @@ const CostItemPickerModal = ({
   allProjectPickerOptions?: OptionEntry[];
 }) => {
   const colors = useColors();
-  const { availableCategoriesOptions, allAvailableCostItemOptions, projectWorkItems } =
-    useProjectWorkItems(projectId);
+  const { allAvailableCostItemOptions } = useProjectWorkItems(projectId);
 
   const [isProjectPickerVisible, setIsProjectPickerVisible] = useState<boolean>(false);
-  const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
-  const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
-
   const [isCostItemPickerVisible, setIsCostItemPickerVisible] = useState<boolean>(false);
   const [pickedCostItemOption, setPickedCostItemOption] = useState<OptionEntry | undefined>(undefined);
-  const [costItemEntries, setCostItemEntries] = useState<OptionEntry[]>([]);
   const handleCostItemChange = useCallback((selectedCostItem: OptionEntry) => {
     setPickedCostItemOption(selectedCostItem);
   }, []);
-
-  const handleCategoryChange = useCallback(
-    (selectedCategory: OptionEntry) => {
-      setPickedCategoryOption(selectedCategory);
-      if (selectedCategory) {
-        const workItems = projectWorkItems
-          .filter((item) => item.categoryId === selectedCategory.value)
-          .sort(WorkItemDataCodeCompareAsNumber);
-        const subCategories = workItems.map((item) => {
-          return allAvailableCostItemOptions.find((o) => o.value === item.id) ?? { label: '', value: '' };
-        });
-
-        setCostItemEntries(subCategories);
-        setPickedCostItemOption(undefined);
-      }
-    },
-    [projectWorkItems, allAvailableCostItemOptions],
-  );
-
-  useEffect(() => {
-    if (pickedCategoryOption === undefined || pickedCategoryOption.value === '') {
-      setCostItemEntries(allAvailableCostItemOptions);
-    }
-  }, [pickedCategoryOption, allAvailableCostItemOptions]);
 
   const handleSubCategoryOptionChange = useCallback(
     (option: OptionEntry) => {
@@ -78,16 +48,6 @@ const CostItemPickerModal = ({
       setIsCostItemPickerVisible(false);
     },
     [handleCostItemChange],
-  );
-
-  const handleCategoryOptionChange = useCallback(
-    (option: OptionEntry) => {
-      if (option) {
-        handleCategoryChange(option);
-      }
-      setIsCategoryPickerVisible(false);
-    },
-    [handleCategoryChange],
   );
 
   const handleProjectOptionChange = useCallback(
@@ -120,15 +80,6 @@ const CostItemPickerModal = ({
                   }}
                 />
               )}
-
-              <OptionPickerItem
-                containerStyle={styles.inputContainer}
-                optionLabel={pickedCategoryOption?.label}
-                label="Category"
-                placeholder="Category"
-                editable={false}
-                onPickerButtonPress={() => setIsCategoryPickerVisible(true)}
-              />
               <OptionPickerItem
                 containerStyle={styles.inputContainer}
                 optionLabel={pickedCostItemOption?.label}
@@ -172,21 +123,6 @@ const CostItemPickerModal = ({
               />
             </BottomSheetContainer>
           )}
-
-          {isCategoryPickerVisible && (
-            <BottomSheetContainer
-              modalHeight="65%"
-              isVisible={isCategoryPickerVisible}
-              onClose={() => setIsCategoryPickerVisible(false)}
-            >
-              <OptionList
-                options={availableCategoriesOptions}
-                enableSearch={availableCategoriesOptions.length > 15}
-                onSelect={(option) => handleCategoryOptionChange(option)}
-                selectedOption={pickedCategoryOption}
-              />
-            </BottomSheetContainer>
-          )}
           {isCostItemPickerVisible && (
             <BottomSheetContainer
               modalHeight="80%"
@@ -196,12 +132,12 @@ const CostItemPickerModal = ({
               <OptionList
                 centerOptions={false}
                 boldSelectedOption={false}
-                options={costItemEntries}
+                options={allAvailableCostItemOptions}
                 onSelect={(option) => {
                   handleSubCategoryOptionChange(option);
                 }}
                 selectedOption={pickedCostItemOption}
-                enableSearch={costItemEntries.length > 15}
+                enableSearch={allAvailableCostItemOptions.length > 15}
               />
             </BottomSheetContainer>
           )}

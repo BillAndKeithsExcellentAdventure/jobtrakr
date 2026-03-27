@@ -7,7 +7,6 @@ import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
-import { WorkItemDataCodeCompareAsNumber } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   useAllRows,
   useUpdateRowCallback,
@@ -28,13 +27,7 @@ const EditLineItemPage = () => {
   const colors = useColors();
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const updateLineItem = useUpdateRowCallback(projectId, 'workItemCostEntries');
-  const {
-    projectWorkItems,
-    availableCategoriesOptions,
-    allAvailableCostItemOptions,
-    allWorkItems,
-    allWorkCategories,
-  } = useProjectWorkItems(projectId);
+  const { allAvailableCostItemOptions } = useProjectWorkItems(projectId);
   const [itemizedEntry, setItemizedEntry] = useState<WorkItemCostEntry>({
     id: '',
     label: '',
@@ -53,22 +46,19 @@ const EditLineItemPage = () => {
     }
   }, [allCostItems, lineItemId]);
 
-  const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
-  const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
   const [isSubCategoryPickerVisible, setIsSubCategoryPickerVisible] = useState<boolean>(false);
   const [pickedSubCategoryOption, setPickedSubCategoryOption] = useState<OptionEntry | undefined>(undefined);
-  const [subCategories, setSubCategories] = useState<OptionEntry[]>([]);
 
   useEffect(() => {
     if (itemizedEntry.workItemId) {
-      const workItem = allWorkItems.find((item) => item.id === itemizedEntry.workItemId);
-      if (workItem) {
-        const category = allWorkCategories.find((c) => c.id === workItem.categoryId);
-        setPickedCategoryOption(category ? { label: category.name, value: category.id } : undefined);
-        setPickedSubCategoryOption({ label: workItem.name, value: workItem.id });
+      const selectedOption = allAvailableCostItemOptions.find(
+        (item) => item.value === itemizedEntry.workItemId,
+      );
+      if (selectedOption) {
+        setPickedSubCategoryOption(selectedOption);
       }
     }
-  }, [itemizedEntry.workItemId, allWorkItems, allWorkCategories]);
+  }, [itemizedEntry.workItemId, allAvailableCostItemOptions]);
 
   const handleSubCategoryOptionChange = (option: OptionEntry) => {
     if (option) {
@@ -77,34 +67,9 @@ const EditLineItemPage = () => {
     setIsSubCategoryPickerVisible(false);
   };
 
-  const handleCategoryOptionChange = (option: OptionEntry) => {
-    if (option) {
-      handleCategoryChange(option);
-    }
-    setIsCategoryPickerVisible(false);
-  };
-
   const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
     setPickedSubCategoryOption(selectedSubCategory);
   }, []);
-
-  const handleCategoryChange = useCallback(
-    (selectedCategory: OptionEntry) => {
-      setPickedCategoryOption(selectedCategory);
-      if (selectedCategory) {
-        const workItems = projectWorkItems
-          .filter((item) => item.categoryId === selectedCategory.value)
-          .sort(WorkItemDataCodeCompareAsNumber);
-        const subCategories = workItems.map((item) => {
-          return allAvailableCostItemOptions.find((o) => o.value === item.id) ?? { label: '', value: '' };
-        });
-
-        setSubCategories(subCategories);
-        setPickedSubCategoryOption(undefined);
-      }
-    },
-    [projectWorkItems, allAvailableCostItemOptions],
-  );
 
   const handleOkPress = useCallback(async () => {
     const entryToSave = { ...itemizedEntry };
@@ -164,14 +129,6 @@ const EditLineItemPage = () => {
         />
         <OptionPickerItem
           containerStyle={styles.inputContainer}
-          optionLabel={pickedCategoryOption?.label}
-          label="Category"
-          placeholder="Category"
-          editable={false}
-          onPickerButtonPress={() => setIsCategoryPickerVisible(true)}
-        />
-        <OptionPickerItem
-          containerStyle={styles.inputContainer}
           optionLabel={pickedSubCategoryOption?.label}
           label="Cost Item Type"
           placeholder="Cost Item Type"
@@ -198,20 +155,6 @@ const EditLineItemPage = () => {
             title="Cancel"
           />
         </View>
-        {isCategoryPickerVisible && (
-          <BottomSheetContainer
-            isVisible={isCategoryPickerVisible}
-            onClose={() => setIsCategoryPickerVisible(false)}
-            modalHeight="65%"
-          >
-            <OptionList
-              options={availableCategoriesOptions}
-              onSelect={(option) => handleCategoryOptionChange(option)}
-              selectedOption={pickedCategoryOption}
-              enableSearch={availableCategoriesOptions.length > 15}
-            />
-          </BottomSheetContainer>
-        )}
         {isSubCategoryPickerVisible && (
           <BottomSheetContainer
             isVisible={isSubCategoryPickerVisible}
@@ -221,10 +164,10 @@ const EditLineItemPage = () => {
             <OptionList
               centerOptions={false}
               boldSelectedOption={false}
-              options={subCategories}
+              options={allAvailableCostItemOptions}
               onSelect={(option) => handleSubCategoryOptionChange(option)}
               selectedOption={pickedSubCategoryOption}
-              enableSearch={subCategories.length > 15}
+              enableSearch={allAvailableCostItemOptions.length > 15}
             />
           </BottomSheetContainer>
         )}

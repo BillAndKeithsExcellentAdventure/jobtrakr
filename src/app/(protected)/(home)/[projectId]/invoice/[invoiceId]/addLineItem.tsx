@@ -6,44 +6,25 @@ import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
-import { WorkItemDataCodeCompareAsNumber } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAddRowCallback, WorkItemCostEntry } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 
 const AddInvoiceLineItemPage = () => {
   const router = useRouter();
   const { projectId, invoiceId } = useLocalSearchParams<{ projectId: string; invoiceId: string }>();
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
-  const { projectWorkItems, availableCategoriesOptions, allAvailableCostItemOptions } =
-    useProjectWorkItems(projectId);
-
-  const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState<boolean>(false);
-  const [pickedCategoryOption, setPickedCategoryOption] = useState<OptionEntry | undefined>(undefined);
+  const { allAvailableCostItemOptions } = useProjectWorkItems(projectId);
 
   const [isSubCategoryPickerVisible, setIsSubCategoryPickerVisible] = useState<boolean>(false);
   const [pickedSubCategoryOption, setPickedSubCategoryOption] = useState<OptionEntry | undefined>(undefined);
-  const [subCategories, setSubCategories] = useState<OptionEntry[]>([]);
-
-  useEffect(() => {
-    if (pickedCategoryOption === undefined || pickedCategoryOption.value === '') {
-      setSubCategories(allAvailableCostItemOptions);
-    }
-  }, [pickedCategoryOption, allAvailableCostItemOptions]);
 
   const handleSubCategoryOptionChange = (option: OptionEntry) => {
     if (option) {
       handleSubCategoryChange(option);
     }
     setIsSubCategoryPickerVisible(false);
-  };
-
-  const handleCategoryOptionChange = (option: OptionEntry) => {
-    if (option) {
-      handleCategoryChange(option);
-    }
-    setIsCategoryPickerVisible(false);
   };
 
   const initItemizedEntry: WorkItemCostEntry = {
@@ -60,24 +41,6 @@ const AddInvoiceLineItemPage = () => {
   const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
     setPickedSubCategoryOption(selectedSubCategory);
   }, []);
-
-  const handleCategoryChange = useCallback(
-    (selectedCategory: OptionEntry) => {
-      setPickedCategoryOption(selectedCategory);
-      if (selectedCategory) {
-        const workItems = projectWorkItems
-          .filter((item) => item.categoryId === selectedCategory.value)
-          .sort(WorkItemDataCodeCompareAsNumber);
-        const subCategories = workItems.map((item) => {
-          return allAvailableCostItemOptions.find((o) => o.value === item.id) ?? { label: '', value: '' };
-        });
-
-        setSubCategories(subCategories);
-        setPickedSubCategoryOption(undefined);
-      }
-    },
-    [projectWorkItems, allAvailableCostItemOptions],
-  );
 
   const handleOkPress = useCallback(async () => {
     if (!itemizedEntry.label || !itemizedEntry.amount) {
@@ -133,14 +96,6 @@ const AddInvoiceLineItemPage = () => {
         />
         <OptionPickerItem
           containerStyle={styles.inputContainer}
-          optionLabel={pickedCategoryOption?.label}
-          label="Category"
-          placeholder="Category"
-          editable={false}
-          onPickerButtonPress={() => setIsCategoryPickerVisible(true)}
-        />
-        <OptionPickerItem
-          containerStyle={styles.inputContainer}
           optionLabel={pickedSubCategoryOption?.label}
           label="Cost Item Type"
           placeholder="Cost Item Type"
@@ -148,20 +103,6 @@ const AddInvoiceLineItemPage = () => {
           onPickerButtonPress={() => setIsSubCategoryPickerVisible(true)}
         />
       </ModalScreenContainer>
-      {isCategoryPickerVisible && (
-        <BottomSheetContainer
-          modalHeight="65%"
-          isVisible={isCategoryPickerVisible}
-          onClose={() => setIsCategoryPickerVisible(false)}
-        >
-          <OptionList
-            options={availableCategoriesOptions}
-            onSelect={(option) => handleCategoryOptionChange(option)}
-            selectedOption={pickedCategoryOption}
-            enableSearch={availableCategoriesOptions.length > 15}
-          />
-        </BottomSheetContainer>
-      )}
       {isSubCategoryPickerVisible && (
         <BottomSheetContainer
           modalHeight="80%"
@@ -171,10 +112,10 @@ const AddInvoiceLineItemPage = () => {
           <OptionList
             centerOptions={false}
             boldSelectedOption={false}
-            options={subCategories}
+            options={allAvailableCostItemOptions}
             onSelect={(option) => handleSubCategoryOptionChange(option)}
             selectedOption={pickedSubCategoryOption}
-            enableSearch={subCategories.length > 15}
+            enableSearch={allAvailableCostItemOptions.length > 15}
           />
         </BottomSheetContainer>
       )}

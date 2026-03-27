@@ -48,7 +48,7 @@ const SwipeableCustomer = ({ customer }: { customer: CustomerData }) => {
   }, [customer.phone]);
 
   const isEmailVerified = useMemo(
-    () => (customer.email && isConnected ? verifiedEmailAddresses.includes(customer.email) : true),
+    () => (customer.email && isConnected ? verifiedEmailAddresses.includes(customer.email) : false),
     [customer.email, isConnected, verifiedEmailAddresses],
   );
 
