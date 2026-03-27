@@ -1,6 +1,7 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { AiLineItem } from '@/src/components/AiLineItem';
-import CostItemPickerModal from '@/src/components/CostItemPickerModal';
+import { CostItemPicker } from '@/src/components/CostItemPicker';
+import { OptionPicker } from '@/src/components/OptionPicker';
 import { OptionEntry } from '@/src/components/OptionList';
 import { ReceiptSummaryEditModal } from '@/src/components/ReceiptSummaryEditModal';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
@@ -28,6 +29,7 @@ import {
   useVendorMatch,
   VendorDataCompareName,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import { useNetwork } from '@/src/context/NetworkContext';
 
 const processAIProcessing = async (
@@ -88,6 +90,7 @@ const RequestAIProcessingPage = () => {
   const receipt = useTypedRow(projectId, 'receipts', receiptId);
   const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
+  const { allAvailableCostItemOptions } = useProjectWorkItems(projectId);
   const allProjects = useAllProjects();
   const projectPickerOptions = useMemo(
     () => allProjects.map((p) => ({ label: p.name, value: p.id })),
@@ -304,10 +307,10 @@ const RequestAIProcessingPage = () => {
   }, []);
 
   const onCostItemOptionSelected = useCallback(
-    (costItemEntry: OptionEntry | undefined) => {
-      if (costItemEntry) {
-        const label = costItemEntry.label;
-        const workItemId = costItemEntry.value ?? '';
+    (workItemId: string) => {
+      const selectedCostItem = allAvailableCostItemOptions.find((option) => option.value === workItemId);
+      if (selectedCostItem) {
+        const label = selectedCostItem.label;
         const projId = lineItemProjectOption ? lineItemProjectOption.value : projectId;
 
         const updatedItems = receiptItems.map((item) => {
@@ -315,13 +318,12 @@ const RequestAIProcessingPage = () => {
             return {
               ...item,
               costWorkItem: { label, workItemId, projectId: projId },
-              isSelected: false, // Deselect after assigning cost item
+              isSelected: false,
             };
           }
           return item;
         });
 
-        // sort receipt items so all items with a null or undefined costWorkItem are at the top
         updatedItems.sort((a, b) => {
           if (a.costWorkItem && b.costWorkItem) return 0;
           if (a.costWorkItem) return 1;
@@ -329,7 +331,6 @@ const RequestAIProcessingPage = () => {
           return 0;
         });
 
-        // select items that still need there Cost Item specified
         const selectedUpdatedItems = updatedItems.map((item) => {
           if (!item.costWorkItem) {
             return {
@@ -344,7 +345,7 @@ const RequestAIProcessingPage = () => {
       setShowCostItemPicker(false);
       setLineItemProjectOption(defaultProjectOption);
     },
-    [receiptItems, lineItemProjectOption, projectId, defaultProjectOption],
+    [allAvailableCostItemOptions, receiptItems, lineItemProjectOption, projectId, defaultProjectOption],
   );
 
   // Handler for saving edited summary
@@ -582,16 +583,31 @@ const RequestAIProcessingPage = () => {
         )}
       </View>
       {showCostItemPicker && (
-        <CostItemPickerModal
-          isVisible={showCostItemPicker}
-          onClose={() => setShowCostItemPicker(false)}
-          projectId={projectId}
-          handleCostItemOptionSelected={onCostItemOptionSelected}
-          showProjectPicker={true}
-          handleProjectChange={handleLineItemProjectChange}
-          selectedProjectPickerOption={lineItemProjectOption}
-          allProjectPickerOptions={projectPickerOptions}
-        />
+        <View style={{ paddingTop: 8, gap: 8 }}>
+          <OptionPicker
+            options={projectPickerOptions}
+            selectedOption={lineItemProjectOption}
+            onOptionSelected={handleLineItemProjectChange}
+            label="Project"
+            placeholder="Project"
+            modalTitle="Select Project"
+            modalHeight="65%"
+          />
+          <CostItemPicker
+            projectId={projectId}
+            onValueChange={onCostItemOptionSelected}
+            placeholder="Select Cost Item"
+            modalTitle="Select Cost Item"
+          />
+          <ActionButton
+            title="Cancel Cost Item Selection"
+            type="cancel"
+            onPress={() => {
+              setShowCostItemPicker(false);
+              setLineItemProjectOption(defaultProjectOption);
+            }}
+          />
+        </View>
       )}
       {receiptSummary && (
         <ReceiptSummaryEditModal

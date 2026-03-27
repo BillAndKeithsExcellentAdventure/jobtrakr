@@ -1,10 +1,10 @@
-import { Alert, Keyboard, Platform, StyleSheet, TouchableOpacity } from 'react-native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Platform, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, TextInput, View } from '@/src/components/Themed';
-import CostItemPickerModal from '@/src/components/CostItemPickerModal';
+import { Text, View } from '@/src/components/Themed';
+import { CostItemPicker } from '@/src/components/CostItemPicker';
 import { TextField } from '@/src/components/TextField';
 import { NumericInputField } from '@/src/components/NumericInputField';
 import { useColors } from '@/src/context/ColorsContext';
@@ -14,12 +14,6 @@ import {
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { ActionButton } from '@/src/components/ActionButton';
-import { OptionEntry } from '@/src/components/OptionList';
-import {
-  useAllRows as useAllConfigurationRows,
-  WorkCategoryCodeCompareAsNumber,
-  WorkItemDataCodeCompareAsNumber,
-} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 
 const EditChangeOrderItem = () => {
@@ -33,38 +27,9 @@ const EditChangeOrderItem = () => {
   const router = useRouter();
   const allChangeOrderItems = useAllRows(projectId, 'changeOrderItems');
   const updateChangeOrderItem = useUpdateRowCallback(projectId, 'changeOrderItems');
-  const allWorkItemCostSummaries = useAllRows(projectId, 'workItemSummaries');
-  const allWorkItems = useAllConfigurationRows('workItems', WorkItemDataCodeCompareAsNumber);
-
-  const allWorkCategories = useAllConfigurationRows('categories', WorkCategoryCodeCompareAsNumber);
-
-  const allAvailableCostItemOptions: OptionEntry[] = useMemo(() => {
-    const uniqueWorkItemIds = allWorkItemCostSummaries.map((item) => item.workItemId);
-    const uniqueWorkItems = allWorkItems.filter((item) => uniqueWorkItemIds.includes(item.id));
-    const uniqueCostItems = uniqueWorkItems.map((item) => {
-      const category = allWorkCategories.find((o) => o.id === item.categoryId);
-      const categoryCode = category ? `${category.code}.` : '';
-      return {
-        sortValue1: Number.parseFloat(item.code),
-        sortValue2: Number.parseFloat(category ? category.code : '0'),
-        label: `${categoryCode}${item.code} - ${item.name}`,
-        value: item.id,
-      };
-    });
-
-    return uniqueCostItems
-      .sort((a, b) => a.sortValue1 - b.sortValue1)
-      .sort((a, b) => a.sortValue2 - b.sortValue2)
-      .map((i) => ({ label: i.label, value: i.value }));
-  }, [allWorkItemCostSummaries, allWorkItems, allWorkCategories]);
 
   const [amount, setAmount] = useState<number>(0);
   const [label, setLabel] = useState<string>('');
-
-  const [itemWorkItemEntry, setItemWorkItemEntry] = useState<OptionEntry>({
-    label: '',
-    value: '',
-  });
 
   const [newChangeOrderItem, setNewChangeOrderItem] = useState<ChangeOrderItem>({
     id: '',
@@ -81,18 +46,9 @@ const EditChangeOrderItem = () => {
         setNewChangeOrderItem(item);
         setAmount(item.amount);
         setLabel(item.label);
-        const option = allAvailableCostItemOptions.find((opt) => opt.value === item.workItemId);
-        if (option) setItemWorkItemEntry(option);
       }
     }
-  }, [newChangeOrderItem, allChangeOrderItems, allAvailableCostItemOptions, changeOrderItemId]);
-
-  const [showCostItemPicker, setShowCostItemPicker] = useState(false);
-
-  const handleShowCostItemPicker = () => {
-    Keyboard.dismiss();
-    setShowCostItemPicker(true);
-  };
+  }, [newChangeOrderItem, allChangeOrderItems, changeOrderItemId]);
 
   const handleAddItemCancel = () => {
     setNewChangeOrderItem({
@@ -106,28 +62,17 @@ const EditChangeOrderItem = () => {
   };
 
   const handleUpdateItemOk = () => {
-    if (!label || !amount || !itemWorkItemEntry.value) {
+    if (!label || !amount || !newChangeOrderItem.workItemId) {
       Alert.alert('Error', 'Please fill in all item fields.');
       return;
     }
     updateChangeOrderItem(changeOrderItemId, {
       ...newChangeOrderItem,
-      workItemId: itemWorkItemEntry.value,
       label,
       amount,
     });
     router.back();
   };
-
-  const onCostItemOptionSelected = useCallback((costItemEntry: OptionEntry | undefined) => {
-    if (costItemEntry) {
-      setItemWorkItemEntry({
-        label: costItemEntry.label,
-        value: costItemEntry.value,
-      });
-    }
-    setShowCostItemPicker(false);
-  }, []);
 
   return (
     <>
@@ -154,6 +99,7 @@ const EditChangeOrderItem = () => {
             numberOfLines={2}
           />
           <NumericInputField
+            label="Bid Amount"
             maxDecimals={2}
             decimals={2}
             value={amount}
@@ -161,18 +107,20 @@ const EditChangeOrderItem = () => {
             placeholder="Amount"
           />
           <View>
-            <Text style={styles.label}>Cost Item</Text>
-            <TouchableOpacity activeOpacity={1} onPress={handleShowCostItemPicker}>
-              <View style={{ marginBottom: 10 }}>
-                <TextInput
-                  style={styles.input}
-                  value={itemWorkItemEntry.label ?? null}
-                  readOnly={true}
-                  placeholder="Select Cost Item"
-                  onPressIn={handleShowCostItemPicker}
-                />
-              </View>
-            </TouchableOpacity>
+            <CostItemPicker
+              label="Cost Item"
+              style={{ marginBottom: 10 }}
+              projectId={projectId}
+              value={newChangeOrderItem.workItemId}
+              onValueChange={(workItemId) => {
+                setNewChangeOrderItem((prev) => ({
+                  ...prev,
+                  workItemId,
+                }));
+              }}
+              placeholder="Select Cost Item"
+              modalTitle="Select Cost Item"
+            />
           </View>
           <View style={styles.saveButtonRow}>
             <ActionButton style={styles.saveButton} onPress={handleUpdateItemOk} type="ok" title="Save" />
@@ -185,14 +133,6 @@ const EditChangeOrderItem = () => {
           </View>
         </View>
       </SafeAreaView>
-      {showCostItemPicker && (
-        <CostItemPickerModal
-          isVisible={showCostItemPicker}
-          onClose={() => setShowCostItemPicker(false)}
-          projectId={projectId}
-          handleCostItemOptionSelected={onCostItemOptionSelected}
-        />
-      )}
       {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
     </>
   );

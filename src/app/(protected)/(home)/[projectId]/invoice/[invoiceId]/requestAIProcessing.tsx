@@ -1,6 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { AiLineItem } from '@/src/components/AiLineItem';
-import CostItemPickerModal from '@/src/components/CostItemPickerModal';
+import { CostItemPicker } from '@/src/components/CostItemPicker';
 import { InvoiceSummaryEditModal } from '@/src/components/InvoiceSummaryEditModal';
 import { OptionEntry } from '@/src/components/OptionList';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
@@ -16,6 +16,7 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/formatters';
 import { createApiWithToken } from '@/src/utils/apiWithToken';
+import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import {
   useAllRows,
   useVendorMatch,
@@ -88,6 +89,7 @@ const RequestAIProcessingPage = () => {
   const invoice = useTypedRow(projectId, 'invoices', invoiceId);
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
+  const { allAvailableCostItemOptions } = useProjectWorkItems(projectId);
   const { isQuickBooksConnected } = useNetwork();
   const allVendors = useAllRows('vendors', VendorDataCompareName);
   const matchableVendors = useMemo(
@@ -277,23 +279,22 @@ const RequestAIProcessingPage = () => {
   }, []);
 
   const onCostItemOptionSelected = useCallback(
-    (costItemEntry: OptionEntry | undefined) => {
-      if (costItemEntry) {
-        const label = costItemEntry.label;
-        const workItemId = costItemEntry.value ?? '';
+    (workItemId: string) => {
+      const selectedCostItem = allAvailableCostItemOptions.find((option) => option.value === workItemId);
+      if (selectedCostItem) {
+        const label = selectedCostItem.label;
 
         const updatedItems = invoiceItems.map((item) => {
           if (item.isSelected) {
             return {
               ...item,
               costWorkItem: { label, workItemId },
-              isSelected: false, // Deselect after assigning cost item
+              isSelected: false,
             };
           }
           return item;
         });
 
-        // sort invoice items so all items with a null or undefined costWorkItem are at the top
         updatedItems.sort((a, b) => {
           if (a.costWorkItem && b.costWorkItem) return 0;
           if (a.costWorkItem) return 1;
@@ -305,7 +306,7 @@ const RequestAIProcessingPage = () => {
       }
       setShowCostItemPicker(false);
     },
-    [invoiceItems],
+    [allAvailableCostItemOptions, invoiceItems],
   );
 
   // Handler for saving edited summary
@@ -505,12 +506,19 @@ const RequestAIProcessingPage = () => {
         )}
       </View>
       {showCostItemPicker && (
-        <CostItemPickerModal
-          isVisible={showCostItemPicker}
-          onClose={() => setShowCostItemPicker(false)}
-          projectId={projectId}
-          handleCostItemOptionSelected={onCostItemOptionSelected}
-        />
+        <View style={{ paddingTop: 8, gap: 8 }}>
+          <CostItemPicker
+            projectId={projectId}
+            onValueChange={onCostItemOptionSelected}
+            placeholder="Select Cost Item"
+            modalTitle="Select Cost Item"
+          />
+          <ActionButton
+            title="Cancel Cost Item Selection"
+            type="cancel"
+            onPress={() => setShowCostItemPicker(false)}
+          />
+        </View>
       )}
       {invoiceSummary && (
         <InvoiceSummaryEditModal

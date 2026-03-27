@@ -1,11 +1,11 @@
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
+import { CostItemPicker } from '@/src/components/CostItemPicker';
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import { NumericInputField } from '@/src/components/NumericInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
-import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import { useAddRowCallback, WorkItemCostEntry } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -17,7 +17,6 @@ const AddReceiptLineItemPage = () => {
   const allProjects = useAllProjects();
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
-  const { allAvailableCostItemOptions } = useProjectWorkItems(projectId);
 
   const [isProjectPickerVisible, setIsProjectPickerVisible] = useState<boolean>(false);
   const [pickedProjectOption, setPickedProjectOption] = useState<OptionEntry | undefined>(undefined);
@@ -41,16 +40,6 @@ const AddReceiptLineItemPage = () => {
     }
   }, [allProjects, projectId]);
 
-  const [isSubCategoryPickerVisible, setIsSubCategoryPickerVisible] = useState<boolean>(false);
-  const [pickedSubCategoryOption, setPickedSubCategoryOption] = useState<OptionEntry | undefined>(undefined);
-
-  const handleSubCategoryOptionChange = (option: OptionEntry) => {
-    if (option) {
-      handleSubCategoryChange(option);
-    }
-    setIsSubCategoryPickerVisible(false);
-  };
-
   const handleProjectOptionChange = (option: OptionEntry) => {
     if (option) {
       setPickedProjectOption(option);
@@ -69,10 +58,6 @@ const AddReceiptLineItemPage = () => {
 
   const [itemizedEntry, setItemizedEntry] = useState<WorkItemCostEntry>(initItemizedEntry);
 
-  const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
-    setPickedSubCategoryOption(selectedSubCategory);
-  }, []);
-
   const handleOkPress = useCallback(async () => {
     if (!itemizedEntry.label || !itemizedEntry.amount) {
       Alert.alert('Error', 'Please fill in all required fields.');
@@ -80,7 +65,7 @@ const AddReceiptLineItemPage = () => {
     }
     const newItemizedEntry: WorkItemCostEntry = {
       ...itemizedEntry,
-      workItemId: pickedSubCategoryOption ? (pickedSubCategoryOption.value as string) : '',
+      workItemId: itemizedEntry.workItemId,
       projectId: pickedProjectOption ? (pickedProjectOption.value as string) : projectId,
     };
     const result = addLineItem(newItemizedEntry);
@@ -89,7 +74,7 @@ const AddReceiptLineItemPage = () => {
       return;
     }
     router.back();
-  }, [itemizedEntry, pickedSubCategoryOption, pickedProjectOption, addLineItem, router, projectId]);
+  }, [itemizedEntry, pickedProjectOption, addLineItem, router, projectId]);
 
   return (
     <View style={{ flex: 1, width: '100%' }}>
@@ -134,31 +119,22 @@ const AddReceiptLineItemPage = () => {
             onPickerButtonPress={() => setIsProjectPickerVisible(true)}
           />
         )}
-        <OptionPickerItem
-          containerStyle={styles.inputContainer}
-          optionLabel={pickedSubCategoryOption?.label}
+        <CostItemPicker
+          style={styles.inputContainer}
+          projectId={projectId}
+          value={itemizedEntry.workItemId}
+          onValueChange={(workItemId) => {
+            setItemizedEntry((prevItem) => ({
+              ...prevItem,
+              workItemId,
+            }));
+          }}
           label="Cost Item Type"
           placeholder="Cost Item Type"
-          editable={false}
-          onPickerButtonPress={() => setIsSubCategoryPickerVisible(true)}
+          modalTitle="Select Cost Item Type"
+          modalHeight="80%"
         />
       </ModalScreenContainer>
-      {isSubCategoryPickerVisible && (
-        <BottomSheetContainer
-          modalHeight="80%"
-          isVisible={isSubCategoryPickerVisible}
-          onClose={() => setIsSubCategoryPickerVisible(false)}
-        >
-          <OptionList
-            centerOptions={false}
-            boldSelectedOption={false}
-            options={allAvailableCostItemOptions}
-            onSelect={(option) => handleSubCategoryOptionChange(option)}
-            selectedOption={pickedSubCategoryOption}
-            enableSearch={allAvailableCostItemOptions.length > 15}
-          />
-        </BottomSheetContainer>
-      )}
       {isProjectPickerVisible && projectOptions && (
         <BottomSheetContainer
           modalHeight="65%"
