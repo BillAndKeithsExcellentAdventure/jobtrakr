@@ -7,11 +7,32 @@ import {
   useAppSettings,
   useSetAppSettingsCallback,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
-import { useAllRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import {
+  useAllRows,
+  useAddRowCallback,
+  useDeleteRowCallback,
+  useConfigurationStore,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { importAccountsFromQuickBooks } from '@/src/utils/quickbooksImports';
+import { sanitizeQuickBooksAccountSettings } from '@/src/utils/quickbooksAccountSettings';
+import { useAuth } from '@clerk/clerk-expo';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  GestureResponderEvent,
+  Modal,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
+import RightHeaderMenu from '@/src/components/RightHeaderMenu';
+import { ActionButtonProps } from '@/src/components/ButtonBar';
+import { SvgImage } from '@/src/components/SvgImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
@@ -20,11 +41,46 @@ const QBAccountsScreen = () => {
   const colors = useColors();
   const router = useRouter();
   const { isQuickBooksAccessible } = useNetwork();
+  const auth = useAuth();
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
   const storedAccounts = useAllRows('accounts');
+  const allAccounts = useAllRows('accounts');
+  const addAccount = useAddRowCallback('accounts');
+  const deleteAccount = useDeleteRowCallback('accounts');
+  const configStore = useConfigurationStore();
 
   const [isLoading] = useState(false);
+  const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
+  const [processingInfo, setProcessingInfo] = useState<{ isProcessing: boolean; label: string }>({
+    isProcessing: false,
+    label: '',
+  });
+  const isProcessingRef = useRef(false);
+  const processingDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const startProcessing = useCallback((label: string) => {
+    isProcessingRef.current = true;
+    if (processingDelayTimerRef.current) {
+      clearTimeout(processingDelayTimerRef.current);
+      processingDelayTimerRef.current = null;
+    }
+    processingDelayTimerRef.current = setTimeout(() => {
+      processingDelayTimerRef.current = null;
+      if (isProcessingRef.current) {
+        setProcessingInfo({ isProcessing: true, label });
+      }
+    }, 500);
+  }, []);
+
+  const stopProcessing = useCallback(() => {
+    isProcessingRef.current = false;
+    if (processingDelayTimerRef.current) {
+      clearTimeout(processingDelayTimerRef.current);
+      processingDelayTimerRef.current = null;
+    }
+    setProcessingInfo({ isProcessing: false, label: '' });
+  }, []);
   const [expenseAccounts, setExpenseAccounts] = useState<OptionEntry[]>([]);
   const [paymentAccounts, setPaymentAccounts] = useState<OptionEntry[]>([]);
   const [selectedExpenseAccountId, setSelectedExpenseAccountId] = useState<string>(
@@ -41,6 +97,54 @@ const QBAccountsScreen = () => {
 
   // Track if accounts have been fetched to prevent multiple API calls
   const hasAccountsFetched = useRef(false);
+
+  const handleGetQBAccounts = useCallback(async () => {
+    if (!auth.orgId || !auth.userId) {
+      Alert.alert('Error', 'Unable to get accounts. Please sign in again.');
+      return;
+    }
+    if (isProcessingRef.current) {
+      return;
+    }
+
+    startProcessing('Importing Accounts from QuickBooks...');
+    try {
+      const { addedCount, accounts } = await importAccountsFromQuickBooks(
+        auth.orgId,
+        auth.userId,
+        auth.getToken,
+        allAccounts,
+        addAccount,
+        deleteAccount,
+        configStore,
+      );
+
+      const sanitizedSettings = sanitizeQuickBooksAccountSettings(appSettings, accounts);
+      setAppSettings(sanitizedSettings);
+      hasAccountsFetched.current = false; // Allow the accounts list to reload
+      Alert.alert(
+        'QuickBooks Account Import Complete',
+        `${addedCount} Accounts imported successfully from QuickBooks.`,
+      );
+    } catch (error) {
+      console.error('Error importing QuickBooks accounts:', error);
+      Alert.alert('Error', 'Failed to import QuickBooks accounts');
+    } finally {
+      stopProcessing();
+    }
+  }, [
+    auth.orgId,
+    auth.userId,
+    auth.getToken,
+    allAccounts,
+    addAccount,
+    deleteAccount,
+    configStore,
+    appSettings,
+    setAppSettings,
+    startProcessing,
+    stopProcessing,
+  ]);
 
   // Sync selected expense account from settings
   useEffect(() => {
@@ -188,6 +292,50 @@ const QBAccountsScreen = () => {
     );
   }, [selectedExpenseAccountId, selectedPaymentAccountIds, defaultPaymentAccountId, appSettings]);
 
+  const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
+    () =>
+      isQuickBooksAccessible
+        ? [
+            {
+              icon: <MaterialIcons name="account-balance" size={28} color={colors.iconColor} />,
+              label: 'Get Accounts from QuickBooks',
+              onPress: (_e: GestureResponderEvent) => {
+                setHeaderMenuModalVisible(false);
+                handleGetQBAccounts();
+              },
+            },
+          ]
+        : [],
+    [colors.iconColor, isQuickBooksAccessible, handleGetQBAccounts],
+  );
+
+  const headerRightComponent = useMemo(() => {
+    if (!isQuickBooksAccessible) return {};
+    return {
+      headerRight: () => (
+        <View
+          style={{
+            minWidth: 30,
+            minHeight: 30,
+            gap: 10,
+            alignItems: 'center',
+            flexDirection: 'row',
+            backgroundColor: 'transparent',
+            marginRight: Platform.OS === 'android' ? 16 : 0,
+          }}
+        >
+          <Pressable
+            style={{ alignItems: 'center' }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            onPress={() => setHeaderMenuModalVisible(!headerMenuModalVisible)}
+          >
+            <MaterialCommunityIcons name="menu" size={28} color={colors.iconColor} />
+          </Pressable>
+        </View>
+      ),
+    };
+  }, [colors.iconColor, headerMenuModalVisible, isQuickBooksAccessible]);
+
   // Show message if no accounts are available (not connected and no stored accounts)
   if (!isQuickBooksAccessible && storedAccounts.length === 0) {
     return (
@@ -223,6 +371,7 @@ const QBAccountsScreen = () => {
           title: 'QuickBooks Accounts',
           headerBackTitle: '',
           headerBackButtonDisplayMode: 'minimal',
+          ...headerRightComponent,
         }}
       />
       <View style={[styles.container, { backgroundColor: colors.listBackground }]}>
@@ -249,6 +398,7 @@ const QBAccountsScreen = () => {
                 type="action"
                 title="Assign Expense Acct for Cost Items"
               />
+
               <Text txtSize="xs" style={{ marginTop: 16, marginBottom: 4, color: colors.neutral600 }}>
                 Default Expense Account
               </Text>
@@ -380,6 +530,21 @@ const QBAccountsScreen = () => {
           )}
         />
       </BottomSheetContainer>
+      <Modal transparent animationType="fade" visible={processingInfo.isProcessing}>
+        <View style={styles.processingOverlay}>
+          <View style={[styles.processingContainer, { backgroundColor: colors.background }]}>
+            <ActivityIndicator size="large" color={colors.tint} />
+            <Text style={styles.processingLabel}>{processingInfo.label}</Text>
+          </View>
+        </View>
+      </Modal>
+      {headerMenuModalVisible && (
+        <RightHeaderMenu
+          modalVisible={headerMenuModalVisible}
+          setModalVisible={setHeaderMenuModalVisible}
+          buttons={rightHeaderMenuButtons}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -437,6 +602,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
+  },
+  processingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  processingContainer: {
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    gap: 16,
+    minWidth: 220,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  processingLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
 

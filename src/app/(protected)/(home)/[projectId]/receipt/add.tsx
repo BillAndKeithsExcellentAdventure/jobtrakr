@@ -64,7 +64,7 @@ const waitForImageUpload = (
 const AddReceiptPage = () => {
   const defaultDate = useMemo(() => new Date(), []);
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
-  const { isQuickBooksAccessible } = useNetwork();
+  const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
   const auth = useAuth();
   const project = useProject(projectId);
   const projectAbbr = project?.abbreviation ?? '';
@@ -230,6 +230,17 @@ const AddReceiptPage = () => {
   const qbVendorId = useMemo(() => {
     return allVendors.find((vendor) => vendor.id === projectReceipt.vendorId)?.accountingId ?? '';
   }, [projectReceipt.vendorId, allVendors]);
+
+  const requiresQuickBooksAccountSetup = useMemo(() => {
+    if (!isQuickBooksConnected) {
+      return false;
+    }
+
+    const hasPaymentAccounts = paymentAccounts.length > 0;
+    const hasDefaultExpenseAccount = !!appSettings.quickBooksExpenseAccountId?.trim();
+
+    return !hasPaymentAccounts || !hasDefaultExpenseAccount;
+  }, [isQuickBooksConnected, paymentAccounts.length, appSettings.quickBooksExpenseAccountId]);
 
   const handleAddReceipt = useCallback(async () => {
     if (!canAddReceipt || isSavingReceipt) return;
@@ -523,7 +534,9 @@ const AddReceiptPage = () => {
   );
 
   useEffect(() => {
-    if (applyToSingleCostCode && !pickedSubCategoryOption) {
+    if (requiresQuickBooksAccountSetup) {
+      setCanAddReceipt(false);
+    } else if (applyToSingleCostCode && !pickedSubCategoryOption) {
       setCanAddReceipt(false);
     } else {
       setCanAddReceipt(
@@ -531,7 +544,7 @@ const AddReceiptPage = () => {
           !!projectReceipt.imageId,
       );
     }
-  }, [projectReceipt, applyToSingleCostCode, pickedSubCategoryOption]);
+  }, [projectReceipt, applyToSingleCostCode, pickedSubCategoryOption, requiresQuickBooksAccountSetup]);
 
   useEffect(() => {
     if (pickedCategoryOption === undefined || pickedCategoryOption.value === '') {
@@ -591,6 +604,26 @@ const AddReceiptPage = () => {
       >
         <Text txtSize="standard" style={[styles.modalTitle, { fontWeight: '600' }]} text={projectName} />
         <Text txtSize="title" style={styles.modalTitle} text="Add Receipt" />
+
+        {requiresQuickBooksAccountSetup && (
+          <View
+            style={[
+              styles.quickBooksSetupNotice,
+              { backgroundColor: colors.neutral200, borderColor: colors.border },
+            ]}
+          >
+            <Text txtSize="standard" style={{ marginBottom: 8 }}>
+              Please ensure at least one Payment Account and Default Expense Account are defined before
+              continuing.
+            </Text>
+            <ActionButton
+              style={styles.quickBooksSetupButton}
+              onPress={() => router.push('/configuration/quickbooks/qbaccounts')}
+              type="action"
+              title="Open QuickBooks Accounts Configuration"
+            />
+          </View>
+        )}
 
         <View style={{ paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border }}>
           <TouchableOpacity activeOpacity={1} onPress={showDatePicker}>
@@ -773,6 +806,16 @@ const AddReceiptPage = () => {
 const styles = StyleSheet.create({
   modalTitle: {
     textAlign: 'center',
+  },
+  quickBooksSetupNotice: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 12,
+    marginBottom: 12,
+  },
+  quickBooksSetupButton: {
+    alignSelf: 'stretch',
   },
   inputContainer: {
     marginTop: 6,

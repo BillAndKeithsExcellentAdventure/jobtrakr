@@ -1,6 +1,7 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
+import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { Text, TextInput, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
@@ -17,7 +18,7 @@ import {
   USE_DEFAULT_EXPENSE_ACCOUNT_OPTION_VALUE,
 } from '@/src/utils/quickbooksWorkItemAccounts';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, FlatList, Platform, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
 import { KeyboardAvoidingView, KeyboardToolbar } from 'react-native-keyboard-controller';
@@ -40,6 +41,7 @@ const DEFAULT_EXPENSE_ACCOUNT_OPTION: OptionEntry = {
 
 const SetCostItemExpenseAccountsScreen = () => {
   const colors = useColors();
+  const router = useRouter();
   const allWorkItems = useAllRows('workItems', WorkItemDataCodeCompareAsNumber);
   const allCategories = useAllRows('categories', WorkCategoryCodeCompareAsNumber);
   const allAccounts = useAllRows('accounts');
@@ -123,9 +125,9 @@ const SetCostItemExpenseAccountsScreen = () => {
     setIsAccountPickerVisible(false);
   }, []);
 
-  const handleApplySelectedAccount = useCallback(() => {
+  const applySelectedAccount = useCallback(() => {
     if (selectedWorkItemIds.length === 0) {
-      return;
+      return false;
     }
 
     const accountingIdToApply =
@@ -136,12 +138,40 @@ const SetCostItemExpenseAccountsScreen = () => {
     const result = setWorkItemAccountingIds(selectedWorkItemIds, accountingIdToApply);
     if (result.status !== 'Success') {
       Alert.alert('Error', 'Unable to update cost item expense accounts.');
-      return;
+      return false;
     }
 
     setSelectedWorkItemIds([]);
     Alert.alert('Success', 'Cost item expense accounts updated successfully.');
+    return true;
   }, [selectedAccountOption.value, selectedWorkItemIds, setWorkItemAccountingIds]);
+
+  const handleApplySelectedAccount = useCallback(() => {
+    applySelectedAccount();
+  }, [applySelectedAccount]);
+
+  const handleBackPress = useCallback(() => {
+    if (selectedWorkItemIds.length === 0) {
+      router.back();
+      return;
+    }
+
+    Alert.alert('Unsaved Changes', 'You have selected cost items. Save changes before leaving?', [
+      {
+        text: 'No',
+        onPress: () => router.back(),
+      },
+      {
+        text: 'Yes',
+        onPress: () => {
+          const wasApplied = applySelectedAccount();
+          if (wasApplied) {
+            router.back();
+          }
+        },
+      },
+    ]);
+  }, [applySelectedAccount, router, selectedWorkItemIds.length]);
 
   const actionButtonTitle = useMemo(() => {
     if (selectedWorkItemIds.length === 0) {
@@ -160,6 +190,7 @@ const SetCostItemExpenseAccountsScreen = () => {
             title: 'Set Cost Item Expense Accounts',
             headerBackTitle: '',
             headerBackButtonDisplayMode: 'minimal',
+            headerLeft: (props) => <StyledHeaderBackButton {...props} onPress={handleBackPress} />,
           }}
         />
         <KeyboardAvoidingView
