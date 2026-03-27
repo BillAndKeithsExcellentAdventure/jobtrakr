@@ -138,7 +138,7 @@ const EditWorkItem = () => {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Edit Work Item',
+          title: 'Edit Cost Item',
           headerBackTitle: '',
           headerBackButtonDisplayMode: 'minimal',
         }}
