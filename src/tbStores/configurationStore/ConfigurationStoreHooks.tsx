@@ -336,77 +336,45 @@ export const useTableValue = <T extends keyof SchemaMap, C extends Extract<keyof
   cellId: C,
 ): Value<SchemaMap[T], C> => useCell(tableId, rowId, cellId, useStoreId()) as Value<SchemaMap[T], C>;
 
+const parseDelimitedIds = (value?: string): string[] =>
+  value
+    ? value
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean)
+    : [];
+
 // --- HOOKS TO SET WORKITEMIDS FOR A TEMPLATE ---
 export const useTemplateWorkItemData = (templateId: string) => {
-  const [templateWorkItemData, setTemplateWorkItemData] = useState<TemplateWorkItemData | null>();
-  const [templateWorkItemIds, setTemplateWorkItemIds] = useState<string[]>([]);
-  const [templateWorkCategoryIds, setTemplateWorkCategoryIds] = useState<string[]>([]);
-  let store = useStore(useStoreId());
+  const store = useStore(useStoreId());
+  const allTemplateWorkItems = useAllRows('templateWorkItems');
   const allWorkItems = useAllRows('workItems', WorkItemDataCodeCompareAsNumber);
 
-  const fetchTemplateWorkItemData = useCallback((): TemplateWorkItemData | null => {
-    if (!store) {
-      return null;
+  const templateWorkItemData = useMemo(
+    () => allTemplateWorkItems.find((row) => row.templateId === templateId || row.id === templateId) ?? null,
+    [allTemplateWorkItems, templateId],
+  );
+
+  const templateWorkItemIds = useMemo(
+    () => parseDelimitedIds(templateWorkItemData?.workItemIds),
+    [templateWorkItemData?.workItemIds],
+  );
+
+  const templateWorkCategoryIds = useMemo(() => {
+    if (templateWorkItemIds.length === 0) {
+      return [];
     }
 
-    const table = store.getTable('templateWorkItems');
-    if (table) {
-      const row = Object.entries(table).find(([id, row]) => row.templateId === templateId);
-      if (row) {
-        const [id, rowData] = row;
-        return {
-          id: id,
-          templateId: rowData.templateId ?? '',
-          workItemIds: rowData.workItemIds ?? '',
-        } as TemplateWorkItemData;
+    const categoryIds = new Set<string>();
+    for (const workItemId of templateWorkItemIds) {
+      const workItem = allWorkItems.find((item) => item.id === workItemId);
+      if (workItem) {
+        categoryIds.add(workItem.categoryId);
       }
     }
 
-    return null;
-  }, [store, templateId]);
-
-  useEffect(() => {
-    setTemplateWorkItemData(fetchTemplateWorkItemData());
-  }, [fetchTemplateWorkItemData]);
-
-  // Function to handle table data change
-  const handleTableChange = useCallback(() => {
-    setTemplateWorkItemData(fetchTemplateWorkItemData());
-  }, [fetchTemplateWorkItemData]);
-
-  useEffect(() => {
-    if (!store) {
-      return;
-    }
-    const listenerId = store.addTableListener('templateWorkItems', handleTableChange);
-    // Cleanup: Remove the listener when the component unmounts
-    return () => {
-      store.delListener(listenerId);
-    };
-  }, [store, handleTableChange]);
-
-  useEffect(() => {
-    if (templateWorkItemData) {
-      const workItemIds =
-        templateWorkItemData.workItemIds.length > 0 ? templateWorkItemData.workItemIds.split(',') : [];
-      setTemplateWorkItemIds(workItemIds);
-    }
-  }, [templateWorkItemData, setTemplateWorkItemIds]);
-
-  useEffect(() => {
-    if (templateWorkItemIds.length > 0) {
-      const categoryIds = new Set<string>();
-      for (const workItemId of templateWorkItemIds) {
-        const workItem = allWorkItems.find((w) => w.id === workItemId);
-        if (workItem) {
-          categoryIds.add(workItem.categoryId);
-        }
-      }
-      setTemplateWorkCategoryIds(Array.from(categoryIds));
-    } else {
-      setTemplateWorkCategoryIds([]); // Reset categories when work items change
-    }
-  }, [templateWorkItemIds, allWorkItems, setTemplateWorkCategoryIds]);
+    return Array.from(categoryIds);
+  }, [templateWorkItemIds, allWorkItems]);
 
   const toggleWorkItemId = useCallback(
     (workItemId: string) => {
@@ -423,14 +391,16 @@ export const useTemplateWorkItemData = (templateId: string) => {
 
       //update the store
       if (store) {
-        store.setRow('templateWorkItems', templateId, {
-          id: templateId,
+        const targetRowId = templateWorkItemData?.id || templateId;
+
+        store.setRow('templateWorkItems', targetRowId, {
+          id: targetRowId,
           templateId: templateId,
           workItemIds: workItemIdsString,
         });
       }
     },
-    [templateWorkItemIds, store, templateId],
+    [templateWorkItemData?.id, templateWorkItemIds, store, templateId],
   );
 
   const setActiveWorkItemIds = useCallback(
@@ -438,14 +408,16 @@ export const useTemplateWorkItemData = (templateId: string) => {
       const workItemIdsString = workItemIds.join(',');
 
       if (store) {
-        store.setRow('templateWorkItems', templateId, {
-          id: templateId,
+        const targetRowId = templateWorkItemData?.id || templateId;
+
+        store.setRow('templateWorkItems', targetRowId, {
+          id: targetRowId,
           templateId: templateId,
           workItemIds: workItemIdsString,
         });
       }
     },
-    [store, templateId],
+    [templateWorkItemData?.id, store, templateId],
   );
 
   return { templateWorkItemIds, toggleWorkItemId, setActiveWorkItemIds, templateWorkCategoryIds }; // Return the template work item data or null if not found
