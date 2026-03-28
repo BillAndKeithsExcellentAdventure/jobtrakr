@@ -1,9 +1,7 @@
 import { ActionButton } from '@/src/components/ActionButton';
-import BottomSheetContainer from '@/src/components/BottomSheetContainer';
+import { CostItemPicker } from '@/src/components/CostItemPicker';
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import { NumericInputField } from '@/src/components/NumericInputField';
-import OptionList, { OptionEntry } from '@/src/components/OptionList';
-import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { Switch } from '@/src/components/Switch';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
@@ -69,10 +67,9 @@ const AddInvoicePage = () => {
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
   const [applyToSingleCostCode, setApplyToSingleCostCode] = useState(false);
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
-  const { projectWorkItems, allAvailableCostItemOptions } = useProjectWorkItems(projectId);
+  const { projectWorkItems } = useProjectWorkItems(projectId);
   const appSettings = useAppSettings();
-  const [isSubCategoryPickerVisible, setIsSubCategoryPickerVisible] = useState<boolean>(false);
-  const [pickedSubCategoryOption, setPickedSubCategoryOption] = useState<OptionEntry | undefined>(undefined);
+  const [pickedCostItemId, setPickedCostItemId] = useState<string | undefined>(undefined);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [dueDatePickerVisible, setDueDatePickerVisible] = useState(false);
   const [canAddInvoice, setCanAddInvoice] = useState(false);
@@ -172,7 +169,7 @@ const AddInvoicePage = () => {
     const invoiceToAdd = {
       ...projectInvoice,
       accountingId: '', // Will be populated by backend
-      markedComplete: applyToSingleCostCode && !!pickedSubCategoryOption,
+      markedComplete: applyToSingleCostCode && !!pickedCostItemId,
     };
     const result = addInvoice(invoiceToAdd);
     if (result.status !== 'Success' || !result.id) {
@@ -181,11 +178,11 @@ const AddInvoicePage = () => {
       return;
     }
     const newInvoiceId = result.id;
-    if (applyToSingleCostCode && !!pickedSubCategoryOption) {
+    if (applyToSingleCostCode && !!pickedCostItemId) {
       const newLineItem: WorkItemCostEntry = {
         id: '',
         label: projectInvoice.description,
-        workItemId: pickedSubCategoryOption.value,
+        workItemId: pickedCostItemId,
         amount: projectInvoice.amount,
         parentId: newInvoiceId,
         documentationType: 'invoice',
@@ -284,7 +281,7 @@ const AddInvoicePage = () => {
     addInvoice,
     addLineItem,
     applyToSingleCostCode,
-    pickedSubCategoryOption,
+    pickedCostItemId,
     router,
     isQuickBooksAccessible,
     orgId,
@@ -350,12 +347,8 @@ const AddInvoicePage = () => {
     }
   }, [addPhotoImage, projectId]);
 
-  const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
-    setPickedSubCategoryOption(selectedSubCategory);
-  }, []);
-
   useEffect(() => {
-    if (applyToSingleCostCode && !pickedSubCategoryOption) {
+    if (applyToSingleCostCode && !pickedCostItemId) {
       setCanAddInvoice(false);
     } else {
       setCanAddInvoice(
@@ -363,14 +356,7 @@ const AddInvoicePage = () => {
           !!projectInvoice.imageId,
       );
     }
-  }, [projectInvoice, applyToSingleCostCode, pickedSubCategoryOption]);
-
-  const handleSubCategoryOptionChange = (option: OptionEntry) => {
-    if (option) {
-      handleSubCategoryChange(option);
-    }
-    setIsSubCategoryPickerVisible(false);
-  };
+  }, [projectInvoice, applyToSingleCostCode, pickedCostItemId]);
 
   const handleCancel = useCallback(() => {
     // clear state of invoice data
@@ -528,35 +514,19 @@ const AddInvoicePage = () => {
           </View>
 
           {applyToSingleCostCode && (
-            <>
-              <OptionPickerItem
-                containerStyle={styles.inputContainer}
-                optionLabel={pickedSubCategoryOption?.label}
-                label="Cost Item Type"
-                placeholder="Cost Item Type"
-                editable={false}
-                onPickerButtonPress={() => setIsSubCategoryPickerVisible(true)}
-              />
-            </>
+            <CostItemPicker
+              style={styles.inputContainer}
+              projectId={projectId}
+              value={pickedCostItemId}
+              onValueChange={setPickedCostItemId}
+              label="Cost Item Type"
+              placeholder="Cost Item Type"
+              modalTitle="Select Cost Item Type"
+              modalHeight="80%"
+            />
           )}
         </View>
       </ModalScreenContainer>
-      {isSubCategoryPickerVisible && (
-        <BottomSheetContainer
-          isVisible={isSubCategoryPickerVisible}
-          onClose={() => setIsSubCategoryPickerVisible(false)}
-          modalHeight="80%"
-        >
-          <OptionList
-            centerOptions={false}
-            boldSelectedOption={false}
-            options={allAvailableCostItemOptions}
-            onSelect={(option) => handleSubCategoryOptionChange(option)}
-            selectedOption={pickedSubCategoryOption}
-            enableSearch={allAvailableCostItemOptions.length > 15}
-          />
-        </BottomSheetContainer>
-      )}
       <Modal transparent animationType="fade" visible={processingInfo.isProcessing}>
         <View style={styles.processingOverlay}>
           <View style={styles.processingContainer}>

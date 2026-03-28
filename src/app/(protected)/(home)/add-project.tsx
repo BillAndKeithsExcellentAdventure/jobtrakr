@@ -1,8 +1,7 @@
-import BottomSheetContainer from '@/src/components/BottomSheetContainer';
 import { CustomerPicker } from '@/src/components/CustomerPicker';
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
-import OptionList, { OptionEntry } from '@/src/components/OptionList';
-import { OptionPickerItem } from '@/src/components/OptionPickerItem';
+import { OptionEntry } from '@/src/components/OptionList';
+import { OptionPicker } from '@/src/components/OptionPicker';
 import { Switch } from '@/src/components/Switch';
 import { TextField } from '@/src/components/TextField';
 import { View, Text } from '@/src/components/Themed';
@@ -54,7 +53,6 @@ const AddProjectScreen = () => {
   const allProjectTemplates = useAllRows('templates');
   const allTemplateWorkItems = useAllRows('templateWorkItems');
   const allCustomers = useAllRows('customers', CustomerDataCompareName);
-  const [isTemplateListPickerVisible, setIsTemplateListPickerVisible] = useState<boolean>(false);
   const [pickedTemplate, setPickedTemplate] = useState<OptionEntry | undefined>(undefined);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | undefined>(undefined);
   const [isCompanyExpenseProject, setIsCompanyExpenseProject] = useState<boolean>(false);
@@ -62,10 +60,6 @@ const AddProjectScreen = () => {
   const [templateOptions, setTemplateOptions] = useState<OptionEntry[]>([]);
   const [canAddProject, setCanAddProject] = useState(false);
   const { addActiveProjectIds } = useActiveProjectIds();
-  const handleTemplateOptionChange = useCallback((option: OptionEntry) => {
-    setPickedTemplate(option);
-    setIsTemplateListPickerVisible(false);
-  }, []);
 
   useEffect(() => {
     // Build template options from available templates that have work items
@@ -182,26 +176,14 @@ const AddProjectScreen = () => {
           </>
         )}
 
-        <OptionPickerItem
-          optionLabel={pickedTemplate?.label}
+        <OptionPicker
+          options={templateOptions}
+          selectedOption={pickedTemplate}
+          onOptionSelected={setPickedTemplate}
           placeholder="Project Costs Template"
-          editable={false}
-          onPickerButtonPress={() => setIsTemplateListPickerVisible(true)}
+          modalTitle="Select Template"
         />
       </ModalScreenContainer>
-      {templateOptions && isTemplateListPickerVisible && (
-        <BottomSheetContainer
-          isVisible={isTemplateListPickerVisible}
-          onClose={() => setIsTemplateListPickerVisible(false)}
-        >
-          <OptionList
-            options={templateOptions}
-            onSelect={(option) => handleTemplateOptionChange(option)}
-            selectedOption={pickedTemplate}
-            enableSearch={templateOptions.length > 15}
-          />
-        </BottomSheetContainer>
-      )}
     </View>
   );
 };

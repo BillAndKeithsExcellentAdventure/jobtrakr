@@ -1,11 +1,11 @@
 import BottomSheetContainer from '@/src/components/BottomSheetContainer';
+import { CostItemPicker } from '@/src/components/CostItemPicker';
 import { NumericInputField } from '@/src/components/NumericInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
-import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   useAllRows,
@@ -28,7 +28,6 @@ const EditLineItemPage = () => {
 
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const updateLineItem = useUpdateRowCallback(projectId, 'workItemCostEntries');
-  const { allAvailableCostItemOptions } = useProjectWorkItems(projectId);
   const [itemizedEntry, setItemizedEntry] = useState<WorkItemCostEntry>({
     id: '',
     label: '',
@@ -41,9 +40,6 @@ const EditLineItemPage = () => {
   const [isProjectPickerVisible, setIsProjectPickerVisible] = useState<boolean>(false);
   const [pickedProjectOption, setPickedProjectOption] = useState<OptionEntry | undefined>(undefined);
   const [projectOptions, setProjectOptions] = useState<OptionEntry[] | undefined>(undefined);
-
-  const [isSubCategoryPickerVisible, setIsSubCategoryPickerVisible] = useState<boolean>(false);
-  const [pickedSubCategoryOption, setPickedSubCategoryOption] = useState<OptionEntry | undefined>(undefined);
 
   // tracks whether any field has been changed since load/save
   const isDirtyRef = useRef<boolean>(false);
@@ -62,7 +58,7 @@ const EditLineItemPage = () => {
 
       const updatedItemizedEntry: WorkItemCostEntry = {
         ...entryToSave,
-        workItemId: pickedSubCategoryOption ? (pickedSubCategoryOption.value as string) : '',
+        workItemId: entryToSave.workItemId,
         projectId: pickedProjectOption ? (pickedProjectOption.value as string) : projectId,
       };
       const result = updateLineItem(updatedItemizedEntry.id, updatedItemizedEntry);
@@ -72,7 +68,7 @@ const EditLineItemPage = () => {
       }
       isDirtyRef.current = false;
     },
-    [itemizedEntry, pickedSubCategoryOption, pickedProjectOption, updateLineItem, projectId],
+    [itemizedEntry, pickedProjectOption, updateLineItem, projectId],
   );
 
   useEffect(() => {
@@ -103,17 +99,6 @@ const EditLineItemPage = () => {
   }, [allProjects, projectId]);
 
   useEffect(() => {
-    if (itemizedEntry.workItemId) {
-      const selectedOption = allAvailableCostItemOptions.find(
-        (item) => item.value === itemizedEntry.workItemId,
-      );
-      if (selectedOption) {
-        setPickedSubCategoryOption(selectedOption);
-      }
-    }
-  }, [itemizedEntry.workItemId, allAvailableCostItemOptions]);
-
-  useEffect(() => {
     if (itemizedEntry.projectId) {
       const projectOption = projectOptions?.find((option) => option.value === itemizedEntry.projectId);
       if (projectOption) {
@@ -121,15 +106,6 @@ const EditLineItemPage = () => {
       }
     }
   }, [itemizedEntry.projectId, projectOptions]);
-
-  const handleSubCategoryOptionChange = (option: OptionEntry) => {
-    if (option) {
-      handleSubCategoryChange(option);
-    }
-    setIsSubCategoryPickerVisible(false);
-    isDirtyRef.current = true;
-    void saveEntry();
-  };
 
   const handleProjectOptionChange = (option: OptionEntry) => {
     if (option) {
@@ -139,10 +115,18 @@ const EditLineItemPage = () => {
     setIsProjectPickerVisible(false);
   };
 
-  const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
-    isDirtyRef.current = true;
-    setPickedSubCategoryOption(selectedSubCategory);
-  }, []);
+  const handleSubCategoryChange = useCallback(
+    (workItemId: string) => {
+      isDirtyRef.current = true;
+      const updatedEntry = {
+        ...itemizedEntry,
+        workItemId,
+      };
+      setItemizedEntry(updatedEntry);
+      void saveEntry(updatedEntry);
+    },
+    [itemizedEntry, saveEntry],
+  );
 
   const handleBackPress = () => {
     router.back();
@@ -206,13 +190,15 @@ const EditLineItemPage = () => {
             onPickerButtonPress={() => setIsProjectPickerVisible(true)}
           />
         )}
-        <OptionPickerItem
-          containerStyle={styles.inputContainer}
-          optionLabel={pickedSubCategoryOption?.label}
+        <CostItemPicker
+          style={styles.inputContainer}
+          projectId={projectId}
+          value={itemizedEntry.workItemId}
+          onValueChange={handleSubCategoryChange}
           label="Cost Item Type"
           placeholder="Cost Item Type"
-          editable={false}
-          onPickerButtonPress={() => setIsSubCategoryPickerVisible(true)}
+          modalTitle="Select Cost Item Type"
+          modalHeight="80%"
         />
       </View>
       {isProjectPickerVisible && projectOptions && (
@@ -227,22 +213,6 @@ const EditLineItemPage = () => {
             onSelect={(option) => handleProjectOptionChange(option)}
             selectedOption={pickedProjectOption}
             enableSearch={projectOptions.length > 15}
-          />
-        </BottomSheetContainer>
-      )}
-      {isSubCategoryPickerVisible && (
-        <BottomSheetContainer
-          isVisible={isSubCategoryPickerVisible}
-          onClose={() => setIsSubCategoryPickerVisible(false)}
-          modalHeight="80%"
-        >
-          <OptionList
-            centerOptions={false}
-            boldSelectedOption={false}
-            options={allAvailableCostItemOptions}
-            onSelect={(option) => handleSubCategoryOptionChange(option)}
-            selectedOption={pickedSubCategoryOption}
-            enableSearch={allAvailableCostItemOptions.length > 15}
           />
         </BottomSheetContainer>
       )}

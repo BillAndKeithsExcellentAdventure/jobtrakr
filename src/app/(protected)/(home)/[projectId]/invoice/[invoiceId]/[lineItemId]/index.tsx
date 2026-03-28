@@ -1,12 +1,9 @@
 import { ActionButton } from '@/src/components/ActionButton';
-import BottomSheetContainer from '@/src/components/BottomSheetContainer';
+import { CostItemPicker } from '@/src/components/CostItemPicker';
 import { NumericInputField } from '@/src/components/NumericInputField';
-import OptionList, { OptionEntry } from '@/src/components/OptionList';
-import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import {
   useAllRows,
   useUpdateRowCallback,
@@ -27,7 +24,6 @@ const EditLineItemPage = () => {
   const colors = useColors();
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const updateLineItem = useUpdateRowCallback(projectId, 'workItemCostEntries');
-  const { allAvailableCostItemOptions } = useProjectWorkItems(projectId);
   const [itemizedEntry, setItemizedEntry] = useState<WorkItemCostEntry>({
     id: '',
     label: '',
@@ -46,40 +42,15 @@ const EditLineItemPage = () => {
     }
   }, [allCostItems, lineItemId]);
 
-  const [isSubCategoryPickerVisible, setIsSubCategoryPickerVisible] = useState<boolean>(false);
-  const [pickedSubCategoryOption, setPickedSubCategoryOption] = useState<OptionEntry | undefined>(undefined);
-
-  useEffect(() => {
-    if (itemizedEntry.workItemId) {
-      const selectedOption = allAvailableCostItemOptions.find(
-        (item) => item.value === itemizedEntry.workItemId,
-      );
-      if (selectedOption) {
-        setPickedSubCategoryOption(selectedOption);
-      }
-    }
-  }, [itemizedEntry.workItemId, allAvailableCostItemOptions]);
-
-  const handleSubCategoryOptionChange = (option: OptionEntry) => {
-    if (option) {
-      handleSubCategoryChange(option);
-    }
-    setIsSubCategoryPickerVisible(false);
-  };
-
-  const handleSubCategoryChange = useCallback((selectedSubCategory: OptionEntry) => {
-    setPickedSubCategoryOption(selectedSubCategory);
-  }, []);
-
   const handleOkPress = useCallback(async () => {
     const entryToSave = { ...itemizedEntry };
-    if (!entryToSave.label || !entryToSave.amount || !pickedSubCategoryOption) {
+    if (!entryToSave.label || !entryToSave.amount || !entryToSave.workItemId) {
       Alert.alert('Error', 'Please fill in all required fields.');
       return;
     }
     const updatedItemizedEntry: WorkItemCostEntry = {
       ...entryToSave,
-      workItemId: pickedSubCategoryOption.value,
+      workItemId: entryToSave.workItemId,
     };
     const result = updateLineItem(updatedItemizedEntry.id, updatedItemizedEntry);
     if (result.status !== 'Success') {
@@ -87,7 +58,7 @@ const EditLineItemPage = () => {
       return;
     }
     router.back();
-  }, [itemizedEntry, pickedSubCategoryOption, updateLineItem]);
+  }, [itemizedEntry, updateLineItem]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -127,13 +98,20 @@ const EditLineItemPage = () => {
             }));
           }}
         />
-        <OptionPickerItem
-          containerStyle={styles.inputContainer}
-          optionLabel={pickedSubCategoryOption?.label}
+        <CostItemPicker
+          style={styles.inputContainer}
+          projectId={projectId}
+          value={itemizedEntry.workItemId}
+          onValueChange={(workItemId) => {
+            setItemizedEntry((prevItem) => ({
+              ...prevItem,
+              workItemId,
+            }));
+          }}
           label="Cost Item Type"
           placeholder="Cost Item Type"
-          editable={false}
-          onPickerButtonPress={() => setIsSubCategoryPickerVisible(true)}
+          modalTitle="Select Cost Item Type"
+          modalHeight="80%"
         />
 
         <View style={styles.saveButtonRow}>
@@ -141,7 +119,7 @@ const EditLineItemPage = () => {
             style={styles.saveButton}
             onPress={handleOkPress}
             type={
-              !itemizedEntry.label || !itemizedEntry.amount || !pickedSubCategoryOption ? 'disabled' : 'ok'
+              !itemizedEntry.label || !itemizedEntry.amount || !itemizedEntry.workItemId ? 'disabled' : 'ok'
             }
             title="Save"
           />
@@ -155,22 +133,6 @@ const EditLineItemPage = () => {
             title="Cancel"
           />
         </View>
-        {isSubCategoryPickerVisible && (
-          <BottomSheetContainer
-            isVisible={isSubCategoryPickerVisible}
-            onClose={() => setIsSubCategoryPickerVisible(false)}
-            modalHeight="80%"
-          >
-            <OptionList
-              centerOptions={false}
-              boldSelectedOption={false}
-              options={allAvailableCostItemOptions}
-              onSelect={(option) => handleSubCategoryOptionChange(option)}
-              selectedOption={pickedSubCategoryOption}
-              enableSearch={allAvailableCostItemOptions.length > 15}
-            />
-          </BottomSheetContainer>
-        )}
       </View>
     </SafeAreaView>
   );

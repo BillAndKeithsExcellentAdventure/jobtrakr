@@ -1,34 +1,44 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { AiLineItem } from '@/src/components/AiLineItem';
-import CostItemPickerModal from '@/src/components/CostItemPickerModal';
+import { CostItemPicker } from '@/src/components/CostItemPicker';
 import { OptionEntry } from '@/src/components/OptionList';
+import { OptionPicker } from '@/src/components/OptionPicker';
 import { ReceiptSummaryEditModal } from '@/src/components/ReceiptSummaryEditModal';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { Text, View } from '@/src/components/Themed';
 import { API_BASE_URL } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
+import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import { ReceiptItem, ReceiptItemFromAI, ReceiptSummary } from '@/src/models/types';
+import {
+  useAllRows,
+  useVendorMatch,
+  VendorDataCompareName,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   useAddRowCallback,
   useTypedRow,
   useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/formatters';
 import { createApiWithToken } from '@/src/utils/apiWithToken';
+import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/formatters';
 import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
-  useAllRows,
-  useVendorMatch,
-  VendorDataCompareName,
-} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useNetwork } from '@/src/context/NetworkContext';
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Modal,
+  Pressable,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const processAIProcessing = async (
   imageId: string,
@@ -88,6 +98,7 @@ const RequestAIProcessingPage = () => {
   const receipt = useTypedRow(projectId, 'receipts', receiptId);
   const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
+  const { allAvailableCostItemOptions } = useProjectWorkItems(projectId);
   const allProjects = useAllProjects();
   const projectPickerOptions = useMemo(
     () => allProjects.map((p) => ({ label: p.name, value: p.id })),
@@ -304,10 +315,10 @@ const RequestAIProcessingPage = () => {
   }, []);
 
   const onCostItemOptionSelected = useCallback(
-    (costItemEntry: OptionEntry | undefined) => {
-      if (costItemEntry) {
-        const label = costItemEntry.label;
-        const workItemId = costItemEntry.value ?? '';
+    (workItemId: string) => {
+      const selectedCostItem = allAvailableCostItemOptions.find((option) => option.value === workItemId);
+      if (selectedCostItem) {
+        const label = selectedCostItem.label;
         const projId = lineItemProjectOption ? lineItemProjectOption.value : projectId;
 
         const updatedItems = receiptItems.map((item) => {
@@ -315,13 +326,12 @@ const RequestAIProcessingPage = () => {
             return {
               ...item,
               costWorkItem: { label, workItemId, projectId: projId },
-              isSelected: false, // Deselect after assigning cost item
+              isSelected: false,
             };
           }
           return item;
         });
 
-        // sort receipt items so all items with a null or undefined costWorkItem are at the top
         updatedItems.sort((a, b) => {
           if (a.costWorkItem && b.costWorkItem) return 0;
           if (a.costWorkItem) return 1;
@@ -329,7 +339,6 @@ const RequestAIProcessingPage = () => {
           return 0;
         });
 
-        // select items that still need there Cost Item specified
         const selectedUpdatedItems = updatedItems.map((item) => {
           if (!item.costWorkItem) {
             return {
@@ -344,7 +353,7 @@ const RequestAIProcessingPage = () => {
       setShowCostItemPicker(false);
       setLineItemProjectOption(defaultProjectOption);
     },
-    [receiptItems, lineItemProjectOption, projectId, defaultProjectOption],
+    [allAvailableCostItemOptions, receiptItems, lineItemProjectOption, projectId, defaultProjectOption],
   );
 
   // Handler for saving edited summary
@@ -581,18 +590,48 @@ const RequestAIProcessingPage = () => {
           </View>
         )}
       </View>
-      {showCostItemPicker && (
-        <CostItemPickerModal
-          isVisible={showCostItemPicker}
-          onClose={() => setShowCostItemPicker(false)}
-          projectId={projectId}
-          handleCostItemOptionSelected={onCostItemOptionSelected}
-          showProjectPicker={true}
-          handleProjectChange={handleLineItemProjectChange}
-          selectedProjectPickerOption={lineItemProjectOption}
-          allProjectPickerOptions={projectPickerOptions}
-        />
-      )}
+      <Modal
+        transparent
+        visible={showCostItemPicker}
+        animationType="fade"
+        onRequestClose={() => {
+          setShowCostItemPicker(false);
+          setLineItemProjectOption(defaultProjectOption);
+        }}
+      >
+        <View style={styles.pickerModalOverlay}>
+          <View
+            style={[
+              styles.pickerModalCard,
+              { backgroundColor: colors.listBackground, borderColor: colors.border },
+            ]}
+          >
+            <OptionPicker
+              options={projectPickerOptions}
+              selectedOption={lineItemProjectOption}
+              onOptionSelected={handleLineItemProjectChange}
+              label="Project"
+              placeholder="Project"
+              modalTitle="Select Project"
+              modalHeight="65%"
+            />
+            <CostItemPicker
+              projectId={projectId}
+              onValueChange={onCostItemOptionSelected}
+              placeholder="Select Cost Item"
+              modalTitle="Select Cost Item"
+            />
+            <ActionButton
+              title="Cancel Cost Item Selection"
+              type="cancel"
+              onPress={() => {
+                setShowCostItemPicker(false);
+                setLineItemProjectOption(defaultProjectOption);
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
       {receiptSummary && (
         <ReceiptSummaryEditModal
           isVisible={isEditModalVisible}
@@ -630,5 +669,18 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     width: 70,
     marginRight: 5,
+  },
+  pickerModalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    paddingTop: 100,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  pickerModalCard: {
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 12,
+    gap: 8,
   },
 });

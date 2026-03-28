@@ -64,14 +64,15 @@ const ListProjectTemplates = () => {
     </>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   headerButton: {
-    padding: 8,
-    paddingRight: 0,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
     zIndex: 1,
   },
 });

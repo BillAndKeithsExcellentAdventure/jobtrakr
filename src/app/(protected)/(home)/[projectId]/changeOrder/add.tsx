@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Alert, Modal, FlatList, Keyboard, Platform, TouchableOpacity } from 'react-native';
+import { StyleSheet, Alert, Modal, FlatList, Keyboard, Platform } from 'react-native';
 import { Text, TextInput, View } from '@/src/components/Themed';
 
 import {
@@ -13,7 +13,7 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatCurrency } from '@/src/utils/formatters';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
-import CostItemPickerModal from '@/src/components/CostItemPickerModal';
+import { CostItemPicker } from '@/src/components/CostItemPicker';
 import { OptionEntry } from '@/src/components/OptionList';
 import { ProposedChangeOrderItem } from '@/src/models/types';
 import SwipeableProposedChangeOrderItem from '@/src/components/SwipeableProposedChangeOrderItem';
@@ -21,9 +21,11 @@ import { ModalScreenContainerWithList } from '@/src/components/ModalScreenContai
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { NumericInputField } from '@/src/components/NumericInputField';
 import { TextField } from '@/src/components/TextField';
+import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 
 export default function AddChangeOrder() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
+  const { allAvailableCostItemOptions } = useProjectWorkItems(projectId);
 
   const colors = useColors();
   const router = useRouter();
@@ -144,23 +146,6 @@ export default function AddChangeOrder() {
     });
   };
 
-  const [showCostItemPicker, setShowCostItemPicker] = useState(false);
-  const handleShowCostItemPicker = () => {
-    Keyboard.dismiss();
-    setShowCostItemPicker(true);
-  };
-
-  const onCostItemOptionSelected = useCallback((costItemEntry: OptionEntry | undefined) => {
-    if (costItemEntry) {
-      setItemWorkItemEntry({
-        label: costItemEntry.label,
-        value: costItemEntry.value,
-      });
-    }
-    setShowCostItemPicker(false);
-  }, []);
-
-  const subTitle = `${itemLabel.length ? 'for ' + itemLabel : ''}`;
   return (
     <>
       <View style={{ flex: 1, width: '100%' }}>
@@ -307,17 +292,22 @@ export default function AddChangeOrder() {
               />
               <View style={{ marginBottom: 10 }}>
                 <Text txtSize="xxs">Cost Item</Text>
-                <TouchableOpacity activeOpacity={1} onPress={handleShowCostItemPicker}>
-                  <View>
-                    <TextInput
-                      style={{ ...styles.input, marginTop: 2, backgroundColor: colors.neutral200 }}
-                      value={itemWorkItemEntry.label ?? null}
-                      readOnly={true}
-                      placeholder="Select Cost Item"
-                      onPressIn={handleShowCostItemPicker}
-                    />
-                  </View>
-                </TouchableOpacity>
+                <CostItemPicker
+                  style={{ marginTop: 2 }}
+                  projectId={projectId}
+                  value={itemWorkItemEntry.value}
+                  onValueChange={(workItemId) => {
+                    const selectedEntry = allAvailableCostItemOptions.find(
+                      (option) => option.value === workItemId,
+                    );
+                    setItemWorkItemEntry({
+                      label: selectedEntry?.label ?? '',
+                      value: workItemId,
+                    });
+                  }}
+                  placeholder="Select Cost Item"
+                  modalTitle="Select Cost Item"
+                />
               </View>
               <View style={styles.saveButtonRow}>
                 <ActionButton
@@ -335,15 +325,6 @@ export default function AddChangeOrder() {
               </View>
             </View>
           </SafeAreaView>
-          {showCostItemPicker && (
-            <CostItemPickerModal
-              isVisible={showCostItemPicker}
-              onClose={() => setShowCostItemPicker(false)}
-              subtitle={subTitle}
-              projectId={projectId}
-              handleCostItemOptionSelected={onCostItemOptionSelected}
-            />
-          )}
         </View>
         {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
       </Modal>

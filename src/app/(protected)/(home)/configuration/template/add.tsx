@@ -1,6 +1,6 @@
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
-import { TextInput, View } from '@/src/components/Themed';
-import { useColors } from '@/src/context/ColorsContext';
+import { TextField } from '@/src/components/TextField';
+import { View } from '@/src/components/Themed';
 import {
   ProjectTemplateData,
   useAddRowCallback,
@@ -11,7 +11,6 @@ import { StyleSheet } from 'react-native';
 
 const AddTemplateModal = () => {
   const router = useRouter();
-  const colors = useColors();
   const addProjectTemplate = useAddRowCallback('templates');
   const [projectTemplate, setProjectTemplate] = useState<ProjectTemplateData>({
     id: '',
@@ -53,19 +52,20 @@ const AddTemplateModal = () => {
         onCancel={() => router.back()}
         canSave={canSave}
       >
-        <TextInput
-          style={[styles.input, { backgroundColor: colors.neutral200 }]}
-          placeholder="Template Name"
-          value={projectTemplate.name}
-          onChangeText={(text) => handleInputChange('name', text)}
-        />
-        <TextInput
-          style={[styles.input, { backgroundColor: colors.neutral200, minHeight: 80 }]}
-          placeholder="Description"
-          value={projectTemplate.description}
-          multiline
-          onChangeText={(text) => handleInputChange('description', text)}
-        />
+        <View style={{ flex: 1, gap: 10 }}>
+          <TextField
+            placeholder="Template Name"
+            value={projectTemplate.name}
+            onChangeText={(text) => handleInputChange('name', text)}
+          />
+          <TextField
+            style={{ minHeight: 80 }}
+            placeholder="Description"
+            value={projectTemplate.description}
+            multiline
+            onChangeText={(text) => handleInputChange('description', text)}
+          />
+        </View>
       </ModalScreenContainer>
     </View>
   );
@@ -75,13 +75,6 @@ const styles = StyleSheet.create({
   modalTitle: {
     marginBottom: 15,
     textAlign: 'center',
-  },
-  input: {
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingLeft: 10,
-    paddingTop: 8,
-    borderRadius: 4,
   },
 });
 

@@ -9,7 +9,7 @@ import {
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Alert, Pressable, StyleSheet } from 'react-native';
 
 const RIGHT_ACTION_WIDTH = 100;
@@ -47,12 +47,19 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
     return <RightAction onDelete={() => handleDelete(projectTemplate.id)} />;
   }, [handleDelete, projectTemplate.id]);
 
-  const textColor = templateWorkItemIds.length > 0 ? colors.text : colors.error;
+  const textColor = useMemo(
+    () => (templateWorkItemIds.length > 0 ? colors.text : colors.error),
+    [templateWorkItemIds.length, colors.text, colors.error],
+  );
 
-  const descriptionText =
-    templateWorkItemIds.length > 0
-      ? projectTemplate.description
-      : `${projectTemplate.description} (No cost items specified)`;
+  const descriptionText = useMemo(
+    () =>
+      templateWorkItemIds.length > 0
+        ? projectTemplate.description
+        : `${projectTemplate.description} (No cost items specified)`,
+    [templateWorkItemIds.length, projectTemplate.description],
+  );
+
   return (
     <SwipeableComponent
       key={projectTemplate.id}
@@ -72,7 +79,9 @@ const SwipeableProjectTemplate = ({ projectTemplate }: { projectTemplate: Projec
           <View style={styles.itemInfo}>
             <View style={{ flex: 1 }}>
               <Text txtSize="title" style={{ color: textColor }} text={projectTemplate.name} />
-              <Text style={[styles.itemName, { color: textColor }]}>{descriptionText}</Text>
+              <Text numberOfLines={2} style={[styles.itemName, { color: textColor }]}>
+                {descriptionText}
+              </Text>
             </View>
             <Feather name="chevrons-right" size={24} color={colors.iconColor} />
           </View>
@@ -88,7 +97,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
-    height: 70,
+    height: 80,
     paddingVertical: 5,
   },
   itemName: {
@@ -100,7 +109,7 @@ const styles = StyleSheet.create({
   },
   rightAction: {
     width: RIGHT_ACTION_WIDTH,
-    height: 70,
+    height: 80,
     backgroundColor: deleteBg,
     alignItems: 'center',
     justifyContent: 'center',

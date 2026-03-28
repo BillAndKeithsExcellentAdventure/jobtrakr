@@ -1,6 +1,6 @@
 import { ActionButton } from '@/src/components/ActionButton';
 import { ActionButtonProps } from '@/src/components/ButtonBar';
-import CostItemPickerModal from '@/src/components/CostItemPickerModal';
+import { CostItemPicker } from '@/src/components/CostItemPicker';
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import { NumericInputField } from '@/src/components/NumericInputField';
 import { OptionEntry } from '@/src/components/OptionList';
@@ -8,6 +8,7 @@ import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import SwipeableChangeOrderItem from '@/src/components/SwipeableChangeOrderItem';
 import { TextField } from '@/src/components/TextField';
 import { Text, TextInput, View } from '@/src/components/Themed';
+import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import { API_BASE_URL } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
@@ -28,7 +29,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { AntDesign, Entypo, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Keyboard, Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Alert, Platform, StyleSheet } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -83,6 +84,7 @@ const DefineChangeOrderScreen = () => {
   const updateChangeOrder = useUpdateRowCallback(projectId, 'changeOrders');
   const allChangeOrderItems = useAllRows(projectId, 'changeOrderItems');
   const addChangeOrderItem = useAddRowCallback(projectId, 'changeOrderItems');
+  const { allAvailableCostItemOptions } = useProjectWorkItems(projectId);
   const [changeOrder, setChangeOrder] = useState<ChangeOrder | null>(null);
   const [changeOrderItems, setChangeOrderItems] = useState<ChangeOrderItem[]>([]);
   const [changeOrderBidAmount, setChangeOrderBidAmount] = useState<number>(0);
@@ -396,18 +398,6 @@ const DefineChangeOrderScreen = () => {
     [colors, router, changeOrder, projectId, changeOrderId],
   );
 
-  const [itemWorkItemEntry, setItemWorkItemEntry] = useState<OptionEntry>({
-    label: '',
-    value: '',
-  });
-
-  const [showCostItemPicker, setShowCostItemPicker] = useState(false);
-
-  const handleShowCostItemPicker = () => {
-    Keyboard.dismiss();
-    setShowCostItemPicker(true);
-  };
-
   const handleAddItemCancel = () => {
     setShowAddItemModal(false);
     setNewChangeOrderItem({
@@ -420,11 +410,11 @@ const DefineChangeOrderScreen = () => {
   };
 
   const handleAddItemOk = () => {
-    if (!newChangeOrderItem.label || !newChangeOrderItem.amount || !itemWorkItemEntry.value) {
+    if (!newChangeOrderItem.label || !newChangeOrderItem.amount || !newChangeOrderItem.workItemId) {
       Alert.alert('Error', 'Please fill in all item fields.');
       return;
     }
-    addChangeOrderItem({ ...newChangeOrderItem, workItemId: itemWorkItemEntry.value, changeOrderId });
+    addChangeOrderItem({ ...newChangeOrderItem, changeOrderId });
     setShowAddItemModal(false);
     setNewChangeOrderItem({
       id: '',
@@ -433,21 +423,7 @@ const DefineChangeOrderScreen = () => {
       amount: 0,
       workItemId: '',
     });
-    setItemWorkItemEntry({
-      label: 'Select Cost Item',
-      value: '',
-    });
   };
-
-  const onCostItemOptionSelected = useCallback((costItemEntry: OptionEntry | undefined) => {
-    if (costItemEntry) {
-      setItemWorkItemEntry({
-        label: costItemEntry.label,
-        value: costItemEntry.value,
-      });
-    }
-    setShowCostItemPicker(false);
-  }, []);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
@@ -596,7 +572,9 @@ const DefineChangeOrderScreen = () => {
           <ModalScreenContainer
             onSave={handleAddItemOk}
             onCancel={handleAddItemCancel}
-            canSave={!!newChangeOrderItem.label && !!newChangeOrderItem.amount && !!itemWorkItemEntry.value}
+            canSave={
+              !!newChangeOrderItem.label && !!newChangeOrderItem.amount && !!newChangeOrderItem.workItemId
+            }
             saveButtonTitle="Add Item"
           >
             <Text style={styles.modalTitle}>Add Change Order Item</Text>
@@ -627,27 +605,21 @@ const DefineChangeOrderScreen = () => {
             />
             <View>
               <Text style={styles.label}>Cost Item</Text>
-              <TouchableOpacity activeOpacity={1} onPress={handleShowCostItemPicker}>
-                <View style={{ marginBottom: 10 }}>
-                  <TextInput
-                    style={styles.input}
-                    value={itemWorkItemEntry.label ?? null}
-                    readOnly={true}
-                    placeholder="Select Cost Item"
-                    onPressIn={handleShowCostItemPicker}
-                  />
-                </View>
-              </TouchableOpacity>
+              <CostItemPicker
+                style={{ marginBottom: 10 }}
+                projectId={projectId}
+                value={newChangeOrderItem.workItemId}
+                onValueChange={(workItemId) => {
+                  setNewChangeOrderItem((prev) => ({
+                    ...prev,
+                    workItemId,
+                  }));
+                }}
+                placeholder="Select Cost Item"
+                modalTitle="Select Cost Item"
+              />
             </View>
           </ModalScreenContainer>
-          {showCostItemPicker && (
-            <CostItemPickerModal
-              isVisible={showCostItemPicker}
-              onClose={() => setShowCostItemPicker(false)}
-              projectId={projectId}
-              handleCostItemOptionSelected={onCostItemOptionSelected}
-            />
-          )}
         </View>
       )}
 
