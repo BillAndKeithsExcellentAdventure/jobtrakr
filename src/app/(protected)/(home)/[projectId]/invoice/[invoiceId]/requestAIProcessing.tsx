@@ -2,32 +2,39 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { AiLineItem } from '@/src/components/AiLineItem';
 import { CostItemPicker } from '@/src/components/CostItemPicker';
 import { InvoiceSummaryEditModal } from '@/src/components/InvoiceSummaryEditModal';
-import { OptionEntry } from '@/src/components/OptionList';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { Text, View } from '@/src/components/Themed';
 import { API_BASE_URL } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
+import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import { InvoiceSummary, ReceiptItem, ReceiptItemFromAI } from '@/src/models/types';
+import {
+  useAllRows,
+  useVendorMatch,
+  VendorDataCompareName,
+} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   useAddRowCallback,
   useTypedRow,
   useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/formatters';
 import { createApiWithToken } from '@/src/utils/apiWithToken';
-import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
-import {
-  useAllRows,
-  useVendorMatch,
-  VendorDataCompareName,
-} from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useNetwork } from '@/src/context/NetworkContext';
+import { formatCurrency, formatDate, replaceNonPrintable } from '@/src/utils/formatters';
 import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Modal,
+  Pressable,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const processAIProcessing = async (
@@ -505,21 +512,33 @@ const RequestAIProcessingPage = () => {
           </View>
         )}
       </View>
-      {showCostItemPicker && (
-        <View style={{ paddingTop: 8, gap: 8 }}>
-          <CostItemPicker
-            projectId={projectId}
-            onValueChange={onCostItemOptionSelected}
-            placeholder="Select Cost Item"
-            modalTitle="Select Cost Item"
-          />
-          <ActionButton
-            title="Cancel Cost Item Selection"
-            type="cancel"
-            onPress={() => setShowCostItemPicker(false)}
-          />
+      <Modal
+        transparent
+        visible={showCostItemPicker}
+        animationType="fade"
+        onRequestClose={() => setShowCostItemPicker(false)}
+      >
+        <View style={styles.pickerModalOverlay}>
+          <View
+            style={[
+              styles.pickerModalCard,
+              { backgroundColor: colors.listBackground, borderColor: colors.border },
+            ]}
+          >
+            <CostItemPicker
+              projectId={projectId}
+              onValueChange={onCostItemOptionSelected}
+              placeholder="Select Cost Item"
+              modalTitle="Select Cost Item"
+            />
+            <ActionButton
+              title="Cancel Cost Item Selection"
+              type="cancel"
+              onPress={() => setShowCostItemPicker(false)}
+            />
+          </View>
         </View>
-      )}
+      </Modal>
       {invoiceSummary && (
         <InvoiceSummaryEditModal
           isVisible={isEditModalVisible}
@@ -557,5 +576,18 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     width: 70,
     marginRight: 5,
+  },
+  pickerModalOverlay: {
+    justifyContent: 'flex-start',
+    paddingTop: 100,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    flex: 1,
+  },
+  pickerModalCard: {
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 12,
+    gap: 8,
   },
 });
