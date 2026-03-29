@@ -10,7 +10,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useColors } from '@/src/context/ColorsContext';
 import { ActionButton } from '@/src/components/ActionButton';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { formatCurrency } from '@/src/utils/formatters';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { CostItemPicker } from '@/src/components/CostItemPicker';
@@ -271,61 +271,62 @@ export default function AddChangeOrder() {
         transparent={true}
         onRequestClose={handleAddItemCancel}
       >
-        <View style={[styles.modalOverlay, { backgroundColor: colors.opaqueModalOverlayBackgroundColor }]}>
-          <SafeAreaView edges={['top']} style={styles.modalSafeArea}>
-            <View style={styles.modalContent}>
-              <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                <Text txtSize="title">Add Change Order Item</Text>
-              </View>
-              <TextField
-                label="Item Description"
-                value={itemLabel}
-                onChangeText={setItemLabel}
-                placeholder="Item Description"
-              />
-              <TextField
-                label="Amount"
-                value={itemAmount}
-                onChangeText={setItemAmount}
-                placeholder="Amount"
-                keyboardType="numeric"
-              />
-              <View style={{ marginBottom: 10 }}>
-                <Text txtSize="xxs">Cost Item</Text>
-                <CostItemPicker
-                  style={{ marginTop: 2 }}
-                  projectId={projectId}
-                  value={itemWorkItemEntry.value}
-                  onValueChange={(workItemId) => {
-                    const selectedEntry = allAvailableCostItemOptions.find(
-                      (option) => option.value === workItemId,
-                    );
-                    setItemWorkItemEntry({
-                      label: selectedEntry?.label ?? '',
-                      value: workItemId,
-                    });
-                  }}
-                  placeholder="Select Cost Item"
-                  modalTitle="Select Cost Item"
+        <SafeAreaProvider>
+          <View style={[styles.modalOverlay, { backgroundColor: colors.opaqueModalOverlayBackgroundColor }]}>
+            <SafeAreaView edges={['top']} style={styles.modalSafeArea}>
+              <View style={styles.modalContent}>
+                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                  <Text txtSize="title">Add Change Order Item</Text>
+                </View>
+                <TextField
+                  label="Item Description"
+                  value={itemLabel}
+                  onChangeText={setItemLabel}
+                  placeholder="Item Description"
                 />
-              </View>
-              <View style={styles.saveButtonRow}>
-                <ActionButton
-                  style={styles.saveButton}
-                  onPress={handleAddItemOk}
-                  type="ok"
-                  title="Add Item"
+                <TextField
+                  label="Amount"
+                  value={itemAmount}
+                  onChangeText={setItemAmount}
+                  placeholder="Amount"
+                  keyboardType="numeric"
                 />
-                <ActionButton
-                  style={styles.cancelButton}
-                  onPress={handleAddItemCancel}
-                  type="cancel"
-                  title="Cancel"
-                />
+                <View style={{ marginBottom: 10 }}>
+                  <CostItemPicker
+                    style={{ marginTop: 2 }}
+                    projectId={projectId}
+                    value={itemWorkItemEntry.value}
+                    onValueChange={(workItemId) => {
+                      const selectedEntry = allAvailableCostItemOptions.find(
+                        (option) => option.value === workItemId,
+                      );
+                      setItemWorkItemEntry({
+                        label: selectedEntry?.label ?? '',
+                        value: workItemId,
+                      });
+                    }}
+                    placeholder="Select Cost Item"
+                    modalTitle="Select Cost Item"
+                  />
+                </View>
+                <View style={styles.saveButtonRow}>
+                  <ActionButton
+                    style={styles.saveButton}
+                    onPress={handleAddItemOk}
+                    type="ok"
+                    title="Add Item"
+                  />
+                  <ActionButton
+                    style={styles.cancelButton}
+                    onPress={handleAddItemCancel}
+                    type="cancel"
+                    title="Cancel"
+                  />
+                </View>
               </View>
-            </View>
-          </SafeAreaView>
-        </View>
+            </SafeAreaView>
+          </View>
+        </SafeAreaProvider>
         {Platform.OS === 'ios' && <KeyboardToolbar offset={{ opened: IOS_KEYBOARD_TOOLBAR_OFFSET }} />}
       </Modal>
     </>
