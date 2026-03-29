@@ -10,7 +10,7 @@ import {
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAddRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SectionList, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
@@ -148,43 +148,47 @@ const AddCostCategoryWorkItemsScreen: React.FC = () => {
   }, [sectionData, searchText]);
 
   return (
-    <View style={{ flex: 1, width: '100%' }}>
-      <ModalScreenContainerWithList
-        onSave={addSelectedWorkItems}
-        onCancel={() => router.back()}
-        canSave={selectedWorkItemIds.length > 0}
-        saveButtonTitle="Add Selected"
-      >
-        <Text style={styles.modalTitle}>Add Cost Items</Text>
-        <View style={[styles.searchContainer, { borderColor: colors.border }]}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search for cost items"
-            placeholderTextColor={colors.textPlaceholder}
-            value={searchText}
-            onChangeText={setSearchText}
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+
+      <View style={{ flex: 1, width: '100%' }}>
+        <ModalScreenContainerWithList
+          onSave={addSelectedWorkItems}
+          onCancel={() => router.back()}
+          canSave={selectedWorkItemIds.length > 0}
+          saveButtonTitle="Add Selected"
+        >
+          <Text style={styles.modalTitle}>Add Cost Items</Text>
+          <View style={[styles.searchContainer, { borderColor: colors.border, marginHorizontal: 10 }]}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search for cost items"
+              placeholderTextColor={colors.textPlaceholder}
+              value={searchText}
+              onChangeText={setSearchText}
+            />
+            <Pressable onPress={() => setSearchText('')} style={styles.clearButton}>
+              <MaterialIcons name="clear" size={24} color={colors.iconColor} />
+            </Pressable>
+          </View>
+          <SectionList
+            showsVerticalScrollIndicator={false}
+            stickySectionHeadersEnabled={false}
+            sections={filteredSectionData}
+            renderItem={({ item, section }) =>
+              section.isExpanded
+                ? renderItem(item, section.id, section.code, toggleItemSelectedState, colors)
+                : null
+            }
+            renderSectionHeader={({ section }) =>
+              renderSectionHeader(section, toggleSection, colors, toggleAllItemsSelectedState)
+            }
+            keyExtractor={(item) => item.id}
+            ListEmptyComponent={<Text>No categories available</Text>}
           />
-          <Pressable onPress={() => setSearchText('')} style={styles.clearButton}>
-            <MaterialIcons name="clear" size={24} color={colors.iconColor} />
-          </Pressable>
-        </View>
-        <SectionList
-          showsVerticalScrollIndicator={false}
-          stickySectionHeadersEnabled={false}
-          sections={filteredSectionData}
-          renderItem={({ item, section }) =>
-            section.isExpanded
-              ? renderItem(item, section.id, section.code, toggleItemSelectedState, colors)
-              : null
-          }
-          renderSectionHeader={({ section }) =>
-            renderSectionHeader(section, toggleSection, colors, toggleAllItemsSelectedState)
-          }
-          keyExtractor={(item) => item.id}
-          ListEmptyComponent={<Text>No categories available</Text>}
-        />
-      </ModalScreenContainerWithList>
-    </View>
+        </ModalScreenContainerWithList>
+      </View>
+    </>
   );
 };
 
@@ -225,20 +229,22 @@ const renderSectionHeader = (
         </Pressable>
       )}
       <Pressable style={{ flex: 1 }} onPress={() => toggleSection(section.id)} hitSlop={10}>
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            backgroundColor: colors.listBackground,
-          }}
-        >
-          <Text txtSize="section-header" text={`${section.title} (${selectedCount}/${totalCount})`} />
-          <Ionicons
-            name={section.isExpanded ? 'chevron-up-sharp' : 'chevron-down-sharp'}
-            size={24}
-            color={colors.iconColor}
+        <View style={[styles.sectionHeaderRow, { backgroundColor: colors.listBackground }]}>
+          <Text
+            txtSize="section-header"
+            text={`${section.title}`}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={styles.sectionTitleText}
           />
+          <View style={styles.sectionHeaderMeta}>
+            <Text txtSize="section-header" text={`(${selectedCount}/${totalCount})`} />
+            <Ionicons
+              name={section.isExpanded ? 'chevron-up-sharp' : 'chevron-down-sharp'}
+              size={24}
+              color={colors.iconColor}
+            />
+          </View>
         </View>
       </Pressable>
     </View>
@@ -317,6 +323,21 @@ const styles = StyleSheet.create({
     padding: 5,
     borderTopWidth: 1,
     height: 45,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sectionTitleText: {
+    flex: 1,
+    marginRight: 8,
+  },
+  sectionHeaderMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flexShrink: 0,
+    backgroundColor: 'transparent',
   },
   item: {
     height: 45,

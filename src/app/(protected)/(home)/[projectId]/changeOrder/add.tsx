@@ -7,7 +7,7 @@ import {
   ChangeOrderItem,
   useAddRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useColors } from '@/src/context/ColorsContext';
 import { ActionButton } from '@/src/components/ActionButton';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -148,6 +148,8 @@ export default function AddChangeOrder() {
 
   return (
     <>
+      <Stack.Screen options={{ headerShown: false }} />
+
       <View style={{ flex: 1, width: '100%' }}>
         <ModalScreenContainerWithList
           onSave={handleSubmit}
@@ -272,8 +274,8 @@ export default function AddChangeOrder() {
         onRequestClose={handleAddItemCancel}
       >
         <SafeAreaProvider>
-          <View style={[styles.modalOverlay, { backgroundColor: colors.opaqueModalOverlayBackgroundColor }]}>
-            <SafeAreaView edges={['top']} style={styles.modalSafeArea}>
+          <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
+            <SafeAreaView edges={['top']} style={[styles.modalSafeArea]}>
               <View style={styles.modalContent}>
                 <View style={{ alignItems: 'center', justifyContent: 'center' }}>
                   <Text txtSize="title">Add Change Order Item</Text>
@@ -364,6 +366,7 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     alignItems: 'center',
+    padding: 10,
   },
   modalSafeArea: {
     flex: 1,
@@ -371,9 +374,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    padding: 20,
+    padding: 10,
     width: '100%',
     elevation: 5,
     gap: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.2)',
   },
 });

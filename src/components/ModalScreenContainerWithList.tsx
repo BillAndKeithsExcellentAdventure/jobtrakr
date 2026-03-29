@@ -37,8 +37,6 @@ export const ModalScreenContainerWithList: React.FC<ModalScreenContainerWithList
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} />
-
       <SafeAreaView
         edges={['top', 'right', 'bottom', 'left']}
         style={[styles.modalBackground, { backgroundColor: colors.modalOverlayBackgroundColor }]}
@@ -85,7 +83,7 @@ const styles = StyleSheet.create({
   },
   container: {
     margin: 10,
-    padding: 10,
+    paddingVertical: 10,
     borderRadius: 20,
     flex: 1,
     elevation: 20, // Adds shadow effect for Android
@@ -95,6 +93,7 @@ const styles = StyleSheet.create({
   },
   saveButtonRow: {
     marginTop: 10,
+    marginHorizontal: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
   },

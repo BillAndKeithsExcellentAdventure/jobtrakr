@@ -7,7 +7,7 @@ import {
   useAddRowCallback,
   useCreateTemplateWithAllWorkItemsCallback,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
@@ -83,53 +83,59 @@ const SeedWorkItemSelectorPage = () => {
   }, [selectedProjectType, addWorkCategory, addWorkItem, createTemplateWithAllWorkItems, router]);
 
   return (
-    <View style={{ flex: 1, width: '100%' }}>
-      <ModalScreenContainerWithList
-        onSave={handleSave}
-        onCancel={() => router.back()}
-        canSave={!!selectedProjectType && selectedProjectType !== 'None'}
-        saveButtonTitle="Save"
-      >
-        <Text style={styles.modalTitle}>Choose Cost Category Set</Text>
-        <TextField
-          label="Selected Project Type"
-          style={[{ borderColor: colors.neutral200 }]}
-          value={selectedProjectType}
-          readOnly
-          placeholder="Select a Project Type from list below"
-          placeholderTextColor={colors.neutral200}
-        />
-        <View style={{ marginTop: 10 }}>
-          <Text>Available Project Types</Text>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
 
-          <View style={{ marginTop: 10, backgroundColor: colors.listBackground, width: '100%', padding: 10 }}>
-            <FlatList
-              data={projectTypes}
-              keyExtractor={(item) => item.projectType}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => {
-                    setSelectedProjectType(item.projectType);
-                  }}
-                >
-                  <View
-                    style={{
-                      padding: 16,
-                      marginBlock: 5,
-                      borderColor: colors.neutral200,
-                      borderRadius: 8,
+      <View style={{ flex: 1, width: '100%' }}>
+        <ModalScreenContainerWithList
+          onSave={handleSave}
+          onCancel={() => router.back()}
+          canSave={!!selectedProjectType && selectedProjectType !== 'None'}
+          saveButtonTitle="Save"
+        >
+          <Text style={styles.modalTitle}>Choose Cost Category Set</Text>
+          <TextField
+            label="Selected Project Type"
+            style={[{ borderColor: colors.neutral200 }]}
+            value={selectedProjectType}
+            readOnly
+            placeholder="Select a Project Type from list below"
+            placeholderTextColor={colors.neutral200}
+          />
+          <View style={{ marginTop: 10 }}>
+            <Text>Available Project Types</Text>
+
+            <View
+              style={{ marginTop: 10, backgroundColor: colors.listBackground, width: '100%', padding: 10 }}
+            >
+              <FlatList
+                data={projectTypes}
+                keyExtractor={(item) => item.projectType}
+                renderItem={({ item }) => (
+                  <Pressable
+                    onPress={() => {
+                      setSelectedProjectType(item.projectType);
                     }}
                   >
-                    <Text style={{ fontSize: 18 }}>{item.projectType}</Text>
-                    <Text style={{ fontSize: 14 }}>{item.description}</Text>
-                  </View>
-                </Pressable>
-              )}
-            />
+                    <View
+                      style={{
+                        padding: 16,
+                        marginBlock: 5,
+                        borderColor: colors.neutral200,
+                        borderRadius: 8,
+                      }}
+                    >
+                      <Text style={{ fontSize: 18 }}>{item.projectType}</Text>
+                      <Text style={{ fontSize: 14 }}>{item.description}</Text>
+                    </View>
+                  </Pressable>
+                )}
+              />
+            </View>
           </View>
-        </View>
-      </ModalScreenContainerWithList>
-    </View>
+        </ModalScreenContainerWithList>
+      </View>
+    </>
   );
 };
 

@@ -7,7 +7,7 @@ import {
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useAddRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
@@ -46,7 +46,7 @@ const AddCostWorkItemsScreen: React.FC = () => {
               code: item.code,
               title: item.name,
               isSelected: selectedWorkItemIds.includes(item.id),
-            } as ItemData),
+            }) as ItemData,
         ),
     [allWorkItems, selectedWorkItemIds, workItemIdsInCategory],
   );
@@ -77,23 +77,27 @@ const AddCostWorkItemsScreen: React.FC = () => {
   }, [selectedWorkItemIds, addWorkItemSummary]);
 
   return (
-    <View style={{ flex: 1, width: '100%' }}>
-      <ModalScreenContainerWithList
-        onSave={addSelectedWorkItems}
-        onCancel={() => router.back()}
-        canSave={selectedWorkItemIds.length > 0}
-        saveButtonTitle="Add Selected"
-      >
-        <Text style={styles.modalTitle}>Add Cost Items</Text>
-        <FlatList
-          showsVerticalScrollIndicator={false}
-          data={availableItems}
-          renderItem={({ item }) => renderItem(item, categoryCode, toggleItemSelectedState, colors)}
-          keyExtractor={(item) => item.id}
-          ListEmptyComponent={<Text>No items available</Text>}
-        />
-      </ModalScreenContainerWithList>
-    </View>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+
+      <View style={{ flex: 1, width: '100%' }}>
+        <ModalScreenContainerWithList
+          onSave={addSelectedWorkItems}
+          onCancel={() => router.back()}
+          canSave={selectedWorkItemIds.length > 0}
+          saveButtonTitle="Add Selected"
+        >
+          <Text style={styles.modalTitle}>Add Cost Items</Text>
+          <FlatList
+            showsVerticalScrollIndicator={false}
+            data={availableItems}
+            renderItem={({ item }) => renderItem(item, categoryCode, toggleItemSelectedState, colors)}
+            keyExtractor={(item) => item.id}
+            ListEmptyComponent={<Text>No items available</Text>}
+          />
+        </ModalScreenContainerWithList>
+      </View>
+    </>
   );
 };
 
