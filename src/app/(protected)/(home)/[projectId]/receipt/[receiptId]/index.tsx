@@ -289,8 +289,13 @@ const ReceiptDetailsPage = () => {
   };
 
   const hasItemWithNoWorkItemId = useMemo(
-    () => allReceiptLineItems.some((item) => !item.workItemId),
-    [allReceiptLineItems],
+    () =>
+      allReceiptLineItems.some(
+        (item) =>
+          (item.projectId === undefined || item.projectId === '' || item.projectId === projectId) &&
+          !item.workItemId,
+      ),
+    [allReceiptLineItems, projectId],
   );
 
   const hasLineItemForCurrentProject = useMemo(
@@ -319,7 +324,7 @@ const ReceiptDetailsPage = () => {
     if (!vendorQbId) return 'Receipt vendor is not linked to a QuickBooks vendor';
     if (!userId || !orgId) return 'Missing user or organization information';
     if (!projectAbbr) return 'Project is missing abbreviation';
-    if (hasItemWithNoWorkItemId) return 'All line items must be linked to a work item';
+    if (hasItemWithNoWorkItemId) return 'All line items for current project must be linked to a cost item';
     if (!hasLineItemForCurrentProject) return 'At least one line item must be linked to the current project';
     if (!amountsMatch) return 'Receipt total does not match sum of line item totals';
     return null;
@@ -525,8 +530,31 @@ const ReceiptDetailsPage = () => {
       };
 
       await processAddReceiptToQuickBooks(receiptData);
+
+      const normalizedProjectIds = new Set(
+        allReceiptLineItems.map((item) =>
+          item.projectId && item.projectId !== '' ? item.projectId : projectId,
+        ),
+      );
+
+      if (normalizedProjectIds.size > 1) {
+        Alert.alert(
+          'Project Cost Items Required',
+          'This receipt includes line items for multiple projects. Go to each corresponding project and set the project-specific cost items.',
+        );
+      }
     },
-    [userId, orgId, projectId, projectAbbr, projectName, receipt, vendorQbId, processAddReceiptToQuickBooks],
+    [
+      userId,
+      orgId,
+      projectId,
+      projectAbbr,
+      projectName,
+      receipt,
+      vendorQbId,
+      processAddReceiptToQuickBooks,
+      allReceiptLineItems,
+    ],
   );
 
   const handleSyncToQuickBooks = useCallback(async () => {
@@ -538,6 +566,19 @@ const ReceiptDetailsPage = () => {
     const skippedLineItems: string[] = [];
 
     for (const lineItem of allReceiptLineItems) {
+      const isLineItemForCurrentProject =
+        lineItem.projectId === undefined || lineItem.projectId === '' || lineItem.projectId === projectId;
+
+      if (!isLineItemForCurrentProject) {
+        qbLineItems.push({
+          amount: lineItem.amount.toFixed(2),
+          description: lineItem.label,
+          accountRef: '',
+          projectId: lineItem.projectId,
+        });
+        continue;
+      }
+
       const resolvedExpenseAccountId = resolveQuickBooksExpenseAccountIdForWorkItem({
         workItemId: lineItem.workItemId,
         workItems: allWorkItems,

@@ -132,6 +132,8 @@ const EditLineItemPage = () => {
     router.back();
   };
 
+  const isCurrentProjectSelected = String(pickedProjectOption?.value ?? '') === String(projectId ?? '');
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
@@ -190,16 +192,18 @@ const EditLineItemPage = () => {
             onPickerButtonPress={() => setIsProjectPickerVisible(true)}
           />
         )}
-        <CostItemPicker
-          style={styles.inputContainer}
-          projectId={projectId}
-          value={itemizedEntry.workItemId}
-          onValueChange={handleSubCategoryChange}
-          label="Cost Item Type"
-          placeholder="Cost Item Type"
-          modalTitle="Select Cost Item Type"
-          modalHeight="80%"
-        />
+        {isCurrentProjectSelected && (
+          <CostItemPicker
+            style={styles.inputContainer}
+            projectId={projectId}
+            value={itemizedEntry.workItemId}
+            onValueChange={handleSubCategoryChange}
+            label="Cost Item Type"
+            placeholder="Cost Item Type"
+            modalTitle="Select Cost Item Type"
+            modalHeight="80%"
+          />
+        )}
       </View>
       {isProjectPickerVisible && projectOptions && (
         <BottomSheetContainer
