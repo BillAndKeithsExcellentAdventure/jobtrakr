@@ -19,9 +19,6 @@ import { useRouter } from 'expo-router';
 import { useDeleteMediaCallback, deleteLocalMediaFile } from '../utils/images';
 import { useAllMediaToUpload, useUploadSyncStore } from '@/src/tbStores/UploadSyncStore';
 import { SvgImage } from './SvgImage';
-//import { deletePurchaseFromQuickBooks } from '../utils/quickbooksAPI';
-import { useAuth } from '@clerk/clerk-expo';
-import { deleteReceiptFromQuickBooks } from '../utils/quickbooksAPI';
 
 export const ITEM_HEIGHT = 128;
 const RIGHT_ACTION_WIDTH = 100;
@@ -53,7 +50,6 @@ const SwipeableReceiptItem = React.memo<{
     () => allReceiptLineItems.filter((lineItem) => lineItem.parentId === item.id),
     [allReceiptLineItems, item.id],
   );
-  const { userId, getToken } = useAuth();
   const totalOfAllReceiptItems = useMemo(
     () => allReceiptItems.reduce((acc, lineItem) => acc + lineItem.amount, 0),
     [allReceiptItems],
@@ -103,27 +99,6 @@ const SwipeableReceiptItem = React.memo<{
         console.error('Error deleting receipt:', error);
       }
 
-      // if receipt has purchaseId, we should also delete the purchase in QuickBooks using deletePurchaseFromQuickBooks
-      if (item.purchaseId && userId) {
-        try {
-          console.log('Receipt has associated purchaseId:', item.purchaseId);
-          const result = await deleteReceiptFromQuickBooks(
-            orgId,
-            userId,
-            projectId,
-            item.purchaseId,
-            getToken,
-          );
-          if (!result.success) {
-            console.error('Failed to delete associated purchase in QuickBooks:', result.message);
-          } else {
-            console.log('Successfully deleted associated purchase in QuickBooks');
-          }
-        } catch (error) {
-          console.error('Error deleting associated purchase in QuickBooks:', error);
-        }
-      }
-
       if (item.imageId) {
         try {
           // Check if this image is in the mediaToUpload queue
@@ -152,11 +127,8 @@ const SwipeableReceiptItem = React.memo<{
       deleteReceiptLineItem,
       allReceiptItems,
       item.imageId,
-      item.purchaseId,
       projectId,
       orgId,
-      userId,
-      getToken,
       deleteMediaCallback,
       store,
       mediaToUpload,
@@ -164,16 +136,17 @@ const SwipeableReceiptItem = React.memo<{
   );
 
   const handleDelete = useCallback(() => {
-    // if there is a purchaseId associated with the receipt, we should inform user that the receipt
-    // will be deleted from QuickBooks as well.
-
-    const alertMessage = item.purchaseId
-      ? 'Are you sure you want to delete this receipt? This will also delete the associated purchase in QuickBooks.'
-      : 'Are you sure you want to delete this receipt and any of its association line items?';
+    if (item.purchaseId) {
+      Alert.alert(
+        'Delete Not Allowed',
+        'This receipt is synced to QuickBooks and cannot be deleted. Remove or edit line items instead.',
+      );
+      return;
+    }
 
     Alert.alert(
       'Delete Receipt',
-      alertMessage,
+      'Are you sure you want to delete this receipt and any of its association line items?',
       [{ text: 'Cancel' }, { text: 'Delete', onPress: () => removeReceipt(item.id) }],
       { cancelable: true },
     );

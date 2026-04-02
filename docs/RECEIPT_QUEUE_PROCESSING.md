@@ -1,97 +1,199 @@
-# Receipt Queue Processing
+# Receipt Processing and Receipt Queue
 
-This document describes how Jobtrakr posts (copies) receipts to **all projects referenced by the receipt’s line items**, and how the system queues, processes, and finalizes those copies.
+This document describes the end-to-end receipt lifecycle in Jobtrakr, including:
 
-## High-level behavior
+- local receipt and line item updates
+- QuickBooks synchronization
+- multi-project propagation through the Receipt Queue
+- current safety restrictions for QuickBooks-synced receipts
 
-When a receipt is created/edited in a way that includes line items for other projects, Jobtrakr places a record into the **Receipt Queue**. A background processor then:
+## Receipt Processing Overview
 
-1. Determines the set of **target projects** from the receipt’s `lineItems[].projectId`
-2. Excludes the origin project (`fromProjectId`)
-3. For each remaining target project:
-   - Creates a new receipt row in that project
-   - Creates work-item cost entries for that project’s line items
-   - Duplicates the receipt image into that project (if the receipt has an `imageId`)
-4. Deletes the queued entry once all target projects have been processed successfully
+At a high level, receipt processing has two related workflows:
 
-The processor is designed to be safe to run during the entire app lifecycle and to avoid doing work when offline.
+1. **QuickBooks workflow**
+2. **Cross-project workflow**
 
-## Key concepts and data flow
+### 1) QuickBooks workflow
 
-### Receipt queue entry
+When a receipt is synced to QuickBooks from the receipt details screen:
 
-A queued receipt is stored in a TinyBase table named `receiptQueueEntries`. Each queue row includes:
+- If the receipt has no `purchaseId`, Jobtrakr creates a new QuickBooks Purchase and stores:
+  - `purchaseId` (QuickBooks Purchase ID)
+  - `accountingId` (doc number when available)
+  - `qbSyncHash` (hash of receipt + line item state)
+- If the receipt already has a `purchaseId`, Jobtrakr updates the existing QuickBooks Purchase.
 
-- `purchaseId`: the original purchase/receipt identifier
-- `fromProjectId`: the project where the receipt originated
-- `imageId` (optional): the backing image identifier (if present)
-- `lineItems`: a JSON-stringified array of line items
+After a receipt has a `purchaseId`, Jobtrakr treats it as QuickBooks-synced and applies additional edit/delete rules (documented below).
 
-### Line items drive posting
+### 2) Cross-project workflow
 
-Each receipt line item contains:
+Line items can belong to other projects by setting `workItemCostEntries.projectId` to a project different from the current route project.
 
-- `projectId`: the project that should receive that portion of the receipt
-- `workItemId`: the work item to attach the cost entry to
-- `amount`, `itemDescription`
+When a synced or newly synced receipt contains line items for other projects, Jobtrakr creates a queue entry so those other projects can receive the receipt representation and line items locally.
 
-**Posting rule:**
-- The receipt is posted to **ALL distinct `lineItems[].projectId`** values
-- The origin project (`fromProjectId`) is **excluded**
-- If there are **no target projects** (i.e., every line item is for `fromProjectId` or missing `projectId`), the queue entry is removed as “nothing to do”
+The queue processor runs in the foreground app lifecycle and applies queued updates to target project stores.
 
-## Processing implementation (where to look)
+## Where This Is Implemented
 
-### Enabling processing in the app
+- Receipt details and QuickBooks sync actions:
+  - `src/app/(protected)/(home)/[projectId]/receipt/[receiptId]/index.tsx`
+- Receipt detail editing with auto-sync for synced receipts:
+  - `src/app/(protected)/(home)/[projectId]/receipt/[receiptId]/edit.tsx`
+- Add line item flow (including queue enqueue for cross-project additions):
+  - `src/app/(protected)/(home)/[projectId]/receipt/[receiptId]/addLineItem.tsx`
+- Edit line item restrictions for synced cross-project items:
+  - `src/app/(protected)/(home)/[projectId]/receipt/[receiptId]/[lineItemId]/index.tsx`
+- Queue processor:
+  - `src/hooks/useReceiptQueue.tsx`
+- Queue storage/hooks:
+  - `src/tbStores/ReceiptQueueStore.tsx`
+  - `src/tbStores/ReceiptQueueStoreHooks.tsx`
+- Processor bootstrap component:
+  - `src/components/ReceiptQueueProcessor.tsx`
 
-Receipt queue processing is enabled by rendering:
+## Receipt Queue Data Model
 
-- `src/components/ReceiptQueueProcessor.tsx`
+Queue rows are stored in TinyBase `receiptQueueEntries` and include:
 
-This component renders `null` but calls the hook below so processing runs during the app lifecycle.
+- `purchaseId`
+- `fromProjectId`
+- `vendor`, `vendorId`
+- `paymentAccountId`, `accountingId`
+- `description`, `receiptDate`, `pictureDate`, `notes`
+- `thumbnail`, `imageId` (optional)
+- `qbSyncHash`
+- `lineItems` (serialized array)
 
-### The processor hook
+Each queued line item includes:
 
-The core logic lives in:
+- `projectId`
+- `workItemId`
+- `amount`
+- `itemDescription`
 
-- `src/hooks/useReceiptQueue.tsx`
+## Queue Processing Capabilities (Current)
 
-Key behaviors implemented there:
+### 1) Target project selection
 
-- Computes target project IDs from `lineItems[].projectId` (excluding `fromProjectId`)
-- Ensures those projects are marked as “active” (so their stores can be loaded)
-- Skips processing when offline (uses `NetworkContext`)
-- Retrieves each target project’s TinyBase store via the cache (see below)
-- Writes:
-  - a new receipt row into the target project’s `receipts` table
-  - corresponding `workItemCostEntries` rows for line items belonging to that project
-- Duplicates receipt images per target project using `useDuplicateReceiptImageCallback`
-- Deletes processed queue entries in a batch once complete
+For each queue entry, the processor:
 
-### Project store access (cache)
+- builds distinct target project IDs from `lineItems[].projectId`
+- excludes `fromProjectId`
+- removes queue entries immediately when no target projects remain
 
-To post into multiple projects, processing needs access to each project’s store. This is provided by:
+### 2) Store readiness and network guards
 
-- `src/context/ProjectDetailsStoreCacheContext.tsx`
+Before processing:
 
-The queue processor calls `getStoreFromCache(projectId)` for each target project. If a store is not yet available, processing logs a warning and retries (up to a bounded number of attempts for that cycle).
+- waits for auth (`userId`, `orgId`)
+- skips while offline (`isConnected` and `isInternetReachable`)
+- requires target project stores to exist in `ProjectDetailsStoreCacheContext`
 
-### Queue storage (TinyBase)
+If required stores are missing, the queue entry is left in queue for retry.
 
-Queue persistence and schema are defined in:
+### 3) Merge-by-purchaseId behavior (new)
 
-- `src/tbStores/ReceiptQueueStore.tsx`
-- `src/tbStores/ReceiptQueueStoreHooks.tsx`
+Queue processing now supports **create-or-merge** in target projects:
 
-`ReceiptQueueStoreHooks.tsx` defines the `ReceiptQueueEntry` / `ReceiptLineItem` structures and helper functions for serializing/deserializing line items.
+- looks for existing receipt in target project where `receipts.purchaseId === queuedReceipt.purchaseId`
+- if found: updates/merges into existing receipt
+- if not found: creates a new receipt row
 
-## Edge cases / operational notes
+This prevents duplicate target receipts when additional cross-project line items are added later.
 
-- **Offline:** Processing is skipped when the device is offline to avoid failing network-dependent operations (such as image duplication).
-- **Missing target stores:** If a target project’s store is not yet loaded, the processor will retry later.
-- **Partial failure:** If one or more projects fail during processing, the queue entry is not deleted (so it can retry later).
-- **Image duplication:** Receipt image duplication is best-effort; failures are logged and do not necessarily block receipt posting.
+### 4) Line item upsert and dedupe (new)
+
+When merging, the processor dedupes line items by a composite key:
+
+- `label|amount|workItemId|projectId`
+
+Only missing entries are inserted. Existing entries are preserved.
+
+### 5) Receipt amount recalculation (new)
+
+After create/merge, the processor recalculates target receipt `amount` from all attached `workItemCostEntries` for that receipt.
+
+### 6) Conditional image duplication (new)
+
+Image duplication now runs only when a new target receipt row is created.
+
+- new receipt: try to duplicate image
+- merge into existing receipt: skip image duplication
+
+This avoids unnecessary duplicate image operations during merge updates.
+
+## Editing and Sync Rules for QuickBooks-Synced Receipts
+
+### 1) Receipt-level detail edits
+
+In the receipt edit screen, if `purchaseId` exists:
+
+- changes to amount/date/vendor/payment account/notes/description trigger `editReceiptInQuickBooks`
+- QuickBooks update sends the full current line item set for that receipt
+- local `qbSyncHash` is refreshed after successful update
+
+### 2) Line item edit restrictions (new)
+
+When editing a receipt line item:
+
+- if receipt has `purchaseId` and line item belongs to a different project, it is read-only in this project
+- project reassignment is disabled once `purchaseId` exists
+- user is instructed to open the owning project to edit that line item
+
+### 3) Adding line items to synced receipts (new)
+
+Adding new line items is allowed even when `purchaseId` exists:
+
+- same-project addition: updates QuickBooks Purchase with full line set
+- cross-project addition:
+  - enqueues a receipt queue entry
+  - updates QuickBooks Purchase with full line set
+  - queue later creates/merges local projection in target project
+
+### 4) Deletion safeguards (new)
+
+- synced receipts (`purchaseId` present) cannot be deleted from receipt list UI
+- synced cross-project line items cannot be deleted from a non-owning project
+- for synced receipts, current project cannot delete its last remaining line item
+
+## QuickBooks Sync Semantics
+
+QuickBooks updates are full-set updates for receipt line items in the current implementation:
+
+- any sync action builds QB line items from all receipt line items available in that project store
+- each QB line item resolves expense account via work item/account config
+- line items missing account resolution are skipped from QB payload
+
+This design simplifies consistency by treating updates as replacement-style payloads rather than per-line deltas.
+
+## Failure and Retry Behavior
+
+- queue entries are deleted only after all target projects for that entry complete successfully
+- partial failure keeps entry in queue for next processing cycle
+- missing stores or offline status defer processing
+- image duplication is best-effort and logged
+
+## Practical Multi-Project Example
+
+1. User syncs Receipt A in Project X to QuickBooks.
+2. Receipt A now has `purchaseId`.
+3. User adds a new line item for Project Y.
+4. App updates QuickBooks Purchase for Receipt A.
+5. App enqueues receipt queue entry for cross-project propagation.
+6. Queue processor runs:
+   - finds Project Y target store
+   - finds existing receipt by `purchaseId` (if any)
+   - creates or merges receipt + line items
+   - recalculates target receipt amount
+   - duplicates image only if a new target receipt was created
+7. Queue entry is removed after success.
 
 ## Summary
 
-Receipts are posted to every project referenced by the receipt’s line items (`lineItems[].projectId`), excluding the origin (`fromProjectId`). The receipt queue mechanism ensures these cross-project postings happen asynchronously and safely across connectivity conditions, and it centralizes retries when dependent project stores are not yet loaded.
+Receipt processing now supports stable multi-project synchronization by combining:
+
+- QuickBooks Purchase create/update using full line-item payloads
+- queue-based cross-project propagation
+- merge-by-purchaseId queue processing to prevent duplicates
+- UI safeguards that enforce project-specific ownership for synced line items

@@ -18,7 +18,13 @@ import {
   useAllRows,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatDate } from '@/src/utils/formatters';
+import { editReceiptInQuickBooks, QBBillLineItem } from '@/src/utils/quickbooksAPI';
+import { resolveQuickBooksExpenseAccountIdForWorkItem } from '@/src/utils/quickbooksWorkItemAccounts';
+import { getReceiptSyncHash } from '@/src/utils/quickbooksSyncHash';
+import { gatherLineItemsForReceipt } from '@/src/utils/receiptUtils';
+import { useAuth } from '@clerk/clerk-expo';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, TouchableOpacity } from 'react-native';
@@ -125,38 +131,158 @@ const EditReceiptDetailsPage = () => {
   ]);
 
   const colors = useColors();
+  const { userId, orgId, getToken } = useAuth();
+  const project = useProject(projectId);
+  const allCostItems = useAllRows(projectId, 'workItemCostEntries');
+  const allWorkItems = useAllRows(projectId, 'workItemSummaries');
+
+  // Sync receipt changes to QuickBooks if it has a purchaseId
+  const syncReceiptToQuickBooks = useCallback(
+    async (updatedReceipt: ReceiptData) => {
+      if (!updatedReceipt.purchaseId || !orgId || !userId || !project) return;
+
+      try {
+        // Gather all line items for this receipt
+        const lineItems = gatherLineItemsForReceipt(receiptId, allCostItems);
+        if (lineItems.length === 0) {
+          console.warn('No line items found for receipt - skipping QB sync');
+          return;
+        }
+
+        // Build QB line items
+        const qbLineItems: QBBillLineItem[] = [];
+        const skippedLineItems: string[] = [];
+
+        for (const lineItem of lineItems) {
+          const resolvedExpenseAccountId = resolveQuickBooksExpenseAccountIdForWorkItem({
+            workItemId: lineItem.workItemId,
+            workItems: allWorkItems,
+            accounts: allAccounts,
+            defaultExpenseAccountId: appSettings.quickBooksExpenseAccountId,
+          });
+
+          if (resolvedExpenseAccountId) {
+            qbLineItems.push({
+              amount: lineItem.amount.toFixed(2),
+              description: lineItem.label,
+              accountRef: resolvedExpenseAccountId,
+              projectId: lineItem.projectId === projectId ? undefined : lineItem.projectId,
+            });
+          } else {
+            skippedLineItems.push(lineItem.label);
+          }
+        }
+
+        if (qbLineItems.length === 0) return;
+
+        // Get vendor QB ID
+        let vendorQbId = '';
+        if (updatedReceipt.vendorId) {
+          const vendor = allVendors.find((v) => v.id === updatedReceipt.vendorId);
+          if (vendor) {
+            vendorQbId = vendor.accountingId;
+          }
+        }
+
+        // Get payment account subtype
+        const paymentAccountSubType = allAccounts.find(
+          (acc) => acc.accountingId === updatedReceipt.paymentAccountId,
+        )?.accountSubType;
+
+        const receiptEditData = {
+          purchaseId: updatedReceipt.purchaseId,
+          accountingId: updatedReceipt.accountingId,
+          orgId,
+          userId,
+          projectId,
+          projectAbbr: project.abbreviation || '',
+          projectName: project.name,
+          addAttachment: false,
+          imageId: updatedReceipt.imageId || '',
+          qbPurchaseData: {
+            vendorRef: vendorQbId,
+            lineItems: qbLineItems,
+            privateNote: updatedReceipt.notes || updatedReceipt.description || '',
+            txnDate: new Date(updatedReceipt.receiptDate).toISOString().split('T')[0],
+            paymentAccount: {
+              paymentAccountRef: updatedReceipt.paymentAccountId,
+              paymentType: paymentAccountSubType,
+            },
+          },
+        };
+
+        console.log('Syncing receipt changes to QuickBooks');
+        const response = await editReceiptInQuickBooks(receiptEditData, orgId, userId, getToken);
+        console.log('Receipt successfully updated in QuickBooks:', response);
+
+        // Update sync hash
+        const newHash = await getReceiptSyncHash(updatedReceipt, lineItems);
+        const updates: ReceiptData = { ...updatedReceipt, qbSyncHash: newHash };
+        updateReceipt(receiptId, updates);
+      } catch (error) {
+        console.error('Error syncing receipt to QuickBooks:', error);
+        // Log but don't alert - don't disrupt user's editing
+      }
+    },
+    [
+      receiptId,
+      allCostItems,
+      orgId,
+      userId,
+      projectId,
+      project,
+      allWorkItems,
+      allAccounts,
+      appSettings.quickBooksExpenseAccountId,
+      allVendors,
+      getToken,
+      updateReceipt,
+    ],
+  );
 
   const handleDateConfirm = useCallback(
     (date: Date) => {
       const newReceipt = { ...receipt, receiptDate: date.getTime() };
       updateReceipt(receiptId, newReceipt);
+      if (newReceipt.purchaseId) {
+        void syncReceiptToQuickBooks(newReceipt);
+      }
       hideDatePicker();
     },
-    [receipt, receiptId, updateReceipt],
+    [receipt, receiptId, updateReceipt, syncReceiptToQuickBooks],
   );
 
   const handleAmountChange = useCallback(
     (amount: number) => {
       const newReceipt = { ...receipt, amount };
       updateReceipt(receiptId, newReceipt);
+      if (newReceipt.purchaseId) {
+        void syncReceiptToQuickBooks(newReceipt);
+      }
     },
-    [receipt, receiptId, updateReceipt],
+    [receipt, receiptId, updateReceipt, syncReceiptToQuickBooks],
   );
 
   const handleNotesChange = useCallback(
     (notes: string) => {
       const newReceipt = { ...receipt, notes };
       updateReceipt(receiptId, newReceipt);
+      if (newReceipt.purchaseId) {
+        void syncReceiptToQuickBooks(newReceipt);
+      }
     },
-    [receipt, receiptId, updateReceipt],
+    [receipt, receiptId, updateReceipt, syncReceiptToQuickBooks],
   );
 
   const handleDescriptionChange = useCallback(
     (description: string) => {
       const newReceipt = { ...receipt, description };
       updateReceipt(receiptId, newReceipt);
+      if (newReceipt.purchaseId) {
+        void syncReceiptToQuickBooks(newReceipt);
+      }
     },
-    [receipt, receiptId, updateReceipt],
+    [receipt, receiptId, updateReceipt, syncReceiptToQuickBooks],
   );
 
   const handleVendorSelected = useCallback(
@@ -167,8 +293,11 @@ const EditReceiptDetailsPage = () => {
         vendorId: vendor.id,
       };
       updateReceipt(receiptId, newReceipt);
+      if (newReceipt.purchaseId) {
+        void syncReceiptToQuickBooks(newReceipt);
+      }
     },
-    [receipt, receiptId, updateReceipt],
+    [receipt, receiptId, updateReceipt, syncReceiptToQuickBooks],
   );
 
   const selectedVendor = useMemo(
@@ -181,11 +310,14 @@ const EditReceiptDetailsPage = () => {
       if (option) {
         const newReceipt = { ...receipt, paymentAccountId: option.value };
         updateReceipt(receiptId, newReceipt);
+        if (newReceipt.purchaseId) {
+          void syncReceiptToQuickBooks(newReceipt);
+        }
         setPickedPaymentAccountOption(option);
       }
       setIsPaymentAccountPickerVisible(false);
     },
-    [receipt, receiptId, updateReceipt],
+    [receipt, receiptId, updateReceipt, syncReceiptToQuickBooks],
   );
 
   const receiptAmount = receipt.amount ?? 0;
