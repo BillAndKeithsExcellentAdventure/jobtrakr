@@ -22,6 +22,7 @@ export interface ProjectData {
   thumbnail: string;
   status: string; // 'active', 'on-hold'  or 'completed'
   seedWorkItems: string; // comma separated list of workItemIds
+  workItemIds?: string; // comma separated list of workItemIds currently used in this project
   isCompanyExpenseProject?: boolean; // true if this project tracks company expenses only
 }
 

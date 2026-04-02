@@ -529,7 +529,7 @@ const ProjectDetailsPage = () => {
           handleMenuItemPress('Delete', actionContext);
         },
       },
-      ...(!projectData?.isCompanyExpenseProject && workItemsWithoutCosts.length > 0
+      ...(workItemsWithoutCosts.length > 0
         ? [
             {
               icon: <FontAwesome5 name="broom" size={28} color={colors.iconColor} />,

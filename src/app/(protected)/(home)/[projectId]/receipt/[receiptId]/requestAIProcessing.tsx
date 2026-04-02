@@ -117,6 +117,7 @@ const RequestAIProcessingPage = () => {
   const [lineItemProjectOption, setLineItemProjectOption] = useState<OptionEntry | undefined>(
     defaultProjectOption,
   );
+  const selectedLineItemProjectId = (lineItemProjectOption?.value as string) ?? projectId;
 
   const { findFirstVendorMatch } = useVendorMatch(matchableVendors);
   const findFirstVendorMatchRef = useRef(findFirstVendorMatch);
@@ -616,7 +617,7 @@ const RequestAIProcessingPage = () => {
               modalHeight="65%"
             />
             <CostItemPicker
-              projectId={projectId}
+              projectId={selectedLineItemProjectId}
               onValueChange={onCostItemOptionSelected}
               placeholder="Select Cost Item"
               modalTitle="Select Cost Item"
