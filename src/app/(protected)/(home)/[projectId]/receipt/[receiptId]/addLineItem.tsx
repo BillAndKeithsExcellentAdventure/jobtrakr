@@ -58,9 +58,6 @@ const AddReceiptLineItemPage = () => {
 
   const [itemizedEntry, setItemizedEntry] = useState<WorkItemCostEntry>(initItemizedEntry);
 
-  // The following condition is needed to ensure the CostItem selected is relevant to the selected project.
-  const isCurrentProjectSelected = String(pickedProjectOption?.value ?? '') === String(projectId ?? '');
-
   const handleOkPress = useCallback(async () => {
     if (!itemizedEntry.label || !itemizedEntry.amount) {
       Alert.alert('Error', 'Please fill in all required fields.');
@@ -122,23 +119,21 @@ const AddReceiptLineItemPage = () => {
             onPickerButtonPress={() => setIsProjectPickerVisible(true)}
           />
         )}
-        {isCurrentProjectSelected && (
-          <CostItemPicker
-            style={styles.inputContainer}
-            projectId={projectId}
-            value={itemizedEntry.workItemId}
-            onValueChange={(workItemId) => {
-              setItemizedEntry((prevItem) => ({
-                ...prevItem,
-                workItemId,
-              }));
-            }}
-            label="Cost Item Type"
-            placeholder="Cost Item Type"
-            modalTitle="Select Cost Item Type"
-            modalHeight="80%"
-          />
-        )}
+        <CostItemPicker
+          style={styles.inputContainer}
+          projectId={projectId}
+          value={itemizedEntry.workItemId}
+          onValueChange={(workItemId) => {
+            setItemizedEntry((prevItem) => ({
+              ...prevItem,
+              workItemId,
+            }));
+          }}
+          label="Cost Item Type"
+          placeholder="Cost Item Type"
+          modalTitle="Select Cost Item Type"
+          modalHeight="80%"
+        />
       </ModalScreenContainer>
       {isProjectPickerVisible && projectOptions && (
         <BottomSheetContainer
