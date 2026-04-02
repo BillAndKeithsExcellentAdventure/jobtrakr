@@ -32,7 +32,7 @@ export const useReceiptQueue = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
   const { addActiveProjectIds } = useActiveProjectIds();
-  const { getStoreFromCache } = useProjectDetailsStoreCache();
+  const { getStoreFromCache, cacheVersion } = useProjectDetailsStoreCache();
 
   // Get unique target projects from line items (excluding fromProjectId)
   const receiptProjectIds = useMemo(() => {
@@ -101,6 +101,11 @@ export const useReceiptQueue = () => {
           );
           return { success: false, msg: 'Failed to create or update receipt', createdNewReceipt: false };
         }
+
+        const targetReceiptCount = (store.getRowIds('receipts') as string[]).length;
+        console.log(
+          `Receipt queue: Target project ${toProjectId} now has ${targetReceiptCount} receipt row(s).`,
+        );
 
         console.log(
           `Receipt queue: ${isNewReceipt ? 'Created' : 'Updated'} receipt ${receiptId}${queuedReceipt.accountingId ? ` (${queuedReceipt.accountingId})` : ''} in project ${toProjectId} with ${queuedReceipt.lineItems.length} queued line item(s)`,
@@ -185,6 +190,10 @@ export const useReceiptQueue = () => {
         return;
       }
 
+      console.log(
+        `Receipt queue: Triggered run (cacheVersion=${cacheVersion}, queueSize=${receiptsToProcess.length}, isConnected=${String(isConnected)}, internetReachable=${String(isInternetReachable)})`,
+      );
+
       // Skip if offline - don't attempt network operations when there's no connection
       if (!isConnected || isInternetReachable === false) {
         console.log(
@@ -230,8 +239,11 @@ export const useReceiptQueue = () => {
 
           const missingProjectIds = targetProjectIds.filter((toProjectId) => !getStoreFromCache(toProjectId));
           if (missingProjectIds.length > 0) {
+            const availableTargetProjectIds = targetProjectIds.filter((toProjectId) =>
+              Boolean(getStoreFromCache(toProjectId)),
+            );
             console.warn(
-              `Receipt queue: Waiting for target stores to load for receipt ${queuedReceipt.purchaseId}: ${missingProjectIds.join(', ')}`,
+              `Receipt queue: Waiting for target stores to load for receipt ${queuedReceipt.purchaseId}: missing=[${missingProjectIds.join(', ')}], available=[${availableTargetProjectIds.join(', ')}], cacheVersion=${cacheVersion}`,
             );
             continue;
           }
@@ -321,6 +333,7 @@ export const useReceiptQueue = () => {
     orgId,
     auth,
     receiptsToProcess,
+    cacheVersion,
     isProcessing,
     isConnected,
     isInternetReachable,

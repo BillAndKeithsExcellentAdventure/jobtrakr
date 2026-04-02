@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { createMergeableStore, NoValuesSchema } from 'tinybase/with-schemas';
 import { useCreateClientPersisterAndStart } from '../persistence/useCreateClientPersisterAndStart';
@@ -112,17 +112,22 @@ export const getStoreId = (projId: string) => STORE_ID_PREFIX + projId;
 // Create, persist, and sync a store containing the project and its categories.
 export default function ProjectDetailsStore({ projectId }: { projectId: string }) {
   const { addStoreToCache, removeStoreFromCache } = useProjectDetailsStoreCache();
+  const [isPersisterLoaded, setIsPersisterLoaded] = useState(false);
 
   const storeId = getStoreId(projectId);
   const store = useCreateMergeableStore(() => createMergeableStore().setTablesSchema(TABLES_SCHEMA));
 
-  useCreateClientPersisterAndStart(storeId, store);
+  useCreateClientPersisterAndStart(storeId, store, undefined, () => {
+    console.log(`ProjectDetailsStore persister loaded for projectId: ${projectId}`);
+    setIsPersisterLoaded(true);
+  });
   useCreateServerSynchronizerAndStart(storeId, store);
   useProvideStore(storeId, store);
 
-  // Add store to cache once when it's created - keep this effect stable
+  // Add store to cache only after persistence is loaded.
+  // This prevents queue writes from being overwritten by a late persister.load().
   useEffect(() => {
-    if (!store) return;
+    if (!store || !isPersisterLoaded) return;
 
     let isMounted = true;
     console.log('Mounting ProjectDetailsStore for projectId:', projectId);
@@ -135,7 +140,12 @@ export default function ProjectDetailsStore({ projectId }: { projectId: string }
         removeStoreFromCache(projectId);
       }
     };
-  }, [projectId, store, addStoreToCache, removeStoreFromCache]);
+  }, [projectId, store, isPersisterLoaded, addStoreToCache, removeStoreFromCache]);
+
+  useEffect(() => {
+    // Reset readiness when project/store changes to avoid stale ready state.
+    setIsPersisterLoaded(false);
+  }, [projectId, storeId]);
 
   return null;
 }
