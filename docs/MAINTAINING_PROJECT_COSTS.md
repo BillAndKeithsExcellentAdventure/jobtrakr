@@ -9,8 +9,9 @@ Project cost screens need fast access to:
 - spent per work item
 - total spent by category or project
 - completion profit totals based on bid amount and spent amount
+- project-specific Cost Items available for receipt line item assignment
 
-To avoid repeating expensive scans of workItemCostEntries in every screen, spent values are aggregated once and cached in context.
+To avoid repeating expensive scans of workItemCostEntries in every screen, spent values are aggregated once and cached in context. Project-specific Cost Item availability is also denormalized into the project list store so receipt line-item pickers can populate options without requiring every project's ProjectDetailsStore to be loaded.
 
 ## Core Components
 
@@ -45,15 +46,40 @@ Responsibilities:
 
 - Runs updater hooks for each active project.
 - Ensures totals are maintained globally while protected routes are mounted.
+- Keeps project-level Cost Item indexes synchronized for active projects.
 
 Hooks used:
 
 - useSeedWorkItemsIfNecessary
 - useCostUpdater
 - useBidAmountUpdater
+- useProjectWorkItemIdsUpdater
 - useWorkItemSpentUpdater
 
-### 3) useWorkItemSpentUpdater
+### 3) ListOfProjectsStore Cost Item Index
+
+File: src/tbStores/listOfProjects/ListOfProjectsStore.tsx
+
+Responsibilities:
+
+- Stores a denormalized `workItemIds` field on each project row.
+- Keeps project-level Cost Item availability accessible from the lightweight project list store.
+- Exposes active-project lookup helpers for picker flows.
+
+Key fields and helpers:
+
+- `projects.workItemIds`: comma-separated list of work item IDs currently available for that project
+- `parseWorkItemIdsCsv(csv)`: parses and deduplicates stored work item IDs
+- `useActiveProjectWorkItemIdsIndex()`: returns a `Record<projectId, string[]>` for active projects
+- `useActiveProjectWorkItemIds(projectId)`: returns parsed work item IDs for one active project
+
+Why this exists:
+
+- Receipt line items can be assigned to other projects.
+- When selecting a Cost Item for a receipt line item, the app may need Cost Items for a project other than the currently open route project.
+- Loading another project's ProjectDetailsStore just to populate a picker is unnecessary overhead when the available Cost Item IDs can be cached in the project list store.
+
+### 4) useWorkItemSpentUpdater
 
 File: src/tbStores/projectDetails/ProjectDetailsStoreHooks.tsx
 
@@ -65,6 +91,19 @@ Responsibilities:
 - Aggregates spent by workItemId.
 - Writes one full snapshot into WorkItemSpentSummaryContext.
 
+### 5) useProjectWorkItemIdsUpdater
+
+File: src/tbStores/projectDetails/ProjectDetailsStoreHooks.tsx
+
+Responsibilities:
+
+- Watches `workItemSummaries` for a project.
+- Builds a deduplicated, deterministic CSV of `workItemId` values.
+- Writes the CSV into `ListOfProjectsStore.projects.workItemIds`.
+- Avoids redundant writes when the CSV has not changed.
+
+This hook is part of the active-project background updater flow, so the list store stays current while active project detail stores are mounted.
+
 ## Provider and Lifecycle Placement
 
 WorkItemSpentSummaryProvider is mounted in:
@@ -74,6 +113,27 @@ WorkItemSpentSummaryProvider is mounted in:
 This keeps spent data available to all protected screens and allows shared cache usage across project pages.
 
 ## Screen Consumption Patterns
+
+### Receipt line item Cost Item pickers
+
+Files:
+
+- src/app/(protected)/(home)/[projectId]/receipt/[receiptId]/addLineItem.tsx
+- src/app/(protected)/(home)/[projectId]/receipt/[receiptId]/[lineItemId]/index.tsx
+- src/app/(protected)/(home)/[projectId]/receipt/[receiptId]/requestAIProcessing.tsx
+
+Pattern:
+
+- Each picker passes the selected project ID for the line item, falling back to the route project ID.
+- `CostItemPicker` calls `useProjectWorkItems(projectId)`.
+- `useProjectWorkItems` first tries the active-project Cost Item index from `ListOfProjectsStore`.
+- If indexed IDs are unavailable, it falls back to reading `workItemSummaries` from that project's `ProjectDetailsStore`.
+
+Benefit:
+
+- Cross-project receipt line item assignment can show project-specific Cost Items immediately.
+- Active-project picker lookups stay cheap.
+- Existing picker APIs remain unchanged.
 
 ### Category cost breakdown screen
 
@@ -122,6 +182,9 @@ Pattern:
   - bidAmount - spentAmount when not complete
 - completion total/profit includes only items marked complete:
   - sum of (bidAmount - spentAmount) for complete items
+- `projects.workItemIds` is derived from `workItemSummaries.workItemId` values for that project.
+- `projects.workItemIds` should contain unique, non-empty work item IDs only.
+- For active projects, picker flows should prefer the list-store index before falling back to project-details reads.
 
 ## Maintenance Guidance
 
@@ -131,10 +194,13 @@ When changing cost calculation behavior:
 2. Keep updater writes batched at the project level when possible.
 3. Ensure deleted or unlinked cost entries cannot leave stale spent values in cache.
 4. Preserve project scoping rules for cross-project cost entries.
-5. Validate all affected screens:
+5. Preserve synchronization between `workItemSummaries` and `projects.workItemIds`.
+6. Validate all affected screens:
    - project summary
    - category summary
    - cost item details
+
+- receipt line item Cost Item pickers
 
 When adding new aggregate metrics:
 
@@ -151,6 +217,9 @@ For any cost-maintenance changes, validate:
 - editing a cost entry amount updates spent and totals
 - deleting a cost entry removes stale spent values
 - adding a cost entry for a new work item auto-creates a summary row
+- adding/removing project work item summaries updates `projects.workItemIds`
+- active-project Cost Item pickers can resolve options without loading another project's ProjectDetailsStore
+- cross-project receipt line items show Cost Items for the selected project, not only the route project
 - completion toggles still affect balance and completion totals correctly
 - category and project summary totals remain consistent with cost item details
 

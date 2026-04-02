@@ -4,6 +4,7 @@ import {
   WorkCategoryCodeCompareAsNumber,
   WorkItemDataCodeCompareAsNumber,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
+import { useActiveProjectWorkItemIdsIndex } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { useAllRows } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useMemo } from 'react';
 
@@ -13,15 +14,29 @@ import { useMemo } from 'react';
  * @returns Object containing projectWorkItems, availableCategoriesOptions, allAvailableCostItemOptions, allWorkItems, and allWorkCategories
  */
 export const useProjectWorkItems = (projectId: string) => {
+  const activeProjectWorkItemIdsIndex = useActiveProjectWorkItemIdsIndex();
+  const indexedWorkItemIds = activeProjectWorkItemIdsIndex[projectId];
   const allWorkItemCostSummaries = useAllRows(projectId, 'workItemSummaries');
   const allWorkItems = useAllRowsConfiguration('workItems', WorkItemDataCodeCompareAsNumber);
   const allWorkCategories = useAllRowsConfiguration('categories', WorkCategoryCodeCompareAsNumber);
 
+  const projectWorkItemIds = useMemo(() => {
+    // Fast path for active projects backed by ListOfProjectsStore index.
+    if (indexedWorkItemIds !== undefined) {
+      return indexedWorkItemIds;
+    }
+
+    // Fallback path when index is unavailable.
+    return Array.from(
+      new Set(allWorkItemCostSummaries.map((item) => item.workItemId).filter((workItemId) => !!workItemId)),
+    );
+  }, [indexedWorkItemIds, allWorkItemCostSummaries]);
+
   // Filter work items to only those available in this project
   const projectWorkItems = useMemo(() => {
-    const uniqueWorkItemIds = allWorkItemCostSummaries.map((item) => item.workItemId);
-    return allWorkItems.filter((item) => uniqueWorkItemIds.includes(item.id));
-  }, [allWorkItemCostSummaries, allWorkItems]);
+    const uniqueWorkItemIds = new Set(projectWorkItemIds);
+    return allWorkItems.filter((item) => uniqueWorkItemIds.has(item.id));
+  }, [projectWorkItemIds, allWorkItems]);
 
   const availableCategoriesOptions: OptionEntry[] = useMemo(() => {
     // get list of unique categoryIds from projectWorkItems

@@ -132,6 +132,8 @@ const EditLineItemPage = () => {
     router.back();
   };
 
+  const selectedProjectId = (pickedProjectOption?.value as string) ?? projectId;
+
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
       <Stack.Screen
@@ -192,7 +194,7 @@ const EditLineItemPage = () => {
         )}
         <CostItemPicker
           style={styles.inputContainer}
-          projectId={projectId}
+          projectId={selectedProjectId}
           value={itemizedEntry.workItemId}
           onValueChange={handleSubCategoryChange}
           label="Cost Item Type"

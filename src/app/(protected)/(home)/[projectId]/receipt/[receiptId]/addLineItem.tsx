@@ -57,6 +57,7 @@ const AddReceiptLineItemPage = () => {
   };
 
   const [itemizedEntry, setItemizedEntry] = useState<WorkItemCostEntry>(initItemizedEntry);
+  const selectedProjectId = (pickedProjectOption?.value as string) ?? projectId;
 
   const handleOkPress = useCallback(async () => {
     if (!itemizedEntry.label || !itemizedEntry.amount) {
@@ -121,7 +122,7 @@ const AddReceiptLineItemPage = () => {
         )}
         <CostItemPicker
           style={styles.inputContainer}
-          projectId={projectId}
+          projectId={selectedProjectId}
           value={itemizedEntry.workItemId}
           onValueChange={(workItemId) => {
             setItemizedEntry((prevItem) => ({

@@ -3,6 +3,7 @@ import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import {
   useCostUpdater,
   useBidAmountUpdater,
+  useProjectWorkItemIdsUpdater,
   useSeedWorkItemsIfNecessary,
   useWorkItemSpentUpdater,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
@@ -17,6 +18,7 @@ const ProjectUpdaterForSingleProject: React.FC<{ projectId: string }> = ({ proje
   useSeedWorkItemsIfNecessary(projectId);
   useCostUpdater(projectId);
   useBidAmountUpdater(projectId);
+  useProjectWorkItemIdsUpdater(projectId);
   useWorkItemSpentUpdater(projectId);
   return null;
 };

@@ -38,6 +38,7 @@ const TABLES_SCHEMA = {
     thumbnail: { type: 'string' },
     status: { type: 'string' },
     seedWorkItems: { type: 'string' }, // comma separated list of workItemIds
+    workItemIds: { type: 'string' }, // comma separated list of workItemIds currently used in project
     isCompanyExpenseProject: { type: 'boolean', default: false },
   },
 } as const;
@@ -122,6 +123,10 @@ export const useAddProjectCallback = () => {
       // Set abbreviation if not provided
       if (!projectData.abbreviation) {
         projectData.abbreviation = generateAbbreviation(projectData.name);
+      }
+
+      if (!projectData.workItemIds) {
+        projectData.workItemIds = '';
       }
 
       if (store) {
@@ -229,6 +234,54 @@ export const useHasActiveCompanyExpenseProject = () => {
     () => allProjects.some((p) => p.isCompanyExpenseProject === true && p.status === 'active'),
     [allProjects],
   );
+};
+
+/**
+ * Parses a comma-separated list of work item IDs into a deduplicated string array.
+ * Empty values and surrounding whitespace are removed.
+ * @param csv - Comma-separated work item IDs stored on a project row.
+ * @returns A deduplicated array of non-empty work item IDs.
+ */
+const parseWorkItemIdsCsv = (csv?: string): string[] => {
+  if (!csv) return [];
+  return Array.from(
+    new Set(
+      csv
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean),
+    ),
+  );
+};
+
+/**
+ * Builds a fast lookup of active project IDs to their parsed work item IDs.
+ * This allows consumers to access project-specific work items without loading
+ * the ProjectDetailsStore for each active project.
+ * @returns A record keyed by project ID containing deduplicated work item ID arrays.
+ */
+export const useActiveProjectWorkItemIdsIndex = () => {
+  const allProjects = useAllProjects();
+
+  return useMemo<Record<string, string[]>>(() => {
+    const index: Record<string, string[]> = {};
+    for (const project of allProjects) {
+      if (project.status !== 'active') continue;
+      index[project.id] = parseWorkItemIdsCsv(project.workItemIds);
+    }
+    return index;
+  }, [allProjects]);
+};
+
+/**
+ * Returns the parsed work item IDs for a single active project.
+ * If the project is not active or has no indexed work items, an empty array is returned.
+ * @param projectId - The project ID to retrieve indexed work item IDs for.
+ * @returns A deduplicated array of work item IDs for the active project.
+ */
+export const useActiveProjectWorkItemIds = (projectId: string): string[] => {
+  const index = useActiveProjectWorkItemIdsIndex();
+  return index[projectId] ?? [];
 };
 
 // Create, persist, and sync a store containing the IDs of the projects

@@ -324,6 +324,27 @@ export const useBidAmountUpdater = (projectId: string): void => {
   }, [allWorkItemSummaries, setBidAmount, projectId]);
 };
 
+const buildWorkItemIdsCsv = (allWorkItemSummaries: WorkItemSummaryData[]): string => {
+  return Array.from(
+    new Set(allWorkItemSummaries.map((item) => item.workItemId).filter((workItemId) => !!workItemId)),
+  )
+    .sort()
+    .join(',');
+};
+
+/* Watch for changes to table workItemSummaries and keep ListOfProjectsStore.projects.workItemIds in sync */
+export const useProjectWorkItemIdsUpdater = (projectId: string): void => {
+  const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
+  const [workItemIds, setWorkItemIds] = useProjectValue(projectId, 'workItemIds');
+
+  useEffect(() => {
+    const nextWorkItemIds = buildWorkItemIdsCsv(allWorkItemSummaries);
+    if (nextWorkItemIds !== (workItemIds ?? '')) {
+      setWorkItemIds(nextWorkItemIds);
+    }
+  }, [allWorkItemSummaries, setWorkItemIds, workItemIds]);
+};
+
 /* Watch for changes to table workItemSummaries and recalculate the total amount bid 
    and then update the project summary information */
 export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
