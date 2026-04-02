@@ -395,7 +395,7 @@ const ReceiptDetailsPage = () => {
           vendorId: receipt.vendorId,
           vendor: receipt.vendor,
           paymentAccountId: receipt.paymentAccountId,
-          accountingId: receipt.accountingId,
+          accountingId: updates.accountingId,
           description: receipt.description,
           receiptDate: receipt.receiptDate,
           pictureDate: receipt.pictureDate,

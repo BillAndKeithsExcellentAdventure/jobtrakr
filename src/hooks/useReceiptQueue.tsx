@@ -79,7 +79,6 @@ export const useReceiptQueue = () => {
           vendor: queuedReceipt.vendor,
           vendorId: queuedReceipt.vendorId,
           paymentAccountId: queuedReceipt.paymentAccountId,
-          expenseAccountId: queuedReceipt.accountingId,
           description: queuedReceipt.description,
           amount: queuedReceipt.lineItems.reduce((sum, item) => sum + item.amount, 0),
           receiptDate: queuedReceipt.receiptDate,
@@ -93,14 +92,18 @@ export const useReceiptQueue = () => {
           id: receiptId,
         };
 
-        const receiptSuccess = store.setRow('receipts', receiptId, receiptData);
-        if (!receiptSuccess) {
-          console.error(`Failed to add receipt to project ${toProjectId}`);
+        store.setRow('receipts', receiptId, receiptData);
+
+        const persistedReceipt = store.getRow('receipts', receiptId);
+        if (!persistedReceipt || Object.keys(persistedReceipt).length === 0) {
+          console.error(
+            `Receipt queue: Failed to persist receipt ${receiptId} in project ${toProjectId}; skipping line item copy.`,
+          );
           return { success: false, msg: 'Failed to create or update receipt', createdNewReceipt: false };
         }
 
         console.log(
-          `Receipt queue: ${isNewReceipt ? 'Created' : 'Updated'} receipt ${receiptId} in project ${toProjectId}`,
+          `Receipt queue: ${isNewReceipt ? 'Created' : 'Updated'} receipt ${receiptId}${queuedReceipt.accountingId ? ` (${queuedReceipt.accountingId})` : ''} in project ${toProjectId} with ${queuedReceipt.lineItems.length} queued line item(s)`,
         );
 
         const existingCostEntryIds = new Set<string>();
