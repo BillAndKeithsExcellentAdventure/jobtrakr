@@ -1,9 +1,10 @@
-import React, { createContext, useContext, useCallback, useMemo, useRef } from 'react';
+import React, { createContext, useContext, useCallback, useMemo, useRef, useState } from 'react';
 
 interface ProjectDetailsStoreCacheContextType {
   addStoreToCache: (projectId: string, store: any) => void;
   removeStoreFromCache: (projectId: string) => void;
   getStoreFromCache: (projectId: string) => any | null;
+  cacheVersion: number;
 }
 
 const ProjectDetailsStoreCacheContext = createContext<ProjectDetailsStoreCacheContextType | undefined>(
@@ -24,14 +25,17 @@ interface ProjectDetailsStoreCacheProviderProps {
 
 export const ProjectDetailsStoreCacheProvider = ({ children }: ProjectDetailsStoreCacheProviderProps) => {
   const storesCacheRef = useRef<Record<string, any>>({});
+  const [cacheVersion, setCacheVersion] = useState(0);
 
   const addStoreToCache = useCallback((projectId: string, store: any) => {
     storesCacheRef.current[projectId] = store;
+    setCacheVersion((version) => version + 1);
     console.log(`ProjectDetailsStoreCache: Added store for project ${projectId}`);
   }, []);
 
   const removeStoreFromCache = useCallback((projectId: string) => {
     delete storesCacheRef.current[projectId];
+    setCacheVersion((version) => version + 1);
     console.log(`ProjectDetailsStoreCache: Removed store for project ${projectId}`);
   }, []);
 
@@ -44,8 +48,9 @@ export const ProjectDetailsStoreCacheProvider = ({ children }: ProjectDetailsSto
       addStoreToCache,
       removeStoreFromCache,
       getStoreFromCache,
+      cacheVersion,
     }),
-    [addStoreToCache, removeStoreFromCache, getStoreFromCache],
+    [addStoreToCache, removeStoreFromCache, getStoreFromCache, cacheVersion],
   );
 
   return (

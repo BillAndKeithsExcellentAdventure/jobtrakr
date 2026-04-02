@@ -6,17 +6,27 @@ import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
-import { useAddRowCallback, WorkItemCostEntry } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import {
+  useAddRowCallback,
+  useTypedRow,
+  useAllRows,
+  WorkItemCostEntry,
+} from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useAddReceiptQueueEntryCallback, ReceiptLineItem } from '@/src/tbStores/ReceiptQueueStoreHooks';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { gatherLineItemsForReceipt } from '@/src/utils/receiptUtils';
 
 const AddReceiptLineItemPage = () => {
   const router = useRouter();
   const allProjects = useAllProjects();
   const { projectId, receiptId } = useLocalSearchParams<{ projectId: string; receiptId: string }>();
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
+  const receipt = useTypedRow(projectId, 'receipts', receiptId);
+  const allCostItems = useAllRows(projectId, 'workItemCostEntries');
+  const addReceiptQueueEntry = useAddReceiptQueueEntryCallback();
 
   const [isProjectPickerVisible, setIsProjectPickerVisible] = useState<boolean>(false);
   const [pickedProjectOption, setPickedProjectOption] = useState<OptionEntry | undefined>(undefined);
@@ -74,8 +84,58 @@ const AddReceiptLineItemPage = () => {
       Alert.alert('Error', 'Failed to add line item.');
       return;
     }
+
+    // If receipt has purchaseId and line item is for a different project, create a queue entry.
+    // QuickBooks sync happens from the receipt details screen once the sync hash reflects this change.
+    if (receipt?.purchaseId && newItemizedEntry.projectId && newItemizedEntry.projectId !== projectId) {
+      try {
+        // Get updated line items including the newly added one
+        const updatedLineItems = gatherLineItemsForReceipt(receiptId, [...allCostItems, newItemizedEntry]);
+
+        // Create receipt queue entry for the target project
+        const receiptLineItems: ReceiptLineItem[] = updatedLineItems.map((item) => ({
+          amount: item.amount,
+          itemDescription: item.label,
+          projectId: item.projectId ?? projectId,
+          workItemId: item.workItemId ?? '',
+        }));
+
+        const queueEntryData = {
+          purchaseId: receipt.purchaseId,
+          fromProjectId: projectId,
+          vendorId: receipt.vendorId,
+          vendor: receipt.vendor,
+          paymentAccountId: receipt.paymentAccountId,
+          accountingId: receipt.accountingId,
+          description: receipt.description,
+          receiptDate: receipt.receiptDate,
+          pictureDate: receipt.pictureDate,
+          thumbnail: receipt.thumbnail,
+          notes: receipt.notes,
+          imageId: receipt.imageId,
+          lineItems: receiptLineItems,
+          qbSyncHash: receipt.qbSyncHash ?? '',
+        };
+        addReceiptQueueEntry(queueEntryData);
+        console.log(`Added receipt queue entry for new line item in project ${newItemizedEntry.projectId}`);
+      } catch (error) {
+        console.error('Error processing cross-project line item addition:', error);
+        // Don't fail - line item was created successfully locally
+      }
+    }
+
     router.back();
-  }, [itemizedEntry, pickedProjectOption, addLineItem, router, projectId]);
+  }, [
+    itemizedEntry,
+    pickedProjectOption,
+    addLineItem,
+    router,
+    projectId,
+    receipt,
+    receiptId,
+    allCostItems,
+    addReceiptQueueEntry,
+  ]);
 
   return (
     <View style={{ flex: 1, width: '100%' }}>

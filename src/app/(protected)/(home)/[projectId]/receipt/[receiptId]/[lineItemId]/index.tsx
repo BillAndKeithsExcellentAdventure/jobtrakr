@@ -5,11 +5,12 @@ import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
 import { TextField } from '@/src/components/TextField';
-import { View } from '@/src/components/Themed';
+import { Text, View } from '@/src/components/Themed';
 import { useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   useAllRows,
   useUpdateRowCallback,
+  useTypedRow,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -20,7 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const EditLineItemPage = () => {
   const router = useRouter();
   const allProjects = useAllProjects();
-  const { projectId, lineItemId } = useLocalSearchParams<{
+  const { projectId, receiptId, lineItemId } = useLocalSearchParams<{
     projectId: string;
     receiptId: string;
     lineItemId: string;
@@ -28,6 +29,8 @@ const EditLineItemPage = () => {
 
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const updateLineItem = useUpdateRowCallback(projectId, 'workItemCostEntries');
+  const receipt = useTypedRow(projectId, 'receipts', receiptId);
+
   const [itemizedEntry, setItemizedEntry] = useState<WorkItemCostEntry>({
     id: '',
     label: '',
@@ -44,13 +47,16 @@ const EditLineItemPage = () => {
   // tracks whether any field has been changed since load/save
   const isDirtyRef = useRef<boolean>(false);
 
+  // Determine if this line item should be read-only (cross-project item with purchaseId)
+  const isReadOnly = receipt?.purchaseId && itemizedEntry.projectId && itemizedEntry.projectId !== projectId;
+
   const saveEntry = useCallback(
     async (updatedEntry?: WorkItemCostEntry) => {
       // Use the provided updated entry or fall back to current state
       const entryToSave = updatedEntry || itemizedEntry;
 
-      // don't save if nothing changed
-      if (!isDirtyRef.current) return;
+      // don't save if nothing changed or item is read-only
+      if (!isDirtyRef.current || isReadOnly) return;
       // require label and amount to be present before saving
       if (!entryToSave.label || !entryToSave.amount) return;
       // ensure we have an id to update
@@ -68,7 +74,7 @@ const EditLineItemPage = () => {
       }
       isDirtyRef.current = false;
     },
-    [itemizedEntry, pickedProjectOption, updateLineItem, projectId],
+    [itemizedEntry, pickedProjectOption, updateLineItem, projectId, isReadOnly],
   );
 
   useEffect(() => {
@@ -147,6 +153,14 @@ const EditLineItemPage = () => {
         }}
       />
       <View style={styles.container}>
+        {isReadOnly && (
+          <View style={styles.warningContainer}>
+            <Text style={styles.warningText}>
+              This line item belongs to a different project and has been synced to QuickBooks. Edit it in the{' '}
+              {pickedProjectOption?.label} project instead.
+            </Text>
+          </View>
+        )}
         <NumericInputField
           containerStyle={{ marginTop: 0 }}
           inputStyle={{ paddingHorizontal: 10 }}
@@ -155,7 +169,9 @@ const EditLineItemPage = () => {
           maxDecimals={2}
           decimals={2}
           value={itemizedEntry.amount}
+          editable={!isReadOnly}
           onChangeNumber={(value: number | null): void => {
+            if (isReadOnly) return;
             isDirtyRef.current = true;
             const updatedEntry = {
               ...itemizedEntry,
@@ -171,7 +187,9 @@ const EditLineItemPage = () => {
           placeholder="Description"
           label="Description"
           value={itemizedEntry.label}
+          editable={!isReadOnly}
           onChangeText={(text): void => {
+            if (isReadOnly) return;
             isDirtyRef.current = true;
             setItemizedEntry((prevItem) => ({
               ...prevItem,
@@ -182,7 +200,7 @@ const EditLineItemPage = () => {
             void saveEntry();
           }}
         />
-        {projectOptions && projectOptions.length > 1 && (
+        {projectOptions && projectOptions.length > 1 && !receipt?.purchaseId && (
           <OptionPickerItem
             containerStyle={styles.inputContainer}
             optionLabel={pickedProjectOption?.label}
@@ -196,7 +214,10 @@ const EditLineItemPage = () => {
           style={styles.inputContainer}
           projectId={selectedProjectId}
           value={itemizedEntry.workItemId}
-          onValueChange={handleSubCategoryChange}
+          onValueChange={(workItemId: string) => {
+            if (isReadOnly) return;
+            handleSubCategoryChange(workItemId);
+          }}
           label="Cost Item Type"
           placeholder="Cost Item Type"
           modalTitle="Select Cost Item Type"
@@ -232,6 +253,19 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginTop: 6,
+  },
+  warningContainer: {
+    backgroundColor: '#FFF3CD',
+    borderRadius: 4,
+    padding: 10,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF9800',
+  },
+  warningText: {
+    fontSize: 14,
+    color: '#856404',
+    fontWeight: '500',
   },
   saveButtonRow: {
     marginVertical: 20,

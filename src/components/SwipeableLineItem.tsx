@@ -4,8 +4,10 @@ import { deleteBg } from '@/src/constants/Colors';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
+  useAllRows,
   useDeleteRowCallback,
   useTableValue,
+  useTypedRow,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { formatCurrency } from '@/src/utils/formatters';
@@ -19,12 +21,44 @@ const SWIPE_THRESHOLD_WIDTH = 50;
 
 const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntry; projectId: string }) => {
   const processDelete = useDeleteRowCallback(projectId, 'workItemCostEntries');
+  const allLineItems = useAllRows(projectId, 'workItemCostEntries');
+  const parentReceipt = useTypedRow(projectId, 'receipts', lineItem.parentId);
   const allWorkItems = useAllRowsConfiguration('workItems');
 
   const router = useRouter();
   const colors = useColors();
   const handleDelete = useCallback(
     (itemId: string) => {
+      const isReceiptLine = lineItem.documentationType === 'receipt';
+      const isQbSyncedReceipt = !!parentReceipt?.purchaseId;
+      const isCrossProjectLineItem = !!lineItem.projectId && lineItem.projectId !== projectId;
+
+      if (isReceiptLine && isQbSyncedReceipt && isCrossProjectLineItem) {
+        Alert.alert(
+          'Delete Not Allowed',
+          'This line item belongs to another project and is synced to QuickBooks. Open that project to edit or delete it.',
+        );
+        return;
+      }
+
+      if (isReceiptLine && isQbSyncedReceipt) {
+        const currentProjectLineItemCount = allLineItems.filter(
+          (item) =>
+            item.parentId === lineItem.parentId &&
+            item.documentationType === 'receipt' &&
+            (!item.projectId || item.projectId === projectId),
+        ).length;
+
+        const isCurrentProjectLineItem = !lineItem.projectId || lineItem.projectId === projectId;
+        if (isCurrentProjectLineItem && currentProjectLineItemCount <= 1) {
+          Alert.alert(
+            'Delete Not Allowed',
+            'At least one line item for this project must remain on a QuickBooks-synced receipt.',
+          );
+          return;
+        }
+      }
+
       Alert.alert(
         'Delete Cost Line Item',
         'Are you sure you want to delete this line item?',
@@ -32,7 +66,7 @@ const SwipeableLineItem = ({ lineItem, projectId }: { lineItem: WorkItemCostEntr
         { cancelable: true },
       );
     },
-    [processDelete],
+    [allLineItems, lineItem, parentReceipt?.purchaseId, processDelete, projectId],
   );
 
   const RightAction = () => {

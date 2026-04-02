@@ -32,7 +32,7 @@ export const useReceiptQueue = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
   const { addActiveProjectIds } = useActiveProjectIds();
-  const { getStoreFromCache } = useProjectDetailsStoreCache();
+  const { getStoreFromCache, cacheVersion } = useProjectDetailsStoreCache();
 
   // Get unique target projects from line items (excluding fromProjectId)
   const receiptProjectIds = useMemo(() => {
@@ -52,30 +52,35 @@ export const useReceiptQueue = () => {
     addActiveProjectIds(receiptProjectIds);
   }, [receiptProjectIds, addActiveProjectIds]);
 
-  // Helper function to create a receipt copy in a target project
+  // Helper function to create or merge a receipt copy in a target project
   const createReceiptCopyInProject = useCallback(
     (
       queuedReceipt: ReceiptQueueEntry,
       toProjectId: string,
       store: any,
-    ): { success: boolean; msg: string } => {
+    ): { success: boolean; msg: string; createdNewReceipt: boolean } => {
       try {
         if (!store) {
           console.error(`Target project store not available for project ${toProjectId}`);
-          return { success: false, msg: 'Target project store not available' };
+          return { success: false, msg: 'Target project store not available', createdNewReceipt: false };
         }
 
-        const newReceiptId = randomUUID();
+        const receiptIds = store.getRowIds('receipts') as string[];
+        const existingReceiptId = receiptIds.find(
+          (id) => store.getCell('receipts', id, 'purchaseId') === queuedReceipt.purchaseId,
+        );
 
-        // Create the receipt in the target project
+        const receiptId = existingReceiptId ?? randomUUID();
+        const isNewReceipt = !existingReceiptId;
+
+        // Create or update the receipt in the target project
         const receiptData = {
-          accountingId: '',
+          accountingId: queuedReceipt.accountingId,
           vendor: queuedReceipt.vendor,
           vendorId: queuedReceipt.vendorId,
           paymentAccountId: queuedReceipt.paymentAccountId,
-          expenseAccountId: queuedReceipt.accountingId,
           description: queuedReceipt.description,
-          amount: queuedReceipt.lineItems.reduce((sum, item) => sum + item.amount, 0), // total amount from all line items
+          amount: queuedReceipt.lineItems.reduce((sum, item) => sum + item.amount, 0),
           receiptDate: queuedReceipt.receiptDate,
           thumbnail: queuedReceipt.thumbnail,
           pictureDate: queuedReceipt.pictureDate,
@@ -84,33 +89,63 @@ export const useReceiptQueue = () => {
           markedComplete: false,
           purchaseId: queuedReceipt.purchaseId,
           qbSyncHash: queuedReceipt.qbSyncHash,
-          id: newReceiptId,
+          id: receiptId,
         };
 
-        const receiptSuccess = store.setRow('receipts', newReceiptId, receiptData);
-        if (!receiptSuccess) {
-          console.error(`Failed to add receipt to project ${toProjectId}`);
-          return { success: false, msg: 'Failed to create receipt' };
+        store.setRow('receipts', receiptId, receiptData);
+
+        const persistedReceipt = store.getRow('receipts', receiptId);
+        if (!persistedReceipt || Object.keys(persistedReceipt).length === 0) {
+          console.error(
+            `Receipt queue: Failed to persist receipt ${receiptId} in project ${toProjectId}; skipping line item copy.`,
+          );
+          return { success: false, msg: 'Failed to create or update receipt', createdNewReceipt: false };
         }
 
-        console.log(`Receipt queue: Created receipt ${newReceiptId} in project ${toProjectId}`);
+        const targetReceiptCount = (store.getRowIds('receipts') as string[]).length;
+        console.log(
+          `Receipt queue: Target project ${toProjectId} now has ${targetReceiptCount} receipt row(s).`,
+        );
 
-        // Create work item cost entries for each line item and if item belongs to this target project set projectId to undefined (since it's the same project)
+        console.log(
+          `Receipt queue: ${isNewReceipt ? 'Created' : 'Updated'} receipt ${receiptId}${queuedReceipt.accountingId ? ` (${queuedReceipt.accountingId})` : ''} in project ${toProjectId} with ${queuedReceipt.lineItems.length} queued line item(s)`,
+        );
+
+        const existingCostEntryIds = new Set<string>();
+        const costEntryRowIds = store.getRowIds('workItemCostEntries') as string[];
+        for (const rowId of costEntryRowIds) {
+          if (store.getCell('workItemCostEntries', rowId, 'parentId') !== receiptId) {
+            continue;
+          }
+          const label = store.getCell('workItemCostEntries', rowId, 'label') ?? '';
+          const amount = Number(store.getCell('workItemCostEntries', rowId, 'amount') ?? 0);
+          const workItemId = store.getCell('workItemCostEntries', rowId, 'workItemId') ?? '';
+          const projectId = store.getCell('workItemCostEntries', rowId, 'projectId') ?? '';
+          existingCostEntryIds.add(`${label}|${amount}|${workItemId}|${projectId}`);
+        }
+
+        // Upsert cost entries: add only entries that don't already exist for this receipt.
         for (const lineItem of queuedReceipt.lineItems) {
+          const normalizedProjectId = lineItem.projectId === toProjectId ? '' : lineItem.projectId;
+          const dedupeKey = `${lineItem.itemDescription}|${lineItem.amount}|${lineItem.workItemId}|${normalizedProjectId}`;
+          if (existingCostEntryIds.has(dedupeKey)) {
+            continue;
+          }
+
           const costEntryId = randomUUID();
           const costEntryData = {
             id: costEntryId,
             label: lineItem.itemDescription,
             amount: lineItem.amount,
             workItemId: lineItem.workItemId,
-            parentId: newReceiptId,
+            parentId: receiptId,
             documentationType: 'receipt',
             projectId: lineItem.projectId === toProjectId ? undefined : lineItem.projectId,
           };
 
           const costEntrySuccess = store.setRow('workItemCostEntries', costEntryId, costEntryData);
           if (!costEntrySuccess) {
-            console.warn(`Failed to add cost entry to receipt ${newReceiptId}`);
+            console.warn(`Failed to add cost entry to receipt ${receiptId}`);
           } else {
             console.log(
               `Receipt queue: Created cost entry for line item "${lineItem.itemDescription}" (${lineItem.amount})`,
@@ -118,12 +153,23 @@ export const useReceiptQueue = () => {
           }
         }
 
-        return { success: true, msg: '' };
+        // Recalculate receipt total from all entries currently attached to this receipt.
+        const updatedCostEntryIds = store.getRowIds('workItemCostEntries') as string[];
+        const updatedAmount = updatedCostEntryIds.reduce((sum, rowId) => {
+          if (store.getCell('workItemCostEntries', rowId, 'parentId') !== receiptId) {
+            return sum;
+          }
+          return sum + Number(store.getCell('workItemCostEntries', rowId, 'amount') ?? 0);
+        }, 0);
+        store.setCell('receipts', receiptId, 'amount', updatedAmount);
+
+        return { success: true, msg: '', createdNewReceipt: isNewReceipt };
       } catch (error) {
         console.error(`Error creating receipt copy in project ${toProjectId}:`, error);
         return {
           success: false,
           msg: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          createdNewReceipt: false,
         };
       }
     },
@@ -143,6 +189,10 @@ export const useReceiptQueue = () => {
       if (isProcessing || receiptsToProcess.length === 0) {
         return;
       }
+
+      console.log(
+        `Receipt queue: Triggered run (cacheVersion=${cacheVersion}, queueSize=${receiptsToProcess.length}, isConnected=${String(isConnected)}, internetReachable=${String(isInternetReachable)})`,
+      );
 
       // Skip if offline - don't attempt network operations when there's no connection
       if (!isConnected || isInternetReachable === false) {
@@ -189,8 +239,11 @@ export const useReceiptQueue = () => {
 
           const missingProjectIds = targetProjectIds.filter((toProjectId) => !getStoreFromCache(toProjectId));
           if (missingProjectIds.length > 0) {
+            const availableTargetProjectIds = targetProjectIds.filter((toProjectId) =>
+              Boolean(getStoreFromCache(toProjectId)),
+            );
             console.warn(
-              `Receipt queue: Waiting for target stores to load for receipt ${queuedReceipt.purchaseId}: ${missingProjectIds.join(', ')}`,
+              `Receipt queue: Waiting for target stores to load for receipt ${queuedReceipt.purchaseId}: missing=[${missingProjectIds.join(', ')}], available=[${availableTargetProjectIds.join(', ')}], cacheVersion=${cacheVersion}`,
             );
             continue;
           }
@@ -212,7 +265,7 @@ export const useReceiptQueue = () => {
               );
             }
 
-            if (queuedReceipt.imageId) {
+            if (queuedReceipt.imageId && result.createdNewReceipt) {
               const duplicateResult = await duplicateReceiptImage(
                 queuedReceipt.fromProjectId,
                 toProjectId,
@@ -280,6 +333,7 @@ export const useReceiptQueue = () => {
     orgId,
     auth,
     receiptsToProcess,
+    cacheVersion,
     isProcessing,
     isConnected,
     isInternetReachable,

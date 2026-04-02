@@ -511,7 +511,7 @@ const ProjectDetailsPage = () => {
             } as ActionButtonProps,
           ]
         : []),
-      ...(!projectData?.isCompanyExpenseProject && allWorkItemSummaries.length > 0
+      ...(allWorkItemSummaries.length > 0
         ? [
             {
               icon: <FontAwesome5 name="search-dollar" size={28} color={colors.iconColor} />,
@@ -540,7 +540,7 @@ const ProjectDetailsPage = () => {
             } as ActionButtonProps,
           ]
         : []),
-      ...(!projectData?.isCompanyExpenseProject && allWorkItemSummaries.length > 0
+      ...(allWorkItemSummaries.length > 0
         ? [
             {
               icon: <MaterialCommunityIcons name="export" size={28} color={colors.iconColor} />,
