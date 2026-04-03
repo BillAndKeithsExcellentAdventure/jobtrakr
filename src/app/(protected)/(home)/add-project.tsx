@@ -15,10 +15,12 @@ import {
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   useAddProjectCallback,
+  useAllProjects,
   useHasActiveCompanyExpenseProject,
 } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { useEffectiveSubscriptionTier } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 
 const AddProjectScreen = () => {
@@ -56,10 +58,32 @@ const AddProjectScreen = () => {
   const [pickedTemplate, setPickedTemplate] = useState<OptionEntry | undefined>(undefined);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | undefined>(undefined);
   const [isCompanyExpenseProject, setIsCompanyExpenseProject] = useState<boolean>(false);
+  const allProjects = useAllProjects();
+  const effectiveSubscriptionTier = useEffectiveSubscriptionTier();
   const hasActiveCompanyExpenseProject = useHasActiveCompanyExpenseProject();
   const [templateOptions, setTemplateOptions] = useState<OptionEntry[]>([]);
   const [canAddProject, setCanAddProject] = useState(false);
   const { addActiveProjectIds } = useActiveProjectIds();
+
+  const projectCreationBlockReason = useMemo(() => {
+    if (effectiveSubscriptionTier !== 'free') {
+      return '';
+    }
+
+    if (allProjects.length >= 2) {
+      return 'No more projects can be added. Free tier supports up to 2 projects total.';
+    }
+
+    const hasExistingCompanyExpenseProject = allProjects.some((existingProject) =>
+      Boolean(existingProject.isCompanyExpenseProject),
+    );
+
+    if (allProjects.length === 1 && !hasExistingCompanyExpenseProject && !isCompanyExpenseProject) {
+      return 'Free tier requires one company expense project within your first two projects.';
+    }
+
+    return '';
+  }, [allProjects, effectiveSubscriptionTier, isCompanyExpenseProject]);
 
   useEffect(() => {
     // Build template options from available templates that have work items
@@ -83,13 +107,19 @@ const AddProjectScreen = () => {
       project.name.length > 0 &&
         undefined !== pickedTemplate &&
         project.abbreviation.length > 0 &&
-        (isCompanyExpenseProject || undefined !== selectedCustomer),
+        (isCompanyExpenseProject || undefined !== selectedCustomer) &&
+        projectCreationBlockReason.length === 0,
     );
-  }, [project, pickedTemplate, selectedCustomer, isCompanyExpenseProject]);
+  }, [project, pickedTemplate, selectedCustomer, isCompanyExpenseProject, projectCreationBlockReason]);
 
   const handleSubmit = useCallback(async () => {
     if (!canAddProject) {
       console.log('Cannot add project, missing required fields.');
+      return;
+    }
+
+    if (projectCreationBlockReason.length > 0) {
+      Alert.alert('Project Limit Reached', projectCreationBlockReason);
       return;
     }
 
@@ -129,12 +159,16 @@ const AddProjectScreen = () => {
     addProject,
     router,
     addActiveProjectIds,
+    projectCreationBlockReason,
   ]);
 
   return (
     <View style={{ flex: 1, width: '100%' }}>
       <ModalScreenContainer onSave={handleSubmit} onCancel={() => router.back()} canSave={canAddProject}>
         <Text style={styles.modalTitle}>Create New Project</Text>
+        {projectCreationBlockReason.length > 0 && (
+          <Text style={[styles.blockReasonText, { color: colors.lossFg }]}>{projectCreationBlockReason}</Text>
+        )}
 
         <TextField
           style={[styles.input, { backgroundColor: colors.neutral200 }]}
@@ -158,7 +192,7 @@ const AddProjectScreen = () => {
             <Switch size="large" value={isCompanyExpenseProject} onValueChange={setIsCompanyExpenseProject} />
           </View>
         )}
-        {!isCompanyExpenseProject && (
+        {!isCompanyExpenseProject && projectCreationBlockReason.length === 0 && (
           <>
             <TextField
               style={[styles.input, { backgroundColor: colors.neutral200 }]}
@@ -212,6 +246,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     textAlign: 'center',
+  },
+  blockReasonText: {
+    marginBottom: 10,
+    textAlign: 'center',
+    fontWeight: '600',
   },
 });
 

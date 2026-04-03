@@ -101,7 +101,7 @@ const RequestAIProcessingPage = () => {
   const { allAvailableCostItemOptions } = useProjectWorkItems(projectId);
   const allProjects = useAllProjects();
   const projectPickerOptions = useMemo(
-    () => allProjects.map((p) => ({ label: p.name, value: p.id })),
+    () => allProjects.filter((p) => p.status === 'active').map((p) => ({ label: p.name, value: p.id })),
     [allProjects],
   );
   const defaultProjectOption = projectPickerOptions.find((option) => option.value === projectId);
