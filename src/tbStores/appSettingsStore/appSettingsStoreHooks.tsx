@@ -62,7 +62,7 @@ const INITIAL_SETTINGS: SettingsData = {
   noQuickBooksInterest: false,
   debugForceOffline: false,
   useDevSubscriptionOverride: false,
-  devSubscriptionTier: 'free',
+  devSubscriptionTier: 'premium',
   quickBooksExpenseAccountId: '',
   quickBooksPaymentAccounts: '',
   quickBooksDefaultPaymentAccountId: '',

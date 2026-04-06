@@ -368,7 +368,7 @@ const SetAppSettingScreen = () => {
                 </Text>
               </View>
 
-              <Text txtSize="small" style={styles.subscriptionTierLabel}>
+              <Text txtSize="xs" style={styles.subscriptionTierLabel}>
                 Development Tier
               </Text>
               <View style={styles.subscriptionTierRow}>
