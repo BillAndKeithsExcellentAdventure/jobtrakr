@@ -4,8 +4,23 @@ import * as UiReact from 'tinybase/ui-react/with-schemas';
 import { useCallback, useEffect, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import { CrudResult } from '@/src/models/types';
+import { isDevelopmentBuild } from '@/src/utils/environment';
 
 const { useStore } = UiReact as UiReact.WithSchemas<[typeof TABLES_SCHEMA, NoValuesSchema]>;
+
+export type SubscriptionTier = 'free' | 'basic' | 'premium';
+export const DEFAULT_SUBSCRIPTION_TIER: SubscriptionTier = 'free';
+export const PHOTO_LIMIT_PER_PROJECT_BY_TIER: Record<SubscriptionTier, number> = {
+  free: 10,
+  basic: 200,
+  premium: 3000,
+};
+
+const SUBSCRIPTION_TIERS: SubscriptionTier[] = ['free', 'basic', 'premium'];
+
+const isSubscriptionTier = (tier: unknown): tier is SubscriptionTier => {
+  return typeof tier === 'string' && SUBSCRIPTION_TIERS.includes(tier as SubscriptionTier);
+};
 
 export interface SettingsData {
   id: string;
@@ -23,6 +38,8 @@ export interface SettingsData {
   syncWithQuickBooks: boolean;
   noQuickBooksInterest: boolean;
   debugForceOffline: boolean;
+  useDevSubscriptionOverride: boolean;
+  devSubscriptionTier: SubscriptionTier;
   quickBooksExpenseAccountId: string;
   quickBooksPaymentAccounts: string; // Comma-separated list of account IDs
   quickBooksDefaultPaymentAccountId: string;
@@ -44,6 +61,8 @@ const INITIAL_SETTINGS: SettingsData = {
   syncWithQuickBooks: false,
   noQuickBooksInterest: false,
   debugForceOffline: false,
+  useDevSubscriptionOverride: false,
+  devSubscriptionTier: 'premium',
   quickBooksExpenseAccountId: '',
   quickBooksPaymentAccounts: '',
   quickBooksDefaultPaymentAccountId: '',
@@ -66,7 +85,7 @@ export const useAppSettings = (): SettingsData => {
     if (array.length > 1) {
       array.slice(1).forEach((row) => store.delRow('settings', row.id));
     }
-    return array.length > 0 ? array[0] : INITIAL_SETTINGS;
+    return array.length > 0 ? ({ ...INITIAL_SETTINGS, ...array[0] } as SettingsData) : INITIAL_SETTINGS;
   }, [store]);
 
   useEffect(() => {
@@ -108,3 +127,35 @@ export function useSetAppSettingsCallback() {
     [store],
   );
 }
+
+interface ResolveEffectiveSubscriptionTierOptions {
+  isDevelopment?: boolean;
+  backendTier?: SubscriptionTier | null;
+}
+
+export const resolveEffectiveSubscriptionTier = (
+  settings: Pick<SettingsData, 'useDevSubscriptionOverride' | 'devSubscriptionTier'>,
+  options?: ResolveEffectiveSubscriptionTierOptions,
+): SubscriptionTier => {
+  if (
+    options?.isDevelopment &&
+    settings.useDevSubscriptionOverride &&
+    isSubscriptionTier(settings.devSubscriptionTier)
+  ) {
+    return settings.devSubscriptionTier;
+  }
+
+  if (isSubscriptionTier(options?.backendTier)) {
+    return options.backendTier;
+  }
+
+  return DEFAULT_SUBSCRIPTION_TIER;
+};
+
+export const useEffectiveSubscriptionTier = (backendTier?: SubscriptionTier | null): SubscriptionTier => {
+  const appSettings = useAppSettings();
+  return resolveEffectiveSubscriptionTier(appSettings, {
+    backendTier,
+    isDevelopment: isDevelopmentBuild(),
+  });
+};

@@ -21,6 +21,8 @@ export const TABLES_SCHEMA = {
     companyLogo: { type: 'string' },
     changeOrderTemplateFileName: { type: 'string' },
     debugForceOffline: { type: 'boolean', default: false },
+    useDevSubscriptionOverride: { type: 'boolean', default: false },
+    devSubscriptionTier: { type: 'string', default: 'free' },
     syncWithQuickBooks: { type: 'boolean', default: false },
     noQuickBooksInterest: { type: 'boolean', default: false },
     quickBooksExpenseAccountId: { type: 'string' },

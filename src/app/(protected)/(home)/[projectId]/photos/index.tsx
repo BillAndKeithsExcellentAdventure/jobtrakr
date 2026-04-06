@@ -16,11 +16,15 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
+import {
+  PHOTO_LIMIT_PER_PROJECT_BY_TIER,
+  useEffectiveSubscriptionTier,
+} from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { Entypo, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Platform, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -58,11 +62,21 @@ const ProjectPhotosPage = () => {
   }, [checkPermissions]);
 
   const allProjectMedia = useAllRows(projectId, 'mediaEntries', RecentMediaEntryDateCompare);
+  const effectiveSubscriptionTier = useEffectiveSubscriptionTier();
+  const photoLimitPerProject = PHOTO_LIMIT_PER_PROJECT_BY_TIER[effectiveSubscriptionTier];
   const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
 
   const handlePhotoCaptured = useCallback(
     async (media: CapturedMedia) => {
+      if (allProjectMedia.length >= photoLimitPerProject) {
+        Alert.alert(
+          'Photo limit reached',
+          `Your ${effectiveSubscriptionTier} tier allows up to ${photoLimitPerProject} photos per project.`,
+        );
+        return;
+      }
+
       setIsPhotoUploading(true);
       console.log(`[handlePhotoCaptured] START - media.id: ${media?.id}, projectId: ${projectId}`);
 
@@ -113,7 +127,14 @@ const ProjectPhotosPage = () => {
         setIsPhotoUploading(false);
       }
     },
-    [projectId, addPhotoImage, addPhotoData],
+    [
+      allProjectMedia.length,
+      photoLimitPerProject,
+      effectiveSubscriptionTier,
+      projectId,
+      addPhotoImage,
+      addPhotoData,
+    ],
   );
 
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);

@@ -350,16 +350,22 @@ export const useProjectWorkItemIdsUpdater = (projectId: string): void => {
 export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
   const [seedWorkItems, setSeedWorkItems] = useProjectValue(projectId, 'seedWorkItems');
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
-  const { getStoreFromCache } = useProjectDetailsStoreCache();
+  const { getStoreFromCache, subscribeToStoreReady } = useProjectDetailsStoreCache();
 
   const seedInitialData = useCallback((): boolean => {
     if (allWorkItemSummaries.length > 0 || !seedWorkItems) return false;
 
-    const workItemIds = seedWorkItems.split(',').filter(Boolean);
+    const workItemIds = seedWorkItems
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
     if (workItemIds.length === 0) return false;
 
     const store = getStoreFromCache(projectId);
-    if (!store) return false;
+    if (!store) {
+      console.log('Project details store not ready for seeding, will retry when cache updates', projectId);
+      return false;
+    }
 
     store.transaction(() => {
       for (const workItemId of workItemIds) {
@@ -370,15 +376,27 @@ export const useSeedWorkItemsIfNecessary = (projectId: string): void => {
     return true;
   }, [seedWorkItems, allWorkItemSummaries, getStoreFromCache, projectId]);
 
-  useEffect(() => {
-    if (projectId && seedWorkItems && allWorkItemSummaries.length === 0) {
-      console.log('Seeding initial data for project', projectId);
-      if (seedInitialData()) {
-        console.log('Initial data seeded for project', projectId);
-        setSeedWorkItems(''); // Clear the seedWorkItems after seeding
-      }
+  const seedIfNeeded = useCallback((): void => {
+    if (!(projectId && seedWorkItems && allWorkItemSummaries.length === 0)) return;
+
+    console.log('Seeding initial data for project', projectId);
+    if (seedInitialData()) {
+      console.log('Initial data seeded for project', projectId);
+      setSeedWorkItems(''); // Clear the seedWorkItems after seeding
     }
   }, [projectId, seedWorkItems, allWorkItemSummaries, seedInitialData, setSeedWorkItems]);
+
+  useEffect(() => {
+    seedIfNeeded();
+  }, [seedIfNeeded]);
+
+  useEffect(() => {
+    if (!(projectId && seedWorkItems && allWorkItemSummaries.length === 0)) return;
+
+    return subscribeToStoreReady(projectId, () => {
+      seedIfNeeded();
+    });
+  }, [projectId, seedWorkItems, allWorkItemSummaries, subscribeToStoreReady, seedIfNeeded]);
 };
 
 // function to get workitems for a given project that has no costs associated with it and no bid amount

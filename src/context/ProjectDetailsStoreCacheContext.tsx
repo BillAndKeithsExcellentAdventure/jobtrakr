@@ -11,6 +11,7 @@ interface ProjectDetailsStoreCacheContextType {
   addStoreToCache: (projectId: string, store: any) => void;
   removeStoreFromCache: (projectId: string) => void;
   getStoreFromCache: (projectId: string) => any | null;
+  subscribeToStoreReady: (projectId: string, callback: () => void) => () => void;
   /**
    * Monotonic version that increments whenever a store is added/removed.
    *
@@ -57,11 +58,20 @@ interface ProjectDetailsStoreCacheProviderProps {
  */
 export const ProjectDetailsStoreCacheProvider = ({ children }: ProjectDetailsStoreCacheProviderProps) => {
   const storesCacheRef = useRef<Record<string, any>>({});
+  const storeReadyListenersRef = useRef<Record<string, Set<() => void>>>({});
   const [cacheVersion, setCacheVersion] = useState(0);
 
   /** Adds or replaces the cached store for a project and bumps cacheVersion. */
   const addStoreToCache = useCallback((projectId: string, store: any) => {
     storesCacheRef.current[projectId] = store;
+
+    const listeners = storeReadyListenersRef.current[projectId];
+    if (listeners && listeners.size > 0) {
+      for (const listener of Array.from(listeners)) {
+        listener();
+      }
+    }
+
     setCacheVersion((version) => version + 1);
     console.log(`ProjectDetailsStoreCache: Added store for project ${projectId}`);
   }, []);
@@ -78,14 +88,35 @@ export const ProjectDetailsStoreCacheProvider = ({ children }: ProjectDetailsSto
     return storesCacheRef.current[projectId] || null;
   }, []);
 
+  /**
+   * Subscribe to a one-project readiness event fired whenever that project's
+   * store is added to cache.
+   */
+  const subscribeToStoreReady = useCallback((projectId: string, callback: () => void) => {
+    if (!storeReadyListenersRef.current[projectId]) {
+      storeReadyListenersRef.current[projectId] = new Set();
+    }
+
+    const listeners = storeReadyListenersRef.current[projectId];
+    listeners.add(callback);
+
+    return () => {
+      listeners.delete(callback);
+      if (listeners.size === 0) {
+        delete storeReadyListenersRef.current[projectId];
+      }
+    };
+  }, []);
+
   const value = useMemo<ProjectDetailsStoreCacheContextType>(
     () => ({
       addStoreToCache,
       removeStoreFromCache,
       getStoreFromCache,
+      subscribeToStoreReady,
       cacheVersion,
     }),
-    [addStoreToCache, removeStoreFromCache, getStoreFromCache, cacheVersion],
+    [addStoreToCache, removeStoreFromCache, getStoreFromCache, subscribeToStoreReady, cacheVersion],
   );
 
   return (

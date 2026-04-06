@@ -6,6 +6,7 @@ import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { isEmailVerified, sendVerificationEmail } from '@/src/utils/quickbooksAPI';
 import {
+  SubscriptionTier,
   SettingsData,
   useAppSettings,
   useSetAppSettingsCallback,
@@ -71,6 +72,24 @@ const SetAppSettingScreen = () => {
   const handleDebugOfflineToggle = useCallback(
     (value: boolean) => {
       const updatedSettings = { ...settings, debugForceOffline: value };
+      setAppSettings(updatedSettings);
+      setSettings(updatedSettings);
+    },
+    [settings, setAppSettings],
+  );
+
+  const handleUseDevSubscriptionOverrideToggle = useCallback(
+    (value: boolean) => {
+      const updatedSettings = { ...settings, useDevSubscriptionOverride: value };
+      setAppSettings(updatedSettings);
+      setSettings(updatedSettings);
+    },
+    [settings, setAppSettings],
+  );
+
+  const handleDevSubscriptionTierChange = useCallback(
+    (tier: SubscriptionTier) => {
+      const updatedSettings = { ...settings, devSubscriptionTier: tier };
       setAppSettings(updatedSettings);
       setSettings(updatedSettings);
     },
@@ -326,23 +345,62 @@ const SetAppSettingScreen = () => {
             )}
           </View>
           {isDevelopment && (
-            <View
-              style={{
-                flexDirection: 'row',
-                marginBottom: 8,
-                marginTop: 8,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Switch
-                value={settings.debugForceOffline}
-                onValueChange={handleDebugOfflineToggle}
-                size="large"
-              />
-              <Text txtSize="standard" style={{ marginLeft: 10 }}>
-                Debug: Force Offline Mode
+            <View style={styles.debugSectionContainer}>
+              <View style={styles.debugSwitchRow}>
+                <Switch
+                  value={settings.debugForceOffline}
+                  onValueChange={handleDebugOfflineToggle}
+                  size="large"
+                />
+                <Text txtSize="standard" style={{ marginLeft: 10 }}>
+                  Debug: Force Offline Mode
+                </Text>
+              </View>
+
+              <View style={styles.debugSwitchRow}>
+                <Switch
+                  value={settings.useDevSubscriptionOverride}
+                  onValueChange={handleUseDevSubscriptionOverrideToggle}
+                  size="large"
+                />
+                <Text txtSize="standard" style={{ marginLeft: 10 }}>
+                  Debug: Use Subscription Override
+                </Text>
+              </View>
+
+              <Text txtSize="xs" style={styles.subscriptionTierLabel}>
+                Development Tier
               </Text>
+              <View style={styles.subscriptionTierRow}>
+                {(['free', 'basic', 'premium'] as SubscriptionTier[]).map((tier) => {
+                  const isSelected = settings.devSubscriptionTier === tier;
+                  return (
+                    <TouchableOpacity
+                      key={tier}
+                      disabled={!settings.useDevSubscriptionOverride}
+                      onPress={() => handleDevSubscriptionTierChange(tier)}
+                      style={[
+                        styles.subscriptionTierButton,
+                        {
+                          backgroundColor: isSelected ? colors.buttonBlue : colors.background,
+                          borderColor: isSelected ? colors.buttonBlue : colors.text,
+                          opacity: settings.useDevSubscriptionOverride ? 1 : 0.45,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={{
+                          color: isSelected ? '#fff' : colors.text,
+                          textTransform: 'capitalize',
+                          fontWeight: '600',
+                        }}
+                      >
+                        {tier}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
           )}
         </View>
@@ -370,6 +428,38 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginTop: 6,
+  },
+  debugSectionContainer: {
+    marginTop: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#D1D1D6',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    gap: 6,
+  },
+  debugSwitchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  subscriptionTierLabel: {
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  subscriptionTierRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  subscriptionTierButton: {
+    minWidth: 84,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignItems: 'center',
   },
 });
 

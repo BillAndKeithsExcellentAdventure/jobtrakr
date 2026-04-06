@@ -34,7 +34,8 @@ const AddReceiptLineItemPage = () => {
 
   useEffect(() => {
     if (allProjects && allProjects.length > 0) {
-      const options: OptionEntry[] = allProjects.map((project) => ({
+      const activeProjects = allProjects.filter((project) => project.status === 'active');
+      const options: OptionEntry[] = activeProjects.map((project) => ({
         label: project.name,
         value: project.id,
       }));

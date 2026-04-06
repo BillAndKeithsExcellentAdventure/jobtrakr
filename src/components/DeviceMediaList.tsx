@@ -12,6 +12,10 @@ import { useRouter } from 'expo-router';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useColors } from '../context/ColorsContext';
+import {
+  PHOTO_LIMIT_PER_PROJECT_BY_TIER,
+  useEffectiveSubscriptionTier,
+} from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 
 export type AssetsItem = {
   _id: string;
@@ -57,6 +61,8 @@ export const DeviceMediaList = ({
   const router = useRouter();
   const addPhotoImage = useAddImageCallback();
   const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
+  const effectiveSubscriptionTier = useEffectiveSubscriptionTier();
+  const photoLimitPerProject = PHOTO_LIMIT_PER_PROJECT_BY_TIER[effectiveSubscriptionTier];
   const colors = useColors();
   const onStatusUpdate = useCallback((status: string) => {
     setFetchStatus(status);
@@ -228,33 +234,50 @@ export const DeviceMediaList = ({
 
   const importDeviceAssetToProject = useCallback(async () => {
     if (deviceMediaAssets) {
+      const selectedAssets = deviceMediaAssets.filter((asset) => !hasSelectedDeviceAssets || asset.selected);
+      const remainingPhotoCapacity = photoLimitPerProject - allProjectMedia.length;
+
+      if (remainingPhotoCapacity <= 0) {
+        Alert.alert(
+          'Photo limit reached',
+          `Your ${effectiveSubscriptionTier} tier allows up to ${photoLimitPerProject} photos per project.`,
+        );
+        return;
+      }
+
+      if (selectedAssets.length > remainingPhotoCapacity) {
+        Alert.alert(
+          'Photo limit exceeded',
+          `You can add ${remainingPhotoCapacity} more photo(s) on the ${effectiveSubscriptionTier} tier for this project.`,
+        );
+        return;
+      }
+
       const addedAssetIds: string[] = [];
 
-      for (const asset of deviceMediaAssets) {
-        if (!hasSelectedDeviceAssets || asset.selected) {
-          // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
-          const imageAddResult = await addPhotoImage(asset.asset.uri, projectId, 'photo', 'photo');
-          if (imageAddResult.status === 'Success') {
-            let tn;
-            if (imageAddResult.uri) {
-              tn = await createThumbnail(imageAddResult?.uri);
-            }
-            if (asset.asset.mediaType === 'photo' || asset.asset.mediaType === 'video') {
-              const newPhoto: MediaEntryData = {
-                id: '',
-                assetId: asset.asset.id,
-                deviceName: 'Device Name', // TODO: Get the device name
-                mediaType: asset.asset.mediaType,
-                imageId: imageAddResult.id,
-                thumbnail: tn ?? '',
-                creationDate: Date.now(),
-                isPublic: false,
-                caption: '', // Default empty caption, can be edited later in the image viewing screen.
-              };
+      for (const asset of selectedAssets) {
+        // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
+        const imageAddResult = await addPhotoImage(asset.asset.uri, projectId, 'photo', 'photo');
+        if (imageAddResult.status === 'Success') {
+          let tn;
+          if (imageAddResult.uri) {
+            tn = await createThumbnail(imageAddResult?.uri);
+          }
+          if (asset.asset.mediaType === 'photo' || asset.asset.mediaType === 'video') {
+            const newPhoto: MediaEntryData = {
+              id: '',
+              assetId: asset.asset.id,
+              deviceName: 'Device Name', // TODO: Get the device name
+              mediaType: asset.asset.mediaType,
+              imageId: imageAddResult.id,
+              thumbnail: tn ?? '',
+              creationDate: Date.now(),
+              isPublic: false,
+              caption: '', // Default empty caption, can be edited later in the image viewing screen.
+            };
 
-              addPhotoData(newPhoto);
-              addedAssetIds.push(asset.asset.id);
-            }
+            addPhotoData(newPhoto);
+            addedAssetIds.push(asset.asset.id);
           }
         }
       }
@@ -264,7 +287,16 @@ export const DeviceMediaList = ({
         prevAssets.filter((asset) => !addedAssetIds.includes(asset.asset.id)),
       );
     }
-  }, [deviceMediaAssets, projectId, hasSelectedDeviceAssets, addPhotoImage, addPhotoData]);
+  }, [
+    deviceMediaAssets,
+    hasSelectedDeviceAssets,
+    photoLimitPerProject,
+    allProjectMedia.length,
+    effectiveSubscriptionTier,
+    projectId,
+    addPhotoImage,
+    addPhotoData,
+  ]);
 
   const handleDeviceAssetSelection = useCallback(async (assetId: string) => {
     setDeviceMediaAssets((prevAssets) =>
