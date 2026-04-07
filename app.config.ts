@@ -157,6 +157,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-web-browser',
     'expo-asset',
     'expo-build-properties',
+    'expo-image',
     'react-native-legal',
   ],
   experiments: {
