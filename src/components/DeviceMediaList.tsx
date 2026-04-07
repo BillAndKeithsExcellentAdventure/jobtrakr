@@ -12,10 +12,7 @@ import { useRouter } from 'expo-router';
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import { useColors } from '../context/ColorsContext';
-import {
-  PHOTO_LIMIT_PER_PROJECT_BY_TIER,
-  useEffectiveSubscriptionTier,
-} from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { useEntitlementLimit } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 
 export type AssetsItem = {
   _id: string;
@@ -61,8 +58,7 @@ export const DeviceMediaList = ({
   const router = useRouter();
   const addPhotoImage = useAddImageCallback();
   const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
-  const effectiveSubscriptionTier = useEffectiveSubscriptionTier();
-  const photoLimitPerProject = PHOTO_LIMIT_PER_PROJECT_BY_TIER[effectiveSubscriptionTier];
+  const photoLimitPerProject = useEntitlementLimit('numProjectPhotos');
   const colors = useColors();
   const onStatusUpdate = useCallback((status: string) => {
     setFetchStatus(status);
@@ -235,20 +231,23 @@ export const DeviceMediaList = ({
   const importDeviceAssetToProject = useCallback(async () => {
     if (deviceMediaAssets) {
       const selectedAssets = deviceMediaAssets.filter((asset) => !hasSelectedDeviceAssets || asset.selected);
-      const remainingPhotoCapacity = photoLimitPerProject - allProjectMedia.length;
+      const remainingPhotoCapacity =
+        photoLimitPerProject === null || photoLimitPerProject < 0
+          ? Number.POSITIVE_INFINITY
+          : photoLimitPerProject - allProjectMedia.length;
 
       if (remainingPhotoCapacity <= 0) {
         Alert.alert(
           'Photo limit reached',
-          `Your ${effectiveSubscriptionTier} tier allows up to ${photoLimitPerProject} photos per project.`,
+          `Your subscription allows up to ${photoLimitPerProject} photos per project.`,
         );
         return;
       }
 
-      if (selectedAssets.length > remainingPhotoCapacity) {
+      if (Number.isFinite(remainingPhotoCapacity) && selectedAssets.length > remainingPhotoCapacity) {
         Alert.alert(
           'Photo limit exceeded',
-          `You can add ${remainingPhotoCapacity} more photo(s) on the ${effectiveSubscriptionTier} tier for this project.`,
+          `You can add ${remainingPhotoCapacity} more photo(s) for this project.`,
         );
         return;
       }
@@ -292,7 +291,6 @@ export const DeviceMediaList = ({
     hasSelectedDeviceAssets,
     photoLimitPerProject,
     allProjectMedia.length,
-    effectiveSubscriptionTier,
     projectId,
     addPhotoImage,
     addPhotoData,

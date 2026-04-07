@@ -13,6 +13,7 @@ For developers new to the codebase:
 5. **Run tests**: `npm test`
 
 **Key first steps**:
+
 - Review `README.md` for project overview and features
 - Check `docs/` folder for detailed documentation on specific topics
 - Understand the TinyBase store architecture (see "Data Management" section below)
@@ -40,6 +41,7 @@ The app supports multiple build variants configured in `app.config.ts`:
 - **Preview**: `com.projecthound.app.preview` - Preview environment for testing
 
 Set the variant using `APP_VARIANT` environment variable:
+
 ```bash
 APP_VARIANT=development npm run dev
 ```
@@ -257,31 +259,37 @@ const project = store.getRow('projects', projectId);
 ### Don'ts
 
 **Data Access**:
+
 - ❌ DON'T access TinyBase stores directly without hooks in components
 - ❌ DON'T bypass the auto-save system by saving data on every keystroke
 - ❌ DON'T mutate store data directly - always use store setter methods
 
 **UI Components**:
+
 - ❌ DON'T import components from `react-native` when themed alternatives exist
 - ❌ DON'T create custom color implementations - use `ColorsContext` and themed components
 - ❌ DON'T use `FlatList` for large lists - prefer `@shopify/flash-list`
 
 **Navigation**:
+
 - ❌ DON'T navigate away from edit screens before ensuring pending field changes are saved
 - ❌ DON'T use imperative navigation when declarative routing is available
 - ❌ DON'T bypass authentication checks on protected routes
 
 **Performance**:
+
 - ❌ DON'T create new objects/arrays in render without memoization
 - ❌ DON'T forget dependency arrays in useEffect/useCallback/useMemo
 - ❌ DON'T perform expensive computations in render without useMemo
 
 **Dependencies**:
+
 - ❌ DON'T add non-Expo-compatible packages without verification
 - ❌ DON'T update package versions without testing thoroughly
 - ❌ DON'T install packages when existing alternatives are available
 
 **Testing**:
+
 - ❌ DON'T skip writing tests for business logic
 - ❌ DON'T mock everything - test real behavior when possible
 - ❌ DON'T commit code without running tests
@@ -469,6 +477,7 @@ Key custom hooks available in `src/hooks/`:
 - Document complex business logic
 
 **Key Documentation Files**:
+
 - `docs/AUTO_SAVE_IMPLEMENTATION.md` - Auto-save system architecture
 - `docs/TESTING_GUIDE.md` - Comprehensive testing guide
 - `docs/TESTING_SUMMARY.md` - Testing overview and patterns
@@ -480,6 +489,7 @@ Key custom hooks available in `src/hooks/`:
 - `docs/DEBUG_OFFLINE_MODE.md` - Debugging offline functionality
 - `docs/DEFERRED_MEDIA_PROCESSING.md` - Media processing architecture
 - `docs/HOME_SCREENS_USER_GUIDE.md` - Home screen user guide
+- `docs/SUBSCRIPTION_AND_ENTITLEMENTS.md` - Subscription and entitlements documentation
 
 ## Debugging Tips
 
@@ -493,26 +503,31 @@ Key custom hooks available in `src/hooks/`:
 ## Troubleshooting Common Issues
 
 ### Build Issues
+
 - Clear cache: `npx expo start -c`
 - Reinstall dependencies: `rm -rf node_modules && npm install`
 - Check Expo SDK compatibility for all packages
 
 ### TinyBase Sync Issues
+
 - Check WebSocket connection status in store synchronization
 - Verify organization ID is correctly set
 - Review `src/tbStores/synchronization/` for sync configuration
 
 ### Auto-Save Not Working
+
 - Ensure input fields have `onBlur` handlers that write to the TinyBase store
 - Check that the `onBlur` callback is correctly updating the store cell/row
 - Consider adding an explicit Save button for screens where blur before navigation is critical
 
 ### Testing Issues
+
 - Review mock configurations in `jest.setup.js`
 - Check `__mocks__/` for module mocks
 - Ensure all Expo modules are properly mocked
 
 ### Type Errors
+
 - Run TypeScript compiler: `npx tsc --noEmit`
 - Check that all imports use correct path aliases (`@/`)
 - Verify types are defined in `src/models/types.ts`

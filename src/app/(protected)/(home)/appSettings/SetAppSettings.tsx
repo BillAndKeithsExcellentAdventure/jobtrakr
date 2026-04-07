@@ -2,6 +2,7 @@ import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton'
 import { Switch } from '@/src/components/Switch';
 import { TextField } from '@/src/components/TextField';
 import { Text, View } from '@/src/components/Themed';
+import { ActionButton } from '@/src/components/ActionButton';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { isEmailVerified, sendVerificationEmail } from '@/src/utils/quickbooksAPI';
@@ -9,6 +10,7 @@ import {
   SubscriptionTier,
   SettingsData,
   useAppSettings,
+  useRefreshSubscription,
   useSetAppSettingsCallback,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { isDevelopmentBuild } from '@/src/utils/environment';
@@ -46,6 +48,7 @@ const SetAppSettingScreen = () => {
   const router = useRouter();
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
+  const refreshSubscription = useRefreshSubscription();
   const [settings, setSettings] = useState<SettingsData>(appSettings);
   const { userId, orgId, getToken } = useAuth();
   const { isConnected, verifiedEmailAddresses } = useNetwork();
@@ -83,8 +86,11 @@ const SetAppSettingScreen = () => {
       const updatedSettings = { ...settings, useDevSubscriptionOverride: value };
       setAppSettings(updatedSettings);
       setSettings(updatedSettings);
+      refreshSubscription().catch((error: unknown) => {
+        console.error('Failed to refresh subscription after override toggle:', error);
+      });
     },
-    [settings, setAppSettings],
+    [refreshSubscription, settings, setAppSettings],
   );
 
   const handleDevSubscriptionTierChange = useCallback(
@@ -92,9 +98,23 @@ const SetAppSettingScreen = () => {
       const updatedSettings = { ...settings, devSubscriptionTier: tier };
       setAppSettings(updatedSettings);
       setSettings(updatedSettings);
+      refreshSubscription().catch((error: unknown) => {
+        console.error('Failed to refresh subscription after tier change:', error);
+      });
     },
-    [settings, setAppSettings],
+    [refreshSubscription, settings, setAppSettings],
   );
+
+  const handleRefreshSubscription = useCallback(() => {
+    refreshSubscription()
+      .then(() => {
+        Alert.alert('Subscription Refreshed', 'The latest subscription entitlements have been loaded.');
+      })
+      .catch((error: unknown) => {
+        console.error('Failed to refresh subscription from settings:', error);
+        Alert.alert('Refresh Failed', 'Unable to refresh subscription entitlements right now.');
+      });
+  }, [refreshSubscription]);
 
   const handleSave = useCallback(() => {
     setAppSettings(settings);
@@ -401,6 +421,8 @@ const SetAppSettingScreen = () => {
                   );
                 })}
               </View>
+
+              <ActionButton title="Refresh Subscription" onPress={handleRefreshSubscription} type="action" />
             </View>
           )}
         </View>

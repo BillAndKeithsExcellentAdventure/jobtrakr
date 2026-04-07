@@ -7,7 +7,11 @@ import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import {
+  isEntitlementLimitReached,
+  useAppSettings,
+  useEntitlementLimit,
+} from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import {
   ClassifiedReceiptData,
   ReceiptData,
@@ -65,6 +69,7 @@ const ProjectReceiptsPage = () => {
   useSeedWorkItemsIfNecessary(projectId);
 
   const allReceipts = useAllRows(projectId, 'receipts', RecentReceiptDateCompare);
+  const receiptLimit = useEntitlementLimit('numReceipts');
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const addReceiptImage = useAddImageCallback();
   const addReceiptToLocalStore = useAddRowCallback(projectId, 'receipts');
@@ -110,6 +115,20 @@ const ProjectReceiptsPage = () => {
 
   const colors = useColors();
 
+  const isAtReceiptLimit = isEntitlementLimitReached(receiptLimit, allReceipts.length);
+
+  const showReceiptLimitAlert = useCallback(() => {
+    if (receiptLimit === null) {
+      Alert.alert('Receipts Unavailable', 'Receipt limits are still loading. Please try again in a moment.');
+      return;
+    }
+
+    Alert.alert(
+      'Receipt limit reached',
+      `Your subscription allows up to ${receiptLimit} receipt(s) for this project.`,
+    );
+  }, [receiptLimit]);
+
   const [paymentAccountOptions, setPaymentAccountOptions] = useState<OptionEntry[]>([]);
 
   useEffect(() => {
@@ -138,6 +157,12 @@ const ProjectReceiptsPage = () => {
       paymentAccountId?: string,
       receiptCheckNumber?: string,
     ) => {
+      if (isEntitlementLimitReached(receiptLimit, allReceipts.length)) {
+        showReceiptLimitAlert();
+        setIsProcessingImage(false);
+        return;
+      }
+
       try {
         // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
 
@@ -203,7 +228,15 @@ const ProjectReceiptsPage = () => {
         setIsProcessingImage(false);
       }
     },
-    [projectId, addReceiptImage, addReceiptToLocalStore, appSettings.quickBooksDefaultPaymentAccountId],
+    [
+      projectId,
+      addReceiptImage,
+      addReceiptToLocalStore,
+      appSettings.quickBooksDefaultPaymentAccountId,
+      receiptLimit,
+      allReceipts.length,
+      showReceiptLimitAlert,
+    ],
   );
 
   const handleAddPhotoReceipt = useCallback(
@@ -232,6 +265,11 @@ const ProjectReceiptsPage = () => {
   );
 
   const handleAddPhoto = useCallback(() => {
+    if (isAtReceiptLimit || receiptLimit === null) {
+      showReceiptLimitAlert();
+      return;
+    }
+
     if (paymentAccountOptions.length === 0) {
       handleAddPhotoReceipt(appSettings.quickBooksDefaultPaymentAccountId || '');
       return;
@@ -239,7 +277,14 @@ const ProjectReceiptsPage = () => {
 
     setSelectedPaymentAccountId(appSettings.quickBooksDefaultPaymentAccountId || '');
     setIsPaymentAccountPickerVisible(true);
-  }, [appSettings.quickBooksDefaultPaymentAccountId, handleAddPhotoReceipt, paymentAccountOptions.length]);
+  }, [
+    isAtReceiptLimit,
+    receiptLimit,
+    showReceiptLimitAlert,
+    appSettings.quickBooksDefaultPaymentAccountId,
+    handleAddPhotoReceipt,
+    paymentAccountOptions.length,
+  ]);
 
   const handlePaymentAccountSelect = useCallback(
     (option: OptionEntry) => {
@@ -262,6 +307,11 @@ const ProjectReceiptsPage = () => {
   }, [checkNumber, handleAddPhotoReceipt, selectedPaymentAccountId]);
 
   const handleAddReceipt = useCallback(() => {
+    if (isAtReceiptLimit || receiptLimit === null) {
+      showReceiptLimitAlert();
+      return;
+    }
+
     router.push({
       pathname: '/[projectId]/receipt/add',
       params: {
@@ -269,7 +319,7 @@ const ProjectReceiptsPage = () => {
         projectName,
       },
     });
-  }, [projectId, projectName, router]);
+  }, [isAtReceiptLimit, receiptLimit, showReceiptLimitAlert, projectId, projectName, router]);
 
   // Scroll to top when new receipts are added
   useEffect(() => {
@@ -314,13 +364,13 @@ const ProjectReceiptsPage = () => {
                     <ActionButton
                       style={{ flex: 1 }}
                       onPress={handleAddPhoto}
-                      type="action"
+                      type={isAtReceiptLimit || receiptLimit === null ? 'disabled' : 'action'}
                       title="Add Photo"
                     />
                     <ActionButton
                       style={{ flex: 1 }}
                       onPress={handleAddReceipt}
-                      type={'action'}
+                      type={isAtReceiptLimit || receiptLimit === null ? 'disabled' : 'action'}
                       title="Add Manual"
                     />
                   </View>

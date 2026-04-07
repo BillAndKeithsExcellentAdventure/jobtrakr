@@ -12,7 +12,11 @@ import { VendorPicker } from '@/src/components/VendorPicker';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
-import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import {
+  isEntitlementLimitReached,
+  useAppSettings,
+  useEntitlementLimit,
+} from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import {
   VendorData,
   useAllRows as useAllConfigurationRows,
@@ -20,6 +24,7 @@ import {
 import {
   ReceiptData,
   useAddRowCallback,
+  useAllRows,
   useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
@@ -70,6 +75,8 @@ const AddReceiptPage = () => {
   const projectAbbr = project?.abbreviation ?? '';
   const { userId, orgId, getToken } = auth;
   const appSettings = useAppSettings();
+  const receiptLimit = useEntitlementLimit('numReceipts');
+  const allProjectReceipts = useAllRows(projectId, 'receipts');
   const addReceiptToLocalStore = useAddRowCallback(projectId, 'receipts');
   const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
 
@@ -235,6 +242,19 @@ const AddReceiptPage = () => {
 
   const handleAddReceipt = useCallback(async () => {
     if (!canAddReceipt || isSavingReceipt) return;
+
+    if (receiptLimit === null) {
+      Alert.alert('Receipts Unavailable', 'Receipt limits are still loading. Please try again in a moment.');
+      return;
+    }
+
+    if (isEntitlementLimitReached(receiptLimit, allProjectReceipts.length)) {
+      Alert.alert(
+        'Receipt limit reached',
+        `Your subscription allows up to ${receiptLimit} receipt(s) for this project.`,
+      );
+      return;
+    }
 
     setIsSavingReceipt(true);
 
@@ -455,6 +475,8 @@ const AddReceiptPage = () => {
     appSettings.quickBooksExpenseAccountId,
     qbVendorId,
     addReceiptQueueEntry,
+    receiptLimit,
+    allProjectReceipts.length,
   ]);
 
   const handleCaptureImage = useCallback(async () => {

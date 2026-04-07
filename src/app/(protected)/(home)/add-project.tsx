@@ -13,12 +13,8 @@ import {
   CustomerData,
   CustomerDataCompareName,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
-import {
-  useAddProjectCallback,
-  useAllProjects,
-  useHasActiveCompanyExpenseProject,
-} from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
-import { useEffectiveSubscriptionTier } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { useAddProjectCallback, useAllProjects } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
+import { useEntitlementLimit } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
@@ -59,31 +55,51 @@ const AddProjectScreen = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | undefined>(undefined);
   const [isCompanyExpenseProject, setIsCompanyExpenseProject] = useState<boolean>(false);
   const allProjects = useAllProjects();
-  const effectiveSubscriptionTier = useEffectiveSubscriptionTier();
-  const hasActiveCompanyExpenseProject = useHasActiveCompanyExpenseProject();
+  const standardProjectLimit = useEntitlementLimit('numProjects');
+  const officeExpenseProjectLimit = useEntitlementLimit('numOfficeExpenseProjects');
   const [templateOptions, setTemplateOptions] = useState<OptionEntry[]>([]);
   const [canAddProject, setCanAddProject] = useState(false);
   const { addActiveProjectIds } = useActiveProjectIds();
 
+  const standardProjectCount = useMemo(
+    () => allProjects.filter((existingProject) => !existingProject.isCompanyExpenseProject).length,
+    [allProjects],
+  );
+
+  const officeExpenseProjectCount = useMemo(
+    () => allProjects.filter((existingProject) => Boolean(existingProject.isCompanyExpenseProject)).length,
+    [allProjects],
+  );
+
+  const canCreateCompanyExpenseProject =
+    officeExpenseProjectLimit === null ||
+    officeExpenseProjectLimit < 0 ||
+    officeExpenseProjectCount < officeExpenseProjectLimit;
+
   const projectCreationBlockReason = useMemo(() => {
-    if (effectiveSubscriptionTier !== 'free') {
+    const activeLimit = isCompanyExpenseProject ? officeExpenseProjectLimit : standardProjectLimit;
+    const currentCount = isCompanyExpenseProject ? officeExpenseProjectCount : standardProjectCount;
+
+    if (activeLimit === null || activeLimit < 0) {
       return '';
     }
 
-    if (allProjects.length >= 2) {
-      return 'No more projects can be added. Free tier supports up to 2 projects total.';
+    if (currentCount < activeLimit) {
+      return '';
     }
 
-    const hasExistingCompanyExpenseProject = allProjects.some((existingProject) =>
-      Boolean(existingProject.isCompanyExpenseProject),
-    );
-
-    if (allProjects.length === 1 && !hasExistingCompanyExpenseProject && !isCompanyExpenseProject) {
-      return 'Free tier requires one company expense project within your first two projects.';
+    if (isCompanyExpenseProject) {
+      return `No more office expense projects can be added. Your subscription allows up to ${activeLimit}.`;
     }
 
-    return '';
-  }, [allProjects, effectiveSubscriptionTier, isCompanyExpenseProject]);
+    return `No more projects can be added. Your subscription allows up to ${activeLimit}.`;
+  }, [
+    isCompanyExpenseProject,
+    officeExpenseProjectCount,
+    officeExpenseProjectLimit,
+    standardProjectCount,
+    standardProjectLimit,
+  ]);
 
   useEffect(() => {
     // Build template options from available templates that have work items
@@ -186,7 +202,7 @@ const AddProjectScreen = () => {
           value={project.abbreviation}
           onChangeText={(text) => setProject({ ...project, abbreviation: text })}
         />
-        {!hasActiveCompanyExpenseProject && (
+        {canCreateCompanyExpenseProject && (
           <View style={styles.switchContainer}>
             <Text style={styles.switchLabel}>Office Expense Project</Text>
             <Switch size="large" value={isCompanyExpenseProject} onValueChange={setIsCompanyExpenseProject} />

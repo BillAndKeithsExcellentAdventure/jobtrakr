@@ -37,6 +37,7 @@ import {
 } from '@/src/utils/quickbooksImports';
 import {
   useAppSettings,
+  useEntitlementFlag,
   useSetAppSettingsCallback,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { sanitizeQuickBooksAccountSettings } from '@/src/utils/quickbooksAccountSettings';
@@ -150,6 +151,7 @@ const Home = () => {
   } = useNetwork();
   const auth = useAuth();
   const appSettings = useAppSettings();
+  const allowQuickBooksSync = useEntitlementFlag('allowQuickBooksSync');
   const setAppSettings = useSetAppSettingsCallback();
   const { clearAllProjectIds } = useActiveProjectIds();
   const showManageTeam = !!auth.orgId && !!auth.orgRole && auth.orgRole.includes('admin');
@@ -951,7 +953,7 @@ const Home = () => {
             },
           ]
         : []),
-      ...(isQuickBooksAccessible
+      ...(allowQuickBooksSync && isQuickBooksAccessible
         ? [
             {
               icon: <MaterialCommunityIcons name="cloud-download" size={28} color={colors.iconColor} />,
@@ -1021,7 +1023,10 @@ const Home = () => {
             },
           ]
         : []),
-      ...(!isQuickBooksAccessible && isInternetReachable && appSettings.noQuickBooksInterest
+      ...(!isQuickBooksAccessible &&
+      isInternetReachable &&
+      appSettings.noQuickBooksInterest &&
+      allowQuickBooksSync
         ? [
             {
               icon: <MaterialCommunityIcons name="link-variant" size={28} color={colors.iconColor} />,
@@ -1044,6 +1049,7 @@ const Home = () => {
     isInternetReachable,
     appSettings.noQuickBooksInterest,
     isQBConnected,
+    allowQuickBooksSync,
   ]);
 
   return (
@@ -1059,19 +1065,22 @@ const Home = () => {
       />
 
       <View style={{ flex: 1, width: '100%', paddingHorizontal: 10, backgroundColor: colors.listBackground }}>
-        {!isQuickBooksAccessible && isInternetReachable && !appSettings.noQuickBooksInterest && (
-          <View style={{ marginBottom: 10, marginTop: 4 }}>
-            <ActionButton type="action" title="Connect to QuickBooks" onPress={handleConnectToQuickBooks} />
-            <View style={styles.quickBooksInterestRow}>
-              <Text>Don't show connect button</Text>
-              <Switch
-                value={!!appSettings.noQuickBooksInterest}
-                onValueChange={handleSetNoQuickBooksInterest}
-                size="medium"
-              />
+        {!isQuickBooksAccessible &&
+          isInternetReachable &&
+          !appSettings.noQuickBooksInterest &&
+          allowQuickBooksSync && (
+            <View style={{ marginBottom: 10, marginTop: 4 }}>
+              <ActionButton type="action" title="Connect to QuickBooks" onPress={handleConnectToQuickBooks} />
+              <View style={styles.quickBooksInterestRow}>
+                <Text>Don't show connect button</Text>
+                <Switch
+                  value={!!appSettings.noQuickBooksInterest}
+                  onValueChange={handleSetNoQuickBooksInterest}
+                  size="medium"
+                />
+              </View>
             </View>
-          </View>
-        )}
+          )}
 
         <ConfigurationEntry
           label="Company Settings"
@@ -1099,7 +1108,7 @@ const Home = () => {
           description="Add and Edit Customers"
           onPress={() => router.push('/configuration/customer/customers')}
         />
-        {isQuickBooksAccessible && (
+        {allowQuickBooksSync && isQuickBooksAccessible && (
           <ConfigurationEntry
             label="QuickBooks Accounts"
             description="Define accounts to use"

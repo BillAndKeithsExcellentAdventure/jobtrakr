@@ -17,8 +17,8 @@ import {
 import { useAddImageCallback } from '@/src/utils/images';
 import { createThumbnail } from '@/src/utils/thumbnailUtils';
 import {
-  PHOTO_LIMIT_PER_PROJECT_BY_TIER,
-  useEffectiveSubscriptionTier,
+  useEntitlementFlag,
+  useEntitlementLimit,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { Entypo, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
@@ -62,17 +62,21 @@ const ProjectPhotosPage = () => {
   }, [checkPermissions]);
 
   const allProjectMedia = useAllRows(projectId, 'mediaEntries', RecentMediaEntryDateCompare);
-  const effectiveSubscriptionTier = useEffectiveSubscriptionTier();
-  const photoLimitPerProject = PHOTO_LIMIT_PER_PROJECT_BY_TIER[effectiveSubscriptionTier];
+  const allowPublishPhotosAndVideos = useEntitlementFlag('allowPublishPhotosAndVideos');
+  const photoLimitPerProject = useEntitlementLimit('numProjectPhotos');
   const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
 
   const handlePhotoCaptured = useCallback(
     async (media: CapturedMedia) => {
-      if (allProjectMedia.length >= photoLimitPerProject) {
+      if (
+        photoLimitPerProject !== null &&
+        photoLimitPerProject >= 0 &&
+        allProjectMedia.length >= photoLimitPerProject
+      ) {
         Alert.alert(
           'Photo limit reached',
-          `Your ${effectiveSubscriptionTier} tier allows up to ${photoLimitPerProject} photos per project.`,
+          `Your subscription allows up to ${photoLimitPerProject} photos per project.`,
         );
         return;
       }
@@ -127,14 +131,7 @@ const ProjectPhotosPage = () => {
         setIsPhotoUploading(false);
       }
     },
-    [
-      allProjectMedia.length,
-      photoLimitPerProject,
-      effectiveSubscriptionTier,
-      projectId,
-      addPhotoImage,
-      addPhotoData,
-    ],
+    [allProjectMedia.length, photoLimitPerProject, projectId, addPhotoImage, addPhotoData],
   );
 
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
@@ -153,11 +150,20 @@ const ProjectPhotosPage = () => {
         setHeaderMenuModalVisible(false);
         router.push({ pathname: '/[projectId]/photos/importFromDevice', params: { projectId, projectName } });
       } else if (item === 'ManageAccess') {
+        if (!allowPublishPhotosAndVideos) {
+          Alert.alert(
+            'Feature Unavailable',
+            'Your subscription does not include photo and video publishing.',
+          );
+          setHeaderMenuModalVisible(false);
+          return;
+        }
+
         setHeaderMenuModalVisible(false);
         router.push({ pathname: '/[projectId]/photos/manageAccess', params: { projectId, projectName } });
       }
     },
-    [router, projectId, projectName, setHeaderMenuModalVisible],
+    [allowPublishPhotosAndVideos, router, projectId, projectName, setHeaderMenuModalVisible],
   );
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(
@@ -169,15 +175,19 @@ const ProjectPhotosPage = () => {
           handleMenuItemPress('AddPhotos');
         },
       },
-      {
-        icon: <Ionicons name="ribbon-outline" size={28} color={colors.iconColor} />,
-        label: 'Manage Photo Access',
-        onPress: () => {
-          handleMenuItemPress('ManageAccess');
-        },
-      },
+      ...(allowPublishPhotosAndVideos
+        ? [
+            {
+              icon: <Ionicons name="ribbon-outline" size={28} color={colors.iconColor} />,
+              label: 'Manage Photo Access',
+              onPress: () => {
+                handleMenuItemPress('ManageAccess');
+              },
+            },
+          ]
+        : []),
     ],
-    [colors, handleMenuItemPress],
+    [allowPublishPhotosAndVideos, colors, handleMenuItemPress],
   );
 
   return (

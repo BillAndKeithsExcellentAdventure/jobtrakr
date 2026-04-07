@@ -10,6 +10,10 @@ import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 
 import SwipeableInvoiceItem from '@/src/components/SwipeableInvoiceItem';
+import {
+  isEntitlementLimitReached,
+  useEntitlementLimit,
+} from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useAllRows as useAllRowsConfiguration } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   ClassifiedInvoiceData,
@@ -53,6 +57,7 @@ const ProjectInvoicesPage = () => {
   useSeedWorkItemsIfNecessary(projectId);
 
   const allInvoices = useAllRows(projectId, 'invoices', RecentInvoiceDateCompare);
+  const invoiceLimit = useEntitlementLimit('numInvoices');
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const addInvoiceImage = useAddImageCallback();
   const addInvoice = useAddRowCallback(projectId, 'invoices');
@@ -124,8 +129,28 @@ const ProjectInvoicesPage = () => {
 
   const colors = useColors();
 
+  const isAtInvoiceLimit = isEntitlementLimitReached(invoiceLimit, allInvoices.length);
+
+  const showInvoiceLimitAlert = useCallback(() => {
+    if (invoiceLimit === null) {
+      Alert.alert('Bills Unavailable', 'Invoice limits are still loading. Please try again in a moment.');
+      return;
+    }
+
+    Alert.alert(
+      'Invoice limit reached',
+      `Your subscription allows up to ${invoiceLimit} invoice(s) for this project.`,
+    );
+  }, [invoiceLimit]);
+
   const processInvoiceImage = useCallback(
     async (assetUri: string, assetId?: string | null) => {
+      if (isEntitlementLimitReached(invoiceLimit, allInvoices.length)) {
+        showInvoiceLimitAlert();
+        setIsProcessingImage(false);
+        return;
+      }
+
       try {
         // TODO: Add deviceTypes as the last parameter. Separated by comma's. i.e. "tablet, desktop, phone".
         const imageAddResult = await addInvoiceImage(assetUri, projectId, 'photo', 'invoice');
@@ -192,10 +217,15 @@ const ProjectInvoicesPage = () => {
         setIsProcessingImage(false); // Reset processImage state
       }
     },
-    [projectId, addInvoiceImage, addInvoice],
+    [projectId, addInvoiceImage, addInvoice, invoiceLimit, allInvoices.length, showInvoiceLimitAlert],
   );
 
   const handleAddPhotoInvoice = useCallback(async () => {
+    if (isAtInvoiceLimit || invoiceLimit === null) {
+      showInvoiceLimitAlert();
+      return;
+    }
+
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
     if (permissionResult.granted === false) {
@@ -214,9 +244,14 @@ const ProjectInvoicesPage = () => {
       // Use requestAnimationFrame to ensure React renders the ActivityIndicator before starting heavy operations
       requestAnimationFrame(() => processInvoiceImage(asset.uri, asset.assetId));
     }
-  }, [processInvoiceImage]);
+  }, [isAtInvoiceLimit, invoiceLimit, showInvoiceLimitAlert, processInvoiceImage]);
 
   const handleAddInvoice = useCallback(() => {
+    if (isAtInvoiceLimit || invoiceLimit === null) {
+      showInvoiceLimitAlert();
+      return;
+    }
+
     router.push({
       pathname: '/[projectId]/invoice/add',
       params: {
@@ -224,7 +259,7 @@ const ProjectInvoicesPage = () => {
         projectName,
       },
     });
-  }, [projectId, projectName, router]);
+  }, [isAtInvoiceLimit, invoiceLimit, showInvoiceLimitAlert, projectId, projectName, router]);
 
   // Scroll to top when new invoices are added
   useEffect(() => {
@@ -268,13 +303,13 @@ const ProjectInvoicesPage = () => {
                   <ActionButton
                     style={{ flex: 1 }}
                     onPress={handleAddPhotoInvoice}
-                    type={'action'}
+                    type={isAtInvoiceLimit || invoiceLimit === null ? 'disabled' : 'action'}
                     title="Add Photo"
                   />
                   <ActionButton
                     style={{ flex: 1 }}
                     onPress={handleAddInvoice}
-                    type={'action'}
+                    type={isAtInvoiceLimit || invoiceLimit === null ? 'disabled' : 'action'}
                     title="Add Manual"
                   />
                 </View>

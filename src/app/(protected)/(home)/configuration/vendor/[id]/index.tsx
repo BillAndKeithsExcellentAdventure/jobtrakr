@@ -6,7 +6,7 @@ import { Text, View } from '@/src/components/Themed';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
-import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { useAppSettings, useEntitlementFlag } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import {
   useAllRows,
   useTypedRow,
@@ -32,6 +32,7 @@ const EditVendor = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { orgId, userId, getToken } = useAuth();
   const appSettings = useAppSettings();
+  const allowVendorPaymentReview = useEntitlementFlag('allowVendorPaymentReview');
 
   const { isQuickBooksAccessible, verifiedEmailAddresses, vendorsGrantedAccess, isConnected } = useNetwork();
   const router = useRouter();
@@ -335,107 +336,108 @@ const EditVendor = () => {
               onChangeText={(text) => handleInputChange('email', text)}
               onBlur={handleBlur}
             />
-            {isEmailVerified ? (
-              <View
-                style={{
-                  flexDirection: 'row',
-                  gap: 8,
-                  alignItems: 'flex-end',
-                  alignSelf: 'flex-end',
-                  paddingBottom: 8,
-                }}
-              >
-                <MaterialIcons name="verified-user" size={28} color={colors.profitFg} />
-                {vendorAccess ? (
-                  <MaterialCommunityIcons
-                    name="shield-key"
-                    size={28}
-                    color={vendorAccess.isRegistered ? colors.profitFg : colors.textMuted}
-                  />
-                ) : (
-                  <>
-                    {isQuickBooksAccessible && grantVendorAccessRequest && (
-                      <TouchableOpacity
-                        onPress={async () => {
-                          if (isSendingVerificationEmail) {
-                            return;
-                          }
+            {allowVendorPaymentReview &&
+              (isEmailVerified ? (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    gap: 8,
+                    alignItems: 'flex-end',
+                    alignSelf: 'flex-end',
+                    paddingBottom: 8,
+                  }}
+                >
+                  <MaterialIcons name="verified-user" size={28} color={colors.profitFg} />
+                  {vendorAccess ? (
+                    <MaterialCommunityIcons
+                      name="shield-key"
+                      size={28}
+                      color={vendorAccess.isRegistered ? colors.profitFg : colors.textMuted}
+                    />
+                  ) : (
+                    <>
+                      {isQuickBooksAccessible && grantVendorAccessRequest && (
+                        <TouchableOpacity
+                          onPress={async () => {
+                            if (isSendingVerificationEmail) {
+                              return;
+                            }
 
-                          setIsSendingVerificationEmail(true);
-                          try {
-                            await grantVendorAccess(orgId!, userId!, grantVendorAccessRequest, getToken);
-                            Alert.alert(
-                              'Access Granted',
-                              'Vendor access has been granted. Please ask them to check their inbox and click the verification link.',
-                            );
-                          } catch (error) {
-                            console.error('Error granting vendor access:', error);
-                            Alert.alert(
-                              'Error',
-                              'There was an error granting vendor access. Please try again later.',
-                            );
-                          } finally {
-                            setIsSendingVerificationEmail(false);
-                          }
-                        }}
-                        disabled={isSendingVerificationEmail}
-                        style={{
-                          backgroundColor: colors.buttonBlue,
-                          borderRadius: 4,
-                          alignSelf: 'flex-end',
-                          paddingVertical: 8,
-                          paddingHorizontal: 12,
-                          opacity: isSendingVerificationEmail ? 0.7 : 1,
-                        }}
-                      >
-                        <Text style={{ color: '#fff' }} text="Grant" />
-                        <Text style={{ color: '#fff' }} text="Access" />
-                      </TouchableOpacity>
-                    )}
-                  </>
-                )}
-              </View>
-            ) : (
-              <>
-                {updatedVendor.email && updatedVendor.email.trim().length > 0 && (
-                  <TouchableOpacity
-                    onPress={async () => {
-                      if (isSendingVerificationEmail) {
-                        return;
-                      }
+                            setIsSendingVerificationEmail(true);
+                            try {
+                              await grantVendorAccess(orgId!, userId!, grantVendorAccessRequest, getToken);
+                              Alert.alert(
+                                'Access Granted',
+                                'Vendor access has been granted. Please ask them to check their inbox and click the verification link.',
+                              );
+                            } catch (error) {
+                              console.error('Error granting vendor access:', error);
+                              Alert.alert(
+                                'Error',
+                                'There was an error granting vendor access. Please try again later.',
+                              );
+                            } finally {
+                              setIsSendingVerificationEmail(false);
+                            }
+                          }}
+                          disabled={isSendingVerificationEmail}
+                          style={{
+                            backgroundColor: colors.buttonBlue,
+                            borderRadius: 4,
+                            alignSelf: 'flex-end',
+                            paddingVertical: 8,
+                            paddingHorizontal: 12,
+                            opacity: isSendingVerificationEmail ? 0.7 : 1,
+                          }}
+                        >
+                          <Text style={{ color: '#fff' }} text="Grant" />
+                          <Text style={{ color: '#fff' }} text="Access" />
+                        </TouchableOpacity>
+                      )}
+                    </>
+                  )}
+                </View>
+              ) : (
+                <>
+                  {updatedVendor.email && updatedVendor.email.trim().length > 0 && (
+                    <TouchableOpacity
+                      onPress={async () => {
+                        if (isSendingVerificationEmail) {
+                          return;
+                        }
 
-                      setIsSendingVerificationEmail(true);
-                      try {
-                        await sendVerificationEmail(orgId!, userId!, updatedVendor.email!, getToken);
-                        Alert.alert(
-                          'Verification Email Sent',
-                          'A verification email has been sent to vendor. Please ask them to check their inbox and click the verification link.',
-                        );
-                      } catch (error) {
-                        console.error('Error sending verification email:', error);
-                        Alert.alert(
-                          'Error',
-                          'There was an error sending the verification email. Please try again later.',
-                        );
-                      } finally {
-                        setIsSendingVerificationEmail(false);
-                      }
-                    }}
-                    disabled={isSendingVerificationEmail}
-                    style={{
-                      backgroundColor: colors.buttonBlue,
-                      borderRadius: 4,
-                      alignSelf: 'flex-end',
-                      paddingVertical: 8,
-                      paddingHorizontal: 12,
-                      opacity: isSendingVerificationEmail ? 0.7 : 1,
-                    }}
-                  >
-                    <Text style={{ color: '#fff' }} text="Verify" />
-                  </TouchableOpacity>
-                )}
-              </>
-            )}
+                        setIsSendingVerificationEmail(true);
+                        try {
+                          await sendVerificationEmail(orgId!, userId!, updatedVendor.email!, getToken);
+                          Alert.alert(
+                            'Verification Email Sent',
+                            'A verification email has been sent to vendor. Please ask them to check their inbox and click the verification link.',
+                          );
+                        } catch (error) {
+                          console.error('Error sending verification email:', error);
+                          Alert.alert(
+                            'Error',
+                            'There was an error sending the verification email. Please try again later.',
+                          );
+                        } finally {
+                          setIsSendingVerificationEmail(false);
+                        }
+                      }}
+                      disabled={isSendingVerificationEmail}
+                      style={{
+                        backgroundColor: colors.buttonBlue,
+                        borderRadius: 4,
+                        alignSelf: 'flex-end',
+                        paddingVertical: 8,
+                        paddingHorizontal: 12,
+                        opacity: isSendingVerificationEmail ? 0.7 : 1,
+                      }}
+                    >
+                      <Text style={{ color: '#fff' }} text="Verify" />
+                    </TouchableOpacity>
+                  )}
+                </>
+              ))}
           </View>
           <TextField
             placeholder="Notes"

@@ -17,7 +17,7 @@ import { Pressable } from 'react-native-gesture-handler';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Animated, { FadeOut } from 'react-native-reanimated';
-import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { useAppSettings, useEntitlementFlag } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   RecentMediaEntryDateCompare,
@@ -66,6 +66,7 @@ export default function ManageAccessScreen() {
   const colors = useColors();
   const router = useRouter();
   const appSettings = useAppSettings();
+  const allowPublishPhotosAndVideos = useEntitlementFlag('allowPublishPhotosAndVideos');
   const fetchEmailsWithPhotoAccess = useFetchEmailsWithPhotoAccessCallback();
   const revokePhotoAccess = useRevokePhotoAccessCallback();
   const grantPhotoAccess = useGrantPhotoAccessCallback();
@@ -158,6 +159,11 @@ export default function ManageAccessScreen() {
   }, [projectId, loadEmails]); // Only run when projectId changes
 
   const handleAddEmail = useCallback(async () => {
+    if (!allowPublishPhotosAndVideos) {
+      Alert.alert('Feature Unavailable', 'Your subscription does not include photo and video publishing.');
+      return;
+    }
+
     if (!newEmail.trim() || !projectId || !projectName) {
       return;
     }
@@ -184,6 +190,7 @@ export default function ManageAccessScreen() {
     appSettings.companyName,
     appSettings.email,
     loadEmails,
+    allowPublishPhotosAndVideos,
   ]);
 
   const handleDeleteEmail = useCallback(
@@ -233,6 +240,12 @@ export default function ManageAccessScreen() {
             type={'action'}
             title="Edit Company Settings"
           />
+        </View>
+      ) : !allowPublishPhotosAndVideos ? (
+        <View style={styles.messageContainer}>
+          <Text txtSize="sub-title" style={{ color: colors.text }}>
+            Your subscription does not include photo and video publishing.
+          </Text>
         </View>
       ) : (
         <KeyboardAvoidingView

@@ -11,7 +11,7 @@ import { Text, TextInput, View } from '@/src/components/Themed';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import { API_BASE_URL } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
-import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { useAppSettings, useEntitlementFlag } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useAllRows as useConfigAllRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
@@ -89,6 +89,7 @@ const DefineChangeOrderScreen = () => {
   const [changeOrderItems, setChangeOrderItems] = useState<ChangeOrderItem[]>([]);
   const [changeOrderBidAmount, setChangeOrderBidAmount] = useState<number>(0);
   const appSettings = useAppSettings();
+  const allowChangeOrderEmails = useEntitlementFlag('allowChangeOrderEmails');
   const projectData = useProject(projectId);
   const allCustomers = useConfigAllRows('customers');
   const auth = useAuth();
@@ -465,8 +466,17 @@ const DefineChangeOrderScreen = () => {
                 <ActionButton
                   title={`${changeOrder.status === 'approval-pending' ? 'Resend' : 'Send'} for Approval`}
                   onPress={handleSendForApproval}
-                  type={isSendingChangeOrder || (changeOrder?.quotedPrice ?? 0) <= 0 ? 'disabled' : 'action'}
+                  type={
+                    !allowChangeOrderEmails || isSendingChangeOrder || (changeOrder?.quotedPrice ?? 0) <= 0
+                      ? 'disabled'
+                      : 'action'
+                  }
                 />
+                {!allowChangeOrderEmails && (
+                  <Text style={{ marginTop: 8, color: colors.error }}>
+                    Your subscription does not include change order emails.
+                  </Text>
+                )}
                 {isSendingChangeOrder && (
                   <View style={styles.sendingRow}>
                     <ActivityIndicator size="small" color={colors.tint} />

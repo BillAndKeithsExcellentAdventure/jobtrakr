@@ -1,0 +1,426 @@
+# Subscription and Entitlements
+
+This document describes the plan for storing, resolving, and consuming subscription tier and entitlement data throughout the ProjectHound app.
+
+---
+
+## Overview
+
+Subscription information is fetched from the backend after login and stored locally in the `appSettingsStore` TinyBase store. Two new tables — `subscriptionInformation` and `entitlementCount` — hold this data so all parts of the app can reactively read limits and feature flags without making repeated network calls.
+
+The backend remains the source of truth. The local tables are a cache that is refreshed on app launch, after a successful purchase, and periodically in the background.
+
+---
+
+## Entitlement Definitions
+
+```typescript
+export const ENTITLEMENT = [
+  // Feature flags (boolean — present = allowed)
+  'allowQuickBooksSync',
+  'allowChangeOrderEmails',
+  'allowPublishPhotosAndVideos',
+  'allowVendorPaymentReview',
+  // -----------------------------------
+  // Numeric limits
+  'numProjects',
+  'numOfficeExpenseProjects',
+  'numProjectPhotos',
+  'numProjectVideos',
+  'numReceipts',
+  'numInvoices',
+  'numPhotosApiRequests',
+  'numInvoicesApiRequests',
+  'numOrgUsers',
+] as const;
+
+export type Entitlement = (typeof ENTITLEMENT)[number];
+
+/** Subset of ENTITLEMENT keys that represent numeric caps. */
+export const ENTITLEMENT_WITH_LIMITS = [
+  'numProjects',
+  'numOfficeExpenseProjects',
+  'numProjectPhotos',
+  'numProjectVideos',
+  'numReceipts',
+  'numInvoices',
+  'numPhotosApiRequests',
+  'numInvoicesApiRequests',
+  'numOrgUsers',
+] as const;
+
+export type EntitlementWithLimit = (typeof ENTITLEMENT_WITH_LIMITS)[number];
+
+/** Feature-flag entitlements (non-numeric). */
+export type EntitlementFlag = Exclude<Entitlement, EntitlementWithLimit>;
+```
+
+---
+
+## TinyBase Schema
+
+Add the following two tables to `TABLES_SCHEMA` in `src/tbStores/appSettingsStore/appSettingsStore.tsx`:
+
+```typescript
+export const TABLES_SCHEMA = {
+  settings: {
+    /* existing columns — unchanged */
+  },
+
+  /**
+   * Single-row table. Row ID is the orgId.
+   * Holds the raw subscription payload cached from the backend.
+   */
+  subscriptionInformation: {
+    tier: { type: 'string' }, // Latest known subscription tier, e.g. 'free' | 'basic' | 'premium'
+    entitlements: { type: 'string' }, // JSON-stringified EntitlementsPayload object from backend
+    lastChecked: { type: 'number' }, // Unix timestamp (ms) of last successful backend refresh
+  },
+
+  /**
+   * One row per numeric entitlement limit.
+   * Row IDs match the keys in ENTITLEMENT_WITH_LIMITS.
+   * e.g. { id: 'numProjects', count: 5 }
+   */
+  entitlementCount: {
+    id: { type: 'string' }, // Entitlement key (EntitlementWithLimit)
+    count: { type: 'number' }, // Allowed cap; -1 means unlimited
+  },
+} as const;
+```
+
+> **Note:** `subscriptionInformation` is a single-row table keyed by `orgId`.  
+> `entitlementCount` is a multi-row table keyed by entitlement name.
+
+---
+
+## Backend Endpoint
+
+### `GET /getOrgEntitlements`
+
+Returns the current subscription tier and all entitlement values for the authenticated organization. This is the sole source of data for both the `subscriptionInformation` and `entitlementCount` tables.
+
+In addition, any backend endpoint that processes photos or invoices must also return the latest values for `numPhotosApiRequests` and `numInvoicesApiRequests` in its response payload so the app can immediately update the local entitlement cache after each processing request.
+
+**Authentication:** Required (Bearer JWT via `apiWithToken`)
+
+**Query Parameters:**
+
+| Parameter | Type   | Description                   |
+| --------- | ------ | ----------------------------- |
+| `orgId`   | string | Organization identifier       |
+| `userId`  | string | Authenticated user identifier |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "tier": "basic",
+  "entitlements": {
+    "allowQuickBooksSync": false,
+    "allowChangeOrderEmails": false,
+    "allowPublishPhotosAndVideos": true,
+    "allowVendorPaymentReview": false,
+    "numProjects": 10,
+    "numOfficeExpenseProjects": 10,
+    "numProjectPhotos": 200,
+    "numProjectVideos": 20,
+    "numReceipts": 500,
+    "numInvoices": 500,
+    "numPhotosApiRequests": 100,
+    "numInvoicesApiRequests": 100,
+    "numOrgUsers": 5
+  }
+}
+```
+
+**Error Response:**
+
+```json
+{ "success": false, "error": "Unauthorized" }
+```
+
+> **Numeric limits:** A value of `-1` means unlimited.
+
+### Processing Endpoint Requirement
+
+Any endpoint that consumes an AI processing request for photos or invoices must include the updated remaining request counts in its success response.
+
+This applies to:
+
+- photo-processing endpoints: must return the latest `numPhotosApiRequests`
+- invoice-processing endpoints: must return the latest `numInvoicesApiRequests`
+
+If an endpoint can affect both counters, it must return both updated values.
+
+Example response shape addition:
+
+```json
+{
+  "success": true,
+  "result": {},
+  "updatedEntitlements": {
+    "numPhotosApiRequests": 99,
+    "numInvoicesApiRequests": 100
+  }
+}
+```
+
+The app should treat these returned values as authoritative and immediately upsert them into the `entitlementCount` table without waiting for the next `GET /getOrgEntitlements` refresh.
+
+### TypeScript Response Type
+
+```typescript
+export interface EntitlementsPayload {
+  // Feature flags
+  allowQuickBooksSync: boolean;
+  allowChangeOrderEmails: boolean;
+  allowPublishPhotosAndVideos: boolean;
+  allowVendorPaymentReview: boolean;
+  // Numeric limits (-1 = unlimited)
+  numProjects: number; // this is a project with 'isCompanyExpenseProject' undefined or set to false
+  numOfficeExpenseProjects: number; // this is a project with 'isCompanyExpenseProject' set to true
+  numProjectPhotos: number;
+  numProjectVideos: number;
+  numReceipts: number;
+  numInvoices: number;
+  numPhotosApiRequests: number;
+  numInvoicesApiRequests: number;
+  numOrgUsers: number;
+}
+
+export interface GetOrgEntitlementsResponse {
+  success: boolean;
+  tier: SubscriptionTier;
+  entitlements: EntitlementsPayload;
+}
+```
+
+---
+
+## Data Flow
+
+```
+GET /getOrgEntitlements
+        │
+        ▼
+  refreshSubscription()  ──write──►  subscriptionInformation (tier, entitlements JSON, lastChecked)
+                         ──write──►  entitlementCount rows   (one row per ENTITLEMENT_WITH_LIMITS key)
+                                               │
+                         ◄─── TinyBase reactive hooks ───────┘
+                                               │
+                         Components / business logic
+```
+
+1. On app launch or return to foreground, `refreshSubscription()` is called.
+2. It calls `GET /getOrgEntitlements` via `apiWithToken`, passing `orgId` and `userId`.
+3. On success it writes to `subscriptionInformation`:
+   - `tier` — the subscription tier string from the response
+   - `entitlements` — the full `EntitlementsPayload` JSON-stringified
+   - `lastChecked` — `Date.now()`
+4. It then iterates over `ENTITLEMENT_WITH_LIMITS` and upserts one `entitlementCount` row per key, using the numeric value returned by the endpoint.
+5. Components read data exclusively through hooks (see below) — they never call the backend directly.
+6. After every successful photo-processing or invoice-processing API request, the app reads the updated `numPhotosApiRequests` and/or `numInvoicesApiRequests` returned by that endpoint and immediately updates the corresponding `entitlementCount` rows.
+
+---
+
+## Hooks Design
+
+All hooks live in `src/tbStores/appSettingsStore/appSettingsStoreHooks.tsx`.
+
+### Reading the subscription tier
+
+```typescript
+/**
+ * Returns the effective subscription tier, respecting the dev override when
+ * running a development build.
+ */
+export const useEffectiveSubscriptionTier = (): SubscriptionTier => { ... }
+```
+
+This replaces the existing hook of the same name. Instead of accepting a `backendTier` argument, it reads `subscriptionInformation.tier` from the store directly.
+
+### Reading a numeric entitlement limit
+
+```typescript
+/**
+ * Returns the numeric cap for a given entitlement, or -1 if unlimited.
+ * Returns `null` while the store has not yet been populated.
+ */
+export const useEntitlementLimit = (key: EntitlementWithLimit): number | null => { ... }
+```
+
+### Checking a feature-flag entitlement
+
+```typescript
+/**
+ * Returns true if the current subscription grants the given feature flag.
+ * Reads from the `entitlements` JSON in `subscriptionInformation`.
+ */
+export const useEntitlementFlag = (key: EntitlementFlag): boolean => { ... }
+```
+
+### Checking whether a limit has been reached
+
+```typescript
+/**
+ * Returns true if the current count has reached or exceeded the allowed cap.
+ * Pass the live count (e.g. number of projects in the store).
+ */
+export const useIsAtEntitlementLimit = (key: EntitlementWithLimit, currentCount: number): boolean => { ... }
+```
+
+### Refreshing from the backend
+
+```typescript
+/**
+ * Returns a callback that fetches the latest subscription from the backend
+ * and writes it into the store. Call on app launch and after purchases.
+ */
+export const useRefreshSubscription = (): (() => Promise<void>) => { ... }
+```
+
+---
+
+## Developer Override
+
+The existing `useDevSubscriptionOverride` and `devSubscriptionTier` fields in the `settings` table control the override. When `useDevSubscriptionOverride` is `true` **and** the app is a development build (`isDevelopmentBuild() === true`), the backend is not consulted — all entitlement data is resolved from a local constant instead.
+
+### How it works
+
+`refreshSubscription()` checks the flag before making any network call:
+
+```
+useDevSubscriptionOverride === true && isDevelopmentBuild()
+          │
+          ▼
+  look up DEV_ENTITLEMENTS_BY_TIER[devSubscriptionTier]
+  write result into subscriptionInformation + entitlementCount
+  (no network call is made)
+```
+
+All hooks (`useEffectiveSubscriptionTier`, `useEntitlementFlag`, `useEntitlementLimit`) then read from the store as normal — they are unaware of whether the data came from the backend or the local override.
+
+### `DEV_ENTITLEMENTS_BY_TIER` constant
+
+Define this constant in `appSettingsStoreHooks.tsx` alongside the existing `PHOTO_LIMIT_PER_PROJECT_BY_TIER`. It maps every `SubscriptionTier` to a full `EntitlementsPayload` so developers can test any tier without a live backend:
+
+```typescript
+export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayload> = {
+  free: {
+    allowQuickBooksSync: true,
+    allowChangeOrderEmails: true,
+    allowPublishPhotosAndVideos: true,
+    allowVendorPaymentReview: true,
+    numProjects: 1,
+    numOfficeExpenseProjects: 1,
+    numProjectPhotos: 10,
+    numProjectVideos: 2,
+    numReceipts: 20,
+    numInvoices: 10,
+    numPhotosApiRequests: 5,
+    numInvoicesApiRequests: 5,
+    numOrgUsers: 2,
+  },
+  basic: {
+    allowQuickBooksSync: false,
+    allowChangeOrderEmails: false,
+    allowPublishPhotosAndVideos: true,
+    allowVendorPaymentReview: false,
+    numProjects: -1,
+    numOfficeExpenseProjects: 10,
+    numProjectPhotos: 500,
+    numProjectVideos: 20,
+    numReceipts: 1000,
+    numInvoices: 1000,
+    numPhotosApiRequests: 100,
+    numInvoicesApiRequests: 100,
+    numOrgUsers: 3,
+  },
+  premium: {
+    allowQuickBooksSync: true,
+    allowChangeOrderEmails: true,
+    allowPublishPhotosAndVideos: true,
+    allowVendorPaymentReview: true,
+    numProjects: -1,
+    numOfficeExpenseProjects: 10,
+    numProjectPhotos: 3000,
+    numProjectVideos: -1,
+    numReceipts: -1,
+    numInvoices: -1,
+    numPhotosApiRequests: -1,
+    numInvoicesApiRequests: -1,
+    numOrgUsers: -1,
+  },
+};
+```
+
+> `-1` means unlimited.
+
+### Toggling the override
+
+The developer toggles `useDevSubscriptionOverride` and selects `devSubscriptionTier` in the in-app developer settings screen. Changing either value should trigger a re-run of `refreshSubscription()` so the store is immediately updated with the new override values without requiring an app restart.
+
+---
+
+## Refresh Strategy
+
+| Trigger                                     | Action                                             |
+| ------------------------------------------- | -------------------------------------------------- |
+| App launch (foreground)                     | Call `useRefreshSubscription()` in the root layout |
+| Returning to foreground (`AppState change`) | Refresh if `lastChecked` is more than 1 hour old   |
+| After in-app purchase                       | Force refresh immediately                          |
+| Manual (settings screen)                    | Expose a "Refresh" button that calls the hook      |
+
+The `lastChecked` timestamp stored in `subscriptionInformation` is used to avoid redundant network calls.
+
+---
+
+## Enforcement Points
+
+Entitlement checks should be performed at the point of creating, not just displaying:
+
+| Entitlement                   | Enforced in                                                              |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| `numProjects`                 | "New Project" action — check before creating                             |
+| `numOfficeExpenseProjects`    | "New Project" action — check before creating                             |
+| `numProjectPhotos`            | Camera capture / image picker — check before adding                      |
+| `numProjectVideos`            | Video capture / picker — check before adding                             |
+| `numReceipts`                 | "Add Receipt" action                                                     |
+| `numInvoices`                 | "Add Invoice" action                                                     |
+| `numPhotosApiRequests`        | AI photo processing queue — gate submission                              |
+| `numInvoicesApiRequests`      | AI invoice processing queue — gate submission                            |
+| `numOrgUsers`                 | Org member invite — check before sending invite                          |
+| `allowQuickBooksSync`         | QuickBooks setup screen — hide/disable option                            |
+| `allowChangeOrderEmails`      | Change order email send button                                           |
+| `allowPublishPhotosAndVideos` | Publish photos/videos action                                             |
+| `allowVendorPaymentReview`    | Vendors screen only — enable email verification and Grant Access actions |
+
+When `allowVendorPaymentReview` is `false`, the Vendors screen must not show or invoke:
+
+- vendor email verification actions
+- `grantVendorAccess` calls
+
+For `numPhotosApiRequests` and `numInvoicesApiRequests`, enforcement must happen in two places:
+
+- before submission: block the request if the count is already exhausted
+- after success: replace the local cached count with the updated value returned by the backend response
+
+---
+
+## Implementation Checklist
+
+- [ ] Add `subscriptionInformation` and `entitlementCount` tables to `TABLES_SCHEMA` in `appSettingsStore.tsx`
+- [ ] Define `ENTITLEMENT`, `ENTITLEMENT_WITH_LIMITS`, `EntitlementsPayload` types in `src/models/types.ts`, including `numOfficeExpenseProjects`
+- [ ] Implement `useRefreshSubscription` hook using `apiWithToken`
+- [ ] Implement `useEntitlementLimit`, `useEntitlementFlag`, `useIsAtEntitlementLimit` hooks
+- [ ] Update `useEffectiveSubscriptionTier` to read from the store instead of accepting a parameter
+- [ ] Define `DEV_ENTITLEMENTS_BY_TIER` for dev override support
+- [ ] Call `useRefreshSubscription` on app launch in the root protected layout
+- [ ] Add `AppState` listener to refresh when stale (> 1 hour since `lastChecked`)
+- [ ] Add enforcement checks at each creation action listed above
+- [ ] Add unit tests in `__tests__/tbStores/` covering:
+  - Dev override entitlements
+  - Limit check at boundary conditions
+  - JSON parse safety for `entitlements` cell

@@ -29,6 +29,16 @@ export const TABLES_SCHEMA = {
     quickBooksPaymentAccounts: { type: 'string' }, // Comma-separated list of account IDs
     quickBooksDefaultPaymentAccountId: { type: 'string' },
   },
+  subscriptionInformation: {
+    tier: { type: 'string' },
+    entitlements: { type: 'string' },
+    lastChecked: { type: 'number' },
+    source: { type: 'string' },
+  },
+  entitlementCount: {
+    id: { type: 'string' },
+    count: { type: 'number' },
+  },
 } as const;
 
 const { useCreateMergeableStore, useProvideStore } = UiReact as UiReact.WithSchemas<

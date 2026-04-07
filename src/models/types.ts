@@ -4,6 +4,64 @@ export type TBStatus = 'Success' | 'Error' | 'NoChanges';
 
 export type CrudResult = { status: 'Success' | 'Error'; id: string; msg: string };
 
+export type SubscriptionTier = 'free' | 'basic' | 'premium';
+
+export const ENTITLEMENT = [
+  'allowQuickBooksSync',
+  'allowChangeOrderEmails',
+  'allowPublishPhotosAndVideos',
+  'allowVendorPaymentReview',
+  'numProjects',
+  'numOfficeExpenseProjects',
+  'numProjectPhotos',
+  'numProjectVideos',
+  'numReceipts',
+  'numInvoices',
+  'numPhotosApiRequests',
+  'numInvoicesApiRequests',
+  'numOrgUsers',
+] as const;
+
+export type Entitlement = (typeof ENTITLEMENT)[number];
+
+export const ENTITLEMENT_WITH_LIMITS = [
+  'numProjects',
+  'numOfficeExpenseProjects',
+  'numProjectPhotos',
+  'numProjectVideos',
+  'numReceipts',
+  'numInvoices',
+  'numPhotosApiRequests',
+  'numInvoicesApiRequests',
+  'numOrgUsers',
+] as const;
+
+export type EntitlementWithLimit = (typeof ENTITLEMENT_WITH_LIMITS)[number];
+export type EntitlementFlag = Exclude<Entitlement, EntitlementWithLimit>;
+
+export interface EntitlementsPayload {
+  allowQuickBooksSync: boolean;
+  allowChangeOrderEmails: boolean;
+  allowPublishPhotosAndVideos: boolean;
+  allowVendorPaymentReview: boolean;
+  numProjects: number;
+  numOfficeExpenseProjects: number;
+  numProjectPhotos: number;
+  numProjectVideos: number;
+  numReceipts: number;
+  numInvoices: number;
+  numPhotosApiRequests: number;
+  numInvoicesApiRequests: number;
+  numOrgUsers: number;
+}
+
+export interface GetOrgEntitlementsResponse {
+  success: boolean;
+  tier: SubscriptionTier;
+  entitlements: EntitlementsPayload;
+  error?: string;
+}
+
 export interface ProjectData {
   id: string;
   name: string;

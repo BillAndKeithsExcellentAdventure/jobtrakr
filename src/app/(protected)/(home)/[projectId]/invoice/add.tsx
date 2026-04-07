@@ -9,7 +9,11 @@ import { VendorPicker } from '@/src/components/VendorPicker';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
-import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import {
+  isEntitlementLimitReached,
+  useAppSettings,
+  useEntitlementLimit,
+} from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import {
   VendorData,
   useAllRows as useAllConfigurationRows,
@@ -18,6 +22,7 @@ import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
   InvoiceData,
   useAddRowCallback,
+  useAllRows,
   useUpdateRowCallback,
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
@@ -69,6 +74,8 @@ const AddInvoicePage = () => {
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
   const { projectWorkItems } = useProjectWorkItems(projectId);
   const appSettings = useAppSettings();
+  const invoiceLimit = useEntitlementLimit('numInvoices');
+  const allProjectInvoices = useAllRows(projectId, 'invoices');
   const [pickedCostItemId, setPickedCostItemId] = useState<string | undefined>(undefined);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [dueDatePickerVisible, setDueDatePickerVisible] = useState(false);
@@ -165,6 +172,19 @@ const AddInvoicePage = () => {
 
   const handleAddInvoice = useCallback(async () => {
     if (!canAddInvoice) return;
+
+    if (invoiceLimit === null) {
+      Alert.alert('Bills Unavailable', 'Invoice limits are still loading. Please try again in a moment.');
+      return;
+    }
+
+    if (isEntitlementLimitReached(invoiceLimit, allProjectInvoices.length)) {
+      Alert.alert(
+        'Invoice limit reached',
+        `Your subscription allows up to ${invoiceLimit} invoice(s) for this project.`,
+      );
+      return;
+    }
 
     const invoiceToAdd = {
       ...projectInvoice,
@@ -296,6 +316,8 @@ const AddInvoicePage = () => {
     startProcessing,
     stopProcessing,
     updateInvoice,
+    invoiceLimit,
+    allProjectInvoices.length,
   ]);
 
   const handleCaptureImage = useCallback(async () => {
