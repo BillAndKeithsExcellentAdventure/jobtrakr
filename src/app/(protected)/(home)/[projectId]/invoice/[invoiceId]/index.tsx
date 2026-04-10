@@ -3,7 +3,7 @@ import { InvoiceSummary } from '@/src/components/InvoiceSummary';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
-import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { useAppSettings, useEntitlementLimit } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
@@ -60,6 +60,7 @@ const InvoiceDetailsPage = () => {
 
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const appSettings = useAppSettings();
+  const numInvoiceApiRequests = useEntitlementLimit('numInvoiceApiRequests');
   const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
   const project = useProject(projectId);
   const allVendors = useAllConfigurationRows('vendors');
@@ -413,6 +414,13 @@ const InvoiceDetailsPage = () => {
   }, [projectId, invoiceId, router]);
 
   const requestAIProcessing = useCallback(() => {
+    if (isInvoiceAiProcessingDisabled) {
+      Alert.alert(
+        'Photo Processing Unavailable',
+        'Photo processing for invoices has reached its monthly limit and is currently unavailable. See your subscription details for more information.',
+      );
+      return;
+    }
     console.log(
       `requestAIProcessing - route = /${projectId}/invoice/${invoiceId}/requestAIProcessing?imageId=${invoice.imageId}`,
     );
@@ -425,6 +433,8 @@ const InvoiceDetailsPage = () => {
       },
     });
   }, [projectId, invoiceId, invoice.imageId, router]);
+
+  const isInvoiceAiProcessingDisabled = numInvoiceApiRequests === 0;
 
   const [containerHeight, setContainerHeight] = useState(0);
 

@@ -20,8 +20,8 @@ describe('app settings entitlements helpers', () => {
         numProjectVideos: 20,
         numReceipts: 500,
         numInvoices: 500,
-        numPhotosApiRequests: 100,
-        numInvoicesApiRequests: 100,
+        numReceiptApiRequests: 100,
+        numInvoiceApiRequests: 100,
         numOrgUsers: 5,
       }),
     );
@@ -37,8 +37,8 @@ describe('app settings entitlements helpers', () => {
       numProjectVideos: 20,
       numReceipts: 500,
       numInvoices: 500,
-      numPhotosApiRequests: 100,
-      numInvoicesApiRequests: 100,
+      numReceiptApiRequests: 100,
+      numInvoiceApiRequests: 100,
       numOrgUsers: 5,
     });
   });
@@ -66,8 +66,8 @@ describe('app settings entitlements helpers', () => {
           numProjectVideos: 999,
           numReceipts: 999,
           numInvoices: 999,
-          numPhotosApiRequests: 999,
-          numInvoicesApiRequests: 999,
+          numReceiptApiRequests: 999,
+          numInvoiceApiRequests: 999,
           numOrgUsers: 999,
         },
       },

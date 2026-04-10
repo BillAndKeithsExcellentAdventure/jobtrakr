@@ -5,7 +5,7 @@ import SwipeableLineItem from '@/src/components/SwipeableLineItem';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
-import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { useAppSettings, useEntitlementLimit } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   ReceiptData,
@@ -65,6 +65,7 @@ const ReceiptDetailsPage = () => {
   const allVendors = useAllConfigurationRows('vendors');
   const addReceiptImage = useAddImageCallback();
   const appSettings = useAppSettings();
+  const numReceiptApiRequests = useEntitlementLimit('numReceiptApiRequests');
   const { isQuickBooksConnected } = useNetwork();
   const project = useProject(projectId);
   const projectAbbr = project?.abbreviation ?? '';
@@ -269,9 +270,18 @@ const ReceiptDetailsPage = () => {
   }, [projectId, receiptId, router]);
 
   const requestAIProcessing = useCallback(() => {
+    if (isReceiptAiProcessingDisabled) {
+      Alert.alert(
+        'Photo Processing Unavailable',
+        'Photo processing for receipts has reached its monthly limit and is currently unavailable. See your subscription details for more information.',
+      );
+      return;
+    }
+
     console.log(
       `requestAIProcessing - route = /${projectId}/receipt/${receiptId}/requestAIProcessing?imageId=${receipt.imageId}`,
     );
+
     router.push({
       pathname: '/[projectId]/receipt/[receiptId]/requestAIProcessing',
       params: {
@@ -281,6 +291,8 @@ const ReceiptDetailsPage = () => {
       },
     });
   }, [projectId, receiptId, receipt.imageId, router]);
+
+  const isReceiptAiProcessingDisabled = numReceiptApiRequests === 0;
 
   const [containerHeight, setContainerHeight] = useState(0);
 

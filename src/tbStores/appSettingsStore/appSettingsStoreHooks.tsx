@@ -42,8 +42,8 @@ export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayl
     numProjectVideos: 2,
     numReceipts: 20,
     numInvoices: 10,
-    numPhotosApiRequests: 5,
-    numInvoicesApiRequests: 5,
+    numReceiptApiRequests: 5,
+    numInvoiceApiRequests: 5,
     numOrgUsers: 2,
   },
   basic: {
@@ -57,8 +57,8 @@ export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayl
     numProjectVideos: 20,
     numReceipts: 1000,
     numInvoices: 1000,
-    numPhotosApiRequests: 100,
-    numInvoicesApiRequests: 100,
+    numReceiptApiRequests: 100,
+    numInvoiceApiRequests: 100,
     numOrgUsers: 3,
   },
   premium: {
@@ -72,8 +72,8 @@ export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayl
     numProjectVideos: -1,
     numReceipts: -1,
     numInvoices: -1,
-    numPhotosApiRequests: -1,
-    numInvoicesApiRequests: -1,
+    numReceiptApiRequests: -1,
+    numInvoiceApiRequests: -1,
     numOrgUsers: -1,
   },
 };
@@ -141,14 +141,14 @@ const sanitizeEntitlementsPayload = (
       typeof payload.numProjectVideos === 'number' ? payload.numProjectVideos : fallback.numProjectVideos,
     numReceipts: typeof payload.numReceipts === 'number' ? payload.numReceipts : fallback.numReceipts,
     numInvoices: typeof payload.numInvoices === 'number' ? payload.numInvoices : fallback.numInvoices,
-    numPhotosApiRequests:
-      typeof payload.numPhotosApiRequests === 'number'
-        ? payload.numPhotosApiRequests
-        : fallback.numPhotosApiRequests,
-    numInvoicesApiRequests:
-      typeof payload.numInvoicesApiRequests === 'number'
-        ? payload.numInvoicesApiRequests
-        : fallback.numInvoicesApiRequests,
+    numReceiptApiRequests:
+      typeof payload.numReceiptApiRequests === 'number'
+        ? payload.numReceiptApiRequests
+        : fallback.numReceiptApiRequests,
+    numInvoiceApiRequests:
+      typeof payload.numInvoiceApiRequests === 'number'
+        ? payload.numInvoiceApiRequests
+        : fallback.numInvoiceApiRequests,
     numOrgUsers: typeof payload.numOrgUsers === 'number' ? payload.numOrgUsers : fallback.numOrgUsers,
   };
 };
