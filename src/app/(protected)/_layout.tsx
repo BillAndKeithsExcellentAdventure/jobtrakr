@@ -11,6 +11,7 @@ import { UploadQueueProcessor } from '@/src/components/UploadQueueProcessor';
 import { ProjectCostSummaryUpdater } from '@/src/components/ProjectCostSummaryUpdater';
 import {
   SUBSCRIPTION_REFRESH_INTERVAL_MS,
+  useEntitlementsPayload,
   useRefreshSubscription,
   useSubscriptionInformation,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
@@ -23,13 +24,34 @@ export const unstable_settings = {
 const SubscriptionEntitlementsBootstrap = () => {
   const { orgId, userId } = useAuth();
   const refreshSubscription = useRefreshSubscription();
-  const { lastChecked } = useSubscriptionInformation();
+  const { lastChecked, tier } = useSubscriptionInformation();
+  const entitlements = useEntitlementsPayload();
   const refreshSubscriptionRef = useRef(refreshSubscription);
+  const tierRef = useRef(tier);
+  const entitlementsRef = useRef(entitlements);
   const lastStartupRefreshKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     refreshSubscriptionRef.current = refreshSubscription;
   }, [refreshSubscription]);
+
+  useEffect(() => {
+    tierRef.current = tier;
+  }, [tier]);
+
+  useEffect(() => {
+    entitlementsRef.current = entitlements;
+  }, [entitlements]);
+
+  const refreshWithLogging = async (reason: 'startup' | 'foreground') => {
+    console.log(`[subscription] refresh requested (${reason}) - current tier: ${tierRef.current}`);
+    await refreshSubscriptionRef.current();
+    console.log(
+      `[subscription] refresh completed (${reason}) - tier: ${tierRef.current}, entitlements: ${JSON.stringify(
+        entitlementsRef.current,
+      )}`,
+    );
+  };
 
   useEffect(() => {
     if (!orgId || !userId) {
@@ -42,7 +64,7 @@ const SubscriptionEntitlementsBootstrap = () => {
     }
 
     lastStartupRefreshKeyRef.current = refreshKey;
-    refreshSubscriptionRef.current().catch((error) => {
+    refreshWithLogging('startup').catch((error) => {
       console.error('Failed to refresh subscription on startup:', error);
     });
   }, [orgId, userId]);
@@ -58,7 +80,7 @@ const SubscriptionEntitlementsBootstrap = () => {
         return;
       }
 
-      refreshSubscriptionRef.current().catch((error) => {
+      refreshWithLogging('foreground').catch((error) => {
         console.error('Failed to refresh subscription after foregrounding:', error);
       });
     });

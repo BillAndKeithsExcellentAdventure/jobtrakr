@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
-import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import { useAppSettings, useEntitlementFlag } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { isDevelopmentBuild } from '@/src/utils/environment';
 import {
   getVerifiedEmailAddresses,
@@ -51,6 +51,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const [isInternetReachable, setIsInternetReachable] = useState<boolean | null>(null);
   const [networkType, setNetworkType] = useState<string | null>(null);
   const appSettings = useAppSettings();
+  const allowQuickBooksSync = useEntitlementFlag('allowQuickBooksSync');
   const [isQuickBooksConnected, setIsQuickBooksConnected] = useState<boolean>(false);
   const [isQuickBooksAccessible, setIsQuickBooksAccessible] = useState<boolean>(false);
   const [verifiedEmailAddresses, setVerifiedEmailAddresses] = useState<string[]>([]);
@@ -235,6 +236,15 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
         return;
       }
 
+      if (!allowQuickBooksSync) {
+        if (false !== previousConnectedRef.current) {
+          console.log('QuickBooks not accessible because allowQuickBooksSync entitlement is false');
+        }
+        previousConnectedRef.current = false;
+        setIsQuickBooksAccessible(false);
+        return;
+      }
+
       try {
         const connected = await testQbIsConnected(orgId, userId, getToken);
         if (connected !== previousConnectedRef.current) {
@@ -257,6 +267,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     auth.isSignedIn,
     appSettings.id,
     appSettings.syncWithQuickBooks,
+    allowQuickBooksSync,
     orgId,
     userId,
     isConnected,
