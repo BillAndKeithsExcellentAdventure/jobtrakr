@@ -6,7 +6,7 @@ This document describes the plan for storing, resolving, and consuming subscript
 
 ## Overview
 
-Subscription information is fetched from the backend after login and stored locally in the `appSettingsStore` TinyBase store. Two new tables — `subscriptionInformation` and `entitlementCount` — hold this data so all parts of the app can reactively read limits and feature flags without making repeated network calls.
+Subscription information is fetched from the backend after login and stored locally in the `appSettingsStore` TinyBase store. Two new tables — `subscriptionInformation` and `entitlements` — hold this data so all parts of the app can reactively read limits and feature flags without making repeated network calls.
 
 The backend remains the source of truth. The local tables are a cache that is refreshed on app launch, after a successful purchase, and periodically in the background.
 
@@ -29,8 +29,8 @@ export const ENTITLEMENT = [
   'numProjectVideos',
   'numReceipts',
   'numInvoices',
-  'numReceiptApiRequests',
-  'numInvoiceApiRequests',
+  'numPhotosApiRequests',
+  'numInvoicesApiRequests',
   'numOrgUsers',
 ] as const;
 
@@ -49,30 +49,41 @@ export const TABLES_SCHEMA = {
 
   /**
    * Single-row table. Row ID is the orgId.
-   * Holds the raw subscription payload cached from the backend.
+   * Holds subscription metadata cached from the backend.
    */
   subscriptionInformation: {
     tier: { type: 'string' }, // Latest known subscription tier, e.g. 'free' | 'basic' | 'premium'
-    entitlements: { type: 'string' }, // JSON-stringified EntitlementsPayload object from backend
     lastChecked: { type: 'number' }, // Unix timestamp (ms) of last successful backend refresh
+    source: { type: 'string' }, // 'server' | 'fallback' | 'override'
   },
 
   /**
    * Multi-row table with one row per entitlement.
    * Row IDs match the keys in ENTITLEMENT.
-   * e.g. { id: 'numProjects', type: 'number', value: 5 }
-   * e.g. { id: 'allowQuickBooksSync', type: 'boolean', value: 1 }
+   * e.g. { id: 'numProjects', kind: 'limit', numberValue: 5 }
+   * e.g. { id: 'allowQuickBooksSync', kind: 'flag', booleanValue: true }
    */
   entitlements: {
-    id: { type: 'string' }, // Entitlement key
-    type: { type: 'string' }, // Values are 'number|boolean'
-    value: { type: 'number' }, // if type = 'number', max numbers of items; -1 means unlimited; if type = 'boolean', 0 = false, 1 = true
+    id: { type: 'string' }, // Entitlement key which is one of he property names in ENTITLEMENT constant.
+    kind: { type: 'string' }, // Values are 'limit|flag'
+    numberValue: { type: 'number', default: 0 }, // used when kind='limit'; -1 means unlimited
+    booleanValue: { type: 'boolean', default: false }, // used when kind='flag'
   },
 } as const;
 ```
 
 > **Note:** `subscriptionInformation` is a single-row table keyed by `orgId`.  
-> `entitlementCount` is a multi-row table keyed by entitlement name.
+> `entitlements` is a multi-row table keyed by entitlement name.
+
+### `subscriptionInformation.source` values
+
+`source` indicates where the currently stored subscription data came from.
+
+- `server`: Data was fetched successfully from `GET /getOrgEntitlements` and written to TinyBase.
+- `fallback`: A network/API refresh failed, so the app kept using the best local fallback.
+  - If cached entitlement rows already exist, those cached values remain in use.
+  - If no cached entitlement rows exist, code defaults (`DEFAULT_FREE_TIER_ENTITLEMENTS`) are written.
+- `override`: Developer override is enabled (`useDevSubscriptionOverride === true`) in a development build, so values are sourced from `DEV_ENTITLEMENTS_BY_TIER` instead of the backend.
 
 ---
 
@@ -80,9 +91,9 @@ export const TABLES_SCHEMA = {
 
 ### `GET /getOrgEntitlements`
 
-Returns the current subscription tier and all entitlement values for the authenticated organization. This is the sole source of data for both the `subscriptionInformation` and `entitlementCount` tables.
+Returns the current subscription tier and all entitlement values for the authenticated organization. This is the sole source of data for both the `subscriptionInformation` and `entitlements` tables.
 
-In addition, any backend endpoint that processes photos or invoices must also return the latest values for `numReceiptApiRequests` and `numInvoiceApiRequests` in its response payload so the app can immediately update the local entitlement cache after each processing request.
+In addition, any backend endpoint that processes photos or invoices must also return the latest values for `numPhotosApiRequests` and `numInvoicesApiRequests` in its response payload so the app can immediately update the local entitlement cache after each processing request.
 
 **Authentication:** Required (Bearer JWT via `apiWithToken`)
 
@@ -110,8 +121,8 @@ In addition, any backend endpoint that processes photos or invoices must also re
     "numProjectVideos": 20,
     "numReceipts": 500,
     "numInvoices": 500,
-    "numReceiptApiRequests": 100,
-    "numInvoiceApiRequests": 100,
+    "numPhotosApiRequests": 100,
+    "numInvoicesApiRequests": 100,
     "numOrgUsers": 5
   }
 }
@@ -131,8 +142,8 @@ Any endpoint that consumes an AI processing request for receipts or invoices mus
 
 This applies to:
 
-- photo-processing endpoints: must return the latest `numReceiptApiRequests`
-- invoice-processing endpoints: must return the latest `numInvoiceApiRequests`
+- photo-processing endpoints: must return the latest `numPhotosApiRequests`
+- invoice-processing endpoints: must return the latest `numInvoicesApiRequests`
 
 If an endpoint can affect both counters, it must return both updated values.
 
@@ -143,13 +154,13 @@ Example response shape addition:
   "success": true,
   "result": {},
   "updatedEntitlements": {
-    "numReceiptApiRequests": 99,
-    "numInvoiceApiRequests": 100
+    "numPhotosApiRequests": 99,
+    "numInvoicesApiRequests": 100
   }
 }
 ```
 
-The app should treat these returned values as authoritative and immediately upsert them into the `entitlementCount` table without waiting for the next `GET /getOrgEntitlements` refresh.
+The app should treat these returned values as authoritative and immediately upsert them into the `entitlements` table without waiting for the next `GET /getOrgEntitlements` refresh.
 
 ### TypeScript Response Type
 
@@ -167,8 +178,8 @@ export interface EntitlementsPayload {
   numProjectVideos: number;
   numReceipts: number;
   numInvoices: number;
-  numReceiptApiRequests: number;
-  numInvoiceApiRequests: number;
+  numPhotosApiRequests: number;
+  numInvoicesApiRequests: number;
   numOrgUsers: number;
 }
 
@@ -187,8 +198,8 @@ export interface GetOrgEntitlementsResponse {
 GET /getOrgEntitlements
         │
         ▼
-  refreshSubscription()  ──write──►  subscriptionInformation (tier, entitlements JSON, lastChecked)
-                         ──write──►  entitlementCount rows   (one row per ENTITLEMENT_WITH_LIMITS key)
+  refreshSubscription()  ──write──►  subscriptionInformation (tier, lastChecked, source)
+                         ──write──►  entitlements rows      (one row per ENTITLEMENT key)
                                                │
                          ◄─── TinyBase reactive hooks ───────┘
                                                │
@@ -199,11 +210,13 @@ GET /getOrgEntitlements
 2. It calls `GET /getOrgEntitlements` via `apiWithToken`, passing `orgId` and `userId`.
 3. On success it writes to `subscriptionInformation`:
    - `tier` — the subscription tier string from the response
-   - `entitlements` — the full `EntitlementsPayload` JSON-stringified
    - `lastChecked` — `Date.now()`
-4. It then iterates over `ENTITLEMENT_WITH_LIMITS` and upserts one `entitlementCount` row per key, using the numeric value returned by the endpoint.
+
+- `source` — `'server'`
+
+4. It then iterates over `ENTITLEMENT` and inserts one `entitlements` row per key.
 5. Components read data exclusively through hooks (see below) — they never call the backend directly.
-6. After every successful photo-processing or invoice-processing API request, the app reads the updated `numReceiptApiRequests` and/or `numInvoiceApiRequests` returned by that endpoint and immediately updates the corresponding `entitlementCount` rows.
+6. After every successful photo-processing or invoice-processing API request, the app reads the updated `numPhotosApiRequests` and/or `numInvoicesApiRequests` returned by that endpoint and immediately updates the corresponding `entitlements` rows.
 
 ---
 
@@ -238,7 +251,7 @@ export const useEntitlementLimit = (key: EntitlementWithLimit): number | null =>
 ```typescript
 /**
  * Returns true if the current subscription grants the given feature flag.
- * Reads from the `entitlements` JSON in `subscriptionInformation`.
+ * Reads from the `entitlements` table.
  */
 export const useEntitlementFlag = (key: EntitlementFlag): boolean => { ... }
 ```
@@ -278,7 +291,7 @@ useDevSubscriptionOverride === true && isDevelopmentBuild()
           │
           ▼
   look up DEV_ENTITLEMENTS_BY_TIER[devSubscriptionTier]
-  write result into subscriptionInformation + entitlementCount
+  write result into subscriptionInformation + entitlements
   (no network call is made)
 ```
 
@@ -301,8 +314,8 @@ export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayl
     numProjectVideos: 2,
     numReceipts: 20,
     numInvoices: 10,
-    numReceiptApiRequests: 5,
-    numInvoiceApiRequests: 5,
+    numPhotosApiRequests: 5,
+    numInvoicesApiRequests: 5,
     numOrgUsers: 2,
   },
   basic: {
@@ -316,8 +329,8 @@ export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayl
     numProjectVideos: 20,
     numReceipts: 1000,
     numInvoices: 1000,
-    numReceiptApiRequests: 100,
-    numInvoiceApiRequests: 100,
+    numPhotosApiRequests: 100,
+    numInvoicesApiRequests: 100,
     numOrgUsers: 3,
   },
   premium: {
@@ -331,8 +344,8 @@ export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayl
     numProjectVideos: -1,
     numReceipts: -1,
     numInvoices: -1,
-    numReceiptApiRequests: -1,
-    numInvoiceApiRequests: -1,
+    numPhotosApiRequests: -1,
+    numInvoicesApiRequests: -1,
     numOrgUsers: -1,
   },
 };
@@ -371,8 +384,8 @@ Entitlement checks should be performed at the point of creating, not just displa
 | `numProjectVideos`            | Video capture / picker — check before adding                             |
 | `numReceipts`                 | "Add Receipt" action                                                     |
 | `numInvoices`                 | "Add Invoice" action                                                     |
-| `numReceiptApiRequests`       | AI photo processing queue — gate submission                              |
-| `numInvoiceApiRequests`       | AI invoice processing queue — gate submission                            |
+| `numPhotosApiRequests`        | AI photo processing queue — gate submission                              |
+| `numInvoicesApiRequests`      | AI invoice processing queue — gate submission                            |
 | `numOrgUsers`                 | Org member invite — check before sending invite                          |
 | `allowQuickBooksSync`         | QuickBooks setup screen — hide/disable option                            |
 | `allowChangeOrderEmails`      | Change order email send button                                           |
@@ -384,7 +397,7 @@ When `allowVendorPaymentReview` is `false`, the Vendors screen must not show or 
 - vendor email verification actions
 - `grantVendorAccess` calls
 
-For `numReceiptApiRequests` and `numInvoiceApiRequests`, enforcement must happen in two places:
+For `numPhotosApiRequests` and `numInvoicesApiRequests`, enforcement must happen in two places:
 
 - before submission: block the request if the count is already exhausted
 - after success: replace the local cached count with the updated value returned by the backend response
@@ -393,7 +406,7 @@ For `numReceiptApiRequests` and `numInvoiceApiRequests`, enforcement must happen
 
 ## Implementation Checklist
 
-- [ ] Add `subscriptionInformation` and `entitlementCount` tables to `TABLES_SCHEMA` in `appSettingsStore.tsx`
+- [ ] Add `subscriptionInformation` and `entitlements` tables to `TABLES_SCHEMA` in `appSettingsStore.tsx`
 - [ ] Define `ENTITLEMENT`, `ENTITLEMENT_WITH_LIMITS`, `EntitlementsPayload` types in `src/models/types.ts`, including `numOfficeExpenseProjects`
 - [ ] Implement `useRefreshSubscription` hook using `apiWithToken`
 - [ ] Implement `useEntitlementLimit`, `useEntitlementFlag`, `useIsAtEntitlementLimit` hooks

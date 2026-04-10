@@ -31,13 +31,14 @@ export const TABLES_SCHEMA = {
   },
   subscriptionInformation: {
     tier: { type: 'string' },
-    entitlements: { type: 'string' },
     lastChecked: { type: 'number' },
     source: { type: 'string' },
   },
-  entitlementCount: {
+  entitlements: {
     id: { type: 'string' },
-    count: { type: 'number' },
+    kind: { type: 'string' },
+    numberValue: { type: 'number', default: 0 },
+    booleanValue: { type: 'boolean', default: false },
   },
 } as const;
 

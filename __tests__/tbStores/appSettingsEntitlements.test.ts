@@ -55,7 +55,7 @@ describe('app settings entitlements helpers', () => {
       },
       {
         isDevelopment: true,
-        entitlementsJson: JSON.stringify({
+        storedEntitlements: {
           allowQuickBooksSync: true,
           allowChangeOrderEmails: true,
           allowPublishPhotosAndVideos: true,
@@ -69,7 +69,7 @@ describe('app settings entitlements helpers', () => {
           numPhotosApiRequests: 999,
           numInvoicesApiRequests: 999,
           numOrgUsers: 999,
-        }),
+        },
       },
     );
 

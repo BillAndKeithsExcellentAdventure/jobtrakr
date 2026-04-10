@@ -7,6 +7,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { API_BASE_URL } from '@/src/constants/app-constants';
 import {
   CrudResult,
+  ENTITLEMENT,
   ENTITLEMENT_WITH_LIMITS,
   EntitlementFlag,
   EntitlementWithLimit,
@@ -27,6 +28,7 @@ export const SUBSCRIPTION_REFRESH_INTERVAL_MS = 60 * 60 * 1000;
 
 const SUBSCRIPTION_TIERS: SubscriptionTier[] = ['free', 'basic', 'premium'];
 const ENTITLEMENT_LIMIT_KEYS = new Set<string>(ENTITLEMENT_WITH_LIMITS);
+const ENTITLEMENT_KEYS = new Set<string>(ENTITLEMENT);
 
 export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayload> = {
   free: {
@@ -87,7 +89,6 @@ const toNumber = (value: unknown): number => (typeof value === 'number' ? value 
 
 export interface SubscriptionInformationData {
   tier: SubscriptionTier;
-  entitlements: string;
   lastChecked: number;
   source: EntitlementsSource;
 }
@@ -98,37 +99,57 @@ const isSameSubscriptionInformation = (
   left: SubscriptionInformationData,
   right: SubscriptionInformationData,
 ): boolean => {
-  return (
-    left.tier === right.tier &&
-    left.entitlements === right.entitlements &&
-    left.lastChecked === right.lastChecked &&
-    left.source === right.source
-  );
+  return left.tier === right.tier && left.lastChecked === right.lastChecked && left.source === right.source;
 };
 
 const INITIAL_SUBSCRIPTION_INFORMATION: SubscriptionInformationData = {
   tier: DEFAULT_SUBSCRIPTION_TIER,
-  entitlements: JSON.stringify(DEFAULT_FREE_TIER_ENTITLEMENTS),
   lastChecked: 0,
   source: 'fallback',
 };
 
-const sanitizeEntitlementsPayload = (value: unknown): EntitlementsPayload => {
+const sanitizeEntitlementsPayload = (
+  value: unknown,
+  fallback: EntitlementsPayload = DEFAULT_FREE_TIER_ENTITLEMENTS,
+): EntitlementsPayload => {
   const payload = typeof value === 'object' && value !== null ? (value as Partial<EntitlementsPayload>) : {};
   return {
-    allowQuickBooksSync: toBoolean(payload.allowQuickBooksSync),
-    allowChangeOrderEmails: toBoolean(payload.allowChangeOrderEmails),
-    allowPublishPhotosAndVideos: toBoolean(payload.allowPublishPhotosAndVideos),
-    allowVendorPaymentReview: toBoolean(payload.allowVendorPaymentReview),
-    numProjects: toNumber(payload.numProjects),
-    numOfficeExpenseProjects: toNumber(payload.numOfficeExpenseProjects),
-    numProjectPhotos: toNumber(payload.numProjectPhotos),
-    numProjectVideos: toNumber(payload.numProjectVideos),
-    numReceipts: toNumber(payload.numReceipts),
-    numInvoices: toNumber(payload.numInvoices),
-    numPhotosApiRequests: toNumber(payload.numPhotosApiRequests),
-    numInvoicesApiRequests: toNumber(payload.numInvoicesApiRequests),
-    numOrgUsers: toNumber(payload.numOrgUsers),
+    allowQuickBooksSync:
+      typeof payload.allowQuickBooksSync === 'boolean'
+        ? payload.allowQuickBooksSync
+        : fallback.allowQuickBooksSync,
+    allowChangeOrderEmails:
+      typeof payload.allowChangeOrderEmails === 'boolean'
+        ? payload.allowChangeOrderEmails
+        : fallback.allowChangeOrderEmails,
+    allowPublishPhotosAndVideos:
+      typeof payload.allowPublishPhotosAndVideos === 'boolean'
+        ? payload.allowPublishPhotosAndVideos
+        : fallback.allowPublishPhotosAndVideos,
+    allowVendorPaymentReview:
+      typeof payload.allowVendorPaymentReview === 'boolean'
+        ? payload.allowVendorPaymentReview
+        : fallback.allowVendorPaymentReview,
+    numProjects: typeof payload.numProjects === 'number' ? payload.numProjects : fallback.numProjects,
+    numOfficeExpenseProjects:
+      typeof payload.numOfficeExpenseProjects === 'number'
+        ? payload.numOfficeExpenseProjects
+        : fallback.numOfficeExpenseProjects,
+    numProjectPhotos:
+      typeof payload.numProjectPhotos === 'number' ? payload.numProjectPhotos : fallback.numProjectPhotos,
+    numProjectVideos:
+      typeof payload.numProjectVideos === 'number' ? payload.numProjectVideos : fallback.numProjectVideos,
+    numReceipts: typeof payload.numReceipts === 'number' ? payload.numReceipts : fallback.numReceipts,
+    numInvoices: typeof payload.numInvoices === 'number' ? payload.numInvoices : fallback.numInvoices,
+    numPhotosApiRequests:
+      typeof payload.numPhotosApiRequests === 'number'
+        ? payload.numPhotosApiRequests
+        : fallback.numPhotosApiRequests,
+    numInvoicesApiRequests:
+      typeof payload.numInvoicesApiRequests === 'number'
+        ? payload.numInvoicesApiRequests
+        : fallback.numInvoicesApiRequests,
+    numOrgUsers: typeof payload.numOrgUsers === 'number' ? payload.numOrgUsers : fallback.numOrgUsers,
   };
 };
 
@@ -175,14 +196,47 @@ const getSubscriptionInformationSnapshot = (
 
   return {
     tier: isSubscriptionTier(row.tier) ? row.tier : DEFAULT_SUBSCRIPTION_TIER,
-    entitlements:
-      typeof row.entitlements === 'string' ? row.entitlements : INITIAL_SUBSCRIPTION_INFORMATION.entitlements,
     lastChecked: typeof row.lastChecked === 'number' ? row.lastChecked : 0,
     source:
       row.source === 'server' || row.source === 'fallback' || row.source === 'override'
         ? row.source
         : INITIAL_SUBSCRIPTION_INFORMATION.source,
   };
+};
+
+const getEntitlementsSnapshot = (store: AppSettingsStoreType): EntitlementsPayload | null => {
+  if (!store) {
+    return null;
+  }
+
+  const table = store.getTable('entitlements');
+  if (!table) {
+    return null;
+  }
+
+  const entitlements: Partial<EntitlementsPayload> = {};
+  let hasEntitlementRows = false;
+
+  ENTITLEMENT.forEach((key) => {
+    const row = store.getRow('entitlements', key);
+    if (!row) {
+      return;
+    }
+
+    hasEntitlementRows = true;
+    if (ENTITLEMENT_LIMIT_KEYS.has(key)) {
+      entitlements[key as EntitlementWithLimit] = toNumber(row.numberValue);
+      return;
+    }
+
+    entitlements[key as EntitlementFlag] = toBoolean(row.booleanValue);
+  });
+
+  if (!hasEntitlementRows) {
+    return null;
+  }
+
+  return sanitizeEntitlementsPayload(entitlements, DEFAULT_FREE_TIER_ENTITLEMENTS);
 };
 
 const writeSubscriptionData = (
@@ -199,33 +253,35 @@ const writeSubscriptionData = (
 
   store.setRow('subscriptionInformation', orgId, {
     tier,
-    entitlements: JSON.stringify(entitlementsPayload),
     lastChecked,
     source,
   });
 
-  ENTITLEMENT_WITH_LIMITS.forEach((key) => {
-    store.setRow('entitlementCount', key, {
+  ENTITLEMENT.forEach((key) => {
+    const value = entitlementsPayload[key];
+    store.setRow('entitlements', key, {
       id: key,
-      count: entitlementsPayload[key],
+      kind: ENTITLEMENT_LIMIT_KEYS.has(key) ? 'limit' : 'flag',
+      numberValue: typeof value === 'number' ? value : 0,
+      booleanValue: typeof value === 'boolean' ? value : false,
     });
   });
 
-  const entitlementTable = store.getTable('entitlementCount');
+  const entitlementTable = store.getTable('entitlements');
   if (!entitlementTable) {
     return;
   }
 
   Object.keys(entitlementTable).forEach((rowId) => {
-    if (!ENTITLEMENT_LIMIT_KEYS.has(rowId)) {
-      store.delRow('entitlementCount', rowId);
+    if (!ENTITLEMENT_KEYS.has(rowId)) {
+      store.delRow('entitlements', rowId);
     }
   });
 };
 
 export const resolveEntitlementsPayload = (
   settings: Pick<SettingsData, 'useDevSubscriptionOverride' | 'devSubscriptionTier'>,
-  options?: { isDevelopment?: boolean; entitlementsJson?: string | null },
+  options?: { isDevelopment?: boolean; storedEntitlements?: EntitlementsPayload | null },
 ): EntitlementsPayload | null => {
   if (
     options?.isDevelopment &&
@@ -235,7 +291,7 @@ export const resolveEntitlementsPayload = (
     return DEV_ENTITLEMENTS_BY_TIER[settings.devSubscriptionTier];
   }
 
-  return parseEntitlementsPayload(options?.entitlementsJson ?? undefined);
+  return options?.storedEntitlements ?? null;
 };
 
 export const isEntitlementLimitReached = (limit: number | null, currentCount: number): boolean => {
@@ -432,33 +488,29 @@ export const useEffectiveSubscriptionTier = (): SubscriptionTier => {
 export const useEntitlementLimit = (key: EntitlementWithLimit): number | null => {
   const store = useStore(useStoreId());
   const appSettings = useAppSettings();
-  const subscriptionInformation = useSubscriptionInformation();
   const isDevelopment = isDevelopmentBuild();
   const [limit, setLimit] = useState<number | null>(() => {
+    const storedEntitlements = getEntitlementsSnapshot(store);
     const fallbackEntitlements = resolveEntitlementsPayload(appSettings, {
       isDevelopment,
-      entitlementsJson: subscriptionInformation.entitlements,
+      storedEntitlements,
     });
     return fallbackEntitlements ? fallbackEntitlements[key] : null;
   });
 
   const fetchLimit = useCallback(() => {
+    const storedEntitlements = getEntitlementsSnapshot(store);
     const entitlements = resolveEntitlementsPayload(appSettings, {
       isDevelopment,
-      entitlementsJson: subscriptionInformation.entitlements,
+      storedEntitlements,
     });
 
     if (entitlements) {
       return entitlements[key];
     }
 
-    if (!store) {
-      return null;
-    }
-
-    const row = store.getRow('entitlementCount', key);
-    return typeof row?.count === 'number' ? row.count : null;
-  }, [appSettings, isDevelopment, key, store, subscriptionInformation.entitlements]);
+    return null;
+  }, [appSettings, isDevelopment, key, store]);
 
   useEffect(() => {
     setLimit(fetchLimit());
@@ -469,7 +521,7 @@ export const useEntitlementLimit = (key: EntitlementWithLimit): number | null =>
       return;
     }
 
-    const listenerId = store.addTableListener('entitlementCount', () => setLimit(fetchLimit()));
+    const listenerId = store.addTableListener('entitlements', () => setLimit(fetchLimit()));
     return () => {
       store.delListener(listenerId);
     };
@@ -479,23 +531,45 @@ export const useEntitlementLimit = (key: EntitlementWithLimit): number | null =>
 };
 
 export const useEntitlementFlag = (key: EntitlementFlag): boolean => {
+  const store = useStore(useStoreId());
   const appSettings = useAppSettings();
-  const subscriptionInformation = useSubscriptionInformation();
+  const storedEntitlements = getEntitlementsSnapshot(store);
   const entitlements = resolveEntitlementsPayload(appSettings, {
     isDevelopment: isDevelopmentBuild(),
-    entitlementsJson: subscriptionInformation.entitlements,
+    storedEntitlements,
   });
 
   return entitlements ? entitlements[key] : false;
 };
 
 export const useEntitlementsPayload = (): EntitlementsPayload | null => {
+  const store = useStore(useStoreId());
   const appSettings = useAppSettings();
-  const subscriptionInformation = useSubscriptionInformation();
+  const [storedEntitlements, setStoredEntitlements] = useState<EntitlementsPayload | null>(() =>
+    getEntitlementsSnapshot(store),
+  );
+
+  useEffect(() => {
+    setStoredEntitlements(getEntitlementsSnapshot(store));
+  }, [store]);
+
+  useEffect(() => {
+    if (!store) {
+      return;
+    }
+
+    const listenerId = store.addTableListener('entitlements', () => {
+      setStoredEntitlements(getEntitlementsSnapshot(store));
+    });
+
+    return () => {
+      store.delListener(listenerId);
+    };
+  }, [store]);
 
   return resolveEntitlementsPayload(appSettings, {
     isDevelopment: isDevelopmentBuild(),
-    entitlementsJson: subscriptionInformation.entitlements,
+    storedEntitlements,
   });
 };
 
@@ -551,18 +625,17 @@ export function useRefreshSubscription(): () => Promise<void> {
       }
 
       const tier = isSubscriptionTier(data.tier) ? data.tier : DEFAULT_SUBSCRIPTION_TIER;
-      const entitlements = sanitizeEntitlementsPayload(data.entitlements);
+      const entitlements = sanitizeEntitlementsPayload(data.entitlements, DEFAULT_FREE_TIER_ENTITLEMENTS);
       writeSubscriptionData(store, orgId, tier, entitlements, checkedAt, 'server');
     } catch (error) {
       const cachedSubscriptionInformation = getSubscriptionInformationSnapshot(store, orgId);
-      const cachedEntitlements = parseEntitlementsPayload(cachedSubscriptionInformation.entitlements);
+      const cachedEntitlements = getEntitlementsSnapshot(store);
       const fallbackTier = cachedEntitlements
         ? cachedSubscriptionInformation.tier
         : DEFAULT_SUBSCRIPTION_TIER;
       const fallbackEntitlements = cachedEntitlements ?? DEFAULT_FREE_TIER_ENTITLEMENTS;
       const fallbackSubscriptionInformation: SubscriptionInformationData = {
         tier: fallbackTier,
-        entitlements: JSON.stringify(fallbackEntitlements),
         lastChecked: cachedSubscriptionInformation.lastChecked,
         source: 'fallback',
       };
