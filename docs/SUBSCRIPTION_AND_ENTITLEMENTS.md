@@ -53,6 +53,8 @@ export const TABLES_SCHEMA = {
    */
   subscriptionInformation: {
     tier: { type: 'string' }, // Latest known subscription tier, e.g. 'free' | 'basic' | 'premium'
+    numReceiptApiRequestsRemaining: { type: 'number' }, // Server maintained value of count remaining
+    numInvoiceApiRequestsRemaining: { type: 'number' }, // Server maintained value of count remaining
     lastChecked: { type: 'number' }, // Unix timestamp (ms) of last successful backend refresh
     source: { type: 'string' }, // 'server' | 'fallback' | 'override'
   },
@@ -110,6 +112,8 @@ In addition, any backend endpoint that processes photos or invoices must also re
 {
   "success": true,
   "tier": "basic",
+  "numReceiptApiRequestsRemaining": 22,
+  "numInvoiceApiRequestsRemaining": 35,
   "entitlements": {
     "allowQuickBooksSync": false,
     "allowChangeOrderEmails": false,

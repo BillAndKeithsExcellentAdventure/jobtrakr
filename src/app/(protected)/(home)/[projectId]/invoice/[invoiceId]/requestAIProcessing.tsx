@@ -9,6 +9,7 @@ import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
 import { InvoiceSummary, ReceiptItem, ReceiptItemFromAI } from '@/src/models/types';
+import { useUpdateApiRequestsRemainingCallback } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import {
   useAllRows,
   useVendorMatch,
@@ -92,6 +93,7 @@ const RequestAIProcessingPage = () => {
   const [aiItems, setAiItems] = useState<ReceiptItemFromAI[]>([]);
   const [invoiceItems, setInvoiceItems] = useState<ReceiptItem[]>([]);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const updateApiRequestsRemaining = useUpdateApiRequestsRemainingCallback();
   const colors = useColors();
   const invoice = useTypedRow(projectId, 'invoices', invoiceId);
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
@@ -115,6 +117,13 @@ const RequestAIProcessingPage = () => {
   const fetchAIResult = useCallback(async () => {
     try {
       const result = await processAIProcessing(imageId, projectId, userId!, orgId!, auth.getToken);
+
+      if (result?.limits) {
+        const limit = typeof result.limits.limit === 'number' ? result.limits.limit : -1;
+        const count = typeof result.limits.count === 'number' ? result.limits.count : -1;
+        const remaining = limit === -1 ? -1 : count === -1 ? limit : Math.max(limit - count, 0);
+        updateApiRequestsRemaining({ numInvoiceApiRequestsRemaining: remaining });
+      }
 
       if (!result || result.status !== 'Success' || !result.response) {
         Alert.alert(
@@ -168,7 +177,7 @@ const RequestAIProcessingPage = () => {
     } finally {
       setFetchingData(false);
     }
-  }, [imageId, projectId, userId, orgId, auth.getToken]);
+  }, [imageId, projectId, userId, orgId, auth.getToken, updateApiRequestsRemaining]);
 
   useEffect(() => {
     // reset fetch flag when navigating to a different invoice image

@@ -5,7 +5,10 @@ import SwipeableLineItem from '@/src/components/SwipeableLineItem';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
-import { useAppSettings, useEntitlementLimit } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import {
+  useAppSettings,
+  useNumReceiptApiRequestsRemaining,
+} from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
   ReceiptData,
@@ -65,7 +68,7 @@ const ReceiptDetailsPage = () => {
   const allVendors = useAllConfigurationRows('vendors');
   const addReceiptImage = useAddImageCallback();
   const appSettings = useAppSettings();
-  const numReceiptApiRequests = useEntitlementLimit('numReceiptApiRequests');
+  const numReceiptApiRequestsRemaining = useNumReceiptApiRequestsRemaining();
   const { isQuickBooksConnected } = useNetwork();
   const project = useProject(projectId);
   const projectAbbr = project?.abbreviation ?? '';
@@ -269,6 +272,8 @@ const ReceiptDetailsPage = () => {
     });
   }, [projectId, receiptId, router]);
 
+  const isReceiptAiProcessingDisabled = numReceiptApiRequestsRemaining === 0;
+
   const requestAIProcessing = useCallback(() => {
     if (isReceiptAiProcessingDisabled) {
       Alert.alert(
@@ -290,9 +295,7 @@ const ReceiptDetailsPage = () => {
         imageId: receipt.imageId,
       },
     });
-  }, [projectId, receiptId, receipt.imageId, router]);
-
-  const isReceiptAiProcessingDisabled = numReceiptApiRequests === 0;
+  }, [projectId, receiptId, receipt.imageId, router, isReceiptAiProcessingDisabled]);
 
   const [containerHeight, setContainerHeight] = useState(0);
 

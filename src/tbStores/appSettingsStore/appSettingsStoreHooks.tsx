@@ -91,6 +91,8 @@ export interface SubscriptionInformationData {
   tier: SubscriptionTier;
   lastChecked: number;
   source: EntitlementsSource;
+  numReceiptApiRequestsRemaining: number;
+  numInvoiceApiRequestsRemaining: number;
 }
 
 export type EntitlementsSource = 'server' | 'fallback' | 'override';
@@ -99,13 +101,21 @@ const isSameSubscriptionInformation = (
   left: SubscriptionInformationData,
   right: SubscriptionInformationData,
 ): boolean => {
-  return left.tier === right.tier && left.lastChecked === right.lastChecked && left.source === right.source;
+  return (
+    left.tier === right.tier &&
+    left.lastChecked === right.lastChecked &&
+    left.source === right.source &&
+    left.numReceiptApiRequestsRemaining === right.numReceiptApiRequestsRemaining &&
+    left.numInvoiceApiRequestsRemaining === right.numInvoiceApiRequestsRemaining
+  );
 };
 
 const INITIAL_SUBSCRIPTION_INFORMATION: SubscriptionInformationData = {
   tier: DEFAULT_SUBSCRIPTION_TIER,
   lastChecked: 0,
   source: 'fallback',
+  numReceiptApiRequestsRemaining: -1,
+  numInvoiceApiRequestsRemaining: -1,
 };
 
 const sanitizeEntitlementsPayload = (
@@ -201,6 +211,10 @@ const getSubscriptionInformationSnapshot = (
       row.source === 'server' || row.source === 'fallback' || row.source === 'override'
         ? row.source
         : INITIAL_SUBSCRIPTION_INFORMATION.source,
+    numReceiptApiRequestsRemaining:
+      typeof row.numReceiptApiRequestsRemaining === 'number' ? row.numReceiptApiRequestsRemaining : -1,
+    numInvoiceApiRequestsRemaining:
+      typeof row.numInvoiceApiRequestsRemaining === 'number' ? row.numInvoiceApiRequestsRemaining : -1,
   };
 };
 
@@ -246,6 +260,8 @@ const writeSubscriptionData = (
   entitlementsPayload: EntitlementsPayload,
   lastChecked: number,
   source: EntitlementsSource,
+  numReceiptApiRequestsRemaining: number = -1,
+  numInvoiceApiRequestsRemaining: number = -1,
 ) => {
   if (!store) {
     return;
@@ -255,6 +271,8 @@ const writeSubscriptionData = (
     tier,
     lastChecked,
     source,
+    numReceiptApiRequestsRemaining,
+    numInvoiceApiRequestsRemaining,
   });
 
   ENTITLEMENT.forEach((key) => {
@@ -582,6 +600,14 @@ export const useEntitlementsSource = (): EntitlementsSource => {
   return useSubscriptionInformation().source;
 };
 
+export const useNumInvoiceApiRequestsRemaining = (): number => {
+  return useSubscriptionInformation().numInvoiceApiRequestsRemaining;
+};
+
+export const useNumReceiptApiRequestsRemaining = (): number => {
+  return useSubscriptionInformation().numReceiptApiRequestsRemaining;
+};
+
 export function useRefreshSubscription(): () => Promise<void> {
   const store = useStore(useStoreId());
   const { orgId, userId, getToken } = useAuth();
@@ -626,7 +652,20 @@ export function useRefreshSubscription(): () => Promise<void> {
 
       const tier = isSubscriptionTier(data.tier) ? data.tier : DEFAULT_SUBSCRIPTION_TIER;
       const entitlements = sanitizeEntitlementsPayload(data.entitlements, DEFAULT_FREE_TIER_ENTITLEMENTS);
-      writeSubscriptionData(store, orgId, tier, entitlements, checkedAt, 'server');
+      const receiptRemaining =
+        typeof data.numReceiptApiRequestsRemaining === 'number' ? data.numReceiptApiRequestsRemaining : -1;
+      const invoiceRemaining =
+        typeof data.numInvoiceApiRequestsRemaining === 'number' ? data.numInvoiceApiRequestsRemaining : -1;
+      writeSubscriptionData(
+        store,
+        orgId,
+        tier,
+        entitlements,
+        checkedAt,
+        'server',
+        receiptRemaining,
+        invoiceRemaining,
+      );
     } catch (error) {
       const cachedSubscriptionInformation = getSubscriptionInformationSnapshot(store, orgId);
       const cachedEntitlements = getEntitlementsSnapshot(store);
@@ -638,6 +677,8 @@ export function useRefreshSubscription(): () => Promise<void> {
         tier: fallbackTier,
         lastChecked: cachedSubscriptionInformation.lastChecked,
         source: 'fallback',
+        numReceiptApiRequestsRemaining: cachedSubscriptionInformation.numReceiptApiRequestsRemaining,
+        numInvoiceApiRequestsRemaining: cachedSubscriptionInformation.numInvoiceApiRequestsRemaining,
       };
 
       const hasStoredSubscriptionInformation = Boolean(store.getRow('subscriptionInformation', orgId));
@@ -658,4 +699,60 @@ export function useRefreshSubscription(): () => Promise<void> {
       console.warn('Failed to fetch entitlements, using cached or free-tier defaults instead.', error);
     }
   }, [getToken, orgId, store, userId]);
+}
+
+export function useUpdateApiRequestsRemainingCallback(): (updates: {
+  numReceiptApiRequestsRemaining?: number;
+  numInvoiceApiRequestsRemaining?: number;
+}) => void {
+  const store = useStore(useStoreId());
+  const { orgId } = useAuth();
+
+  return useCallback(
+    (updates) => {
+      if (!store || !orgId) {
+        return;
+      }
+
+      const current = store.getRow('subscriptionInformation', orgId);
+      if (!current) {
+        return;
+      }
+
+      const patch: Partial<typeof current> = {};
+      if (typeof updates.numReceiptApiRequestsRemaining === 'number') {
+        patch.numReceiptApiRequestsRemaining = updates.numReceiptApiRequestsRemaining;
+      }
+      if (typeof updates.numInvoiceApiRequestsRemaining === 'number') {
+        patch.numInvoiceApiRequestsRemaining = updates.numInvoiceApiRequestsRemaining;
+      }
+
+      if (Object.keys(patch).length > 0) {
+        store.setRow('subscriptionInformation', orgId, { ...current, ...patch });
+      }
+    },
+    [orgId, store],
+  );
+}
+
+export function useUpdateNumReceiptApiRequestsRemainingCallback(): (remaining: number) => void {
+  const updateApiRequestsRemaining = useUpdateApiRequestsRemainingCallback();
+
+  return useCallback(
+    (remaining: number) => {
+      updateApiRequestsRemaining({ numReceiptApiRequestsRemaining: remaining });
+    },
+    [updateApiRequestsRemaining],
+  );
+}
+
+export function useUpdateNumInvoiceApiRequestsRemainingCallback(): (remaining: number) => void {
+  const updateApiRequestsRemaining = useUpdateApiRequestsRemainingCallback();
+
+  return useCallback(
+    (remaining: number) => {
+      updateApiRequestsRemaining({ numInvoiceApiRequestsRemaining: remaining });
+    },
+    [updateApiRequestsRemaining],
+  );
 }

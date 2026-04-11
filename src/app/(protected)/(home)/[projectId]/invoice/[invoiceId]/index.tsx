@@ -3,7 +3,10 @@ import { InvoiceSummary } from '@/src/components/InvoiceSummary';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
-import { useAppSettings, useEntitlementLimit } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import {
+  useAppSettings,
+  useNumInvoiceApiRequestsRemaining,
+} from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import {
@@ -60,7 +63,7 @@ const InvoiceDetailsPage = () => {
 
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const appSettings = useAppSettings();
-  const numInvoiceApiRequests = useEntitlementLimit('numInvoiceApiRequests');
+  const numInvoiceApiRequestsRemaining = useNumInvoiceApiRequestsRemaining();
   const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
   const project = useProject(projectId);
   const allVendors = useAllConfigurationRows('vendors');
@@ -413,6 +416,8 @@ const InvoiceDetailsPage = () => {
     });
   }, [projectId, invoiceId, router]);
 
+  const isInvoiceAiProcessingDisabled = numInvoiceApiRequestsRemaining === 0;
+
   const requestAIProcessing = useCallback(() => {
     if (isInvoiceAiProcessingDisabled) {
       Alert.alert(
@@ -432,9 +437,7 @@ const InvoiceDetailsPage = () => {
         imageId: invoice.imageId,
       },
     });
-  }, [projectId, invoiceId, invoice.imageId, router]);
-
-  const isInvoiceAiProcessingDisabled = numInvoiceApiRequests === 0;
+  }, [projectId, invoiceId, invoice.imageId, router, isInvoiceAiProcessingDisabled]);
 
   const [containerHeight, setContainerHeight] = useState(0);
 

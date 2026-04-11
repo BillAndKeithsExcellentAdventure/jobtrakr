@@ -33,6 +33,8 @@ export const TABLES_SCHEMA = {
     tier: { type: 'string' },
     lastChecked: { type: 'number' },
     source: { type: 'string' },
+    numReceiptApiRequestsRemaining: { type: 'number', default: -1 },
+    numInvoiceApiRequestsRemaining: { type: 'number', default: -1 },
   },
   entitlements: {
     id: { type: 'string' },

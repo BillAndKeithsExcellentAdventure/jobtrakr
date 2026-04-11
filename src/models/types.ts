@@ -59,6 +59,8 @@ export interface GetOrgEntitlementsResponse {
   success: boolean;
   tier: SubscriptionTier;
   entitlements: EntitlementsPayload;
+  numReceiptApiRequestsRemaining?: number;
+  numInvoiceApiRequestsRemaining?: number;
   error?: string;
 }
 
