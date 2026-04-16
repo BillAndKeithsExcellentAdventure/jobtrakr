@@ -198,7 +198,7 @@ const AddReceiptPage = () => {
   const handleDateConfirm = useCallback((date: Date) => {
     setProjectReceipt((prevReceipt) => ({
       ...prevReceipt,
-      date,
+      receiptDate: date.getTime(),
     }));
 
     setDatePickerVisible(false);
