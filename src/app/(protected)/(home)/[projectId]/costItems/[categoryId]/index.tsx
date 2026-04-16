@@ -13,6 +13,7 @@ import {
   useIsStoreAvailableCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { FontAwesome5, FontAwesome6, MaterialCommunityIcons } from '@expo/vector-icons';
+import Octicons from '@expo/vector-icons/Octicons';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet } from 'react-native';
@@ -219,7 +220,7 @@ const CategorySpecificCostItemsPage = () => {
                   setHeaderMenuModalVisible(!headerMenuModalVisible);
                 }}
               >
-                <MaterialCommunityIcons name="menu" size={28} color={colors.iconColor} />
+                <Octicons name="kebab-horizontal" size={28} color={colors.iconColor} />
               </Pressable>
             </View>
           ),

@@ -291,10 +291,10 @@ const AddInvoicePage = () => {
           return;
         }
       }
-
-      console.log('Project invoice successfully added:', projectInvoice);
-      router.back();
     }
+
+    console.log('Project invoice successfully added:', projectInvoice);
+    router.back();
   }, [
     projectInvoice,
     canAddInvoice,
@@ -413,15 +413,15 @@ const AddInvoicePage = () => {
   return (
     <View style={{ flex: 1, width: '100%' }}>
       <ModalScreenContainer onSave={handleAddInvoice} onCancel={handleCancel} canSave={canAddInvoice}>
-        <Text txtSize="title" style={styles.modalTitle} text="Add Invoice" />
+        <Text txtSize="title" style={styles.modalTitle} text="Add Bill" />
         <Text txtSize="xs" style={[styles.modalTitle, { fontWeight: '600' }]} text={projectName} />
 
         <View style={{ paddingBottom: 10, borderBottomWidth: 1, gap: 6, borderColor: colors.border }}>
           <TextField
             containerStyle={styles.inputContainer}
             style={[styles.input, { borderColor: colors.transparent }]}
-            placeholder="Invoice Number"
-            label="Invoice Number"
+            placeholder="Bill/Invoice Number"
+            label="Bill/Invoice Number"
             value={projectInvoice.invoiceNumber}
             onChangeText={(invoiceNumber) =>
               setProjectInvoice((prevInvoice) => ({

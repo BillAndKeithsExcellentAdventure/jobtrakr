@@ -34,6 +34,7 @@ import Entypo from '@expo/vector-icons/Entypo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import Octicons from '@expo/vector-icons/Octicons';
 import { FlashList } from '@shopify/flash-list';
 import { File, Paths } from 'expo-file-system';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -753,7 +754,7 @@ const ProjectDetailsPage = () => {
                   setHeaderMenuModalVisible(!headerMenuModalVisible);
                 }}
               >
-                <MaterialCommunityIcons name="menu" size={28} color={colors.iconColor} />
+                <Octicons name="kebab-horizontal" size={28} color={colors.iconColor} />
               </Pressable>
             </View>
           ),

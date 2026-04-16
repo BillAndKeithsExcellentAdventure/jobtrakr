@@ -21,6 +21,7 @@ import {
   useEntitlementLimit,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { Entypo, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import Octicons from '@expo/vector-icons/Octicons';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -216,7 +217,7 @@ const ProjectPhotosPage = () => {
                   setHeaderMenuModalVisible(!headerMenuModalVisible);
                 }}
               >
-                <MaterialCommunityIcons name="menu" size={28} color={colors.iconColor} />
+                <Octicons name="kebab-horizontal" size={28} color={colors.iconColor} />
               </Pressable>
             </View>
           ),

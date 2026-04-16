@@ -17,6 +17,7 @@ import { importAccountsFromQuickBooks } from '@/src/utils/quickbooksImports';
 import { sanitizeQuickBooksAccountSettings } from '@/src/utils/quickbooksAccountSettings';
 import { useAuth } from '@clerk/clerk-expo';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import Octicons from '@expo/vector-icons/Octicons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -329,7 +330,7 @@ const QBAccountsScreen = () => {
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             onPress={() => setHeaderMenuModalVisible(!headerMenuModalVisible)}
           >
-            <MaterialCommunityIcons name="menu" size={28} color={colors.iconColor} />
+            <Octicons name="kebab-horizontal" size={28} color={colors.iconColor} />
           </Pressable>
         </View>
       ),

@@ -7,6 +7,7 @@ import { Paths, File } from 'expo-file-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import Octicons from '@expo/vector-icons/Octicons';
 import { Pressable } from 'react-native-gesture-handler';
 import * as Sharing from 'expo-sharing';
 import { ActivityIndicator, Alert, GestureResponderEvent, Modal, Platform, StyleSheet } from 'react-native';
@@ -323,7 +324,7 @@ const Home = () => {
               setHeaderMenuModalVisible(!headerMenuModalVisible);
             }}
           >
-            <MaterialCommunityIcons name="menu" size={28} color={colors.iconColor} />
+            <Octicons name="kebab-horizontal" size={28} color={colors.iconColor} />
           </Pressable>
         </View>
       ),

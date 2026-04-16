@@ -27,6 +27,7 @@ import { loadTemplateHtmlAssetFileToString } from '@/src/utils/htmlFileGenerator
 import { ChangeOrderData, renderChangeOrderTemplate } from '@/src/utils/renderChangeOrderTemplate';
 import { useAuth } from '@clerk/clerk-expo';
 import { AntDesign, Entypo, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
+import Octicons from '@expo/vector-icons/Octicons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, StyleSheet } from 'react-native';
@@ -452,7 +453,7 @@ const DefineChangeOrderScreen = () => {
                   setHeaderMenuModalVisible(!headerMenuModalVisible);
                 }}
               >
-                <MaterialCommunityIcons name="menu" size={28} color={colors.iconColor} />
+                <Octicons name="kebab-horizontal" size={28} color={colors.iconColor} />
               </Pressable>
             </View>
           ),
