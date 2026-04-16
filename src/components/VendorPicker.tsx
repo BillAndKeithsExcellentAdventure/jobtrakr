@@ -7,7 +7,7 @@ import { VendorData, useAddRowCallback } from '@/src/tbStores/configurationStore
 import { useAuth } from '@clerk/clerk-expo';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Keyboard, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { useNetwork } from '../context/NetworkContext';
@@ -54,6 +54,7 @@ export const VendorPicker = ({
   const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
   const auth = useAuth();
   const { orgId, userId, getToken } = auth;
+  const openPickerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Filter to only show active vendors; when connected to QuickBooks, only show vendors with an accountingId
   const activeVendors = useMemo(
@@ -177,7 +178,15 @@ export const VendorPicker = ({
 
   const toggleModalPicker = useCallback(() => {
     Keyboard.dismiss();
-    setIsPickerVisible(true);
+    if (openPickerTimerRef.current) clearTimeout(openPickerTimerRef.current);
+    // Delay on iOS so the keyboard (and its toolbar) finishes animating out before the modal opens
+    openPickerTimerRef.current = setTimeout(
+      () => {
+        openPickerTimerRef.current = null;
+        setIsPickerVisible(true);
+      },
+      Platform.OS === 'ios' ? 300 : 0,
+    );
   }, []);
 
   const displayText = selectedVendor ? selectedVendor.name : '';
