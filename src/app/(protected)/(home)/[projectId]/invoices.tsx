@@ -221,8 +221,15 @@ const ProjectInvoicesPage = () => {
   );
 
   const handleAddPhotoInvoice = useCallback(async () => {
-    if (isAtInvoiceLimit || invoiceLimit === null) {
+    if (invoiceLimit === null) {
       showInvoiceLimitAlert();
+      return;
+    }
+    if (isAtInvoiceLimit) {
+      Alert.alert(
+        'Bill Limit Reached',
+        'This project has reached its bill limit based on your current subscription tier.',
+      );
       return;
     }
 
@@ -247,8 +254,15 @@ const ProjectInvoicesPage = () => {
   }, [isAtInvoiceLimit, invoiceLimit, showInvoiceLimitAlert, processInvoiceImage]);
 
   const handleAddInvoice = useCallback(() => {
-    if (isAtInvoiceLimit || invoiceLimit === null) {
+    if (invoiceLimit === null) {
       showInvoiceLimitAlert();
+      return;
+    }
+    if (isAtInvoiceLimit) {
+      Alert.alert(
+        'Bill Limit Reached',
+        'This project has reached its bill limit based on your current subscription tier.',
+      );
       return;
     }
 
@@ -303,13 +317,13 @@ const ProjectInvoicesPage = () => {
                   <ActionButton
                     style={{ flex: 1 }}
                     onPress={handleAddPhotoInvoice}
-                    type={isAtInvoiceLimit || invoiceLimit === null ? 'disabled' : 'action'}
+                    type={invoiceLimit === null ? 'disabled' : 'action'}
                     title="Add Photo"
                   />
                   <ActionButton
                     style={{ flex: 1 }}
                     onPress={handleAddInvoice}
-                    type={isAtInvoiceLimit || invoiceLimit === null ? 'disabled' : 'action'}
+                    type={invoiceLimit === null ? 'disabled' : 'action'}
                     title="Add Manual"
                   />
                 </View>

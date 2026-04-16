@@ -265,8 +265,15 @@ const ProjectReceiptsPage = () => {
   );
 
   const handleAddPhoto = useCallback(() => {
-    if (isAtReceiptLimit || receiptLimit === null) {
+    if (receiptLimit === null) {
       showReceiptLimitAlert();
+      return;
+    }
+    if (isAtReceiptLimit) {
+      Alert.alert(
+        'Receipt Limit Reached',
+        'This project has reached its receipt limit based on your current subscription tier.',
+      );
       return;
     }
 
@@ -307,8 +314,15 @@ const ProjectReceiptsPage = () => {
   }, [checkNumber, handleAddPhotoReceipt, selectedPaymentAccountId]);
 
   const handleAddReceipt = useCallback(() => {
-    if (isAtReceiptLimit || receiptLimit === null) {
+    if (receiptLimit === null) {
       showReceiptLimitAlert();
+      return;
+    }
+    if (isAtReceiptLimit) {
+      Alert.alert(
+        'Receipt Limit Reached',
+        'This project has reached its receipt limit based on your current subscription tier.',
+      );
       return;
     }
 
@@ -364,13 +378,13 @@ const ProjectReceiptsPage = () => {
                     <ActionButton
                       style={{ flex: 1 }}
                       onPress={handleAddPhoto}
-                      type={isAtReceiptLimit || receiptLimit === null ? 'disabled' : 'action'}
+                      type={receiptLimit === null ? 'disabled' : 'action'}
                       title="Add Photo"
                     />
                     <ActionButton
                       style={{ flex: 1 }}
                       onPress={handleAddReceipt}
-                      type={isAtReceiptLimit || receiptLimit === null ? 'disabled' : 'action'}
+                      type={receiptLimit === null ? 'disabled' : 'action'}
                       title="Add Manual"
                     />
                   </View>
