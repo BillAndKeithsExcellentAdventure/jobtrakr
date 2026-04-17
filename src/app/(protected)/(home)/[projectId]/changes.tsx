@@ -8,7 +8,10 @@ import SwipeableChangeOrder from '@/src/components/SwipeableChangeOrder';
 import { API_BASE_URL } from '@/src/constants/app-constants';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import {
+  ChangeOrderItem,
+  WorkItemSummaryData,
   useAllRows,
+  useAddRowCallback,
   useIsStoreAvailableCallback,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
@@ -56,7 +59,8 @@ const getChangeOrderStatuses = async (
 
 interface ChangeOrderStatus {
   change_order_id: string;
-  approved: number;
+  approved?: number;
+  status?: string;
 }
 
 interface ChangeOrderStatusResponse {
@@ -69,6 +73,10 @@ const ChangeOrdersScreen = () => {
   const colors = useColors();
   const router = useRouter();
   const updateChangeOrder = useUpdateRowCallback(projectId, 'changeOrders');
+  const allChangeOrderItems = useAllRows(projectId, 'changeOrderItems');
+  const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
+  const updateBidEstimate = useUpdateRowCallback(projectId, 'workItemSummaries');
+  const addWorkItemSummary = useAddRowCallback(projectId, 'workItemSummaries');
   const auth = useAuth();
   const appSettings = useAppSettings();
   const currentProject = useProject(projectId);
@@ -107,6 +115,38 @@ const ChangeOrdersScreen = () => {
   const customer = allCustomers.find((c) => c.id === currentProject?.customerId);
   const isProjectCustomerInfoComplete = customer?.name?.trim() && customer?.email?.trim();
 
+  const mergeChangeOrderCostItems = useCallback(
+    (items: ChangeOrderItem[], summaries: WorkItemSummaryData[], isAdding = true) => {
+      const changeOrderItemsToPost: ChangeOrderItem[] = items.reduce((acc, item) => {
+        const existingItem = acc.find((i) => i.workItemId === item.workItemId);
+        if (existingItem) {
+          existingItem.amount += item.amount;
+        } else {
+          acc.push({ ...item });
+        }
+        return acc;
+      }, [] as ChangeOrderItem[]);
+
+      changeOrderItemsToPost.forEach((item) => {
+        const match = summaries.find((s) => s.workItemId === item.workItemId);
+        if (match) {
+          const updatedDatedBidAmount = isAdding
+            ? match.bidAmount + item.amount
+            : match.bidAmount - item.amount;
+          updateBidEstimate(match.id, { bidAmount: updatedDatedBidAmount });
+        } else if (isAdding) {
+          addWorkItemSummary({
+            id: '',
+            workItemId: item.workItemId,
+            bidAmount: item.amount,
+            complete: false,
+          });
+        }
+      });
+    },
+    [addWorkItemSummary, updateBidEstimate],
+  );
+
   const fetchStatuses = useCallback(async () => {
     try {
       const changeOrderStatusString = await getChangeOrderStatuses(projectId, auth.getToken);
@@ -125,7 +165,16 @@ const ChangeOrdersScreen = () => {
 
       if (changeOrderStatusResponse.data && Array.isArray(changeOrderStatusResponse.data)) {
         changeOrderStatusResponse.data.forEach((statusItem) => {
-          const status = statusItem.approved === 1 ? 'approved' : 'approval-pending';
+          const normalizedStatus = (statusItem.status ?? '').toLowerCase();
+          const status =
+            normalizedStatus === 'approved' ||
+            normalizedStatus === 'approval-pending' ||
+            normalizedStatus === 'cancelled' ||
+            normalizedStatus === 'draft'
+              ? (normalizedStatus as 'draft' | 'approval-pending' | 'approved' | 'cancelled')
+              : statusItem.approved === 1
+                ? 'approved'
+                : 'approval-pending';
           statusMap.set(statusItem.change_order_id, status);
         });
       }
@@ -139,19 +188,40 @@ const ChangeOrdersScreen = () => {
       });
 
       if (updatedChangeOrders) {
-        updatedChangeOrders.forEach((changeOrder) => {
+        updatedChangeOrders.forEach((changeOrder, index) => {
+          const previousStatus = allChangeOrders[index]?.status;
           const changeOrderId = changeOrder.id;
           if (changeOrderId) {
             const newStatus = changeOrder.status;
             // Update the change order status in your TinyBase store
             updateChangeOrder(changeOrderId, { status: newStatus });
+
+            if (newStatus !== previousStatus) {
+              const relatedChangeOrderItems = allChangeOrderItems.filter(
+                (item) => item.changeOrderId === changeOrderId,
+              );
+              if (previousStatus !== 'approved' && newStatus === 'approved') {
+                mergeChangeOrderCostItems(relatedChangeOrderItems, allWorkItemSummaries, true);
+              }
+              if (previousStatus === 'approved' && newStatus === 'cancelled') {
+                mergeChangeOrderCostItems(relatedChangeOrderItems, allWorkItemSummaries, false);
+              }
+            }
           }
         });
       }
     } catch (error) {
       console.error('Error fetching change order statuses:', error);
     }
-  }, [auth, projectId, allChangeOrders, updateChangeOrder]);
+  }, [
+    auth,
+    projectId,
+    allChangeOrders,
+    updateChangeOrder,
+    allChangeOrderItems,
+    allWorkItemSummaries,
+    mergeChangeOrderCostItems,
+  ]);
 
   useFocusEffect(
     useCallback(() => {
