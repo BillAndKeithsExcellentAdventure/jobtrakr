@@ -33,6 +33,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, StyleSheet } from 'react-native';
 import { FlatList, Pressable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNetwork } from '@/src/context/NetworkContext';
 
 interface SendPdfParams {
   orgId: string;
@@ -65,15 +66,28 @@ const generateAndSendPdf = async (
       body: JSON.stringify(params),
     });
 
-    if (!response.ok) {
-      console.error(`HTTP error! status: ${response.status}`);
+    const responseText = await response.text();
+    let data: { accountingId?: string; message?: string } = {};
+
+    if (responseText) {
+      try {
+        data = JSON.parse(responseText) as { accountingId?: string; message?: string };
+      } catch {
+        data = { message: responseText };
+      }
     }
 
-    const data = await response.json();
+    if (!response.ok) {
+      const serverMessage = data.message || responseText;
+      console.error(`HTTP error! status: ${response.status}. Response: ${serverMessage}`);
+      throw new Error(serverMessage || `Failed to send change order (${response.status}).`);
+    }
+
     return data.accountingId || null;
   } catch (error) {
     console.error('Error generating PDF:', error);
-    throw new Error('Failed to generate PDF. Please try again.');
+    const message = error instanceof Error ? error.message : 'Failed to generate PDF. Please try again.';
+    throw new Error(message);
   }
 };
 
@@ -85,7 +99,6 @@ const DefineChangeOrderScreen = () => {
   const updateChangeOrder = useUpdateRowCallback(projectId, 'changeOrders');
   const allChangeOrderItems = useAllRows(projectId, 'changeOrderItems');
   const addChangeOrderItem = useAddRowCallback(projectId, 'changeOrderItems');
-  const { allAvailableCostItemOptions } = useProjectWorkItems(projectId);
   const [changeOrder, setChangeOrder] = useState<ChangeOrder | null>(null);
   const [changeOrderItems, setChangeOrderItems] = useState<ChangeOrderItem[]>([]);
   const [changeOrderBidAmount, setChangeOrderBidAmount] = useState<number>(0);
@@ -104,6 +117,7 @@ const DefineChangeOrderScreen = () => {
     amount: 0,
     workItemId: '',
   });
+  const { verifiedEmailAddresses, isConnected } = useNetwork();
 
   useEffect(() => {
     if (allChangeOrders) {
@@ -173,6 +187,19 @@ const DefineChangeOrderScreen = () => {
     };
   }, [changeOrder, projectData, appSettings, changeOrderItems, allCustomers]);
 
+  const isOwnerEmailVerified = useMemo(
+    () => (appSettings.email && isConnected ? verifiedEmailAddresses.includes(appSettings.email) : false),
+    [appSettings.email, isConnected, verifiedEmailAddresses],
+  );
+
+  const isClientEmailVerified = useMemo(() => {
+    const customer = allCustomers.find((c) => c.id === projectData?.customerId);
+
+    return customer && customer.email && isConnected
+      ? verifiedEmailAddresses.includes(customer.email)
+      : false;
+  }, [allCustomers, projectData, isConnected, verifiedEmailAddresses]);
+
   const handleSendForApproval = useCallback(async () => {
     if (!changeOrderData) return;
 
@@ -186,6 +213,23 @@ const DefineChangeOrderScreen = () => {
 
     if (!customer?.email) {
       Alert.alert('Missing Client Email', 'The project does not have a client email address specified.');
+      return;
+    }
+
+    // Validate that the owner and client email addresses have been verified.
+    if (!isOwnerEmailVerified) {
+      Alert.alert(
+        'Email Not Verified',
+        `Your email address (${appSettings.email}) must be verified before you can send change orders. Please verify your email in the Company Settings Screen and try again.`,
+      );
+      return;
+    }
+
+    if (!isClientEmailVerified) {
+      Alert.alert(
+        'Client Email Not Verified',
+        `The client's email address (${customer.email}) must be verified before you can send change orders. Please go to the Customer Settings Screen to send a verification request and then ask your client to verify their email and try again.`,
+      );
       return;
     }
 
@@ -204,6 +248,11 @@ const DefineChangeOrderScreen = () => {
 
     const orgId = auth.orgId;
     const userId = auth.userId;
+    if (!orgId) {
+      Alert.alert('Error', 'Organization ID not found. Please sign in again and retry.');
+      return;
+    }
+
     if (!userId) {
       Alert.alert('Error', 'User ID not found.');
       return;
@@ -300,7 +349,7 @@ const DefineChangeOrderScreen = () => {
       // Generate and send PDF with HTML email body
       const accountingId = await generateAndSendPdf(
         {
-          orgId: orgId ?? '',
+          orgId: orgId,
           userId: userId,
           htmlPdf: htmlOutput,
           htmlBody: msgBody,

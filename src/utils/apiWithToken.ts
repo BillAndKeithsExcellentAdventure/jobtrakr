@@ -10,6 +10,13 @@
  */
 const DEFAULT_TIMEOUT_MS = 30000;
 
+type ClerkGetTokenOptions = {
+  skipCache?: boolean;
+  template?: string;
+};
+
+type GetTokenFn = (options?: ClerkGetTokenOptions) => Promise<string | null>;
+
 /**
  * Creates a fetch request with a timeout.
  * If the request takes longer than the timeout, it will be aborted and throw an error.
@@ -69,7 +76,7 @@ async function fetchWithTimeout(
  * ```
  */
 export function createApiWithToken(
-  getToken: () => Promise<string | null>,
+  getToken: GetTokenFn,
   timeoutMs: number = DEFAULT_TIMEOUT_MS,
 ): (url: string, options: RequestInit) => Promise<Response> {
   return async (url: string, options: RequestInit): Promise<Response> => {
@@ -87,9 +94,19 @@ export function createApiWithToken(
       return await fetchWithTimeout(url, requestOptions, timeoutMs);
     };
 
-    // Get token and make the initial request
     const token = await getToken();
     const response = await makeRequest(token);
-    return response;
+
+    if (response.status !== 401 && response.status !== 403) {
+      return response;
+    }
+
+    const refreshedToken = await getToken({ skipCache: true });
+
+    if (!refreshedToken || refreshedToken === token) {
+      return response;
+    }
+
+    return await makeRequest(refreshedToken);
   };
 }
