@@ -618,8 +618,36 @@ export function useRefreshSubscription(): () => Promise<void> {
   const getTokenRef = useRef(getToken);
   getTokenRef.current = getToken;
 
+  // Track whether the settings table has been hydrated from SQLite.
+  // `store` becomes non-null before persistence finishes loading, so we
+  // must not read settings until at least one row exists. When this flips
+  // to `true`, `useCallback` gets a new identity and the startup effect in
+  // _layout.tsx re-fires with the now-ready callback.
+  const [settingsReady, setSettingsReady] = useState(() => (store?.getRowIds('settings')?.length ?? 0) > 0);
+
+  useEffect(() => {
+    setSettingsReady((store?.getRowIds('settings')?.length ?? 0) > 0);
+  }, [store]);
+
+  useEffect(() => {
+    if (!store) return;
+    const listenerId = store.addTableListener('settings', () => {
+      setSettingsReady((store.getRowIds('settings')?.length ?? 0) > 0);
+    });
+    return () => {
+      store.delListener(listenerId);
+    };
+  }, [store]);
+
   return useCallback(async () => {
     if (!store || !orgId || !userId) {
+      return;
+    }
+
+    // Settings table not yet hydrated from SQLite — bail out.
+    // The callback will get a new identity once settingsReady becomes true
+    // and the startup effect will re-fire automatically.
+    if (!settingsReady) {
       return;
     }
 
@@ -711,7 +739,7 @@ export function useRefreshSubscription(): () => Promise<void> {
 
       console.warn('Failed to fetch entitlements, using cached or free-tier defaults instead.', error);
     }
-  }, [orgId, store, userId]);
+  }, [orgId, settingsReady, store, userId]);
 }
 
 export function useUpdateApiRequestsRemainingCallback(): (updates: {
