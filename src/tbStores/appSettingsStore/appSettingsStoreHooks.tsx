@@ -662,6 +662,13 @@ export function useRefreshSubscription(): () => Promise<void> {
         typeof data.numReceiptApiRequestsRemaining === 'number' ? data.numReceiptApiRequestsRemaining : -1;
       const invoiceRemaining =
         typeof data.numInvoiceApiRequestsRemaining === 'number' ? data.numInvoiceApiRequestsRemaining : -1;
+      console.log('Fetched entitlements from server:', {
+        tier,
+        entitlements,
+        receiptRemaining,
+        invoiceRemaining,
+      });
+      console.log('Storing subscription data to local store with source "server".');
       writeSubscriptionData(
         store,
         orgId,
