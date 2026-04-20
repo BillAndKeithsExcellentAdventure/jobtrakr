@@ -1,7 +1,7 @@
 import { NoValuesSchema } from 'tinybase/with-schemas';
 import { TABLES_SCHEMA, useStoreId } from './appSettingsStore';
 import * as UiReact from 'tinybase/ui-react/with-schemas';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import { useAuth } from '@clerk/clerk-expo';
 import { API_BASE_URL } from '@/src/constants/app-constants';
@@ -612,6 +612,12 @@ export function useRefreshSubscription(): () => Promise<void> {
   const store = useStore(useStoreId());
   const { orgId, userId, getToken } = useAuth();
 
+  // Use a ref for getToken so the callback identity stays stable.
+  // getToken changes identity on every render, but the callback only
+  // needs to change when orgId, userId, or store changes.
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
+
   return useCallback(async () => {
     if (!store || !orgId || !userId) {
       return;
@@ -633,7 +639,7 @@ export function useRefreshSubscription(): () => Promise<void> {
         orgId,
         userId,
       }).toString();
-      const apiFetch = createApiWithToken(getToken);
+      const apiFetch = createApiWithToken(getTokenRef.current);
       const response = await apiFetch(`${API_BASE_URL}/getOrgEntitlements?${params}`, {
         method: 'GET',
         headers: {
@@ -698,7 +704,7 @@ export function useRefreshSubscription(): () => Promise<void> {
 
       console.warn('Failed to fetch entitlements, using cached or free-tier defaults instead.', error);
     }
-  }, [getToken, orgId, store, userId]);
+  }, [orgId, store, userId]);
 }
 
 export function useUpdateApiRequestsRemainingCallback(): (updates: {

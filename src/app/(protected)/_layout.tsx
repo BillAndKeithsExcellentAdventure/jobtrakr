@@ -1,6 +1,6 @@
 import { Redirect, Stack } from 'expo-router';
 import { useAuth, useOrganization } from '@clerk/clerk-expo';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { registerForPushNotifications } from '@/src/utils/notificationServices';
 import { API_BASE_URL } from '@/src/constants/app-constants';
 import { ActiveProjectIdsProvider } from '@/src/context/ActiveProjectIdsContext';
@@ -11,7 +11,6 @@ import { UploadQueueProcessor } from '@/src/components/UploadQueueProcessor';
 import { ProjectCostSummaryUpdater } from '@/src/components/ProjectCostSummaryUpdater';
 import {
   SUBSCRIPTION_REFRESH_INTERVAL_MS,
-  useEntitlementsPayload,
   useRefreshSubscription,
   useSubscriptionInformation,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
@@ -24,71 +23,36 @@ export const unstable_settings = {
 const SubscriptionEntitlementsBootstrap = () => {
   const { orgId, userId } = useAuth();
   const refreshSubscription = useRefreshSubscription();
-  const { lastChecked, tier } = useSubscriptionInformation();
-  const entitlements = useEntitlementsPayload();
-  const refreshSubscriptionRef = useRef(refreshSubscription);
-  const tierRef = useRef(tier);
-  const entitlementsRef = useRef(entitlements);
-  const lastStartupRefreshKeyRef = useRef<string | null>(null);
+  const { lastChecked } = useSubscriptionInformation();
 
+  // Startup refresh: refreshSubscription identity changes when orgId, userId, or store change,
+  // so this re-runs when the store becomes available (initial call with null store is a harmless no-op).
   useEffect(() => {
-    refreshSubscriptionRef.current = refreshSubscription;
-  }, [refreshSubscription]);
+    if (!orgId || !userId) return;
 
-  useEffect(() => {
-    tierRef.current = tier;
-  }, [tier]);
+    console.log('[subscription] refresh requested (startup)');
+    refreshSubscription()
+      .then(() => console.log('[subscription] refresh completed (startup)'))
+      .catch((error) => console.error('Failed to refresh subscription on startup:', error));
+  }, [orgId, userId, refreshSubscription]);
 
-  useEffect(() => {
-    entitlementsRef.current = entitlements;
-  }, [entitlements]);
-
-  const refreshWithLogging = async (reason: 'startup' | 'foreground') => {
-    console.log(`[subscription] refresh requested (${reason}) - current tier: ${tierRef.current}`);
-    await refreshSubscriptionRef.current();
-    console.log(
-      `[subscription] refresh completed (${reason}) - tier: ${tierRef.current}, entitlements: ${JSON.stringify(
-        entitlementsRef.current,
-      )}`,
-    );
-  };
-
-  useEffect(() => {
-    if (!orgId || !userId) {
-      return;
-    }
-
-    const refreshKey = `${orgId}:${userId}`;
-    if (lastStartupRefreshKeyRef.current === refreshKey) {
-      return;
-    }
-
-    lastStartupRefreshKeyRef.current = refreshKey;
-    refreshWithLogging('startup').catch((error) => {
-      console.error('Failed to refresh subscription on startup:', error);
-    });
-  }, [orgId, userId]);
-
+  // Foreground refresh: re-subscribes when refreshSubscription or lastChecked changes,
+  // so the AppState listener always captures the latest callback.
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState) => {
-      if (nextState !== 'active') {
-        return;
-      }
+      if (nextState !== 'active') return;
 
       const isStale = Date.now() - lastChecked > SUBSCRIPTION_REFRESH_INTERVAL_MS;
-      if (!isStale) {
-        return;
-      }
+      if (!isStale) return;
 
-      refreshWithLogging('foreground').catch((error) => {
-        console.error('Failed to refresh subscription after foregrounding:', error);
-      });
+      console.log('[subscription] refresh requested (foreground)');
+      refreshSubscription()
+        .then(() => console.log('[subscription] refresh completed (foreground)'))
+        .catch((error) => console.error('Failed to refresh subscription after foregrounding:', error));
     });
 
-    return () => {
-      subscription.remove();
-    };
-  }, [lastChecked]);
+    return () => subscription.remove();
+  }, [lastChecked, refreshSubscription]);
 
   return null;
 };
