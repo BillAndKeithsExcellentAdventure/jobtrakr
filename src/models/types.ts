@@ -16,9 +16,9 @@ export const ENTITLEMENT = [
   'numProjectPhotos',
   'numProjectVideos',
   'numReceipts',
-  'numInvoices',
-  'numReceiptApiRequests',
-  'numInvoiceApiRequests',
+  'numBills',
+  'numReceiptAiRequests',
+  'numBillAiRequests',
   'numOrgUsers',
 ] as const;
 
@@ -30,9 +30,9 @@ export const ENTITLEMENT_WITH_LIMITS = [
   'numProjectPhotos',
   'numProjectVideos',
   'numReceipts',
-  'numInvoices',
-  'numReceiptApiRequests',
-  'numInvoiceApiRequests',
+  'numBills',
+  'numReceiptAiRequests',
+  'numBillAiRequests',
   'numOrgUsers',
 ] as const;
 
@@ -49,9 +49,9 @@ export interface EntitlementsPayload {
   numProjectPhotos: number;
   numProjectVideos: number;
   numReceipts: number;
-  numInvoices: number;
-  numReceiptApiRequests: number;
-  numInvoiceApiRequests: number;
+  numBills: number;
+  numReceiptAiRequests: number;
+  numBillAiRequests: number;
   numOrgUsers: number;
 }
 
@@ -59,6 +59,10 @@ export interface GetOrgEntitlementsResponse {
   success: boolean;
   tier: SubscriptionTier;
   entitlements: EntitlementsPayload;
+  // New names
+  numReceiptAiRequestsRemaining?: number;
+  numBillAiRequestsRemaining?: number;
+  // Legacy names — accepted for backward compatibility with older backend responses
   numReceiptApiRequestsRemaining?: number;
   numInvoiceApiRequestsRemaining?: number;
   error?: string;

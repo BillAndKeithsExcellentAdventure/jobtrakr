@@ -41,9 +41,9 @@ export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayl
     numProjectPhotos: 10,
     numProjectVideos: 2,
     numReceipts: 20,
-    numInvoices: 10,
-    numReceiptApiRequests: 5,
-    numInvoiceApiRequests: 5,
+    numBills: 10,
+    numReceiptAiRequests: 5,
+    numBillAiRequests: 5,
     numOrgUsers: 2,
   },
   basic: {
@@ -56,9 +56,9 @@ export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayl
     numProjectPhotos: 500,
     numProjectVideos: 20,
     numReceipts: 1000,
-    numInvoices: 1000,
-    numReceiptApiRequests: 100,
-    numInvoiceApiRequests: 100,
+    numBills: 1000,
+    numReceiptAiRequests: 100,
+    numBillAiRequests: 100,
     numOrgUsers: 3,
   },
   premium: {
@@ -71,9 +71,9 @@ export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayl
     numProjectPhotos: 3000,
     numProjectVideos: -1,
     numReceipts: -1,
-    numInvoices: -1,
-    numReceiptApiRequests: -1,
-    numInvoiceApiRequests: -1,
+    numBills: -1,
+    numReceiptAiRequests: -1,
+    numBillAiRequests: -1,
     numOrgUsers: -1,
   },
 };
@@ -91,8 +91,8 @@ export interface SubscriptionInformationData {
   tier: SubscriptionTier;
   lastChecked: number;
   source: EntitlementsSource;
-  numReceiptApiRequestsRemaining: number;
-  numInvoiceApiRequestsRemaining: number;
+  numReceiptAiRequestsRemaining: number;
+  numBillAiRequestsRemaining: number;
 }
 
 export type EntitlementsSource = 'server' | 'fallback' | 'override';
@@ -105,8 +105,8 @@ const isSameSubscriptionInformation = (
     left.tier === right.tier &&
     left.lastChecked === right.lastChecked &&
     left.source === right.source &&
-    left.numReceiptApiRequestsRemaining === right.numReceiptApiRequestsRemaining &&
-    left.numInvoiceApiRequestsRemaining === right.numInvoiceApiRequestsRemaining
+    left.numReceiptAiRequestsRemaining === right.numReceiptAiRequestsRemaining &&
+    left.numBillAiRequestsRemaining === right.numBillAiRequestsRemaining
   );
 };
 
@@ -114,15 +114,23 @@ const INITIAL_SUBSCRIPTION_INFORMATION: SubscriptionInformationData = {
   tier: DEFAULT_SUBSCRIPTION_TIER,
   lastChecked: 0,
   source: 'fallback',
-  numReceiptApiRequestsRemaining: -1,
-  numInvoiceApiRequestsRemaining: -1,
+  numReceiptAiRequestsRemaining: -1,
+  numBillAiRequestsRemaining: -1,
 };
 
 const sanitizeEntitlementsPayload = (
   value: unknown,
   fallback: EntitlementsPayload = DEFAULT_FREE_TIER_ENTITLEMENTS,
 ): EntitlementsPayload => {
-  const payload = typeof value === 'object' && value !== null ? (value as Partial<EntitlementsPayload>) : {};
+  const payload =
+    typeof value === 'object' && value !== null
+      ? (value as Partial<EntitlementsPayload> & {
+          // Legacy field names accepted for backward compatibility with older backend responses
+          numInvoices?: number;
+          numReceiptApiRequests?: number;
+          numInvoiceApiRequests?: number;
+        })
+      : {};
   return {
     allowQuickBooksSync:
       typeof payload.allowQuickBooksSync === 'boolean'
@@ -150,15 +158,24 @@ const sanitizeEntitlementsPayload = (
     numProjectVideos:
       typeof payload.numProjectVideos === 'number' ? payload.numProjectVideos : fallback.numProjectVideos,
     numReceipts: typeof payload.numReceipts === 'number' ? payload.numReceipts : fallback.numReceipts,
-    numInvoices: typeof payload.numInvoices === 'number' ? payload.numInvoices : fallback.numInvoices,
-    numReceiptApiRequests:
-      typeof payload.numReceiptApiRequests === 'number'
-        ? payload.numReceiptApiRequests
-        : fallback.numReceiptApiRequests,
-    numInvoiceApiRequests:
-      typeof payload.numInvoiceApiRequests === 'number'
-        ? payload.numInvoiceApiRequests
-        : fallback.numInvoiceApiRequests,
+    numBills:
+      typeof payload.numBills === 'number'
+        ? payload.numBills
+        : typeof payload.numInvoices === 'number'
+          ? payload.numInvoices
+          : fallback.numBills,
+    numReceiptAiRequests:
+      typeof payload.numReceiptAiRequests === 'number'
+        ? payload.numReceiptAiRequests
+        : typeof payload.numReceiptApiRequests === 'number'
+          ? payload.numReceiptApiRequests
+          : fallback.numReceiptAiRequests,
+    numBillAiRequests:
+      typeof payload.numBillAiRequests === 'number'
+        ? payload.numBillAiRequests
+        : typeof payload.numInvoiceApiRequests === 'number'
+          ? payload.numInvoiceApiRequests
+          : fallback.numBillAiRequests,
     numOrgUsers: typeof payload.numOrgUsers === 'number' ? payload.numOrgUsers : fallback.numOrgUsers,
   };
 };
@@ -211,10 +228,10 @@ const getSubscriptionInformationSnapshot = (
       row.source === 'server' || row.source === 'fallback' || row.source === 'override'
         ? row.source
         : INITIAL_SUBSCRIPTION_INFORMATION.source,
-    numReceiptApiRequestsRemaining:
-      typeof row.numReceiptApiRequestsRemaining === 'number' ? row.numReceiptApiRequestsRemaining : -1,
-    numInvoiceApiRequestsRemaining:
-      typeof row.numInvoiceApiRequestsRemaining === 'number' ? row.numInvoiceApiRequestsRemaining : -1,
+    numReceiptAiRequestsRemaining:
+      typeof row.numReceiptAiRequestsRemaining === 'number' ? row.numReceiptAiRequestsRemaining : -1,
+    numBillAiRequestsRemaining:
+      typeof row.numBillAiRequestsRemaining === 'number' ? row.numBillAiRequestsRemaining : -1,
   };
 };
 
@@ -260,8 +277,8 @@ const writeSubscriptionData = (
   entitlementsPayload: EntitlementsPayload,
   lastChecked: number,
   source: EntitlementsSource,
-  numReceiptApiRequestsRemaining: number = -1,
-  numInvoiceApiRequestsRemaining: number = -1,
+  numReceiptAiRequestsRemaining: number = -1,
+  numBillAiRequestsRemaining: number = -1,
 ) => {
   if (!store) {
     return;
@@ -271,8 +288,8 @@ const writeSubscriptionData = (
     tier,
     lastChecked,
     source,
-    numReceiptApiRequestsRemaining,
-    numInvoiceApiRequestsRemaining,
+    numReceiptAiRequestsRemaining,
+    numBillAiRequestsRemaining,
   });
 
   ENTITLEMENT.forEach((key) => {
@@ -319,6 +336,10 @@ export const isEntitlementLimitReached = (limit: number | null, currentCount: nu
 
   return currentCount >= limit;
 };
+
+// Returns true when all AI processing requests for this billing period have been used.
+// A value of -1 means unlimited — never exhausted.
+export const isAiRequestsExhausted = (remaining: number): boolean => remaining === 0;
 
 export interface SettingsData {
   id: string;
@@ -600,12 +621,12 @@ export const useEntitlementsSource = (): EntitlementsSource => {
   return useSubscriptionInformation().source;
 };
 
-export const useNumInvoiceApiRequestsRemaining = (): number => {
-  return useSubscriptionInformation().numInvoiceApiRequestsRemaining;
+export const useNumBillAiRequestsRemaining = (): number => {
+  return useSubscriptionInformation().numBillAiRequestsRemaining;
 };
 
-export const useNumReceiptApiRequestsRemaining = (): number => {
-  return useSubscriptionInformation().numReceiptApiRequestsRemaining;
+export const useNumReceiptAiRequestsRemaining = (): number => {
+  return useSubscriptionInformation().numReceiptAiRequestsRemaining;
 };
 
 export function useRefreshSubscription(): () => Promise<void> {
@@ -687,9 +708,17 @@ export function useRefreshSubscription(): () => Promise<void> {
       const tier = isSubscriptionTier(data.tier) ? data.tier : DEFAULT_SUBSCRIPTION_TIER;
       const entitlements = sanitizeEntitlementsPayload(data.entitlements, DEFAULT_FREE_TIER_ENTITLEMENTS);
       const receiptRemaining =
-        typeof data.numReceiptApiRequestsRemaining === 'number' ? data.numReceiptApiRequestsRemaining : -1;
+        typeof data.numReceiptAiRequestsRemaining === 'number'
+          ? data.numReceiptAiRequestsRemaining
+          : typeof data.numReceiptApiRequestsRemaining === 'number'
+            ? data.numReceiptApiRequestsRemaining
+            : -1;
       const invoiceRemaining =
-        typeof data.numInvoiceApiRequestsRemaining === 'number' ? data.numInvoiceApiRequestsRemaining : -1;
+        typeof data.numBillAiRequestsRemaining === 'number'
+          ? data.numBillAiRequestsRemaining
+          : typeof data.numInvoiceApiRequestsRemaining === 'number'
+            ? data.numInvoiceApiRequestsRemaining
+            : -1;
       console.log('Fetched entitlements from server:', {
         tier,
         entitlements,
@@ -718,8 +747,8 @@ export function useRefreshSubscription(): () => Promise<void> {
         tier: fallbackTier,
         lastChecked: cachedSubscriptionInformation.lastChecked,
         source: 'fallback',
-        numReceiptApiRequestsRemaining: cachedSubscriptionInformation.numReceiptApiRequestsRemaining,
-        numInvoiceApiRequestsRemaining: cachedSubscriptionInformation.numInvoiceApiRequestsRemaining,
+        numReceiptAiRequestsRemaining: cachedSubscriptionInformation.numReceiptAiRequestsRemaining,
+        numBillAiRequestsRemaining: cachedSubscriptionInformation.numBillAiRequestsRemaining,
       };
 
       const hasStoredSubscriptionInformation = Boolean(store.getRow('subscriptionInformation', orgId));
@@ -743,8 +772,8 @@ export function useRefreshSubscription(): () => Promise<void> {
 }
 
 export function useUpdateApiRequestsRemainingCallback(): (updates: {
-  numReceiptApiRequestsRemaining?: number;
-  numInvoiceApiRequestsRemaining?: number;
+  numReceiptAiRequestsRemaining?: number;
+  numBillAiRequestsRemaining?: number;
 }) => void {
   const store = useStore(useStoreId());
   const { orgId } = useAuth();
@@ -761,11 +790,11 @@ export function useUpdateApiRequestsRemainingCallback(): (updates: {
       }
 
       const patch: Partial<typeof current> = {};
-      if (typeof updates.numReceiptApiRequestsRemaining === 'number') {
-        patch.numReceiptApiRequestsRemaining = updates.numReceiptApiRequestsRemaining;
+      if (typeof updates.numReceiptAiRequestsRemaining === 'number') {
+        patch.numReceiptAiRequestsRemaining = updates.numReceiptAiRequestsRemaining;
       }
-      if (typeof updates.numInvoiceApiRequestsRemaining === 'number') {
-        patch.numInvoiceApiRequestsRemaining = updates.numInvoiceApiRequestsRemaining;
+      if (typeof updates.numBillAiRequestsRemaining === 'number') {
+        patch.numBillAiRequestsRemaining = updates.numBillAiRequestsRemaining;
       }
 
       if (Object.keys(patch).length > 0) {
@@ -776,23 +805,23 @@ export function useUpdateApiRequestsRemainingCallback(): (updates: {
   );
 }
 
-export function useUpdateNumReceiptApiRequestsRemainingCallback(): (remaining: number) => void {
+export function useUpdateNumReceiptAiRequestsRemainingCallback(): (remaining: number) => void {
   const updateApiRequestsRemaining = useUpdateApiRequestsRemainingCallback();
 
   return useCallback(
     (remaining: number) => {
-      updateApiRequestsRemaining({ numReceiptApiRequestsRemaining: remaining });
+      updateApiRequestsRemaining({ numReceiptAiRequestsRemaining: remaining });
     },
     [updateApiRequestsRemaining],
   );
 }
 
-export function useUpdateNumInvoiceApiRequestsRemainingCallback(): (remaining: number) => void {
+export function useUpdateNumBillAiRequestsRemainingCallback(): (remaining: number) => void {
   const updateApiRequestsRemaining = useUpdateApiRequestsRemainingCallback();
 
   return useCallback(
     (remaining: number) => {
-      updateApiRequestsRemaining({ numInvoiceApiRequestsRemaining: remaining });
+      updateApiRequestsRemaining({ numBillAiRequestsRemaining: remaining });
     },
     [updateApiRequestsRemaining],
   );

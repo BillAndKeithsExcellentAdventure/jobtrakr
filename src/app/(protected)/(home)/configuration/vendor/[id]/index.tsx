@@ -359,6 +359,14 @@ const EditVendor = () => {
                       {isQuickBooksAccessible && grantVendorAccessRequest && (
                         <TouchableOpacity
                           onPress={async () => {
+                            if (!allowVendorPaymentReview) {
+                              Alert.alert(
+                                'Subscription Required',
+                                'Vendor payment review is not available with your current subscription. Please upgrade to Premium to access this feature.',
+                              );
+                              return;
+                            }
+
                             if (isSendingVerificationEmail) {
                               return;
                             }

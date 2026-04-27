@@ -6,8 +6,9 @@ import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
 import { useNetwork } from '@/src/context/NetworkContext';
 import {
+  isAiRequestsExhausted,
   useAppSettings,
-  useNumReceiptApiRequestsRemaining,
+  useNumReceiptAiRequestsRemaining,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { useAllRows as useAllConfigurationRows } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import {
@@ -68,7 +69,7 @@ const ReceiptDetailsPage = () => {
   const allVendors = useAllConfigurationRows('vendors');
   const addReceiptImage = useAddImageCallback();
   const appSettings = useAppSettings();
-  const numReceiptApiRequestsRemaining = useNumReceiptApiRequestsRemaining();
+  const numReceiptAiRequestsRemaining = useNumReceiptAiRequestsRemaining();
   const { isQuickBooksConnected } = useNetwork();
   const project = useProject(projectId);
   const projectAbbr = project?.abbreviation ?? '';
@@ -272,7 +273,7 @@ const ReceiptDetailsPage = () => {
     });
   }, [projectId, receiptId, router]);
 
-  const isReceiptAiProcessingDisabled = numReceiptApiRequestsRemaining === 0;
+  const isReceiptAiProcessingDisabled = isAiRequestsExhausted(numReceiptAiRequestsRemaining);
 
   const requestAIProcessing = useCallback(() => {
     if (isReceiptAiProcessingDisabled) {

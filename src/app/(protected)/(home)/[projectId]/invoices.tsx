@@ -57,7 +57,7 @@ const ProjectInvoicesPage = () => {
   useSeedWorkItemsIfNecessary(projectId);
 
   const allInvoices = useAllRows(projectId, 'invoices', RecentInvoiceDateCompare);
-  const invoiceLimit = useEntitlementLimit('numInvoices');
+  const invoiceLimit = useEntitlementLimit('numBills');
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const addInvoiceImage = useAddImageCallback();
   const addInvoice = useAddRowCallback(projectId, 'invoices');

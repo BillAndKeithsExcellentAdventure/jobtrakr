@@ -203,6 +203,14 @@ const DefineChangeOrderScreen = () => {
   const handleSendForApproval = useCallback(async () => {
     if (!changeOrderData) return;
 
+    if (!allowChangeOrderEmails) {
+      Alert.alert(
+        'Subscription Required',
+        'Change order emails are not available with your current subscription. Please upgrade to Premium to access this feature.',
+      );
+      return;
+    }
+
     // Validate required settings
     if (!appSettings?.ownerName || !appSettings?.email || !appSettings?.companyName) {
       Alert.alert('Missing Settings', 'Please configure your company settings before sending change orders.');
@@ -407,6 +415,7 @@ const DefineChangeOrderScreen = () => {
     projectId,
     router,
     updateChangeOrder,
+    allowChangeOrderEmails,
   ]);
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(

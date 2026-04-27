@@ -64,7 +64,10 @@ describe('useSeedWorkItemsIfNecessary', () => {
       };
     });
 
-    const { rerender } = renderHook(() => useSeedWorkItemsIfNecessary('project-1'));
+    const { rerender } = renderHook(
+      ({ projectId }: { projectId: string }) => useSeedWorkItemsIfNecessary(projectId),
+      { initialProps: { projectId: 'project-1' } },
+    );
 
     expect(setRow).toHaveBeenCalledTimes(0);
     expect(mockSeedStateSetterSpy).toHaveBeenCalledTimes(0);
@@ -96,7 +99,7 @@ describe('useSeedWorkItemsIfNecessary', () => {
     });
     expect(mockSeedStateSetterSpy).toHaveBeenCalledWith('');
 
-    rerender();
+    rerender({ projectId: 'project-1' });
 
     act(() => {
       for (const callback of Array.from(storeReadyCallbacks)) {

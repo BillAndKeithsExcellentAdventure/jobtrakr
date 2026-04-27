@@ -151,7 +151,7 @@ const RequestAIProcessingPage = () => {
         const limit = typeof result.limits.limit === 'number' ? result.limits.limit : -1;
         const count = typeof result.limits.count === 'number' ? result.limits.count : -1;
         const remaining = limit === -1 ? -1 : count === -1 ? limit : Math.max(limit - count, 0);
-        updateApiRequestsRemaining({ numReceiptApiRequestsRemaining: remaining });
+        updateApiRequestsRemaining({ numReceiptAiRequestsRemaining: remaining });
       }
 
       if (!result || result.status !== 'Success' || !result.response) {

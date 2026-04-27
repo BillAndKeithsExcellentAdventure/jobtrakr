@@ -74,7 +74,7 @@ const AddInvoicePage = () => {
   const addLineItem = useAddRowCallback(projectId, 'workItemCostEntries');
   const { projectWorkItems } = useProjectWorkItems(projectId);
   const appSettings = useAppSettings();
-  const invoiceLimit = useEntitlementLimit('numInvoices');
+  const invoiceLimit = useEntitlementLimit('numBills');
   const allProjectInvoices = useAllRows(projectId, 'invoices');
   const [pickedCostItemId, setPickedCostItemId] = useState<string | undefined>(undefined);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
