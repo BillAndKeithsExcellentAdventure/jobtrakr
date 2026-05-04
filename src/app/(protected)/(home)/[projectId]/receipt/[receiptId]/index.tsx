@@ -110,6 +110,7 @@ const ReceiptDetailsPage = () => {
     markedComplete: false,
     purchaseId: '',
     qbSyncHash: '',
+    invoiceClient: false,
   });
 
   useEffect(() => {
@@ -461,6 +462,7 @@ const ReceiptDetailsPage = () => {
         projectName: projectName,
         addAttachment: wasImageJustAdded && !!receipt.imageId,
         imageId: receipt.imageId || '',
+        invoiceClient: receipt.invoiceClient ?? false,
         qbPurchaseData: {
           vendorRef: vendorQbId,
           lineItems: qbLineItems,
@@ -528,6 +530,7 @@ const ReceiptDetailsPage = () => {
         projectName,
         imageId: receipt.imageId || '',
         addAttachment: !!receipt.imageId,
+        invoiceClient: receipt.invoiceClient ?? false,
         qbPurchaseData: {
           vendorRef: vendorQbId,
           lineItems: qbLineItems,

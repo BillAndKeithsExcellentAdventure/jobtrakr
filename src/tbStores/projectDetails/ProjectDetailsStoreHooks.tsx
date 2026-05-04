@@ -62,6 +62,7 @@ export type ReceiptData = {
   markedComplete: boolean;
   purchaseId: string;
   qbSyncHash: string;
+  invoiceClient: boolean; // true if this receipt should be invoiced to the client
 };
 
 export type ClassifiedReceiptData = ReceiptData & { fullyClassified: boolean };

@@ -33,6 +33,7 @@ export const TABLES_SCHEMA = {
     markedComplete: { type: 'boolean' },
     purchaseId: { type: 'string' }, // QuickBooks Purchase ID
     qbSyncHash: { type: 'string' },
+    invoiceClient: { type: 'boolean' }, // true if this receipt should be invoiced to the client
   },
 
   invoices: {

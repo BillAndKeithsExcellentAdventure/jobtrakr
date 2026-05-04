@@ -120,7 +120,18 @@ const AddReceiptPage = () => {
     paymentAccountId: appSettings.quickBooksDefaultPaymentAccountId || '',
     purchaseId: '',
     qbSyncHash: '',
+    invoiceClient: false,
   });
+
+  // Auto-set invoiceClient based on project's receiptInvoiceDesignation
+  useEffect(() => {
+    const designation = project?.receiptInvoiceDesignation;
+    if (designation === 'always') {
+      setProjectReceipt((prev) => ({ ...prev, invoiceClient: true }));
+    } else if (designation !== 'prompt') {
+      setProjectReceipt((prev) => ({ ...prev, invoiceClient: false }));
+    }
+  }, [project?.receiptInvoiceDesignation]);
 
   const handlePaymentAccountOptionChange = (option: OptionEntry) => {
     setPickedPaymentAccountOption(option);
@@ -366,6 +377,7 @@ const AddReceiptPage = () => {
             projectName: projectName || '',
             imageId: projectReceipt.imageId || '',
             addAttachment: !!projectReceipt.imageId,
+            invoiceClient: projectReceipt.invoiceClient,
             qbPurchaseData: {
               vendorRef: qbVendorId,
               lineItems: qbLineItems,
@@ -559,6 +571,7 @@ const AddReceiptPage = () => {
       purchaseId: '',
       markedComplete: false,
       qbSyncHash: '',
+      invoiceClient: false,
     });
     router.back();
   }, [router, defaultDate, appSettings.quickBooksDefaultPaymentAccountId]);
@@ -675,6 +688,17 @@ const AddReceiptPage = () => {
                 />
               )}
             </>
+          )}
+
+          {isQuickBooksConnected && project?.receiptInvoiceDesignation === 'prompt' && (
+            <View style={[styles.applyToSingleCostCodeRow, { marginTop: 8 }]}>
+              <Switch
+                value={projectReceipt.invoiceClient}
+                onValueChange={(value) => setProjectReceipt((prev) => ({ ...prev, invoiceClient: value }))}
+                size="large"
+              />
+              <Text text="Invoice Client" txtSize="standard" style={{ marginLeft: 10 }} />
+            </View>
           )}
 
           {projectReceipt.thumbnail && (

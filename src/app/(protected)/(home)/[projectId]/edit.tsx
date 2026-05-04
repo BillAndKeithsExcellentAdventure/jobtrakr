@@ -30,7 +30,7 @@ const EditProjectScreen = () => {
   const colors = useColors();
   const router = useRouter();
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
-  const { isQuickBooksAccessible } = useNetwork();
+  const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
   const { orgId, userId, getToken } = useAuth();
 
   const [project, setProject] = useState<ProjectData>({
@@ -62,6 +62,7 @@ const EditProjectScreen = () => {
   const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | undefined>(undefined);
   const [isStatusPickerVisible, setIsStatusPickerVisible] = useState<boolean>(false);
+  const [isDesignationPickerVisible, setIsDesignationPickerVisible] = useState<boolean>(false);
 
   const STATUS_OPTIONS: OptionEntry[] = [
     { label: 'Active', value: 'active' },
@@ -70,6 +71,29 @@ const EditProjectScreen = () => {
   ];
 
   const currentStatusOption = STATUS_OPTIONS.find((o) => o.value === project.status);
+
+  const RECEIPT_DESIGNATION_OPTIONS: OptionEntry[] = [
+    { label: 'Never invoice client for receipts', value: 'never' },
+    { label: 'Always invoice client for receipts', value: 'always' },
+    { label: 'Optionally invoice client for receipts', value: 'prompt' },
+  ];
+
+  const currentDesignationOption = RECEIPT_DESIGNATION_OPTIONS.find(
+    (o) => o.value === (project.receiptInvoiceDesignation || 'never'),
+  );
+
+  const handleDesignationSelected = useCallback(
+    (option: OptionEntry) => {
+      const newProject = {
+        ...project,
+        receiptInvoiceDesignation: option.value as 'always' | 'never' | 'prompt',
+      };
+      setProject(newProject);
+      if (projectId) updateProject(projectId, newProject);
+      setIsDesignationPickerVisible(false);
+    },
+    [project, projectId, updateProject],
+  );
 
   const handleStatusSelected = useCallback(
     (option: OptionEntry) => {
@@ -333,6 +357,15 @@ const EditProjectScreen = () => {
             editable={false}
             onPickerButtonPress={() => setIsStatusPickerVisible(true)}
           />
+          {isQuickBooksConnected && !project.isCompanyExpenseProject && (
+            <OptionPickerItem
+              label="Invoice Client for Receipts"
+              placeholder="Select invoice designation"
+              optionLabel={currentDesignationOption?.label}
+              editable={false}
+              onPickerButtonPress={() => setIsDesignationPickerVisible(true)}
+            />
+          )}
           {!project.isCompanyExpenseProject && (
             <>
               {project.latitude && project.longitude ? (
@@ -373,6 +406,18 @@ const EditProjectScreen = () => {
             options={STATUS_OPTIONS}
             onSelect={handleStatusSelected}
             selectedOption={currentStatusOption}
+          />
+        </BottomSheetContainer>
+      )}
+      {isDesignationPickerVisible && (
+        <BottomSheetContainer
+          isVisible={isDesignationPickerVisible}
+          onClose={() => setIsDesignationPickerVisible(false)}
+        >
+          <OptionList
+            options={RECEIPT_DESIGNATION_OPTIONS}
+            onSelect={handleDesignationSelected}
+            selectedOption={currentDesignationOption}
           />
         </BottomSheetContainer>
       )}

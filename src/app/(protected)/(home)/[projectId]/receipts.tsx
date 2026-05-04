@@ -193,6 +193,7 @@ const ProjectReceiptsPage = () => {
           vendorId: '',
           paymentAccountId: paymentAccountId || appSettings.quickBooksDefaultPaymentAccountId || '',
           qbSyncHash: '',
+          invoiceClient: false,
         };
 
         //console.log('Adding a new Receipt to local store.', newReceipt);

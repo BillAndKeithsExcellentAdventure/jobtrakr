@@ -88,6 +88,7 @@ export interface ProjectData {
   seedWorkItems: string; // comma separated list of workItemIds
   workItemIds?: string; // comma separated list of workItemIds currently used in this project
   isCompanyExpenseProject?: boolean; // true if this project tracks company expenses only
+  receiptInvoiceDesignation?: 'always' | 'never' | 'prompt'; // controls whether receipts are invoiced to the client
 }
 
 export function CostItemDataCodeCompareAsNumber(a: CostItemData, b: CostItemData) {

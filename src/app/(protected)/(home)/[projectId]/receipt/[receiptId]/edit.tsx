@@ -3,6 +3,7 @@ import { NumericInputField } from '@/src/components/NumericInputField';
 import OptionList, { OptionEntry } from '@/src/components/OptionList';
 import { OptionPickerItem } from '@/src/components/OptionPickerItem';
 import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton';
+import { Switch } from '@/src/components/Switch';
 import { TextField } from '@/src/components/TextField';
 import { Text, View } from '@/src/components/Themed';
 import { VendorPicker } from '@/src/components/VendorPicker';
@@ -18,6 +19,7 @@ import {
   useAllRows,
   useUpdateRowCallback,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useProject } from '@/src/tbStores/listOfProjects/ListOfProjectsStore';
 import { formatDate } from '@/src/utils/formatters';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -36,6 +38,7 @@ const EditReceiptDetailsPage = () => {
   );
   const allProjectReceipts = useAllRows(projectId, 'receipts');
   const updateReceipt = useUpdateRowCallback(projectId, 'receipts');
+  const project = useProject(projectId);
   const appSettings = useAppSettings();
   const { isQuickBooksConnected } = useNetwork();
   const [datePickerVisible, setDatePickerVisible] = useState(false);
@@ -86,6 +89,7 @@ const EditReceiptDetailsPage = () => {
     accountingId: '',
     purchaseId: '',
     qbSyncHash: '',
+    invoiceClient: false,
   });
 
   useEffect(() => {
@@ -292,6 +296,20 @@ const EditReceiptDetailsPage = () => {
                 />
               )}
             </>
+          )}
+          {isQuickBooksConnected && project?.receiptInvoiceDesignation === 'prompt' && (
+            <View style={[styles.inputContainer, { flexDirection: 'row', alignItems: 'center' }]}>
+              <Switch
+                size="large"
+                value={receipt.invoiceClient ?? false}
+                onValueChange={(value) => {
+                  const newReceipt = { ...receipt, invoiceClient: value };
+                  updateReceipt(receiptId, newReceipt);
+                  setReceipt(newReceipt);
+                }}
+              />
+              <Text txtSize="formLabel" text="Invoice Client" style={{ marginLeft: 10 }} />
+            </View>
           )}
         </View>
       </KeyboardAwareScrollView>

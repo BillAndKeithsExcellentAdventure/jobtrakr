@@ -7,6 +7,7 @@ import { TextField } from '@/src/components/TextField';
 import { View, Text } from '@/src/components/Themed';
 import { useActiveProjectIds } from '@/src/context/ActiveProjectIdsContext';
 import { useColors } from '@/src/context/ColorsContext';
+import { useNetwork } from '@/src/context/NetworkContext';
 import { ProjectData } from '@/src/models/types';
 import {
   useAllRows,
@@ -48,12 +49,22 @@ const AddProjectScreen = () => {
   const addProject = useAddProjectCallback();
   const colors = useColors();
   const router = useRouter();
+  const { isQuickBooksConnected } = useNetwork();
   const allProjectTemplates = useAllRows('templates');
   const allTemplateWorkItems = useAllRows('templateWorkItems');
   const allCustomers = useAllRows('customers', CustomerDataCompareName);
   const [pickedTemplate, setPickedTemplate] = useState<OptionEntry | undefined>(undefined);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | undefined>(undefined);
   const [isCompanyExpenseProject, setIsCompanyExpenseProject] = useState<boolean>(false);
+  const [receiptInvoiceDesignation, setReceiptInvoiceDesignation] = useState<'always' | 'never' | 'prompt'>(
+    'never',
+  );
+
+  const RECEIPT_DESIGNATION_OPTIONS: OptionEntry[] = [
+    { label: 'Never invoice client for receipts', value: 'never' },
+    { label: 'Always invoice client for receipts', value: 'always' },
+    { label: 'Optionally invoice client for receipts', value: 'prompt' },
+  ];
   const allProjects = useAllProjects();
   const standardProjectLimit = useEntitlementLimit('numProjects');
   const officeExpenseProjectLimit = useEntitlementLimit('numOfficeExpenseProjects');
@@ -154,6 +165,7 @@ const AddProjectScreen = () => {
     }
 
     project.isCompanyExpenseProject = isCompanyExpenseProject;
+    project.receiptInvoiceDesignation = isQuickBooksConnected ? receiptInvoiceDesignation : 'never';
 
     const result = addProject(project);
     if (result.status !== 'Success') {
@@ -233,6 +245,17 @@ const AddProjectScreen = () => {
           placeholder="Project Costs Template"
           modalTitle="Select Template"
         />
+        {isQuickBooksConnected && !isCompanyExpenseProject && (
+          <OptionPicker
+            options={RECEIPT_DESIGNATION_OPTIONS}
+            selectedOption={RECEIPT_DESIGNATION_OPTIONS.find((o) => o.value === receiptInvoiceDesignation)}
+            onOptionSelected={(opt) =>
+              setReceiptInvoiceDesignation(opt.value as 'always' | 'never' | 'prompt')
+            }
+            placeholder="Invoice Client for Receipts"
+            modalTitle="Invoice Client for Receipts"
+          />
+        )}
       </ModalScreenContainer>
     </View>
   );

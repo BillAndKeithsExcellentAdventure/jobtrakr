@@ -40,6 +40,7 @@ const TABLES_SCHEMA = {
     seedWorkItems: { type: 'string' }, // comma separated list of workItemIds
     workItemIds: { type: 'string' }, // comma separated list of workItemIds currently used in project
     isCompanyExpenseProject: { type: 'boolean', default: false },
+    receiptInvoiceDesignation: { type: 'string' }, // 'always' | 'never' | 'prompt'
   },
 } as const;
 

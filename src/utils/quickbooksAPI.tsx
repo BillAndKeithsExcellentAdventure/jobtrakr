@@ -322,6 +322,7 @@ export interface AddReceiptRequest {
   projectName: string;
   imageId: string;
   addAttachment: boolean;
+  invoiceClient?: boolean;
   qbBillData?: QBReceiptData;
 }
 
@@ -348,6 +349,7 @@ export interface EditReceiptRequest {
   projectAbbr?: string;
   imageId?: string;
   addAttachment: boolean;
+  invoiceClient?: boolean;
   qbPurchaseData: {
     vendorRef: string;
     txnDate: string;
