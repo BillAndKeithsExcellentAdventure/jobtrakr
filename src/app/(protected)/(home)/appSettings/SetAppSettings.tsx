@@ -384,7 +384,7 @@ const SetAppSettingScreen = () => {
                   size="large"
                 />
                 <Text txtSize="standard" style={{ marginLeft: 10 }}>
-                  Debug: Use Subscription Override
+                  Debug: Subscription Override
                 </Text>
               </View>
 
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
   debugSwitchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
   subscriptionTierLabel: {
     textAlign: 'center',

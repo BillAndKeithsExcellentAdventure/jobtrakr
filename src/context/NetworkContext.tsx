@@ -245,6 +245,17 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
         return;
       }
 
+      // In development builds with a subscription override active, skip the real QB connection
+      // check — the entitlement + syncWithQuickBooks flag is sufficient for UI testing.
+      if (isDevelopmentBuild() && appSettings.useDevSubscriptionOverride) {
+        if (true !== previousConnectedRef.current) {
+          console.log('QuickBooks accessible via dev subscription override ✅');
+          previousConnectedRef.current = true;
+          setIsQuickBooksAccessible(true);
+        }
+        return;
+      }
+
       try {
         const connected = await testQbIsConnected(orgId, userId, getToken);
         if (connected !== previousConnectedRef.current) {
@@ -267,6 +278,8 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     auth.isSignedIn,
     appSettings.id,
     appSettings.syncWithQuickBooks,
+    appSettings.useDevSubscriptionOverride,
+    appSettings.devSubscriptionTier,
     allowQuickBooksSync,
     orgId,
     userId,

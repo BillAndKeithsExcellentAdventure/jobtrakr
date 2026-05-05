@@ -129,25 +129,38 @@ const sanitizeEntitlementsPayload = (
           numInvoices?: number;
           numReceiptApiRequests?: number;
           numInvoiceApiRequests?: number;
+          // Boolean flags may arrive as numbers (1 = true, 0 = false) from older backend responses
+          allowQuickBooksSync?: boolean | number;
+          allowChangeOrderEmails?: boolean | number;
+          allowPublishPhotosAndVideos?: boolean | number;
+          allowVendorPaymentReview?: boolean | number;
         })
       : {};
   return {
     allowQuickBooksSync:
       typeof payload.allowQuickBooksSync === 'boolean'
         ? payload.allowQuickBooksSync
-        : fallback.allowQuickBooksSync,
+        : typeof payload.allowQuickBooksSync === 'number'
+          ? payload.allowQuickBooksSync === 1
+          : fallback.allowQuickBooksSync,
     allowChangeOrderEmails:
       typeof payload.allowChangeOrderEmails === 'boolean'
         ? payload.allowChangeOrderEmails
-        : fallback.allowChangeOrderEmails,
+        : typeof payload.allowChangeOrderEmails === 'number'
+          ? payload.allowChangeOrderEmails === 1
+          : fallback.allowChangeOrderEmails,
     allowPublishPhotosAndVideos:
       typeof payload.allowPublishPhotosAndVideos === 'boolean'
         ? payload.allowPublishPhotosAndVideos
-        : fallback.allowPublishPhotosAndVideos,
+        : typeof payload.allowPublishPhotosAndVideos === 'number'
+          ? payload.allowPublishPhotosAndVideos === 1
+          : fallback.allowPublishPhotosAndVideos,
     allowVendorPaymentReview:
       typeof payload.allowVendorPaymentReview === 'boolean'
         ? payload.allowVendorPaymentReview
-        : fallback.allowVendorPaymentReview,
+        : typeof payload.allowVendorPaymentReview === 'number'
+          ? payload.allowVendorPaymentReview === 1
+          : fallback.allowVendorPaymentReview,
     numProjects: typeof payload.numProjects === 'number' ? payload.numProjects : fallback.numProjects,
     numOfficeExpenseProjects:
       typeof payload.numOfficeExpenseProjects === 'number'
@@ -572,13 +585,35 @@ export const useEntitlementLimit = (key: EntitlementWithLimit): number | null =>
 export const useEntitlementFlag = (key: EntitlementFlag): boolean => {
   const store = useStore(useStoreId());
   const appSettings = useAppSettings();
-  const storedEntitlements = getEntitlementsSnapshot(store);
-  const entitlements = resolveEntitlementsPayload(appSettings, {
-    isDevelopment: isDevelopmentBuild(),
-    storedEntitlements,
-  });
+  const isDevelopment = isDevelopmentBuild();
 
-  return entitlements ? entitlements[key] : false;
+  const fetchFlag = useCallback(() => {
+    const storedEntitlements = getEntitlementsSnapshot(store);
+    const entitlements = resolveEntitlementsPayload(appSettings, {
+      isDevelopment,
+      storedEntitlements,
+    });
+    return entitlements ? entitlements[key] : false;
+  }, [appSettings, isDevelopment, key, store]);
+
+  const [flag, setFlag] = useState<boolean>(() => fetchFlag());
+
+  useEffect(() => {
+    setFlag(fetchFlag());
+  }, [fetchFlag]);
+
+  useEffect(() => {
+    if (!store) {
+      return;
+    }
+
+    const listenerId = store.addTableListener('entitlements', () => setFlag(fetchFlag()));
+    return () => {
+      store.delListener(listenerId);
+    };
+  }, [fetchFlag, store]);
+
+  return flag;
 };
 
 export const useEntitlementsPayload = (): EntitlementsPayload | null => {
@@ -680,6 +715,7 @@ export function useRefreshSubscription(): () => Promise<void> {
         ? settings.devSubscriptionTier
         : DEFAULT_SUBSCRIPTION_TIER;
       writeSubscriptionData(store, orgId, devTier, DEV_ENTITLEMENTS_BY_TIER[devTier], checkedAt, 'override');
+      console.log('Using development subscription override with tier', devTier);
       return;
     }
 
@@ -704,6 +740,8 @@ export function useRefreshSubscription(): () => Promise<void> {
       if (!data.success) {
         throw new Error(data.error || 'Failed to fetch entitlements');
       }
+
+      // console.log('[GetOrgEntitlementsResponse]Successfully fetched entitlements data from server:', data);
 
       const tier = isSubscriptionTier(data.tier) ? data.tier : DEFAULT_SUBSCRIPTION_TIER;
       const entitlements = sanitizeEntitlementsPayload(data.entitlements, DEFAULT_FREE_TIER_ENTITLEMENTS);
