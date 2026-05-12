@@ -20,6 +20,7 @@ A Cloudflare Workers-based backend API for managing construction project media, 
   - [Change Order Management](#change-order-management)
   - [Vendor Access Management](#vendor-access-management)
   - [QuickBooks Online Integration](#quickbooks-online-integration)
+  - [NMI Subscription Management](#nmi-subscription-management)
   - [Notification Management](#notification-management)
 - [Error Responses](#error-responses)
 - [Development](#development)
@@ -2880,6 +2881,379 @@ QuickBooks webhook payload (various event types)
 - Signature is verified using the QuickBooks webhook token
 - Not intended for direct API consumer use
 - Handles various QuickBooks event types (bill updates, payment changes, etc.)
+
+---
+
+### NMI Subscription Management
+
+These endpoints support subscription signup, plan changes, cancellation, payment method updates, and subscription status lookup using NMI.
+
+#### POST /nmi/createCheckoutSession
+
+Create a generic NMI checkout session.
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+  "userId": "user_123",
+  "customerId": "org_456",
+  "amount": 49.99,
+  "currency": "USD",
+  "subscriptionDayOfMonth": 1,
+  "planId": "pro",
+  "planName": "Pro",
+  "startDate": "2026-06-01"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "sessionId": "nmi_session_abc",
+  "checkoutUrl": "https://<worker>/nmi/collectCheckout?sessionId=nmi_session_abc",
+  "expiresAt": 1770000000,
+  "message": "Collect.js checkout session created"
+}
+```
+
+**Notes:**
+
+- Required fields: `userId`, `customerId`, `amount`
+- `subscriptionDayOfMonth` is normalized to the range `1-28`
+- This endpoint is useful when the client already knows plan and pricing details
+
+#### GET /nmi/startSubscription
+
+Render hosted HTML page that allows a user to pick a subscription plan and start checkout.
+
+**Authentication:** Not required at router level
+
+**Query Parameters:**
+
+- `orgId` (string): Organization/customer identifier (required)
+- `userId` (string): User identifier (optional, defaults to `orgId`)
+
+**Response:** HTML page (not JSON)
+
+**Notes:**
+
+- Loads available plans from `subscription_plans`
+- Excludes the `free` plan from the plan selector
+- Frontend calls `/nmi/createPlanCheckoutSession`
+
+#### POST /nmi/createPlanCheckoutSession
+
+Create an NMI checkout session directly from a plan in the `subscription_plans` table.
+
+**Authentication:** Not required at router level
+
+**Request Body:**
+
+```json
+{
+  "orgId": "org_456",
+  "userId": "user_123",
+  "planId": "pro",
+  "subscriptionDayOfMonth": 1,
+  "startDate": "2026-06-01",
+  "email": "billing@example.com",
+  "firstName": "Sam",
+  "lastName": "Taylor"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "sessionId": "nmi_session_abc",
+  "checkoutUrl": "https://<worker>/nmi/collectCheckout?sessionId=nmi_session_abc",
+  "expiresAt": 1770000000
+}
+```
+
+**Notes:**
+
+- Required fields: `orgId`, `planId`, `userId`
+- `planId` must map to a billable entry in `subscription_plans`
+- `subscriptionDayOfMonth` is normalized to `1-28`
+
+#### GET /nmi/collectCheckout
+
+Render hosted Collect.js card entry page for an existing checkout session.
+
+**Authentication:** Not required at router level
+
+**Query Parameters:**
+
+- `sessionId` (string): Checkout session ID (required)
+
+**Response:** HTML page (not JSON)
+
+**Notes:**
+
+- Uses mode-aware completion endpoint:
+  - subscription setup -> `/nmi/completeCheckout`
+  - card update -> `/nmi/completeUpdateCard`
+
+#### POST /nmi/completeCheckout
+
+Complete subscription checkout by exchanging a Collect.js token, charging the initial amount, and storing the vault/subscription records.
+
+**Authentication:** Not required at router level
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "nmi_session_abc",
+  "paymentToken": "tok_xxx",
+  "couponCode": "SAVE20"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Payment method stored and subscription activated",
+  "data": {
+    "internalCustomerId": "org_456",
+    "nmiCustomerVaultId": "vault_123",
+    "initialTransactionId": "txn_123",
+    "billingMode": "internal"
+  }
+}
+```
+
+**Notes:**
+
+- Required fields: `sessionId`, `paymentToken`
+- Applies coupon only if valid and not expired
+- Creates/updates records in `nmi_subscriptions`, `nmi_customer_vault_map`, and customer subscription tables
+
+#### POST /nmi/upgradeSubscription
+
+Upgrade an existing subscription to a new billable plan.
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+  "userId": "user_123",
+  "orgId": "org_456",
+  "planId": "enterprise"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Subscription upgraded successfully",
+  "data": {
+    "orgId": "org_456",
+    "newPlanId": "enterprise",
+    "newPlanName": "Enterprise",
+    "newAmount": 149.0,
+    "currency": "USD",
+    "nextChargeDate": "2026-07-01"
+  }
+}
+```
+
+**Notes:**
+
+- Required fields: `userId`, `orgId`, `planId`
+- Fails with `404` if there is no existing subscription for `orgId`
+- Fails with `400` if `planId` is invalid or non-billable
+
+#### GET /nmi/cancelSubscription
+
+Cancel subscription, set plan to `free`, and delete customer from NMI vault.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization/customer identifier (required)
+- `userId` (string): User identifier (required)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Subscription canceled, plan set to free, and customer deleted from NMI vault",
+  "data": {
+    "orgId": "org_456",
+    "nmiSubscriptionStatus": "canceled",
+    "customerPlanId": "free",
+    "nmiCustomerVaultId": "vault_123"
+  }
+}
+```
+
+**Notes:**
+
+- Requires `GET` (not `POST`)
+- Returns `409` if subscription/customer records are in an inconsistent state
+
+#### GET /nmi/updateCard
+
+Convenience redirect endpoint that creates an update credit card session and redirects to hosted checkout.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `orgId` (string): Organization/customer identifier (required)
+- `userId` (string): User identifier (required)
+- `email` (string): Optional email
+- `firstName` (string): Optional first name
+- `lastName` (string): Optional last name
+
+**Response:** `302` redirect to `/nmi/collectCheckout?sessionId=...`
+
+#### POST /nmi/createUpdateCardSession
+
+Create a session for updating credit card details without charging the card.
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+  "orgId": "org_456",
+  "userId": "user_123",
+  "email": "billing@example.com",
+  "firstName": "Sam",
+  "lastName": "Taylor"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "sessionId": "nmi_session_update_abc",
+  "checkoutUrl": "https://<worker>/nmi/collectCheckout?sessionId=nmi_session_update_abc",
+  "expiresAt": 1770000000
+}
+```
+
+**Notes:**
+
+- Required fields: `orgId`, `userId`
+- Fails with `404` if there is no existing `nmi_subscriptions` row for the org
+
+#### POST /nmi/completeUpdateCard
+
+Complete card update flow and replace customer vault payment method without charging.
+
+**Authentication:** Not required at router level
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "nmi_session_update_abc",
+  "paymentToken": "tok_xxx"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Payment method updated successfully without charging the card",
+  "data": {
+    "internalCustomerId": "org_456",
+    "nmiCustomerVaultId": "vault_123",
+    "vaultUpdated": true
+  }
+}
+```
+
+#### GET /nmi/subscriptionStatus
+
+Get subscription status/details for an organization.
+
+**Authentication:** Not required at router level
+
+**Query Parameters:**
+
+- `customerId` (string): Organization/customer identifier (required)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "org_id": "org_456",
+    "plan_id": "pro",
+    "plan_name": "Pro",
+    "status": "active",
+    "next_charge_date": "2026-07-01"
+  }
+}
+```
+
+#### POST /nmi/webhook
+
+Receive NMI webhook notifications.
+
+**Authentication:** Signature verification via `Webhook-Signature` header
+
+**Notes:**
+
+- Intended for NMI webhook delivery, not direct client usage
+- Requires `NMI_WEBHOOK_SIGNING_KEY` to be configured
+
+#### POST /nmi/processDueSubscriptions
+
+Process subscriptions due for billing.
+
+**Authentication:** Not required at router level
+
+**Notes:**
+
+- Internal/operational endpoint for scheduled billing jobs
+
+#### POST /nmi/reconcilePayments
+
+Manually reconcile NMI payments for an existing customer.
+
+**Authentication:** Not required at router level
+
+**Request Body:**
+
+```json
+{
+  "customerId": "org_456",
+  "startDate": "2026-05-01",
+  "endDate": "2026-05-31",
+  "amount": 49.99
+}
+```
+
+**Notes:**
+
+- Internal/operational endpoint for back-office reconciliation
 
 ---
 

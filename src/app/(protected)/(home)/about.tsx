@@ -1,24 +1,30 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { Stack } from 'expo-router';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, View } from '@/src/components/Themed';
 import { ActionButton } from '@/src/components/ActionButton';
 import { useColors } from '@/src/context/ColorsContext';
 import * as Application from 'expo-application';
 import * as WebBrowser from 'expo-web-browser';
+import { useAuth } from '@clerk/clerk-expo';
 import { ReactNativeLegal } from 'react-native-legal';
 import { DOCS_URL } from '@/src/constants/app-constants';
 import { Image } from 'expo-image';
 import { ENTITLEMENT } from '@/src/models/types';
+import { cancelSubscription, getSelectSubscriptionHTML } from '@/src/utils/subscriptionApi';
 import {
   useEffectiveSubscriptionTier,
   useEntitlementsPayload,
   useEntitlementsSource,
+  useRefreshSubscription,
 } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 
 export default function AboutScreen() {
   const colors = useColors();
+  const router = useRouter();
+  const { orgId, userId, getToken } = useAuth();
+  const refreshSubscription = useRefreshSubscription();
   const effectiveSubscriptionTier = useEffectiveSubscriptionTier();
   const entitlements = useEntitlementsPayload();
   const entitlementsSource = useEntitlementsSource();
@@ -34,6 +40,11 @@ export default function AboutScreen() {
         value: entitlements ? entitlements[entitlement] : null,
       })),
     [entitlements],
+  );
+
+  const usingPaidSubscription = useMemo(
+    () => effectiveSubscriptionTier !== 'free' && entitlementsSource === 'server',
+    [effectiveSubscriptionTier, entitlementsSource],
   );
 
   const handleOpenDocs = useCallback(async () => {
@@ -65,6 +76,61 @@ export default function AboutScreen() {
     if (source === 'fallback') return 'Fallback (cached/free default)';
     return 'Server';
   }, []);
+
+  const handleCancelSubscriptionPlan = useCallback(() => {
+    Alert.alert(
+      'Cancel Subscription',
+      'Are you sure you want to cancel your subscription and downgrade to the free plan?',
+      [
+        { text: 'No', style: 'cancel' },
+        {
+          text: 'Yes, Cancel',
+          style: 'destructive',
+          onPress: async () => {
+            if (!orgId || !userId) {
+              Alert.alert('Authentication Required', 'Please sign in again before managing subscriptions.');
+              return;
+            }
+
+            try {
+              await cancelSubscription(orgId, userId, getToken);
+              await refreshSubscription();
+              Alert.alert(
+                'Subscription Cancelled',
+                'Your subscription has been cancelled and your plan has been downgraded to free.',
+              );
+            } catch (error) {
+              const message =
+                error instanceof Error ? error.message : 'Unable to cancel subscription right now.';
+              Alert.alert('Cancellation Failed', message);
+            }
+          },
+        },
+      ],
+    );
+  }, [orgId, userId, getToken, refreshSubscription]);
+
+  const handleChooseSubscriptionPlan = useCallback(async () => {
+    if (!orgId || !userId) {
+      Alert.alert('Authentication Required', 'Please sign in again before managing subscriptions.');
+      return;
+    }
+
+    try {
+      const subscriptionHtml = await getSelectSubscriptionHTML(orgId, userId);
+      if (!subscriptionHtml || !subscriptionHtml.trim()) {
+        throw new Error('Subscription page content is empty.');
+      }
+
+      router.push({
+        pathname: '/subscription/choosePlan',
+        params: { html: subscriptionHtml },
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to open subscription plans right now.';
+      Alert.alert('Subscription Unavailable', message);
+    }
+  }, [orgId, userId, router]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
@@ -109,6 +175,21 @@ export default function AboutScreen() {
               onPress={() => setIsDetailsVisible(true)}
               style={styles.subscriptionButton}
             />
+            {usingPaidSubscription ? (
+              <ActionButton
+                title="Cancel Subscription"
+                type="action"
+                onPress={handleCancelSubscriptionPlan}
+                style={styles.subscriptionButton}
+              />
+            ) : (
+              <ActionButton
+                title="Choose Subscription Plan"
+                type="action"
+                onPress={handleChooseSubscriptionPlan}
+                style={styles.subscriptionButton}
+              />
+            )}
           </View>
         </View>
 
@@ -205,6 +286,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   subscriptionButton: {
+    marginTop: 6,
     width: '100%',
   },
   appIcon: {
