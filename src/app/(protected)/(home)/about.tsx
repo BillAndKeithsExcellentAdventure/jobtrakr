@@ -12,7 +12,7 @@ import { ReactNativeLegal } from 'react-native-legal';
 import { DOCS_URL } from '@/src/constants/app-constants';
 import { Image } from 'expo-image';
 import { ENTITLEMENT } from '@/src/models/types';
-import { cancelSubscription, getSelectSubscriptionHTML } from '@/src/utils/subscriptionApi';
+import { cancelSubscription, getSelectSubscriptionHTML, updateCard } from '@/src/utils/subscriptionApi';
 import {
   useEffectiveSubscriptionTier,
   useEntitlementsPayload,
@@ -76,6 +76,24 @@ export default function AboutScreen() {
     if (source === 'fallback') return 'Fallback (cached/free default)';
     return 'Server';
   }, []);
+
+  const handleUpdateCreditCardInfo = useCallback(async () => {
+    if (!orgId || !userId) {
+      Alert.alert('Authentication Required', 'Please sign in again before managing subscriptions.');
+      return;
+    }
+
+    try {
+      const { checkoutUrl } = await updateCard(orgId, userId, getToken);
+      router.push({
+        pathname: '/subscription/choosePlan',
+        params: { url: checkoutUrl },
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to open card update right now.';
+      Alert.alert('Card Update Unavailable', message);
+    }
+  }, [orgId, userId, getToken, router]);
 
   const handleCancelSubscriptionPlan = useCallback(() => {
     Alert.alert(
@@ -176,12 +194,20 @@ export default function AboutScreen() {
               style={styles.subscriptionButton}
             />
             {usingPaidSubscription ? (
-              <ActionButton
-                title="Cancel Subscription"
-                type="action"
-                onPress={handleCancelSubscriptionPlan}
-                style={styles.subscriptionButton}
-              />
+              <>
+                <ActionButton
+                  title="Update Credit Card Info"
+                  type="action"
+                  onPress={handleUpdateCreditCardInfo}
+                  style={styles.subscriptionButton}
+                />
+                <ActionButton
+                  title="Cancel Subscription"
+                  type="action"
+                  onPress={handleCancelSubscriptionPlan}
+                  style={styles.subscriptionButton}
+                />
+              </>
             ) : (
               <ActionButton
                 title="Choose Subscription Plan"
