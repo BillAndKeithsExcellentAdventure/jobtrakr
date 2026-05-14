@@ -28,7 +28,10 @@ import { ActionButton } from '@/src/components/ActionButton';
 import { DOCS_URL } from '@/src/constants/app-constants';
 import { Image } from 'expo-image';
 import { useColorScheme } from '@/src/components/useColorScheme';
-import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
+import {
+  useAppSettings,
+  useEffectiveSubscriptionTier,
+} from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
 import { SvgImage } from '@/src/components/SvgImage';
 import { ReceiptQueueProcessor } from '@/src/components/ReceiptQueueProcessor';
 
@@ -53,6 +56,7 @@ export default function ProjectHomeScreen() {
   const { isQuickBooksAccessible } = useNetwork();
 
   const appSettings = useAppSettings();
+  const effectiveSubscriptionTier = useEffectiveSubscriptionTier();
 
   const minAppSettingsMet: boolean = useMemo(() => {
     return (
@@ -439,6 +443,17 @@ export default function ProjectHomeScreen() {
         }}
       />
       <View style={{ flex: 1, width: '100%' }}>
+        {effectiveSubscriptionTier === 'free' && (
+          <View style={styles.freeTierBanner}>
+            <ActionButton
+              title="Subscribe for more features"
+              type="action"
+              onPress={() => router.push({ pathname: '/(protected)/(home)/about' })}
+              style={styles.freeTierBannerButton}
+            />
+          </View>
+        )}
+
         {visibleProjects.length > 0 ? (
           <View style={[styles.twoColListContainer, { backgroundColor: colors.background }]}>
             <ProjectList data={visibleProjects} onPress={handleSelection} buttons={getProjectButtons} />
@@ -527,8 +542,25 @@ export const styles = StyleSheet.create({
   twoColListContainer: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     width: '100%',
+  },
+  freeTierBanner: {
+    width: '96%',
+    marginTop: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  freeTierBannerText: {
+    flex: 1,
+  },
+  freeTierBannerButton: {
+    minHeight: 40,
   },
   splashImage: {
     width: 300,
