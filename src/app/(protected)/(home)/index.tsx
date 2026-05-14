@@ -376,6 +376,10 @@ export default function ProjectHomeScreen() {
     }
   }, [minAppSettingsMet, isLoading, router]);
 
+  const handleSubscribePress = useCallback(async () => {
+    router.push('/subscription/subscriptionOverview');
+  }, [router]);
+
   // wait for up to a 2 seconds to allow tinybase to load and synch data.
   if (isLoading) {
     return (
@@ -448,7 +452,7 @@ export default function ProjectHomeScreen() {
             <ActionButton
               title="Subscribe for more features"
               type="action"
-              onPress={() => router.push({ pathname: '/(protected)/(home)/about' })}
+              onPress={handleSubscribePress}
               style={styles.freeTierBannerButton}
             />
           </View>
@@ -547,12 +551,7 @@ export const styles = StyleSheet.create({
   },
   freeTierBanner: {
     width: '96%',
-    marginTop: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    margin: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
