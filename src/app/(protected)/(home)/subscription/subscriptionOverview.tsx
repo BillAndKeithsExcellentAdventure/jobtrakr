@@ -1,17 +1,23 @@
 import React, { useCallback } from 'react';
 import { Alert, ScrollView, StyleSheet } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@clerk/clerk-expo';
 import { ActionButton } from '@/src/components/ActionButton';
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
+import { DOCS_URL } from '@/src/constants/app-constants';
 import { getSelectSubscriptionHTML } from '@/src/utils/subscriptionApi';
 
 export default function SubscriptionOverviewScreen() {
   const colors = useColors();
   const router = useRouter();
   const { orgId, userId } = useAuth();
+
+  const handleOpenDocs = useCallback(async () => {
+    await WebBrowser.openBrowserAsync(`${DOCS_URL}/home/subscriptions`);
+  }, []);
 
   const handleSubscribePress = useCallback(async () => {
     if (!orgId || !userId) {
@@ -108,6 +114,9 @@ export default function SubscriptionOverviewScreen() {
             integration with QuickBooks.
           </Text>
         </View>
+        <Text style={[styles.detailsLink, { color: colors.buttonBlue }]} onPress={handleOpenDocs}>
+          Get more subscription details
+        </Text>
 
         <ActionButton
           title="Subscribe"
@@ -140,6 +149,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontWeight: '700',
+  },
+  detailsLink: {
+    textDecorationLine: 'underline',
+    marginTop: -2,
+    marginBottom: 4,
+    alignSelf: 'flex-start',
   },
   tierCard: {
     borderWidth: 1,
