@@ -171,20 +171,20 @@ The app should treat these returned values as authoritative and immediately upse
 ```typescript
 export interface EntitlementsPayload {
   // Feature flags
-  allowQuickBooksSync: boolean;
-  allowChangeOrderEmails: boolean;
-  allowPublishPhotosAndVideos: boolean;
-  allowVendorPaymentReview: boolean;
+  allowQuickBooksSync: boolean; // If true it allows user to connect ProjectHound to existing Quickbooks account. This allows receipts and bill entered into ProjectHound to be sent to QuickBooks.
+  allowChangeOrderEmails: boolean; // If true an email can be sent to the Project Owner to summarize change orders and request approval.
+  allowPublishPhotosAndVideos: boolean; // Allow user to publish specific project photos to web server so Project Owner can access photos as the project progresses.
+  allowVendorPaymentReview: boolean; // Allow vendors to see that payment status of bills they have submitted from a custom web site.
   // Numeric limits (-1 = unlimited)
-  numProjects: number; // this is a project with 'isCompanyExpenseProject' undefined or set to false
-  numOfficeExpenseProjects: number; // this is a project with 'isCompanyExpenseProject' set to true
-  numProjectPhotos: number;
-  numProjectVideos: number;
-  numReceipts: number;
-  numBills: number;
-  numReceiptAiRequests: number;
-  numBillAiRequests: number;
-  numOrgUsers: number;
+  numProjects: number; // this is number of 'regular' projects that can be created. A 'regular' project is one that is not set to be a 'CompanyExpenseProject'.
+  numOfficeExpenseProjects: number; // This is a special type project that tracks company expenses. There can only be one active 'CompanyExpenseProject' at a time.
+  numProjectPhotos: number; // Number of photos that can be saved for a specific project.
+  numProjectVideos: number; // Number of videos that can be saved for a specific project.
+  numReceipts: number; // Number of receipts that can be assigned to a specific project.
+  numBills: number; // Number of bills that can be assigned to a specific project.
+  numReceiptAiRequests: number; // Number of times receipt images can be processed to convert the image to line items and amounts per month.
+  numBillAiRequests: number; // Number of times bill images can be processed to convert the image to line items and amounts per month.
+  numOrgUsers: number; // Number of other users that can be invited to your organization so that project data can be synched with their mobile devices.
 }
 
 export interface GetOrgEntitlementsResponse {
@@ -387,9 +387,9 @@ Entitlement checks should be performed at the point of creating, not just displa
 | `numProjectPhotos`            | Camera capture / image picker — check before adding                      |
 | `numProjectVideos`            | Video capture / picker — check before adding                             |
 | `numReceipts`                 | "Add Receipt" action                                                     |
-| `numBills`                 | "Add Invoice" action                                                     |
-| `numReceiptAiRequests`       | AI photo processing queue — gate submission                              |
-| `numBillAiRequests`       | AI invoice processing queue — gate submission                            |
+| `numBills`                    | "Add Invoice" action                                                     |
+| `numReceiptAiRequests`        | AI photo processing queue — gate submission                              |
+| `numBillAiRequests`           | AI invoice processing queue — gate submission                            |
 | `numOrgUsers`                 | Org member invite — check before sending invite                          |
 | `allowQuickBooksSync`         | QuickBooks setup screen — hide/disable option                            |
 | `allowChangeOrderEmails`      | Change order email send button                                           |
