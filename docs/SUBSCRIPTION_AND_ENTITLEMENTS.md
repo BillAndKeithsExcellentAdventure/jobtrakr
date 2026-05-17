@@ -348,9 +348,9 @@ export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayl
     numProjectVideos: -1,
     numReceipts: -1,
     numBills: -1,
-    numReceiptAiRequests: -1,
-    numBillAiRequests: -1,
-    numOrgUsers: -1,
+    numReceiptAiRequests: 1000,
+    numBillAiRequests: 1000,
+    numOrgUsers: 5,
   },
 };
 ```
