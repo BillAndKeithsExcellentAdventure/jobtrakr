@@ -38,8 +38,8 @@ describe('app settings entitlements helpers', () => {
       numProjectVideos: 20,
       numReceipts: 500,
       numBills: 500,
-      numReceiptAiRequests: 100,
-      numBillAiRequests: 100,
+      numReceiptAIRequests: 100,
+      numBillAIRequests: 100,
       numOrgUsers: 5,
     });
   });
@@ -67,8 +67,8 @@ describe('app settings entitlements helpers', () => {
           numProjectVideos: 999,
           numReceipts: 999,
           numBills: 999,
-          numReceiptAiRequests: 999,
-          numBillAiRequests: 999,
+          numReceiptAIRequests: 999,
+          numBillAIRequests: 999,
           numOrgUsers: 999,
         },
       },

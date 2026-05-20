@@ -17,8 +17,8 @@ export const ENTITLEMENT = [
   'numProjectVideos',
   'numReceipts',
   'numBills',
-  'numReceiptAiRequests',
-  'numBillAiRequests',
+  'numReceiptAIRequests',
+  'numBillAIRequests',
   'numOrgUsers',
 ] as const;
 
@@ -31,8 +31,8 @@ export const ENTITLEMENT_WITH_LIMITS = [
   'numProjectVideos',
   'numReceipts',
   'numBills',
-  'numReceiptAiRequests',
-  'numBillAiRequests',
+  'numReceiptAIRequests',
+  'numBillAIRequests',
   'numOrgUsers',
 ] as const;
 
@@ -50,8 +50,8 @@ export interface EntitlementsPayload {
   numProjectVideos: number;
   numReceipts: number;
   numBills: number;
-  numReceiptAiRequests: number;
-  numBillAiRequests: number;
+  numReceiptAIRequests: number;
+  numBillAIRequests: number;
   numOrgUsers: number;
 }
 

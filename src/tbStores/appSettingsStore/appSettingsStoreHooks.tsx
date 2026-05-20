@@ -42,8 +42,8 @@ export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayl
     numProjectVideos: 2,
     numReceipts: 20,
     numBills: 10,
-    numReceiptAiRequests: 5,
-    numBillAiRequests: 5,
+    numReceiptAIRequests: 5,
+    numBillAIRequests: 5,
     numOrgUsers: 2,
   },
   basic: {
@@ -57,8 +57,8 @@ export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayl
     numProjectVideos: 20,
     numReceipts: 1000,
     numBills: 1000,
-    numReceiptAiRequests: 100,
-    numBillAiRequests: 100,
+    numReceiptAIRequests: 100,
+    numBillAIRequests: 100,
     numOrgUsers: 3,
   },
   premium: {
@@ -69,12 +69,12 @@ export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayl
     numProjects: -1,
     numOfficeExpenseProjects: 10,
     numProjectPhotos: 3000,
-    numProjectVideos: -1,
+    numProjectVideos: 100,
     numReceipts: -1,
     numBills: -1,
-    numReceiptAiRequests: -1,
-    numBillAiRequests: -1,
-    numOrgUsers: -1,
+    numReceiptAIRequests: 1000,
+    numBillAIRequests: 1000,
+    numOrgUsers: 5,
   },
 };
 
@@ -177,18 +177,18 @@ const sanitizeEntitlementsPayload = (
         : typeof payload.numInvoices === 'number'
           ? payload.numInvoices
           : fallback.numBills,
-    numReceiptAiRequests:
-      typeof payload.numReceiptAiRequests === 'number'
-        ? payload.numReceiptAiRequests
+    numReceiptAIRequests:
+      typeof payload.numReceiptAIRequests === 'number'
+        ? payload.numReceiptAIRequests
         : typeof payload.numReceiptApiRequests === 'number'
           ? payload.numReceiptApiRequests
-          : fallback.numReceiptAiRequests,
-    numBillAiRequests:
-      typeof payload.numBillAiRequests === 'number'
-        ? payload.numBillAiRequests
+          : fallback.numReceiptAIRequests,
+    numBillAIRequests:
+      typeof payload.numBillAIRequests === 'number'
+        ? payload.numBillAIRequests
         : typeof payload.numInvoiceApiRequests === 'number'
           ? payload.numInvoiceApiRequests
-          : fallback.numBillAiRequests,
+          : fallback.numBillAIRequests,
     numOrgUsers: typeof payload.numOrgUsers === 'number' ? payload.numOrgUsers : fallback.numOrgUsers,
   };
 };

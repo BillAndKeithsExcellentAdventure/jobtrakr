@@ -29,8 +29,8 @@ export const ENTITLEMENT = [
   'numProjectVideos',
   'numReceipts',
   'numBills',
-  'numReceiptAiRequests',
-  'numBillAiRequests',
+  'numReceiptAIRequests',
+  'numBillAIRequests',
   'numOrgUsers',
 ] as const;
 
@@ -95,7 +95,7 @@ export const TABLES_SCHEMA = {
 
 Returns the current subscription tier and all entitlement values for the authenticated organization. This is the sole source of data for both the `subscriptionInformation` and `entitlements` tables.
 
-In addition, any backend endpoint that processes photos or invoices must also return the latest values for `numReceiptAiRequests` and `numBillAiRequests` in its response payload so the app can immediately update the local entitlement cache after each processing request.
+In addition, any backend endpoint that processes photos or invoices must also return the latest values for `numReceiptAIRequests` and `numBillAIRequests` in its response payload so the app can immediately update the local entitlement cache after each processing request.
 
 **Authentication:** Required (Bearer JWT via `apiWithToken`)
 
@@ -125,8 +125,8 @@ In addition, any backend endpoint that processes photos or invoices must also re
     "numProjectVideos": 20,
     "numReceipts": 500,
     "numBills": 500,
-    "numReceiptAiRequests": 100,
-    "numBillAiRequests": 100,
+    "numReceiptAIRequests": 100,
+    "numBillAIRequests": 100,
     "numOrgUsers": 5
   }
 }
@@ -146,8 +146,8 @@ Any endpoint that consumes an AI processing request for receipts or invoices mus
 
 This applies to:
 
-- photo-processing endpoints: must return the latest `numReceiptAiRequests`
-- invoice-processing endpoints: must return the latest `numBillAiRequests`
+- photo-processing endpoints: must return the latest `numReceiptAIRequests`
+- invoice-processing endpoints: must return the latest `numBillAIRequests`
 
 If an endpoint can affect both counters, it must return both updated values.
 
@@ -158,8 +158,8 @@ Example response shape addition:
   "success": true,
   "result": {},
   "updatedEntitlements": {
-    "numReceiptAiRequests": 99,
-    "numBillAiRequests": 100
+    "numReceiptAIRequests": 99,
+    "numBillAIRequests": 100
   }
 }
 ```
@@ -182,8 +182,8 @@ export interface EntitlementsPayload {
   numProjectVideos: number; // Number of videos that can be saved for a specific project.
   numReceipts: number; // Number of receipts that can be assigned to a specific project.
   numBills: number; // Number of bills that can be assigned to a specific project.
-  numReceiptAiRequests: number; // Number of times receipt images can be processed to convert the image to line items and amounts per month.
-  numBillAiRequests: number; // Number of times bill images can be processed to convert the image to line items and amounts per month.
+  numReceiptAIRequests: number; // Number of times receipt images can be processed to convert the image to line items and amounts per month.
+  numBillAIRequests: number; // Number of times bill images can be processed to convert the image to line items and amounts per month.
   numOrgUsers: number; // Number of other users that can be invited to your organization so that project data can be synched with their mobile devices.
 }
 
@@ -220,7 +220,7 @@ GET /getOrgEntitlements
 
 4. It then iterates over `ENTITLEMENT` and inserts one `entitlements` row per key.
 5. Components read data exclusively through hooks (see below) — they never call the backend directly.
-6. After every successful photo-processing or invoice-processing API request, the app reads the updated `numReceiptAiRequests` and/or `numBillAiRequests` returned by that endpoint and immediately updates the corresponding `entitlements` rows.
+6. After every successful photo-processing or invoice-processing API request, the app reads the updated `numReceiptAIRequests` and/or `numBillAIRequests` returned by that endpoint and immediately updates the corresponding `entitlements` rows.
 
 ---
 
@@ -318,8 +318,8 @@ export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayl
     numProjectVideos: 2,
     numReceipts: 20,
     numBills: 10,
-    numReceiptAiRequests: 5,
-    numBillAiRequests: 5,
+    numReceiptAIRequests: 5,
+    numBillAIRequests: 5,
     numOrgUsers: 2,
   },
   basic: {
@@ -333,8 +333,8 @@ export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayl
     numProjectVideos: 20,
     numReceipts: 1000,
     numBills: 1000,
-    numReceiptAiRequests: 100,
-    numBillAiRequests: 100,
+    numReceiptAIRequests: 100,
+    numBillAIRequests: 100,
     numOrgUsers: 3,
   },
   premium: {
@@ -348,8 +348,8 @@ export const DEV_ENTITLEMENTS_BY_TIER: Record<SubscriptionTier, EntitlementsPayl
     numProjectVideos: -1,
     numReceipts: -1,
     numBills: -1,
-    numReceiptAiRequests: -1,
-    numBillAiRequests: -1,
+    numReceiptAIRequests: -1,
+    numBillAIRequests: -1,
     numOrgUsers: -1,
   },
 };
@@ -388,8 +388,8 @@ Entitlement checks should be performed at the point of creating, not just displa
 | `numProjectVideos`            | Video capture / picker — check before adding                             |
 | `numReceipts`                 | "Add Receipt" action                                                     |
 | `numBills`                    | "Add Invoice" action                                                     |
-| `numReceiptAiRequests`        | AI photo processing queue — gate submission                              |
-| `numBillAiRequests`           | AI invoice processing queue — gate submission                            |
+| `numReceiptAIRequests`        | AI photo processing queue — gate submission                              |
+| `numBillAIRequests`           | AI invoice processing queue — gate submission                            |
 | `numOrgUsers`                 | Org member invite — check before sending invite                          |
 | `allowQuickBooksSync`         | QuickBooks setup screen — hide/disable option                            |
 | `allowChangeOrderEmails`      | Change order email send button                                           |
@@ -401,7 +401,7 @@ When `allowVendorPaymentReview` is `false`, the Vendors screen must not show or 
 - vendor email verification actions
 - `grantVendorAccess` calls
 
-For `numReceiptAiRequests` and `numBillAiRequests`, enforcement must happen in two places:
+For `numReceiptAIRequests` and `numBillAIRequests`, enforcement must happen in two places:
 
 - before submission: block the request if the count is already exhausted
 - after success: replace the local cached count with the updated value returned by the backend response
