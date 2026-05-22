@@ -12,7 +12,7 @@ import { ReactNativeLegal } from 'react-native-legal';
 import { DOCS_URL } from '@/src/constants/app-constants';
 import { Image } from 'expo-image';
 import { ENTITLEMENT } from '@/src/models/types';
-import { cancelSubscription, getSelectSubscriptionHTML, updateCard } from '@/src/utils/subscriptionApi';
+import {} from '@/src/utils/subscriptionApi';
 import {
   useEffectiveSubscriptionTier,
   useEntitlementsPayload,
@@ -77,78 +77,9 @@ export default function AboutScreen() {
     return 'Server';
   }, []);
 
-  const handleUpdateCreditCardInfo = useCallback(async () => {
-    if (!orgId || !userId) {
-      Alert.alert('Authentication Required', 'Please sign in again before managing subscriptions.');
-      return;
-    }
-
-    try {
-      const { checkoutUrl } = await updateCard(orgId, userId, getToken);
-      router.push({
-        pathname: '/subscription/choosePlan',
-        params: { url: checkoutUrl },
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to open card update right now.';
-      Alert.alert('Card Update Unavailable', message);
-    }
-  }, [orgId, userId, getToken, router]);
-
-  const handleCancelSubscriptionPlan = useCallback(() => {
-    Alert.alert(
-      'Cancel Subscription',
-      'Are you sure you want to cancel your subscription and downgrade to the free plan?',
-      [
-        { text: 'No', style: 'cancel' },
-        {
-          text: 'Yes, Cancel',
-          style: 'destructive',
-          onPress: async () => {
-            if (!orgId || !userId) {
-              Alert.alert('Authentication Required', 'Please sign in again before managing subscriptions.');
-              return;
-            }
-
-            try {
-              await cancelSubscription(orgId, userId, getToken);
-              await refreshSubscription();
-              Alert.alert(
-                'Subscription Cancelled',
-                'Your subscription has been cancelled and your plan has been downgraded to free.',
-              );
-            } catch (error) {
-              const message =
-                error instanceof Error ? error.message : 'Unable to cancel subscription right now.';
-              Alert.alert('Cancellation Failed', message);
-            }
-          },
-        },
-      ],
-    );
-  }, [orgId, userId, getToken, refreshSubscription]);
-
-  const handleChooseSubscriptionPlan = useCallback(async () => {
-    if (!orgId || !userId) {
-      Alert.alert('Authentication Required', 'Please sign in again before managing subscriptions.');
-      return;
-    }
-
-    try {
-      const subscriptionHtml = await getSelectSubscriptionHTML(orgId, userId);
-      if (!subscriptionHtml || !subscriptionHtml.trim()) {
-        throw new Error('Subscription page content is empty.');
-      }
-
-      router.push({
-        pathname: '/subscription/choosePlan',
-        params: { html: subscriptionHtml },
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to open subscription plans right now.';
-      Alert.alert('Subscription Unavailable', message);
-    }
-  }, [orgId, userId, router]);
+  const handleManageSubscription = useCallback(() => {
+    router.push('/subscription/manageSubscription');
+  }, [router]);
 
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={[styles.container]}>
@@ -193,29 +124,12 @@ export default function AboutScreen() {
               onPress={() => setIsDetailsVisible(true)}
               style={styles.subscriptionButton}
             />
-            {usingPaidSubscription ? (
-              <>
-                <ActionButton
-                  title="Update Credit Card Info"
-                  type="action"
-                  onPress={handleUpdateCreditCardInfo}
-                  style={styles.subscriptionButton}
-                />
-                <ActionButton
-                  title="Cancel Subscription"
-                  type="action"
-                  onPress={handleCancelSubscriptionPlan}
-                  style={styles.subscriptionButton}
-                />
-              </>
-            ) : (
-              <ActionButton
-                title="Choose Subscription Plan"
-                type="action"
-                onPress={handleChooseSubscriptionPlan}
-                style={styles.subscriptionButton}
-              />
-            )}
+            <ActionButton
+              title="Manage Subscription"
+              type="action"
+              onPress={handleManageSubscription}
+              style={styles.subscriptionButton}
+            />
           </View>
         </View>
 

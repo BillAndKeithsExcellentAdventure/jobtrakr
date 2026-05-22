@@ -15,6 +15,17 @@ interface CancelSubscriptionResponse extends ApiDefaultResponse {
   };
 }
 
+interface UpgradeSubscriptionResponse extends ApiDefaultResponse {
+  data?: {
+    orgId: string;
+    newPlanId: string;
+    newPlanName: string;
+    newAmount: number;
+    currency: string;
+    nextChargeDate: string;
+  };
+}
+
 export interface UpdateCardResult {
   checkoutUrl: string;
 }
@@ -127,4 +138,35 @@ export async function updateCard(
   }
 
   return { checkoutUrl: response.url };
+}
+
+/**
+ * Upgrade an organization's subscription to a new billable plan.
+ */
+export async function upgradeSubscription(
+  orgId: string,
+  userId: string,
+  planId: string,
+  getToken: () => Promise<string | null>,
+): Promise<UpgradeSubscriptionResponse> {
+  const apiFetch = createApiWithToken(getToken);
+
+  const response = await apiFetch(`${API_BASE_URL}/nmi/upgradeSubscription`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userId,
+      orgId,
+      planId,
+    }),
+  });
+
+  const data: UpgradeSubscriptionResponse = await response.json();
+  if (!response.ok || !data.success) {
+    throw new Error(data.message || 'Failed to upgrade subscription');
+  }
+
+  return data;
 }
