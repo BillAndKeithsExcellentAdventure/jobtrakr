@@ -150,12 +150,12 @@ const Home = () => {
     refreshVerifiedEmailAddresses,
     refreshVendorsGrantedAccess,
   } = useNetwork();
-  const auth = useAuth();
+  const { orgId, userId, getToken, orgRole } = useAuth();
   const appSettings = useAppSettings();
   const allowQuickBooksSync = useEntitlementFlag('allowQuickBooksSync');
   const setAppSettings = useSetAppSettingsCallback();
   const { clearAllProjectIds } = useActiveProjectIds();
-  const showManageTeam = !!auth.orgId && !!auth.orgRole && auth.orgRole.includes('admin');
+  const showManageTeam = !!orgId && !!orgRole && orgRole.includes('admin');
 
   useEffect(() => {
     clearAllProjectIds();
@@ -173,7 +173,7 @@ const Home = () => {
 
   const checkQBConnectionWithRetry = useCallback(
     async (maxRetries = 60, retryInterval = 1000): Promise<boolean> => {
-      if (!auth.orgId || !auth.userId) {
+      if (!orgId || !userId) {
         console.error('Cannot check QB connection: missing orgId or userId');
         return false;
       }
@@ -181,7 +181,7 @@ const Home = () => {
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
           await new Promise((resolve) => setTimeout(resolve, retryInterval));
-          const connected = await isQuickBooksConnected(auth.orgId, auth.userId, auth.getToken);
+          const connected = await isQuickBooksConnected(orgId, userId, getToken);
           if (connected) {
             return true;
           }
@@ -192,11 +192,11 @@ const Home = () => {
 
       return false;
     },
-    [auth],
+    [orgId, userId, getToken],
   );
 
   const handleDisconnectFromQuickBooks = useCallback(() => {
-    if (!auth.orgId || !auth.userId) {
+    if (!orgId || !userId) {
       Alert.alert('Error', 'Authentication required to disconnect from QuickBooks');
       return;
     }
@@ -209,13 +209,13 @@ const Home = () => {
         onPress: async () => {
           startProcessing('Disconnecting from QuickBooks...');
           try {
-            const token = await auth.getToken();
+            const token = await getToken();
             if (!token) {
               Alert.alert('Error', 'Unable to obtain authentication token');
               return;
             }
 
-            await qbDisconnect(auth.orgId!, auth.userId!, auth.getToken);
+            await qbDisconnect(orgId, userId, getToken);
             setAppSettings({ syncWithQuickBooks: false });
             Alert.alert('Success', 'Successfully disconnected from QuickBooks');
           } catch (error) {
@@ -227,11 +227,11 @@ const Home = () => {
         },
       },
     ]);
-  }, [auth, setAppSettings, startProcessing, stopProcessing]);
+  }, [orgId, userId, getToken, setAppSettings, startProcessing, stopProcessing]);
 
   const handleLoadCompanyInfoFromQuickBooks = useCallback(
     async (showAlert = true) => {
-      if (!auth.orgId || !auth.userId) {
+      if (!orgId || !userId) {
         Alert.alert('Error', 'Authentication required to fetch company information');
         return;
       }
@@ -249,7 +249,7 @@ const Home = () => {
             if (attempt > 0) {
               await new Promise((resolve) => setTimeout(resolve, retryInterval));
             }
-            companyInfo = await fetchCompanyInfo(auth.orgId, auth.userId, auth.getToken);
+            companyInfo = await fetchCompanyInfo(orgId, userId, getToken);
             break;
           } catch (error) {
             if (attempt === maxRetries - 1) {
@@ -289,7 +289,7 @@ const Home = () => {
         queuePostProcessingAlert(alertTitle, alertMessage);
       }
     },
-    [auth, setAppSettings, startProcessing, stopProcessing, queuePostProcessingAlert],
+    [orgId, userId, getToken, setAppSettings, startProcessing, stopProcessing, queuePostProcessingAlert],
   );
 
   const hasConfigurationData: boolean = useMemo(
@@ -518,7 +518,7 @@ const Home = () => {
 
   const handleGetQBVendors = useCallback(
     async (showAlert = true) => {
-      if (!auth.orgId || !auth.userId) {
+      if (!orgId || !userId) {
         Alert.alert('Error', 'Unable to import vendors. Please sign in again.');
         return;
       }
@@ -532,9 +532,9 @@ const Home = () => {
       let alertMessage = '';
       try {
         const { addedCount } = await importVendorsFromQuickBooks(
-          auth.orgId!,
-          auth.userId!,
-          auth.getToken,
+          orgId,
+          userId,
+          getToken,
           allVendors,
           addVendorToStore,
           deleteVendor,
@@ -559,9 +559,9 @@ const Home = () => {
       }
     },
     [
-      auth.orgId,
-      auth.userId,
-      auth.getToken,
+      orgId,
+      userId,
+      getToken,
       allVendors,
       addVendorToStore,
       deleteVendor,
@@ -574,7 +574,7 @@ const Home = () => {
 
   const handleGetQBAccounts = useCallback(
     async (showAlert = true) => {
-      if (!auth.orgId || !auth.userId) {
+      if (!orgId || !userId) {
         Alert.alert('Error', 'Unable to get accounts. Please sign in again.');
         return;
       }
@@ -588,9 +588,9 @@ const Home = () => {
       let alertMessage = '';
       try {
         const { addedCount, accounts } = await importAccountsFromQuickBooks(
-          auth.orgId,
-          auth.userId,
-          auth.getToken,
+          orgId,
+          userId,
+          getToken,
           allAccounts,
           addAccount,
           deleteAccount,
@@ -618,9 +618,9 @@ const Home = () => {
       }
     },
     [
-      auth.orgId,
-      auth.userId,
-      auth.getToken,
+      orgId,
+      userId,
+      getToken,
       allAccounts,
       addAccount,
       deleteAccount,
@@ -635,7 +635,7 @@ const Home = () => {
 
   const handleGetQBCustomers = useCallback(
     async (showAlert = true) => {
-      if (!auth.orgId || !auth.userId) {
+      if (!orgId || !userId) {
         Alert.alert('Error', 'Unable to import customers. Please sign in again.');
         return;
       }
@@ -649,9 +649,9 @@ const Home = () => {
       let alertMessage = '';
       try {
         const { addedCount, updatedCount, unchangedCount } = await importCustomersFromQuickBooks(
-          auth.orgId,
-          auth.userId,
-          auth.getToken,
+          orgId,
+          userId,
+          getToken,
           allCustomers,
           addCustomer,
           updateCustomer,
@@ -676,9 +676,9 @@ const Home = () => {
       }
     },
     [
-      auth.orgId,
-      auth.userId,
-      auth.getToken,
+      orgId,
+      userId,
+      getToken,
       allCustomers,
       addCustomer,
       updateCustomer,
@@ -746,20 +746,20 @@ const Home = () => {
   }, [allCustomers, addCustomer, updateCustomer, configStore]);
 
   const handleConnectToQuickBooks = useCallback(async () => {
-    if (!auth.orgId || !auth.userId) {
+    if (!orgId || !userId) {
       Alert.alert('Error', 'Authentication required to connect to QuickBooks');
       return;
     }
 
     startProcessing('Connecting to QuickBooks...');
     try {
-      const token = await auth.getToken();
+      const token = await getToken();
       if (!token) {
         Alert.alert('Error', 'Unable to obtain authentication token');
         return;
       }
 
-      const { authUrl } = await qbConnect(auth.orgId, auth.userId, auth.getToken);
+      const { authUrl } = await qbConnect(orgId, userId, getToken);
       if (!authUrl) {
         Alert.alert('Error', 'No authorization URL received from server');
         return;
@@ -789,7 +789,9 @@ const Home = () => {
       stopProcessing();
     }
   }, [
-    auth,
+    orgId,
+    userId,
+    getToken,
     checkQBConnectionWithRetry,
     setAppSettings,
     startProcessing,
@@ -1073,7 +1075,7 @@ const Home = () => {
             <View style={{ marginBottom: 10, marginTop: 4 }}>
               <ActionButton type="action" title="Connect to QuickBooks" onPress={handleConnectToQuickBooks} />
               <View style={styles.quickBooksInterestRow}>
-                <Text>Don't show connect button</Text>
+                <Text>Don&apos;t show connect button</Text>
                 <Switch
                   value={!!appSettings.noQuickBooksInterest}
                   onValueChange={handleSetNoQuickBooksInterest}

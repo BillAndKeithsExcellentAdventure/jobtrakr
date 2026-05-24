@@ -70,10 +70,9 @@ const AddReceiptPage = () => {
   const defaultDate = useMemo(() => new Date(), []);
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
-  const auth = useAuth();
+  const { userId, orgId, getToken } = useAuth();
   const project = useProject(projectId);
   const projectAbbr = project?.abbreviation ?? '';
-  const { userId, orgId, getToken } = auth;
   const appSettings = useAppSettings();
   const receiptLimit = useEntitlementLimit('numReceipts');
   const allProjectReceipts = useAllRows(projectId, 'receipts');

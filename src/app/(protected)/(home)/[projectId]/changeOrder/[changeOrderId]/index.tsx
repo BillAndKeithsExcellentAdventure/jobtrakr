@@ -106,7 +106,7 @@ const DefineChangeOrderScreen = () => {
   const allowChangeOrderEmails = useEntitlementFlag('allowChangeOrderEmails');
   const projectData = useProject(projectId);
   const allCustomers = useConfigAllRows('customers');
-  const auth = useAuth();
+  const { orgId, userId, getToken } = useAuth();
   const [headerMenuModalVisible, setHeaderMenuModalVisible] = useState<boolean>(false);
   const [showAddItemModal, setShowAddItemModal] = useState<boolean>(false);
   const [isSendingChangeOrder, setIsSendingChangeOrder] = useState(false);
@@ -254,8 +254,6 @@ const DefineChangeOrderScreen = () => {
     const htmlOutput = renderChangeOrderTemplate(templateHTMLString, changeOrderData);
     if (!htmlOutput) return;
 
-    const orgId = auth.orgId;
-    const userId = auth.userId;
     if (!orgId) {
       Alert.alert('Error', 'Organization ID not found. Please sign in again and retry.');
       return;
@@ -374,7 +372,7 @@ const DefineChangeOrderScreen = () => {
             changeOrder?.title || 'unknown'
           }"`,
         },
-        auth.getToken,
+        getToken,
       );
 
       if (accountingId && changeOrder) {
@@ -411,7 +409,9 @@ const DefineChangeOrderScreen = () => {
     appSettings,
     projectData,
     allCustomers,
-    auth,
+    orgId,
+    userId,
+    getToken,
     projectId,
     router,
     updateChangeOrder,

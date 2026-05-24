@@ -5,7 +5,7 @@ import { ActivityIndicator, Alert, StyleSheet, TouchableOpacity } from 'react-na
 
 import { ActionButton } from '@/src/components/ActionButton';
 import { useColors } from '@/src/context/ColorsContext';
-import { isClerkAPIResponseError, useAuth, useSignUp } from '@clerk/clerk-expo';
+import { isClerkAPIResponseError, useSignUp } from '@clerk/clerk-expo';
 import { Link, Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,7 +21,6 @@ export default function SignUpScreen() {
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [isClerkReady, setIsClerkReady] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
-  const auth = useAuth();
 
   React.useEffect(() => {
     if (!signUp || !isLoaded || setActive == null) {
@@ -86,7 +85,6 @@ export default function SignUpScreen() {
         await setActive({ session: signUpAttempt.createdSessionId });
         console.log('Sign-up verification completed successfully');
         console.log('  Ready to useAuth');
-        console.log('Auth:', auth);
         router.replace('/');
       } else {
         // If the status is not complete, check why. User may need to

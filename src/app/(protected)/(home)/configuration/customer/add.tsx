@@ -12,8 +12,7 @@ import { StyleSheet } from 'react-native';
 const AddCustomerModal = () => {
   const router = useRouter();
   const colors = useColors();
-  const auth = useAuth();
-  const { orgId, userId, getToken } = auth;
+  const { orgId, userId, getToken } = useAuth();
   const { isQuickBooksAccessible } = useNetwork();
   const addCustomerToStore = useAddRowCallback('customers');
   const [customer, setCustomer] = useState<CustomerData>({

@@ -84,8 +84,7 @@ const RequestAIProcessingPage = () => {
     imageId: string;
     invoiceId: string;
   }>();
-  const auth = useAuth();
-  const { userId, orgId } = auth;
+  const { userId, orgId, getToken } = useAuth();
   const hasFetched = useRef(false);
   const [fetchingData, setFetchingData] = useState(true);
   const [showCostItemPicker, setShowCostItemPicker] = useState(false);
@@ -116,7 +115,7 @@ const RequestAIProcessingPage = () => {
 
   const fetchAIResult = useCallback(async () => {
     try {
-      const result = await processAIProcessing(imageId, projectId, userId!, orgId!, auth.getToken);
+      const result = await processAIProcessing(imageId, projectId, userId!, orgId!, getToken);
 
       if (result?.limits) {
         const limit = typeof result.limits.limit === 'number' ? result.limits.limit : -1;
@@ -177,7 +176,7 @@ const RequestAIProcessingPage = () => {
     } finally {
       setFetchingData(false);
     }
-  }, [imageId, projectId, userId, orgId, auth.getToken, updateApiRequestsRemaining]);
+  }, [imageId, projectId, userId, orgId, getToken, updateApiRequestsRemaining]);
 
   useEffect(() => {
     // reset fetch flag when navigating to a different invoice image

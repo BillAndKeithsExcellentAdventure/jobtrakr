@@ -60,17 +60,19 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const previousSyncWithQuickBooksRef = useRef<boolean | null>(null);
   const verifiedEmailAddressesRef = useRef<string[]>([]);
   const vendorsGrantedAccessRef = useRef<VendorGrantedAccess[]>([]);
-  const auth = useAuth();
+  const { userId, orgId, getToken, isLoaded, isSignedIn } = useAuth();
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
   const lastNetworkStateRef = useRef<{
     isConnected: boolean;
     isInternetReachable: boolean | null;
     type: string | null;
   } | null>(null);
 
-  const { userId, orgId, getToken } = auth;
-
   const refreshVerifiedEmailAddresses = useCallback(async (): Promise<void> => {
-    if (!auth.isLoaded || !auth.isSignedIn || !orgId || !userId || !isInternetReachable) {
+    const tokenGetter = getTokenRef.current;
+
+    if (!isLoaded || !isSignedIn || !orgId || !userId || !tokenGetter || !isInternetReachable) {
       if (verifiedEmailAddressesRef.current.length > 0) {
         verifiedEmailAddressesRef.current = [];
         setVerifiedEmailAddresses([]);
@@ -79,7 +81,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     }
 
     try {
-      const nextAddresses = await getVerifiedEmailAddresses(orgId, userId, getToken);
+      const nextAddresses = await getVerifiedEmailAddresses(orgId, userId, tokenGetter);
       const currentAddresses = verifiedEmailAddressesRef.current;
       const hasChanged =
         currentAddresses.length !== nextAddresses.length ||
@@ -92,10 +94,12 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     } catch (error) {
       console.error('Failed to refresh verified email addresses:', error);
     }
-  }, [auth.isLoaded, auth.isSignedIn, getToken, orgId, userId, isInternetReachable]);
+  }, [isLoaded, isSignedIn, orgId, userId, isInternetReachable]);
 
   const refreshVendorsGrantedAccess = useCallback(async (): Promise<void> => {
-    if (!auth.isLoaded || !auth.isSignedIn || !orgId || !userId || !isInternetReachable) {
+    const tokenGetter = getTokenRef.current;
+
+    if (!isLoaded || !isSignedIn || !orgId || !userId || !tokenGetter || !isInternetReachable) {
       if (vendorsGrantedAccessRef.current.length > 0) {
         vendorsGrantedAccessRef.current = [];
         setVendorsGrantedAccess([]);
@@ -104,7 +108,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     }
 
     try {
-      const nextVendorsGrantedAccess = await getVendorsGrantedAccess(orgId, userId, getToken);
+      const nextVendorsGrantedAccess = await getVendorsGrantedAccess(orgId, userId, tokenGetter);
       const currentVendorsGrantedAccess = vendorsGrantedAccessRef.current;
       const hasChanged =
         currentVendorsGrantedAccess.length !== nextVendorsGrantedAccess.length ||
@@ -122,7 +126,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     } catch (error) {
       console.error('Failed to refresh vendors granted access:', error);
     }
-  }, [auth.isLoaded, auth.isSignedIn, getToken, orgId, userId, isInternetReachable]);
+  }, [isLoaded, isSignedIn, orgId, userId, isInternetReachable]);
 
   // Check if we're in a development build and debug offline mode is enabled
   const debugForceOffline = isDevelopmentBuild() && appSettings.debugForceOffline;
@@ -200,7 +204,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
 
   useEffect(() => {
     const checkQbConnection = async () => {
-      if (!auth.isLoaded || !auth.isSignedIn) {
+      if (!isLoaded || !isSignedIn) {
         console.log('Skipping QuickBooks check: auth not ready/signed in');
         previousConnectedRef.current = false;
         setIsQuickBooksAccessible(false);
@@ -257,7 +261,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
       }
 
       try {
-        const connected = await testQbIsConnected(orgId, userId, getToken);
+        const connected = await testQbIsConnected(orgId, userId, getTokenRef.current);
         if (connected !== previousConnectedRef.current) {
           console.log(
             `QuickBooks accessibility: ${connected ? 'QuickBooks is accessible ✅' : 'QuickBooks is not accessible ❌'}`,
@@ -274,8 +278,8 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
 
     void checkQbConnection();
   }, [
-    auth.isLoaded,
-    auth.isSignedIn,
+    isLoaded,
+    isSignedIn,
     appSettings.id,
     appSettings.syncWithQuickBooks,
     appSettings.useDevSubscriptionOverride,
@@ -285,7 +289,6 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     userId,
     isConnected,
     isInternetReachable,
-    getToken,
   ]);
 
   const value: NetworkContextType = {

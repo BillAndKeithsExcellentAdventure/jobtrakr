@@ -18,15 +18,21 @@ export const registerForPushNotifications = async (
 ): Promise<void> => {
   try {
     // Request permissions
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
+    const existingPermissions = (await Notifications.getPermissionsAsync()) as {
+      granted?: boolean;
+      status?: string;
+    };
+    let finalGranted = existingPermissions.granted ?? existingPermissions.status === 'granted';
 
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
+    if (!finalGranted) {
+      const requestedPermissions = (await Notifications.requestPermissionsAsync()) as {
+        granted?: boolean;
+        status?: string;
+      };
+      finalGranted = requestedPermissions.granted ?? requestedPermissions.status === 'granted';
     }
 
-    if (finalStatus !== 'granted') {
+    if (!finalGranted) {
       console.warn('Failed to get push notification permissions');
       return;
     }

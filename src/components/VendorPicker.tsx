@@ -52,8 +52,7 @@ export const VendorPicker = ({
   const colors = useColors();
   const addVendorToStore = useAddRowCallback('vendors');
   const { isQuickBooksAccessible, isQuickBooksConnected } = useNetwork();
-  const auth = useAuth();
-  const { orgId, userId, getToken } = auth;
+  const { orgId, userId, getToken } = useAuth();
   const openPickerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Filter to only show active vendors; when connected to QuickBooks, only show vendors with an accountingId

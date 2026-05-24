@@ -43,7 +43,7 @@ const ProjectInvoicesPage = () => {
   const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
-  const auth = useAuth();
+  const { orgId, userId, getToken } = useAuth();
 
   useEffect(() => {
     if (projectId) {
@@ -67,7 +67,6 @@ const ProjectInvoicesPage = () => {
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
   const { isQuickBooksAccessible, refreshVerifiedEmailAddresses } = useNetwork();
-  const { orgId, userId, getToken } = auth;
 
   useEffect(() => {
     if (refreshVerifiedEmailAddresses) {

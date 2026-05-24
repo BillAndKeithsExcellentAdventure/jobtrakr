@@ -19,16 +19,14 @@ export default function CreateOrganization() {
   const [organizationName, setOrganizationName] = React.useState('');
   const [organizationExists, setOrganizationExists] = React.useState(false);
   const [isCreating, setIsCreating] = React.useState(false);
-  const auth = useAuth();
+  const { orgId, userId, getToken } = useAuth();
   const { setActive } = useOrganizationList();
 
   useEffect(() => {
-    if (auth) {
-      if (auth.orgId) {
-        setOrganizationExists(true);
-      }
+    if (orgId) {
+      setOrganizationExists(true);
     }
-  }, [auth]);
+  }, [orgId]);
 
   const createOrganization = async (
     userId: string,
@@ -92,18 +90,18 @@ export default function CreateOrganization() {
         //console.log('onCreateOrganizationPress-Auth:', auth);
         //console.log('onCreateOrganizationPress-Clerk:', clerk);
         if (clerk && clerk.session) {
-          if (auth.userId) {
+          if (userId) {
             // Determine deployment type. Use NODE_ENV when available, fall back to React Native __DEV__.
             const isDev =
               (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
               (global as any).__DEV__ === true;
 
             const result = await createOrganization(
-              auth.userId,
+              userId,
               organizationName,
               getOrganizationSlug(organizationName),
               isDev,
-              auth.getToken,
+              getToken,
             );
 
             if (result && result.id) {

@@ -42,7 +42,7 @@ const QBAccountsScreen = () => {
   const colors = useColors();
   const router = useRouter();
   const { isQuickBooksAccessible } = useNetwork();
-  const auth = useAuth();
+  const { orgId, userId, getToken } = useAuth();
   const appSettings = useAppSettings();
   const setAppSettings = useSetAppSettingsCallback();
   const storedAccounts = useAllRows('accounts');
@@ -100,7 +100,7 @@ const QBAccountsScreen = () => {
   const hasAccountsFetched = useRef(false);
 
   const handleGetQBAccounts = useCallback(async () => {
-    if (!auth.orgId || !auth.userId) {
+    if (!orgId || !userId) {
       Alert.alert('Error', 'Unable to get accounts. Please sign in again.');
       return;
     }
@@ -111,9 +111,9 @@ const QBAccountsScreen = () => {
     startProcessing('Importing Accounts from QuickBooks...');
     try {
       const { addedCount, accounts } = await importAccountsFromQuickBooks(
-        auth.orgId,
-        auth.userId,
-        auth.getToken,
+        orgId,
+        userId,
+        getToken,
         allAccounts,
         addAccount,
         deleteAccount,
@@ -134,9 +134,9 @@ const QBAccountsScreen = () => {
       stopProcessing();
     }
   }, [
-    auth.orgId,
-    auth.userId,
-    auth.getToken,
+    orgId,
+    userId,
+    getToken,
     allAccounts,
     addAccount,
     deleteAccount,

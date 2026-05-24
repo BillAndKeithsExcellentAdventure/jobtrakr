@@ -23,8 +23,7 @@ import { randomUUID } from 'expo-crypto';
  * Includes network connectivity checks to avoid unnecessary attempts when offline.
  */
 export const useReceiptQueue = () => {
-  const auth = useAuth();
-  const { userId, orgId, getToken } = auth;
+  const { userId, orgId } = useAuth();
   const { isConnected, isInternetReachable } = useNetwork();
   const receiptsToProcess = useAllReceiptQueueEntries();
   const deleteQueuedReceipts = useDeleteReceiptQueueEntriesCallback();
@@ -331,7 +330,6 @@ export const useReceiptQueue = () => {
   }, [
     userId,
     orgId,
-    auth,
     receiptsToProcess,
     cacheVersion,
     isProcessing,
@@ -339,7 +337,6 @@ export const useReceiptQueue = () => {
     isInternetReachable,
     deleteQueuedReceipts,
     duplicateReceiptImage,
-    getToken,
     getStoreFromCache,
     createReceiptCopyInProject,
   ]);

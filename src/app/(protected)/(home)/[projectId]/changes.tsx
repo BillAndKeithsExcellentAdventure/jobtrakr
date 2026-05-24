@@ -77,7 +77,7 @@ const ChangeOrdersScreen = () => {
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const updateBidEstimate = useUpdateRowCallback(projectId, 'workItemSummaries');
   const addWorkItemSummary = useAddRowCallback(projectId, 'workItemSummaries');
-  const auth = useAuth();
+  const { getToken } = useAuth();
   const appSettings = useAppSettings();
   const currentProject = useProject(projectId);
   const allCustomers = useConfigAllRows('customers');
@@ -149,7 +149,7 @@ const ChangeOrdersScreen = () => {
 
   const fetchStatuses = useCallback(async () => {
     try {
-      const changeOrderStatusString = await getChangeOrderStatuses(projectId, auth.getToken);
+      const changeOrderStatusString = await getChangeOrderStatuses(projectId, getToken);
       //console.log('Change Order Statuses:', changeOrderStatusString);
 
       if (!changeOrderStatusString) {
@@ -214,7 +214,7 @@ const ChangeOrdersScreen = () => {
       console.error('Error fetching change order statuses:', error);
     }
   }, [
-    auth,
+    getToken,
     projectId,
     allChangeOrders,
     updateChangeOrder,

@@ -78,8 +78,7 @@ const ReceiptDetailsPage = () => {
   const allWorkItems = useAllConfigurationRows('workItems');
   const addReceiptQueueEntry = useAddReceiptQueueEntryCallback();
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
-  const auth = useAuth();
-  const { userId, orgId, getToken } = auth;
+  const { userId, orgId, getToken } = useAuth();
   const getImage = useGetImageCallback();
   const mediaToUpload = useAllMediaToUpload();
   const mediaToUploadRef = useRef(mediaToUpload);

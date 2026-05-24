@@ -46,8 +46,7 @@ export const CustomerPicker = ({
   const colors = useColors();
   const addCustomerToStore = useAddRowCallback('customers');
   const { isQuickBooksAccessible } = useNetwork();
-  const auth = useAuth();
-  const { orgId, userId, getToken } = auth;
+  const { orgId, userId, getToken } = useAuth();
   const openPickerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Filter to only show active customers

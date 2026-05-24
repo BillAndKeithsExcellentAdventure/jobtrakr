@@ -57,8 +57,7 @@ export const ProjectMediaList = ({
   const deleteMediaCallback = useDeleteMediaCallback();
   const mediaToUpload = useAllMediaToUpload();
   const store = useUploadSyncStore();
-  const auth = useAuth();
-  const { orgId } = auth;
+  const { orgId } = useAuth();
   const setPublicStateForSelectedMedia = useMakePhotosPublicCallback();
   const { isConnected, isInternetReachable } = useNetwork();
 

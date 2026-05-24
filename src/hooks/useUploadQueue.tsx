@@ -15,8 +15,7 @@ import { mediaType, resourceType, ImageDetails, uploadImage, deleteMedia } from 
  * Now includes network connectivity checks to avoid unnecessary attempts when offline.
  */
 export const useUploadQueue = () => {
-  const auth = useAuth();
-  const { userId, orgId } = auth;
+  const { userId, orgId, getToken } = useAuth();
   const { isConnected, isInternetReachable } = useNetwork();
   const mediaToUpload = useAllMediaToUpload();
   const serverMediaToDelete = useAllServerMediaToDelete();
@@ -103,7 +102,7 @@ export const useUploadQueue = () => {
           // Attempt to upload with extended timeout for queue processing (120 seconds)
           const result = await uploadImage(
             details,
-            auth.getToken,
+            getToken,
             item.mediaType as mediaType,
             item.resourceType as resourceType,
             item.localUri,
@@ -163,7 +162,7 @@ export const useUploadQueue = () => {
             item.projectId,
             imageIds,
             item.imageType,
-            auth.getToken,
+            getToken,
             120000,
           );
 
@@ -210,7 +209,7 @@ export const useUploadQueue = () => {
   }, [
     userId,
     orgId,
-    auth,
+    getToken,
     store,
     mediaToUpload,
     serverMediaToDelete,

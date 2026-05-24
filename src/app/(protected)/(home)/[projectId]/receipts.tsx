@@ -55,7 +55,7 @@ const ProjectReceiptsPage = () => {
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const { isQuickBooksConnected } = useNetwork();
-  const auth = useAuth();
+  const { orgId } = useAuth();
 
   useEffect(() => {
     if (projectId) {
@@ -485,7 +485,7 @@ const ProjectReceiptsPage = () => {
                         data={classifiedReceipts}
                         keyExtractor={(item, index) => item.id ?? index.toString()}
                         renderItem={({ item }) => (
-                          <SwipeableReceiptItem orgId={auth.orgId!} projectId={projectId} item={item} />
+                          <SwipeableReceiptItem orgId={orgId!} projectId={projectId} item={item} />
                         )}
                         ListEmptyComponent={
                           <View style={{ alignItems: 'center', margin: 20 }}>

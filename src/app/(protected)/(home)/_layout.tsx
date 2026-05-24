@@ -6,13 +6,13 @@ export const unstable_settings = {
   initialRouteName: 'index',
 };
 const ProjectsLayout = () => {
-  const auth = useAuth();
+  const { isLoaded, isSignedIn, orgId } = useAuth();
 
-  if (!auth || !auth.isLoaded) {
+  if (!isLoaded) {
     return null;
   }
 
-  if (auth.isSignedIn && auth.orgId) {
+  if (isSignedIn && orgId) {
     return (
       <Stack
         screenOptions={{ headerShown: true, headerBackTitle: '', headerBackButtonDisplayMode: 'minimal' }}

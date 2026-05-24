@@ -685,8 +685,7 @@ const fetchProjectPublicImageIds = async (
  * If the media is in the mediaToUpload queue, it's removed from there without an API call.
  */
 export const useDeleteMediaCallback = () => {
-  const auth = useAuth();
-  const { userId, orgId } = auth;
+  const { userId, orgId, getToken } = useAuth();
   const addServerMediaToDeleteRecord = useAddServerMediaToDeleteCallback();
   const mediaToUpload = useAllMediaToUpload();
 
@@ -700,7 +699,7 @@ export const useDeleteMediaCallback = () => {
         return { success: false, msg: 'User ID or Organization ID not available' };
       }
 
-      if (!auth.getToken) {
+      if (!getToken) {
         return { success: false, msg: 'Auth token getter not available' };
       }
 
@@ -743,7 +742,7 @@ export const useDeleteMediaCallback = () => {
         };
       }
     },
-    [userId, orgId, auth, addServerMediaToDeleteRecord, mediaToUpload],
+    [userId, orgId, getToken, addServerMediaToDeleteRecord, mediaToUpload],
   );
 };
 
@@ -753,8 +752,7 @@ export const useDeleteMediaCallback = () => {
  * If online, the request is executed immediately via the API.
  */
 export const useDuplicateReceiptImageCallback = () => {
-  const auth = useAuth();
-  const { userId, orgId } = auth;
+  const { userId, orgId, getToken } = useAuth();
   const { isConnected, isInternetReachable } = useNetwork();
 
   return useCallback(
@@ -767,7 +765,7 @@ export const useDuplicateReceiptImageCallback = () => {
         return { success: false, msg: 'User ID or Organization ID not available' };
       }
 
-      if (!auth.getToken) {
+      if (!getToken) {
         return { success: false, msg: 'Auth token getter not available' };
       }
 
@@ -782,7 +780,7 @@ export const useDuplicateReceiptImageCallback = () => {
           fromProjectId,
           toProjectId,
           imageId,
-          auth.getToken,
+          getToken,
         );
 
         if (!duplicateResult.success) {
@@ -803,7 +801,7 @@ export const useDuplicateReceiptImageCallback = () => {
         };
       }
     },
-    [userId, orgId, auth, isConnected, isInternetReachable],
+    [userId, orgId, getToken, isConnected, isInternetReachable],
   );
 };
 
@@ -942,8 +940,7 @@ const copyToLocalFolder = async (
 };
 
 export const useAddImageCallback = () => {
-  const auth = useAuth();
-  const { userId, orgId } = auth;
+  const { userId, orgId } = useAuth();
   const addMediaToUploadRecord = useAddMediaToUploadCallback();
 
   return useCallback(
@@ -1062,8 +1059,7 @@ export const useAddImageCallback = () => {
 };
 
 export const useGetImageCallback = () => {
-  const auth = useAuth();
-  const { userId, orgId } = auth;
+  const { userId, orgId, getToken } = useAuth();
 
   return useCallback(
     async (
@@ -1072,10 +1068,6 @@ export const useGetImageCallback = () => {
       resourceType: resourceType,
       deviceType: string = 'phone', // default to 'phone' as this will probably be 80% of the devices used.
     ): Promise<{ localUri: string; result: ImageResult }> => {
-      if (!auth) {
-        return { localUri: '', result: { status: 'Error', id: itemId, msg: 'Auth not available' } };
-      }
-
       if (!userId || !orgId) {
         return {
           localUri: '',
@@ -1106,7 +1098,7 @@ export const useGetImageCallback = () => {
           deviceTypes: deviceType,
         };
 
-        const downloadResult = await downloadImage(details, auth.getToken, resourceType, imageUri);
+        const downloadResult = await downloadImage(details, getToken, resourceType, imageUri);
 
         return {
           localUri: imageUri,
@@ -1124,7 +1116,7 @@ export const useGetImageCallback = () => {
         };
       }
     },
-    [userId, orgId, auth],
+    [userId, orgId, getToken],
   );
 };
 
@@ -1134,8 +1126,7 @@ export const useGetImageCallback = () => {
  * If online, the request is executed immediately via the API.
  */
 export const useMakePhotosPublicCallback = () => {
-  const auth = useAuth();
-  const { userId } = auth;
+  const { userId, getToken } = useAuth();
   const { isConnected, isInternetReachable } = useNetwork();
 
   return useCallback(
@@ -1144,7 +1135,7 @@ export const useMakePhotosPublicCallback = () => {
         return { success: false, msg: 'User ID not available' };
       }
 
-      if (!auth.getToken) {
+      if (!getToken) {
         return { success: false, msg: 'Auth token getter not available' };
       }
 
@@ -1153,7 +1144,7 @@ export const useMakePhotosPublicCallback = () => {
       }
 
       try {
-        const makePublicResult = await makePhotosPublic(userId, projectId, imageIds, auth.getToken);
+        const makePublicResult = await makePhotosPublic(userId, projectId, imageIds, getToken);
 
         if (!makePublicResult.success) {
           console.log('Make public failed:', makePublicResult.msg);
@@ -1173,7 +1164,7 @@ export const useMakePhotosPublicCallback = () => {
         };
       }
     },
-    [userId, auth, isConnected, isInternetReachable],
+    [userId, getToken, isConnected, isInternetReachable],
   );
 };
 
@@ -1183,8 +1174,7 @@ export const useMakePhotosPublicCallback = () => {
  * If online, the request is executed immediately via the API.
  */
 export const useMakePhotosNonPublicCallback = () => {
-  const auth = useAuth();
-  const { userId } = auth;
+  const { userId, getToken } = useAuth();
   const { isConnected, isInternetReachable } = useNetwork();
 
   return useCallback(
@@ -1193,7 +1183,7 @@ export const useMakePhotosNonPublicCallback = () => {
         return { success: false, msg: 'User ID not available' };
       }
 
-      if (!auth.getToken) {
+      if (!getToken) {
         return { success: false, msg: 'Auth token getter not available' };
       }
 
@@ -1202,7 +1192,7 @@ export const useMakePhotosNonPublicCallback = () => {
       }
 
       try {
-        const makeNonPublicResult = await makePhotosNonPublic(userId, imageIds, auth.getToken);
+        const makeNonPublicResult = await makePhotosNonPublic(userId, imageIds, getToken);
 
         if (!makeNonPublicResult.success) {
           console.log('Make non-public failed:', makeNonPublicResult.msg);
@@ -1222,7 +1212,7 @@ export const useMakePhotosNonPublicCallback = () => {
         };
       }
     },
-    [userId, auth, isConnected, isInternetReachable],
+    [userId, getToken, isConnected, isInternetReachable],
   );
 };
 
@@ -1319,8 +1309,7 @@ const grantPhotoAccess = async (
  * If online, the request is executed immediately via the API.
  */
 export const useGrantPhotoAccessCallback = () => {
-  const auth = useAuth();
-  const { userId, orgId } = auth;
+  const { userId, orgId, getToken } = useAuth();
   const { isConnected, isInternetReachable } = useNetwork();
 
   return useCallback(
@@ -1335,7 +1324,7 @@ export const useGrantPhotoAccessCallback = () => {
         return { success: false, msg: 'User ID or Organization ID not available' };
       }
 
-      if (!auth.getToken) {
+      if (!getToken) {
         return { success: false, msg: 'Auth token getter not available' };
       }
 
@@ -1352,7 +1341,7 @@ export const useGrantPhotoAccessCallback = () => {
           orgId,
           fromName ?? '',
           fromEmail ?? '',
-          auth.getToken,
+          getToken,
         );
 
         if (!grantAccessResult.success) {
@@ -1373,7 +1362,7 @@ export const useGrantPhotoAccessCallback = () => {
         };
       }
     },
-    [userId, orgId, auth, isConnected, isInternetReachable],
+    [userId, orgId, getToken, isConnected, isInternetReachable],
   );
 };
 /**
@@ -1484,8 +1473,7 @@ const revokePhotoAccess = async (
  * If online, the request is executed immediately via the API.
  */
 export const useRevokePhotoAccessCallback = () => {
-  const auth = useAuth();
-  const { userId } = auth;
+  const { userId, getToken } = useAuth();
   const { isConnected, isInternetReachable } = useNetwork();
 
   return useCallback(
@@ -1494,7 +1482,7 @@ export const useRevokePhotoAccessCallback = () => {
         return { success: false, msg: 'User ID not available' };
       }
 
-      if (!auth.getToken) {
+      if (!getToken) {
         return { success: false, msg: 'Auth token getter not available' };
       }
 
@@ -1503,7 +1491,7 @@ export const useRevokePhotoAccessCallback = () => {
       }
 
       try {
-        const revokeResult = await revokePhotoAccess(userId, projectId, auth.getToken);
+        const revokeResult = await revokePhotoAccess(userId, projectId, getToken);
 
         if (!revokeResult.success) {
           console.log('Revoke photo access failed:', revokeResult.msg);
@@ -1523,7 +1511,7 @@ export const useRevokePhotoAccessCallback = () => {
         };
       }
     },
-    [userId, auth, isConnected, isInternetReachable],
+    [userId, getToken, isConnected, isInternetReachable],
   );
 };
 
@@ -1533,12 +1521,12 @@ export const useRevokePhotoAccessCallback = () => {
  * If online, the request is executed immediately via the API.
  */
 export const useFetchPublicImageIdsCallback = () => {
-  const auth = useAuth();
+  const { getToken } = useAuth();
   const { isConnected, isInternetReachable } = useNetwork();
 
   return useCallback(
     async (projectId: string): Promise<{ success: boolean; msg: string; imageIds?: string[] }> => {
-      if (!auth.getToken) {
+      if (!getToken) {
         return { success: false, msg: 'Auth token getter not available' };
       }
 
@@ -1547,7 +1535,7 @@ export const useFetchPublicImageIdsCallback = () => {
       }
 
       try {
-        const fetchResult = await fetchProjectPublicImageIds(projectId, auth.getToken);
+        const fetchResult = await fetchProjectPublicImageIds(projectId, getToken);
 
         if (!fetchResult.success) {
           console.log('Fetch public image IDs failed:', fetchResult.msg);
@@ -1567,6 +1555,6 @@ export const useFetchPublicImageIdsCallback = () => {
         };
       }
     },
-    [auth, isConnected, isInternetReachable],
+    [getToken, isConnected, isInternetReachable],
   );
 };

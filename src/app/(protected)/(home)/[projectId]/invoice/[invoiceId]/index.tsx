@@ -70,8 +70,7 @@ const InvoiceDetailsPage = () => {
   const allVendors = useAllConfigurationRows('vendors');
   const allAccounts = useAllConfigurationRows('accounts');
   const allWorkItems = useAllConfigurationRows('workItems');
-  const auth = useAuth();
-  const { orgId, userId, getToken } = auth;
+  const { orgId, userId, getToken } = useAuth();
   const getImage = useGetImageCallback();
   const mediaToUpload = useAllMediaToUpload();
   const mediaToUploadRef = useRef(mediaToUpload);

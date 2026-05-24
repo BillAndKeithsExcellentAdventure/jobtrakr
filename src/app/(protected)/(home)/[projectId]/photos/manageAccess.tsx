@@ -74,6 +74,7 @@ export default function ManageAccessScreen() {
   const fetchProjectPublicImageIds = useFetchPublicImageIdsCallback();
   const makePhotosPublic = useMakePhotosPublicCallback();
   const syncCompleteRef = useRef<string | null>(null);
+  const loadEmailsRef = useRef<(projectId: string) => Promise<void>>(async () => undefined);
 
   // Check if required app settings are defined
   const isAppSettingsComplete =
@@ -155,8 +156,12 @@ export default function ManageAccessScreen() {
   );
 
   useEffect(() => {
-    loadEmails(projectId);
-  }, [projectId, loadEmails]); // Only run when projectId changes
+    loadEmailsRef.current = loadEmails;
+  }, [loadEmails]);
+
+  useEffect(() => {
+    void loadEmailsRef.current(projectId);
+  }, [projectId]); // Only run when projectId changes
 
   const handleAddEmail = useCallback(async () => {
     if (!allowPublishPhotosAndVideos) {
@@ -178,7 +183,7 @@ export default function ManageAccessScreen() {
     if (result.success) {
       setNewEmail('');
       // Reload the email list from server to get the updated list
-      await loadEmails(projectId);
+      await loadEmailsRef.current(projectId);
     } else {
       Alert.alert('Error', `Failed to grant access: ${result.msg}`);
     }
@@ -206,7 +211,7 @@ export default function ManageAccessScreen() {
             const result = await revokePhotoAccess(projectId);
             if (result.success) {
               // Reload the email list from server to get the updated list
-              await loadEmails(projectId);
+              await loadEmailsRef.current(projectId);
             } else {
               Alert.alert('Error', `Failed to revoke access: ${result.msg}`);
             }
@@ -214,7 +219,7 @@ export default function ManageAccessScreen() {
         },
       ]);
     },
-    [projectId, revokePhotoAccess, loadEmails],
+    [projectId, revokePhotoAccess],
   );
   return (
     <SafeAreaView edges={['right', 'bottom', 'left']} style={{ flex: 1 }}>
