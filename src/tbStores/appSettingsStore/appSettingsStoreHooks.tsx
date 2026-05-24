@@ -369,6 +369,7 @@ export interface SettingsData {
   changeOrderTemplateFileName: string;
   syncWithQuickBooks: boolean;
   noQuickBooksInterest: boolean;
+  acceptedEULA: boolean;
   debugForceOffline: boolean;
   useDevSubscriptionOverride: boolean;
   devSubscriptionTier: SubscriptionTier;
@@ -392,6 +393,7 @@ const INITIAL_SETTINGS: SettingsData = {
   changeOrderTemplateFileName: '',
   syncWithQuickBooks: false,
   noQuickBooksInterest: false,
+  acceptedEULA: false,
   debugForceOffline: false,
   useDevSubscriptionOverride: false,
   devSubscriptionTier: 'free',

@@ -76,6 +76,38 @@ export async function getSelectSubscriptionHTML(orgId: string, userId?: string):
 }
 
 /**
+ * This endpoint serves EULA HTML and does not require authentication.
+ */
+export async function getEULAHTML(): Promise<string> {
+  const response = await fetch(`${API_BASE_URL}/getEULA`, {
+    method: 'GET',
+    headers: {
+      Accept: 'text/html',
+    },
+  });
+
+  if (!response.ok) {
+    let message = `Failed to load EULA HTML (${response.status})`;
+    const contentType = response.headers.get('content-type') || '';
+
+    if (contentType.includes('application/json')) {
+      try {
+        const body = (await response.json()) as ApiDefaultResponse;
+        if (body?.message) {
+          message = body.message;
+        }
+      } catch {
+        // Keep default message if parsing fails.
+      }
+    }
+
+    throw new Error(message);
+  }
+
+  return await response.text();
+}
+
+/**
  * Cancel an organization's active subscription and downgrade to the free plan.
  */
 export async function cancelSubscription(

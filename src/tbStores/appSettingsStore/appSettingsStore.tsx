@@ -25,6 +25,7 @@ export const TABLES_SCHEMA = {
     devSubscriptionTier: { type: 'string', default: 'free' },
     syncWithQuickBooks: { type: 'boolean', default: false },
     noQuickBooksInterest: { type: 'boolean', default: false },
+    acceptedEULA: { type: 'boolean', default: false },
     quickBooksExpenseAccountId: { type: 'string' },
     quickBooksPaymentAccounts: { type: 'string' }, // Comma-separated list of account IDs
     quickBooksDefaultPaymentAccountId: { type: 'string' },

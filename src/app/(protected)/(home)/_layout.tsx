@@ -16,7 +16,9 @@ const ProjectsLayout = () => {
     return (
       <Stack
         screenOptions={{ headerShown: true, headerBackTitle: '', headerBackButtonDisplayMode: 'minimal' }}
-      />
+      >
+        <Stack.Screen name="eula" options={{ headerShown: false }} />
+      </Stack>
     );
   }
 

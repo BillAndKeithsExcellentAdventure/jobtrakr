@@ -376,6 +376,12 @@ export default function ProjectHomeScreen() {
     }
   }, [minAppSettingsMet, isLoading, router]);
 
+  useEffect(() => {
+    if (!isLoading && minAppSettingsMet && !appSettings.acceptedEULA) {
+      router.replace('/eula');
+    }
+  }, [appSettings.acceptedEULA, isLoading, minAppSettingsMet, router]);
+
   const handleSubscribePress = useCallback(async () => {
     router.push('/subscription/subscriptionOverview');
   }, [router]);
@@ -423,6 +429,10 @@ export default function ProjectHomeScreen() {
         </View>
       </SafeAreaView>
     );
+  }
+
+  if (!appSettings.acceptedEULA) {
+    return null;
   }
 
   return (
