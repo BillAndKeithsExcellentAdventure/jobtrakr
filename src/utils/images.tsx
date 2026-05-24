@@ -1382,12 +1382,12 @@ export const useGrantPhotoAccessCallback = () => {
  * If online, the request is executed immediately via the API.
  */
 export const useFetchEmailsWithPhotoAccessCallback = () => {
-  const auth = useAuth();
+  const { getToken } = useAuth();
   const { isConnected, isInternetReachable } = useNetwork();
 
   return useCallback(
     async (projectId: string): Promise<{ success: boolean; msg: string; emails?: string[] }> => {
-      if (!auth.getToken) {
+      if (!getToken) {
         return { success: false, msg: 'Auth token getter not available' };
       }
 
@@ -1396,7 +1396,7 @@ export const useFetchEmailsWithPhotoAccessCallback = () => {
       }
 
       try {
-        const fetchResult = await fetchEmailsWithPhotoAccess(projectId, auth.getToken);
+        const fetchResult = await fetchEmailsWithPhotoAccess(projectId, getToken);
 
         if (!fetchResult.success) {
           console.log('Fetch emails with photo access failed:', fetchResult.msg);
@@ -1416,7 +1416,7 @@ export const useFetchEmailsWithPhotoAccessCallback = () => {
         };
       }
     },
-    [auth, isConnected, isInternetReachable],
+    [getToken, isConnected, isInternetReachable],
   );
 };
 
