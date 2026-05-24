@@ -74,6 +74,7 @@ export default function ManageAccessScreen() {
   const fetchProjectPublicImageIds = useFetchPublicImageIdsCallback();
   const makePhotosPublic = useMakePhotosPublicCallback();
   const syncCompleteRef = useRef<string | null>(null);
+  const syncInProgressRef = useRef<string | null>(null);
   const loadEmailsRef = useRef<(projectId: string) => Promise<void>>(async () => undefined);
 
   // Check if required app settings are defined
@@ -89,13 +90,15 @@ export default function ManageAccessScreen() {
   useEffect(() => {
     const syncPublicPhotos = async () => {
       // Only sync once per project
-      if (syncCompleteRef.current === projectId) {
+      if (syncCompleteRef.current === projectId || syncInProgressRef.current === projectId) {
         return;
       }
 
       if (!projectId || !allProjectMedia || allProjectMedia.length === 0) {
         return;
       }
+
+      syncInProgressRef.current = projectId;
 
       try {
         // Get public image IDs from server
@@ -135,6 +138,10 @@ export default function ManageAccessScreen() {
         syncCompleteRef.current = projectId;
       } catch (error) {
         console.error('Error syncing public photos:', error);
+      } finally {
+        if (syncInProgressRef.current === projectId) {
+          syncInProgressRef.current = null;
+        }
       }
     };
     syncPublicPhotos();
