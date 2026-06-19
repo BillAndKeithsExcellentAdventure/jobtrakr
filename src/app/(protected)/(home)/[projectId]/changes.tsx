@@ -17,7 +17,7 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { createApiWithToken } from '@/src/utils/apiWithToken';
 import { useAuth } from '@clerk/clerk-expo';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from 'expo-router/react-navigation';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { FlatList, StyleSheet } from 'react-native';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
