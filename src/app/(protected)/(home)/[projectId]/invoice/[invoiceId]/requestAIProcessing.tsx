@@ -114,6 +114,7 @@ const RequestAIProcessingPage = () => {
   }, [findFirstVendorMatch]);
 
   const fetchAIResult = useCallback(async () => {
+    setFetchingData(true);
     try {
       const result = await processAIProcessing(imageId, projectId, userId!, orgId!, getToken);
 
@@ -131,6 +132,7 @@ const RequestAIProcessingPage = () => {
         );
         setInvoiceSummary(undefined);
         setAiItems([]);
+        setInvoiceItems([]);
         return;
       }
 
@@ -149,22 +151,33 @@ const RequestAIProcessingPage = () => {
         terms: replaceNonPrintable(result.response?.Terms?.value ?? ''),
       };
 
+      let nextAiItems: ReceiptItemFromAI[];
       if (Array.isArray(result.response.Items) && result.response.Items.length > 0) {
-        const invoiceItems = result.response.Items.map((i: any) => ({
+        nextAiItems = result.response.Items.map((i: any) => ({
           description: i.Description.value,
           amount: Number.parseFloat(i.TotalPrice.value),
         }));
-        setAiItems(invoiceItems);
       } else {
-        setAiItems([
+        nextAiItems = [
           {
             description: 'Not Specified',
             amount: summary.totalAmount - summary.totalTax,
           },
-        ]);
+        ];
       }
 
+      setAiItems(nextAiItems);
+
       setInvoiceSummary(summary);
+
+      const initialized = nextAiItems.map((item) => ({
+        ...item,
+        taxable: true,
+        proratedTax: 0,
+        isSelected: true,
+      }));
+      const withTax = recalculateProratedTax(initialized, summary.totalTax);
+      setInvoiceItems(withTax);
     } catch (error) {
       console.error('Error fetching AI result:', error);
       Alert.alert(
@@ -173,26 +186,29 @@ const RequestAIProcessingPage = () => {
       );
       setInvoiceSummary(undefined);
       setAiItems([]);
+      setInvoiceItems([]);
     } finally {
       setFetchingData(false);
     }
-  }, [imageId, projectId, userId, orgId, getToken, updateApiRequestsRemaining]);
+  }, [imageId, projectId, userId, orgId, getToken, updateApiRequestsRemaining, recalculateProratedTax]);
 
   useEffect(() => {
     // reset fetch flag when navigating to a different invoice image
     hasFetched.current = false;
-    setFetchingData(true);
   }, [imageId, projectId]);
 
   useEffect(() => {
     if (hasFetched.current) return;
     if (!imageId || !projectId || !userId || !orgId) return;
     hasFetched.current = true;
-    fetchAIResult();
+    const frame = requestAnimationFrame(() => {
+      void fetchAIResult();
+    });
+    return () => cancelAnimationFrame(frame);
   }, [fetchAIResult, imageId, projectId, userId, orgId]);
 
   // Recalculate proratedTax values
-  const recalculateProratedTax = useCallback((items: ReceiptItem[], totalTax: number): ReceiptItem[] => {
+  function recalculateProratedTax(items: ReceiptItem[], totalTax: number): ReceiptItem[] {
     // Create map of indices for taxable items to preserve original positions
     const taxableItemIndices = items
       .map((item, index) => ({ index, item }))
@@ -226,16 +242,7 @@ const RequestAIProcessingPage = () => {
     result[smallestItemIndex].proratedTax = parseFloat(remainingTax.toFixed(2));
 
     return result;
-  }, []);
-
-  // Initial setup with all items taxable
-  useEffect(() => {
-    const initialized = aiItems.map((item) => ({ ...item, taxable: true, proratedTax: 0, isSelected: true }));
-    if (invoiceSummary) {
-      const withTax = recalculateProratedTax(initialized, invoiceSummary.totalTax);
-      setInvoiceItems(withTax);
-    }
-  }, [aiItems, invoiceSummary, recalculateProratedTax]);
+  }
 
   const toggleTaxable = useCallback(
     (index: number) => {

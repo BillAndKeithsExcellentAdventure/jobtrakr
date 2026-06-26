@@ -79,7 +79,6 @@ const AddInvoicePage = () => {
   const [pickedCostItemId, setPickedCostItemId] = useState<string | undefined>(undefined);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [dueDatePickerVisible, setDueDatePickerVisible] = useState(false);
-  const [canAddInvoice, setCanAddInvoice] = useState(false);
   const addPhotoImage = useAddImageCallback();
   const allVendors = useAllConfigurationRows('vendors');
   const allAccounts = useAllConfigurationRows('accounts');
@@ -369,15 +368,14 @@ const AddInvoicePage = () => {
     }
   }, [addPhotoImage, projectId]);
 
-  useEffect(() => {
+  const canAddInvoice = useMemo(() => {
     if (applyToSingleCostCode && !pickedCostItemId) {
-      setCanAddInvoice(false);
-    } else {
-      setCanAddInvoice(
-        (projectInvoice.amount > 0 && !!projectInvoice.vendor && !!projectInvoice.description) ||
-          !!projectInvoice.imageId,
-      );
+      return false;
     }
+    return (
+      (projectInvoice.amount > 0 && !!projectInvoice.vendor && !!projectInvoice.description) ||
+      !!projectInvoice.imageId
+    );
   }, [projectInvoice, applyToSingleCostCode, pickedCostItemId]);
 
   const handleCancel = useCallback(() => {

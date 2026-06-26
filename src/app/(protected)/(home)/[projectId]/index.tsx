@@ -62,7 +62,6 @@ const ProjectDetailsPage = () => {
   const allActualCostItems = useAllRows(projectId, 'workItemCostEntries');
   const { getProjectWorkItemSpentAmounts } = useWorkItemSpentSummary();
   const removeWorkItemSummary = useDeleteRowCallback(projectId, 'workItemSummaries');
-  const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const workItemsWithoutCosts = useWorkItemsWithoutCosts(projectId);
   const allChangeOrders = useAllRows(projectId, 'changeOrders');
@@ -88,9 +87,7 @@ const ProjectDetailsPage = () => {
 
   const projectCustomerQbId = useMemo(() => projectCustomer?.accountingId, [projectCustomer]);
 
-  useEffect(() => {
-    setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
-  }, [projectId, activeProjectIds, isStoreReady]);
+  const projectIsReady = !!projectId && activeProjectIds.includes(projectId) && isStoreReady();
 
   // QuickBooks sync on project details page mount
   useEffect(() => {

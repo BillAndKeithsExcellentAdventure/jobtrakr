@@ -1,5 +1,5 @@
 import { Alert, Platform, StyleSheet } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,18 +8,13 @@ import { CostItemPicker } from '@/src/components/CostItemPicker';
 import { TextField } from '@/src/components/TextField';
 import { NumericInputField } from '@/src/components/NumericInputField';
 import { useColors } from '@/src/context/ColorsContext';
-import {
-  ChangeOrderItem,
-  useAllRows,
-  useUpdateRowCallback,
-} from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useAllRows, useUpdateRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { ActionButton } from '@/src/components/ActionButton';
 import { IOS_KEYBOARD_TOOLBAR_OFFSET } from '@/src/constants/app-constants';
 
 const EditChangeOrderItem = () => {
-  const { projectId, changeOrderId, changeOrderItemId } = useLocalSearchParams<{
+  const { projectId, changeOrderItemId } = useLocalSearchParams<{
     projectId: string;
-    changeOrderId: string;
     changeOrderItemId: string;
   }>();
 
@@ -27,50 +22,25 @@ const EditChangeOrderItem = () => {
   const router = useRouter();
   const allChangeOrderItems = useAllRows(projectId, 'changeOrderItems');
   const updateChangeOrderItem = useUpdateRowCallback(projectId, 'changeOrderItems');
-
-  const [amount, setAmount] = useState<number>(0);
-  const [label, setLabel] = useState<string>('');
-
-  const [newChangeOrderItem, setNewChangeOrderItem] = useState<ChangeOrderItem>({
-    id: '',
-    changeOrderId: changeOrderId,
-    label: '',
-    amount: 0,
-    workItemId: '',
-  });
-
-  useEffect(() => {
-    if (changeOrderItemId) {
-      const item = allChangeOrderItems.find((item) => item.id === changeOrderItemId);
-      if (item) {
-        setNewChangeOrderItem(item);
-        setAmount(item.amount);
-        setLabel(item.label);
-      }
-    }
-  }, [newChangeOrderItem, allChangeOrderItems, changeOrderItemId]);
+  const changeOrderItem = useMemo(
+    () => allChangeOrderItems.find((item) => item.id === changeOrderItemId) ?? null,
+    [allChangeOrderItems, changeOrderItemId],
+  );
 
   const handleAddItemCancel = () => {
-    setNewChangeOrderItem({
-      id: '',
-      changeOrderId: changeOrderId,
-      label: '',
-      amount: 0,
-      workItemId: '',
-    });
     router.back();
   };
 
   const handleUpdateItemOk = () => {
-    if (!label || !amount || !newChangeOrderItem.workItemId) {
+    if (
+      !changeOrderItem ||
+      !changeOrderItem.label ||
+      !changeOrderItem.amount ||
+      !changeOrderItem.workItemId
+    ) {
       Alert.alert('Error', 'Please fill in all item fields.');
       return;
     }
-    updateChangeOrderItem(changeOrderItemId, {
-      ...newChangeOrderItem,
-      label,
-      amount,
-    });
     router.back();
   };
 
@@ -92,8 +62,11 @@ const EditChangeOrderItem = () => {
           </View>
           <TextField
             style={[styles.input, { borderColor: colors.transparent }]}
-            value={label}
-            onChangeText={(text) => setLabel(text)}
+            value={changeOrderItem?.label ?? ''}
+            onChangeText={(text) => {
+              if (!changeOrderItem) return;
+              updateChangeOrderItem(changeOrderItemId, { ...changeOrderItem, label: text });
+            }}
             placeholder="Item Description"
             label="Item Description"
             numberOfLines={2}
@@ -102,8 +75,11 @@ const EditChangeOrderItem = () => {
             label="Bid Amount"
             maxDecimals={2}
             decimals={2}
-            value={amount}
-            onChangeNumber={(value) => setAmount(value ?? 0)}
+            value={changeOrderItem?.amount ?? 0}
+            onChangeNumber={(value) => {
+              if (!changeOrderItem) return;
+              updateChangeOrderItem(changeOrderItemId, { ...changeOrderItem, amount: value ?? 0 });
+            }}
             placeholder="Amount"
           />
           <View>
@@ -111,12 +87,10 @@ const EditChangeOrderItem = () => {
               label="Cost Item"
               style={{ marginBottom: 10 }}
               projectId={projectId}
-              value={newChangeOrderItem.workItemId}
+              value={changeOrderItem?.workItemId ?? ''}
               onValueChange={(workItemId) => {
-                setNewChangeOrderItem((prev) => ({
-                  ...prev,
-                  workItemId,
-                }));
+                if (!changeOrderItem) return;
+                updateChangeOrderItem(changeOrderItemId, { ...changeOrderItem, workItemId });
               }}
               placeholder="Select Cost Item"
               modalTitle="Select Cost Item"

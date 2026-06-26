@@ -31,13 +31,13 @@ export class MediaAssetsHelper {
     pageSize?: number;
     after?: string; // cursor position returned from a previous call to paginate results
     mediaTypes?: MediaLibrary.MediaTypeValue[];
-    sortBy?: MediaLibrary.SortByKey;
+    sortBy?: 'default' | 'mediaType' | 'width' | 'height' | 'creationTime' | 'modificationTime' | 'duration';
   }): Promise<MediaAssetPage> {
     const {
       pageSize = 20,
       after,
       mediaTypes = [MediaLibrary.MediaType.photo, MediaLibrary.MediaType.video],
-      sortBy = MediaLibrary.SortBy.creationTime,
+      sortBy = 'creationTime',
     } = options;
 
     try {

@@ -69,8 +69,8 @@
     "expo-web-browser": "~56.0.5",
     "jszip": "^3.10.1",
     "mustache": "^4.2.0",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
     "react-native": "0.85.3",
     "react-native-edge-to-edge": "^1.7.0",
     "react-native-gesture-handler": "~2.31.1",
@@ -85,7 +85,7 @@
     "react-native-webview": "13.16.1",
     "react-native-worklets": "0.8.3",
     "reconnecting-websocket": "^4.4.0",
-    "tinybase": "^8.4.2"
+    "tinybase": "^8.5.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -99,7 +99,7 @@
     "eslint-config-expo": "~56.0.4",
     "jest": "~29.7.0",
     "jest-expo": "~56.0.5",
-    "react-test-renderer": "19.2.4",
+    "react-test-renderer": "19.2.7",
     "ts-jest": "^29.4.6",
     "typescript": "~6.0.3"
   },

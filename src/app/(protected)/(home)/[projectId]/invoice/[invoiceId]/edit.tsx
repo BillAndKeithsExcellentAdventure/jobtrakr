@@ -29,13 +29,6 @@ const EditInvoiceDetailsPage = () => {
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [dueDatePickerVisible, setDueDatePickerVisible] = useState(false);
-  const handleVendorSelected = useCallback((vendor: VendorData) => {
-    setInvoice((prevInvoice) => ({
-      ...prevInvoice,
-      vendor: vendor.name,
-      vendorId: vendor.id,
-    }));
-  }, []);
 
   const allVendors = useAllConfigurationRows('vendors');
 
@@ -93,6 +86,14 @@ const EditInvoiceDetailsPage = () => {
     billId: '',
     qbSyncHash: '',
   });
+
+  const handleVendorSelected = useCallback((vendor: VendorData) => {
+    setInvoice((prevInvoice) => ({
+      ...prevInvoice,
+      vendor: vendor.name,
+      vendorId: vendor.id,
+    }));
+  }, []);
 
   useEffect(() => {
     const match = allProjectInvoices.find((r) => r.id === invoiceId);

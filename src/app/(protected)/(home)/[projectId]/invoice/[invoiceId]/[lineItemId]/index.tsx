@@ -10,7 +10,7 @@ import {
   WorkItemCostEntry,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -24,23 +24,18 @@ const EditLineItemPage = () => {
   const colors = useColors();
   const allCostItems = useAllRows(projectId, 'workItemCostEntries');
   const updateLineItem = useUpdateRowCallback(projectId, 'workItemCostEntries');
-  const [itemizedEntry, setItemizedEntry] = useState<WorkItemCostEntry>({
-    id: '',
-    label: '',
-    amount: 0,
-    workItemId: '',
-    parentId: '',
-    documentationType: 'invoice',
-  });
-
-  useEffect(() => {
-    if (lineItemId) {
-      const existingItem = allCostItems.find((item) => item.id === lineItemId);
-      if (existingItem) {
-        setItemizedEntry(existingItem);
-      }
-    }
-  }, [allCostItems, lineItemId]);
+  const itemizedEntry = useMemo<WorkItemCostEntry>(
+    () =>
+      allCostItems.find((item) => item.id === lineItemId) ?? {
+        id: '',
+        label: '',
+        amount: 0,
+        workItemId: '',
+        parentId: '',
+        documentationType: 'invoice',
+      },
+    [allCostItems, lineItemId],
+  );
 
   const handleOkPress = useCallback(async () => {
     const entryToSave = { ...itemizedEntry };
@@ -80,10 +75,10 @@ const EditLineItemPage = () => {
           decimals={2}
           value={itemizedEntry.amount}
           onChangeNumber={(value: number | null): void => {
-            setItemizedEntry((prevItem) => ({
-              ...prevItem,
+            updateLineItem(itemizedEntry.id, {
+              ...itemizedEntry,
               amount: value ?? 0,
-            }));
+            });
           }}
         />
         <TextField
@@ -92,10 +87,10 @@ const EditLineItemPage = () => {
           label="Description"
           value={itemizedEntry.label}
           onChangeText={(text): void => {
-            setItemizedEntry((prevItem) => ({
-              ...prevItem,
+            updateLineItem(itemizedEntry.id, {
+              ...itemizedEntry,
               label: text,
-            }));
+            });
           }}
         />
         <CostItemPicker
@@ -103,10 +98,10 @@ const EditLineItemPage = () => {
           projectId={projectId}
           value={itemizedEntry.workItemId}
           onValueChange={(workItemId) => {
-            setItemizedEntry((prevItem) => ({
-              ...prevItem,
+            updateLineItem(itemizedEntry.id, {
+              ...itemizedEntry,
               workItemId,
-            }));
+            });
           }}
           label="Cost Item Type"
           placeholder="Cost Item Type"

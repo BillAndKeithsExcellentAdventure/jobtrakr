@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import * as Location from 'expo-location';
 import { LocationPicker } from '@/src/components/MapLocation';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,7 +15,6 @@ const SetLocationViaMap = () => {
   const { projectId } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const router = useRouter();
   const colors = useColors();
-  const [currentLocation, setCurrentLocation] = useState<CoordinateLocation | null>(null);
   const [deviceLocation, setDeviceLocation] = useState<CoordinateLocation | null>(null);
   const currentProject = useProject(projectId);
 
@@ -40,25 +39,21 @@ const SetLocationViaMap = () => {
   };
 
   useEffect(() => {
-    fetchCurrentDeviceLocation();
+    const frame = requestAnimationFrame(() => {
+      void fetchCurrentDeviceLocation();
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
 
-  useEffect(() => {
-    if (currentProject) {
-      if (currentProject.latitude && currentProject.longitude) {
-        setCurrentLocation({
-          latitude: currentProject.latitude,
-          longitude: currentProject.longitude,
-        });
-      } else {
-        if (deviceLocation) {
-          setCurrentLocation({
-            latitude: deviceLocation.latitude,
-            longitude: deviceLocation.longitude,
-          });
-        }
-      }
+  const currentLocation = useMemo<CoordinateLocation | null>(() => {
+    if (!currentProject) return null;
+    if (currentProject.latitude && currentProject.longitude) {
+      return {
+        latitude: currentProject.latitude,
+        longitude: currentProject.longitude,
+      };
     }
+    return deviceLocation;
   }, [currentProject, deviceLocation]);
 
   const updateProject = useUpdateProjectCallback();

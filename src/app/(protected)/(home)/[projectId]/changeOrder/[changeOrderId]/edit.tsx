@@ -3,13 +3,9 @@ import { StyledHeaderBackButton } from '@/src/components/StyledHeaderBackButton'
 import { TextField } from '@/src/components/TextField';
 import { View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import {
-  ChangeOrder,
-  useAllRows,
-  useUpdateRowCallback,
-} from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
+import { useAllRows, useUpdateRowCallback } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -23,22 +19,10 @@ const EditChangeOrder = () => {
   const router = useRouter();
   const allChangeOrders = useAllRows(projectId, 'changeOrders');
   const updateChangeOrder = useUpdateRowCallback(projectId, 'changeOrders');
-  const [changeOrder, setChangeOrder] = useState<ChangeOrder | null>(null);
-
-  useEffect(() => {
-    if (allChangeOrders) {
-      const foundChangeOrder = allChangeOrders.find((co) => co.id === changeOrderId);
-      if (foundChangeOrder) {
-        setChangeOrder(foundChangeOrder);
-      }
-    }
-  }, [allChangeOrders, changeOrderId]);
-
-  const handleSubmit = useCallback(async () => {
-    if (changeOrder) {
-      updateChangeOrder(changeOrderId, changeOrder);
-    }
-  }, [changeOrder, changeOrderId, updateChangeOrder]);
+  const changeOrder = useMemo(
+    () => allChangeOrders.find((co) => co.id === changeOrderId) ?? null,
+    [allChangeOrders, changeOrderId],
+  );
 
   const handleBackPress = () => {
     router.back();
@@ -71,8 +55,7 @@ const EditChangeOrder = () => {
               label="Title"
               placeholder="Title"
               value={changeOrder.title}
-              onChangeText={(text) => setChangeOrder({ ...changeOrder, title: text })}
-              onBlur={handleSubmit}
+              onChangeText={(text) => updateChangeOrder(changeOrderId, { ...changeOrder, title: text })}
             />
             <TextField
               containerStyle={styles.inputContainer}
@@ -80,10 +63,9 @@ const EditChangeOrder = () => {
               placeholder="Description"
               label="Description"
               value={changeOrder.description}
-              onChangeText={(text) => setChangeOrder({ ...changeOrder, description: text })}
+              onChangeText={(text) => updateChangeOrder(changeOrderId, { ...changeOrder, description: text })}
               multiline={true}
               numberOfLines={4}
-              onBlur={handleSubmit}
             />
             <NumericInputField
               label="Customer Quoted Price"

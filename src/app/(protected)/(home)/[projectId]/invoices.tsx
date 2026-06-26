@@ -5,7 +5,7 @@ import { useColors } from '@/src/context/ColorsContext';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 
@@ -40,7 +40,6 @@ const ProjectInvoicesPage = () => {
     projectName: string;
   }>();
 
-  const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const { orgId, userId, getToken } = useAuth();
@@ -50,10 +49,7 @@ const ProjectInvoicesPage = () => {
       addActiveProjectIds([projectId]);
     }
   }, [projectId, addActiveProjectIds]);
-
-  useEffect(() => {
-    setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
-  }, [projectId, activeProjectIds, isStoreReady]);
+  const projectIsReady = !!projectId && activeProjectIds.includes(projectId) && isStoreReady();
   useSeedWorkItemsIfNecessary(projectId);
 
   const allInvoices = useAllRows(projectId, 'invoices', RecentInvoiceDateCompare);

@@ -11,7 +11,7 @@ import {
   WorkItemSummaryData,
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Alert, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -23,9 +23,6 @@ const CostItemDetails = () => {
     itemCode: string;
     itemTitle: string;
   }>();
-  const [itemEstimate, setItemEstimate] = useState(0);
-  const [itemComplete, setItemComplete] = useState(false);
-  const [itemNote, setItemNote] = useState('');
   const router = useRouter();
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
   const updateBidEstimate = useUpdateRowCallback(projectId, 'workItemSummaries');
@@ -44,16 +41,9 @@ const CostItemDetails = () => {
 
   const amountSpent = useWorkItemSpentValue(projectId, workItemSummary ? workItemSummary.workItemId : '');
 
-  useEffect(() => {
-    setItemEstimate(workItemSummary ? workItemSummary.bidAmount : 0);
-    setItemNote(workItemSummary ? workItemSummary.bidNote || '' : '');
-    setItemComplete(workItemSummary ? workItemSummary.complete : false);
-  }, [workItemSummary]);
-
   const handleEstimateChanged = useCallback(
     (value: number) => {
       if (workItemSummary) updateBidEstimate(workItemSummary.id, { bidAmount: value });
-      setItemEstimate(value);
     },
     [workItemSummary, updateBidEstimate],
   );
@@ -61,7 +51,6 @@ const CostItemDetails = () => {
   const handleNoteChanged = useCallback(
     (value: string) => {
       if (workItemSummary) updateBidEstimate(workItemSummary.id, { bidNote: value });
-      setItemNote(value);
     },
     [workItemSummary, updateBidEstimate],
   );
@@ -69,7 +58,6 @@ const CostItemDetails = () => {
   const handleCompleteChanged = useCallback(
     (value: boolean) => {
       if (workItemSummary) updateBidEstimate(workItemSummary.id, { complete: value });
-      setItemComplete(value);
     },
     [workItemSummary, updateBidEstimate],
   );
@@ -123,7 +111,7 @@ const CostItemDetails = () => {
                 <View style={{ flex: 1 }}>
                   <NumericInputField
                     label="Estimate"
-                    value={itemEstimate}
+                    value={workItemSummary?.bidAmount ?? 0}
                     onChangeNumber={(value) => handleEstimateChanged(value ?? 0)}
                     placeholder="Estimated Amount"
                   />
@@ -133,7 +121,7 @@ const CostItemDetails = () => {
                 <Text text="Spent" txtSize="formLabel" />
 
                 <TextInput
-                  value={itemNote}
+                  value={workItemSummary?.bidNote || ''}
                   onChangeText={handleNoteChanged}
                   numberOfLines={2}
                   placeholder="Add a note"
@@ -164,7 +152,11 @@ const CostItemDetails = () => {
                 }}
               >
                 <View style={{ alignItems: 'flex-end', width: 90, marginEnd: 10 }}>
-                  <Switch value={itemComplete} onValueChange={handleCompleteChanged} size="large" />
+                  <Switch
+                    value={workItemSummary?.complete ?? false}
+                    onValueChange={handleCompleteChanged}
+                    size="large"
+                  />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text

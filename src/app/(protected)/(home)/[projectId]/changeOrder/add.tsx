@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { StyleSheet, Alert, Modal, FlatList, Keyboard, Platform } from 'react-native';
 import { Text, TextInput, View } from '@/src/components/Themed';
 
@@ -33,14 +33,13 @@ export default function AddChangeOrder() {
   const addChangeOrderItem = useAddRowCallback(projectId, 'changeOrderItems');
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [items, setItems] = useState<ProposedChangeOrderItem[]>([]);
-  const [canAdd, setCanAdd] = useState(false);
   const [newChangeOrder, setNewChangeOrder] = useState<ChangeOrder>({
     id: '',
     title: '',
     description: '',
     bidAmount: 0,
     quotedPrice: undefined, // default to undefined so placeholder shows in NumericInputField. Set to 0 when user enters a value or on submit if still undefined
-    dateCreated: Date.now(),
+    dateCreated: 0,
     status: 'draft',
     accountingId: '',
   });
@@ -53,27 +52,16 @@ export default function AddChangeOrder() {
     value: '',
   });
 
-  useEffect(() => {
-    // set total cost by summing the amount of each item in items array
-    if (items && items.length === 0) handleAmountChange(0);
-    else handleAmountChange(items.reduce((total, item) => total + item.amount, 0));
-  }, [items]);
+  const bidAmount = useMemo(() => items.reduce((total, item) => total + item.amount, 0), [items]);
 
-  useEffect(() => {
-    setCanAdd(
-      newChangeOrder.bidAmount > 0 &&
-        (newChangeOrder.quotedPrice ?? 0) > 0 &&
-        !!newChangeOrder.title &&
-        !!newChangeOrder.description,
-    );
-  }, [newChangeOrder]);
-
-  const handleAmountChange = (value: number) => {
-    setNewChangeOrder((prev) => ({
-      ...prev,
-      bidAmount: value,
-    }));
-  };
+  const canAdd = useMemo(
+    () =>
+      bidAmount > 0 &&
+      (newChangeOrder.quotedPrice ?? 0) > 0 &&
+      !!newChangeOrder.title &&
+      !!newChangeOrder.description,
+    [bidAmount, newChangeOrder.quotedPrice, newChangeOrder.title, newChangeOrder.description],
+  );
 
   const handleQuotedPriceChange = (value: number) => {
     setNewChangeOrder((prev) => ({
@@ -86,14 +74,18 @@ export default function AddChangeOrder() {
     if (
       !newChangeOrder.title ||
       !newChangeOrder.description ||
-      !(newChangeOrder.bidAmount > 0) ||
+      !(bidAmount > 0) ||
       !((newChangeOrder.quotedPrice ?? 0) > 0)
     ) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
 
-    const result = addChangeOrder(newChangeOrder);
+    const result = addChangeOrder({
+      ...newChangeOrder,
+      bidAmount,
+      dateCreated: Date.now(),
+    });
     if (result.status === 'Success') {
       const coId = result.id;
       items.forEach((entry) => {
@@ -258,7 +250,7 @@ export default function AddChangeOrder() {
                 <View style={{ width: 120, backgroundColor: colors.listBackground }}>
                   <Text
                     style={{ textAlign: 'right', fontWeight: '600' }}
-                    text={formatCurrency(newChangeOrder.bidAmount, true)}
+                    text={formatCurrency(bidAmount, true)}
                   />
                 </View>
               </View>
