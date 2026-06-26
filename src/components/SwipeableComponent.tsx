@@ -145,11 +145,18 @@ SwipeableComponent.displayName = 'SwipeableComponent';
 
 const styles = StyleSheet.create({
   root: {
+    position: 'relative',
     width: '100%',
     overflow: 'hidden',
   },
   backgroundContainer: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 0,
+    elevation: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -165,6 +172,8 @@ const styles = StyleSheet.create({
     paddingRight: 0,
   },
   foreground: {
+    zIndex: 1,
+    elevation: 1,
     width: '100%',
   },
 });
