@@ -3,7 +3,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleProp, StyleSheet, ViewStyle, TextStyle, Keyboard, TextInput } from 'react-native';
 import { useThemeColor, View } from './Themed';
 import { Pressable } from 'react-native-gesture-handler';
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useCallback } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState, useCallback } from 'react';
 /* -------------------------------------------
  Standard Supporting React State 
  -------------------------------------------
@@ -80,20 +80,17 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
   ) => {
     const inputRef = useRef<TextInput | null>(null);
 
-    const [labelText, setLabelText] = useState<string | undefined>();
-
-    useEffect(() => {
-      setLabelText(optionLabel);
-    }, [optionLabel]);
+    const [labelText, setLabelText] = useState<string | undefined>(optionLabel);
+    const activeLabelText = editable ? labelText : optionLabel;
 
     // Store the current label text in a ref for stable access in callbacks
-    const labelTextRef = useRef<string>(labelText ?? '');
-    labelTextRef.current = labelText ?? '';
+    const labelTextRef = useRef<string>(activeLabelText ?? '');
+    labelTextRef.current = activeLabelText ?? '';
 
     const handleOnBlur = useCallback(() => {
       //console.log('OptionPickerItem handleOnBlur called');
-      onOptionLabelChange?.(labelText ?? '');
-    }, [onOptionLabelChange, labelText]);
+      onOptionLabelChange?.(labelTextRef.current);
+    }, [onOptionLabelChange]);
 
     useImperativeHandle(ref, () => ({
       blur: () => {
@@ -126,7 +123,7 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
                 style={[inputStyle, { color: finalTextColor }]}
                 label={label}
                 placeholder={placeholder}
-                value={labelText}
+                value={activeLabelText}
                 editable={editable}
               />
             </View>
@@ -154,7 +151,7 @@ export const OptionPickerItem = forwardRef<OptionPickerItemHandle, OptionPickerI
             placeholderTextColor={textDim}
             onChangeText={setLabelText}
             onBlur={handleOnBlur}
-            value={labelText}
+            value={activeLabelText}
             editable={editable}
           />
         </View>

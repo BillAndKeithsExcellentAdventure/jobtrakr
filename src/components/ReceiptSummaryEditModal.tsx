@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Modal, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from './ActionButton';
@@ -54,51 +54,38 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
   const [editedSummary, setEditedSummary] = useState(receiptSummary);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [isPaymentAccountPickerVisible, setIsPaymentAccountPickerVisible] = useState<boolean>(false);
-  const [pickedPaymentAccountOption, setPickedPaymentAccountOption] = useState<OptionEntry | undefined>(
-    undefined,
-  );
-  const [paymentAccounts, setPaymentAccounts] = useState<OptionEntry[]>([]);
   const { isQuickBooksAccessible } = useNetwork();
   const allVendors = useAllConfigurationRows('vendors');
   const allAccounts = useAllConfigurationRows('accounts');
   const appSettings = useAppSettings();
 
-  useEffect(() => {
-    setEditedSummary(receiptSummary);
-  }, [receiptSummary]);
-
-  useEffect(() => {
-    if (allAccounts && allAccounts.length > 0) {
-      const configuredAccountIds = appSettings.quickBooksPaymentAccounts
-        ? appSettings.quickBooksPaymentAccounts.split(',').filter((id) => id.trim() !== '')
-        : [];
-
-      const paymentList = allAccounts
-        .filter((account) => configuredAccountIds.includes(account.accountingId))
-        .map((account) => ({
-          label: account.name,
-          value: account.accountingId,
-        }));
-
-      setPaymentAccounts(paymentList);
-    } else {
-      setPaymentAccounts([]);
+  const paymentAccounts = useMemo<OptionEntry[]>(() => {
+    if (!allAccounts || allAccounts.length === 0) {
+      return [];
     }
+
+    const configuredAccountIds = appSettings.quickBooksPaymentAccounts
+      ? appSettings.quickBooksPaymentAccounts.split(',').filter((id) => id.trim() !== '')
+      : [];
+
+    return allAccounts
+      .filter((account) => configuredAccountIds.includes(account.accountingId))
+      .map((account) => ({
+        label: account.name,
+        value: account.accountingId,
+      }));
   }, [allAccounts, appSettings.quickBooksPaymentAccounts]);
 
-  useEffect(() => {
+  const pickedPaymentAccountOption = useMemo<OptionEntry | undefined>(() => {
     if (!paymentAccounts.length) {
-      setPickedPaymentAccountOption(undefined);
-      return;
+      return undefined;
     }
-    const match = paymentAccounts.find((o) => o.value === editedSummary.paymentAccountId);
-    setPickedPaymentAccountOption(match);
+    return paymentAccounts.find((o) => o.value === editedSummary.paymentAccountId);
   }, [editedSummary.paymentAccountId, paymentAccounts]);
 
   const handlePaymentAccountOptionChange = useCallback((option: OptionEntry) => {
     if (option) {
       setEditedSummary((prev) => ({ ...prev, paymentAccountId: option.value }));
-      setPickedPaymentAccountOption(option);
     }
     setIsPaymentAccountPickerVisible(false);
   }, []);
@@ -136,7 +123,12 @@ export const ReceiptSummaryEditModal: React.FC<ReceiptSummaryEditModalProps> = (
   );
 
   return (
-    <Modal visible={isVisible} transparent={true} animationType="fade">
+    <Modal
+      visible={isVisible}
+      transparent={true}
+      animationType="fade"
+      onShow={() => setEditedSummary(receiptSummary)}
+    >
       <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
         <View style={[styles.container, { backgroundColor: colors.modalOverlayBackgroundColor }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.background }]}>

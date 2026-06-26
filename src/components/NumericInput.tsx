@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { TextInput, TextInputProps, TextStyle } from 'react-native';
 import { useColors } from '@/src/context/ColorsContext';
 
@@ -95,12 +95,6 @@ export const NumericInput = forwardRef<NumericInputHandle, NumericInputProps>(fu
   ref,
 ) {
   const colors = useColors();
-  const [text, setText] = useState(value !== null && value !== undefined ? String(value) : '');
-  const textRef = useRef(text);
-  textRef.current = text;
-  const inputRef = useRef<TextInput | null>(null);
-
-  const isFocusedRef = useRef(false);
 
   // Treat incomplete edit states as non-numeric so they can remain visible while typing.
   const parseEditableNumber = useCallback((input: string): number | null => {
@@ -110,6 +104,15 @@ export const NumericInput = forwardRef<NumericInputHandle, NumericInputProps>(fu
     const parsed = parseFloat(input);
     return Number.isNaN(parsed) ? null : parsed;
   }, []);
+
+  const [draftText, setDraftText] = useState(value !== null && value !== undefined ? String(value) : '');
+  const [isFocused, setIsFocused] = useState(false);
+  const externalText = value !== null && value !== undefined ? String(value) : '';
+  const parsedDraftValue = parseEditableNumber(draftText);
+  const text = isFocused && parsedDraftValue === value ? draftText : externalText;
+  const textRef = useRef(text);
+  textRef.current = text;
+  const inputRef = useRef<TextInput | null>(null);
 
   useImperativeHandle(ref, () => ({
     focus: (selectAll?: boolean) => {
@@ -131,20 +134,6 @@ export const NumericInput = forwardRef<NumericInputHandle, NumericInputProps>(fu
   }));
 
   // -------------------------
-  // Sync external value -> text
-  // -------------------------
-  useEffect(() => {
-    if (isFocusedRef.current) {
-      const currentParsed = parseEditableNumber(textRef.current);
-      if (currentParsed === value) {
-        return;
-      }
-    }
-
-    setText(value !== null && value !== undefined ? String(value) : '');
-  }, [value, parseEditableNumber]);
-
-  // -------------------------
   // Handle typing
   // -------------------------
   const handleChangeText = useCallback(
@@ -155,7 +144,7 @@ export const NumericInput = forwardRef<NumericInputHandle, NumericInputProps>(fu
           : /^-?\d*\.?\d*$/.test(input);
       if (!isValid) return; // also enforces maxDecimals
 
-      setText(input);
+      setDraftText(input);
 
       onChangeNumber(parseEditableNumber(input));
     },
@@ -166,19 +155,21 @@ export const NumericInput = forwardRef<NumericInputHandle, NumericInputProps>(fu
   // Handle blur formatting
   // -------------------------
   const handleBlur: NonNullable<TextInputProps['onBlur']> = (event) => {
-    isFocusedRef.current = false;
+    setIsFocused(false);
 
-    const parsed = parseEditableNumber(textRef.current);
+    const parsed = parseEditableNumber(draftText);
     if (decimals !== undefined && parsed !== null) {
       const formatted = parsed.toFixed(decimals);
-      setText(formatted);
+      setDraftText(formatted);
+      onChangeNumber(Number(formatted));
     }
 
     props.onBlur?.(event);
   };
 
   const handleFocus: NonNullable<TextInputProps['onFocus']> = (event) => {
-    isFocusedRef.current = true;
+    setIsFocused(true);
+    setDraftText(externalText);
     props.onFocus?.(event);
 
     if (selectOnFocus && inputRef.current) {

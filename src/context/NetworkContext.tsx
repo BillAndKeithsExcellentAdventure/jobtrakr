@@ -52,7 +52,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const [networkType, setNetworkType] = useState<string | null>(null);
   const appSettings = useAppSettings();
   const allowQuickBooksSync = useEntitlementFlag('allowQuickBooksSync');
-  const [isQuickBooksConnected, setIsQuickBooksConnected] = useState<boolean>(false);
+  const isQuickBooksConnected = appSettings.syncWithQuickBooks;
   const [isQuickBooksAccessible, setIsQuickBooksAccessible] = useState<boolean>(false);
   const [verifiedEmailAddresses, setVerifiedEmailAddresses] = useState<string[]>([]);
   const [vendorsGrantedAccess, setVendorsGrantedAccess] = useState<VendorGrantedAccess[]>([]);
@@ -130,10 +130,6 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
 
   // Check if we're in a development build and debug offline mode is enabled
   const debugForceOffline = isDevelopmentBuild() && appSettings.debugForceOffline;
-
-  useEffect(() => {
-    setIsQuickBooksConnected(appSettings.syncWithQuickBooks);
-  }, [appSettings.syncWithQuickBooks]);
 
   useEffect(() => {
     const previous = previousSyncWithQuickBooksRef.current;

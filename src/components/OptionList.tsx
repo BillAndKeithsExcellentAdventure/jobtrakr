@@ -1,6 +1,6 @@
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { FlatList, Platform, Pressable, StyleProp, StyleSheet, TextInput, TextStyle } from 'react-native';
 import { ActionButton } from './ActionButton';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -42,42 +42,34 @@ export default function OptionList({
   okButtonText = 'OK',
   cancelButtonText = 'Cancel',
 }: Props) {
-  const [isOkToSaveSelectedValue, setIsOkToSaveSelectedValue] = useState<boolean>(false);
-  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(undefined);
-  const [searchText, setSearchText] = useState<string>('');
+  const [pickedOption, setPickedOption] = useState<OptionEntry | undefined>(() =>
+    selectedOption ? options.find((o) => o.label === selectedOption.label) : undefined,
+  );
+  const [searchText, setSearchText] = useState<string>(initialSearchText ?? '');
   const searchInputRef = useRef<TextInput>(null);
 
+  const selectedOptionMatch = useMemo(
+    () => (selectedOption ? options.find((o) => o.label === selectedOption.label) : undefined),
+    [options, selectedOption],
+  );
+
+  const activeOption = pickedOption ?? selectedOptionMatch;
+  const canSaveSelection = !!activeOption;
+
   const onOkSelected = useCallback(() => {
-    if (pickedOption) onSelect(pickedOption);
-  }, [pickedOption, onSelect]);
+    if (activeOption) onSelect(activeOption);
+  }, [activeOption, onSelect]);
 
   const onOptionSelected = useCallback(
     (item: OptionEntry) => {
-      setPickedOption(item);
       if (showOkCancel) {
-        setIsOkToSaveSelectedValue(!!item);
+        setPickedOption(item);
       } else {
         onSelect(item);
       }
     },
     [showOkCancel, onSelect],
   );
-
-  useEffect(() => {
-    if (options && selectedOption) {
-      const match = options.find((o) => o.label === selectedOption.label);
-      if (match) {
-        if (showOkCancel) onOptionSelected(match);
-        else setPickedOption(match);
-      }
-    }
-  }, [selectedOption, options, showOkCancel, onOptionSelected]);
-
-  useEffect(() => {
-    if (initialSearchText !== undefined) {
-      setSearchText(initialSearchText);
-    }
-  }, [initialSearchText]);
 
   // Filter options based on search text
   const filteredOptions = useMemo(() => {
@@ -160,9 +152,9 @@ export default function OptionList({
                   style={[
                     { fontWeight: 500 },
                     textStyle,
-                    pickedOption &&
+                    activeOption &&
                       boldSelectedOption &&
-                      item.label === pickedOption.label && { fontSize: 18, fontWeight: 800 },
+                      item.label === activeOption.label && { fontSize: 18, fontWeight: 800 },
                   ]}
                 />
               </Pressable>
@@ -180,7 +172,7 @@ export default function OptionList({
               <ActionButton
                 style={styles.saveButton}
                 onPress={onOkSelected}
-                type={isOkToSaveSelectedValue ? 'ok' : 'disabled'}
+                type={canSaveSelection ? 'ok' : 'disabled'}
                 title={okButtonText}
               />
               <ActionButton

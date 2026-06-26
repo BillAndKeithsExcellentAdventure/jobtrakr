@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { StyleSheet, Alert, Platform } from 'react-native';
 import { AppleMaps, GoogleMaps } from 'expo-maps';
 import { ActionButton } from './ActionButton';
@@ -42,43 +42,46 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
 }) => {
   const colors = useColors();
   const [selectedLocation, setSelectedLocation] = useState<CoordinateLocation | null>(null);
-  const [markerLocation, setMarkerLocation] = useState<CoordinateLocation | null>(null);
-  const [googleMarkers, setGoogleMarkers] = useState<GoogleMarkerLocation[]>([]);
-  const [appleMarkers, setAppleMarkers] = useState<AppleMarkerLocation[]>([]);
   const router = useRouter();
-  useEffect(() => {
+  const markerLocation = useMemo<CoordinateLocation>(() => {
     const location = selectedLocation ?? projectLocation;
-    setMarkerLocation({ ...location });
+    return { ...location };
   }, [selectedLocation, projectLocation]);
 
-  useEffect(() => {
-    if (markerLocation) {
-      if (Platform.OS === 'android') {
-        setGoogleMarkers([
-          {
-            coordinates: {
-              latitude: markerLocation.latitude,
-              longitude: markerLocation.longitude,
-            },
-            title: 'Project Site',
-            snippet: 'Project Site',
-            draggable: false,
-          },
-        ]);
-      } else if (Platform.OS === 'ios') {
-        setAppleMarkers([
-          {
-            coordinates: {
-              latitude: markerLocation.latitude,
-              longitude: markerLocation.longitude,
-            },
-            title: 'Project Site',
-            tintColor: 'blue',
-            //systemImage: 'mappin',
-          },
-        ]);
-      }
+  const googleMarkers = useMemo<GoogleMarkerLocation[]>(() => {
+    if (Platform.OS !== 'android') {
+      return [];
     }
+
+    return [
+      {
+        coordinates: {
+          latitude: markerLocation.latitude,
+          longitude: markerLocation.longitude,
+        },
+        title: 'Project Site',
+        snippet: 'Project Site',
+        draggable: false,
+      },
+    ];
+  }, [markerLocation]);
+
+  const appleMarkers = useMemo<AppleMarkerLocation[]>(() => {
+    if (Platform.OS !== 'ios') {
+      return [];
+    }
+
+    return [
+      {
+        coordinates: {
+          latitude: markerLocation.latitude,
+          longitude: markerLocation.longitude,
+        },
+        title: 'Project Site',
+        tintColor: 'blue',
+        //systemImage: 'mappin',
+      },
+    ];
   }, [markerLocation]);
 
   const handleSaveLocation = useCallback(() => {
@@ -128,8 +131,8 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const cameraPosition = useMemo(() => {
     return {
       coordinates: {
-        latitude: markerLocation ? markerLocation.latitude : 0,
-        longitude: markerLocation ? markerLocation.longitude : 0,
+        latitude: markerLocation.latitude,
+        longitude: markerLocation.longitude,
       },
       zoom: SF_ZOOM,
     };

@@ -53,20 +53,16 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
   const { orgId } = useAuth();
 
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-
-    if (isRecording) {
-      interval = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
-      }, 1000);
-    } else {
-      setRecordingTime(0);
+    if (!isRecording) {
+      return;
     }
 
+    const interval = setInterval(() => {
+      setRecordingTime((prev) => prev + 1);
+    }, 1000);
+
     return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
+      clearInterval(interval);
     };
   }, [isRecording]);
 
@@ -171,6 +167,7 @@ export const ProjectCameraView: React.FC<ProjectCameraViewProps> = ({
     // Haptic feedback for video recording start
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
+    setRecordingTime(0);
     setIsRecording(true);
     try {
       console.log('Before recordAsync...');
