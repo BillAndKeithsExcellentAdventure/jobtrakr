@@ -23,7 +23,7 @@ import { Ionicons, Octicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import { File } from 'expo-file-system';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useProjectValue } from '../tbStores/listOfProjects/ListOfProjectsStore';
 import { useNetwork } from '../context/NetworkContext';
@@ -47,7 +47,8 @@ export const ProjectMediaList = ({
   showInSingleColumn,
   playVideo,
 }: ProjectMediaListProps) => {
-  const [mediaItems, setMediaItems] = useState<MediaEntryDisplayData[]>([]);
+  const [selectedMediaIds, setSelectedMediaIds] = useState<Set<string>>(() => new Set());
+  const selectedMediaIdsRef = useRef(selectedMediaIds);
   const [, setThumbnail] = useProjectValue(projectId, 'thumbnail');
   const removePhotoData = useDeleteRowCallback(projectId, 'mediaEntries');
   const updateMediaEntry = useUpdateRowCallback(projectId, 'mediaEntries');
@@ -61,10 +62,32 @@ export const ProjectMediaList = ({
   const setPublicStateForSelectedMedia = useMakePhotosPublicCallback();
   const { isConnected, isInternetReachable } = useNetwork();
 
-  useEffect(() => {
-    // Initialize selectableProjectMedia whenever allProjectMedia changes
-    setMediaItems(projectMediaItems.map((m) => ({ ...m, isSelected: false })));
-  }, [projectMediaItems]);
+  const availableMediaIds = useMemo(
+    () => new Set(projectMediaItems.map((item) => item.id)),
+    [projectMediaItems],
+  );
+
+  const syncedSelectedMediaIds = useMemo(() => {
+    let changed = false;
+    const nextSelectedMediaIds = new Set<string>();
+    selectedMediaIds.forEach((id) => {
+      if (availableMediaIds.has(id)) {
+        nextSelectedMediaIds.add(id);
+      } else {
+        changed = true;
+      }
+    });
+    return changed ? nextSelectedMediaIds : selectedMediaIds;
+  }, [selectedMediaIds, availableMediaIds]);
+
+  if (selectedMediaIdsRef.current !== syncedSelectedMediaIds) {
+    selectedMediaIdsRef.current = syncedSelectedMediaIds;
+  }
+
+  const mediaItems = useMemo<MediaEntryDisplayData[]>(
+    () => projectMediaItems.map((item) => ({ ...item, isSelected: syncedSelectedMediaIds.has(item.id) })),
+    [projectMediaItems, syncedSelectedMediaIds],
+  );
 
   const selectedCount = useMemo(() => mediaItems.filter((media) => media.isSelected).length, [mediaItems]);
   const hasSelectedItems = useMemo(() => mediaItems.some((media) => media.isSelected), [mediaItems]);
@@ -81,19 +104,24 @@ export const ProjectMediaList = ({
   }, [mediaItems, setThumbnail]);
 
   const onSelectAll = useCallback(() => {
-    const hasSelectedItems = mediaItems.some((media) => media.isSelected);
-    setMediaItems((prevMedia) =>
-      prevMedia.map((media) => ({
-        ...media,
-        isSelected: !hasSelectedItems,
-      })),
-    );
-  }, [mediaItems]);
+    setSelectedMediaIds((prevSelectedMediaIds) => {
+      if (prevSelectedMediaIds.size === projectMediaItems.length && projectMediaItems.length > 0) {
+        return new Set();
+      }
+      return new Set(projectMediaItems.map((media) => media.id));
+    });
+  }, [projectMediaItems]);
 
   const handleSelection = useCallback(async (id: string) => {
-    setMediaItems((prevMedia) =>
-      prevMedia.map((media) => (media.id === id ? { ...media, isSelected: !media.isSelected } : media)),
-    );
+    setSelectedMediaIds((prevSelectedMediaIds) => {
+      const nextSelectedMediaIds = new Set(prevSelectedMediaIds);
+      if (nextSelectedMediaIds.has(id)) {
+        nextSelectedMediaIds.delete(id);
+      } else {
+        nextSelectedMediaIds.add(id);
+      }
+      return nextSelectedMediaIds;
+    });
   }, []);
 
   const handleImageLongPress = useCallback(

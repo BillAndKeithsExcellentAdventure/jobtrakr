@@ -1,7 +1,7 @@
 import { OptionEntry } from '@/src/components/OptionList';
 import { OptionPicker } from '@/src/components/OptionPicker';
 import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { DimensionValue, StyleProp, TextStyle, ViewStyle } from 'react-native';
 
 type CostItemPickerProps = {
@@ -35,27 +35,17 @@ export const CostItemPicker = ({
 }: CostItemPickerProps) => {
   const { allAvailableCostItemOptions } = useProjectWorkItems(projectId);
 
-  // Keep options and selected option state internal to this wrapper.
-  const [options, setOptions] = useState<OptionEntry[]>([]);
-  const [selectedOption, setSelectedOption] = useState<OptionEntry | undefined>(undefined);
+  const options = useMemo<OptionEntry[]>(() => allAvailableCostItemOptions, [allAvailableCostItemOptions]);
 
-  useEffect(() => {
-    setOptions(allAvailableCostItemOptions);
-  }, [allAvailableCostItemOptions]);
-
-  useEffect(() => {
+  const selectedOption = useMemo<OptionEntry | undefined>(() => {
     if (!value) {
-      setSelectedOption(undefined);
-      return;
+      return undefined;
     }
-
-    const matchedOption = options.find((option) => option.value === value);
-    setSelectedOption(matchedOption);
+    return options.find((option) => option.value === value);
   }, [value, options]);
 
   const handleOptionSelected = useCallback(
     (option: OptionEntry) => {
-      setSelectedOption(option);
       onValueChange(String(option.value ?? ''));
     },
     [onValueChange],

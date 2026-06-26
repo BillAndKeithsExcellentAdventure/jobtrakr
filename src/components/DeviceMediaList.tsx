@@ -40,18 +40,11 @@ export const DeviceMediaList = ({
   useProjectLocation,
   setUseProjectLocation,
 }: DeviceMediaListProps) => {
-  const mediaTools = useRef<MediaAssetsHelper | null>(null);
-
-  useEffect(() => {
-    if (mediaTools.current === null) {
-      mediaTools.current = new MediaAssetsHelper();
-    }
-  }, []);
+  const mediaTools = useRef<MediaAssetsHelper>(new MediaAssetsHelper());
 
   const [loadingNearest, setLoadingNearest] = useState<boolean>(false);
   const [fetchStatus, setFetchStatus] = useState<string>('');
   const [deviceMediaAssets, setDeviceMediaAssets] = useState<AssetsItem[]>([]);
-  const [hasSelectedDeviceAssets, setHasSelectedDeviceAssets] = useState<boolean>(false);
   const [pagingCursor, setPagingCursor] = useState<string | undefined>(undefined);
   const [hasNextPage, setHasNextPage] = useState<boolean>(true);
   const currentProject = useProject(projectId);
@@ -60,6 +53,7 @@ export const DeviceMediaList = ({
   const addPhotoData = useAddRowCallback(projectId, 'mediaEntries');
   const photoLimitPerProject = useEntitlementLimit('numProjectPhotos');
   const colors = useColors();
+  const hasSelectedDeviceAssets = deviceMediaAssets.some((item) => item.selected);
   const onStatusUpdate = useCallback((status: string) => {
     setFetchStatus(status);
   }, []);
@@ -178,7 +172,6 @@ export const DeviceMediaList = ({
   ]);
 
   const LoadAllPhotos = useCallback(async () => {
-    if (!mediaTools.current) return;
     const page = await mediaTools.current.getAssetPageWithInfo({ pageSize: 100 });
     // Filter out assets that are already in projectAssets
     const filteredAssets = page.assets.filter(
@@ -210,7 +203,7 @@ export const DeviceMediaList = ({
   }, [useProjectLocation]);
 
   const handleLoadMore = useCallback(async () => {
-    if (!mediaTools.current || !hasNextPage) return;
+    if (!hasNextPage) return;
     const page = await mediaTools.current.getAssetPageWithInfo({
       pageSize: 100,
       after: pagingCursor,
@@ -302,16 +295,7 @@ export const DeviceMediaList = ({
     );
   }, []);
 
-  useEffect(() => {
-    if (deviceMediaAssets) {
-      setHasSelectedDeviceAssets(deviceMediaAssets.some((item) => item.selected));
-    } else {
-      setHasSelectedDeviceAssets(false);
-    }
-  }, [deviceMediaAssets]);
-
   const getAddButtonTitle = useCallback(() => {
-    if (!deviceMediaAssets) return 'Add All';
     const hasSelectedAssets = deviceMediaAssets.some((item) => item.selected);
     return hasSelectedAssets ? 'Add Selected' : 'Add All';
   }, [deviceMediaAssets]);

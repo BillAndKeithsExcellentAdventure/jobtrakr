@@ -5,7 +5,7 @@ import {
   useAllRows as useAllConfigurationRows,
 } from '@/src/tbStores/configurationStore/ConfigurationStoreHooks';
 import { formatDate } from '@/src/utils/formatters';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Modal, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { KeyboardToolbar } from 'react-native-keyboard-controller';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
@@ -67,10 +67,6 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
       : allVendors.filter((v) => !v.inactive);
   }, [allVendors, editedSummary.vendorId, isQuickBooksConnected]);
 
-  useEffect(() => {
-    setEditedSummary(invoiceSummary);
-  }, [invoiceSummary]);
-
   const handleSave = useCallback(() => {
     onSave(editedSummary);
     onClose();
@@ -129,7 +125,12 @@ export const InvoiceSummaryEditModal: React.FC<InvoiceSummaryEditModalProps> = (
   }, []);
 
   return (
-    <Modal visible={isVisible} transparent={true} animationType="fade">
+    <Modal
+      visible={isVisible}
+      transparent={true}
+      animationType="fade"
+      onShow={() => setEditedSummary(invoiceSummary)}
+    >
       <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
         <View style={[styles.container, { backgroundColor: colors.opaqueModalOverlayBackgroundColor }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.background }]}>

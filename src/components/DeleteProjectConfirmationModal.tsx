@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Modal, Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from './ActionButton';
@@ -24,13 +24,6 @@ export const DeleteProjectConfirmationModal: React.FC<DeleteProjectConfirmationM
   const colors = useColors();
   const [deleteText, setDeleteText] = useState('');
 
-  // Reset the text field when modal opens
-  useEffect(() => {
-    if (isVisible) {
-      setDeleteText('');
-    }
-  }, [isVisible]);
-
   const handleDelete = useCallback(() => {
     if (deleteText.toLowerCase() === 'delete') {
       onConfirmDelete();
@@ -46,7 +39,7 @@ export const DeleteProjectConfirmationModal: React.FC<DeleteProjectConfirmationM
   const canDelete = deleteText.toLowerCase() === 'delete';
 
   return (
-    <Modal visible={isVisible} transparent={true} animationType="fade">
+    <Modal visible={isVisible} transparent={true} animationType="fade" onShow={() => setDeleteText('')}>
       <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
         <View style={[styles.container, { backgroundColor: colors.opaqueModalOverlayBackgroundColor }]}>
           <View style={[styles.modalContent, { backgroundColor: colors.background }]}>

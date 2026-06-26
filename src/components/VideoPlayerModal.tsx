@@ -12,7 +12,6 @@ interface VideoPlayerModalProps {
 }
 
 export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, videoUri, onClose }) => {
-  const [isPlaying, setIsPlaying] = useState(true);
   const [showControls, setShowControls] = useState(true);
   const insets = useSafeAreaInsets();
   const player = useVideoPlayer(videoUri, (player) => {
@@ -29,38 +28,32 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
   useEventListener(player, 'sourceChange', () => {
     console.log('Video metadata loaded, starting playback...');
     player.play();
-    setIsPlaying(true);
   });
 
   useEffect(() => {
     if (isVisible) {
       player.seekBy(0);
       player.play();
-      setIsPlaying(true);
     } else {
       player.pause();
-      setIsPlaying(false);
     }
   }, [isVisible, player]);
 
   const handleClose = useCallback(() => {
     player.pause();
-    setIsPlaying(false);
     onClose();
   }, [player, onClose]);
 
   const handlePlayPause = useCallback(async () => {
     if (player) {
-      console.log(`handlePlayPause ${isPlaying}`);
-      if (isPlaying) {
+      console.log(`handlePlayPause ${player.playing}`);
+      if (player.playing) {
         player.pause();
-        setIsPlaying(false);
       } else {
         player.play();
-        setIsPlaying(true);
       }
     }
-  }, [isPlaying, player]);
+  }, [player]);
 
   const handleVideoPress = useCallback(() => {
     setShowControls((prev) => !prev);
@@ -88,7 +81,7 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isVisible, v
             style={[styles.playPauseButton, { bottom: insets.bottom + 16 }]}
             hitSlop={8}
           >
-            <Ionicons name={isPlaying ? 'pause-circle' : 'play-circle'} size={64} color="white" />
+            <Ionicons name={player.playing ? 'pause-circle' : 'play-circle'} size={64} color="white" />
           </Pressable>
         )}
       </SafeAreaView>
