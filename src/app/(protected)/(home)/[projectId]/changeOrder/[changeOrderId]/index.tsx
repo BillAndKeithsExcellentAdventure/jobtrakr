@@ -3,12 +3,10 @@ import { ActionButtonProps } from '@/src/components/ButtonBar';
 import { CostItemPicker } from '@/src/components/CostItemPicker';
 import { ModalScreenContainer } from '@/src/components/ModalScreenContainer';
 import { NumericInputField } from '@/src/components/NumericInputField';
-import { OptionEntry } from '@/src/components/OptionList';
 import RightHeaderMenu from '@/src/components/RightHeaderMenu';
 import SwipeableChangeOrderItem from '@/src/components/SwipeableChangeOrderItem';
 import { TextField } from '@/src/components/TextField';
-import { Text, TextInput, View } from '@/src/components/Themed';
-import { useProjectWorkItems } from '@/src/hooks/useProjectWorkItems';
+import { Text, View } from '@/src/components/Themed';
 import { API_BASE_URL } from '@/src/constants/app-constants';
 import { useColors } from '@/src/context/ColorsContext';
 import { useAppSettings, useEntitlementFlag } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
@@ -99,9 +97,6 @@ const DefineChangeOrderScreen = () => {
   const updateChangeOrder = useUpdateRowCallback(projectId, 'changeOrders');
   const allChangeOrderItems = useAllRows(projectId, 'changeOrderItems');
   const addChangeOrderItem = useAddRowCallback(projectId, 'changeOrderItems');
-  const [changeOrder, setChangeOrder] = useState<ChangeOrder | null>(null);
-  const [changeOrderItems, setChangeOrderItems] = useState<ChangeOrderItem[]>([]);
-  const [changeOrderBidAmount, setChangeOrderBidAmount] = useState<number>(0);
   const appSettings = useAppSettings();
   const allowChangeOrderEmails = useEntitlementFlag('allowChangeOrderEmails');
   const projectData = useProject(projectId);
@@ -119,26 +114,20 @@ const DefineChangeOrderScreen = () => {
   });
   const { verifiedEmailAddresses, isConnected } = useNetwork();
 
-  useEffect(() => {
-    if (allChangeOrders) {
-      const foundChangeOrder = allChangeOrders.find((co) => co.id === changeOrderId);
-      if (foundChangeOrder) {
-        const quotedPrice = foundChangeOrder.quotedPrice || 0;
-        setChangeOrder({ ...foundChangeOrder, quotedPrice });
-      }
-    }
+  const changeOrder = useMemo<ChangeOrder | null>(() => {
+    const foundChangeOrder = allChangeOrders.find((co) => co.id === changeOrderId);
+    return foundChangeOrder ? { ...foundChangeOrder, quotedPrice: foundChangeOrder.quotedPrice || 0 } : null;
   }, [allChangeOrders, changeOrderId]);
 
-  useEffect(() => {
-    if (changeOrder) {
-      const items = allChangeOrderItems.filter((item) => item.changeOrderId === changeOrder.id);
-      setChangeOrderItems(items);
-    }
-  }, [changeOrder, allChangeOrderItems]);
+  const changeOrderItems = useMemo(
+    () => allChangeOrderItems.filter((item) => item.changeOrderId === changeOrderId),
+    [allChangeOrderItems, changeOrderId],
+  );
 
-  useEffect(() => {
-    setChangeOrderBidAmount(changeOrderItems.reduce((total, item) => total + item.amount, 0));
-  }, [changeOrderItems]);
+  const changeOrderBidAmount = useMemo(
+    () => changeOrderItems.reduce((total, item) => total + item.amount, 0),
+    [changeOrderItems],
+  );
 
   useEffect(() => {
     if (changeOrder && changeOrder.bidAmount !== changeOrderBidAmount) {
@@ -383,7 +372,6 @@ const DefineChangeOrderScreen = () => {
           status: 'approval-pending',
         };
         updateChangeOrder(changeOrder!.id, updatedChangeOrder);
-        setChangeOrder(updatedChangeOrder);
 
         Alert.alert('Success', 'Change order sent successfully!', [
           {
@@ -416,6 +404,8 @@ const DefineChangeOrderScreen = () => {
     router,
     updateChangeOrder,
     allowChangeOrderEmails,
+    isOwnerEmailVerified,
+    isClientEmailVerified,
   ]);
 
   const rightHeaderMenuButtons: ActionButtonProps[] = useMemo(

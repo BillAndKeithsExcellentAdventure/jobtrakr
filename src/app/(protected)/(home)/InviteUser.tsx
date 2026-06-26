@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Alert, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useOrganization, useUser } from '@clerk/clerk-expo';
 import { inviteUserToOrganization } from '@/src/utils/organization';
@@ -17,15 +17,7 @@ export const InviteUser = () => {
   const [members, setMembers] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [numAdmins, setNumAdmins] = useState(0);
-  const [currentUserId, setCurrentUserId] = useState<string>('');
-
-  // Add this useEffect to set the current user's ID
-  useEffect(() => {
-    if (user) {
-      setCurrentUserId(user.id);
-      console.log('Current user ID:', user.id);
-    }
-  }, [user]);
+  const currentUserId = useMemo(() => user?.id ?? '', [user]);
 
   useEffect(() => {
     const fetchMembers = async () => {

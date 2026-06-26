@@ -56,7 +56,6 @@ const waitForImageUpload = (
   });
 
 const InvoiceDetailsPage = () => {
-  const defaultDate = new Date();
   const { projectId, invoiceId } = useLocalSearchParams<{ projectId: string; invoiceId: string }>();
   const allProjectInvoices = useAllRows(projectId, 'invoices');
   const updateInvoice = useUpdateRowCallback(projectId, 'invoices');
@@ -78,42 +77,36 @@ const InvoiceDetailsPage = () => {
     mediaToUploadRef.current = mediaToUpload;
   }, [mediaToUpload]);
 
-  const [allInvoiceLineItems, setAllInvoiceLineItems] = useState<WorkItemCostEntry[]>([]);
+  const allInvoiceLineItems = useMemo(
+    () => allCostItems.filter((item) => item.parentId === invoiceId),
+    [allCostItems, invoiceId],
+  );
 
-  useEffect(() => {
-    const invoices = allCostItems.filter((item) => item.parentId === invoiceId);
-    setAllInvoiceLineItems(invoices);
-  }, [allCostItems, invoiceId]);
+  const invoice = useMemo<InvoiceData>(
+    () =>
+      allProjectInvoices.find((r) => r.id === invoiceId) ?? {
+        id: '',
+        invoiceNumber: '',
+        vendor: '',
+        vendorId: '',
+        description: '',
+        amount: 0,
+        thumbnail: '',
+        invoiceDate: 0,
+        dueDate: 0,
+        pictureDate: 0,
+        imageId: '',
+        notes: '',
+        accountingId: '',
+        markedComplete: false,
+        paymentAccountId: '',
+        paymentStatus: '',
+        billId: '',
+        qbSyncHash: '',
+      },
+    [allProjectInvoices, invoiceId],
+  );
 
-  const [invoice, setInvoice] = useState<InvoiceData>({
-    id: '',
-    invoiceNumber: '',
-    vendor: '',
-    vendorId: '',
-    description: '',
-    amount: 0,
-    thumbnail: '',
-    invoiceDate: defaultDate.getTime(),
-    dueDate: defaultDate.getTime(),
-    pictureDate: defaultDate.getTime(),
-    imageId: '',
-    notes: '',
-    accountingId: '',
-    markedComplete: false,
-    paymentAccountId: '',
-    paymentStatus: '',
-    billId: '',
-    qbSyncHash: '',
-  });
-
-  useEffect(() => {
-    const match = allProjectInvoices.find((r) => r.id === invoiceId);
-    if (match) {
-      setInvoice({ ...match });
-    }
-  }, [invoiceId, allProjectInvoices]);
-
-  const [itemsTotalCost, setItemsTotalCost] = useState(0);
   const [isSavingToQuickBooks, setIsSavingToQuickBooks] = useState(false);
   const router = useRouter();
 
@@ -147,9 +140,10 @@ const InvoiceDetailsPage = () => {
     !!invoice.billId && currentSyncHash !== null && invoice.qbSyncHash !== currentSyncHash;
   const isInvoiceUpToDate = !!invoice.billId && currentSyncHash !== null && !isInvoiceOutOfSync;
 
-  useEffect(() => {
-    setItemsTotalCost(allInvoiceLineItems.reduce((acc, item) => acc + item.amount, 0));
-  }, [allInvoiceLineItems]);
+  const itemsTotalCost = useMemo(
+    () => allInvoiceLineItems.reduce((acc, item) => acc + item.amount, 0),
+    [allInvoiceLineItems],
+  );
 
   const hasItemWithNoWorkItemId = useMemo(
     () => allInvoiceLineItems.some((item) => !item.workItemId),

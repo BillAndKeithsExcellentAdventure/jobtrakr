@@ -33,7 +33,6 @@ const CategorySpecificCostItemsPage = () => {
     categoryId: string;
   }>();
   const colors = useColors();
-  const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
   const allWorkItemSummaries = useAllRows(projectId, 'workItemSummaries');
@@ -46,10 +45,7 @@ const CategorySpecificCostItemsPage = () => {
       addActiveProjectIds([projectId]);
     }
   }, [projectId, addActiveProjectIds]);
-
-  useEffect(() => {
-    setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
-  }, [projectId, activeProjectIds, isStoreReady]);
+  const projectIsReady = !!projectId && activeProjectIds.includes(projectId) && isStoreReady();
 
   const projectSpentByWorkItem = useMemo(
     () => getProjectWorkItemSpentAmounts(projectId),

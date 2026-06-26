@@ -1,4 +1,4 @@
-import { HeaderBackButton, HeaderBackButtonProps } from '@react-navigation/elements';
+import { HeaderBackButton, HeaderBackButtonProps } from "expo-router/react-navigation";
 import React from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { useColors } from '@/src/context/ColorsContext';

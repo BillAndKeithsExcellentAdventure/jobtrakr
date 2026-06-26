@@ -1,6 +1,6 @@
 import { Text, View } from '@/src/components/Themed';
 import { useColors } from '@/src/context/ColorsContext';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ActionButton } from '@/src/components/ActionButton';
@@ -17,7 +17,7 @@ import {
 } from '@/src/tbStores/projectDetails/ProjectDetailsStoreHooks';
 import { createApiWithToken } from '@/src/utils/apiWithToken';
 import { useAuth } from '@clerk/clerk-expo';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from 'expo-router/react-navigation';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { FlatList, StyleSheet } from 'react-native';
 import { useAppSettings } from '@/src/tbStores/appSettingsStore/appSettingsStoreHooks';
@@ -87,19 +87,8 @@ const ChangeOrdersScreen = () => {
       addActiveProjectIds([projectId]);
     }
   }, [projectId, addActiveProjectIds]);
-
-  const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
-
-  useEffect(() => {
-    if (projectId) {
-      addActiveProjectIds([projectId]);
-    }
-  }, [projectId, addActiveProjectIds]);
-
-  useEffect(() => {
-    setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
-  }, [projectId, activeProjectIds, isStoreReady]);
+  const projectIsReady = !!projectId && activeProjectIds.includes(projectId) && isStoreReady();
 
   const allChangeOrders = useAllRows(projectId, 'changeOrders');
 

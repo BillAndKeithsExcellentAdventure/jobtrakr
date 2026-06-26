@@ -18,7 +18,6 @@ const ImportDevicePhotosPage = () => {
   const router = useRouter();
   const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>();
   const [useProjectLocation, setUseProjectLocation] = useState(false);
-  const [projectIsReady, setProjectIsReady] = useState(false);
   const isStoreReady = useIsStoreAvailableCallback(projectId);
   const { addActiveProjectIds, activeProjectIds } = useActiveProjectIds();
 
@@ -27,10 +26,7 @@ const ImportDevicePhotosPage = () => {
       addActiveProjectIds([projectId]);
     }
   }, [projectId, addActiveProjectIds]);
-
-  useEffect(() => {
-    setProjectIsReady(!!projectId && activeProjectIds.includes(projectId) && isStoreReady());
-  }, [projectId, activeProjectIds, isStoreReady]);
+  const projectIsReady = !!projectId && activeProjectIds.includes(projectId) && isStoreReady();
 
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
 

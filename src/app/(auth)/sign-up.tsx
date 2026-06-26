@@ -19,17 +19,8 @@ export default function SignUpScreen() {
   const [pendingVerification, setPendingVerification] = React.useState(false);
   const [code, setCode] = React.useState('');
   const [isProcessing, setIsProcessing] = React.useState(false);
-  const [isClerkReady, setIsClerkReady] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!signUp || !isLoaded || setActive == null) {
-      setIsClerkReady(false);
-      return;
-    } else {
-      setIsClerkReady(true);
-    }
-  }, [signUp, isLoaded, setActive]);
+  const isClerkReady = Boolean(signUp && isLoaded && setActive != null);
 
   // Handle submission of sign-up form
   const onSignUpPress = async () => {

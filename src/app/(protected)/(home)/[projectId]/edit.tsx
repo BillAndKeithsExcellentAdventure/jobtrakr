@@ -107,6 +107,8 @@ const EditProjectScreen = () => {
 
   useEffect(() => {
     if (currentProject) {
+      // Hydrate local editable form state from store row.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProject({
         ...currentProject,
       });
