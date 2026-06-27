@@ -120,7 +120,10 @@ const ReceiptDetailsPage = () => {
     }
   }, [receiptId, allProjectReceipts]);
 
-  const [itemsTotalCost, setItemsTotalCost] = useState(0);
+  const itemsTotalCost = useMemo(
+    () => allReceiptLineItems.reduce((acc, item) => acc + item.amount, 0),
+    [allReceiptLineItems],
+  );
   const [isSavingToQuickBooks, setIsSavingToQuickBooks] = useState(false);
   const [wasImageJustAdded, setWasImageJustAdded] = useState(false);
   const router = useRouter();
@@ -154,10 +157,6 @@ const ReceiptDetailsPage = () => {
   const isReceiptOutOfSync =
     !!receipt.purchaseId && currentSyncHash !== null && receipt.qbSyncHash !== currentSyncHash;
   const isReceiptUpToDate = !!receipt.purchaseId && currentSyncHash !== null && !isReceiptOutOfSync;
-
-  useEffect(() => {
-    setItemsTotalCost(allReceiptLineItems.reduce((acc, item) => acc + item.amount, 0));
-  }, [allReceiptLineItems]);
 
   const editDetails = useCallback(
     (item: ReceiptData) => {

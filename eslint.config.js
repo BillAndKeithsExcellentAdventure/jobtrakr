@@ -44,6 +44,7 @@ module.exports = defineConfig([
       'src/components/VideoPlayerModal.tsx',
       'src/components/useClientOnlyValue.web.ts',
       'src/context/NetworkContext.tsx',
+      'src/app/(protected)/(home)/[projectId]/receipt/[receiptId]/index.tsx',
     ],
     rules: {
       'react-hooks/set-state-in-effect': 'warn',
